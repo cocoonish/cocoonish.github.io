@@ -47,6 +47,15 @@ URETILEN: list[tuple[str, str, str]] = []
 ATLANAN: list[str] = []
 
 
+def tr(x: float, ond: int = 1) -> str:
+    """Türkçe sayı biçimi: binlik ayracı NOKTA, ondalık ayracı VİRGÜL.
+
+    Python'ın `{:,.1f}` çıktısı (4,018.6) İngilizce ayraçlar kullanır; yalnızca
+    `.replace(",", ".")` demek ondalık noktayı da binlik ayracına çevirip
+    "%4.018.6" gibi okunamaz metinler üretiyordu. İki ayraç birlikte takas edilir."""
+    return f"{x:,.{ond}f}".replace(",", "\u0000").replace(".", ",").replace("\u0000", ".")
+
+
 def kaydet(fig, ad: str, baslik: str, pencere: str):
     panel_basliklari(fig)
     yol = CIKTI / f"{ad}.html"
@@ -322,6 +331,9 @@ T_DUYUN["pay"] = 100 * T_DUYUN["du"] / T_DUYUN["toplam"]
 
 # T6 · Lozan borcunun ödeme takvimi (13 Haziran 1928 Paris Sözleşmesi).
 # Kaynak: Arslan, İ. (2015). Birim: altın lira / yıl.
+# NOT: bu tablo HENÜZ BİR FİGÜRDE KULLANILMIYOR. Yazım aşamasında "1929 taksidi
+# ödenmedi → 1/3 oranında ödeme → 1933'te %92 kesinti" anlatısı için ayrı bir panel
+# istenirse hazır duruyor (planlanan taksit vs fiilen ödenen).
 T_TAKSIT = pd.DataFrame({
     "bas":    [1929, 1936, 1942, 1947, 1952],
     "bit":    [1936, 1942, 1947, 1952, 1955],
@@ -334,24 +346,27 @@ T_TAKSIT = pd.DataFrame({
 # ======================================================================
 def d01():
     bas, bit = "1946-01-01", "2026-08-21"
-    k = kes(kur_uzun(), "1950-01-01", bit)
+    # ESKİ TL ile çizilir (yeni TL'de eksen 0,0000028 – 47,86 arasına yayılıyor ve
+    # tikler mikro önekiyle okunmaz hâle geliyor). Eski TL, dönemin kendi birimidir:
+    # 1946'da 2,80 lira, bugün 47,9 milyon lira. 1 YTL = 1.000.000 eski TL (2005).
+    k = kes(kur_uzun(), "1950-01-01", bit) * 1e6
 
     fig = make_subplots(
         rows=2, cols=1, shared_xaxes=False, vertical_spacing=0.10,
         subplot_titles=(
-            "1 ABD doları kaç TL? — resmî alış kuru, yeni TL, LOGARİTMİK eksen "
-            "(1 YTL = 1.000.000 eski TL). Gölgeli bantlar kur rejimini gösterir",
+            "1 ABD doları kaç TL? — resmî alış kuru, ESKİ TL, LOGARİTMİK eksen "
+            "(bugünkü TL = eski TL ÷ 1.000.000). Gölgeli bantlar kur rejimini gösterir",
             "Yıl sonundan yıl sonuna USD/TRY değişimi (%) — sabit kur rejiminde "
             "yıllarca sıfır, ayarlama geldiğinde tek adımda"))
 
     # 1946–1949 EVDS dışı basamak (kesik çizgi + kaynak notu)
-    fig.add_trace(go.Scatter(x=KUR_1946.index, y=(KUR_1946 / 1e6).values,
+    fig.add_trace(go.Scatter(x=KUR_1946.index, y=KUR_1946.values,
                              name="1946–1949 (EVDS dışı · kaynak: Tuna 2007)",
                              mode="lines", line=dict(color=GRI, width=1.6, dash="dot",
                                                      shape="hv"),
-                             hovertemplate="%{y:.8f} TL<extra>EVDS dışı</extra>"),
+                             hovertemplate="%{y:.2f} eski TL<extra>EVDS dışı</extra>"),
                   row=1, col=1)
-    cizgi(fig, k, "USD/TRY resmî alış (EVDS TP.DK.USD.A.YTL, yeni TL)", TEAL,
+    cizgi(fig, k, "USD/TRY resmî alış (EVDS TP.DK.USD.A.YTL, eski TL)", TEAL,
           row=1, w=1.7)
 
     yil_son = k.resample("YE").last()
@@ -372,23 +387,27 @@ def d01():
         dikey(fig, t, "", row=1, renk=rgba(MUREKKEP, 0.45), dash="dot")
 
     # seviye anotasyonları — hepsi seriden okunuyor
-    for t, bicim in [("1960-08-22", "22.08.1960: 2,80 → 9,00 eski TL"),
-                     ("1970-08-10", "10.08.1970: 9,00 → 14,85"),
-                     ("1980-01-25", "25.01.1980: 35 → 70 (24 Ocak)"),
-                     ("1994-04-07", "07.04.1994 zirve: 39.853 eski TL"),
-                     ("2001-02-22", "22.02.2001: dalgalı kur")]:
+    for t, bicim, ay in [("1960-08-22", "22.08.1960: 2,80 → 9,00", 46),
+                         ("1970-08-10", "10.08.1970: 9,00 → 14,85", -34),
+                         ("1980-01-25", "25.01.1980: 35 → 70 (24 Ocak)", 52),
+                         ("1994-04-07", "07.04.1994 zirve: 39.853", -36),
+                         ("2001-02-22", "22.02.2001: dalgalı kura geçiş", 54)]:
         ts = pd.Timestamp(t)
         yakin = k.loc[:ts]
         if not len(yakin):
             continue
-        v = yakin.iloc[-1]
-        not_(fig, ts, np.log10(v), bicim, row=1, ay=-40, boyut=9.5, renk=MUREKKEP)
+        not_(fig, ts, np.log10(yakin.iloc[-1]), bicim, row=1, ay=ay, boyut=9.5,
+             renk=MUREKKEP)
     son = k.dropna().index[-1]
     not_(fig, son, np.log10(k.loc[son]),
-         f"{son.strftime('%d.%m.%Y')}: {k.loc[son]:,.2f} TL".replace(",", "."),
-         row=1, ay=34, boyut=10, xanchor="right", renk=TEAL)
+         (f"{son.strftime('%d.%m.%Y')}: {tr(k.loc[son], 0)} eski TL "
+          f"= {tr(k.loc[son] / 1e6, 2)} TL"),
+         row=1, ay=-34, boyut=10, xanchor="right", renk=TEAL)
 
-    fig.update_yaxes(type="log", title_text="TL (yeni TL, log)", row=1)
+    fig.update_yaxes(type="log", title_text="eski TL (log)", row=1,
+                     tickvals=[1, 10, 100, 1e3, 1e4, 1e5, 1e6, 1e7],
+                     ticktext=["1", "10", "100", "1.000", "10.000", "100.000",
+                               "1 milyon", "10 milyon"])
     fig.update_yaxes(title_text="%", row=2)
     fig.update_xaxes(title_text="tarih", row=1,
                      range=[pd.Timestamp("1946-01-01"), pd.Timestamp(bit)])
@@ -438,17 +457,17 @@ def d02():
             continue
         t = alt.idxmax()
         not_(fig, t, alt.max(),
-             f"{etiket} zirve: %{alt.max():,.1f}".replace(",", "."),
+             f"{etiket} zirve: %{tr(alt.max(), 1)}",
              row=1, ay=-32, boyut=9.5)
     dip = kes(pi, "2004-01-01", "2019-12-31")
     if len(dip):
         t = dip.idxmin()
-        not_(fig, t, dip.min(), f"{t.strftime('%m.%Y')} dip: %{dip.min():.1f}",
+        not_(fig, t, dip.min(), f"{t.strftime('%m.%Y')} dip: %{tr(dip.min(), 1)}",
              row=1, ay=44, boyut=9.5, renk=YESIL)
 
     kat = p.iloc[-1] / p.iloc[0]
     not_(fig, p.index[-1], np.log10(p.iloc[-1]),
-         f"1963'ten bu yana fiyat düzeyi ×{kat:,.0f}".replace(",", "."),
+         f"1963'ten bu yana fiyat düzeyi ×{tr(kat, 0)}",
          row=2, ay=-30, boyut=10, xanchor="right", renk=BORDO)
 
     fig.update_yaxes(title_text="%", row=1)
@@ -518,16 +537,27 @@ def d03():
     zirve = kes(oran, "1993-01-01", "1995-12-31")
     if len(zirve):
         t = zirve.idxmax()
-        not_(fig, t, zirve.max(), f"{t.strftime('%m.%Y')} zirve: {zirve.max():.2f}×",
+        not_(fig, t, zirve.max(), f"{t.strftime('%m.%Y')} zirve: {tr(zirve.max(), 2)}×",
              row=3, ay=-30, boyut=9.5, renk=TURUNCU)
-    dikey(fig, "1994-04-21", "21.04.1994 — Hazine'nin TCMB kaynağı kullanımına sınır",
-          row=3, renk=BORDO, boyut=8.5)
-    fig.add_annotation(x=pd.Timestamp("1997-06-01"), y=0.5, xref="x3", yref="y3",
-                       text="seri 12.1996'da biter — 1997 protokolüyle avans kullanımı "
-                            "durdu, 25.04.2001'de KANUNLA yasaklandı<br>"
-                            "(TCMB, 'Dünden Bugüne TCMB', ss.11,13)",
-                       showarrow=False, xanchor="left", align="left",
-                       font=dict(size=9, color=GRI), row=3, col=1)
+    # Panelin 1997 sonrası boşluğu VERİ EKSİKLİĞİ değil, kurumsal sonucun kendisidir:
+    # kanal üç aşamada kapatıldı. Boşluk, üç dikey çizgi ve bir kutuyla anlatılıyor.
+    for tarih, etiket in [
+            ("1994-04-21", "21.04.1994 — Hazine'nin TCMB kaynağı kullanımına SINIR"),
+            ("1997-01-01", "1997 — TCMB–Hazine protokolü: 1998'den itibaren avans YOK"),
+            ("2001-04-25", "25.04.2001 — 4651 s.K.: avans ve birincil piyasadan "
+                           "alım YASAK")]:
+        dikey(fig, tarih, etiket, row=3, renk=BORDO, boyut=8.2)
+    fig.add_annotation(x=pd.Timestamp("2004-01-01"), y=2.6, xanchor="left",
+                       yanchor="top", align="left", showarrow=False,
+                       text="Bu paneldeki seri <b>12.1996'da biter</b>. Boşluk veri "
+                            "eksikliği değildir: mali baskınlık kanalı üç aşamada "
+                            "kapatıldı<br>(1994 sınır → 1997 protokol → 2001 kanun). "
+                            "Kaynak: TCMB, <i>Dünden Bugüne TCMB</i>, ss. 11, 13.<br>"
+                            "2001 sonrası analitik bilanço kalemleri yeniden "
+                            "tanımlandığı için aynı oran doğrudan sürdürülmemiştir.",
+                       font=dict(size=9.5, color=MUREKKEP),
+                       bgcolor="rgba(255,255,255,0.86)", bordercolor=rgba(GRI, 0.4),
+                       borderwidth=0.8, borderpad=4, row=3, col=1)
 
     rejim_bantlari(fig, bas, bit, satir_sayisi=2, etiket_satiri=1)
 
@@ -553,7 +583,7 @@ KRIZ = [
     ("1993-12-31", "1994 · t₀ = 31.12.1993 (kriz öncesi son iş günü)", BORDO),
     ("2001-02-16", "2001 · t₀ = 16.02.2001 (kriz öncesi son Cuma)", MOR),
     ("2018-08-09", "2018 · t₀ = 09.08.2018 (kriz öncesi son iş günü)", TURUNCU),
-    ("2021-09-23", "2021 · t₀ = 23.09.2021 (indirim serisinin ilk günü)", MAVI),
+    ("2021-09-23", "2021 · t₀ = 23.09.2021 (indirim serisinin ilk günü)", TEAL),
 ]
 UFUK = 250      # iş günü
 
@@ -612,7 +642,7 @@ def d04():
             continue
         son = s.index[-1]
         not_(fig, son, np.log10(s.iloc[-1]),
-             f"{ad.split(' ·')[0]}: t+{son} → {s.iloc[-1]:,.0f}".replace(",", "."),
+             f"{ad.split(' ·')[0]}: t+{son} → {tr(s.iloc[-1], 0)}",
              row=1, ay=-16, boyut=9.5, renk=renk, xanchor="right")
 
     fig.update_yaxes(type="log", title_text="endeks (t₀ = 100, log)", row=1)
@@ -656,17 +686,21 @@ def d05():
     cizgi(fig, pi, "yıllık enflasyon (%)", ALTIN, row=3, w=1.7)
     fig.add_hline(y=0, line=dict(color=rgba(MUREKKEP, 0.5), width=1.2), row=3, col=1)
 
-    for t, etiket in [("1958-08-03", "03.08.1958 — fiilî devalüasyon, çoklu kur "
-                                     "(ithalat 9,00; ihracat 4,90/5,60/9,00)"),
-                      ("1960-08-22", "22.08.1960 — resmî parite birleşti: 2,80 → 9,00"),
-                      ("1970-08-10", "10.08.1970 — 9,00 → 14,85"),
-                      ("1971-12-23", "23.12.1971 — Smithsonian: TL/USD DÜŞTÜ"),
-                      ("1979-06-12", "12.06.1979 — 26,50 → 35,00"),
-                      ("1980-01-25", "25.01.1980 — 24 Ocak: 35,00 → 70,00"),
-                      ("1981-05-01", "05.1981 — günlük kur ilanı"),
-                      ("1989-08-11", "11.08.1989 — 32 sayılı Karar"),
-                      ("1994-01-26", "26.01.1994 — devalüasyon")]:
-        dikey(fig, t, etiket, row=1, renk=BORDO, boyut=8.5)
+    # Etiketler dönüşümlü iki yükseklikte: yan yana düşen olaylarda (1979/1980/1981
+    # ve 1989/1994) tek hizada yazıldıklarında birbirinin üstüne biniyorlardı.
+    for i, (t_, etiket) in enumerate([
+            ("1958-08-03", "03.08.1958 — fiilî devalüasyon, çoklu kur "
+                           "(ithalat 9,00; ihracat 4,90/5,60/9,00)"),
+            ("1960-08-22", "22.08.1960 — resmî parite birleşti: 2,80 → 9,00"),
+            ("1970-08-10", "10.08.1970 — 9,00 → 14,85"),
+            ("1971-12-23", "23.12.1971 — Smithsonian: TL/USD DÜŞTÜ"),
+            ("1979-06-12", "12.06.1979 — 26,50 → 35,00"),
+            ("1980-01-25", "25.01.1980 — 24 Ocak: 35,00 → 70,00"),
+            ("1981-05-01", "05.1981 — günlük kur ilanı"),
+            ("1989-08-11", "11.08.1989 — 32 sayılı Karar"),
+            ("1994-01-26", "26.01.1994 — devalüasyon")]):
+        dikey(fig, t_, etiket, row=1, renk=BORDO, boyut=8.2,
+              y_konum=1.0 if i % 2 == 0 else 0.62)
 
     ilk_yil = int(sayim[sayim > 100].index.min()) if (sayim > 100).any() else None
     if ilk_yil:
@@ -679,7 +713,9 @@ def d05():
                        showarrow=False, font=dict(size=10, color=GRI),
                        row=2, col=1)
 
-    fig.update_yaxes(type="log", title_text="eski TL (log)", row=1)
+    fig.update_yaxes(type="log", title_text="eski TL (log)", row=1,
+                     tickvals=[1, 10, 100, 1e3, 1e4, 1e5],
+                     ticktext=["1", "10", "100", "1.000", "10.000", "100.000"])
     fig.update_yaxes(title_text="gün", row=2)
     fig.update_yaxes(title_text="%", row=3)
     fig.update_xaxes(title_text="tarih", row=1)
@@ -737,33 +773,45 @@ def d06():
     fig.add_hline(y=1, line=dict(color=rgba(MUREKKEP, 0.45), width=1.1), row=2, col=1)
     cizgi(fig, hac, "gecelik işlem hacmi (bin TL, hafta ort.)", TEAL, row=3, w=1.2)
 
-    for pencere, ad in [(("1994-01-01", "1994-06-30"), "1994"),
-                        (("2000-11-01", "2000-12-31"), "Kasım 2000"),
-                        (("2001-02-01", "2001-04-30"), "Şubat 2001"),
-                        (("2019-03-01", "2019-04-30"), "Mart 2019"),
-                        (("2018-08-01", "2018-12-31"), "Ağustos 2018"),
-                        (("2023-06-01", "2024-06-30"), "2023–24 sıkılaşma")]:
+    # Etiket sayısı bilinçli olarak DAR tutuldu: altı epizot yan yana yazıldığında
+    # 1994–2001 bölgesinde hepsi üst üste biniyordu. Kalanlar hover'da okunur.
+    for pencere, ad, ay in [(("1994-01-01", "1994-06-30"), "1994", -30),
+                            (("2001-02-01", "2001-04-30"), "Şubat 2001", -64),
+                            (("2019-03-01", "2019-04-30"), "Mart 2019", -34),
+                            (("2023-06-01", "2024-06-30"), "2023–24 sıkılaşma", -34)]:
         alt_ao = kes(ao, *pencere)
         alt_yk = kes(enY, *pencere)
         if not len(alt_ao):
             continue
-        t = alt_ao.idxmax()
-        metin = (f"{ad} — AO zirve %{alt_ao.max():,.1f}".replace(",", "."))
+        tz = alt_ao.idxmax()
+        metin = f"{ad} — AO zirve %{tr(alt_ao.max(), 1)}"
         if len(alt_yk):
-            metin += f" · en yüksek %{alt_yk.max():,.0f}".replace(",", ".")
-        not_(fig, t, np.log10(max(alt_ao.max(), 1e-6)), metin, row=1,
-             ay=-34, boyut=9.5)
+            metin += f" · en yüksek %{tr(alt_yk.max(), 0)}"
+        not_(fig, tz, np.log10(max(alt_ao.max(), 1e-6)), metin, row=1,
+             ay=ay, boyut=9.5)
 
     fig.add_annotation(
-        x=pd.Timestamp("2004-01-01"), y=np.log10(3000), xref="x", yref="y",
+        x=pd.Timestamp("2026-06-01"), y=np.log10(1.6), xanchor="right", yanchor="bottom",
         text="Mart 2019'da asıl sıkışma <b>offshore (Londra) TL swap</b> faizindeydi; "
-             "o oran EVDS'te YOKTUR — burada yalnız yurt içi gecelik faiz görünür.",
-        showarrow=False, xanchor="left", align="left",
-        font=dict(size=9.5, color=GRI), row=1, col=1)
+             "o oran EVDS'te YOKTUR — bu grafikte yalnız yurt içi gecelik faiz görünür.",
+        showarrow=False, align="right", font=dict(size=9.5, color=GRI),
+        bgcolor="rgba(255,255,255,0.86)", bordercolor=rgba(GRI, 0.35),
+        borderwidth=0.8, borderpad=3, row=1, col=1)
+    fig.add_annotation(
+        x=pd.Timestamp("1990-06-01"), y=np.log10(2.2e3), xanchor="left", yanchor="bottom",
+        text="Alt panel <b>NOMİNAL</b> TL hacmidir; 1990'lardaki yükselişin büyük kısmı "
+             "fiyat düzeyi artışıdır, reel işlem hacmi değil.",
+        showarrow=False, align="left", font=dict(size=9.5, color=GRI),
+        bgcolor="rgba(255,255,255,0.86)", bordercolor=rgba(GRI, 0.35),
+        borderwidth=0.8, borderpad=3, row=3, col=1)
 
     fig.update_yaxes(type="log", title_text="% (log)", row=1)
     fig.update_yaxes(type="log", title_text="kat (log)", row=2)
     fig.update_yaxes(type="log", title_text="bin TL (log)", row=3)
+    # Pencere PİNLİ: otomatik menzil, sağdaki metin kutusu yüzünden 2040'a
+    # kadar açılıyordu.
+    for r in (1, 2, 3):
+        fig.update_xaxes(range=[pd.Timestamp(bas), pd.Timestamp(bit)], row=r)
     fig.update_xaxes(title_text="tarih", row=3)
     duzen(fig, "Gecelik faizin otuz altı yılı: %6.200'den negatif reel plato'ya",
           "02.01.1990 – 21.08.2026", 1150,
@@ -780,7 +828,12 @@ def d06():
 # ======================================================================
 def d07():
     t = T_ISTIKRAZ
-    x = t["etiket"]
+    # KATEGORİ EKSENİ KULLANILMIYOR: etiketlerin çoğu ("1854", "1874") sayıya
+    # benziyor ve plotly bunları koordinata çevirip bütün çubukları tek noktaya
+    # yığıyor (autotypenumbers="strict" annotation koordinatlarını kurtarmıyor).
+    # Çözüm: x = 0…13 tamsayı konumları, etiketler tickvals/ticktext ile basılır.
+    x = list(range(len(t)))
+    etiket = t["etiket"].tolist()
 
     fig = make_subplots(
         rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.11,
@@ -790,12 +843,14 @@ def d07():
             "fiyatladığı yer burasıdır"))
 
     fig.add_trace(go.Bar(x=x, y=t["nominal"], name="nominal anapara",
-                         marker=dict(color=rgba(GRI, 0.55), line=dict(width=0)),
-                         hovertemplate="%{y:.1f} mn frank<extra>nominal</extra>"),
+                         marker=dict(color=rgba(GRI, 0.50), line=dict(width=0)),
+                         width=0.72, customdata=etiket,
+                         hovertemplate="%{y:.1f} mn frank<extra>%{customdata} · nominal</extra>"),
                   row=1, col=1)
     fig.add_trace(go.Bar(x=x, y=t["gelen"], name="fiilen ele geçen",
                          marker=dict(color=BORDO, line=dict(width=0)),
-                         hovertemplate="%{y:.1f} mn frank<extra>ele geçen</extra>"),
+                         width=0.42, customdata=etiket,
+                         hovertemplate="%{y:.1f} mn frank<extra>%{customdata} · ele geçen</extra>"),
                   row=1, col=1)
     fig.update_layout(barmode="overlay")
 
@@ -803,45 +858,44 @@ def d07():
                              mode="lines+markers+text",
                              line=dict(color=TEAL, width=2.2),
                              marker=dict(size=8, color=TEAL),
-                             text=[f"{v:.1f}" for v in t["fiyat"]],
+                             text=[tr(v, 1) for v in t["fiyat"]],
                              textposition="top center", textfont=dict(size=9.5),
-                             hovertemplate="%{y:.1f}%<extra>ihraç fiyatı</extra>"),
+                             customdata=etiket,
+                             hovertemplate="%{y:.1f}%<extra>%{customdata}</extra>"),
                   row=2, col=1)
-    for e, dash, ad in [(100, "dash", "başabaş (100)"), (56.8, "dot",
-                        "20 yılın ortalaması: %56,8")]:
+    for e, dash, ad in [(100, "dash", "başabaş (100)"),
+                        (56.8, "dot", "20 yılın ortalaması: %56,8")]:
         fig.add_hline(y=e, line=dict(color=rgba(MUREKKEP, 0.5), width=1.2, dash=dash),
                       row=2, col=1,
                       annotation_text=ad, annotation_position="top left",
                       annotation=dict(font=dict(size=9, color=GRI)))
 
-    fig.add_annotation(x="1870–72", y=32.125, text="%32,1 — nominalin üçte biri kadar nakit",
-                       showarrow=True, arrowhead=2, ax=0, ay=42,
+    i70 = etiket.index("1870–72")
+    i74 = etiket.index("1874")
+    fig.add_annotation(x=i70, y=32.125, text="%32,1 — nominalin üçte biri kadar nakit",
+                       showarrow=True, arrowhead=2, ax=-58, ay=-34,
                        font=dict(size=9.5, color=BORDO), row=2, col=1)
-    fig.add_annotation(x="1874", y=43.5, text="1874: %43,5 — moratoryumdan bir yıl önce",
-                       showarrow=True, arrowhead=2, ax=-10, ay=40,
+    fig.add_annotation(x=i74, y=43.5, text="1874: %43,5 — moratoryumdan bir yıl önce",
+                       showarrow=True, arrowhead=2, ax=-46, ay=-40,
                        font=dict(size=9.5, color=BORDO), row=2, col=1)
     fig.add_annotation(
-        x="1858", y=900, text=("20 yılın toplamı: nominal <b>5.298,7</b> mn frank → "
-                               "ele geçen <b>3.012,9</b> mn frank (%56,8)<br>"
-                               "Osmanlı lirası karşılığı: 238,77 mn OL nominal → "
-                               "127,12 mn OL ele geçen (%53,2)<br>"
-                               "1863 için kaynak iki emisyon kuru verir (%68 ve %72); "
-                               "grafikte ele geçen/nominal = %71,0 kullanıldı"),
-        showarrow=False, xanchor="left", align="left",
-        font=dict(size=9.5, color=MUREKKEP), bgcolor="rgba(255,255,255,0.86)",
+        x=0, y=980, xanchor="left", yanchor="top", showarrow=False, align="left",
+        text=("20 yılın toplamı: nominal <b>5.298,7</b> mn frank → ele geçen "
+              "<b>3.012,9</b> mn frank (%56,8)<br>"
+              "Osmanlı lirası karşılığı: 238,77 mn OL nominal → 127,12 mn OL "
+              "ele geçen (%53,2)<br>"
+              "1863 için kaynak iki emisyon kuru verir (%68 ve %72); grafikte "
+              "ele geçen/nominal = %71,0 kullanıldı"),
+        font=dict(size=9.5, color=MUREKKEP), bgcolor="rgba(255,255,255,0.88)",
         bordercolor=rgba(GRI, 0.4), borderwidth=0.8, borderpad=4, row=1, col=1)
 
-    fig.update_yaxes(title_text="milyon frank", row=1)
+    fig.update_yaxes(title_text="milyon frank", row=1, range=[0, 1080])
     fig.update_yaxes(title_text="%", row=2, range=[20, 118])
-    # Etiketlerin bir kısmı sayıya benziyor ("1854", "1874"). plotly'nin varsayılan
-    # autotypenumbers="convert types" ayarı bu etiketleri SAYIYA çevirip 1854…1874
-    # koordinatlarına yerleştiriyor, sayı olmayanları ("1870–72") 0–1 indekslerinde
-    # bırakıyordu; sonuç: eksen menzili 0–1874'e açılıyor, bütün çubuklar tek noktaya
-    # yığılıyordu. autotypenumbers="strict" etiketleri metin olarak tutar.
-    fig.update_xaxes(type="category", autotypenumbers="strict", row=1)
-    fig.update_xaxes(type="category", autotypenumbers="strict",
-                     title_text="istikraz yılı", row=2,
-                     tickangle=-40, tickfont=dict(size=10))
+    for r in (1, 2):
+        fig.update_xaxes(tickmode="array", tickvals=x, ticktext=etiket,
+                         range=[-0.7, len(x) - 0.3], tickangle=-40,
+                         zeroline=False, tickfont=dict(size=10), row=r)
+    fig.update_xaxes(title_text="istikraz yılı", row=2)
     duzen(fig, "Kupon pazarlığa açıktır, iskonto değildir: Osmanlı istikrazları 1854–1874",
           "1854 – 1874 (15 ya da 16 istikraz — kaynaklar ayrışıyor)", 880,
           alt="KAYNAK: Eldem, V. (1970), s.160–161 ve s.260–262; Dikmen (2005) Tablo 1–2 "
@@ -856,93 +910,106 @@ def d07():
 # ======================================================================
 def d08():
     t = T_STOK
-    renkler = [TEAL] * len(t)
-    for i, e in enumerate(t["etiket"]):
-        if "Muharrem" in e or "1933" in e:
-            renkler[i] = YESIL                          # kesinti sonrası
-        if "1918\n" in e or "1875" in e:
-            renkler[i] = BORDO
+    x = list(range(len(t)))
+    etiket = t["etiket"].tolist()
+    renkler = []
+    for e in etiket:
+        if "Muharrem" in e or "1933" in e or "1954" in e:
+            renkler.append(YESIL)                        # kesinti / kapanış
+        elif "1875" in e or "1918\nsavaş sonu" in e:
+            renkler.append(BORDO)                        # temerrüt / zirve
+        else:
+            renkler.append(TEAL)
 
     fig = make_subplots(
-        rows=3, cols=1, shared_xaxes=False, vertical_spacing=0.11,
+        rows=3, cols=1, shared_xaxes=False, vertical_spacing=0.13,
         row_heights=[0.42, 0.30, 0.28],
         subplot_titles=(
             "Dış borç stokunun kilometre taşları (milyon altın Osmanlı lirası) — "
             "yüz yıllık merdiven",
-            "1881 Muharrem Kararnamesi'nin borcu ne kadar indirdiği — "
-            "KAYNAKLAR AYRIŞIYOR",
+            "1881 Muharrem Kararnamesi borcu ne kadar indirdi? KAYNAKLAR AYRIŞIYOR",
             "Borç faizinin hükümet gelirine oranı (%) — SEYREK SERİ: yalnız kaynaklı "
-            "yıllar, ara yıllar uydurulmadı"))
+            "yıllar noktalanmıştır, ara yıllar uydurulmamıştır"))
 
-    fig.add_trace(go.Bar(x=t["etiket"], y=t["deger"], name="dış borç stoku (mn OL)",
-                         marker=dict(color=renkler, line=dict(width=0)),
-                         text=[f"{v:,.2f}".replace(",", ".") if v else "0"
-                               for v in t["deger"]],
+    fig.add_trace(go.Bar(x=x, y=t["deger"], name="dış borç stoku (mn OL)",
+                         marker=dict(color=renkler, line=dict(width=0)), width=0.62,
+                         text=[tr(v, 2) if v else "0" for v in t["deger"]],
                          textposition="outside", textfont=dict(size=9.5),
-                         hovertemplate="%{y:.2f} mn OL<extra>%{x}</extra>"),
+                         customdata=etiket,
+                         hovertemplate="%{y:.2f} mn OL<extra>%{customdata}</extra>"),
                   row=1, col=1)
 
     m = T_MUHARREM
-    fig.add_trace(go.Bar(x=m["kaynak"], y=m["oncesi"], name="Kararname ÖNCESİ",
-                         marker=dict(color=rgba(GRI, 0.6), line=dict(width=0)),
-                         text=[f"{v:,.2f}".replace(",", ".") for v in m["oncesi"]],
+    xm = list(range(len(m)))
+    fig.add_trace(go.Bar(x=[v - 0.19 for v in xm], y=m["oncesi"], name="Kararname ÖNCESİ",
+                         marker=dict(color=rgba(GRI, 0.6), line=dict(width=0)), width=0.34,
+                         text=[tr(v, 2) for v in m["oncesi"]],
                          textposition="outside", textfont=dict(size=9.5),
-                         hovertemplate="%{y:.2f} mn OL<extra>öncesi</extra>"),
+                         customdata=m["kaynak"],
+                         hovertemplate="%{y:.2f} mn OL<extra>%{customdata} · öncesi</extra>"),
                   row=2, col=1)
-    fig.add_trace(go.Bar(x=m["kaynak"], y=m["sonrasi"], name="Kararname SONRASI",
-                         marker=dict(color=YESIL, line=dict(width=0)),
-                         text=[("veri yok" if pd.isna(v) else f"{v:,.2f}".replace(",", "."))
+    fig.add_trace(go.Bar(x=[v + 0.19 for v in xm], y=m["sonrasi"].fillna(0),
+                         name="Kararname SONRASI",
+                         marker=dict(color=YESIL, line=dict(width=0)), width=0.34,
+                         text=[("kaynakta yok" if pd.isna(v) else tr(v, 2))
                                for v in m["sonrasi"]],
                          textposition="outside", textfont=dict(size=9.5),
-                         hovertemplate="%{y:.2f} mn OL<extra>sonrası</extra>"),
+                         customdata=m["kaynak"],
+                         hovertemplate="%{y:.2f} mn OL<extra>%{customdata} · sonrası</extra>"),
                   row=2, col=1)
 
     sv = T_SERVIS
-    fig.add_trace(go.Scatter(x=sv["yil"], y=sv["oran"], name="borç faizi / hükümet geliri (%)",
-                             mode="lines+markers+text", line=dict(color=BORDO, width=1.6,
-                                                                  dash="dash"),
-                             marker=dict(size=11, color=BORDO, symbol="circle"),
+    fig.add_trace(go.Scatter(x=sv["yil"], y=sv["oran"],
+                             name="borç faizi / hükümet geliri (%)",
+                             mode="lines+markers+text",
+                             line=dict(color=BORDO, width=1.6, dash="dash"),
+                             marker=dict(size=11, color=BORDO),
                              text=[f"%{v:.0f}" for v in sv["oran"]],
                              textposition="top center", textfont=dict(size=10),
-                             hovertemplate="%{y:.0f}%<extra>%{x}</extra>"),
+                             customdata=sv["not_"],
+                             hovertemplate="%{y:.0f}%<extra>%{customdata}</extra>"),
                   row=3, col=1)
     fig.add_hline(y=25, line=dict(color=rgba(GRI, 0.6), width=1.1, dash="dot"),
                   row=3, col=1, annotation_text="1865'ten itibaren alarm eşiği (%25)",
-                  annotation_position="bottom left",
+                  annotation_position="bottom right",
                   annotation=dict(font=dict(size=9, color=GRI)))
 
-    fig.add_annotation(x="1933\nParis (yeniden yapılandırma)", y=8.58,
-                       text="107,53 → 8,58 mn OL · <b>%92,0 kesinti</b>",
-                       showarrow=True, arrowhead=2, ax=-40, ay=-52,
+    i33 = etiket.index([e for e in etiket if "1933" in e][0])
+    i18 = etiket.index([e for e in etiket if "1918\nsavaş sonu" in e][0])
+    fig.add_annotation(x=i33, y=8.58, text="107,53 → 8,58 mn OL · <b>%92,0 kesinti</b>",
+                       showarrow=True, arrowhead=2, ax=-6, ay=-96, xanchor="right",
                        font=dict(size=10, color=YESIL), row=1, col=1)
-    fig.add_annotation(x="1918\nsavaş sonu", y=303.7,
-                       text="savaşta 153,7 → 303,7 · İtilaf düzenlemesiyle 161,85",
-                       showarrow=True, arrowhead=2, ax=0, ay=-34,
+    fig.add_annotation(x=i18, y=303.7,
+                       text="savaşta 153,7 → 303,7; İtilaf düzenlemesiyle 161,85",
+                       showarrow=True, arrowhead=2, ax=-20, ay=-34,
                        font=dict(size=9.5, color=BORDO), row=1, col=1)
     fig.add_annotation(
-        x=1869.5, y=72, xref="x3", yref="y3", showarrow=False, xanchor="left",
-        align="left", font=dict(size=9.5, color=GRI),
-        text="1874 kesiti (Kıray 1993, s.145): ihracat 19 mn £ · kısa vadeli borç 16 mn £ · "
-             "hükümet geliri 22,5 mn £<br>faiz/ihracat %66 · faiz/hükümet geliri %57 — "
-             "1875'te yıllık anapara+faiz 11 mn £'ye karşı gelir 18 mn £ (Pamuk aktarımı)",
+        x=1864.7, y=76, showarrow=False, xanchor="left", yanchor="top", align="left",
+        font=dict(size=9.5, color=GRI),
+        text="1874 kesiti (Kıray 1993, s.145): ihracat 19 mn £ · kısa vadeli borç "
+             "16 mn £ · hükümet geliri 22,5 mn £<br>faiz/ihracat %66 · faiz/hükümet "
+             "geliri %57 — 1875'te yıllık anapara+faiz 11 mn £'ye karşı gelir 18 mn £ "
+             "(Pamuk aktarımı)",
         row=3, col=1)
 
-    fig.update_layout(barmode="group")
-    fig.update_yaxes(title_text="milyon OL", row=1, range=[0, 355])
-    fig.update_yaxes(title_text="milyon OL", row=2, range=[0, 300])
-    fig.update_yaxes(title_text="%", row=3, range=[0, 82])
-    fig.update_xaxes(title_text="yıl", row=3, dtick=2)
-    fig.update_xaxes(type="category", autotypenumbers="strict",
-                     tickfont=dict(size=9), row=1)
-    fig.update_xaxes(type="category", autotypenumbers="strict",
+    fig.update_layout(barmode="overlay")
+    fig.update_yaxes(title_text="milyon OL", row=1, range=[0, 375])
+    fig.update_yaxes(title_text="milyon OL", row=2, range=[0, 310])
+    fig.update_yaxes(title_text="%", row=3, range=[0, 88])
+    fig.update_xaxes(tickmode="array", tickvals=x, ticktext=etiket, zeroline=False,
+                     range=[-0.7, len(x) - 0.3], tickangle=-32,
+                     tickfont=dict(size=8.8), row=1)
+    fig.update_xaxes(tickmode="array", tickvals=xm, ticktext=m["kaynak"].tolist(),
+                     range=[-0.6, len(xm) - 0.4], zeroline=False,
                      tickfont=dict(size=10), row=2)
+    fig.update_xaxes(title_text="yıl", row=3, dtick=2, range=[1863.5, 1876.5])
     duzen(fig, "Bir borcun yüz yılı: 1854'te 3,3 milyon, 1954'te sıfır",
-          "1854 – 1954", 1180,
+          "1854 – 1954", 1220,
           alt="KAYNAK: Arslan, İ. (2015), Journal of History Studies 7/4 (Yeniay ve "
               "Eldem'den); Dikmen (2005) s.143–150; TDV İslâm Ansiklopedisi "
               "'Düyûn-ı Umûmiyye'; Kıray (1993) s.145 · 1881 için üç kaynak üç ayrı "
-              "büyüklük verir (kapsam farkı: gecikmiş faizler, iç borç, parite kabulü) "
-              "— tek bir rakam 'doğru' diye seçilmemiştir")
+              "büyüklük verir (kapsam farkı: gecikmiş faizler, iç borcun sayılıp "
+              "sayılmaması, parite kabulü) — tek bir rakam 'doğru' diye seçilmemiştir")
     kaydet(fig, "D08_borc_stoku_yuz_yil",
            "Osmanlı/TC dış borç stoku 1854–1954 ve iki kesinti", "1854 → 1954")
 
@@ -980,10 +1047,13 @@ def d09():
                            text=" " + etiket, showarrow=False, textangle=-90,
                            font=dict(size=8.5, color=GRI), row=1, col=1)
 
-    d = T_DUYUN
+    # TOPLAM satırı çubuklardan ÇIKARILDI: bileşenlerin on katı olduğu için ekseni
+    # eziyor ve kalemler okunmaz hâle geliyordu; toplam metin kutusunda verilir.
+    d = T_DUYUN[T_DUYUN["kalem"] != "TOPLAM"].reset_index(drop=True)
+    top = T_DUYUN[T_DUYUN["kalem"] == "TOPLAM"].iloc[0]
     fig.add_trace(go.Bar(y=d["kalem"], x=d["du"], name="Düyun-u Umumiye'ye ayrılan",
                          orientation="h", marker=dict(color=BORDO, line=dict(width=0)),
-                         text=[f"%{p:.1f}" for p in d["pay"]], textposition="inside",
+                         text=[f"%{tr(p, 1)}" for p in d["pay"]], textposition="inside",
                          textfont=dict(size=10, color="#ffffff"),
                          hovertemplate="%{x:,.0f} bin OL<extra>D.U.</extra>"),
                   row=2, col=1)
@@ -993,10 +1063,19 @@ def d09():
                          hovertemplate="%{x:,.0f} bin OL<extra>devlete kalan</extra>"),
                   row=2, col=1)
     fig.update_layout(barmode="stack")
-    fig.add_annotation(x=20000, y="İnhisarlar (tekeller)",
+    fig.add_annotation(x=float(d.loc[d["kalem"] == "İnhisarlar (tekeller)", "du"].iloc[0]),
+                       y="İnhisarlar (tekeller)",
                        text="tekel gelirlerinin <b>%79,5</b>'i İdare'ye",
-                       showarrow=True, arrowhead=2, ax=60, ay=0,
+                       showarrow=True, arrowhead=2, ax=118, ay=0,
                        font=dict(size=9.5, color=BORDO), row=2, col=1)
+    fig.add_annotation(x=float(T_DUYUN["toplam"].max()) * 0.99, y=-0.42,
+                       xanchor="right", yanchor="bottom", showarrow=False, align="right",
+                       text=(f"<b>TOPLAM 1911/12:</b> {tr(top['toplam'], 0)} bin OL "
+                             f"gelirin {tr(top['du'], 0)}'i İdare'ye → "
+                             f"<b>%{tr(top['pay'], 1)}</b>"),
+                       font=dict(size=10, color=MUREKKEP),
+                       bgcolor="rgba(255,255,255,0.88)", bordercolor=rgba(GRI, 0.4),
+                       borderwidth=0.8, borderpad=4, row=2, col=1)
 
     fig.update_yaxes(title_text="%", row=1, range=[0, 17])
     fig.update_xaxes(title_text="yıl", row=1, range=[1828, 1918], dtick=10)
@@ -1083,54 +1162,96 @@ def d10():
     for s, *_ in ZAMAN_CIZELGESI:
         if s not in satirlar:
             satirlar.append(s)
-    satirlar = satirlar[::-1]                            # üstte "Kur rejimi"
+    satirlar = satirlar[::-1]                            # en üstte "Kur rejimi"
+    X0, X1 = 1834, 2036
+    DAR = 15                                             # yıl — bu genişliğin altı "dar dilim"
 
     fig = make_subplots(
-        rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.06,
-        row_heights=[0.70, 0.30],
+        rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.075,
+        row_heights=[0.63, 0.37],
         subplot_titles=(
-            "Rejim şeridi — her çubuk bir dönemdir, uzunluğu o rejimin ömrüdür",
-            "Kırılma işaretleri: temerrüt · yeniden yapılandırma · devalüasyon · "
-            "rejim değişimi"))
+            "Rejim şeridi — her kutu bir dönemdir, genişliği o rejimin ömrüdür. "
+            "Kutuya sığmayan dar dilimler NUMARALIDIR; anahtar aşağıdaki kutuda",
+            "Kırılma işaretleri — her olay kendi satırında; elmasın yatay konumu "
+            "olayın YILIDIR (aşağı indikçe sağa kayar)"))
 
+    # Şerit go.Bar ile DEĞİL, add_shape ile çizilir: tek noktalı yatay çubuklar
+    # plotly'nin grup ofsetine takılıp şeritleri birbirinin üstüne bindiriyordu.
+    # DAR dilimlerin adı kutuya sığmaz; kutunun üstüne/altına yazma denendi, yoğun
+    # 1999–2026 bölgesinde etiketler çakıştı. Çözüm: dar dilime NUMARA rozeti,
+    # numaraların açılımı şeridin boş sol üst bölgesindeki ANAHTAR kutusunda.
+    anahtar: list[str] = []
     for satir, b, e, etiket, renk in ZAMAN_CIZELGESI:
         y = satirlar.index(satir)
-        fig.add_trace(go.Bar(
-            x=[e - b], y=[y], base=[b], orientation="h", name=etiket,
-            marker=dict(color=rgba(renk, 0.55), line=dict(color=renk, width=1.1)),
-            showlegend=False, width=0.62,
-            hovertemplate=f"{b}–{e}<br>{etiket}<extra>{satir}</extra>"),
-            row=1, col=1)
-        if e - b >= 14:                                  # kısa dilimlerde metin sığmaz
+        fig.add_shape(type="rect", x0=b, x1=e, y0=y - 0.28, y1=y + 0.28,
+                      fillcolor=rgba(renk, 0.42), line=dict(color=renk, width=1.1),
+                      layer="below", row=1, col=1)
+        fig.add_trace(go.Scatter(x=[(b + e) / 2], y=[y], mode="markers",
+                                 marker=dict(size=1, color="rgba(0,0,0,0)"),
+                                 showlegend=False,
+                                 hovertemplate=f"{b}–{e}<br>{etiket}<extra>{satir}</extra>"),
+                      row=1, col=1)
+        if e - b >= DAR:
             fig.add_annotation(x=(b + e) / 2, y=y, text=etiket, showarrow=False,
+                               font=dict(size=8.4, color=MUREKKEP), row=1, col=1)
+        else:
+            no = len(anahtar) + 1
+            anahtar.append(f"<b>{no}</b> · {b}–{e} {etiket}")
+            fig.add_annotation(x=(b + e) / 2, y=y, text=f"<b>{no}</b>", showarrow=False,
                                font=dict(size=8.6, color=MUREKKEP), row=1, col=1)
 
-    for yil, etiket in KRIZ_ISARET:
+    # Anahtar kutusu: "Para politikası çerçevesi" satırının 1838–1990 aralığı boştur.
+    yk = satirlar.index("Para politikası çerçevesi")
+    yarim = (len(anahtar) + 1) // 2
+    sol_sutun = "<br>".join(anahtar[:yarim])
+    sag_sutun = "<br>".join(anahtar[yarim:])
+    for x_konum, govde in ((1841, sol_sutun), (1913, sag_sutun)):
+        if not govde:
+            continue
+        fig.add_annotation(x=x_konum, y=yk + 0.42, text=govde, showarrow=False,
+                           xanchor="left", yanchor="top", align="left",
+                           font=dict(size=8.0, color=MUREKKEP), row=1, col=1)
+    fig.add_annotation(x=1841, y=yk + 0.52, text="dar dilimlerin anahtarı:",
+                       showarrow=False, xanchor="left", yanchor="bottom",
+                       font=dict(size=8.4, color=GRI), row=1, col=1)
+
+    # Kırılma işaretleri — MERDİVEN düzeni: her olay kendi satırında. Kademeli
+    # serpiştirme 1994–2021 yığılmasında çakışmayı çözemiyordu; merdivende
+    # her etiketin kendi satırı olduğu için çakışma yapısal olarak imkânsızdır.
+    olaylar = sorted(KRIZ_ISARET)
+    n = len(olaylar)
+    for i, (yil, etiket) in enumerate(olaylar):
+        y = n - 1 - i                                    # en eski en üstte
+        saga = yil < 1975
         fig.add_shape(type="line", x0=yil, x1=yil, y0=0, y1=1, yref="y domain",
-                      line=dict(color=rgba(BORDO, 0.30), width=1), layer="below",
+                      line=dict(color=rgba(BORDO, 0.20), width=1), layer="below",
                       row=1, col=1)
-        fig.add_trace(go.Scatter(x=[yil], y=[0], mode="markers", showlegend=False,
-                                 marker=dict(symbol="triangle-up", size=11, color=BORDO),
+        fig.add_shape(type="line", x0=X0, x1=yil, y0=y, y1=y,
+                      line=dict(color=rgba(BORDO, 0.18), width=0.8), layer="below",
+                      row=2, col=1)
+        fig.add_trace(go.Scatter(x=[yil], y=[y], mode="markers", showlegend=False,
+                                 marker=dict(symbol="diamond", size=7, color=BORDO),
                                  hovertemplate=f"{yil} — {etiket}<extra></extra>"),
                       row=2, col=1)
-        fig.add_annotation(x=yil, y=0.06, yref="y2", text=f"{yil} · {etiket}",
-                           showarrow=False, textangle=-72, xanchor="center",
-                           yanchor="bottom", font=dict(size=8.4, color=BORDO),
-                           row=2, col=1)
+        fig.add_annotation(x=yil, y=y, text=f"<b>{yil}</b> · {etiket}", showarrow=False,
+                           xanchor="left" if saga else "right", yanchor="middle",
+                           xshift=7 if saga else -7,
+                           font=dict(size=8.6, color=BORDO), row=2, col=1)
 
     fig.update_yaxes(tickmode="array", tickvals=list(range(len(satirlar))),
-                     ticktext=satirlar, row=1, range=[-0.7, len(satirlar) - 0.3],
-                     showgrid=False)
-    fig.update_yaxes(row=2, range=[-0.12, 1.0], showticklabels=False, showgrid=False)
-    fig.update_xaxes(title_text="yıl", row=2, dtick=10,
-                     range=[1836, 2032])
+                     ticktext=satirlar, row=1, range=[-0.75, len(satirlar) - 0.28],
+                     showgrid=False, zeroline=False, tickfont=dict(size=11))
+    fig.update_yaxes(row=2, range=[-0.9, len(KRIZ_ISARET) - 0.1],
+                     showticklabels=False, showgrid=False, zeroline=False)
+    fig.update_xaxes(range=[X0, X1], dtick=10, zeroline=False, row=1)
+    fig.update_xaxes(title_text="yıl", range=[X0, X1], dtick=10, zeroline=False, row=2)
     duzen(fig, "Yüz yetmiş yılın rejim şeridi: kur · para otoritesi · sermaye hesabı",
-          "1838 – 2026", 980,
+          "1838 – 2026", 1080,
           alt="KAYNAK: TCMB 'Kâğıt Paranın Tarihçesi' ve 'Dünden Bugüne TCMB'; 1567 s. "
               "TPKK Kanunu (20.02.1930); 1715 s.K. (11.06.1930, RG 30.06.1930); 1211 s.K. "
               "(1970); 32 sayılı Karar (11.08.1989); 4651 s.K. (25.04.2001); Arslan "
               "(2015); Dikmen (2005); TDV 'Düyûn-ı Umûmiyye'; FRUS 1958–60 X/2 blg.322; "
-              "Tuna (2007) · dönem sınırları yuvarlanmıştır: şerit kronoloji değil, "
+              "Tuna (2007) · dönem sınırları YUVARLANMIŞTIR: şerit kronoloji değil, "
               "REJİM haritasıdır")
     kaydet(fig, "D10_rejim_zaman_cizelgesi", "Rejim zaman çizelgesi 1838–2026",
            "1838 → 2026")
@@ -1140,7 +1261,10 @@ def d10():
 #  D11 — Korunma araçlarının uzun ufku (altın · döviz · fiyat düzeyi)
 # ======================================================================
 def d11():
-    bas, bit = "1963-01-01", "2026-05-01"
+    # TABAN 1963-12: altın serisi 1978 öncesinde YALNIZ ARALIK gözlemi taşır,
+    # 1963-01 tabanı altın serisini tamamen NaN yapıyordu (endeksle() taban
+    # tarihinden ÖNCEKİ son gözlemi arar, altında öyle bir gözlem yoktur).
+    bas, bit = "1963-12-01", "2026-05-01"
     eski = _oku("altin_eski_ham.csv").set_index("dt")
     yeni = E("altin_yeni", ["TP.MK.KUL.YTL", "TP.MK.RES.YTL", "TP.MK.CUM.YTL"],
              "1990-01-01", "2026-08-21", 10)
@@ -1154,7 +1278,7 @@ def d11():
 
     k = kur_uzun().resample("MS").last()
     p = fiyat_endeksi()
-    taban = "1963-01-01"
+    taban = "1963-12-01"
 
     e_altin = endeksle(kes(kul, bas, bit), taban)
     e_cum = endeksle(kes(cum, bas, bit), taban)
@@ -1164,10 +1288,11 @@ def d11():
     fig = make_subplots(
         rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.095,
         subplot_titles=(
-            "Nominal, 1963-01 = 100, LOGARİTMİK — külçe altın (TL/gram) · Cumhuriyet "
+            "Nominal, 1963-12 = 100, LOGARİTMİK — külçe altın (TL/gram) · Cumhuriyet "
             "altını (TL/adet) · USD/TRY · fiyat düzeyi",
-            "REEL: aynı serilerin fiyat düzeyine bölünmüş hâli (1963-01 = 100). "
-            "100 çizgisinin altı, o aracın enflasyonu KORUYAMADIĞI dönemdir"))
+            "REEL: aynı serilerin Türkiye fiyat düzeyine bölünmüş hâli (1963-12 = 100). "
+            "100 çizgisinin altı, o aracın FAİZSİZ tutulduğunda enflasyonu "
+            "KORUYAMADIĞI dönemdir"))
 
     for s, ad, renk, w in [(e_altin, "külçe altın (TL/gram)", ALTIN, 1.9),
                            (e_cum, "Cumhuriyet altını (TL/adet)", TURUNCU, 1.4),
@@ -1177,7 +1302,8 @@ def d11():
 
     for s, ad, renk, w in [((e_altin / e_fiyat * 100).dropna(), "külçe altın, reel", ALTIN, 1.9),
                            ((e_cum / e_fiyat * 100).dropna(), "Cumhuriyet altını, reel", TURUNCU, 1.4),
-                           ((e_kur / e_fiyat * 100).dropna(), "USD/TRY, reel (≈ reel kur, ters)", TEAL, 1.7)]:
+                           ((e_kur / e_fiyat * 100).dropna(),
+                            "yastık altı USD nakit, reel (TL malları cinsinden)", TEAL, 1.7)]:
         cizgi(fig, s, ad, renk, row=2, w=w)
     fig.add_hline(y=100, line=dict(color=rgba(MUREKKEP, 0.55), width=1.4), row=2, col=1)
 
@@ -1185,26 +1311,38 @@ def d11():
 
     reel_altin = (e_altin / e_fiyat * 100).dropna()
     if len(reel_altin):
+        # DİKKAT: 2. panelin y ekseni LOGARİTMİK — anotasyon y'si log10 verilmeli.
+        # Ham değer verildiğinde plotly y=1650'yi 10^1650 sayıyor ve ekseni 10^30'a
+        # kadar açıyordu (grafiğin bütün çizgileri tabana yapışıyordu).
         dip = kes(reel_altin, "1970-01-01", "1990-12-31")
         if len(dip):
-            t = dip.idxmin()
-            not_(fig, t, dip.min(), f"{t.strftime('%m.%Y')} — reel dip: {dip.min():.0f}",
+            td = dip.idxmin()
+            not_(fig, td, np.log10(dip.min()),
+                 f"{td.strftime('%m.%Y')} — reel dip: {tr(dip.min(), 0)}",
                  row=2, ay=42, boyut=9.5, renk=ALTIN)
         son = reel_altin.index[-1]
-        not_(fig, son, reel_altin.loc[son],
-             f"{son.strftime('%m.%Y')} — reel {reel_altin.loc[son]:,.0f}".replace(",", "."),
+        not_(fig, son, np.log10(reel_altin.loc[son]),
+             f"{son.strftime('%m.%Y')} — reel {tr(reel_altin.loc[son], 0)}",
              row=2, ay=-30, boyut=10, xanchor="right", renk=ALTIN)
+        reel_kur = (e_kur / e_fiyat * 100).dropna()
+        sk = reel_kur.index[-1]
+        not_(fig, sk, np.log10(reel_kur.loc[sk]),
+             f"{sk.strftime('%m.%Y')} — faizsiz USD nakit reel {tr(reel_kur.loc[sk], 0)}",
+             row=2, ay=36, boyut=10, xanchor="right", renk=TEAL)
 
-    fig.update_yaxes(type="log", title_text="endeks (log, 1963-01 = 100)", row=1)
-    fig.update_yaxes(type="log", title_text="reel endeks (log, 1963-01 = 100)", row=2)
+    fig.update_yaxes(type="log", title_text="endeks (log, 1963-12 = 100)", row=1)
+    fig.update_yaxes(type="log", title_text="reel endeks (log, 1963-12 = 100)", row=2)
     fig.update_xaxes(title_text="tarih", row=2)
     duzen(fig, "Altmış üç yıl boyunca ne korudu? Altın, dolar ve fiyat düzeyi",
-          "01.1963 – 05.2026", 940,
+          "12.1963 – 05.2026", 940,
           alt="EVDS TP.MK.KUL.YTL / TP.MK.CUM.YTL (Ankara Kuyumcular Odası; 1978 "
               "öncesi yalnız ARALIK gözlemi vardır — o dönemde çizgi yıllık noktaları "
               "birleştirir) · TP.DK.USD.A.YTL · fiyat düzeyi: D02 eklemlenmiş endeksi · "
               "1963–86 toptan eşya endeksi kullanıldığı için o dönemin REEL "
-              "hesapları tüketici sepetiyle birebir karşılaştırılamaz")
+              "hesapları tüketici sepetiyle birebir karşılaştırılamaz · UYARI: alt "
+              "paneldeki USD çizgisi REEL KUR DEĞİLDİR — reel kur yabancı fiyat "
+              "endeksini de ister; buradaki ölçü, faizsiz tutulan bir dolar nakit "
+              "pozisyonunun Türkiye malları cinsinden satın alma gücüdür")
     kaydet(fig, "D11_korunma_araclari_uzun_ufuk",
            "Altın, dolar ve fiyat düzeyi — nominal ve reel, 1963–2026",
            "1963-01 → 2026-05")
