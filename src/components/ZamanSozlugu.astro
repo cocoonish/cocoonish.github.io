@@ -1,0 +1,50 @@
+---
+/**
+ * Zaman sözlüğü — T1 · T2 · T3 · Y+1 · Y+2.
+ *
+ * TEK KAYNAK: Trade Pratiği dersinde bu tablo iki yerde görünür (gezinme kutusu ve
+ * Bölüm B girişi). Çıpa yenilendiğinde yalnız BURASI güncellenir; iki kopya
+ * arasında sessiz ayrışma olamaz.
+ */
+interface Props {
+  /** Tabloyu bir başlık satırıyla mı çerçeveleyelim (Bölüm B girişi) yoksa çıplak mı (gezinme kutusu). */
+  ozet?: boolean;
+}
+const { ozet = false } = Astro.props;
+
+const satirlar: Array<[string, string, string]> = [
+  ['T1', 'çıpa gününden sonraki <strong>ilk</strong> PPK toplantısı', '10.09.2026'],
+  ['T2', 'ikinci toplantı', '22.10.2026'],
+  ['T3', 'üçüncü toplantı — T2–T3 bloğunun sonu', '10.12.2026'],
+  ['T2–T3 bloğu', "T1'den sonra kalan toplantılar", 'çıpada Ekim–Aralık 2026'],
+  ['Y+1', 'önümüzdeki takvim yılı; döngünün ikinci yılı', '2027'],
+  ['Y+2', 'onu izleyen yıl — platonun ilk yılı', '2028'],
+];
+---
+
+<table class="zaman-sozlugu">
+  <thead>
+    <tr>
+      <th>Metindeki ad</th>
+      <th>Anlamı (her zaman geçerli)</th>
+      <th>Çıpa anındaki karşılığı</th>
+    </tr>
+  </thead>
+  <tbody>
+    {
+      satirlar.map(([ad, anlam, karsilik]) => (
+        <tr>
+          <td><strong>{ad}</strong></td>
+          <td set:html={anlam} />
+          <td class="sayi">{karsilik}</td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+{ozet && (
+  <p class="zaman-sozlugu-not">
+    Çıpa yenilendiğinde <strong>yalnız bu tablo</strong> güncellenir; gövde metnine
+    dokunulmaz. Tablo tek kaynaktan gelir — derste iki yerde görünür, tek yerde tutulur.
+  </p>
+)}

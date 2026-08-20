@@ -1,16 +1,38 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Yazi from '../../layouts/Yazi.astro';
+import { olc } from '../../lib/ders';
+import { grupBul } from '../../lib/dersGruplari';
 
 export async function getStaticPaths() {
   const arastirmalar = await getCollection('arastirma');
-  return arastirmalar.map((a) => ({ params: { slug: a.id }, props: { entry: a } }));
+  const basliklar = new Map(arastirmalar.map((a) => [a.id, a.data.title]));
+
+  return arastirmalar.map((a) => ({
+    params: { slug: a.id },
+    props: {
+      entry: a,
+      // Künye sayıları derleme anında gövdeden sayılır; MDX'e elle yazılmaz.
+      olcum: olc(a.body),
+      grup: grupBul(a.id, a.data.tags),
+      onkosullar: (a.data.onkosul ?? [])
+        .filter((s) => basliklar.has(s))
+        .map((s) => ({ href: `/arastirma/${s}/`, title: basliklar.get(s)! })),
+    },
+  }));
 }
 
-const { entry } = Astro.props;
+const { entry, olcum, grup, onkosullar } = Astro.props;
 const { Content } = await render(entry);
 ---
 
-<Yazi {...entry.data} tur="arastirma">
+<Yazi
+  {...entry.data}
+  tur="arastirma"
+  olcum={olcum}
+  grupAdi={grup.baslik}
+  grupHref={`/arastirma/#${grup.id}`}
+  onkosullar={onkosullar}
+>
   <Content />
 </Yazi>

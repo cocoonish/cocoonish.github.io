@@ -1,15 +1,68 @@
 ---
 title: 'Opsiyon Book Yönetimi: FX Vanilla, Çapraz Kur ve Egzotikler'
-description: 'Garman-Kohlhagen''dan Greeklere, gamma-theta ekonomisinden vol yüzeyine, bucket mimarisinden EURTRY decomposition''ına ve egzotiklere: bir FX opsiyon kitabının uçtan uca yönetimi — 12 modül, tamamı sayısal örnekli.'
+description: 'Garman-Kohlhagen''dan Greeklere, gamma-theta ekonomisinden vol yüzeyine, bucket mimarisinden EURTRY decomposition''ına ve egzotiklere: bir FX opsiyon kitabının uçtan uca yönetimi. Ders bittiğinde bir opsiyonu fiyatlayabilir, Greek kartını çıkarabilir, riski tenor×delta bucket matrisine yazabilir, günlük P&L''i altı bileşene ayırabilir, delta/gamma/vega hedge''ini vade-eşleşmeli kurabilir ve terste kalan bir kitabı yazılı protokolle toparlayabilirsiniz — 12 modül, 11 pratik bloğu, 33 çözümlü alıştırma, tamamı sayısal.'
 pubDate: 2026-07-16
+updatedDate: 2026-08-20
 tags: ['fx', 'opsiyon', 'vol', 'risk', 'ders']
 durum: 'aktif'
 kaynak: 'Masa rehberi (anonimleştirilmiş vaka ve örneklerle)'
+ozet: "Bir FX opsiyonunu fiyatlamaktan kitabın günlük risk raporuna: Greek kartı, tenor×delta bucket matrisi, altı bileşenli P&L ayrıştırması ve terste kalan kitabın toparlanma protokolü."
+seviye: "ileri"
+onkosul: []
 ---
 
 import GkOpsiyonHesaplayici from '../../components/GkOpsiyonHesaplayici.astro';
 
-**Ders haritası.** Doküman on iki modülden oluşur; bu bölüm Giriş ile Modül 1–3'ü kapsar:
+Bir FX opsiyon kitabı, tek tek opsiyonların toplamı değildir: taşıdığı şey **duyarlılıklardır**
+ve o duyarlılıklar her gün, her fiyat hareketinde yeniden şekillenir. Bu ders o kitabın
+uçtan uca yönetimini — fiyatlamadan Greek'lere, bucket mimarisinden kriz protokolüne —
+tek bir tutarlı sayı setiyle kurar.
+
+<div class="not gezinme">
+  <span class="etiket">Bu derste ne var</span>
+
+  **Amaç.** Ders bittiğinde bir FX opsiyonunu sıfırdan fiyatlayabilir, Greek kartını
+  elle çıkarabilir, pozisyonu tenor × delta bucket matrisine yazabilir, günlük P&L'i
+  altı bileşene ayırıp residual'ı teşhis edebilir, hedge'i vade-eşleşmeli kurabilir ve
+  terste kalan bir kitabı yazılı bir protokolle toparlayabilirsiniz.
+
+  **Yapı.** Ders **tek akıştır**: Modül 1–5 ölçme (fiyat ve Greek'ler), Modül 6–8
+  yönetme (mimari, ritim, karar), Modül 9–11 genişletme (cross, EM pratiği, egzotik).
+  Sayısal zemin baştan sona **tek koşan örnektir**; her modül bir öncekinin sayısını
+  yeniden kullanır, bu yüzden sırayla okunması tavsiye edilir.
+
+  | Modül | Konu | Ne kazanırsın | Uzunluk |
+  |---|---|---|---|
+  | **Giriş + M1** | koşan örnek, GK çerçevesi, konvansiyonlar | bir opsiyonu sıfırdan fiyatlamak ve "hangi ATM / hangi delta" sorusunu çözmek | ~25 dk |
+  | **M2–M3** | birinci ve yüksek dereceli Greek'ler | Greek kartını elle çıkarmak; vanna/volga'yı senaryo matrisiyle sınırlamak | ~35 dk |
+  | **M4** | gamma-theta ekonomisi, attribution | günün P&L'ini altı bileşene ayırıp residual'ı okumak | ~25 dk |
+  | **M5** | vol yüzeyi: ATM·RR·BF, SABR, event vol | kotasyondan strike vol'üne inmek ve yüzeyin kendisini trade etmek | ~30 dk |
+  | **M6–M7** | bucket mimarisi, günün ritmi, limitler | riski 35 hücreye yazmak, limit ve hedge disiplinini kurmak | ~30 dk |
+  | **M8** | strateji, karar zinciri, kriz protokolü | görüşü doğru yapıya çevirmek; terste kalınca sırayı bozmamak | ~30 dk |
+  | **M9–M10** | cross book, TRY/EM pratiği | EURTRY'yi likit bacaklarla yönetmek; TRY'ye özgü tuzakları görmek | ~30 dk |
+  | **M11–M12** | egzotikler, kaynakça | barrier/digital/KIKO/TARF'ı kitaba doğru entegre etmek | ~25 dk |
+
+  **Önce şunu oku.** [Faiz Eğrisi ve Konvansiyonlar](/arastirma/faiz-egrisi-ve-konvansiyonlar/)
+  (iskonto faktörü, forward mekaniği) · [Enstrüman Fiyatlama](/arastirma/enstruman-fiyatlama/)
+  (Black-76, swaption, implied vol Newton'u) · [Risk ve Hedge](/arastirma/risk-ve-hedge/)
+  (DV01, hedge oranı mantığı). Burada bunlar **veri kabul edilir**.
+
+  **İçinde ne var.** 1 hesap aracı (Garman-Kohlhagen fiyatlayıcı) · 0 grafik ·
+  37 sayısal tablo · **11 pratik bloğu (33 çözümlü alıştırma)** · 12 modül özeti ·
+  her modülde bir "tipik hatalar" kutusu.
+
+  **Tarih dili.** Bu ders bir **rehberdir**: kural, prosedür ve katalog metninde ay adı
+  ve yıl kullanılmaz. Vade daima göreli yazılır — **O/N · 1W · 2W · 1M · 3M · 6M · 1Y**
+  ve olaylar takvim tarihiyle değil rolüyle anılır: *ilk toplantı*, *vade günü*,
+  *event günü*, *ay dönümü*. İki istisna: (i) periyodisite bilgisi (T+1/T+2 valör,
+  aylık fixing, iş günü sayısı) olduğu gibi kalır; (ii) **tarihsel epizotlar**
+  (ör. 2018 TRY krizi) veri olarak tarihli kalır ve "tarihsel örnek" etiketiyle
+  işaretlenir. Sayısal seviyeler tek bir temsili fotoğrafa aittir — aşağıdaki
+  **Çıpa** kutusuna bakın.
+
+</div>
+
+**Ders haritası.** Doküman on iki modülden oluşur; modüllerin kapsamı:
 
 - **Giriş** — bu ders nasıl okunmalı; koşan örnekler ve birim standartları
 - **Modül 1** — Temeller ve fiyatlama çerçevesi: Garman-Kohlhagen, konvansiyonlar
@@ -25,7 +78,7 @@ import GkOpsiyonHesaplayici from '../../components/GkOpsiyonHesaplayici.astro';
 - **Modül 11** — Egzotikler: barrier, digital, KIKO, TARF ve book entegrasyonu
 - **Modül 12** — Kaynakça ve çalışma sırası
 
-## Giriş: Bu Ders Nasıl Okunmalı
+## Giriş — Bu ders nasıl okunmalı: koşan örnek, birimler, çıpa
 
 Bu ders, bir FX opsiyon book'unun — yani bir masanın taşıdığı tüm opsiyon
 pozisyonlarını tek portföy olarak toplayan pozisyon defterinin — sıfırdan yönetimini
@@ -40,7 +93,13 @@ tercihidir: aynı örnek farklı modüllerde farklı açılardan yeniden hesapla
 okur her ara sonucu bir öncekiyle çapraz kontrol edebilir.
 
 <div class="not">
-  <span class="etiket">Koşan örnek (running example)</span>
+  <span class="etiket">Çıpa + koşan örnek (running example)</span>
+
+  **Çıpa: bu ders boyunca sabit tutulan temsili piyasa fotoğrafı** — anlık görüntüdür,
+  kural değildir. Aşağıdaki seviyeler gerçek bir kotasyon değil, kendi içinde tutarlı
+  bir örnek setidir; **yöntem** her koşulda geçerlidir, **sayılar** değildir. Piyasa
+  değiştiğinde formüller aynı kalır, girdiler değişir — ders sonundaki hesap aracına
+  kendi seviyelerinizi girerek her tabloyu yeniden üretebilirsiniz.
 
   **USDTRY 3M ATMF Call — 10.000.000 USD nominal.** Doküman boyunca aynı örnek
   üzerinden ilerlenir: Spot $S = 45{,}00$ · $r_{TRY} = \%40$ (sürekli bileşik) ·
@@ -62,9 +121,13 @@ puanı için TRY değişimi; **cash gamma** = %1 spot hareketi için USD delta d
 için, hangi para biriminde, ne kadar" sorusuna tek sayıyla cevap vermelidir. Formül
 kutuları hesap makinesine birebir girilebilir.
 
-## Modül 1 — Temeller ve Fiyatlama Çerçevesi
+## Modül 1 — Fiyatlama çerçevesi: bir FX opsiyonunun primi nereden gelir?
 
-### 1.1 Opsiyonun Anatomisi
+*Bu modülde:* opsiyonun anatomisi, iki faizli forward, Garman-Kohlhagen primi, implied
+vol'ün ne olduğu, ATM/delta konvansiyonları — ve modül sonunda uçtan uca bir fiyatlama
+prosedürü ile üç alıştırma.
+
+### 1.1 Opsiyonun anatomisi: içsel değer · zaman değeri · moneyness neden delta ile ölçülür
 
 Bir FX opsiyonu, sahibine belirli bir vadede (Avrupa tipi — yalnızca vade günü
 kullanılabilir) belirli bir kurdan (strike, $K$) belirli bir tutarda dövizi **alma**
@@ -90,7 +153,7 @@ girdilere duyarlılığından (greekler) gelir. Book yönetimi, değer yönetimi
 **duyarlılık yönetimidir** — masanın günlük sorusu "portföyüm kaç para eder" değil,
 "spot/vol/zaman oynarsa portföyüm ne kadar oynar" sorusudur.
 
-### 1.2 Garman-Kohlhagen Çerçevesi: FX'te İki Faiz
+### 1.2 Garman-Kohlhagen: iki faiz forward'ı, forward da primi nasıl belirler
 
 FX opsiyonunu hisse opsiyonundan ayıran şey, dayanak varlığın "taşıma maliyetinin"
 iki faizin farkı olmasıdır: **yerli** (domestic — kote edilen para, USDTRY'de TRY) ve
@@ -158,7 +221,7 @@ Aşağıdaki araçla Garman-Kohlhagen fiyatını ve temel Greekleri kendiniz ür
 
 <GkOpsiyonHesaplayici />
 
-### 1.3 Implied Volatilite Gerçekte Nedir
+### 1.3 Implied volatilite: ne ölçer, ne ölçmez (ve neden tek sayı değildir)
 
 Implied vol, piyasada gözlenen opsiyon fiyatının Black-Scholes/GK formülünden geriye
 doğru çözülmesiyle elde edilen parametredir: "bu fiyatı üretmek için formüle hangi
@@ -178,7 +241,7 @@ değişmese bile.
 - **Pratik sonuç:** implied vol'ü "piyasa %X hareket bekliyor" diye okuma hatasına
   düşme; "piyasa opsiyon belirsizliğini %X'lik vol fiyatından takas ediyor" diye oku.
 
-### 1.4 FX Konvansiyonları: ATM Tanımları ve Delta Türleri
+### 1.4 FX konvansiyonları: hangi "ATM", hangi "delta" — ve yanlışının maliyeti
 
 FX opsiyon piyasasında "ATM" ve "delta" kelimelerinin birden fazla teknik tanımı
 vardır; konvansiyon karıştırmak akademik bir kusur değil, **doğrudan hedge
@@ -198,7 +261,7 @@ uzun vadede %1–2'ye ulaşır. USDTRY %12 vol, 1Y için $e^{0{,}0072} \approx \
 strike farkı demektir — kote edilen "ATM" vol'ün hangi strike'a ait olduğunu
 bilmemek, yüzeyin en likit noktasını yanlış yere koymaktır.
 
-#### Delta türleri
+#### 1.4.1 Delta türleri: spot · forward · premium-adjusted — hangisiyle hedge edilir
 
 - **Spot delta:** $\Delta_{spot} = e^{-r_f T}\,N(d_1)$. Spot ile hedge ederken
   kullanılır. Koşan örnekte **0,5062**.
@@ -222,6 +285,44 @@ bilmemek, yüzeyin en likit noktasını yanlış yere koymaktır.
   yaşar ve P&L açıklamasında iz bırakır.
 </div>
 
+### 1.5 Adım adım prosedür: bir opsiyonu sıfırdan fiyatlamak
+
+Bu modülün bütün parçaları tek bir yürütme sırasına dizilir. Reçete, koşan örnek
+üzerinde satır satır işletilmiştir; kendi girdilerinizle aynı sırayı izleyin.
+
+| # | Adım | Koşan örnekte |
+| --- | --- | --- |
+| 1 | Konvansiyonu sabitle: hangi ATM, hangi delta, prim hangi para biriminde | ATMF · spot delta · prim TRY |
+| 2 | Vade kesirini hesapla ($T$ = gün/365, tatil takvimine göre valör) | $T = 0{,}25$ |
+| 3 | İki faizi sürekli bileşiğe çevir | $r_d = \%40$, $r_f = \%4{,}5$ |
+| 4 | Forward'ı kur: $F = S\,e^{(r_d-r_f)T}$ | $45{,}00 \times e^{0{,}08875} = 49{,}1763$ |
+| 5 | Strike'ı **forward'a göre** yerleştir (spota göre değil) | $K = F = 49{,}1763$ (ATMF) |
+| 6 | Vol'ü yüzeyden oku: hangi vade, hangi delta noktası | $\sigma = \%12$ (3M ATM) |
+| 7 | $d_1, d_2$ ve $N(\cdot)$ değerlerini üret | $+0{,}0300 / -0{,}0300$; $0{,}5120 / 0{,}4880$ |
+| 8 | İskonto et, nominalle çarp, kaba kuralla sağla | 1,0649 TRY/USD → 10.649.345 TRY |
+
+**Neden bu sıra.** Adım 1 atlanırsa geri kalan yedi adım doğru hesaplanmış *yanlış*
+sayı üretir: yanlış ATM tanımı strike'ı, yanlış delta tanımı hedge miktarını kaydırır.
+Adım 5'in vurgusu TRY'ye özgüdür — %40 faizli bir parada forward spotun ~%9 üzerindedir,
+"spota göre ATM" dediğinizde aslında derin OTM bir opsiyon fiyatlıyorsunuzdur.
+
+<div class="not">
+  <span class="etiket">Bu modülün tipik hataları</span>
+
+  1. **Spot ATM ile forward ATM'yi karıştırmak.** TRY'de aradaki fark 3M'de ~%9'dur;
+     G10 refleksiyle "ATM = spot" demek, kotasyonu tanınmaz hâle getirir.
+  2. **Delta konvansiyonunu sormadan hedge etmek.** Spot / forward / premium-adjusted
+     delta arasındaki fark %1 ile %5 arasında değişir — 10M USD'de 100–500K USD açık.
+  3. **Faizi basit bileşikten sürekli bileşiğe çevirmemek.** $F$ formülü sürekli
+     bileşik varsayar; basit oranı doğrudan koymak forward'ı bp'lerce kaydırır.
+  4. **Implied vol'ü tahmin sanmak.** "Piyasa %12 hareket bekliyor" cümlesi yanlıştır;
+     doğrusu "opsiyon belirsizliği %12'lik vol fiyatından takas ediliyor".
+  5. **Vade kesirini takvim günü / 365 yerine iş günü / 252 ile karıştırmak.** Fiyatlama
+     $T$'si takvim bazlıdır; 252 yalnızca *günlük* hareketin yıllıklandırılmasında kullanılır
+     (Modül 4.1).
+
+</div>
+
 <div class="not">
   <span class="etiket">Modülün özeti</span>
 
@@ -231,7 +332,93 @@ bilmemek, yüzeyin en likit noktasını yanlış yere koymaktır.
   TRY/USD** (10M USD'de 10,65M TRY).
 </div>
 
-## Modül 2 — Birinci Derece Greekler
+<div class="pratik">
+  <span class="etiket">Pratik — Modül 1 · Fiyatlama çerçevesi</span>
+
+**1. Doğrudan uygulama — faiz şoku.** Koşan örnekteki her şey aynı kalsın, yalnız
+$r_{TRY}$ %40'tan %45'e çıksın. (a) Yeni forward kaç? (b) Strike yine ATMF olarak
+yeniden konursa prim TRY/USD cinsinden kaç olur? (c) Sonuç sizi şaşırttı mı, neden?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — forward: $F = 45{,}00\,e^{(0{,}45-0{,}045)\times 0{,}25} = 45{,}00 \times 1{,}10655 = 49{,}7949$.
+Eski forward 49,1763 idi; **+%1,26**.
+
+Adım 2 — prim: ATMF'de $K=F$ olduğundan $\ln(F/K)=0$ ve $d_{1,2} = \pm\tfrac12\sigma\sqrt{T} = \pm 0{,}0300$ —
+**faizden bağımsız**. Prim $= e^{-r_d T}F\,[N(d_1)-N(d_2)]$ ve $e^{-r_d T}F = S\,e^{-r_f T}$
+olduğundan yerli faiz sadeleşir:
+
+$$
+\text{Prim}_{ATMF} = S\,e^{-r_f T}\,[N(d_1)-N(d_2)] = 45{,}00 \times 0{,}98881 \times 0{,}02394 = 1{,}0649 \ \text{TRY/USD}
+$$
+
+**Cevap:** (a) 49,7949 (b) **1,0649 TRY/USD — değişmedi** (c) Şaşırtıcı olan şu:
+strike forward'ı takip ettiği sürece ATMF primi yerli faize **duyarsızdır**; faiz hem
+forward'ı büyütür hem iskontoyu aynı oranda küçültür, ikisi birebir sadeleşir. Primin
+forward'a oranı ise düşer: %2,166 → **%2,139**. Strike **sabit** bırakılsaydı (49,1763)
+opsiyon forward'a göre ITM'e geçerdi ve prim 1,3576 TRY/USD'ye, toplam 13,58M TRY'ye
+çıkardı (+2,93M TRY) — rho'nun gerçek yüzü budur: ATMF'de değil, **sabit strike'ta** yaşar.
+
+**Araçla doğrula:** yukarıdaki Garman-Kohlhagen aracına $S=45$, $K=49{,}7949$, $T=0{,}25$,
+$\sigma=12$, $r_d=45$, $r_f=4{,}5$, nominal 10.000.000 girin — prim 1,0649 okumalı.
+Sonra $K$'yı 49,1763'te bırakıp $r_d$'yi 45 yapın: prim 1,3576'ya çıkar.
+
+</details>
+
+**2. Ters çevirme — hangi ATM?** Kotasyon "3M ATM vol %12" diyor ama karşı taraf DNS
+(delta-nötr straddle) konvansiyonunda çalışıyor. (a) DNS strike'ı ATMF'den kaç TRY
+uzakta? (b) Aynı hesabı 1Y için yapın. (c) Hangi vadede bu farkı ihmal edebilirsiniz?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — kural: $K_{DNS} = F\,e^{+\sigma^2 T/2}$.
+
+Adım 2 — 3M: $\sigma^2T/2 = 0{,}12^2 \times 0{,}25/2 = 0{,}0018$ →
+$K_{DNS} = 49{,}1763 \times e^{0{,}0018} = 49{,}2649$. Fark **+0,0886 TRY (%0,18)**.
+
+Adım 3 — 1Y: $F = 45\,e^{0{,}355} = 64{,}1781$; $\sigma^2T/2 = 0{,}0072$ →
+$K_{DNS} = 64{,}6419$. Fark **+0,4638 TRY (%0,72)**.
+
+**Cevap:** (a) ~9 kuruş (b) ~46 kuruş (c) Kısa vadede (1M–3M) fark bir-iki kuruştur ve
+bid-ask içinde kaybolur; 6M'den itibaren strike'ı gözle görülür kaydırır ve "aynı vol'ü
+farklı strike'a uygulama" hatası doğar. Kural: **vade uzadıkça konvansiyon sorusu
+zorunlulaşır.** (Premium-included DNS ters yöne gider: 3M'de 49,0879, 1Y'de 63,7177.)
+
+</details>
+
+**3. Tuzak — hedge miktarı.** 10M USD nominalli koşan örnek call'u sattınız ve primi
+**USD cinsinden** tahsil ettiniz. Delta hedge için kaç USD alırsınız: 5.062.391 mi,
+başka bir sayı mı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — prim baz (yabancı) para cinsinden ödendiğinde doğru ölçü **premium-adjusted
+delta**'dır: $\Delta_{pa} = \Delta_{spot} - \text{Prim}/S$.
+
+Adım 2 — $\text{Prim}/S = 1{,}0649 / 45{,}00 = 0{,}02366$.
+
+Adım 3 — $\Delta_{pa} = 0{,}5062 - 0{,}0237 = \mathbf{0{,}4826}$ → hedge **4.825.739 USD**.
+
+Adım 4 — fark: $5.062.391 - 4.825.739 = \mathbf{236.652}$ USD. Spot delta ile hedge
+ederseniz 236,6K USD **fazla** alırsınız; kasaya giren primin kendisi zaten bir USD
+pozisyonudur ve o kadarını ikinci kez almanıza gerek yoktur.
+
+**Cevap:** 4.825.739 USD. Sayısal tesadüf değil sağlama: aynı rakam put-call parity'den
+de gelir — koşan örnekte ATMF put'un spot deltası tam olarak **−0,4826**'dır
+($\Delta_C - \Delta_P = e^{-r_f T} = 0{,}98881$).
+
+</details>
+
+</div>
+
+## Modül 2 — Birinci derece Greek'ler: delta · gamma · vega · theta · rho
+
+*Bu modülde:* beş temel Greek'in tanımı, koşan örnek üzerinde sayısal karşılıkları,
+"aynı delta iki farklı kimlik" karşılaştırması — ve modül sonunda Greek kartını elle
+çıkarma prosedürü ile üç alıştırma.
 
 Greekler, opsiyon değerinin piyasa girdilerine kısmi türevleridir. Book yönetiminin
 tamamı şu döngüdür: **greekleri ölç → limitlerle karşılaştır → istenmeyen duyarlılığı
@@ -239,7 +426,7 @@ hedge et → istenen duyarlılığı taşı.** Bu modülde her greek koşan örn
 sayısallaştırılır (USDTRY 3M ATMF call, 10M USD; $S = 45{,}00$, $F = 49{,}1763$,
 $\sigma = \%12$).
 
-### 2.1 Delta — Yönlü Risk
+### 2.1 Delta: pozisyonun spot eşdeğeri kaç USD?
 
 $$
 \Delta_{spot} = e^{-r_f T}\cdot N(d_1) = 0{,}98881 \times 0{,}5120 = 0{,}5062
@@ -263,7 +450,7 @@ masasına devredilecek hedge miktarı budur.
 - **Forward delta 0,5120:** hedge forward ile yapılacaksa kullanılacak sayı. Spot ve
   forward delta karıştırılırsa $e^{-r_f T}$ kadar (burada ~%1,1) hata doğar.
 
-### 2.2 Gamma — Konveksite / Hızlanma
+### 2.2 Gamma: delta ne hızla kayar — konveksitenin ölçüsü
 
 $$
 \Gamma = \frac{e^{-r_f T}\cdot n(d_1)}{S \cdot \sigma \cdot \sqrt{T}} \qquad (n: \text{standart normal yoğunluk})
@@ -286,7 +473,7 @@ demektir — **konveksite avantajı**. Bedava değildir; bedeli theta'dır (Mod�
   büyük harekette zarar hızlanarak büyür. Negatif gamma'da piyasa hangi yöne giderse
   gitsin delta **aleyhine** kayar — düşerken long kalırsın, yükselirken short.
 
-### 2.3 Vega — Volatilite Duyarlılığı
+### 2.3 Vega: +1 vol puanı kaç TRY eder, vadeyle nasıl büyür?
 
 $$
 \text{Vega} = S \cdot e^{-r_f T} \cdot n(d_1) \cdot \sqrt{T} \;\;\Rightarrow\;\; +1 \text{ vol puanı için } 887.179 \ \text{TRY} \ (\approx 19.715 \ \text{USD})
@@ -298,7 +485,7 @@ kısa vadeli opsiyon **hareket (gamma) görüşünün**. Uzun vade vega'sı hem 
 stabildir (spot oynadıkça yavaş değişir); kısa vade vega'sı küçük ama hızlı değişir.
 Aynı ayrım book mimarisinde vade bucket'larının neden ayrı yönetildiğini açıklar.
 
-### 2.4 Theta — Zamanın Fiyatı
+### 2.4 Theta: bir günün faturası — ve TRY'de neden saf erime değildir
 
 $$
 \text{Koşan örnek: } \Theta = -268.231 \ \text{TRY/gün} \ (-5.961 \ \text{USD/gün})
@@ -313,18 +500,18 @@ sayısallaştırılır ve klasik $\Theta \approx -\tfrac{1}{2}\Gamma\sigma^2 S^2
 özdeşliğinin TRY'de neden kırıldığını gösterir — düşük faizli paritelerde geçerli
 olan "theta = gamma kirası" eşitliği, yüksek faizde faiz terimleriyle kirlenir.
 
-### 2.5 Rho — İki Faiz Duyarlılığı
+### 2.5 Rho: iki faiz duyarlılığı ve FX swap ile rates masasına devri
 
 FX opsiyonunda iki rho vardır: $r_d$ (TRY) ve $r_f$ (USD). Pratikte ikisi tek
 kanaldan işler: faizler forward'ı oynatır ($F = S\,e^{(r_d-r_f)T}$), forward
 $d_1/d_2$ üzerinden fiyatı oynatır; ayrıca $r_d$ prim iskontosunu değiştirir. Masada
 rho ayrı yönetilmez; opsiyonun vadesiyle eşleşen FX swap ile nötralize edilip rates
-riskine dönüştürülür ve faiz masasına devredilir (Modül 6.10). TRY'de faiz oynaklığı
+riskine dönüştürülür ve faiz masasına devredilir (Modül 6.8). TRY'de faiz oynaklığı
 yüksek olduğundan rho ihmal edilebilir bir "küçük greek" değildir: 3M vadede TRY
 faizinin ±5 puan oynaması forward'ı $\pm 5 \times 0{,}25 = \pm\%1{,}25$ oynatır — bu,
 delta kanalından ciddi P&L'dir.
 
-### 2.6 Aynı Delta, İki Farklı Kimlik: ATM Düşük Nominal vs OTM Yüksek Nominal
+### 2.6 Aynı delta, iki kimlik: ATM düşük nominal mi, OTM yüksek nominal mi?
 
 Book yönetiminin en öğretici sorusu: "**+5.000.000 USD delta almak istiyorum — 9,88M
 nominal ATM call mü, 20M nominal 25Δ call mü?**" Delta ikisinde de aynıdır; geri
@@ -366,6 +553,54 @@ değil.
   gösterilir (gamma ≈ 0, vega ≈ 0, prim ≈ 0, saf delta + skew).
 </div>
 
+### 2.7 Greek kartını elle çıkarmak: prosedür, duyarlılık haritası, tipik hatalar
+
+Bir pozisyonun "Greek kartı", masaya tek bakışta ne taşıdığını söyleyen beş satırlık
+özettir. Üretme sırası hep aynıdır:
+
+1. **Girdileri sabitle** — $S, K, T, \sigma, r_d, r_f$, nominal ve yön. Vol'ü yüzeyden
+   *o strike'ın* noktasından okuyun; ATM vol'ü OTM opsiyona uygulamak Greek'leri
+   sistematik olarak yanlış üretir.
+2. **$d_1, d_2$ üret** — bütün Greek'ler bu ikisinin fonksiyonudur.
+3. **Delta yaz** — $e^{-r_f T}N(d_1)$; nominalle çarpıp **spot eşdeğeri** olarak yaz.
+   Masada delta yüzde değil, **para birimi cinsinden** konuşulur.
+4. **Gamma'yı cash gamma'ya çevir** — $\Gamma \times S \times \%1 \times$ nominal;
+   "spot %1 oynarsa delta kaç birim kayar" cümlesine dönüştür.
+5. **Vega ve theta'yı birime bağla** — vega: +1 vol puanı için yerli para; theta:
+   yerli para/gün. Sonra **ikisinin oranını** al: bu, "kaç günlük theta bir vol puanına
+   eşit" sorusunun cevabıdır ve pozisyonun karakterini tek sayıyla verir.
+
+**Duyarlılık haritası — hangi Greek nerede yaşar.** Aynı formüller, farklı bölgelerde
+farklı sonuç verir; bu tablo ezberlenmeye değer, çünkü hedge aracının seçimi buradan
+çıkar:
+
+| Bölge | Gamma | Vega | Theta | Vanna | Volga |
+| --- | --- | --- | --- | --- | --- |
+| Kısa vade · ATM | **çok yüksek** | düşük | **çok negatif** (long'ta) | ≈ 0 | ≈ 0 |
+| Kısa vade · OTM kanat | düşük | düşük | küçük | orta | orta |
+| Uzun vade · ATM | düşük | **yüksek, stabil** | ölçülü | ≈ 0 | hafif negatif |
+| Uzun vade · OTM kanat | çok düşük | orta-yüksek | küçük | **yüksek** | **yüksek** |
+
+Okunuşu: "hareket" görüşü kısa vade ATM'de, "vol rejimi" görüşü uzun vade ATM'de,
+"smile/kuyruk" görüşü kanatlarda alınır. Aynı tablo hedge tarafında da çalışır — kanattaki
+vanna'yı ATM opsiyonla kapatamazsınız, çünkü ATM'de vanna zaten yoktur.
+
+<div class="not">
+  <span class="etiket">Bu modülün tipik hataları</span>
+
+  1. **Delta'yı yüzde olarak konuşmak.** "%50 delta'yım" cümlesi risk taşımaz; "5,06M
+     USD spot eşdeğeri taşıyorum" cümlesi taşır.
+  2. **Gamma'yı ham türev olarak bırakmak.** 0,146 sayısı hiçbir şey anlatmaz; 657K USD
+     / %1 spot anlatır.
+  3. **Theta'yı "gamma kirası" sanıp TRY'de doğrulamamak.** Yüksek faizde strike iskontosu
+     theta'yı büker (2.4 ve 4.2); put bacağının theta'sı **pozitiftir**.
+  4. **Nominal ile riski eşitlemek.** 2.6'daki tablo bunun panzehiridir: aynı delta,
+     1,6 kat gamma-vega, 39 kat vanna.
+  5. **Vol'ü tek noktadan okumak.** 25Δ opsiyonu ATM vol'üyle fiyatlayıp Greek çıkarmak,
+     smile'lı bir piyasada hem primi hem hedge'i kaydırır.
+
+</div>
+
 <div class="not">
   <span class="etiket">Modülün özeti</span>
 
@@ -375,7 +610,93 @@ değil.
   bambaşka risk paketleri taşır — 2.6'daki tablo ezberlenmeye değer.
 </div>
 
-## Modül 3 — Yüksek Dereceli Greekler
+<div class="pratik">
+  <span class="etiket">Pratik — Modül 2 · Birinci derece Greek'ler</span>
+
+**1. Doğrudan uygulama — rebalance miktarı.** Koşan örnek call'u (10M USD, long)
+delta-hedge'lisiniz: 5.062.391 USD spot satılmış durumda. Spot aynı gün 45,00'ten
+45,45'e (%1) çıktı; vol ve vade değişmedi. (a) Cash gamma tahminiyle yeni delta kaç?
+(b) Tam yeniden fiyatlama ile kaç? (c) Kaç USD daha satarsınız ve iki cevap arasındaki
+fark nereden geliyor?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — cash gamma tahmini: $5.062.391 + 657.170 = \mathbf{5.719.561}$ USD.
+
+Adım 2 — tam repricing: $S=45{,}45$ ile $d_1$ yeniden hesaplanır, delta $0{,}5712$ →
+$\mathbf{5.711.699}$ USD.
+
+Adım 3 — satılacak ilave: tam hesapla $5.711.699 - 5.062.391 = \mathbf{649.308}$ USD.
+
+Adım 4 — fark: $657.170 - 649.308 = 7.862$ USD (%1,2). Kaynağı **speed**'dir
+($\partial\Gamma/\partial S$, Modül 3.3): gamma spot yükseldikçe küçülür, bu yüzden
+lineer gamma tahmini deltayı bir miktar fazla gösterir. Küçük hareketlerde ihmal
+edilebilir; %5'lik bir şokta ihmal edilemez — orada artık Taylor değil, senaryo matrisi
+(3.6) kullanılır.
+
+**Cevap:** ~649K USD daha satılır. **Araçla doğrula:** araca $S=45{,}45$ girip
+"Delta (spot)" satırındaki USD tutarını okuyun.
+
+</details>
+
+**2. Ters çevirme — theta'yı vega cinsinden okumak.** Aynı pozisyonun vega'sı 887.179
+TRY/puan, theta'sı −268.231 TRY/gün. (a) Kaç günlük theta bir vol puanına eşit?
+(b) Bu oran pozisyonun karakteri hakkında ne söyler? (c) Vade 3M yerine 1Y olsaydı oran
+hangi yöne kayardı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — oran: $887.179 / 268.231 = \mathbf{3{,}31}$ gün.
+
+Adım 2 — okunuşu: vol 1 puan düşerse, üç günden biraz fazla theta ödemişsiniz gibi
+zarar yazarsınız. Bu pozisyon **vol'e görece duyarsız, zamana duyarlı** — yani bir
+*gamma* pozisyonudur, vega pozisyonu değil.
+
+Adım 3 — vade uzarsa: vega $\sqrt{T}$ ile büyür, theta ise kabaca $1/\sqrt{T}$ ile
+küçülür → oran **$T$ ile doğru orantılı** büyür. 1Y'de aynı hesap 10 günün üzerine
+çıkar: uzun vade opsiyonu bir **vol** pozisyonudur, günlük theta gürültüsü küçüktür.
+
+**Cevap:** (a) 3,31 gün (b) gamma karakterli (c) yukarı — vega/theta oranı vadeyle
+büyür. Pratik kullanım: bu oran, "trade'im vol görüşü mü hareket görüşü mü" sorusunun
+tek sayılık testidir.
+
+</details>
+
+**3. Karar — hangi yol?** Kitabınız hâlihazırda **short gamma, short vega**. +5.000.000
+USD delta eklemeniz gerekiyor ve iki teklif var: (A) 9.876.755 USD ATM call al,
+(B) 20.000.000 USD 25Δ call al. 2.6'daki tabloyu kullanarak seçin ve gerekçelendirin.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — iki yolun yükü (2.6 tablosu): A → +649K cash gamma, +876K vega, +9,7K vanna,
+10,52M TRY prim. B → +1.054K cash gamma, +1.422K vega, +382K vanna, 7,85M TRY prim.
+
+Adım 2 — bağlam: kitap short gamma + short vega. **Long** gamma/vega eklemek burada
+mevcut açığı kapatır, büyütmez — yani bu özel durumda B'nin "fazla" Greek'i aslında
+*işe yarar*.
+
+Adım 3 — ama vanna: B, 39 kat vanna getirir (+382K USD delta / puan). TRY'de spot-vol
+birlikte hareket ettiğinden (3.5) bu kalem yönlü bir bahse dönüşür: spot ve vol birlikte
+yükselirse delta beklenenden hızlı büyür.
+
+**Cevap:** kitap short gamma/vega ise **B savunulabilir** — ama yalnızca vanna'yı
+bilinçli istiyorsanız ve limit tablosundaki vanna/senaryo köşesi (7.2) buna izin
+veriyorsa. Kitap zaten **long** gamma/vega olsaydı cevap tartışmasız **A** olurdu.
+Genel kural değişmez: karar tekil trade'e değil, **trade sonrası kitaba** bakılarak
+verilir.
+
+</details>
+
+</div>
+
+## Modül 3 — Yüksek dereceli Greek'ler: vanna, volga ve senaryo matrisi
+
+*Bu modülde:* vanna ve volga'nın tanımı ve sayısal büyüklüğü, üçüncü derece Greek'ler,
+bump & reprice yöntemi, TRY'ye özgü spot-vol birlikteliği ve tekil Greek'lerin yerine
+geçen senaryo matrisi — sonunda matrisi kendin kurma prosedürü ve üç alıştırma.
 
 Delta-vega hedge yapıldıktan sonra book'ta kalan rezidüel riskler ikinci/üçüncü
 derece türevlerde yaşar. Smile'lı bir piyasada (özellikle TRY'de) bu "küçük" greekler
@@ -383,7 +704,7 @@ küçük değildir: Modül 2.6'daki tabloda 25Δ pozisyonun vanna'sı ATM'nin **
 Birinci derece greekleri sıfırlamak, ikinci dereceleri sıfırlamaz — hedge edilmiş bir
 book'un P&L'i tam da bu rezidüellerden gelir.
 
-### 3.1 Vanna — $\partial\Delta/\partial\sigma = \partial \text{Vega}/\partial S$
+### 3.1 Vanna: vol oynayınca delta ne kadar kayar? ($\partial\Delta/\partial\sigma = \partial\text{Vega}/\partial S$)
 
 $$
 \text{Vanna} = -e^{-r_f T} \cdot n(d_1) \cdot \frac{d_2}{\sigma}
@@ -402,7 +723,7 @@ belirgin büyür, dolayısıyla delta vol'e duyarlı hale gelir. ATM'de ise ihti
 puan sıçrarsa deltan bir anda ~1,15M USD kayar ($382\text{K} \times 3$) — **spot hiç
 kımıldamadan** hedge'in bozulmuştur.
 
-### 3.2 Volga (Vomma) — $\partial \text{Vega}/\partial\sigma$
+### 3.2 Volga (vomma): vega'nın vol'e konveksitesi — kanatların Greek'i
 
 $$
 \text{Volga} = \text{Vega} \cdot \frac{d_1 \, d_2}{\sigma}
@@ -420,7 +741,7 @@ olarak volga'dır: long strangle (iki OTM kanat) + short straddle (ATM gövde) =
 volga, short gamma (Modül 5.6). Kanat opsiyonlarının ATM'ye göre neden farklı vol'den
 işlem gördüğünün greek karşılığı budur.
 
-### 3.3 Speed, Charm, Color — Tamlık İçin
+### 3.3 Speed, charm, color: hangi üçüncü derece ne zaman sorun olur
 
 | Greek | Tanım | Ne zaman sorun olur |
 | --- | --- | --- |
@@ -430,7 +751,7 @@ işlem gördüğünün greek karşılığı budur.
 | Vanna | $\partial\Delta/\partial\sigma = \partial\text{Vega}/\partial S$ | Spot-vol birlikte hareket edince (TRY'de neredeyse her zaman) |
 | Volga | $\partial\text{Vega}/\partial\sigma$ | Vol-of-vol yüksekken; kanat pozisyonlarında |
 
-### 3.4 Pratik Hesap: Bump & Reprice
+### 3.4 Bump & reprice: yüksek dereceli Greek'i formül ezberlemeden hesaplamak
 
 Kapalı formül ezberlemek gerekmez; pricing modeli iki kez çalıştırılıp fark alınır
 (merkezî sonlu fark). Vanna için spotu $\pm\%1$ bump edip vega'yı yeniden hesapla;
@@ -452,7 +773,7 @@ değiştirir — **sticky-strike** (her strike kendi vol'ünü korur) ile **stic
 (vol, delta/moneyness'e yapışır ve spotla birlikte kayar) varsayımları farklı vanna
 üretir. Hangi varsayımla hesapladığını bil.
 
-### 3.5 TRY Gerçeği: Negatif Spot-Vol Korelasyonu
+### 3.5 TRY gerçeği: spot-vol birlikte hareketi vanna'yı neden birinci lige taşır
 
 <div class="not">
   <span class="etiket">Vanna neden hayati</span>
@@ -472,7 +793,7 @@ değiştirir — **sticky-strike** (her strike kendi vol'ünü korur) ile **stic
   yanlış teşhis, bir sonraki harekette aynı hatayı tekrarlatır.
 </div>
 
-### 3.6 Greek Kovalamak Yerine: Senaryo Matrisi
+### 3.6 Senaryo matrisi: Greek kovalamak yerine spot × vol ızgarasında yeniden fiyatlamak
 
 Üçüncü derece greekleri tek tek takip etmek, sürekli kayan sayıları kovalamaktır —
 her greek yerel bir türevdir ve büyük şokta Taylor açılımı çöker. Daha güvenilir
@@ -498,6 +819,49 @@ greekler "şu an, küçük şok için" konuşur; matris "kriz günü, büyük ş
 TRY gibi "sıçrayan" bir paritede greekler sürekli kaydığından, günlük risk
 toplantısının ekranı bu matristir.
 
+### 3.7 Senaryo matrisini kendin kurmak: altı adımlık prosedür
+
+3.6'daki tablo hazır verildi; masada onu **siz** üretirsiniz. Prosedür:
+
+1. **Eksenleri seç.** Spot ekseni: $0, \pm\%1, \pm\%3, \pm\%5$ (kriz kitabında
+   $\pm\%10$ de eklenir). Vol ekseni: baz vol $\pm$ ve $\pm 2\times$ tipik günlük vol
+   sıçraması; koşan örnekte %7 – %17 aralığı bunu veriyor.
+2. **Şokları eşleştir, bağımsız sayma.** TRY'de spot ve vol birlikte hareket eder;
+   matrisin *kullanılan* hücreleri köşegen boyunca uzananlardır (spot ↑ + vol ↑).
+   Diğer köşeler yine hesaplanır ama karar onlara göre verilmez.
+3. **Tam repricing yap, Taylor kullanma.** Her hücrede bütün pozisyonları yeniden
+   fiyatla. Taylor açılımı büyük şokta çöker — zaten matrisi kurmanın sebebi budur.
+4. **Smile'ın nasıl kaydığını seç.** Vol şoku uygulanırken yüzey sticky-strike mı
+   sticky-delta mı hareket ediyor (3.4, 10.2)? Bu seçim köşe sayılarını gözle görülür
+   değiştirir ve raporun başına yazılır.
+5. **En kötü hücreyi işaretle** ve limit eşiğiyle karşılaştır (7.2'deki "senaryo kaybı"
+   satırı).
+6. **Bir gün öncekiyle karşılaştır.** Matrisin *değişimi*, seviyesinden daha çok bilgi
+   taşır: dün −9M olan köşe bugün −14M ise, kitap siz fark etmeden büyümüştür.
+
+**Örnek okuma (3.6 matrisi).** Baz hücre 0. Spot %5 aşağı + vol %17 köşesi −13.310 bin
+TRY; spot %5 yukarı + vol %17 köşesi −14.579 bin TRY. Aradaki 1,27M TRY'lik asimetri
+tesadüf değildir: short straddle'ın yukarı tarafı, forward drift'i (TRY carry'si)
+nedeniyle daha ağır basar. Limit eşiği 12M TRY ise **iki köşe de ihlaldedir** ve
+pozisyon gün başlamadan küçültülür.
+
+<div class="not">
+  <span class="etiket">Bu modülün tipik hataları</span>
+
+  1. **Vanna'yı "küçük Greek" saymak.** 25Δ'da ATM'nin 39 katıdır; TRY'de her spot
+     hareketinde tetiklenir.
+  2. **Volga'yı yalnız kanatta aramak ama BF fiyatını izlememek.** BF, volga'nın
+     piyasa fiyatıdır; kanat pozisyonu taşıyorsan BF'nin nereye gittiği doğrudan P&L'dir.
+  3. **Bump & reprice'ı smile varsayımını yazmadan yapmak.** Sticky-strike ile
+     sticky-delta farklı vanna üretir; hangi varsayımla ürettiğini bilmeyen, "doğru
+     hesaplanmış yanlış sayı" taşır.
+  4. **Bump adımını çok küçük seçmek.** Sayısal gürültü ikinci derece hatayı geçer;
+     pratikte spot için $\pm\%1$, vol için $\pm 1$ puan iyi bir başlangıçtır.
+  5. **Matrisi kurup köşesine limit koymamak.** Ölçülen ama sınırlanmayan risk, ölçülmemiş
+     riskle aynı sonucu verir.
+
+</div>
+
 <div class="not">
   <span class="etiket">Modülün özeti</span>
 
@@ -507,11 +871,88 @@ toplantısının ekranı bu matristir.
   köşelerine bakılarak alınır.
 </div>
 
-## Modül 4 — Gamma-Theta Ekonomisi ve Günlük P&L
+<div class="pratik">
+  <span class="etiket">Pratik — Modül 3 · Yüksek dereceli Greek'ler</span>
+
+**1. Doğrudan uygulama — vanna kanalı.** 20M USD nominalli 25Δ call **short**
+taşıyorsunuz (Modül 2.6 tablosu: vanna +382.270 USD delta/puan, cash gamma
++1.053.652 USD/%1). Delta hedge tamam. Gün içinde spot %2 yükseldi ve vol +3 puan
+sıçradı. (a) Gamma kanalından delta kayması? (b) Vanna kanalından? (c) Toplam açık
+pozisyon ve bunun yüzde kaçı vol'ün eseri?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — gamma kanalı: $-1.053.652 \times 2 = \mathbf{-2{,}11}$M USD.
+
+Adım 2 — vanna kanalı: $-382.270 \times 3 = \mathbf{-1{,}15}$M USD.
+
+Adım 3 — toplam: $\approx \mathbf{-3{,}26}$M USD açık; **%35'i** vanna'dan, yani
+**spot hiç kımıldamasa bile** oluşacak kısımdan geliyor.
+
+**Cevap:** −3,26M USD; üçte birinden fazlası vol kanalı. Teşhis notu: bunu "gamma
+sürprizi" diye kaydeden trader, bir sonraki harekette aynı hatayı tekrarlar — vanna
+ayrı satır olarak izlenmeliydi.
+
+</details>
+
+**2. Ters çevirme — bump & reprice.** Aynı 25Δ pozisyonun vega'sı $\sigma$ = %11'de
+1.358.607 TRY, %12'de 1.422.442 TRY, %13'te 1.474.156 TRY. (a) Merkezî farkla volga'yı
+hesaplayın. (b) Analitik volga 57.249 TRY/puan. Fark yüzde kaç, kaynağı ne?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — merkezî fark: $\dfrac{1.474.156 - 1.358.607}{2} = \mathbf{57.775}$ TRY/puan.
+
+Adım 2 — sapma: $(57.775 - 57.249)/57.249 = \mathbf{+\%0{,}92}$.
+
+Adım 3 — kaynak: sonlu bump adımının **üçüncü derece** hatası (vega'nın vol'e göre
+üçüncü türevi, "ultima"). Adım $\pm 1$ puandan $\pm 0{,}5$ puana indirilirse hata
+kabaca dörtte birine düşer.
+
+**Cevap:** 57.775 TRY/puan; %0,9 sapma, kesme hatası. Aynı yöntem vanna için de işler:
+spotu $\pm\%1$ bump edip vega farkını alırsanız birim başına 0,018907 çıkar; analitik
+değer 0,019114 — Modül 3.4'teki 0,01891 / 0,01911 sağlaması tam olarak budur.
+
+</details>
+
+**3. Karar — köşe limiti.** Kitabınızda 3.6'daki short straddle var ve "senaryo kaybı"
+limitiniz **12.000 bin TRY**. (a) Hangi hücreler ihlalde? (b) Pozisyonu limit içine
+almak için nominali hangi orana indirmelisiniz? (c) Nominal küçültmek yerine hangi tek
+işlem köşeyi daha ucuza kapatır?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — ihlal eden hücreler: spot −%5 / vol %17 → −13.310; spot +%5 / vol %17 →
+−14.579. İkisi de eşiğin üstünde.
+
+Adım 2 — ölçek: en kötü köşe −14.579; limit −12.000 → oran $12.000/14.579 = 0{,}823$.
+Nominali **%82'ye** (yani ~%18 küçülterek 8,2M USD'ye) indirmek köşeyi eşiğe oturtur.
+
+Adım 3 — alternatif: köşeyi yaratan şey vol'ün %17'ye sıçraması. Uzak bir kanat
+(ör. 10Δ strangle) **satın almak** volga'yı pozitife çevirir ve yalnız uç sütunu
+düzeltir; gövdedeki theta gelirini korursunuz. Bedeli, ödenen kanat primi ve BF'nin
+pahalı olduğu bir anda alıyorsanız girişte yazılan negatif carry'dir.
+
+**Cevap:** (a) vol %17 sütununun iki ucu (b) ~%82 ölçek (c) kanat alımı — nominal
+kesmek bütün matrisi küçültür, kanat alımı yalnız ihlal eden köşeyi düzeltir. Hangisinin
+seçileceği, gövdedeki theta gelirinden vazgeçmeye değip değmediğine bakar.
+
+</details>
+
+</div>
+
+## Modül 4 — Gamma-theta ekonomisi: günün P&L'i altı bileşene nasıl ayrılır?
+
+*Bu modülde:* gamma P&L formülü ve başabaş hareket, straddle üzerinde gamma-theta
+netleşmesi, scalping mekaniği, altı bileşenli attribution ve rates karşılığı — sonunda
+attribution'ı elle yürütme prosedürü ve üç alıştırma.
 
 Opsiyon kitabının günlük hayatı iki büyüklüğün çekişmesidir: gamma'nın kazandırdığı ile theta'nın götürdüğü. Bu modül önce bu çekişmenin aritmetiğini kurar, sonra scalping mekaniğine ve günlük P&L ayrıştırmasına (attribution) bağlar.
 
-### 4.1 Gamma P&L Formülü ve Breakeven Hareket
+### 4.1 Gamma P&L ve başabaş hareket: günde kaç kuruş oynarsa theta çıkar?
 
 Delta'sı hedge'lenmiş bir opsiyon pozisyonunun spot hareketinden kazancı ikinci mertebedendir — birinci mertebe (delta) hedge ile sıfırlandığı için geriye Taylor açılımının konvekslik terimi kalır:
 
@@ -530,7 +971,7 @@ $$
 
 Yani %12 implied vol, spot 45,00 iken "günde 34 kuruş" demektir. Piyasa günde 34 kuruştan fazla oynarsa long gamma theta'sını çıkarır ve üstüne kazanır — "realized vol implied'ı aştı" cümlesinin masa karşılığı tam olarak budur.
 
-### 4.2 Sayısal Tablo: Long 10M USD ATMF Straddle
+### 4.2 Sayısal tablo: long 10M straddle'da gamma-theta netleşmesi (TRY nüansıyla)
 
 ATMF straddle: strike'ı forward'a eşit bir call ile bir put'un birlikte alınması; burada her bacak 10M USD nominal. Pozisyon kartı:
 
@@ -559,7 +1000,7 @@ Günlük hareketin büyüklüğüne göre gamma-theta netleşmesi:
   Klasik özdeşlik $\Theta \approx -\tfrac12\Gamma\sigma^2S^2$ yalnızca faizler sıfıra yakınken geçerlidir. Saf gamma kirası burada $\tfrac12 \times 2.920.754 \times 0{,}34^2 = 168.820$ TRY/gün olmalıydı; oysa GK theta yalnızca 103.687 TRY/gün. Aradaki $+65.133$ TRY/gün fark, %40 TRY faizinin strike iskontosundan gelir: long put vadede $K$ tahsil etmeyi içerir ve strike'ın bugünkü değeri $K\,e^{-r_d T}$, $T$ kısaldıkça her gün büyür — bu, put bacağına pozitif theta katkısı yazar. TRY kitabında theta okurken bu iki bileşeni — zaman erimesi ve faiz taşıması — ayırmayı öğrenmek zorunludur; aksi halde "straddle bedava gamma veriyor" yanılgısına düşülür. Vermiyor: faiz taşıması, spotun forward'a ($F = 49{,}18$) doğru drift'i olarak delta kanalından geri alınır — kazandığını sandığın günlük +65K, drift gerçekleştikçe delta hedge tarafında geri ödenir.
 </div>
 
-### 4.3 Gamma Scalping Mekaniği
+### 4.3 Gamma scalping: bandlı rebalance, realized−implied farkını nasıl nakde çevirir
 
 Long gamma pozisyonda delta sürekli kayar; scalping, bu kaymayı sistematik olarak nakde çevirmektir: spot yükselince oluşan long deltayı sat, spot düşünce oluşan short deltayı geri al. Her turda "düşük al / yüksek sat" mekanik olarak gerçekleşir — trade fikri değil, pozisyonun geometrisinin doğal sonucudur.
 
@@ -571,7 +1012,7 @@ Long gamma pozisyonda delta sürekli kayar; scalping, bu kaymayı sistematik ola
   Gün içinde spot 45,00 → 45,50: delta $0 \to +0{,}5 \times 2{,}92\text{M} \approx +1{,}46$M USD. Band iki kez aşıldı; 45,25 ve 45,50 seviyelerinde toplam 1,46M USD satıldı (ortalama ~45,37). Akşam spot 45,00'e döndü: delta $-1{,}46$M'e kaydı; 44,75 ve 45,00 seviyelerinde geri alındı. Kabaca scalp kârı $\approx 1{,}46\text{M} \times 0{,}37 \approx +540$K TRY; ödenen theta 104K → net +436K TRY. Aynı gün spot hiç oynamasaydı net −104K olacaktı. Scalping'in matematiği budur: realized vol implied'ı aşarsa aradaki fark, bandlı rebalance turlarıyla cebe girer.
 </div>
 
-### 4.4 Günlük P&L Attribution — Ayrıştırma Formülü
+### 4.4 P&L attribution: günlük değişimi altı bileşene ayırmak ve residual'ı okumak
 
 Günlük değer değişimi Taylor açılımıyla bileşenlerine ayrılır:
 
@@ -612,7 +1053,7 @@ Residual %1-2 bandında ise Taylor kesme hatasıdır, normaldir. Residual büyü
 
 Residual, model hatasının günlük dedektörüdür — sessizce büyümesine asla izin verilmez.
 
-### 4.5 Rates Tarafı Aynı Disiplin: Swaption Örneği
+### 4.5 Aynı disiplin rates'te: swaption attribution örneği
 
 Aynı ayrıştırma faiz opsiyonlarında da birebir uygulanır. Örnek: 2Y×3Y payer swaption (iki yıl sonra başlayan üç yıllık swap'ta sabit faiz *ödeme* hakkı), 100M nominal. Bir günde forward swap faizi %30,20 → %30,32 (+12 bp), ATM vol %24,0 → %24,5 (+0,5 puan):
 
@@ -626,14 +1067,151 @@ Aynı ayrıştırma faiz opsiyonlarında da birebir uygulanır. Örnek: 2Y×3Y p
 
 Fiili MTM farkı 125K ise ~9K residual var demektir: smile/vanna P&L'inden gelebilir — o gün vol yüzeyinin kalibrasyonu detaylı incelenir. FX ve rates kitaplarında attribution disiplini birebir aynıdır; yalnızca eksenler değişir: spot → forward swap faizi, vol → normal bp vol (baz puan cinsinden kote edilen Bachelier tipi vol).
 
+### 4.6 Attribution'ı elle yürütmek: prosedür ve residual teşhis ağacı
+
+Attribution, sabahın ilk ve en önemli işidir (7.1). Elle yürütme sırası:
+
+1. **İki fotoğrafı sabitle.** Dünkü ve bugünkü girdiler: $S$, yüzey (ATM/RR/BF),
+   faizler, $t$. Girdi setini yazmadan başlanan attribution, farkın nereden geldiğini
+   asla söyleyemez.
+2. **Dünkü Greek'leri kullan.** Ayrıştırma **dünün** duyarlılıklarıyla yapılır; bugünün
+   Greek'leriyle yapılan hesap, hareketin kendisini iki kez saymış olur.
+3. **Sırayla çarp:** delta × $\Delta S$ → $\tfrac12\Gamma(\Delta S)^2$ →
+   vega × $\Delta\sigma$ → theta × $\Delta t$ → vanna × $\Delta S\Delta\sigma$ →
+   $\tfrac12$ volga × $(\Delta\sigma)^2$.
+4. **Topla ve tam repricing ile karşılaştır.** Fark = residual.
+5. **Residual'ı yüzdeye çevir.** Ölçek: |açıklanan| toplamına oran. %1–2 normaldir.
+6. **Eşik aşılırsa teşhis ağacını işlet** (aşağıda).
+
+**Koşan örnekte sağlama.** 4.4'teki tablo: açıklanan +2.408.217, fiili +2.376.622,
+residual −31.595 → $31.595 / 2.408.217 = \%1{,}3$. Kabul bandında; bu gün için başka
+bir işlem gerekmez.
+
+**Residual teşhis ağacı.** Sırayla sorulur, ilk "evet"te durulur:
+
+| Sıra | Soru | Evetse ne yapılır |
+| --- | --- | --- |
+| 1 | Şok büyük müydü (spot > %2 veya vol > 2 puan)? | Taylor kesme hatasıdır; tam repricing'e geç, alarm kapat |
+| 2 | Yüzey yeniden kalibre edildi mi / mark değişti mi? | Kalibrasyon P&L'i ayrı satır olarak raporla |
+| 3 | Forward/faiz eğrisi güncellendi mi? | Rho kanalını ayrıştır, FX swap hedge'ini kontrol et |
+| 4 | Gün içinde büyük tekil trade var mı? | Trade'in ilk gün P&L'ini (spread) ayır |
+| 5 | Egzotik pozisyon var mı? | Model reserve hareketini ayır (11.6) |
+| 6 | Hiçbiri değilse | Booking hatası ara: yanlış book, yanlış nominal, eksik bacak |
+
+Sıralamanın mantığı ucuzdan pahalıya doğrudur: ilk üç adım masada dakikalar içinde
+yapılır, son adım operasyonla birlikte saatler alır. Residual'ın **birikimli** grafiği
+de tutulur — tek gün küçük ama hep aynı işaretli residual, rastgele hata değil
+**sistematik model sapmasıdır**.
+
+<div class="not">
+  <span class="etiket">Bu modülün tipik hataları</span>
+
+  1. **Bugünün Greek'leriyle dünü açıklamak.** En yaygın attribution hatası; residual'ı
+     yapay olarak şişirir.
+  2. **Başabaş hareketi implied vol'den okuyup TRY düzeltmesini unutmak.** Koşan
+     straddle'da nominal başabaş 34 kuruş görünür, gerçek başabaş **26,6 kuruştur**
+     (aşağıdaki 1. alıştırma).
+  3. **Scalp kârını işlem maliyetsiz hesaplamak.** Her rebalance yarım spread öder;
+     dar bandın kârı kâğıt üzerinde kalır.
+  4. **Residual'ı yüzde yerine mutlak izlemek.** Kitap büyüdükçe mutlak residual doğal
+     olarak büyür; anlamlı ölçü orandır.
+  5. **Theta'yı takvim günü yerine iş günü saymak (veya tersi).** Hafta sonu theta'sı
+     Cuma akşamı üç gün olarak düşer; scalping planı buna göre yapılır.
+
+</div>
+
 <div class="not">
   <span class="etiket">Modülün özeti</span>
   Gamma'nın kirası theta; başabaş hareket $\sigma\sqrt{1/252}$ (örnekte 34 kuruş). TRY'de GK theta saf gamma kirasından küçüktür (strike iskontosu) — fark, forward drift olarak delta kanalından geri alınır. Scalping = bandlı delta rebalance ile realized−implied farkını toplamak. Her günün P&L'i altı bileşene ayrıştırılır; residual model-hata alarmıdır.
 </div>
 
-## Modül 5 — Vol Yüzeyi: Okuma, Kalibrasyon, Trade
+<div class="pratik">
+  <span class="etiket">Pratik — Modül 4 · Gamma-theta ekonomisi</span>
 
-### 5.1 Kotasyon Standardı: ATM + RR + BF
+**1. Tuzak — gerçek başabaş.** Koşan straddle: $\Gamma_{cash} = 2.920.754$ TRY başına,
+GK theta $= -103.687$ TRY/gün. (a) Gamma P&L'i theta'ya eşitleyen günlük hareket kaç
+TRY? (b) Bu, %12 implied vol'ün ima ettiği 34 kuruşla neden aynı değil? (c) Gerçek
+başabaşın yıllık vol karşılığı kaç?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — denklem: $\tfrac12 \Gamma (\Delta S)^2 = |\Theta|$ →
+$\Delta S = \sqrt{2|\Theta|/\Gamma} = \sqrt{2\times 103.687 / 2.920.754}$.
+
+Adım 2 — $\Delta S = \sqrt{0{,}071} = \mathbf{0{,}2665}$ TRY ≈ **26,6 kuruş**.
+
+Adım 3 — neden 34 değil: 34 kuruş, *saf* gamma kirası ($\tfrac12\Gamma\sigma^2S^2$)
+varsayımının başabaşıdır. GK theta bundan 65.133 TRY/gün daha ucuzdur (strike
+iskontosu, 4.2) — kira ucuzlayınca başabaş da düşer.
+
+Adım 4 — yıllık karşılık: $0{,}2665/45 = \%0{,}5921$ günlük;
+$0{,}5921 \times \sqrt{252} = \mathbf{\%9{,}4}$.
+
+**Cevap:** 26,6 kuruş; efektif başabaş vol **%9,4**, kote %12'nin belirgin altında.
+Uyarı: bu "bedava gamma" değildir — aradaki fark, spotun forward'a doğru drift'i olarak
+delta hedge kanalından geri ödenir (4.2 kutusu). Yine de günlük scalping planını
+kurarken kullanılacak sayı 26,6 kuruştur, 34 değil.
+
+</details>
+
+**2. Doğrudan uygulama — bir günün neti.** Aynı straddle. Spot gün içinde 60 kuruş
+oynadı (kapanış farkı mutlak değerce 0,60 TRY). (a) Gamma P&L? (b) Günün neti?
+(c) Vol %12'den %11'e düşerse toplam ne olur?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — gamma: $\tfrac12 \times 2.920.754 \times 0{,}60^2 = \mathbf{+525.736}$ TRY.
+
+Adım 2 — net: $525.736 - 103.687 = \mathbf{+422.049}$ TRY.
+
+Adım 3 — vega kanalı: vega 1.774.358 TRY/puan, $\Delta\sigma = -1$ →
+$\mathbf{-1.774.358}$ TRY.
+
+Adım 4 — toplam: $+422.049 - 1.774.358 = \mathbf{-1.352.309}$ TRY.
+
+**Cevap:** gamma kazandırdı, vol götürdü. Ders: long straddle'da "piyasa oynadı, para
+kazandım" cümlesi eksiktir — hareketin gerçekleşmesi implied'ın **düşmesiyle** birlikte
+gelirse (klasik event sonrası vol crush, 5.5) net zarardır. Long gamma pozisyonunun asıl
+bahsi realized > implied'dır, sadece "hareket oldu mu" değil.
+
+</details>
+
+**3. Ters çevirme — residual.** Bir günün ayrıştırması: delta +2.024.957 · gamma
++116.830 · vega +532.308 · theta −268.231 · vanna +2.366 · volga −12. Middle office
+fiili MTM değişimini **+2.310.000** TRY raporladı. (a) Residual kaç, yüzde kaç?
+(b) 4.6'daki ağaçta hangi adımda durursunuz?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — açıklanan toplam: $2.024.957+116.830+532.308-268.231+2.366-12 = \mathbf{2.408.218}$ TRY.
+
+Adım 2 — residual: $2.310.000 - 2.408.218 = \mathbf{-98.218}$ TRY.
+
+Adım 3 — oran: $98.218 / 2.408.218 = \mathbf{\%4{,}1}$ → kabul bandının (%1–2) dışında.
+
+Adım 4 — ağaç: şok büyük değil (spot 40 kuruş ≈ %0,9, vol +0,6 puan) → adım 1 "hayır".
+Adım 2'ye geçilir: **yüzey marklaması** ilk şüpheli — 0,6 puanlık ATM hareketi RR/BF ile
+birlikte mi geldi? Kanat marklaması değiştiyse vega tek başına yetmez, vanna/volga
+katsayıları da yeniden hesaplanmalıdır.
+
+**Cevap:** −98.218 TRY (%4,1); teşhis ağacında **2. adımda** durulur — kalibrasyon P&L'i
+ayrı satıra çıkarılır. Aynı işaretli residual üst üste birkaç gün tekrarlarsa artık
+gün-içi hata değil, model sapması aranır.
+
+</details>
+
+</div>
+
+## Modül 5 — Vol yüzeyi: ATM·RR·BF okumak, kalibre etmek, trade etmek
+
+*Bu modülde:* ATM/RR/BF kotasyonundan strike vol'üne inmek, smile'ın nedenleri, SABR
+kalibrasyonu, dağılım okuma, term structure ve event vol ayrıştırması, yüzeyin kendisini
+trade etmek — sonunda yüzey sağlaması prosedürü ve üç alıştırma.
+
+### 5.1 Kotasyon standardı: ATM + RR + BF'den strike vol'lerine inmek
 
 FX vol piyasası strike bazında değil, üç kotasyonla konuşur: **ATM** (para-başı vol seviyesi), **Risk Reversal — RR** (aynı deltadaki call vol ile put vol farkı; smile'ın *eğimi*, skew) ve **Butterfly — BF** (kanatların ortalamasının ATM'ye göre yüksekliği; smile'ın *kıvrımı*). Kotasyonlar 25Δ ve 10Δ noktalarında verilir; strike bazlı call/put vol'leri bunlardan türetilir (masaların standardı olan market-strangle konvansiyonu):
 
@@ -663,13 +1241,13 @@ $$
 
 RR'nin pozitif işareti, USD call'ların (yani TRY zayıflama korumasının) put'lardan pahalı olduğunu söyler — gelişen piyasa (EM) smile'ının imzası. 10Δ kanadın ATM'den 5,4 puan yukarıda olması, kuyruk (tail) senaryosunun ne kadar pahalı fiyatlandığının doğrudan ölçüsüdür.
 
-### 5.2 Smile Neden Var
+### 5.2 Smile neden var: RR vanna'nın, BF volga'nın fiyatıdır
 
 - **RR = skew = spot-vol korelasyonu.** USDTRY yukarı giderken vol'ün de artacağı bilgisi, call kanadına vol primi olarak yazılır. Kur zayıflarken vol'ün fırlaması EM'de neredeyse mekaniktir; piyasa bu birlikte-hareketi opsiyon fiyatına gömer. Bu yüzden RR aslında piyasanın **vanna fiyatıdır** — spot ile vol'ün çapraz hareketine kimin ne ödediğini gösterir.
 - **BF = kanat = vol-of-vol + sıçrama riski.** Log-normal dağılımdan daha şişman kuyruklar OTM opsiyonları göreli pahalı yapar. BF piyasanın **volga fiyatıdır**: yüksek BF → OTM'ler pahalı → vol-of-vol pahalı fiyatlanıyor.
 - **Sonuç:** tek bir Black-Scholes σ'sı yoktur; model yanlıştır ama kotasyon *dili* olarak kullanılır. Smile, modelin yanlışlığının strike'lara dağıtılmış itirafıdır — her strike'a farklı σ vererek modelin tek-vol varsayımı fiilen iptal edilir.
 
-### 5.3 SABR ile Kalibrasyon ve Strike Bazlı Fiyatlama
+### 5.3 SABR kalibrasyonu: beş kotasyon noktasından sürekli smile'a
 
 Masada beş kotasyon noktasından (10P, 25P, ATM, 25C, 10C) *sürekli* bir smile'a geçmek için standart araç SABR modelidir. Dört parametresi smile'ın dört özelliğini yakalar:
 
@@ -683,7 +1261,7 @@ Kalibrasyon reçetesi: $\beta$ sabitlenir, $(\alpha, \rho, \nu)$ üçlüsü beş
 - **Ne işe yarar:** müşteri 47,80 gibi grid dışı bir strike sorduğunda, kotasyon noktaları arasında keyfî interpolasyon yerine arbitrajsız ve smile-tutarlı bir vol verir; greekler — özellikle vanna ve volga — smile'la tutarlı üretilir.
 - **Bid/ask kurgusu:** basit yaklaşım tenor başına tek spread'dir (mid smile $\pm$ yarım spread). Gerçekte 10Δ spread'i 25Δ'dan, o da ATM'den geniştir; ileri kurgu her market point'e ayrı spread ya da iki ayrı SABR kalibrasyonudur (bid smile + ask smile). Kritik konvansiyon: **risk daima mid σ üzerinden ölçülür** — pozisyon mid'de görülür, spread P&L'i ayrı satırda izlenir.
 
-### 5.4 Breeden-Litzenberger: Smile'dan Dağılım Okumak
+### 5.4 Breeden-Litzenberger: smile'dan risk-nötr dağılımı okumak
 
 $$
 \varphi(K) \;=\; e^{r_d T}\,\frac{\partial^2 C}{\partial K^2}
@@ -698,7 +1276,7 @@ USDTRY smile'ı (pozitif RR + yüksek BF) sağa çarpık, sağ kuyruğu şişman
 2. "Piyasa 50'nin üstünü hangi olasılıkla fiyatlıyor?" tipi soruların cevabı buradan okunur.
 3. İki farklı tarihin yoğunluğu üst üste konarak bir event'in fiyatlanışının nasıl değiştiği izlenir.
 
-### 5.5 Term Structure ve Event Vol
+### 5.5 Term structure ve event vol: kotasyonun içindeki event günü nasıl ayrıştırılır
 
 Vade ekseni boyunca ATM vol'lerin şekli başlı başına bir rejim sinyalidir:
 
@@ -714,11 +1292,11 @@ Vade ekseni boyunca ATM vol'lerin şekli başlı başına bir rejim sinyalidir:
   1M vol kotası %14, vadede 21 iş günü var ve içinde 1 FOMC toplantısı. FOMC günü 4 normal güne eşdeğer sayılırsa efektif gün sayısı $= 14 + 7 + 4 = 25$ olur. İlke, toplam varyansın korunmasıdır — kotasyonun taşıdığı varyans, normal günler ile event gününe yeniden paylaştırılır: normal-gün vol'ü $= 14 \times \sqrt{21/25} = \%12{,}83$. Normal günün 1σ hareketi $= 12{,}83 / \sqrt{252} = \%0{,}808$; FOMC gününün 1σ hareketi $= \sqrt{4} \times 0{,}808 = \%1{,}617$. Kullanımı: FOMC'den önceki gün 1W opsiyon fiyatlarken düz "takvim vol'ü" değil, bu ayrıştırılmış vol kullanılır. Event geçtikten sonra vol'ün mekanik düşüşü (vol crush) sürpriz değildir — baştan hesaplıdır, sadece event gününün varyans payı kotasyondan düşer. TCMB kararları, seçimler ve CPI günleri aynı çerçeveyle modellenir.
 </div>
 
-### 5.6 Yüzey Trade'leri
+### 5.6 Yüzey trade'leri: flattener ve butterfly'ın bacak oranı nereden gelir
 
 Yüzey yalnızca fiyatlama altyapısı değildir; şekli doğrudan trade edilir.
 
-#### Calendar / Term-structure flattener
+#### 5.6.1 Calendar / term-structure flattener: kriz hedge'inin bacak oranı
 
 Long uzun-vade vega + short kısa-vade vega = curve flattener. Kriz hedge'i karakteri taşır: stres geldiğinde kısa vade vol uzun vadeden çok daha fazla sıçrar (eğri düzleşir, hatta ters döner) → trade kazanır. Sakin dönemde eğri yeniden dikleşir → theta benzeri yavaş bir kayıp ödenir.
 
@@ -727,18 +1305,147 @@ Long uzun-vade vega + short kısa-vade vega = curve flattener. Kriz hedge'i kara
   1M vol %12, 1Y vol %14. Trade: long 1Y vega, short 1M vega. Vega'ları eşitlemek için nominal oranına bakılır: 1M opsiyonun birim vega'sı $\sqrt{1/12}$ ölçeğinde küçük olduğundan nominal oranı $\sim\sqrt{12} \approx 3{,}5\times$ gerekir (P&L *varyansını* eşitlemek istersen vol-of-vol oranına göre $\sim 6\times$ nominal gerekir). Kriz senaryosu: 1M vol → %25, 1Y vol → %18. P&L $= +(18-14)\times V_{1Y} - (25-12)\times V_{1M}$; vega-eşit kurulumda ($V_{1Y}=V_{1M}=V$) bu $V\times(4-13) = -9V$ eder — kriz hedge'i olsun diye kurduğun trade krizde zarar yazar! Bu yüzden kurulum vega-eşit değil, **beta-ağırlıklı** yapılır: kısa vadenin vol-beta'sı $\sim 3\times$ ise short 1M vega, long 1Y vega'nın $1/3$'ü kadar tutulur → kriz P&L'i $= +4V - 13V/3 \approx -0{,}33V \approx$ nötr; dikleşme (steepening) senaryosunda artı. Ders: term-structure trade'inde bacak oranı tarihsel vol-beta'dan gelir, kafadan değil. Ayrıca saf vega trade'i istiyorsan gamma kirletir — kısa vadenin gamma'sı büyüktür; her iki vadede straddle kurup delta ve gamma'yı ayrıca nötrlemek gerekir ("pure curve" kurulumu).
 </div>
 
-#### Butterfly / kanat trade'i
+#### 5.6.2 Butterfly: kanat pahalılığına — vol-of-vol'e — oynamak
 
 Long 25Δ strangle + short ATM straddle (vega-flat oranlanmış) = long volga, short gamma. Vol-of-vol artarsa (BF genişlerse) kazanır. BF tarihsel olarak mean-reverting'dir — ortalamaya döner: panik sonrası aşırı yüksek BF satılır, ölü sakinlikte aşırı düşük BF alınır. USDTRY'de BF10 %2,6 iken tarihsel medyan %1,8 ise kanat satışı (short volga) carry'li ama kuyruk-riskli bir pozisyondur — tek büyük sıçrama yıllarca biriktirilen carry'yi silebilir, boyut limiti şarttır.
+
+### 5.7 Yüzeyin sağlaması: arbitraj kontrolleri ve günlük yüzey ritüeli
+
+Kalibre edilmiş bir yüzey, güzel görünmesine rağmen **arbitrajlı** olabilir; arbitrajlı
+yüzey, negatif olasılık üreten yüzeydir ve ondan çıkan her Greek yanlıştır. Masada her
+gün yapılan dört kontrol:
+
+1. **Kelebek (butterfly) arbitrajı — dikey yön.** Sabit vadede call fiyatı $K$'ye göre
+   **konveks** olmalıdır: $C(K_1) - 2C(K_2) + C(K_3) \ge 0$ (eşit aralıklı üç strike).
+   İhlal, Breeden-Litzenberger yoğunluğunun (5.4) negatif çıkması demektir — piyasada
+   olmayan bir olasılık üretmişsiniz.
+2. **Calendar arbitrajı — yatay yön.** Aynı moneyness'te **toplam varyans** vadeyle
+   azalamaz: $\sigma_1^2 T_1 \le \sigma_2^2 T_2$ ($T_1 < T_2$). Backwardation'da
+   (5.5) bu koşul sık sık *sınırda* gezer: kısa vade vol'ü fırlarken uzun vade
+   yerinde kalırsa kalibrasyon sessizce ihlale girebilir.
+3. **Uç koşullar.** $K \to 0$ ve $K \to \infty$ limitlerinde call fiyatı sırasıyla
+   $DF\cdot F$ ve 0'a gitmeli; smile ekstrapolasyonu bunu bozmamalı. Kanat
+   ekstrapolasyonu SABR'ın en kırılgan bölgesidir.
+4. **Kotasyon noktalarına dönüş sağlaması.** Kalibre edilmiş yüzeyden 10P/25P/ATM/25C/10C
+   vol'leri geri okunduğunda girdi kotasyonlarına kabul edilebilir hata (tipik olarak
+   < 0,05 vol puanı) ile dönmeli. Dönmüyorsa $\beta$ seçimi ya da ağırlıklandırma
+   yeniden gözden geçirilir.
+
+**Günlük yüzey ritüeli.** (i) Kotasyonları al (ATM/RR/BF, tüm tenorlar). (ii) Kalibre et.
+(iii) Dört kontrolü koştur. (iv) Dünkü yüzeyle **fark haritası** çıkar: hangi tenor, hangi
+delta noktası kaç puan oynadı. (v) Fark haritasını kitabın vega bucket'larıyla çarp —
+bu, günün vega P&L'inin bağımsız tahminidir ve attribution'ın vega satırıyla eşleşmelidir
+(4.6). Eşleşmiyorsa ya marklama ya bucket'lama hatalıdır.
+
+<div class="not">
+  <span class="etiket">Bu modülün tipik hataları</span>
+
+  1. **RR'yi "yön görüşü" sanmak.** RR skew'in fiyatıdır, spot yönü değil; pozitif RR
+     "USD yükselecek" demez, "yukarı korumanın vol'ü pahalı" der.
+  2. **BF konvansiyonunu karıştırmak.** Market strangle BF'si ile smile BF'si aynı sayı
+     değildir; ikisini karıştırmak kanat vol'lerini kaydırır.
+  3. **Event vol'ü kotasyondan düşmeyi unutmak.** Event sonrası "vol düştü, zarar
+     ettim" cümlesinin yarısı baştan hesaplanabilir bir crush'tır.
+  4. **Aynı vol'ü tüm strike'lara uygulamak.** Düz vol'le üretilen digital ve barrier
+     fiyatları sistematik olarak yanlıştır (11.3'te %35'lik fark).
+  5. **Arbitraj kontrolünü yalnız kalibrasyon gününde yapmak.** Yüzey her gün mark
+     edilir; kontrol de her gün koşar.
+
+</div>
 
 <div class="not">
   <span class="etiket">Modülün özeti</span>
   Yüzey ATM+RR+BF ile konuşulur; RR vanna'nın, BF volga'nın fiyatıdır. SABR beş kotasyon noktasını sürekli ve arbitrajsız smile'a çevirir. Breeden-Litzenberger smile'ı olasılık yoğunluğuna çevirir. Term structure rejim sinyalidir; event günleri eşdeğer-gün yöntemiyle ayrıştırılır. Yüzeyin kendisi trade edilir: flattener (kriz hedge'i), butterfly (vol-of-vol).
 </div>
 
-## Modül 6 — Book'un Mimarisi
+<div class="pratik">
+  <span class="etiket">Pratik — Modül 5 · Vol yüzeyi</span>
 
-### 6.1 Trade Capture'dan Risk Ekranına
+**1. Doğrudan uygulama — kotasyondan strike vol'üne.** Yeni bir kotasyon geldi:
+ATM %14,0 · RR25 = +4,0 · BF25 = +1,0 · RR10 = +7,2 · BF10 = +3,2. (a) Dört strike
+vol'ünü hesaplayın. (b) 10Δ call kanadı ATM'nin kaç puan üstünde? (c) Bu yüzey 5.1'deki
+yüzeye göre neyi farklı fiyatlıyor?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — formüller: $\sigma_{25C} = \sigma_{ATM} + BF_{25} + RR_{25}/2$, vb.
+
+Adım 2 — hesap:
+
+| Nokta | Hesap | Sonuç |
+| --- | --- | --- |
+| $\sigma_{25C}$ | $14 + 1{,}0 + 2{,}0$ | **%17,0** |
+| $\sigma_{25P}$ | $14 + 1{,}0 - 2{,}0$ | **%13,0** |
+| $\sigma_{10C}$ | $14 + 3{,}2 + 3{,}6$ | **%20,8** |
+| $\sigma_{10P}$ | $14 + 3{,}2 - 3{,}6$ | **%13,6** |
+
+Adım 3 — kanat farkı: $20{,}8 - 14{,}0 = \mathbf{+6{,}8}$ puan (5.1'deki yüzeyde +5,4 idi).
+
+**Cevap:** Yeni yüzey hem daha yüksek seviyeli (ATM +2 puan) hem daha **çarpık**
+(RR25 3,0 → 4,0) hem daha **kuyruklu** (BF10 2,6 → 3,2). Üçü birlikte klasik stres
+imzasıdır: piyasa yalnız "daha çok oynayacak" demiyor, "yukarı ve sıçrayarak oynayacak"
+diyor. Bu yüzeyde 25Δ call satan, öncekine göre çok daha fazla vanna ve volga satar.
+
+</details>
+
+**2. Ters çevirme — event vol.** 1M ATM kotası %16. Vadede 21 iş günü var ve içinde
+**iki** event günü bulunuyor; her biri 3 normal güne eşdeğer sayılıyor. (a) Normal-gün
+vol'ü kaç? (b) Normal ve event günlerinin 1σ hareketleri? (c) Event'lerden biri takvimden
+düşerse (ertelenir) kotasyon nereye gitmeli?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — eşdeğer gün: $(21-2) + 2\times 3 = \mathbf{25}$.
+
+Adım 2 — normal vol: $16 \times \sqrt{21/25} = \mathbf{\%14{,}66}$.
+
+Adım 3 — 1σ hareketler: normal gün $14{,}66/\sqrt{252} = \mathbf{\%0{,}92}$;
+event günü $\sqrt{3}\times 0{,}92 = \mathbf{\%1{,}60}$.
+
+Adım 4 — biri ertelenirse: eşdeğer gün $19+1+3 = 23$ olur ve kotasyon
+$14{,}66\times\sqrt{23/21} = \mathbf{\%15{,}34}$'e iner — yani **0,66 puanlık
+mekanik düşüş**. Bu düşüş "vol satıldı" değil, takvimin değişmesidir; attribution'da
+vega satırına değil, **event ayrıştırma** satırına yazılır.
+
+**Cevap:** (a) %14,66 (b) %0,92 / %1,60 (c) %15,34. Pratik kullanım: event tarihi
+kesinleşmeden yazılan kısa vade opsiyonlarda bu 0,66 puan doğrudan P&L'dir.
+
+</details>
+
+**3. Karar — flattener bacak oranı.** Long 1Y vega $V$, short 1M vega. Tarihsel vol-beta
+tahmininiz 2,5 (1Y vol 1 puan oynarken 1M vol 2,5 puan oynuyor). Kriz geldi: 1M vol
+%12 → %28, 1Y vol %14 → %18. (a) Beta-ağırlıklı kurulumda bacak oranı ne? (b) Krizde
+P&L? (c) Nötr olması için beta ne olmalıydı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — kurulum: short 1M vega $= V/2{,}5 = 0{,}4V$.
+
+Adım 2 — P&L: $+(18-14)\times V - (28-12)\times 0{,}4V = 4V - 6{,}4V = \mathbf{-2{,}4V}$.
+
+Adım 3 — nötrlük koşulu: $\Delta\sigma_{1M} / \Delta\sigma_{1Y} = 16/4 = \mathbf{4}$.
+Beta 4 olsaydı short bacak $0{,}25V$ olur ve P&L $4V - 16\times 0{,}25V = 0$ çıkardı.
+
+**Cevap:** (a) 1 : 0,4 (b) −2,4V (c) 4. Ders: beta bir **tahmindir** ve krizde
+gerçekleşen beta tarihsel ortalamanın üstüne çıkar — kısa vade vol'ü krizde orantısız
+patlar. Bu yüzden flattener'da short bacak, tarihsel beta ile hesaplanan miktardan
+**daha küçük** tutulur; fazlalık, ödenmesi gereken sigorta primi olarak kabul edilir.
+
+</details>
+
+</div>
+
+## Modül 6 — Book'un mimarisi: 35 hücrelik risk matrisi nasıl kurulur ve okunur
+
+*Bu modülde:* trade capture'dan risk ekranına üç katman, tenor × delta bucket matrisi,
+off-grid dağıtım, call/put ayrımının neden yapılmadığı, bucket okuma tuzakları,
+back-to-back kitap, vega ve rho hedge'inde vade eşleşmesi — sonunda bucket ekranını
+sıfırdan kurma prosedürü ve üç alıştırma.
+
+### 6.1 Trade capture'dan risk ekranına: üç katman ve hangisine ne sorulur
 
 Kurumsal işlem-risk sistemleri (front-to-back hazine platformları) üç katmandan oluşur:
 
@@ -748,7 +1455,7 @@ Kurumsal işlem-risk sistemleri (front-to-back hazine platformları) üç katman
 
 Trader'ın gün boyu baktığı ekran üçüncü katmandır: binlerce satırlık trade listesi değil, agregat risk matrisi. İlk katman ise sorulduğunda oradadır — "bu strike'ta kime ne sattık" sorusunun cevabı capture'dan gelir.
 
-### 6.2 Risk Matrisi: Tenor × Delta Bucket
+### 6.2 Risk matrisi: tenor × delta bucket — neden tek toplam sayıdan iyidir
 
 Standart kurgu, eksenlerin likit kotasyon noktalarıyla eşleşmesidir — çünkü hedge enstrümanları da o noktalarda yaşar. Vadeler O/N, 1W, 2W, 1M, 3M, 6M, 1Y (7 tenor) × delta bucket'ları 10ΔP, 25ΔP, ATM, 25ΔC, 10ΔC (5 bucket) = 35 hücre. (Daha kısa 6 vadelik listeyle 30 hücre olur; ilke aynıdır. 5Δ/15Δ/35Δ ekleyen daha granüler deskler vardır ama çoğu kitap için 5 bucket yeterlidir.)
 
@@ -764,11 +1471,11 @@ Standart kurgu, eksenlerin likit kotasyon noktalarıyla eşleşmesidir — çün
 
 Her hücrede o bölgeye düşen tüm opsiyonların *net* gamma/vega/theta'sı toplanmış durur. Trader 35 hücreyi tarayarak kitabı okur; risk yoğunluğu tipik olarak ATM × 1M–3M bölgesinde toplanır (tabloda dolu bölge), 1W/10ΔP gibi köşeler çoğu zaman boştur.
 
-#### Moneyness ayrımı neden şart: netleşme tuzağı
+#### 6.2.1 Moneyness ayrımı neden şart: netleşme tuzağı
 
 Tek bir toplam gamma sayısı yanıltır. ATM'deki +800K gamma ile 10Δ'daki −700K gamma netlenip "+100K gamma'mız var" dedirtir; oysa ATM'de büyük ve aktif bir risk, kanatta bambaşka bir risk vardır ve **hedge araçları farklıdır** — ATM gamma spot ile scalp edilir, OTM vega ancak başka bir opsiyonla kapatılır. İkinci tehlike dinamiktir: spot kayınca OTM opsiyon aniden ATM'leşir ve gamma "yoktan" belirir; bucket'lı ekran bu geçişi olmadan önce gösterir, tek sayı göstermez.
 
-### 6.3 Off-Grid Dağıtım: 4M Opsiyon Hangi Bucket'a?
+### 6.3 Off-grid dağıtım: grid dışı vade hangi pillar'lara hangi ağırlıkla yazılır?
 
 Grid dışı vadeler (ör. 4M) komşu pillar'lara lineer-zaman pro-rata ile dağıtılır — TLREF DV01 bucket'lamasında kullandığımız pro-rata mantığının birebir aynısı:
 
@@ -783,7 +1490,7 @@ $$
 - Aynı kural delta-bucket ekseninde de işler: 35Δ'lık bir pozisyon, 25Δ ve ATM bucket'larına lineer interpolasyonla bölünür.
 - İnce nokta: vega $\sqrt{T}$ ile ölçeklendiğinden bazı deskler lineer zaman yerine varyans-zaman ($T\cdot\sigma^2$) ağırlığı kullanır. Fark küçüktür; ama hedge'i pillar enstrümanlarıyla yapacaksan sistemin *hangisini* kullandığını bilmek zorundasın — hedge oranların ona göre çıkar.
 
-### 6.4 Greekler Call/Put Diye Ayrılmaz
+### 6.4 Greek'ler call/put diye ayrılmaz: kural ve üç istisnası
 
 Aynı strike ve vadede call ile put'un gamma'sı ve vega'sı **aynıdır**; theta'sı neredeyse aynıdır; delta'ları put-call parity gereği sadece $e^{-r_f T} \approx 1$ kadar farklıdır. Bu yüzden "call gamma'larım / put gamma'larım" ayrımının analitik değeri sıfırdır — greekler tenor × moneyness × underlying × book eksenlerinde ayrılır, asla call/put ekseninde değil. Pozisyonel (call/put bazlı) takibin gerektiği üç istisna vardır:
 
@@ -791,7 +1498,7 @@ Aynı strike ve vadede call ile put'un gamma'sı ve vega'sı **aynıdır**; thet
 - **Barrier/egzotik:** yapı gereği call/put ayrımı risk profilini doğrudan değiştirir (Modül 11).
 - **Counterparty/uygunluk:** hangi müşteriye ne satıldığı trade bazında bilinmek zorundadır — ama bu risk ekranının değil, capture katmanının işidir.
 
-### 6.5 Bucket Ekranı Nasıl Okunur — Sayısal Örnek
+### 6.5 Bucket ekranını okumak: ortalama vol karşılaştırmasının tuzağı
 
 Yaklaşık 4,5 ay vadeli USDTRY bucket'ı; forward 46,95, ATM vol %8,10. Ekranda görünen:
 
@@ -803,23 +1510,23 @@ Yaklaşık 4,5 ay vadeli USDTRY bucket'ı; forward 46,95, ATM vol %8,10. Ekranda
   "%8,20'ye alıp %7,80'e satmışım, 40 tick zarardayım" okuması yanlıştır. Long ve short bacaklar farklı strike'lardadır — biri forward'a yakın K46,50 (ATM-forward), diğeri forward altındaki K45,50 (forward'a göre ITM) — ve pozitif RR'li bir smile'da K46,50 doğal olarak daha yüksek vol taşır. İkisi de fair value'ya yakın fiyatlanmış olabilir; görünen 40 tick fark smile'ın kendisidir, alım-satım marjı değil. Doğru araç smile-adjusted ortalamadır: her trade'in işlem vol'ünden o strike'ın mid-smile vol'ü düşülür; kalan fark gerçekten kazanılan/kaybedilen spread'i gösterir.
 </div>
 
-### 6.6 Back-to-Back Müşteri Kitabı
+### 6.6 Back-to-back kitap: neden hem call hem put görünür, gelir nereden gelir?
 
 Müşteri işlemleri anında piyasada birebir kapatılıyorsa (back-to-back), net greekler $\approx 0$'dır; ama ekranda en kısa vade bucket'ında aynı anda hem call hem put pozisyonu görünmesi doğaldır. Sebep basittir: farklı müşteriler farklı yönlerde işlem yapmıştır; her biri piyasada *ayrı ayrı* kapatılınca iki pozisyon da defterde yaşar (geriye net delta −20 gibi kırıntılar kalır). Sistem yanlış kurgulanmış değildir — netleşmemiş görüntü, riskin değil kapatma mekaniğinin sonucudur.
 
 Gelir mekanizması: farklı fiyattan alıp satmanın spread'i ilk revaluation'da (yeniden değerlemede) P&L'e düşer. 10.000'e alınıp 20.000'e satılan opsiyonda vade sonunda hangi senaryo gerçekleşirse gerçekleşsin net K/Z hep +10.000 kalır — iki bacak her durumda birbirini nakit akışı bazında sıfırlar, kilitlenen spread değişmez. Back-to-back kitapta dikkat gerektiren yalnız iki şey vardır: pin/settlement riski (6.4'teki istisna) ve counterparty replasman riski — müşteri temerrüt ederse hedge bacağı yalnız kalır.
 
-### 6.7 Vega Hedge'inde Tenor Seçimi
+### 6.7 Vega hedge'inde tenor seçimi: vade eşleşmezse geriye ne taşırsın?
 
 Vega, hedge edilecek pozisyonla **eşleşen vadede** kapatılır. 6M vega'yı 1M opsiyonla kapatmak toplam vega'yı sıfırlar ama iki yeni sorun açar: (1) term-structure riski — 1M vol düşüp 6M vol yükselirse iki bacak *birden* zarar yazar; (2) 1M bacağı bolca istenmeyen gamma getirir (kısa vadenin gamma'sı büyüktür). Vade eşleşmesi mümkün değilse dağıtım komşu pillar'lara 6.3'teki pro-rata ile yapılır ve kalan curve riski, Modül 5.6'daki flattener çerçevesiyle *bilinçli* taşınır — fark, riskin farkında olunup olunmamasıdır.
 
-### 6.8 Faiz (Rho) Hedge'i: Vade Eşleşmeli FX Swap
+### 6.8 Rho hedge'i: vade-eşleşmeli FX swap ve riskin masalar arası yolculuğu
 
 3M opsiyonun rho'su (faiz duyarlılığı) 3M FX swap ile nötralize edilir: spot USD al / 3M forward sat, ya da tersi. 1Y swap kullanılmaz — 3M sonra opsiyon ölür ama swap yaşamaya devam eder; hedge, hedge'lediği riskten uzun ömürlüyse kendisi yeni risk üretmiş olur. İkinci dinamik: delta hedge boyutu spot hareketiyle değiştikçe taşınan spot pozisyonun funding ihtiyacı da değişir; bu yüzden swap nominali periyodik olarak güncellenir.
 
 Riskin bankadaki yolculuğu şudur: gamma/vega/theta opsiyon deskinde kalır, delta spot desk'e devredilir, rho rates desk'e devredilir. Her desk kendi eksenindeki riski yönetir; opsiyon deski yalnız opsiyona *özgü* riskleri tutar.
 
-### 6.9 Cross'lar Sistemde Nasıl Tutulur
+### 6.9 Cross'lar sistemde: ayrı underlying mi, bacaklara decompose mu?
 
 EURTRY gibi bir cross iki yaklaşımla book edilebilir:
 
@@ -828,12 +1535,157 @@ EURTRY gibi bir cross iki yaklaşımla book edilebilir:
 
 Decompose modelinde iki bacak arasındaki **korelasyon**, ayrı bir risk faktörü satırı olarak ekrana gelir — cross vol'ü iki bacak vol'ü + korelasyonun fonksiyonudur, korelasyon oynarsa cross pozisyonun değeri bacak vol'leri sabitken bile değişir. Ayrıştırmanın tüm matematiği ve sayısal örnekleri Modül 9'dadır.
 
+### 6.10 Bucket ekranını sıfırdan kurmak: dört pozisyonluk örnek kitap
+
+Mimari anlatıldı; şimdi küçük bir kitabı **elle** matrise yazalım. Prosedür beş adımdır
+ve her akşam aynı sırayla işler.
+
+**Kitap.** Dört pozisyon, hepsi USDTRY:
+
+| # | Pozisyon | Vade | Delta noktası | Vega (TRY/puan) |
+| --- | --- | --- | --- | --- |
+| 1 | Long 10M ATMF call (koşan örnek) | 3M | ATM | +887.179 |
+| 2 | Short 20M 25Δ call | 3M | 25ΔC | −1.422.442 |
+| 3 | Long 15M call, off-grid vade | 5M | 25ΔC | +900.000 |
+| 4 | Short 8M put, off-grid delta (35Δ) | 1M | 35ΔP | −400.000 |
+
+**Adım 1 — grid'e oturt.** Pozisyon 1 ve 2 zaten pillar üzerinde: 3M × ATM ve
+3M × 25ΔC.
+
+**Adım 2 — off-grid vadeyi pro-rata dağıt (6.3).** 5M, 3M ile 6M arasında:
+$w_{3M} = (6-5)/(6-3) = 1/3$, $w_{6M} = 2/3$ → 3M × 25ΔC hücresine **+300.000**,
+6M × 25ΔC hücresine **+600.000**.
+
+**Adım 3 — off-grid delta'yı interpole et.** 35Δ put, 25ΔP (25) ile ATM (50) arasında:
+$w_{25P} = (50-35)/(50-25) = 0{,}60$, $w_{ATM} = 0{,}40$ → 1M × 25ΔP hücresine
+**−240.000**, 1M × ATM hücresine **−160.000**.
+
+**Adım 4 — hücreleri topla.**
+
+| Hücre | Vega (TRY/puan) | Kaynak |
+| --- | --- | --- |
+| 1M × 25ΔP | −240.000 | poz. 4 (%60) |
+| 1M × ATM | −160.000 | poz. 4 (%40) |
+| 3M × ATM | +887.179 | poz. 1 |
+| 3M × 25ΔC | −1.122.442 | poz. 2 (−1.422.442) + poz. 3 (+300.000) |
+| 6M × 25ΔC | +600.000 | poz. 3 (%67) |
+| **Toplam** | **−35.263** | |
+
+**Adım 5 — oku.** Toplam vega neredeyse sıfır (−35K) — "nötr kitap" diyen yanılır.
+Ekranda gördüğünüz gerçek şudur: **3M kanadında büyük short (−1,12M), 6M kanadında
+büyük long (+600K), 3M gövdede long (+887K)**. Bu kitap paralel vol hareketine duyarsız
+ama (i) term structure büküldüğünde, (ii) RR genişlediğinde — yani kanat ile gövde
+ayrıştığında — belirgin P&L üretir. Tek toplam sayının neden yeterli olmadığının somut
+kanıtı budur.
+
+**Hedge kararı.** Kanat riskini kapatmak için doğru araç, aynı vade ve aynı delta
+noktasında opsiyondur (6.7): 3M 25Δ call **almak**. 1M veya 6M ile kapatmak toplam
+vega'yı düzeltir, kova riskini kitapta bırakır.
+
+<div class="not">
+  <span class="etiket">Bu modülün tipik hataları</span>
+
+  1. **Toplam vega'ya bakıp "nötrüm" demek.** Yukarıdaki kitap tam olarak bu tuzağın
+     örneğidir.
+  2. **Off-grid dağıtım kuralını sistemden farklı varsaymak.** Lineer zaman mı,
+     varyans-zaman mı? Hedge oranınız buna göre değişir.
+  3. **Bucket ortalama vol'lerini smile düzeltmesi olmadan karşılaştırmak** (6.5).
+  4. **Cross bacaklarını ana kitaptan ayırmamak** (6.9, 9.6) — 3M kovasının işareti
+     sessizce dönebilir.
+  5. **Vega'yı vade eşleşmesiz kapatmak.** Toplam sıfırlanır, curve riski kalır ve
+     "nötr" sanılan kitap eğri büküldüğünde zarar yazar.
+
+</div>
+
 <div class="not">
   <span class="etiket">Modülün özeti</span>
   Karar ekranı 35 hücrelik tenor×delta matrisidir; off-grid pozisyon 2/3–1/3 tipi pro-rata ile pillar'lara dağıtılır. Greekler call/put diye ayrılmaz (istisna: pin, barrier, counterparty). Bucket ortalama vol'ü smile düzeltmesi yapılmadan karşılaştırılmaz. Back-to-back kitapta kısa vade bucket'ında call+put birlikte görünür ve spread ilk gün P&L'e düşer. Vega vade-eşleşmeli opsiyonla, rho vade-eşleşmeli FX swap ile kapatılır.
 </div>
 
-## Modül 7 — Günlük İş Akışı, Limitler, Hedge Disiplini
+<div class="pratik">
+  <span class="etiket">Pratik — Modül 6 · Book'un mimarisi</span>
+
+**1. Doğrudan uygulama — off-grid vade.** 9M vadeli bir opsiyonun 45.000 TRY/puan
+vega'sı var. Grid pillar'ları 6M ve 1Y. (a) Ağırlıklar? (b) Hangi hücreye ne yazılır?
+(c) Sistem lineer zaman yerine varyans-zaman ($T\sigma^2$) kullanıyor ve 6M vol %12,
+1Y vol %14 ise ağırlıklar hangi yöne kayar?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — lineer zaman: $w_{6M} = (12-9)/(12-6) = 0{,}50$; $w_{1Y} = 0{,}50$.
+
+Adım 2 — dağıtım: 6M bucket'ına **+22.500**, 1Y bucket'ına **+22.500**.
+
+Adım 3 — varyans-zaman: ağırlıklar toplam varyansa göre kurulur.
+$T\sigma^2$: 6M → $0{,}5\times 0{,}12^2 = 0{,}0072$; 1Y → $1\times 0{,}14^2 = 0{,}0196$;
+9M (ara vol ~%13,2) → $0{,}75\times 0{,}132^2 = 0{,}0131$. Doğrusal interpolasyonla
+$w_{6M} = (0{,}0196-0{,}0131)/(0{,}0196-0{,}0072) = 0{,}52$; $w_{1Y} = 0{,}48$.
+
+**Cevap:** (a) 0,50 / 0,50 (b) 22.500 + 22.500 (c) ağırlık **kısa pillar'a** hafifçe
+kayar (0,52 / 0,48). Fark küçüktür ama hedge nominalinize %2 yansır; hangi kuralın
+kullanıldığını bilmeden pillar enstrümanıyla hedge kurulmaz.
+
+</details>
+
+**2. Tuzak — smile düzeltmeli spread okuması.** Bir bucket'ta long 5.800 vega ortalama
+**%8,20**'den, short 8.250 vega ortalama **%7,80**'den yazılmış. Long bacağın strike'ının
+mid-smile vol'ü %8,05; short bacağınki %7,60. (a) Naif okuma ne der? (b) Smile düzeltmeli
+gerçek spread P&L'i kaç? (c) Sonuç naif okumadan neden farklı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — naif: "%8,20'ye aldım, %7,80'e sattım → 40 tick zarar."
+
+Adım 2 — long bacak: mid %8,05'e karşı %8,20 ödenmiş → mid'in **0,15 puan üstünde**
+alım → $5.800 \times 0{,}15 = \mathbf{-870}$ birim.
+
+Adım 3 — short bacak: mid %7,60'a karşı %7,80'den satış → mid'in **0,20 puan üstünde**
+satış → $8.250 \times 0{,}20 = \mathbf{+1.650}$ birim.
+
+Adım 4 — net: $-870 + 1.650 = \mathbf{+780}$ birim, yani **kâr**.
+
+**Cevap:** (a) 40 tick zarar (b) +780 birim kâr (c) İki bacak farklı strike'larda;
+pozitif RR'li bir smile'da yüksek strike doğal olarak yüksek vol taşır. Görünen 40
+tick'in tamamı smile'ın kendisidir, alım-satım marjı değil. Kural: **işlem vol'ünden
+o strike'ın mid-smile vol'ü düşülmeden hiçbir bucket kârı okunmaz.**
+
+</details>
+
+**3. Karar — hangi hedge?** 6.10'daki örnek kitabı devraldınız: 3M × 25ΔC hücresinde
+−1.122.442, 6M × 25ΔC'de +600.000, 3M × ATM'de +887.179 vega var. Yönetim "vega'yı
+sıfırla" diyor. (a) Tek işlemle toplam vega'yı sıfırlamanın en kolay yolu ne, sakıncası
+ne? (b) Doğru çözüm ne? (c) Doğru çözümün maliyeti ne?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — kolay yol: toplam zaten −35.263; herhangi bir vadede +35K vega alıp kapatmak.
+Sakıncası: kova yapısı hiç değişmez — kitap hâlâ 3M kanadında büyük short, 6M kanadında
+büyük long. Rapor "nötr" der, kitap nötr değildir.
+
+Adım 2 — doğru çözüm: **hücre bazında** kapatmak. 3M 25Δ call al (+1,12M vega),
+6M 25Δ call sat (−600K), 3M ATM straddle sat (−887K). Her bacak kendi vade ve delta
+noktasında.
+
+Adım 3 — maliyet: üç ayrı işlemin bid-ask'i + 3M 25Δ call alırken ödenecek kanat primi
+(BF pahalıysa yüksek). Ayrıca gamma ve delta profili değişir; her bacaktan sonra delta
+yeniden hedge edilir.
+
+**Cevap:** (a) 35K'lık tek işlem — kozmetik (b) hücre bazlı üç işlem (c) üç spread +
+kanat primi + delta rebalance. Yönetime verilecek doğru cevap "vega sıfırlandı" değil,
+"**hangi kovada** sıfırlandı"dır.
+
+</details>
+
+</div>
+
+## Modül 7 — Günün ritmi, limitler, hedge disiplini: masada bir iş günü
+
+*Bu modülde:* günün üç fazı ve her adımın gerekçesi, limit tablosunun anatomisi, delta
+hedge frekansının üç rejimi — sonunda uygulanabilir bir sabah kontrol listesi ve üç
+alıştırma.
 
 Buraya kadar olan modüller kitabın *ne* taşıdığını ölçmeyi öğretti: greekler, bucket
 matrisi, senaryo taraması, P&L ayrıştırması. Bu modül o ölçümleri bir **iş gününe**
@@ -842,7 +1694,7 @@ yapılan kontroller (ritim), yazılı ve pazarlıksız sınırlar (limitler) ve 
 zaman-nasıl düzelteceğini önceden tanımlayan kurallar (hedge disiplini). Üçünün ortak
 amacı aynıdır: karar anında duyguya yer bırakmamak.
 
-### 7.1 Günün Ritmi
+### 7.1 Günün ritmi: sabah · gün içi · EOD — hangi adım hangisinin girdisi?
 
 Gün üç faza bölünür: sabah (dünün hesabını kapatıp bugünün risk fotoğrafını çekmek),
 gün içi (yeni trade + hedge yürütmesi) ve gün sonu (bağımsız değerleme + raporlama).
@@ -892,7 +1744,7 @@ Satırların gerekçesi tek tek:
 - **P&L raporlama.** Desk P&L'i risk attribution ile birlikte raporlanır ve ertesi
   sabahki ilk adımın girdisi olur — döngü böyle kapanır.
 
-### 7.2 Limit Tablosu
+### 7.2 Limit tablosu: hangi satır neyi bağlar, neden net ve gross birlikte gerekir?
 
 Limitler "trading kârı vs risk taşıma" dengesinin **yazılı** halidir: kurumun risk
 iştahını, tartışmanın mümkün olmadığı sayılara çevirirler. İki örnek set — biri TL
@@ -935,7 +1787,7 @@ settir. Ve ikinci ilke: **limit ihlali tartışma konusu değildir** — ihlal a
 aksiyonun önceden tanımlı olduğu andır. "Bir gün daha bekleyelim" cümlesinin limit
 çerçevesinde karşılığı yoktur; olsaydı limit olmazdı.
 
-### 7.3 Delta Hedge Frekansı
+### 7.3 Delta hedge frekansı: band · saat · olay — hangi rejim ne zaman kullanılır?
 
 - **Sürekli hedge yok.** Her tick'te rebalance etmek, bid-ask spread'ini gamma scalp
   kârına yediren en garantili yoldur: long gamma pozisyonun kazancı tam da spotun
@@ -961,13 +1813,144 @@ aksiyonun önceden tanımlı olduğu andır. "Bir gün daha bekleyelim" cümlesi
   altında tutulur. Vol yükselince TRY cinsinden band genişletilir; bu gevşeklik değil,
   aynı istatistiksel disiplinin korunmasıdır.
 
-## Modül 8 — Pozisyon Stratejileri ve Kriz Yönetimi
+### 7.4 Sabah kontrol listesi: on iki madde, sırayla
+
+7.1'deki tablo *neyin* yapıldığını söyler; aşağıdaki liste *nasıl* yapıldığını. Her
+madde ya bir sayı üretir ya bir aksiyon tetikler; hiçbiri "göz gezdirme" değildir.
+
+| # | Kontrol | Beklenen çıktı | Aksiyon eşiği |
+| --- | --- | --- | --- |
+| 1 | Dünün P&L'i ayrıştırıldı mı? | altı bileşen + residual | residual > %2 → 4.6 ağacı |
+| 2 | Residual'ın işareti üst üste aynı mı? | 5 günlük seri | 3 gün aynı işaret → model incelemesi |
+| 3 | Bucket vega tablosu yenilendi mi? | 35 hücre | herhangi bir hücre limitin %80'i → boyut planı |
+| 4 | Senaryo matrisi köşeleri? | en kötü hücre | eşiği aşıyorsa gün başlamadan küçült |
+| 5 | Net ve gross delta? | iki sayı | gross/net oranı sıçradıysa ölü pozisyon ara |
+| 6 | Bugün vade dolan opsiyonlar? | strike + nominal listesi | spot strike'a %1 yakınsa pin planı yaz |
+| 7 | Bugünkü event takvimi? | event listesi + eşdeğer gün | event vol ayrıştırması güncellendi mi |
+| 8 | Dünkü yüzey ile bugünkü fark haritası | tenor × delta farkları | vega P&L ile eşleşmiyorsa marklama kontrolü |
+| 9 | Rho hedge'i vade eşleşmesi bozuldu mu? | swap ladder | eşleşmemiş bacak varsa yenile |
+| 10 | Collateral / margin çağrısı var mı? | tutar | likidite planına gir |
+| 11 | Egzotik bariyerlere yakınlık? | mesafe (%) | %2'nin altına inen bariyer → izleme listesi |
+| 12 | Dün girilen trade'lerin booking'i doğru mu? | capture ile mutabakat | fark varsa düzelt, attribution'ı yeniden koştur |
+
+**Neden liste, neden sıra?** Kriz günü hafıza güvenilmez bir araçtır; liste, sakin günde
+yazılıp gergin günde uygulanmak üzere vardır. Sıra ise bağımlılıktır: 1–2 dünü kapatır,
+3–5 bugünün fotoğrafını çeker, 6–8 günün risklerini önceden görür, 9–12 altyapıyı denetler.
+
+<div class="not">
+  <span class="etiket">Bu modülün tipik hataları</span>
+
+  1. **Limit ihlalini "bugünlük" görmezden gelmek.** İhlal anı, aksiyonun önceden
+     tanımlı olduğu andır; erteleme limiti fiilen iptal eder.
+  2. **Yalnız net delta limiti tutmak.** Net sıfırken gross devasa olabilir; unwind
+     maliyeti gross ile ölçeklenir.
+  3. **Bandı TRY cinsinden sabitlemek.** Vol yükseldiğinde işlem sayısı ve ödenen spread
+     patlar; band günlük vol'e endekslenir.
+  4. **Hedge'i illikit saatte yapmak.** Aynı miktar, dar spread'li pencerede yarı
+     maliyete kapanır.
+  5. **Event sonrası bandı beklemek.** Gap sonrası delta zaten bandın çok dışındadır;
+     olay bazlı tur zorunludur.
+
+</div>
+
+<div class="not">
+  <span class="etiket">Modülün özeti</span>
+
+  Gün üç fazlıdır ve her adım bir sonrakinin girdisidir: attribution → Greek update →
+  limit → trade → hedge → bağımsız valuation → raporlama. Limitler net **ve** gross,
+  bucket başına vega, gamma, konsantrasyon ve **senaryo köşesi** olarak konur; ihlal
+  tartışılmaz. Delta hedge'i sürekli değil bandlıdır; band vol'e endekslenir ve olay
+  günlerinde zorunlu tur yapılır.
+
+</div>
+
+<div class="pratik">
+  <span class="etiket">Pratik — Modül 7 · Ritim, limit, hedge disiplini</span>
+
+**1. Doğrudan uygulama — band kalibrasyonu.** Delta bandınız vol %12 iken ±500K USD.
+Vol %20'ye çıktı. (a) Band ne olmalı? (b) Koşan örneğin cash gamma'sı 657.170 USD/%1
+ise, %12 rejiminde bandı aşmak için spotun yüzde kaç oynaması gerekir? (c) Bu sayı size
+ne söylüyor?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — kural: band $\propto \sigma_{günlük}$ → $500\text{K} \times 20/12 = \mathbf{833}$K USD.
+
+Adım 2 — bandı aşma hareketi: $500.000 / 657.170 = \mathbf{\%0{,}76}$.
+
+Adım 3 — karşılaştırma: %12 vol'ün ima ettiği günlük 1σ hareket **%0,756** (4.1).
+Yani band, tam olarak **bir günlük 1σ** genişliğinde kurulmuş.
+
+**Cevap:** (a) ±833K (b) %0,76 (c) Band 1σ'ya denk geliyorsa istatistiksel beklenti
+kabaca **günde bir rebalance**tir. Bandı yarıya indirirseniz tur sayısı ~4 katına çıkar
+(hareket karekökle ölçeklendiği için), ödenen spread de öyle. Band seçimi bu yüzden
+"hassasiyet" değil, **maliyet-hata** optimizasyonudur.
+
+</details>
+
+**2. Karar — limit tamponu.** FX vega limitiniz ±150K USD/puan. Kitapta hâlihazırda
+96K kullanılıyor. Müşteri, kabul ederseniz +32K vega ekleyecek bir trade istiyor.
+(a) Trade sonrası kullanım yüzde kaç? (b) 8.4'teki #6 filtresi ne der? (c) Trade'i
+tamamen reddetmeden ne yaparsınız?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — kullanım: $(96+32)/150 = \mathbf{\%85{,}3}$.
+
+Adım 2 — filtre: checklist #6 eşiği **%80**; ihlal. Limit teknik olarak aşılmıyor ama
+**tampon** yok — piyasa aleyhe dönerse boyut küçültmekten başka manevra kalmaz.
+
+Adım 3 — çözümler: (i) trade'i $150\times 0{,}80 - 96 = 24$K vega ile sınırla → müşteri
+nominalinin **%75'i** ($24/32$); (ii) tam nominali al ve **aynı gün** offset işlemle
+vega'yı geri kısaltarak kullanımı %80 altına indir; (iii) trade'i eşleşen bir vadede
+back-to-back kapat (6.6) — spread'i cebe koy, riski taşıma.
+
+**Cevap:** (a) %85,3 (b) tamponu yiyor, ham hâliyle geçmez (c) %75 boyut, aynı-gün
+offset veya back-to-back. Müşteriye "hayır" demeden riski çerçeveye sokmak masanın
+zanaatıdır.
+
+</details>
+
+**3. Tuzak — hangi rejim?** Sabah 09:00'da önemli bir makro veri açıklanacak; kitabınız
+long gamma. Üç seçenek: (i) bandı yarıya indirip sık rebalance, (ii) veriden önce
+deltayı tam nötrle ve veriden hemen sonra tur yap, (iii) hiçbir şey yapma, akşam banda
+bak. Hangisi ve neden?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — (i) yanlış: veri öncesi dar band, gürültüde defalarca tetiklenir ve spread
+ödetir; hareketin asıl kısmı zaten veriden **sonra** gelecektir.
+
+Adım 2 — (iii) yanlış: gap sonrası delta bandın çok dışında kalır; long gamma'nın
+kazancını nakde çevirmenin yolu rebalance'tır, akşama kadar beklemek kazancı geri
+verebilir.
+
+Adım 3 — (ii) doğru: veri öncesi delta nötr → gap simetrik yakalanır; veri sonrası
+fiyatlama oturur oturmaz **olay bazlı zorunlu tur** (7.3) yapılır ve oluşan büyük delta
+kaymasının kârı kilitlenir.
+
+**Cevap:** (ii). Ek not: veriden hemen sonraki ilk saniyelerde spread'ler geniştir;
+"fiyatlama oturur oturmaz" ifadesi tam olarak bunu anlatır — ilk tick'e değil, ilk
+sakin kotasyona işlem yapılır.
+
+</details>
+
+</div>
+
+## Modül 8 — Pozisyon kurmak ve terste kalmak: karar zinciri ve kriz protokolü
+
+*Bu modülde:* görüşten araca giden karar zinciri, strateji kataloğu, delta azaltmanın
+üç yolunun sayısal karşılaştırması, trade öncesi checklist, kriz protokolü ve risk
+tablosu okuma — sonunda kaybeden bir vakanın adım adım çözümü ve üç alıştırma.
 
 Önceki modül günün rutinini kurdu; bu modül iki soruya cevap verir: **pozisyon nasıl
 kurulur** (görüşten araca giden karar zinciri, strateji kataloğu, sayısal vaka) ve
 **ters gidince ne yapılır** (müdahale protokolü, risk tablosu okuma, sık hatalar).
 
-### 8.1 Karar Mekanizması: Üç Adım
+### 8.1 Karar mekanizması: görüş → ufuk → araç (ve neden bu sırayla)
 
 Her trade'in girişi aynı üç sorudan geçer. Sıra önemlidir: önce görüş netleşir, sonra
 ufuk, en son araç — araçtan başlayıp görüşü sonradan uydurma, masaların en yaygın
@@ -1001,7 +1984,7 @@ oynamaz ve theta faturası görece hafiftir — gamma taşımak istemiyorsan vad
 doğal filtredir. Delta ayrıca nötrlenir ki pozisyon saf vol görüşü olarak kalsın;
 aksi halde "vol yükselecek" trade'in fark etmeden bir spot pozisyonuna dönüşür.
 
-### 8.2 Strateji Kataloğu
+### 8.2 Strateji kataloğu: hedefe karşılık gelen yapı ve onun bedeli
 
 Görüş → ufuk → araç zinciri işledikten sonra katalog, hedefe karşılık gelen yapıyı ve
 o yapının **bedelini** verir. Opsiyon piyasasında bedava öğle yemeği yoktur: her satırda
@@ -1028,7 +2011,7 @@ değildir. **RR** (risk reversal: bir kanadı al, diğerini sat) saf skew/vanna
 pozisyonudur; **BF** (butterfly: strangle ile straddle farkı) ise kanatların
 merkeze göre pahalılığına, yani vol-of-vol'e oynar.
 
-### 8.3 Sayısal Vaka: XAU/USD'de +5M USD Delta Azaltmanın Üç Yolu
+### 8.3 Sayısal vaka: XAU'da +5M delta azaltmanın üç yolu, üç farklı risk paketi
 
 Kurulum: kitapta istenmeyen $+5.000.000$ USD long delta var — spot $S = 5.000$
 USD/oz iken bu $1.000$ oz altın eşdeğeridir. Piyasa verisi: $\sigma = \%16$,
@@ -1080,7 +2063,7 @@ bambaşka risk paketi:
   USD theta toplar; C'nin theta'sı +549 ile neredeyse sıfırdır, çünkü net prim de
   sıfırdır — kira almıyorsan kira geliri olmaz.
 
-### 8.4 Trade Öncesi 10 Soru (Checklist)
+### 8.4 Trade öncesi 10 soru: tetiğe basmadan önceki son filtre
 
 Katalogdan yapı seçildi, vaka hesaplandı — tetiğe basmadan önce son filtre. Bu liste
 kâğıt üzerinde bürokrasi gibi görünür; pratikte her sorunun arkasında bu kitapta
@@ -1106,7 +2089,7 @@ bakar — limiti dolduran trade, piyasa aleyhine gittiğinde manevra alanı bır
 gibi çok bacaklı yapılarda özellikle önemlidir — girişte dar görünen spread, stresli
 piyasada unwind ederken katlanır.
 
-### 8.5 Terste Kalma Protokolü — Vaka Üzerinden
+### 8.5 Terste kalma protokolü: delta → gamma → vega → tasfiye sırası
 
 Anonimleştirilmiş bir vaka: bir XAU/USD opsiyon kitabı fena terste. Risk tablosunun
 verdiği fotoğraf (değerler kitabın kendi risk-birimi ölçeğinde; okuma için işaretler
@@ -1157,7 +2140,7 @@ zararı taksitlendirmekten ibarettir.
   Önce kanamayı durdur, sonra strateji kur; bu sıra asla değişmez.
 </div>
 
-### 8.6 Risk Tablosu Arkeolojisi: Greeklerden Trader'ı Okumak
+### 8.6 Risk tablosu arkeolojisi: Greek'lerden trader'ın niyetini okumak
 
 Bir risk tablosu, pozisyon listesine hiç bakmadan trader'ın niyetini söyler.
 Anonimleştirilmiş bir vaka: bir EUR opsiyon kitabı, net delta **−4,3M** ama gamma
@@ -1192,7 +2175,7 @@ alınmış/satılmış). Tabloyu bu anahtarla okumak, pozisyon listesini satır 
 hem daha hızlı hem daha doğrudur — çünkü liste ne yapıldığını, tablo ne **taşındığını**
 gösterir.
 
-### 8.7 Sık Yapılan Hatalar
+### 8.7 Sık yapılan hatalar: beş tuzak ve her birinin panzehiri
 
 - **Büyük nominal + kısa vade + OTM tuzağı.** "Ucuz" primle dev nominal satmak: OTM
   opsiyonun birim primi küçüktür, bu yüzden anlamlı prim toplamak için nominal şişirilir.
@@ -1217,6 +2200,53 @@ gösterir.
   üçüncü soru işareti). Çözüm rutindir: her çeyrek "ölü pozisyon temizliği" yapılır —
   teze hizmet etmeyen, hedge görevi kalmamış her bacak kapatılır ya da sadeleştirilir.
 
+### 8.8 Kaybeden vaka ve geçersizleşme kuralı: bir trade adım adım nasıl bozulur
+
+Buraya kadarki örnekler çalışan hâli gösterdi. Zanaatın asıl öğretici kısmı, **kaybeden**
+örneği aynı ayrıntıyla yürütmektir.
+
+**Kurulum.** Koşan örneğin piyasasında (spot 45,00 · 3M · $\sigma=\%12$) 20M USD
+nominal **25Δ call sattınız** (strike 51,2722). Tez: "TRY sakin kalır, kanat pahalı,
+theta toplarım." Girişte tahsil edilen prim **7.846.227 TRY**; delta hedge için
+5.000.078 USD spot **alındı**; günlük theta geliri +303.771 TRY.
+
+**Bir günde ne oldu.** Spot 45,00 → 45,90 (+%2) ve vol %12 → %15 (+3 puan).
+
+| Kalem | Hesap | TRY |
+| --- | --- | --- |
+| Opsiyonun değeri (t0) | satılan prim | +7.846.227 |
+| Opsiyonun değeri (t1) | tam repricing | −18.080.676 |
+| **Opsiyon bacağı** | $7{,}85 - 18{,}08$ M | **−10.234.450** |
+| Spot hedge kârı | $5.000.078 \times 0{,}90$ | **+4.500.070** |
+| **Net** | | **−5.734.380** |
+
+**Neden bu kadar?** Ayrıştırma yapılırsa: gamma kanalı ve vanna kanalı birlikte deltayı
+5,00M USD'den **7,79M** USD'ye taşıdı — yani gün sonunda hedge'iniz **2,79M USD eksik**
+kaldı ve zararın bir kısmı bu açıktan geldi. Tekil Greek'lerle yapılan Taylor tahmini
+bu kaymayı 3,26M USD gösteriyordu (Modül 3 pratiği); gerçek 2,79M çıktı — büyük şokta
+Taylor **abartır**, çünkü gamma ve vanna hareket ilerledikçe kendileri de değişir. İki
+sonuç: (i) hedge açığını Taylor'la değil tam repricing'le ölçün, (ii) büyük şokta
+"ne kadar açığım" sorusunun tek doğru cevabı yeniden fiyatlamadır.
+
+**Tez nerede yanlıştı?** Tezin kendisi ("kanat pahalı") makul olabilir. Yanlış olan
+**boyut ve yapı**ydı: aynı görüşü 2.6'daki A yolu (düşük nominal ATM) ile almak
+vanna'yı 39 kat küçültürdü. "Kanat pahalı" tezi kanat **satmayı** gerektirir, ama
+kanadın vanna'sını taşımayı gerektirmez — vanna, ikinci bir bahistir ve bilinçli
+alınmadıysa kazayla alınmıştır.
+
+**Geçersizleşme (invalidation) kuralı — girişte yazılır.** Bu trade için:
+
+| Sinyal | Eşik | Aksiyon |
+| --- | --- | --- |
+| Spot, strike'a mesafe | %5'in altına inerse | nominali yarıya indir |
+| Vol seviyesi | giriş vol'ünün +2 puan üstü | vanna kanalını kapat (kanat geri al) |
+| Senaryo köşesi | limitin %80'ini geçerse | pozisyonu ölçekle küçült |
+| RR | giriş seviyesinin +1 puan üstü | tez geçersiz: skew genişliyor, kanat satışı yanlış |
+| Süre | tez ufkunun (ör. 4 hafta) sonu | kâr/zarar fark etmeksizin gözden geçir |
+
+Kuralın değeri, **pozisyon zarardayken yazılmamış olmasındadır**. Zarardayken yazılan
+kural, kuralın kılığına girmiş bir umuttur.
+
 <div class="not">
   <span class="etiket">Modülün özeti</span>
   Görüş → ufuk → araç üçlüsü her trade'in girişidir; katalog hedefe göre yapıyı verir.
@@ -1226,11 +2256,100 @@ gösterir.
   kitabı da karşı tarafı da daha hızlı anlar.
 </div>
 
-## Modül 9 — Çapraz Kur Book'u: EURTRY'yi EURUSD + USDTRY ile Yönetmek
+<div class="pratik">
+  <span class="etiket">Pratik — Modül 8 · Strateji ve kriz yönetimi</span>
+
+**1. Karar — hangi yol?** XAU kitabınızda istenmeyen +5.000.000 USD delta var ve kitap
+hâlihazırda **short gamma, short vega**. 8.3'teki üç yol (A: ATM sat · B: 25Δ sat ·
+C: risk reversal) arasından seçin ve iki cümleyle gerekçelendirin. Seçtiğiniz yolun
+gizli maliyeti ne?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — A: ATM **satmak** gamma ve vega'yı daha da negatife iter (−483K cash gamma,
+−19,3K vega). Zaten short olan kitapta bu yangına körüktür.
+
+Adım 2 — B: daha beter — aynı deltayı %64 daha fazla gamma/vega ve **31 kat vanna** ile
+keser.
+
+Adım 3 — C: risk reversal. Gamma ≈ 0, vega ≈ 0, prim ≈ 0 → mevcut short profili
+büyütmez. Doğru seçim **C**.
+
+Adım 4 — gizli maliyet: tabloda duran **−267.374** vanna, yani satılan skew; artı **iki
+ayrı strike'ta** (5.346,9 ve 4.800,7) pin/settlement riski; artı theta'nın da sıfıra
+yakın olması (+549/gün) — kira almıyorsanız kira geliriniz de yoktur.
+
+**Cevap:** C; bedeli "delta azalttım" değil, "**delta azalttım ve skew sattım**"
+kararını bilinçli vermektir. Bu karar 8.4'teki #7 ("vanna/volga yükü ne?") sorusunun
+tam olarak sorduğu şeydir.
+
+</details>
+
+**2. Doğrudan uygulama — nominal sağlaması.** Aynı +5M USD delta'yı bu kez **25Δ put
+alarak** kesmek istiyorsunuz. Spot 5.000 USD/oz, 25Δ put'un ons başına deltası −0,25.
+(a) Kaç ons put alırsınız? (b) Bu yol kitabın gamma/vega'sına ne yapar? (c) A ve B
+yollarından farkı ne?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — nominal: $5.000.000 / (0{,}25 \times 5.000) = \mathbf{4.000}$ ons.
+
+Adım 2 — işaret: opsiyon **alındığı** için gamma ve vega **pozitif** eklenir — short
+gamma/vega olan kitap için bu bir düzeltmedir, bozma değil.
+
+Adım 3 — fark: A ve B prim **toplar** (satış), bu yol prim **öder**. Karşılığında
+kitabın en tehlikeli bacağını (negatif gamma) hafifletirsiniz.
+
+**Cevap:** 4.000 ons 25Δ put; gamma/vega long'a döner, prim ödenir. Ders: aynı delta
+hedefine ulaşmanın **dört** yolu vardır ve dördü de farklı Greek paketleri taşır —
+"delta'yı kestim" cümlesi tek başına hiçbir şey anlatmaz.
+
+</details>
+
+**3. Kriz — ilk üç hamle.** 8.5'teki kitabı devraldınız: net delta **+4.192**,
+gamma **−258** (1M'de −178), vega **−8,48** (0D call −8,85). Altın ralli hâlinde ve vol
+sıçramış. (a) İlk üç hamleyi sırayla yazın. (b) Yasak hamle ne? (c) Roll'u ne zaman
+meşru sayarsınız?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — hamle 1: **deltayı kes.** +4.192'yi spot/futures ile en az yarıya (≈ +2.096)
+indir. En hızlı, en likit, en ucuz müdahale; kanamanın birinci derecesini durdurur.
+
+Adım 2 — hamle 2: **gammayı düzelt.** Yoğunlaşmanın olduğu 1M vadesinde ATM
+straddle/strangle **al**. Vol sıçradığı için pahalıdır — ama negatif gamma durduğu her
+saat zarar üretme kapasitesini büyütür; yönetilemeyen pozisyonun ucuzu olmaz.
+
+Adım 3 — hamle 3: **vega'ya görüşle karar ver.** Vol zaten sıçradıysa tam hedge pahalı;
+"daha da yükselir" tezi varsa uzak kanat alıp kuyruğu kapat, yoksa taşı ve boyutu
+tasfiye ile küçült (0D'lerden başlayarak).
+
+Adım 4 — yasak: **pozisyona ekleyip ortalama düşürmek.** Negatif gamma + negatif vega
+kitabında ekleme riski toplamaz, katlar.
+
+Adım 5 — roll: yalnızca "tezim doğru, zamanlamam erken" önermesi **savunulabilirse**.
+Tezsiz roll, zararı taksitlendirmektir.
+
+**Cevap:** delta → gamma → vega; ekleme yasak; roll ancak yazılı tezle. Sıranın mantığı
+maliyet-hız eğrisidir: en ucuz ve en hızlı müdahale önce gelir.
+
+</details>
+
+</div>
+
+## Modül 9 — Çapraz kur book'u: EURTRY'yi EURUSD + USDTRY bacaklarıyla yönetmek
+
+*Bu modülde:* triangulation, cross vol formülü, delta ve vega'nın bacaklara dağıtımı,
+uçtan uca 5M EUR'luk bir trade, korelasyon riski, cross'ların ana kitaba sızması,
+yedi bileşenli attribution ve proxy hedge — sonunda bir cross trade'i sıfırdan kurma
+prosedürü ve üç alıştırma.
 
 Problem şudur: müşteri EURTRY opsiyonu istiyor, ama EURTRY'nin kendi opsiyon piyasası sığ — kotasyon aralığı geniş, derinlik az, büyük nominalde makul fiyat tek başına bulunmaz. Buna karşılık iki "bacak" (EURUSD ve USDTRY) likit opsiyon piyasalarıdır. Çözüm, cross'un riskini matematiksel olarak bacaklara ayrıştırmak ve hedge'in **tamamını** likit bacaklarda yapmaktır. Bu modül ayrıştırmanın tüm matematiğini kurar ve 5M EUR'luk bir trade üzerinde uçtan uca, her ara sonucu göstererek hesaplar.
 
-### 9.1 Triangulation ve Doğrulama
+### 9.1 Triangulation: cross iki bacaktan nasıl türer, nasıl doğrulanır?
 
 Triangulation (üçgenleme), çapraz kurun iki likit bacaktan arbitrajsız türetilmesidir. İlişki çarpımsaldır; logaritma alınınca toplamsal olur:
 
@@ -1249,7 +2368,7 @@ Doğrulama — EURTRY'de \%1'lik hareket $47{,}957\times 0{,}01 = 0{,}4796$ TRY 
 
 Log dönüşümünün önemi şudur: çarpım ilişkisi log dünyasında toplama dönüştüğü için cross'un **log-getirisi** bacakların log-getirilerinin toplamıdır. İki rastgele değişkenin toplamının varyansı ise vektör toplamı gibi davranır — varyanslar toplanır, araya korelasyon terimi girer. Bir sonraki formülün temeli tam olarak budur.
 
-### 9.2 Cross Vol Formülü
+### 9.2 Cross vol formülü: iki vol ve korelasyon tek vol'e nasıl iner?
 
 Toplamın varyans kuralını log-getirilere uygularsak:
 
@@ -1267,7 +2386,7 @@ Burada $\rho$, EURUSD ile USDTRY **log-getirilerinin** korelasyonudur. USD iki p
 
 Bir konvansiyon uyarısı: $\rho$'nun işareti, paritelerin hangi yönde yazıldığına (kotasyon konvansiyonuna) bağlıdır. Burada her iki parite de "TRY tarafı payda / EUR veya USD güçlenirse yukarı" yönüyle tanımlıdır; farklı yazımda işaret tanımı değişir ve formül körlemesine uygulanırsa yanlış cross vol üretir.
 
-### 9.3 Delta Decomposition — Tam Replikasyon
+### 9.3 Delta decomposition: tam replikasyon — hangi bacakta ne kadar?
 
 EURTRY üzerinde $\Delta$ (EUR cinsinden) delta taşıyan bir pozisyonun sentetik eşdeğeri, **iki bacakta birden** pozisyondur. Zincir kuralıyla, $V$ TRY cinsinden değer ve $S_{ET}=S_{EU}\cdot S_{UT}$ olmak üzere:
 
@@ -1286,7 +2405,7 @@ Sezgisi işlem zinciriyle görülür: EURTRY almak, önce EUR'u USD'ye karşı a
   Cross hedge anlatımlarında sık görülen bir karışıklık: hedge bacaklarının vol-oranı ağırlığıyla (bu trade ölçeğinde 1,35M EUR / 1,65M USD gibi) gösterilmesi. O ağırlıklama <strong>vega dağıtımının</strong> katsayısıdır (9.4'te türeteceğiz); delta için doğru olan <strong>tam replikasyondur</strong>: aşağıdaki trade'de 3,13M EUR / 3,41M USD. Delta'yı vol-oranıyla bölmek eksik hedge bırakır — iki kavram ayrı tutulur: delta spot duyarlılığıdır ve replikasyonla dağıtılır, vega vol duyarlılığıdır ve kısmi türev katsayılarıyla dağıtılır.
 </div>
 
-### 9.4 Uçtan Uca Trade: 5M EUR EURTRY Call
+### 9.4 Uçtan uca trade: 5M EUR EURTRY call'un fiyatı, hedge'i, vega dağıtımı
 
 **Trade.** Alınan opsiyon: EURTRY Avrupa tipi call, nominal 5.000.000 EUR, $K=50{,}00$, vade 94 gün ($T=94/365=0{,}2575$).
 
@@ -1306,7 +2425,7 @@ $$
 
 Toplam prim **7.534.478 TRY = 157.109 EUR = spotun \%3,14'ü**. Forward delta $N(d_1)=0{,}6268$ → hedge edilecek tutar $5.000.000\times 0{,}6268 = 3.134.087$ EUR.
 
-#### Adım 1 — Delta hedge (iki ayrı piyasada, forward ile)
+#### 9.4.1 Adım 1 — Delta hedge: iki ayrı piyasada, forward ile
 
 Delta forward delta olduğu için hedge de forward'la, opsiyonun value date'ine eşleşerek kurulur:
 
@@ -1317,7 +2436,7 @@ Delta forward delta olduğu için hedge de forward'la, opsiyonun value date'ine 
 
 Dikkat edilecek nokta: **EURTRY piyasasında hiçbir işlem yapılmadı** — hedge tamamen likit bacaklarda kuruldu. Bundan sonrası dinamiktir: spot hareket ettikçe delta değişir ve her iki bacak da ayrı ayrı rebalance edilir. Gamma scalping (delta'yı yeniden dengelerken düşük al / yüksek sat döngüsünden kazanç) artık **iki piyasada birden** döner: EURUSD'nin kendi hareketi bir bacağı, USDTRY'nin hareketi öbür bacağı oynatır.
 
-#### Adım 2 — Vega decomposition
+#### 9.4.2 Adım 2 — Vega decomposition: katsayılar nereden gelir
 
 Cross vega'yı bacaklara dağıtan katsayılar, 9.2'deki varyans özdeşliğinin kısmi türevleridir ($\sigma_{ET}^2$'yi $\sigma_{EU}$'ya göre türetip $2\sigma_{ET}$'ye bölün):
 
@@ -1346,7 +2465,7 @@ Dikkat: bacak vega'larının toplamı (14.679 EUR/puan) cross vega'dan (9.287) *
 
 **Sağlama.** Aynı katsayılar farklı ölçekte de birebir çalışır: 18.500 EUR/puan'lık bir cross vega'sı alın — dağılım EURUSD 14.318 + USDTRY 14.923 + korelasyon 847 EUR / 0,01 $\rho$ çıkar. Hangi nominalle girerseniz girin, makine aynıdır; katsayılar yalnızca vol'lere ve $\rho$'ya bağlıdır.
 
-### 9.5 Üçüncü Risk Boyutu: Korelasyon
+### 9.5 Üçüncü risk boyutu: korelasyon vega'sı ve neden hedge edilemez?
 
 $\rho$ değiştiğinde bacak vol'leri hiç kımıldamadan cross vol değişir; bacaklarda yapılmış hiçbir vanilla hedge bunu yakalayamaz — çünkü bacak opsiyonlarının hiçbirinin fiyatında $\rho$ yoktur. Rejim sıçraması senaryoları (bacak vol'leri 7 / 7,5'te sabit):
 
@@ -1363,7 +2482,7 @@ $\rho$ değiştiğinde bacak vol'leri hiç kımıldamadan cross vol değişir; b
   EM selloff'ta üç şey aynı anda olur: bacak vol'leri yükselir, $\rho$ sıçrar (USD her şeye karşı güçlenir, bütün EM pariteleri aynı yöne koşar), spotlar TRY aleyhine gider. Korelasyon vega'sı short olan dealer — cross opsiyon satmış, bacaklarda hedge'lemiş — tam da en kötü günde ekstra zarar yazar; kayıplar bağımsız değil, aynı tetikleyiciye bağlıdır. Bu yüzden korelasyon riski üç araçla yönetilir: (i) nominal limitle sınırlanır, (ii) $\rho=0{,}70$ stres senaryosu limit tablosuna kalıcı satır olarak girer, (iii) fırsat çıktığında gerçek cross opsiyonla — tek hakiki hedge budur — kapatılır.
 </div>
 
-#### Cross gamma
+#### 9.5.1 Cross gamma: iki bacak aynı gün oynayınca doğan çapraz terim
 
 İkinci derece çapraz terim $\partial^2 V/\partial S_{EURUSD}\,\partial S_{USDTRY}$: iki bacak **aynı gün birlikte** hareket ettiğinde, tekil gamma'ların toplamının açıklamadığı ek P&L üretir — tekil gamma'lar "biri oynarken öbürü sabit" dünyasının ölçüsüdür, birlikte hareketin etkileşim terimi ayrıca ölçülmelidir. Attribution'da (9.7) residual'ın klasik kaynağıdır. Kapalı formu kullanışsız olduğundan bump ile ölçülür:
 
@@ -1371,11 +2490,11 @@ $$
 \Gamma_{\times} = \frac{V(S_1^{\uparrow},S_2^{\uparrow}) - V(S_1^{\uparrow},S_2^{\downarrow}) - V(S_1^{\downarrow},S_2^{\uparrow}) + V(S_1^{\downarrow},S_2^{\downarrow})}{4\,\Delta S_1\,\Delta S_2}
 $$
 
-### 9.6 Cross'ların Ana USDTRY Kitabına Etkisi
+### 9.6 Cross'ların ana kitaba etkisi: bucket işareti nasıl sessizce döner?
 
 Cross trade'lerin USDTRY bacak vega'ları ana kitaba akar ve bucket (vade kovası) dağılımını sessizce değiştirir. Temsili bir kitap ölçümü: 5 cross opsiyon (EURTRY + GBPTRY) eklendiğinde USDTRY kitabının toplam vega'sı −13.391'den −16.371'e kaydı; 3M bucket'ı −1.400'den +5.720'ye döndü — **işaret bile değişti**. Ders: "USDTRY kitabım" diye baktığınız rapor, cross'ların USDTRY bacaklarını da içerir; USDTRY vol hedge'i planlarken cross katkısı ayrıştırılmadan bucket okunmaz. Aksi hâlde 3M bucket'ını "short vega" sanıp aldığınız hedge, gerçekte long olan kovayı daha da uzatır.
 
-### 9.7 Cross Kitabının P&L Attribution'ı — 7 Bileşen
+### 9.7 Cross attribution: yedi bileşen ve korelasyon satırının ayrı tutulması
 
 Günlük P&L, tek-underlying ayrıştırmasının (Modül 4.4) iki-eksenli hâline dağıtılır:
 
@@ -1391,7 +2510,7 @@ $$
 
 Korelasyon satırının **ayrı** raporlanması bilinçli bir tasarımdır: $\rho$ gözlenen bir piyasa fiyatı değil, masanın marklamasıdır. Ayrı satır olmazsa $\rho$ marklamasından gelen P&L "açıklanamayan" içinde kaybolur ve model hatası ile piyasa hareketi birbirinden ayrıştırılamaz.
 
-### 9.8 Proxy Hedging: Bacak Bile Yoksa
+### 9.8 Proxy hedging: bacak bile yoksa ne yapılır, bedeli nedir?
 
 Bazı underlying'lerin opsiyonu hiç likit değildir (klasik örnek USDPHP). Çözüm: yapısal olarak benzer, likit bir çiftin (USDIDR / USDTHB / USDKRW) opsiyonuyla **proxy hedge** — riski birebir değil, "vekil" enstrümanla taşımak. Yöntem: hedeflenen vega × tarihsel beta kadar proxy vega taşınır; beta, vol değişimlerinin regresyon eğimidir:
 
@@ -1406,30 +2525,150 @@ Asya EM USD-cross'ları arasında tipik vol korelasyonu 0,5–0,8'dir; betanın 
   Proxy sakin rejimde iyi çalışır; ülkeye özgü idiosinkratik şokta (siyasi olay gibi) korelasyon tam ihtiyaç anında kırılır — dealer'ın en korumasız anı budur, çünkü hedef vol tek başına sıçrarken vekil yerinde durur. Kural: proxy ile taşınan boyut konservatif tutulur; gerçek underlying'de likidite doğduğu an tam hedge'e geçilir. Aynı uyarı EURTRY-USDTRY ilişkisi için de geçerlidir: TRY-özgü şokta iki bacak birlikte hareket eder ama EUR bacağı beklenmedik davranabilir.
 </div>
 
+### 9.9 Bir cross trade'ini sıfırdan kurmak: yedi adımlık prosedür
+
+9.4'teki trade tek parça hâlinde yürütüldü; masada aynı iş yedi adımlık bir kontrol
+listesine oturur:
+
+1. **Bacakları ve konvansiyonu sabitle.** Hangi iki parite, hangi yön, hangi kotasyon
+   konvansiyonu. $\rho$'nun işareti buna bağlıdır (9.2) — yanlış yön, cross vol'ü
+   yanlış hesaplatır.
+2. **Spot ve forward'ları triangule et.** $S_{ET}=S_{EU}S_{UT}$, $F_{ET}=F_{EU}F_{UT}$;
+   her ikisini de %1'lik hareket testiyle doğrula (9.1).
+3. **Cross vol'ü kur.** İki bacak vol'ü + $\rho$; $\rho$'yu **hangi kaynaktan ve hangi
+   pencereden** aldığını yaz — bu bir marklamadır, gözlenen fiyat değil.
+4. **Fiyatla.** Black-76, forward üzerinden; iskonto yerli para eğrisinden.
+5. **Delta'yı tam replikasyonla dağıt.** EURUSD bacağı $\Delta$ EUR, USDTRY bacağı
+   $\Delta \times S_{EU}$ USD. Vol oranıyla bölme — o katsayılar **vega** içindir.
+6. **Vega'yı kısmi türev katsayılarıyla dağıt** ve artakalanı **korelasyon vega'sı**
+   satırına yaz. Bacak vega'larının toplamının cross vega'yı aşması normaldir.
+7. **Limit ve stres satırlarını aç.** Korelasyon için nominal limiti + kalıcı stres
+   senaryosu; cross bacaklarının ana kitaptaki bucket etkisini ayrı raporla (9.6).
+
+**Kim ne taşır — özet.** Delta spot/forward masasında, bacak vega'ları vanilla
+opsiyonlarda, korelasyon vega'sı **kitapta** kalır. Cross book'un tek gerçek açık
+pozisyonu üçüncüsüdür; diğer ikisi kapatılabilir risklerdir.
+
+<div class="not">
+  <span class="etiket">Bu modülün tipik hataları</span>
+
+  1. **Delta'yı vol oranıyla dağıtmak.** 9.3'teki kutunun konusu: delta replikasyonla,
+     vega katsayıyla dağıtılır. Karıştırmak eksik hedge bırakır.
+  2. **Bacak vega toplamının cross vega'yı aşmasını "hata" sanmak.** Katsayılar
+     toplamı pozitif $\rho$'da 1'i aşar; artakalan korelasyon satırıdır.
+  3. **$\rho$'yu sabit varsaymak.** Kriz rejiminde 0,25'ten 0,70'e sıçrar; bu tek
+     başına cross vol'ü ~1,9 puan oynatır.
+  4. **Cross bacaklarını ana kitapta ayrıştırmamak** (9.6) — 3M kovasının işareti
+     habersiz döner.
+  5. **Proxy hedge'i tam hedge sanmak.** Proxy tanımı gereği eksiktir; basis, ihtiyaç
+     duyulan günde açılır.
+
+</div>
+
 <div class="not">
   <span class="etiket">Modülün özeti</span>
   Cross = bacakların log-toplamı; vol'ler $\rho$ ile birleşir (\%7 ve \%7,5 → \%11,47). Delta <strong>tam replikasyonla</strong> iki bacağa (3,13M EUR + 3,41M USD), vega <strong>kısmi türev katsayılarıyla</strong> (0,774 / 0,807) dağıtılır; artakalan korelasyon vega'sı (425 EUR / 0,01 $\rho$) hedge edilemez, limit + stresle yönetilir. Cross bacakları ana kitabın bucket'larını görünmez biçimde değiştirir — ayrıştırmadan okuma.
 </div>
 
-## Modül 10 — TRY/EM Özelinde Pratik Notlar
+<div class="pratik">
+  <span class="etiket">Pratik — Modül 9 · Çapraz kur book'u</span>
 
-### 10.1 EM Smile İmzası
+**1. Doğrudan uygulama — stresli cross vol.** Bacak vol'leri EURUSD %9,0 ve USDTRY %9,5,
+korelasyon $\rho = 0{,}40$. (a) Cross vol kaç? (b) Vega dağıtım katsayıları? (c) Korelasyon
+katsayısı (puan / 0,01 $\rho$)?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — vol: $\sigma_{ET} = \sqrt{81 + 90{,}25 + 2\times 0{,}40\times 9\times 9{,}5}
+= \sqrt{239{,}65} = \mathbf{\%15{,}48}$.
+
+Adım 2 — katsayılar:
+$\dfrac{\partial\sigma_{ET}}{\partial\sigma_{EU}} = \dfrac{9 + 0{,}40\times 9{,}5}{15{,}48} = \mathbf{0{,}827}$;
+$\dfrac{\partial\sigma_{ET}}{\partial\sigma_{UT}} = \dfrac{9{,}5 + 0{,}40\times 9}{15{,}48} = \mathbf{0{,}846}$.
+
+Adım 3 — korelasyon: $\dfrac{9\times 9{,}5}{15{,}48} = 5{,}52$ puan / 1,00 $\rho$ =
+**0,0552 puan / 0,01 $\rho$**.
+
+**Cevap:** %15,48 · 0,827 / 0,846 · 0,0552. Karşılaştırma: normal rejimde (%7 / %7,5 /
+0,25) katsayılar 0,774 / 0,807 idi. Stres rejiminde **her iki katsayı da 1'e yaklaşır** —
+vol'ler yükseldikçe cross, bacaklarının neredeyse toplamı gibi davranmaya başlar,
+çeşitlendirme faydası erir.
+
+</details>
+
+**2. Doğrudan uygulama — hedge bacakları.** 3.000.000 EUR nominalli bir EURTRY call'un
+forward deltası 0,45. EURUSD 3M forward 1,0880, USDTRY 3M forward 46,75. (a) Hangi
+bacakta ne kadar işlem yaparsınız? (b) Cross vol'ün bu hesaba etkisi var mı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — hedge edilecek EUR: $3.000.000 \times 0{,}45 = \mathbf{1.350.000}$ EUR →
+EURUSD forward **SATIŞ**.
+
+Adım 2 — USDTRY bacağı: $1.350.000 \times 1{,}0880 = \mathbf{1.468.800}$ USD →
+USDTRY forward **SATIŞ**.
+
+Adım 3 — cross vol'ün etkisi: **yok**. Vol yalnızca deltayı (0,45'i) belirlerken
+kullanılır; delta bilindikten sonra bacaklara dağıtım saf **replikasyon cebiridir**.
+Vol oranı burada işe karışırsa hata yapılmış demektir (9.3 kutusu).
+
+**Cevap:** 1.350.000 EUR ve 1.468.800 USD, ikisi de satış, ikisi de opsiyonun value
+date'ine eşleşmiş. EURTRY piyasasında hiçbir işlem yapılmaz.
+
+</details>
+
+**3. Tuzak — korelasyon şoku lineer değildir.** Kitabınızın cross vega'sı 18.500
+EUR/puan. Rejim normalden ($\rho=0{,}25$) strese ($\rho=0{,}55$) geçti; bacak vol'leri
+%7 / %7,5'te sabit. (a) 9.5'teki katsayıyla (0,0458 puan / 0,01) lineer tahmin ne verir?
+(b) Gerçek değişim ne? (c) Fark neden?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — lineer: $0{,}0458 \times 30 = \mathbf{1{,}374}$ puan.
+
+Adım 2 — gerçek: $\sigma(0{,}55) - \sigma(0{,}25) = 12{,}7671 - 11{,}4673 = \mathbf{1{,}2998}$ puan.
+
+Adım 3 — P&L: $18.500 \times 1{,}2998 = \mathbf{24.046}$ EUR (lineer tahmin 25.419 EUR
+derdi, **%5,7 fazla**).
+
+Adım 4 — sebep: $\sigma_{ET} = \sqrt{\cdot}$ fonksiyonu $\rho$'da **konkavdır**;
+karekökün türevi $\rho$ büyüdükçe küçülür. Korelasyon vega'sı da tıpkı vega gibi yerel
+bir türevdir ve büyük şokta abartır.
+
+**Cevap:** (a) 1,374 puan (b) 1,2998 puan → 24.046 EUR (c) karekökün konkavlığı. Ders:
+korelasyon şoku da tıpkı spot/vol şoku gibi **tam yeniden fiyatlamayla** ölçülür; 9.5'teki
+senaryo tablosunun neden katsayı değil seviye listelediği budur.
+
+</details>
+
+</div>
+
+## Modül 10 — TRY/EM pratiği: smile imzası, onshore-offshore, settlement asimetrisi
+
+*Bu modülde:* TRY yüzeyinin yapısal imzası, marklama rejimi seçimi, onshore-offshore
+ayrışması ve settlement asimetrisinden doğan akış vakası — sonunda TRY kitabına özel
+kontrol seti ve üç alıştırma.
+
+### 10.1 EM smile imzası: pozitif RR + yüksek BF ne anlatır?
 
 USDTRY vol yüzeyi yapısal olarak **pozitif risk reversal** (USD call'lar pahalı — TRY zayıflama koruması sürekli talep görür, alıcı tarafı hiç boşalmaz) ve **yüksek butterfly** (sıçrama/kuyruk primi — piyasa kademeli değil kesikli hareketleri fiyatlar) taşır. Modül 5.1'deki sayılar (RR25 +3,0 / BF10 +2,6) G10 paritelerinde istisnai bir stres gününü anlatır; TRY'de gündelik seviyedir. Pratik sonucu: TRY kitabında vanna (spot-vol çapraz duyarlılığı) ve volga (vol-of-vol dışbükeyliği) daima "açık" pozisyonlardır; smile'sız, düz vol'le üretilmiş risk raporu sistematik olarak yanlıştır — yanılma yönü de rastgele değil, hep aynı taraftadır.
 
-### 10.2 Spot-Vol Korelasyonu ve Marklama Rejimi
+### 10.2 Marklama rejimi: sticky-strike mi, sticky-delta mı — ve neden fark eder?
 
 - **Negatif spot-vol korelasyonu** (TRY zayıfladıkça vol yukarı): M3.5'te sayısallaştırıldı. Sonucu şudur: delta hedge tek başına hep geç kalır — spot aleyhte giderken vol de yükselir ve pozisyonun deltası beklenenden hızlı kayar; bu yüzden vanna ayrı kalem olarak bütçelenir.
 - **Sticky-strike vs sticky-delta**: spot kaydığında smile strike'a mı yapışık kalır (sticky-strike), delta noktalarına mı taşınır (sticky-delta)? Ampirik desen: sakin rejimde sticky-delta'ya, trend/kriz rejiminde sticky-strike'a yakın davranış. Hangi varsayımla mark ettiğiniz, bump-greeklerini (M3.4) ve attribution residual'ını doğrudan değiştirir — rejim yanlışsa greekler "doğru hesaplanmış yanlış sayılardır".
 - **Rejim kırılması**: TCMB müdahale/politika günlerinde vol yüzeyi paralel değil **bükülerek** hareket eder — kısa uç fırlarken uzun uç yerinde kalabilir, smile kanatları gövdeden ayrışır. Event günlerinde greek raporuna değil senaryo matrisine güvenilir; greekler lokal türevdir, event hareketi lokal değildir.
 
-### 10.3 Onshore-Offshore Ayrımı ve Kotasyon Gerçekleri
+### 10.3 Onshore-offshore ayrımı: aynı underlying, iki ayrı fiyat seti
 
 - **BDDK swap limitleri**: yurt içi bankaların yerleşik olmayanlarla TRY swap/forward hacmi sermayeye oranla sınırlıdır; offshore'un TRY funding'e erişimi kısıtlı ve pahalıdır. Sonuç: onshore ve offshore dünyalarda implied faiz/forward ayrışması ve zaman zaman offshore vol'ün kendi hayatını yaşaması — aynı underlying, iki fiyat seti.
 - **Pratik yansıma**: aynı EURTRY opsiyonu onshore ve offshore karşı tarafla farklı forward/vol setinden fiyatlanabilir. Kotasyon verirken karşı tarafın hangi dünyada settle edeceği **sorulur**; varsayılmaz.
 - **Delta konvansiyonu** (M1.4 tekrarı): USDTRY'de premium-adjusted delta mı spot delta mı kullanılıyor — karşı tarafa teyit ettirmeden trade kapatılmaz. Fark kozmetik değildir: \%5-10'luk hedge tutarı farkıdır ve yanlış varsayım ilk günden yanlış pozisyonla başlamak demektir.
 
-### 10.4 Settlement Asimetrisi: USDTRY T+1 / EURTRY T+2 — Bir Akış Vakası
+### 10.4 Settlement asimetrisi: T+1/T+2 farkından doğan örtük swap — akış vakası
 
 USDTRY spot piyasası T+1, EURTRY spot piyasası T+2 valörle settle olur. Bu bir günlük asimetri, doğru kurgulanmış eşzamanlı işlemlerle örtük bir FX swap üretir — aşağıdaki vaka bunun ders kitabı örneğidir.
 
@@ -1446,11 +2685,125 @@ USDTRY spot piyasası T+1, EURTRY spot piyasası T+2 valörle settle olur. Bu bi
 
 **Opsiyon kitabına dersi.** Value-date ladder — kitabın gün gün nakit akış merdiveni (T+1/T+2 ve sonrası) — opsiyon settlement'larıyla birlikte izlenir. Expiry + settlement asimetrisi gün içi TL likidite pozisyonunu oynatır; bu da kısa uç forward/swap noktaları üzerinden 0D-1W opsiyonların forward'ını kımıldatır. Yani settlement takvimi arka ofis detayı değil, kısa uç fiyatlama girdisidir.
 
-## Modül 11 — Egzotikler ve Book'a Etkileri
+### 10.5 TRY kitabına özel kontrol seti: sekiz madde
+
+G10 refleksleriyle yönetilen bir TRY kitabı sistematik olarak aynı yerlerden kanar.
+Aşağıdaki sekiz madde, bu dersteki TRY'ye özgü bulguların tek listeye indirgenmiş hâlidir:
+
+| # | Kontrol | Nereden geliyor | Atlanırsa |
+| --- | --- | --- | --- |
+| 1 | Strike forward'a göre mi konuldu? | 1.2 · 1.5 | 3M'de ~%9 kayma; "ATM" sanılan opsiyon derin OTM |
+| 2 | Delta konvansiyonu karşı tarafla teyitli mi? | 1.4 · 10.3 | %5–10 hedge hatası, ilk günden yanlış pozisyon |
+| 3 | Theta iki bileşene ayrıldı mı (erime + faiz taşıması)? | 2.4 · 4.2 | "bedava gamma" yanılgısı; başabaş hareket yanlış |
+| 4 | Vanna ayrı satır olarak izleniyor mu? | 3.5 · 10.2 | Spot-vol birlikteliği "gamma sürprizi" diye yanlış teşhis edilir |
+| 5 | Marklama rejimi (sticky-strike / sticky-delta) yazılı mı? | 3.4 · 10.2 | Greek'ler "doğru hesaplanmış yanlış sayı" olur |
+| 6 | Onshore/offshore settlement soruldu mu? | 10.3 | Aynı opsiyon iki farklı forward setinden fiyatlanır |
+| 7 | Value-date ladder opsiyon vadeleriyle birlikte mi izleniyor? | 10.4 | Gün içi TL likidite ve kısa uç forward şaşar |
+| 8 | Event günleri kotasyondan ayrıştırıldı mı? | 5.5 | Event sonrası mekanik vol crush "zarar" diye okunur |
+
+**Neden sekizi birden.** Bu maddeler bağımsız değildir; TRY'de aynı kök nedenden —
+**yüksek faiz + sıçramalı hareket + parçalı likidite** — türerler. Yüksek faiz forward'ı
+spottan koparır (1, 3, 7); sıçramalı hareket smile'ı kalınlaştırır ve spot-vol
+birlikteliğini yaratır (4, 5, 8); parçalı likidite onshore-offshore ayrışmasını doğurur
+(2, 6). Birini düzeltip diğerlerini bırakmak, aynı hatayı başka bir kanaldan geri getirir.
+
+<div class="not">
+  <span class="etiket">Modülün özeti</span>
+
+  TRY yüzeyi yapısal olarak pozitif RR + yüksek BF taşır; bu, vanna ve volga'nın kitapta
+  **daima açık** olduğu anlamına gelir. Marklama rejimi (sticky-strike / sticky-delta)
+  bir tercihtir ve yazılı olmalıdır; Greek'ler ve residual doğrudan ona bağlıdır.
+  Onshore ve offshore dünyalar aynı underlying için iki fiyat seti üretir; settlement
+  asimetrisi (T+1 / T+2) arka ofis detayı değil, kısa uç fiyatlama girdisidir.
+
+</div>
+
+<div class="pratik">
+  <span class="etiket">Pratik — Modül 10 · TRY/EM pratiği</span>
+
+**1. Doğrudan uygulama — onshore/offshore implied faiz.** USDTRY spot 44,20. Onshore 3M
+forward 46,75; offshore aynı vade 47,20. (a) İki dünyanın implied faiz farkı
+($r_d - r_f$) kaç? (b) Aradaki fark kaç puan? (c) Bu fark opsiyon fiyatına nasıl girer?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — kural: $F = S\,e^{(r_d-r_f)T} \Rightarrow r_d - r_f = \dfrac{\ln(F/S)}{T}$.
+
+Adım 2 — onshore: $\ln(46{,}75/44{,}20)/0{,}25 = 0{,}05609/0{,}25 = \mathbf{\%22{,}44}$.
+
+Adım 3 — offshore: $\ln(47{,}20/44{,}20)/0{,}25 = 0{,}06567/0{,}25 = \mathbf{\%26{,}27}$.
+
+Adım 4 — fark: **3,83 puan**.
+
+Adım 5 — opsiyona etkisi: ATMF strike'ı $46{,}75 \to 47{,}20$'ye, yani **%0,96** yukarı
+taşır. Aynı "ATM" kelimesi iki dünyada farklı bir opsiyonu tarif eder; sabit strike'lı
+bir opsiyonun moneyness'i, karşı tarafın hangi dünyada settle ettiğine göre değişir.
+
+**Cevap:** %22,44 / %26,27; 3,83 puan fark; ATMF strike %0,96 kayar. 10.3'ün "sorulur,
+varsayılmaz" kuralının sayısal karşılığı budur.
+
+</details>
+
+**2. Karar — marklama rejimi.** Spot 45,00 → 45,90 (+%2) oldu, yüzeyin kendisi
+"kımıldamadı". 5.1 smile'ında ATM (49,18) %12,00, 25ΔC (51,27) %14,30 — yani strike
+ekseninde eğim ~1,10 puan/TRY. Yeni forward 50,16. (a) Sticky-delta varsayımıyla yeni
+ATM vol kaç? (b) Sticky-strike varsayımıyla kaç? (c) 10M ATM opsiyonda (vega 887.179
+TRY/puan) fark kaç TRY?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — sticky-delta: smile delta eksenine yapışıktır, spotla birlikte kayar → yeni
+ATM vol yine **%12,00**.
+
+Adım 2 — sticky-strike: her strike kendi vol'ünü korur; yeni ATM strike 50,16'nın vol'ü
+eski smile'dan okunur: $12{,}00 + (50{,}16 - 49{,}18)\times 1{,}10 = \mathbf{\%13{,}08}$.
+
+Adım 3 — fark: 1,08 puan → $887.179 \times 1{,}08 = \mathbf{958.153}$ TRY.
+
+**Cevap:** %12,00 vs %13,08; ~958K TRY. İki "doğru" hesap arasındaki fark, tek bir
+varsayımdan doğuyor. Bu yüzden marklama rejimi bir tercih olarak **yazılır**, sonra da
+tutarlı uygulanır: rejim değişirse P&L'de görünen şey piyasa değil, varsayım değişikliğidir
+ve attribution'da ayrı satıra yazılır (4.6, adım 2).
+
+</details>
+
+**3. Ters çevirme — settlement carry'si.** 10.4'teki akışın büyüklüğü 100M USD olsun;
+USDTRY spot 45,00, TL T/N implied getirisi %40, USD funding %5. (a) Bir günlük sentetik
+TL plasmanının brüt getirisi kaç TRY? (b) USD karşılığı? (c) Bu akış neden spot
+piyasada "müdahale gibi" görünür?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — TL tutarı: $100\text{M} \times 45{,}00 = 4{,}5$ milyar TRY.
+
+Adım 2 — bir günlük net carry: $4{,}5\text{ milyar} \times (0{,}40-0{,}05)/365 = \mathbf{4.315.068}$ TRY.
+
+Adım 3 — USD karşılığı: $4.315.068 / 45 = \mathbf{95.890}$ USD/gün.
+
+Adım 4 — görünüm: paketin **spot ayağı** piyasada tek başına görünür — 100M USD'lik
+USDTRY satışı (T+1). EURTRY alım bacağı (T+2) başka bir defterde, başka bir ekranda
+akar. Ekrana bakan "birileri agresif dolar satıyor" der ve müdahale sanır; oysa iki
+bacak birlikte okunduğunda ortaya çıkan şey **takvim arbitrajıdır**.
+
+**Cevap:** 4,32M TRY/gün (~95,9K USD); akış decompose edilmeden yanlış teşhis edilir.
+Ders: fiyat hareketinin "kim" sorusuna verilen ilk cevap çoğu zaman yanlıştır.
+
+</details>
+
+</div>
+
+## Modül 11 — Egzotikler: barrier · digital · KIKO · TARF ve book'a entegrasyonu
+
+*Bu modülde:* egzotik ailelerinin sınıflandırması, barrier Greek'lerinin işaret
+dönmesi, digital'in skew duyarlılığı, KIKO ve TARF'ın asimetrileri, entegrasyon ve
+rezerv kuralları — sonunda kotasyon prosedürü ve üç alıştırma.
 
 Vanilla kitabın greek makinesi egzotiklerde de çalışır; fark greeklerin **davranışındadır**: sürekli değil sıçramalı, işaret değiştiren, bariyer civarında patlayan. Vanilla sezgisiyle ("opsiyon aldım, long gamma'yım") egzotik yönetmek, bu modülün sayılarla göstereceği gibi, çift taraflı yanlış pozisyona kadar götürür. Modül dört ana yapıyı — barrier, digital, KIKO, TARF — sayısal olarak inceler ve kitaba entegrasyon kurallarını verir.
 
-### 11.1 Sınıflandırma
+### 11.1 Sınıflandırma: dört egzotik ailesi ve risk karakterleri
 
 | Aile | Üyeler | Temel risk karakteri |
 | --- | --- | --- |
@@ -1459,7 +2812,7 @@ Vanilla kitabın greek makinesi egzotiklerde de çalışır; fark greeklerin **d
 | Periyodik yapılar | TARF/TARN, accumulator, KIKO | Path-dependent; Monte Carlo; müşteri kaldıraçlı |
 | Çok varlıklı | Worst-of, basket | Korelasyon ana risk; Modül 9'un genellemesi |
 
-### 11.2 Barrier Greek Davranışı — Sayısal
+### 11.2 Barrier Greek davranışı: bir call'un deltası neden negatif olur?
 
 Örnek: XAU/USD **up-and-out call** (UOC — spot bariyere dokunursa ölen call): $S=5.000$, $K=5.000$, bariyer $B=5.400$, $\sigma=\%16$, $T=3M$. Aynı strike'lı vanilla ile yan yana (ons başına USD; delta ve vega bump & reprice ile ölçülmüştür):
 
@@ -1479,7 +2832,7 @@ Vanilla kitabın greek makinesi egzotiklerde de çalışır; fark greeklerin **d
   Spot 5.350'deyken 50 puanlık hareket pozisyonun kaderini belirler: greekler saatlik değişir, hedge maliyeti fırlar. Masalar bariyeri "yumuşatır": fiyatlama ve hedge'de B yerine [B−ε, B] bandına yayılmış bariyer (barrier shift) kullanılır — pozisyon tek noktada değil bir bant boyunca kademeli ölür, greekler sonsuza gitmez. Shift'in maliyeti müşteri fiyatına yazılır; bedava değildir. Vade + bariyer kombinasyonları masanın takviminde işaretlenir; bariyer günü, 0D pin yönetiminin egzotik versiyonudur — strike yerine bariyere pinlenme riski izlenir.
 </div>
 
-### 11.3 Digital — Skew'in En Çıplak Hali
+### 11.3 Digital: skew'in fiyata en çıplak yansıdığı ürün
 
 Digital (cash-or-nothing), vade sonunda koşul sağlanırsa sabit tutar ödeyen opsiyondur. Örnek: USDTRY 3M digital call, vade sonunda $S > 51{,}30$ ise 1M TRY öder. Fiyat iki katmanlıdır — düz-smile değer ve skew düzeltmesi:
 
@@ -1514,18 +2867,18 @@ $$
 
 Hedge de budur: $1M/0{,}50 = 2M$ USD nominal call spread. Spread daraldıkça replikasyon hassaslaşır ama gearing (nominal kaldıracı) büyür — 0,10'luk spread 10M USD nominal ister. Bu yüzden spread genişliği risk iştahıyla seçilir ve digital asla "tek nokta" olarak hedge'lenmez.
 
-### 11.4 KIKO — Yapı, Zehir, Hedge
+### 11.4 KIKO: "sıfır maliyet"in bedeli, wrong-way zehri ve hedge'i
 
 - **Yapı**: müşteri (tipik ihracatçı/ithalatçı) "sıfır maliyetli iyileştirilmiş kur" paketi alır: vanilla forward + knock-in kaldıraç bacağı (spot aleyhte bölgeye geçince nominal 2×'e çıkar) − knock-out limiti (spot lehte bölgeye geçince yapı ölür, kazanç tavanlanır). Aylık gözlemlidir; accumulator karakteri taşır. "Sıfır maliyet" pazarlama dilidir: müşteri primi nakit ödemez, opsiyonalite satarak öder.
 - **Wrong-way zehri**: TRY zayıfladıkça — spot müşterinin "fena" yönüne gittikçe — müşteri 2× USD almaya zorlanır; pozisyon tam da en kötü anda **büyür**. Riskin büyüklüğü ile riskin gerçekleşme olasılığı aynı yönde hareket eder: wrong-way risk tanımı budur. Dealer tarafı aynadır: müşteriden KIKO alan dealer short vol + short skew taşır.
 - **Hedge**: statik tek enstrüman yoktur. USDTRY ATM straddle short + RR short + BF short kombinasyonunun **dinamik** yönetimi gerekir; her aylık observation ayrı bir vanilla dilimi gibi davranır ve zaman geçtikçe yapının kalan kısmı yeniden profillenir.
 
 <div class="not">
-  <span class="etiket">2018 dersi ve regülasyon</span>
+  <span class="etiket">Tarihsel epizot (geçmiş veri) — 2018 TRY krizi ve regülasyon</span>
   2018 TRY krizinde vol + skew + spot üçü birlikte sıçradı; KIKO yazmış çok sayıda dealer ve kendini "hedge yaptım" sanan müşteri ağır yara aldı — müşteri hedge aldığını sanırken kaldıraçlı spekülatif pozisyon taşıyordu. Bugün KIKO tarzı yapılar BDDK/SPK tarafında sıkı uygunluk (suitability — ürünün müşterinin risk profiline uygunluğu) testine tabidir; eksik bilgilendirmeyle "hedge" diye satılan yapılar tazminat davalarıyla sonuçlanmıştır. Kitap tarafında KIKO nominali ayrı konsantrasyon limitiyle izlenir: tek tek küçük görünen yapılar, aynı bölgede kümelenen bariyerleriyle toplamda büyük tek bir pozisyondur.
 </div>
 
-### 11.5 TARF/TARN — Hedefli Sonlanan Forward Serisi
+### 11.5 TARF/TARN: kaldıraç + target asimetrisi ve Monte Carlo marklama
 
 TARF (target accrual redemption forward), birikmiş müşteri kârı bir hedefe ulaşınca kendini kapatan kaldıraçlı forward serisidir. Klasik USDTRY TARF, sayılarla:
 
@@ -1542,19 +2895,147 @@ TARF (target accrual redemption forward), birikmiş müşteri kârı bir hedefe 
 
 **Erken sonlanma paradoksu.** Target'ın dolması dealer için "iyi haber" görünür (yükümlülük bitti) ama dealer bu yapıya karşı uzun vadeli hedge kurmuşsa şimdi onu **unwind etmek** zorundadır — kalan hedge bacaklarını piyasada, o günün koşullarında kapatmak maliyetlidir. Bu yüzden unwind maliyeti trade gününde baştan rezervlenir.
 
-### 11.6 Egzotiklerin Book'a Entegrasyonu
+### 11.6 Egzotiklerin entegrasyonu: ayrı kitap, rezerv, konsantrasyon limiti
 
 - **Greek sıçramaları**: barrier/digital greekleri bucket matrisinde bir gecede işaret değiştirebilir (11.2 tablosu bunun kanıtıdır). Bu yüzden egzotikler vanilla ile aynı havuzda değil, **ayrı egzotik book'ta** tutulur; vanilla hedge bacakları ana kitapta yaşar ve iki kitap konsolide raporlanır. Karışık havuzda bir bariyer dokunuşu bütün bucket matrisini bir gecede tanınmaz hâle getirir.
 - **Call/put ve pozisyon takibi**: M6.4'ün ("vanilla risk için call/put ayrımı gerekmez") istisnası burasıdır — barrier/digital'de call/put kimliği ve tekil pozisyon takibi **risk için de** gereklidir, çünkü greek profili yapıya özgüdür ve netleştirilemez.
 - **Rezervler**: model reserve (MC/model belirsizliği), unwind reserve (erken sonlanma, 11.5), barrier-shift maliyeti (11.2) — hepsi trade gününde P&L'den ayrılır. "İlk gün kârı" egzotikte asla brüt bırakılmaz; brüt bırakılan kâr, ileride ödenecek maliyetin bugünden bonusa yazılmasıdır.
 - **Worst-of/basket notu**: çok varlıklı yapılarda korelasyon fiyatın **ana** girdisidir; Modül 9'un korelasyon-vega çerçevesi N varlığa genellenir. Yön sezgisi: yüksek korelasyon worst-of putu pahalandırır (varlıklar birlikte düşer, "en kötüsü" daha kötü olur), autocallable kuponunu düşürür.
 
+### 11.7 Egzotik kotasyon prosedürü: fiyattan rezerve altı adım
+
+Bir egzotik kotasyonu, vanilla kotasyonundan üç ek katman taşır. Sıra:
+
+1. **Yapıyı ayrıştır.** Her egzotik, vanilla bileşenlerine ve bir "artık"a ayrılır:
+   KO = vanilla − KI; digital = dar call spread limiti; KIKO = forward + KI kaldıraç −
+   KO tavan; TARF = kaldıraçlı forward serisi + target barrier. Ayrıştıramadığınız
+   yapıyı kote etmeyin.
+2. **Model seç ve sınırını yaz.** Kapalı form (barrier, digital) mü, Monte Carlo
+   (TARF, KIKO) mu? MC ise: patika sayısı, adım sıklığı, her fixing tarihinin **kendi**
+   smile'ı.
+3. **Smile'ı doğru bağla.** Digital'de $d\sigma/dK$ terimi (11.3), barrier'da bariyer
+   civarı vol'ü. Düz vol kullanmak, 11.3'te görüldüğü gibi %35'lik fiyat hatası üretir.
+4. **Hedge maliyetini içeri koy.** Barrier shift (11.2), dinamik hedge'in beklenen
+   işlem maliyeti, likidite primi. Bunlar "ekstra marj" değil, **maliyettir**.
+5. **Rezervleri ayır.** Model reserve, unwind reserve (11.5), barrier-shift maliyeti.
+   İlk gün kârı brüt bırakılmaz.
+6. **Limit ve izleme satırlarını aç.** Bariyer mesafesi (%), konsantrasyon (aynı bölgede
+   kümelenen bariyerler), müşteri uygunluğu, ayrı egzotik book kaydı.
+
+**Fiyat = mid model değeri + hedge maliyeti + rezerv + marj.** Bu dört kalemden birini
+atlayan kotasyon, ucuz göründüğü için kazanılır ve pahalıya mal olur.
+
 <div class="not">
-  <span class="etiket">Modülün özeti</span>
-  Barrier: değer ucuz, greekler vanilla'nın tersi olabilir (delta −, vega −); KO + KI = vanilla sağlaması günlük ritüel. Digital: fiyat = $N(d_2)$ − vega·(dσ/dK); TRY skew'i digitali ucuzlatır; hedge call-spread'dir. KIKO: short vol + short skew, wrong-way, 2018 dersi. TARF: kaldıraç + target asimetrisi, MC ile mark. Egzotikler ayrı kitapta, rezervli ve konsantrasyon limitli yaşar.
+  <span class="etiket">Bu modülün tipik hataları</span>
+
+  1. **Vanilla sezgisiyle egzotik hedge etmek.** UOC'de call olduğu hâlde delta
+     negatiftir; işaretini kontrol etmeden hedge kuran çift taraflı yanlıştadır.
+  2. **Barrier'ı tek noktada hedge etmek.** Shift olmadan Greek'ler sonsuza gider,
+     hedge maliyeti fırlar.
+  3. **Digital'i düz vol'le kote etmek.** Her işlemde skew'i hediye edersiniz.
+  4. **"Sıfır maliyet" ifadesini müşteriyle aynı anlamda kullanmak.** Prim nakit
+     ödenmiyor demek, bedeli yok demek değildir; opsiyonalite satılarak ödenir.
+  5. **Egzotikleri vanilla havuzuna karıştırmak.** Bir bariyer dokunuşu bütün bucket
+     matrisini bir gecede tanınmaz hâle getirir.
+
 </div>
 
-## Modül 12 — Kaynakça ve Çalışma Sırası
+<div class="not">
+  <span class="etiket">Modülün özeti</span>
+  Barrier: değer ucuz, greekler vanilla'nın tersi olabilir (delta −, vega −); KO + KI = vanilla sağlaması günlük ritüel. Digital: fiyat = $N(d_2)$ − vega·(dσ/dK); TRY skew'i digitali ucuzlatır; hedge call-spread'dir. KIKO: short vol + short skew, wrong-way; tarihsel epizot olarak 2018 TRY krizi. TARF: kaldıraç + target asimetrisi, MC ile mark. Egzotikler ayrı kitapta, rezervli ve konsantrasyon limitli yaşar.
+</div>
+
+<div class="pratik">
+  <span class="etiket">Pratik — Modül 11 · Egzotikler</span>
+
+**1. Doğrudan uygulama — parity sağlaması.** 11.2 tablosunda spot 5.200 iken UOC 17,78
+ve aynı strike'lı vanilla 316,11. (a) Aynı bariyerli UIC (up-and-in call) kaç? (b) Bu
+sağlama neden her gün koşturulur? (c) Sağlama tutmuyorsa ilk şüpheli ne?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — kural: spot ya bariyere dokunur ya dokunmaz; iki senaryo evreni tam böler →
+$UOC + UIC = \text{vanilla}$.
+
+Adım 2 — hesap: $UIC = 316{,}11 - 17{,}78 = \mathbf{298{,}33}$.
+
+Adım 3 — neden günlük: parity, barrier fiyatlayıcısının **model bağımsız** tek
+denetimidir; tutmuyorsa hata kesindir, tartışmaya yer yoktur.
+
+Adım 4 — ilk şüpheli: **bariyer izleme konvansiyonu** — sürekli mi, günlük kapanış mı,
+hangi kaynak fixing? İki bacak farklı konvansiyonla fiyatlanırsa parity kırılır. İkinci
+şüpheli barrier shift'in yalnız bir bacağa uygulanmış olmasıdır.
+
+**Cevap:** 298,33; günlük ritüel; ilk şüpheli izleme konvansiyonu.
+
+</details>
+
+**2. Ters çevirme — skew düzleşirse digital.** 11.3'teki digital (USDTRY 3M, $K=51{,}30$,
+1M TRY ödemeli). Piyasa sakinleşti ve RR25 +3,0'dan +1,0'a indi: $\sigma_{25C}$ artık
+%13,00. Diğer her şey aynı ($N(d_2)$ tabanlı düz değer 0,2401; $\text{Vega}(K)=7{,}606$).
+(a) Yeni $d\sigma/dK$? (b) Yeni digital değeri? (c) Eski fiyata göre yüzde kaç?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — eğim: $\dfrac{13{,}00 - 12{,}00}{51{,}28 - 49{,}18} = \dfrac{1{,}00}{2{,}10} = \mathbf{0{,}476}$ puan/TRY
+(eskiden 1,095).
+
+Adım 2 — düzeltme: $7{,}606 \times 0{,}476 \times 0{,}01 = \mathbf{0{,}0362}$.
+
+Adım 3 — değer: $0{,}2401 - 0{,}0362 = 0{,}2039$ → **203.880 TRY**.
+
+Adım 4 — karşılaştırma: $203.880 / 156.754 = \mathbf{+\%30}$.
+
+**Cevap:** skew yarıya inince aynı digital **%30 pahalanır**. Ders: digital'in fiyatı
+seviye kadar **skew'in eğimine** bağlıdır; RR daralırken digital satan, farkında olmadan
+skew'in normalleşmesine karşı pozisyon almış olur. Hedge tarafında da aynı: call spread
+genişliği aynı kalsa bile bacakların vol'leri değiştiği için replikasyon fiyatı kayar.
+
+</details>
+
+**3. Karar — TARF patikası.** 11.5'teki TARF ($K=43{,}00$, 1M USD/ay, aleyhte 2×
+kaldıraç, hedef 12M TRY). İlk beş fixing: 45,00 · 44,50 · 42,00 · 46,00 · 45,00.
+(a) Her ayın nakit sonucu? (b) Beş ay sonunda hedefe sayılan birikim? (c) Yapı ne zaman
+ölür ve son ayda hangi konvansiyon sorusu doğar?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — aylık sonuçlar (müşteri açısından):
+
+| Ay | Fixing | Mekanik | Nakit (TRY) |
+| --- | --- | --- | --- |
+| 1 | 45,00 | $K$ üstü → 1M USD @ 43 | +2.000.000 |
+| 2 | 44,50 | $K$ üstü → 1M USD @ 43 | +1.500.000 |
+| 3 | 42,00 | $K$ altı → **2M USD** @ 43 | −2.000.000 |
+| 4 | 46,00 | $K$ üstü → 1M USD @ 43 | +3.000.000 |
+| 5 | 45,00 | $K$ üstü → 1M USD @ 43 | +2.000.000 |
+
+Adım 2 — hedefe sayılan birikim: yalnız **kârlar** sayılır →
+$2{,}0+1{,}5+3{,}0+2{,}0 = \mathbf{8{,}5}$M TRY. Zarar ayı hedefe **sayılmaz** (ama
+cebinizden çıkar): müşterinin net nakdi $8{,}5 - 2{,}0 = 6{,}5$M TRY.
+
+Adım 3 — ölüm: hedefe 3,5M TRY kaldı. Fixing 46,50 olan bir ay tek başına
+$(46{,}5-43)\times 1\text{M} = 3{,}5$M getirir ve yapı **o ay ölür**.
+
+Adım 4 — konvansiyon sorusu: hedefi **aşan** ay nasıl ödenir? Üç standart: *exact
+target* (kâr tam 12M'e tamamlanır, fazlası ödenmez), *full payout* (o ay tam ödenir),
+*no payout* (hedefi aşan ay hiç ödenmez). Üçü müşteri nakdini gözle görülür değiştirir
+ve **term sheet'te yazılı olmak zorundadır**.
+
+**Cevap:** (a) tablo (b) 8,5M hedefe sayılan / 6,5M net nakit (c) 3,5M'lik ilk kârlı
+ayda ölür; ödeme konvansiyonu sözleşmede tanımlı olmalıdır. Asimetri burada çıplak
+görünüyor: **kârlar yapıyı öldürür, zararlar sürdürür.**
+
+</details>
+
+</div>
+
+## Modül 12 — Kaynakça ve çalışma sırası: hangi kitap hangi modülü derinleştirir
+
+*Bu modülde:* dört temel kaynak ve hangi modülü derinleştirdikleri, önerilen okuma sırası.
 
 | Sıra | Kaynak | Neden / hangi modülleri derinleştirir |
 | --- | --- | --- |

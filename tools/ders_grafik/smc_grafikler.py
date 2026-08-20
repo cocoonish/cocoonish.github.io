@@ -14,6 +14,8 @@ Tek komut:  python3 site/tools/ders_grafik/smc_grafikler.py
 """
 from __future__ import annotations
 
+import datetime
+
 import sys
 import warnings
 from pathlib import Path
@@ -322,8 +324,32 @@ def _alt_baslik_kir(fig, esik=24, font=12):
         fig.update_layout(margin=dict(r=110))
 
 
+def _sematik_hover_saati(fig, ad: str):
+    """Şematik (sentetik) figürlerde hover'ın TAKVİM TARİHİ göstermesini engeller.
+
+    Bu figürler zamansız bir kuralı anlatır (kill zone, Silver Bullet penceresi, PO3
+    günlük planı, makro pencereleri); eksen etiketleri zaten saat bazlıdır ama Plotly
+    hover'da ham x değerini basar ve okur şemanın üstünde "16 Jul 2025" görür. Tarih
+    yalnız ÖLÇÜM figürlerinde (dosya adında `gercek`) anlamlıdır; orada dokunulmaz.
+    """
+    if "gercek" in ad:
+        return
+    tarihli = False
+    for iz in fig.data:
+        x = getattr(iz, "x", None)
+        if x is None or len(x) == 0:
+            continue
+        ilk = x[0]
+        if isinstance(ilk, (pd.Timestamp, datetime.datetime, datetime.date, np.datetime64)):
+            tarihli = True
+            break
+    if tarihli:
+        fig.update_xaxes(hoverformat="%H:%M")
+
+
 def kaydet(fig, ad: str):
     _alt_baslik_kir(fig)
+    _sematik_hover_saati(fig, ad)
     yol = CIKTI / f"{ad}.html"
     fig.write_html(str(yol), include_plotlyjs="cdn", full_html=True,
                    config={"responsive": True, "displaylogo": False})

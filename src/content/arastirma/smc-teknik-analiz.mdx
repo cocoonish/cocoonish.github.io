@@ -1,11 +1,14 @@
 ---
 title: 'Smart Money Concepts (SMC): Piyasa Yapısı, Likidite, Order Block ve FVG ile İşlem'
-description: 'ICT/SMC çerçevesinin tamamı tek derste: swing yapısı, BOS/CHoCH/MSS, dealing range ve OTE, likidite havuzları ve sweep, order block, FVG ve akrabaları, kill zone ve Power of Three, adım adım giriş modelleri, stop/hedef/pozisyon yönetimi, canlı karar ağacı ve dürüst kanıt tartışması — 28 grafik üstünde. Genişletilmiş baskı: her konsept için adım adım trade dersi (tarama, geçerlilik listesi, tetik, giriş/SL/TP hesabı, pozisyon senaryo ağacı, geçersizleşme, kaybeden örnek, sık hatalar), IPDA veri aralıkları, PD Array Matrix, CBDR ve SD projeksiyonları, NDOG/NWOG, makro pencereleri, açılış çapaları, SMT divergence, on beş modellik setup kataloğu, icra ve maliyet katmanı, backtest protokolü ve MAE/MFE ölçümü, risk mimarisi ve disiplin, araç kurulumu ve TRY/BIST uyarlaması — toplam 57 grafik.'
+description: 'Sıfırdan ileri seviyeye ICT/SMC: bir sweep gördüğünde onu adlandırmayı, arkasından hangi onayı bekleyeceğini, emri hangi kutuya hangi fiyattan koyacağını ve bu çerçevenin hangi ayağının ölçülmüş hangisinin anlatı olduğunu öğretir. Çerçevenin tamamı tek derste: swing yapısı, BOS/CHoCH/MSS, dealing range ve OTE, likidite havuzları ve sweep, order block, FVG ve akrabaları, kill zone ve Power of Three, adım adım giriş modelleri, stop/hedef/pozisyon yönetimi, canlı karar ağacı ve dürüst kanıt tartışması — 57 grafik üstünde (51 sentetik/şematik + 6 gerçek veri). Genişletilmiş baskı: her konsept için adım adım trade dersi (tarama, geçerlilik listesi, tetik, giriş/SL/TP hesabı, pozisyon senaryo ağacı, geçersizleşme, kaybeden örnek, sık hatalar), IPDA veri aralıkları, PD Array Matrix, CBDR ve SD projeksiyonları, NDOG/NWOG, makro pencereleri, açılış çapaları, SMT divergence, on beş modellik setup kataloğu, icra ve maliyet katmanı, backtest protokolü ve MAE/MFE ölçümü, risk mimarisi ve disiplin, araç kurulumu ve TRY/BIST uyarlaması — toplam 57 grafik.'
 pubDate: 2026-08-19
-updatedDate: 2026-08-19
+updatedDate: 2026-08-20
 tags: ['smc', 'ict', 'fiyat-aksiyonu', 'likidite', 'order-block', 'fvg', 'ders', 'teknik-analiz']
 durum: 'aktif'
-kaynak: 'ICT (Inner Circle Trader) öğretisinin metne dökülmüş birincil türevleri (innercircletrader.net, ictkillzone.com, LuxAlgo Library, TradingFinder), Connors & Raschke Street Smarts (1995), Osler (2003, 2005) NY Fed çalışmaları, MPM Research / edgeful / IndicatorEdge backtest derlemeleri; sentetik ve yfinance (EURUSD, GC=F, BTC-USD) verisiyle üretilmiş 28 grafik. Genişletilmiş baskıda ayrıca: innercircletrader.net / ictkillzone / LuxAlgo / grandalgo / liquidityscan / writofinance ileri konu sayfaları, Kyle (1985), Perold (1988), Bouchaud vd. (2022, kare-kök yasası), Ariel (1987), Lakonishok-Smidt (1988), Ni-Pearson-Poteshman (2005), Alt-Fortin-Weinberger (2011), Sweeney (MAE/MFE), Barber-Odean Tayvan verisi, Borsa İstanbul / TCMB / SPK belgeleri; ve yfinance ile ölçülmüş üç yeni gerçek-veri grafiği (EURUSD-GBPUSD SMT, haftalık ekstremin günü, TSİ saatlik oynaklık profili) — toplam 57 grafik.'
+kaynak: 'ICT (Inner Circle Trader) öğretisinin metne dökülmüş birincil türevleri (innercircletrader.net, ictkillzone.com, LuxAlgo Library, TradingFinder), Connors & Raschke Street Smarts (1995), Osler (2003, 2005) NY Fed çalışmaları, MPM Research / edgeful / IndicatorEdge backtest derlemeleri; sentetik ve yfinance (EURUSD, GC=F, BTC-USD) verisiyle üretilmiş 57 grafik. Genişletilmiş baskıda ayrıca: innercircletrader.net / ictkillzone / LuxAlgo / grandalgo / liquidityscan / writofinance ileri konu sayfaları, Kyle (1985), Perold (1988), Bouchaud vd. (2022, kare-kök yasası), Ariel (1987), Lakonishok-Smidt (1988), Ni-Pearson-Poteshman (2005), Alt-Fortin-Weinberger (2011), Sweeney (MAE/MFE), Barber-Odean Tayvan verisi, Borsa İstanbul / TCMB / SPK belgeleri; ve yfinance ile ölçülmüş üç yeni gerçek-veri grafiği (EURUSD-GBPUSD SMT, haftalık ekstremin günü, TSİ saatlik oynaklık profili) — toplam 57 grafik.'
+ozet: "Bir sweep gördüğünde onu adlandırmayı, arkasından hangi onayı bekleyeceğini ve emri hangi kutuya hangi fiyattan koyacağını öğretir; çerçevenin hangi ayağının ölçülmüş, hangisinin anlatı olduğunu da söyler."
+seviye: "giris"
+onkosul: []
 ---
 
 import GrafikEmbed from '../../components/GrafikEmbed.astro';
@@ -14,16 +17,43 @@ import GrafikEmbed from '../../components/GrafikEmbed.astro';
 
 <div class="not">
   <span class="etiket">Ders neyi vaat ediyor, neyi etmiyor</span>
-  Vaat: SMC/ICT külliyatındaki <em>her</em> kavramın kesin tanımı ve kuralı (swing, BOS, CHoCH, MSS, dealing range, premium/discount, OTE, BSL/SSL, EQH/EQL, sweep, inducement, trendline likiditesi, draw on liquidity, displacement, OB, breaker, mitigation block, propulsion block, rejection block, FVG/BISI/SIBI/CE, IFVG, BPR, volume imbalance, Power of Three, Judas, kill zone'lar, Silver Bullet, 2022 modeli, Unicorn, market maker modelleri), her kuralın arkasındaki <em>neden</em>, 28 grafik üstünde adım adım okuma, canlı karar ağacı, kontrol listeleri, stop/hedef/pozisyon yönetimi ve sayısal sabitler tablosu (28 grafik). Vaat <strong>etmediği</strong>: kazanma oranı. Bölüm 12'de göreceğiniz gibi, bu çerçevenin bir <em>sistem</em> olarak maliyet sonrası edge'i bağımsız testlerde gösterilememiştir; edge — varsa — uygulayıcının seçiciliğinden ve yönetiminden gelir ve <em>sizin</em> ölçmeniz gerekir.
+  Vaat: SMC/ICT külliyatındaki <em>her</em> kavramın kesin tanımı ve kuralı (swing, BOS, CHoCH, MSS, dealing range, premium/discount, OTE, BSL/SSL, EQH/EQL, sweep, inducement, trendline likiditesi, draw on liquidity, displacement, OB, breaker, mitigation block, propulsion block, rejection block, FVG/BISI/SIBI/CE, IFVG, BPR, volume imbalance, Power of Three, Judas, kill zone'lar, Silver Bullet, 2022 modeli, Unicorn, market maker modelleri), her kuralın arkasındaki <em>neden</em>, 57 grafik üstünde adım adım okuma, canlı karar ağacı, kontrol listeleri, stop/hedef/pozisyon yönetimi ve sayısal sabitler tablosu. Vaat <strong>etmediği</strong>: kazanma oranı. Bölüm 12'de göreceğiniz gibi, bu çerçevenin bir <em>sistem</em> olarak maliyet sonrası edge'i bağımsız testlerde gösterilememiştir; edge — varsa — uygulayıcının seçiciliğinden ve yönetiminden gelir ve <em>sizin</em> ölçmeniz gerekir.
 </div>
 
 **Terminoloji notu.** "ICT" (Inner Circle Trader — Michael J. Huddleston'ın 2010'lardan itibaren video ve mentorluk yoluyla yaydığı öğreti) özgün kaynağı; "SMC" ise topluluğun bu öğretiyi sadeleştirip yeniden etiketlediği türev çerçeveyi ifade eder. İkisi aynı kavramlara bazen farklı ad verir (ICT "MSS" der, SMC "CHoCH" der; ICT "PD array" der, SMC "kutu" der). Ders boyunca hangi terimin hangi kampa ait olduğunu belirtiyor, çelişki varsa iki sürümü de yazıyoruz. İngilizce terimlerin yerleşik Türkçe karşılığı olmadığında İngilizcesi korunmuş, ilk geçtiğinde açıklanmıştır.
 
-**Nasıl okumalı.** Ders üç katmanlıdır: önce *mantık* (Bölüm 1), sonra *kavramlar* (Bölüm 2–5, her biri grafik üstünde), sonra *uygulama* (Bölüm 6–9: giriş, yönetim, canlı akış, çoklu zaman dilimi). Bölüm 10–12 araç ayarları, tuzaklar ve kanıt tartışmasıdır. Sonda tüm sayısal sabitler tek tabloda ve bir sözlük vardır. Grafiklerin 25'i sentetiktir (kavramı tek başına, gürültüsüz göstermek için tohumlu üretim); son üçü gerçek veridir (EURUSD, altın, BTC) ve "mekanik kurallar gerçek grafikte neye benzer" sorusuna cevap verir.
+**Nasıl okumalı.** Ders üç katmanlıdır: önce *mantık* (Bölüm 1), sonra *kavramlar* (Bölüm 2–5, her biri grafik üstünde), sonra *uygulama* (Bölüm 6–9: giriş, yönetim, canlı akış, çoklu zaman dilimi). Bölüm 10–12 araç ayarları, tuzaklar ve kanıt tartışmasıdır. Sonda tüm sayısal sabitler tek tabloda ve bir sözlük vardır. Grafiklerin büyük çoğunluğu sentetiktir (kavramı tek başına, gürültüsüz göstermek için tohumlu üretim); **altısı gerçek veridir** — Şekil 14 (EURUSD↔GBPUSD SMT), 29 (haftanın günü profili), 48 (EURUSD), 49 (altın), 50 (BTC) ve 57 (TSİ seans profili) — ve "mekanik kurallar gerçek grafikte neye benzer" sorusuna cevap verir.
 
 <div class="not">
   <span class="etiket">Genişletilmiş baskı — bu dersin ikinci katmanı</span>
-  Yukarıdaki paragraflarda geçen “28 grafik” ve “Bölüm 1–12” tarifi dersin <em>ilk</em> katmanını anlatır ve olduğu gibi geçerlidir. Bu baskıda üzerine iki şey eklendi, hiçbiri çıkarılmadı: (i) mevcut bölümlerin içine, <strong>her ana konsept için</strong> “adım adım trade dersi” alt bölümleri — işlev, tarama prosedürü, geçerlilik listesi, tetik, giriş/SL/TP hesabı, pozisyon sonrası senaryo ağacı, geçersizleşme işaretleri, kaybeden örnek ve sık üç hata; (ii) <strong>Bölüm 13–19</strong>: setup kataloğu, icra ve maliyet, backtest protokolü ve ölçüm, günlük-risk-disiplin, araçlar, Türkiye uyarlaması ve ileri katmanların sentezi. Grafik numaraları <strong>29'dan 57'ye</strong> devam eder; eski şekil numaraları değişmemiştir. Yeni şekiller ait oldukları bölümün <em>içine</em> yerleştirildiği için numaralar okuma sırasında art arda gelmez (Şekil 01 aşağıda Şekil 02'den önce çıkar); her şekil kendi bölümünde anlatılır. Yeni grafiklerin 26'sı sentetik/şematik, üçü gerçek veridir (Şekil 14, 29, 57) ve üçü de dersin kanıt tartışmasını <em>güçlendirmek</em> değil, gerektiğinde <em>zayıflatmak</em> üzere ölçülmüştür.
+  Yukarıdaki paragraflardaki “Bölüm 1–12” tarifi dersin <em>ilk</em> katmanını anlatır ve olduğu gibi geçerlidir (o baskıda 28 şekil vardı; bugün 57). Bu baskıda üzerine iki şey eklendi, hiçbiri çıkarılmadı: (i) mevcut bölümlerin içine, <strong>her ana konsept için</strong> “adım adım trade dersi” alt bölümleri — işlev, tarama prosedürü, geçerlilik listesi, tetik, giriş/SL/TP hesabı, pozisyon sonrası senaryo ağacı, geçersizleşme işaretleri, kaybeden örnek ve sık üç hata; (ii) <strong>Bölüm 13–19</strong>: setup kataloğu, icra ve maliyet, backtest protokolü ve ölçüm, günlük-risk-disiplin, araçlar, Türkiye uyarlaması ve ileri katmanların sentezi. Grafik numaraları <strong>29'dan 57'ye</strong> devam eder; eski şekil numaraları değişmemiştir. Yeni şekiller ait oldukları bölümün <em>içine</em> yerleştirildiği için numaralar okuma sırasında art arda gelmez (Şekil 01 aşağıda Şekil 02'den önce çıkar); her şekil kendi bölümünde anlatılır. Yeni grafiklerin 24'ü sentetik/şematik, beşi gerçek veridir (Şekil 29, 48, 49, 50, 57 — ilk katmandaki Şekil 14 ile birlikte derste toplam <strong>altı</strong> gerçek-veri şekli olur) ve hepsi dersin kanıt tartışmasını <em>güçlendirmek</em> değil, gerektiğinde <em>zayıflatmak</em> üzere ölçülmüştür.
+</div>
+
+<div class="not gezinme">
+  <span class="etiket">Bu derste ne var</span>
+
+**Amaç.** Ders bittiğinde ekranda bir süpürme gördüğünüzde onu adlandırabilecek, arkasından hangi onayı beklediğinizi bilecek, emri hangi kutuya hangi fiyattan koyacağınızı hesaplayabilecek ve — en önemlisi — bu çerçevenin hangi ayağının ölçülmüş, hangisinin anlatı olduğunu ayırt edebileceksiniz.
+
+**Yapı.** Ders **tek akıştır**: Bölüm 1–19 sırayla okunacak biçimde dizilmiştir ve dört katmana ayrılır — **mantık** (neden böyle olsun), **kavram** (tanım + grafik), **uygulama** (giriş, yönetim, canlı akış), **kanıt ve altyapı** (ölçüm, disiplin, araç, yerelleştirme). İlk okumada 1 → 7 zinciri tek başına yeterlidir; Bölüm 8–19 o zincirin çalışma ortamıdır.
+
+| Bölüm | Katman | Konu | Ne kazanırsın | Uzunluk |
+|---|---|---|---|---|
+| **1** | mantık | stop kümelenmesi, kaskad, Wyckoff/AMT akrabalığı, IPDA veri aralıkları | hangi iddianın kanıtlı, hangisinin anlatı olduğunu baştan ayırmak | ~25 dk |
+| **2–3** | kavram | swing/BOS/CHoCH/MSS, dealing range ve OTE; havuzlar, sweep, inducement, SMT | grafiğe bakınca "yapı ne diyor, havuz nerede" sorusunu tek geçişte cevaplamak | ~50 dk |
+| **4–5** | kavram | displacement, FVG ailesi, OB/breaker/mitigation, PD Array Matrix; kill zone, PO3, profiller | emrin **hangi kutuya** ve **hangi saatte** konacağını seçmek | ~55 dk |
+| **6–7** | uygulama | klasik model, 2022, Silver Bullet, Unicorn, Judas, MMXM, ORG; stop/hedef/boyut/kısmi/BE | bir tezi giriş–SL–TP üçlüsüne ve R çarpanına çevirmek | ~60 dk |
+| **8–11** | uygulama | günün dakika dakika akışı, karar ağacı, kontrol listeleri, çoklu zaman dilimi, araç ayarları, tipik hatalar | ekran başındaki karar hızını kurala bağlamak | ~35 dk |
+| **12** | kanıt | gerçek veride mekanik tespit, backtest bulguları, yapısal eleştiriler, order flow gerçeği | çerçeveye ne kadar ağırlık vereceğinize dürüstçe karar vermek | ~25 dk |
+| **13–15** | altyapı | on beş modellik katalog, icra ve maliyet, backtest protokolü ve MAE/MFE | kendi edge'inizi **maliyet sonrası** ölçmek | ~40 dk |
+| **16–19** | altyapı | günlük, risk mimarisi, disiplin, ekran kurulumu, Türkiye uyarlaması, katmanların sentezi | hesabı yaşatan çerçeveyi ve TSİ/BIST/USDTRY uyarlamasını kurmak | ~45 dk |
+| **Kapanış** | başvuru | özet tablo (tüm sayısal sabitler) · sözlük · kaynaklar | bir eşiğin nereden geldiğini ve hangi kaynağa dayandığını tek bakışta bulmak | ~10 dk |
+
+**Önce şunu oku.** Ön koşul yok — ders sıfırdan başlar; mum grafiği okuyabilmek yeterlidir. Yan okuma olarak [Harmonik Patternler](/arastirma/harmonik-patternler/) (aynı fiyat aksiyonu ailesinin ölçülü/geometrik kanadı, aynı kanıt disipliniyle) ve [Risk ve Hedge](/arastirma/risk-ve-hedge/) (pozisyon boyutu disiplini) faydalıdır; ikisi de zorunlu değildir.
+
+**İçinde ne var.** 57 grafik (51 sentetik/şematik + 6 gerçek veri: Şekil 14, 29, 48, 49, 50, 57) · 21 "adım adım trade dersi" (işlev → tarama → geçerlilik listesi → tetik → fiyat hesabı → pozisyon sonrası → geçersizleşme → kaybeden örnek → üç hata) · 24 kaybeden örnek · **8 pratik bloğu, 29 alıştırma** (çözümleri açılır kutularda) · 80'in üstünde katalog/eşik tablosu · sonda tüm sayısal sabitler tablosu ve sözlük. Hesap aracı yoktur; doğrulama grafik ve tablo referanslarıyla yapılır.
+
+**Tarih dili.** Bu bir **rehberdir**: kurallar, saatler ve şablonlar takvimden bağımsızdır ve öyle yazılmıştır. Ay adı ve yıl yalnız üç yerde geçer, üçü de işaretlidir: (i) **ölçüm pencereleri** — gerçek veri grafiklerinin her birinin başında `Çıpa:` ile başlayan bir satır vardır; (ii) **akademik künyeler**; (iii) **tarihsel olgular** (ABD yaz saati düzenlemesi, SPK kaldıraç değişikliği). Buna karşılık **saat, seans ve gün adı takvim değil periyodisitedir** — Londra kill zone'u 02:00–05:00, NY AM 2 makrosu 09:50–10:10, "haftalık ekstremin günü" her yıl aynıdır; bunlar genelleştirilmez, olduğu gibi kalır. Bir ayrım daha: **"2022 modeli"** bir tarih değil, ICT'nin o mentorluk serisine verdiği **addır** — bugün de aynı adla anılır ve her yıl aynı kuralla uygulanır.
+
 </div>
 
 ---
@@ -184,7 +214,7 @@ Kırılım geçerlilik kuralı (SMC/edgeflo özeti):
 
 **Şekil 02 nasıl okunur.** Sentetik seri önce yükseliş, sonra düşüş yapısı çiziyor. Sol üstteki kutu 3-mum kuralını gösteriyor: ortadaki mumun high'ı iki komşusundan kesin yüksek → swing high. Ana grafikte üçgen işaretleri swing'ler, etiketleri HH/HL/LH/LL — her etiket bir öncekiyle karşılaştırılarak konur. Daireyle işaretlenen nokta **ITH**: iki yanında daha alçak STH'ler var. Gri işaretler gürültü için 5-mum ($k=2$) sürümünü gösteriyor: daha az swing, daha geç onay. Yatay çizgi **korunan dip**; sağda bir mum bu çizginin altında *gövdeyle* kapanınca yapı düşüşe döner ve etiketler LH/LL'ye geçer. Nereye bakılır: (i) etiketlerin hangi swing'e göre verildiği, (ii) korunan dibin *fitille* değil *gövdeyle* kırıldığı an.
 
-### 2.5 BOS — Break of Structure
+### 2.5 BOS — Break of Structure: trend yönünde kırılım nasıl sayılır
 
 - **Tanım:** Fiyatın mevcut trend *yönünde* bir önceki swing ekstremini **gövde kapanışıyla** aşması. Yükselişte önceki HH üstünde kapanış = bullish BOS; düşüşte önceki LL altında kapanış = bearish BOS.
 - **Rol:** Devam onayı. Tek başına giriş sinyali değildir; yeni dealing range'i (2.7) tanımlar ve yeni "korunan swing"i belirler.
@@ -387,19 +417,89 @@ $$
 
 **(i) Sık yapılan üç hata.** (1) *"Standard deviation"ı istatistik sanmak* — $\sigma$ hesaplayıp uyumsuzluk aramak; bu bir aralık katıdır. (2) *SD çizgisine limit koymak* — çizgi giriş değil, bakılacak bölgedir; MSS olmadan girmek dip yakalamaktır. (3) *CBDR'yi yerel saatle çizmek* — TSİ 14:00'a çizen trader tamamen başka bir aralık ölçer; grafik saat dilimi daima "New York".
 
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 2 · Yapı, dealing range ve OTE</span>
+
+**1. Konum hesabı (doğrudan uygulama).** 2.7(e)'deki H4 aralığı: $L = 99{,}9$, $H = 110{,}3$. EQ kaçtır, fiyat 102,6 aralığın yüzde kaçındadır ve bu hangi bölgedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $EQ = L + 0{,}5(H-L) = 99{,}9 + 0{,}5 \times 10{,}4 = \mathbf{105{,}1}$.
+
+Adım 2 — konum $= (102{,}6 - 99{,}9)/10{,}4 = 0{,}2596 \approx \mathbf{\%26}$.
+
+Adım 3 — %26 < %50 → **derin discount**. Bullish bias'ta alım aranabilir; bearish bias'ta satış **aranmaz** (yanlış yarı, 2.7 kuralı).
+
+**Cevap:** EQ = 105,1 · konum %26 · discount.
+
+</details>
+
+**2. Ters çevirme — aynı fikir, iki farklı yarı.** Aynı aralıkta SL 99,8, hedef karşı ERL 110,3. (a) 102,6'dan ve (b) 107,5'ten alışın R:R'leri nedir? Aradaki kat farkı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — (a) risk $= 102{,}6 - 99{,}8 = 2{,}8$; ödül $= 110{,}3 - 102{,}6 = 7{,}7$ → $7{,}7/2{,}8 = \mathbf{2{,}75R}$.
+
+Adım 2 — (b) risk $= 107{,}5 - 99{,}8 = 7{,}7$; ödül $= 110{,}3 - 107{,}5 = 2{,}8$ → $2{,}8/7{,}7 = \mathbf{0{,}36R}$.
+
+Adım 3 — kat farkı $2{,}75/0{,}36 \approx \mathbf{7{,}6}$.
+
+**Cevap:** 2,75R vs 0,36R; premium'da almak aynı fikri 7,6 kat kötüleştirir. Premium/discount kuralının bütün gerekçesi bu tek karşılaştırmadır — kalıp aynı, geometri farklı.
+
+</details>
+
+**3. Bearish OTE (aynı bacak, ters yön).** 2.8'deki EURUSD bacağını ters yönde kullanın: swing high 1,0910 (fib 1.0), MSS dibi 1,0850 (fib 0). Bearish OTE bandı hangi fiyatlardır, 0.705 satış limiti kaçtır?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — bearish'te fib **high'dan low'a** çekilir; geri çekilme **yukarı** ölçülür: $P(f) = L + f\,(H-L)$, $H-L = 0{,}0060$ (60 pip).
+
+Adım 2 — $f = 0{,}62 \rightarrow 1{,}0850 + 37{,}2\ \text{pip} = 1{,}08872$ (OTE alt kenarı).
+
+Adım 3 — $f = 0{,}705 \rightarrow 1{,}0850 + 42{,}3\ \text{pip} = \mathbf{1{,}08923}$ (sweet spot).
+
+Adım 4 — $f = 0{,}79 \rightarrow 1{,}0850 + 47{,}4\ \text{pip} = 1{,}08974$ (OTE üst kenarı).
+
+Adım 5 — SL 1.0'ın (1,0910) 10 pip ötesi = 1,0920 → $1R = 27{,}7$ pip; bullish aynasıyla **aynı** risk.
+
+**Cevap:** OTE 1,08872–1,08974, limit 1,08923. Dikkat: bant EQ'nun (1,0880) **üstündedir** — yani premium'dadır; satış için doğru yarı budur. Fib'i alışkanlıkla low→high çekseydiniz bant discount'a düşer ve ucuzdan satmış olurdunuz (2.8'deki "Pratik not — fib'i ters çizmek").
+
+</details>
+
+**4. Tuzak — eşiği esnetmek.** Bir gece CBDR 44 pip ölçüldü. ADR 92 pip, Asya aralığı 26 pip, HTF bias net. Kaç SD çizgisi çizilir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — geçerlilik listesinin **ilk** maddesi: CBDR 40 pip'in altında mı? 44 > 40 → **hayır**.
+
+Adım 2 — ilk madde bir vetodur; kalan maddelerin ("2R = 88 < 92 ✓", "Asya 26 pip ✓", "bias net ✓") hiçbiri bunu telafi etmez.
+
+**Cevap: sıfır çizgi.** O gün bu yöntem yoktur. 2.9(h)'deki kaybeden örnek tam olarak bu maddenin esnetilmesidir: 47 pip'lik CBDR ile çizilen SD−1, fiyatın gerçekte SD−1,7'ye inmesini engellemez — geniş aralık merdiveni seyrekleştirir, basamaklar bilgi taşımaz olur.
+
+</details>
+
+**Grafikle doğrula.** Şekil 06'da OTE bandının (0,62–0,79) tanımı gereği discount'un *içinde* kaldığını; Şekil 08'de sağ üstteki "R = 25 pip ✓ (&lt;40)" rozetinin bu dersteki tek veto mekanizması olduğunu görün.
+
+</div>
+
+
 ---
 
 ## Bölüm 3 — Likidite: havuzlar, süpürme, inducement, trend çizgisi ve "draw on liquidity"
 
 Yapı iskeletse likidite kastır. Fiyatın *nereye* gideceğine dair SMC'nin tek cevabı vardır: bir sonraki likidite havuzuna.
 
-### 3.1 BSL / SSL ve nerede bulunur
+### 3.1 BSL / SSL: alım ve satım likiditesi tam olarak nerede birikir
 
 - **Buy-side liquidity (BSL):** tepelerin *üstünde* biriken bekleyen alım emirleri — short'ların buy-stop'ları + breakout alıcılarının buy-stop girişleri. Konumlar: önceki gün/hafta/ay yüksekleri (PDH/PWH/PMH), swing high'lar, equal highs, trend çizgisi üstleri, yuvarlak sayılar.
 - **Sell-side liquidity (SSL):** diplerin *altında* biriken sell-stop'lar (long'ların stopları + breakdown satıcıları). Konumlar simetrik (PDL/PWL/PML, swing low'lar, equal lows).
 - **Grey pool (ICT):** henüz süpürülmemiş EQH/EQL — DOL olarak kullanılır, tek başına sinyal değildir.
 
-### 3.2 Equal highs / equal lows
+### 3.2 Equal highs / equal lows (EQH / EQL) — eşit uçlar neden mıknatıs gibi davranır
 
 - **Tanım:** iki veya daha fazla swing'in yaklaşık aynı seviyede olması ("relative equal"). ICT/SMC sayısal tolerans vermez; pratikte "görsel olarak eşit".
 - **Operasyonel tolerans (bu dersin önerisi, ICT kaynağı değil):** seviye farkı ≤ ilgili zaman diliminin ATR(14)'ünün %10–15'i.
@@ -444,7 +544,7 @@ Yapı iskeletse likidite kastır. Fiyatın *nereye* gideceğine dair SMC'nin tek
 - **Liquidity void:** fiyatın çok hızlı geçtiği, az işlem gören bölge (uzun tek yönlü mumlar); FVG'nin çok mumlu/büyük hali. Fiyatın "yeniden dengelemek" için geri dönmesi beklenen bölge (IRL). Çizimi: tek yönlü uzun mumların kapladığı dikey aralık yarı saydam dikdörtgenle, içindeki FVG'ler ayrıca ince kutuyla — Şekil 04'teki displacement bacağında gri noktalı dikey aralık budur.
 - **Draw on Liquidity (DOL):** fiyatın bir sonraki gitmek "istediği" en yakın anlamlı likidite havuzu (ERL: PDH/PDL, PWH/PWL, EQH/EQL) veya dengesizlik (IRL: FVG). **Bias = DOL'un yönü.** Günün ilk sorusu "fiyat yukarı mı aşağı mı" değil, "en yakın süpürülmemiş havuz nerede"dir.
 
-### 3.5 Inducement (IDM)
+### 3.5 Inducement (IDM) — asıl kutuya girmeden önce süpürülen tuzak likidite
 
 - **Tanım:** gerçek POI'den (point of interest — order block/FVG) *önce* duran, retail'in erken girmesini/stop koymasını sağlayan minör swing (çoğunlukla ilk pullback'in STH/STL'i).
 - **SMC kuralı:** "geçerli swing, IDM alındıktan sonra oluşur"; POI'ye giriş için önce IDM'nin süpürülmesi aranır.
@@ -474,7 +574,7 @@ Yapı iskeletse likidite kastır. Fiyatın *nereye* gideceğine dair SMC'nin tek
 
 **(i) Sık yapılan üç hata.** (1) *IDM'yi POI sanmak* — düzeltme: POI displacement'ı üreten bölgedir, IDM ondan sonraki ilk düzeltmenin ucudur. (2) *IDM süpürülmeden limit koymak* — düzeltme: limit, IDM alındıktan sonra girilir. (3) *Her düzeltmeye IDM demek* — düzeltme: IDM yalnızca **POI ile fiyat arasında** duran ilk swing'dir; POI'nin ötesindeki swing'ler IDM değildir.
 
-### 3.6 Trendline liquidity
+### 3.6 Trendline liquidity — trend çizgisinin altına yığılan stopların hasadı
 
 - **Tanım:** en az **3 temaslı**, görünür (H4/günlük) bir trend çizgisi boyunca dizilen stoplar/emirler; diyagonal likidite havuzu (LuxAlgo Library).
 - **Sweep:** çizgiyi delip hızla geri kazanma. Kırılım değil.
@@ -520,6 +620,8 @@ $\approx 0$: ticariler dönemin en az long konumunda (ICT okuması: orta vadeli 
 
 <GrafikEmbed src="/arastirma/smc-teknik-analiz/14_gercek_smt_eurusd_gbpusd.html" baslik="Gerçek veri — EURUSD ↔ GBPUSD SMT: tek örnek (15 Nis 2025) ve iki yıllık örneklemin ölçümü" no="14" yukseklik={1380} />
 
+**Çıpa: 02.11.2023 – 18.08.2026 saatlik örneklemi** (tek örnek: 15.04.2025) — örneklem penceresidir; başka pencerede sayılar değişir. Aşağıdaki tarihler bir **ölçümün** adresidir, bir kuralın parçası değildir: SMT'nin *yöntemi* her koşulda geçerlidir, bu paragraftaki *sayılar* yalnız bu pencereye aittir.
+
 **Şekil 14 nasıl okunur.** Üstteki iki panel (EUR/USD ve GBP/USD, aynı zaman ekseninde) gerçek bir örnektir: **15 Nisan 2025, 16:00 UTC** — EURUSD 1,13186'dan **1,12689**'a inip önceki dibi kırıyor (LL, 49,7 pip), GBPUSD 1,31659'dan **1,32074**'e gidip dibini koruyor (HL, 41,6 pip). Alttaki iki panel — medyan MFE çubukları ile örneklem kutusu — bu tek örneği iki yıllık bir ölçümün içine oturtur ve dersin en rahatsız edici sayısını verir. Ölçüm: **17.208 ortak saatlik bar, 02 Kas 2023 – 18 Ağu 2026**; günlük getiri korelasyonu $\rho_{60g} = 0{,}835$ ve $\rho_{250g} = 0{,}837$ (SMT eşiği 0,80 ✓). EURUSD'de LL yapan 11-mumluk ($k=5$) fraktal swing dibi sayısı **234**; bunların **47**'sinde GBPUSD dibini koruyor (SMT), **187**'sinde GBPUSD de LL yapıyor (teyit), her iki tarafta ≥5 pip marjlı "net SMT" **16**. 24 saatlik ileri hareket medyanı: **SMT 45,8 pip · teyit 51,6 pip · net SMT 48,9 pip**. Yani **SMT'li dipler bu örneklemde teyitli diplerden daha iyi çıkmıyor.** "Güçlü tarafta giriş" kuralı da ayrışmıyor: net SMT örneklerinde EURUSD medyanı 48,9 pip, GBPUSD medyanı 48,3 pip. Nereye bakılır: (i) korelasyon rozeti — SMT'nin tüm bilgi içeriği buradan gelir; (ii) üç grubun medyan çubukları ve aralarındaki farkın küçüklüğü; (iii) grafikte yazılı dürüstlük şerhi: $n = 16$ çok küçüktür, **bu bir çürütme değil**, "ölçmeden kullanma" ilkesinin somut hâlidir. Bu dersin duruşu: SMT'yi kullanabilirsiniz, ama kendi enstrümanınızda, kendi tanımınızla **ölçmeden** ona ekstra ağırlık vermeyin.
 
 #### Adım adım trade dersi — SMT divergence
@@ -542,13 +644,83 @@ $\approx 0$: ticariler dönemin en az long konumunda (ICT okuması: orta vadeli 
 
 **(i) Sık yapılan üç hata.** (1) *DXY–EURUSD SMT'si* — DXY'nin %58'i EUR; kendinizi teyit ediyorsunuz. Düzeltme: DXY'yi GBPUSD/USDJPY ile eşleyin. (2) *Farklı swing'leri karşılaştırmak* — düzeltme: zaman damgası eşleşmeli. (3) *Zayıf enstrümandan işlem almak* — "divergence yapan o, dönecek olan da o" yanılgısı; düzeltme: güçlü olan alınır, stop zaten orada korunmuştur.
 
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 3 · Likidite, sweep, IDM ve SMT</span>
+
+**1. Sweep mi, run mı, gürültü mü (doğrudan uygulama).** PDL = 100,00, ATR(1dk) = 3 pip. Üç ayrı 15m mum kapanışı: (a) fitil 99,84 / kapanış 100,12 · (b) fitil 99,80 / kapanış 99,71 · (c) fitil 99,995 / kapanış 100,06. Her biri nedir ve ne yapılır?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — minimum aşım eşiği: $\max(1\ \text{pip},\ 0{,}3 \times 3 = 0{,}9\ \text{pip}) = 1$ pip.
+
+Adım 2 — (a) aşım 16 pip ✓, fitil ötede, **gövde içeride** → **sweep**. Aksiyon: sayaç başlar; sonraki 1–3 mumda displacement + MSS aranır.
+
+Adım 3 — (b) gövde seviyenin **altında** kapandı → **liquidity run**. Aksiyon: karşı işlem yok; DOL aşağı, bir sonraki havuza güncellenir.
+
+Adım 4 — (c) aşım 0,5 pip < 1 pip → **gürültü**. Aksiyon: yok; feed farkı bile bu kadar olabilir (14.3).
+
+**Cevap:** (a) sweep · (b) run · (c) gürültü. Üçünün ilk mumu ekranda neredeyse aynı görünür — fark yalnız **kapanıştadır** (Şekil 10).
+
+</details>
+
+**2. Fiyat hesabı ve stop kuralının bedeli.** 3.3(e) kurgusu: giriş 100,33 (FVG CE), SL sweep fitilinin 6 pip altı = 99,78, TP2 = PDH 101,42. R kaçtır? Aynı girişte SL OB gövdesinin altına (100,20) konsaydı R ne olurdu ve neden bu yanlıştır?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $1R = 100{,}33 - 99{,}78 = 0{,}55$; ödül $= 101{,}42 - 100{,}33 = 1{,}09$ → $\mathbf{1{,}98R \approx 2{,}0R}$.
+
+Adım 2 — dar SL ile $1R = 0{,}13$; aynı hedef **8,4R** görünür.
+
+Adım 3 — ama 3.3(e)'nin notu: aynı seviyenin **ikinci fitili** o stopu alır. Kâğıt üstündeki 8,4R, gerçekte tetiklenme olasılığı çok yüksek bir stopla satın alınmıştır; beklenti hesabında pay büyürken payda (isabet) çöker.
+
+**Cevap:** 2,0R. Kural: sweep girişlerinde SL **sweep fitilinin ötesindedir** — çünkü geçersizleşme noktası oradadır (7.1). R'yi büyütmek için stopu yapının içine çekmek, R'yi değil, kayıp sıklığını satın almaktır.
+
+</details>
+
+**3. Karar — IDM'de mi, POI'de mi?** Bullish OB 101,20–101,45 (MT 101,325), IDM 101,62, TP1 101,75. İki seçenek: (a) IDM'de al, giriş 101,62, SL 101,55; (b) OB'nin MT'sinde al, giriş 101,33, SL 101,12. Hangisi ve neden?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — (a): $1R = 0{,}07$; TP1 $+0{,}13 = 1{,}9R$ **görünür**.
+
+Adım 2 — ama IDM'nin tanımı "erken girenlerin stop koyduğu yer"dir. Dizi gereği fiyat önce IDM'yi süpürüp *sonra* OB'ye iner — yani (a) tanım gereği stop olur.
+
+Adım 3 — (b): $1R = 101{,}33 - 101{,}12 = 0{,}21$; TP1 $+0{,}42 = \mathbf{2{,}0R}$, ve giriş dizinin doğru halkasındadır.
+
+**Cevap:** (b). Ders: IDM bir giriş **üretmez**, bir girişi **erteler**. Ekrandaki en iyi görünen R çoğu zaman modelin sizi yakıt olarak beklediği yerdir.
+
+</details>
+
+**4. Tuzak — SMT'de sıralama.** Bir sabah: EURUSD LL yapıyor, GBPUSD dibini koruyor, HTF bias bullish, süpürülen seviye adlandırılmış bir PDL, iki dip aynı mumun dibi. Ama $\rho_{60g} = 0{,}41$. Kaç madde "evet", karar ne?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — dört madde "evet" (aynı mum ✓, aynı TF ✓, bias yönünde ✓, adlandırılmış havuz ✓).
+
+Adım 2 — ama 3.7(c)'nin kuralı sıralıdır: **$\rho$ kontrolü "hayır" ise diğerleri sayılmaz.** 0,41 < 0,80.
+
+Adım 3 — dolayısıyla görülen şey SMT değil, iki bağımsız enstrümanın rastgele farklı davranmasıdır (3.7(h)'deki ECB haftası örneği).
+
+**Cevap: işlem yok.** İkinci katman: $\rho$ eşiği **tutsaydı** bile Şekil 14'ün ölçümü hatırlatır — o örneklemde SMT'li diplerin 24 saatlik medyan ilerlemesi 45,8 pip, teyitli diplerinki 51,6 pip. SMT bir tie-breaker'dır, ağırlık çarpanı değil.
+
+</details>
+
+**Grafikle doğrula.** Şekil 10'da iki panelin ilk mumlarının ne kadar benzediğini; Şekil 14'ün alt panelinde üç medyan çubuğunun (SMT / teyit / net SMT) birbirine ne kadar yakın durduğunu ölçün.
+
+</div>
+
+
 ---
 
 ## Bölüm 4 — Bloklar: displacement, FVG ve akrabaları, order block, breaker, mitigation block
 
 ICT bu bloklara topluca **PD array** (Premium/Discount array) der: discount'ta bullish array'ler (OB, FVG, breaker, MB, RB, BPR), premium'da bearish array'ler aranır. Hepsinin ön koşulu displacement'tır; oradan başlıyoruz.
 
-### 4.1 Displacement — yer değiştirme
+### 4.1 Displacement — yer değiştirme: bir mumu "itki" yapan ölçülebilir eşikler
 
 **Tanım.** Bir yönde, çok az geri çekilmeyle, ardışık büyük gövdeli mumlarla gerçekleşen ve arkasında en az bir **imbalance/FVG** bırakan hareket. Literatürdeki somut eşikler:
 
@@ -605,7 +777,7 @@ $$
 
 **(i) Sık yapılan üç hata.** (1) *Her boşluğu FVG saymak* — düzeltme: displacement eşiği + bacak şartı. (2) *"Gap'ler mutlaka dolar" beklentisiyle karşı-trend girmek* — düzeltme: edgeful'un YM verisi bullish FVG'lerin %60,7'sinin aynı seansta gövdeyle **dolmadığını** gösteriyor (12.2); FVG bias yönünde bir adrestir, karşı-trend bahanesi değil. (3) *CE yerine kutunun uzak kenarına emir koymak* — düzeltme: uzak kenar çoğu zaman doldurulmaz; CE birincil, kenar ikincildir.
 
-### 4.3 Inversion FVG (IFVG)
+### 4.3 Inversion FVG (IFVG) — geçersizleşen FVG'nin ters yönde kullanımı
 
 - **Tanım:** fiyat bir FVG'nin **tamamından gövde kapanışıyla** geçtiğinde FVG'nin rolü tersine döner: bullish FVG kırılırsa **bearish IFVG** (direnç), bearish FVG kırılırsa **bullish IFVG** (destek).
 - **Kural:** (i) FVG'nin karşı kenarını **gövde** geçmeli (fitil yetmez), (ii) tercihen o kırılım bir sweep/MSS ile birlikte olmalı, (iii) giriş IFVG'ye ilk retest'te.
@@ -661,7 +833,7 @@ $$
 
 **(i) Sık yapılan üç hata.** (1) *Her zıt renkli mumu OB saymak* — düzeltme: sweep + displacement + yapı kırılımı olmadan kutu çizilmez. (2) *Stopu gövdenin altına koymak* — düzeltme: gövde bölgedir, **fitil** stop referansıdır; tampon ayrıca eklenir. (3) *Aynı OB'yi üçüncü kez denemek* — düzeltme: bir bölge iki kez test edildiyse listeden düşer; yeni bir hikâye gerekir.
 
-### 4.5 Breaker Block (BB)
+### 4.5 Breaker Block (BB) — başarısız OB'nin ters yönde kullanımı
 
 - **Tanım:** başarısız OB. Bullish bir OB gövde kapanışıyla aşağı kırılırsa o blok **bearish breaker** olur (yukarıdan test edilince direnç); bearish OB yukarı kırılırsa **bullish breaker** (destek).
 - **Kritik ek koşul (ICT):** kırılmadan önce fiyat bir **likidite süpürmesi** yapmış olmalı (yeni high/low). Sıra: sweep → geri dönüş → OB'nin karşı tarafa gövdeyle kırılması → retest.
@@ -806,13 +978,89 @@ PD array ailesinin en az öznel üyeleri bunlardır: OB/FVG çiziminde iki trade
 
 **(i) Sık yapılan üç hata.** (1) *NDOG'u midnight open sanmak* — düzeltme: farklı renkte çiz, defterde ayrı satır tut. (2) *Boşluğun kenarına emir koymak* — düzeltme: CE birincil, kenar ikincil. (3) *"Boşluk dolar" beklentisiyle karşı-trend işlem* — doldurma oranı ölçülmemiştir; boşluk **hedef** olarak kullanılır (bias yönündeyse), giriş tezi olarak değil.
 
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 4 · FVG, order block ve PD array önceliği</span>
+
+**1. FVG: CE ve iki stop kuralı (doğrudan uygulama).** Bullish FVG 100,20–100,44, TP1 = 100,86. CE kaçtır? (a) M1 fitili 100,08'in 6 pip altına konan SL ile, (b) sweep fitili 99,92'nin altına konan SL ile R'ler nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $CE = (100{,}20 + 100{,}44)/2 = \mathbf{100{,}32}$.
+
+Adım 2 — (a) $1R = 100{,}32 - 100{,}08 = 0{,}24$; ödül 0,54 → $\mathbf{2{,}25R}$.
+
+Adım 3 — (b) $1R = 100{,}32 - 99{,}92 = 0{,}40$; ödül 0,54 → $\mathbf{1{,}35R}$.
+
+Adım 4 — oran $2{,}25/1{,}35 = 1{,}67$ kat.
+
+**Cevap:** CE 100,32 · 2,25R vs 1,35R. Aynı giriş, aynı hedef, 1,67 kat farklı R — bu yüzden hangi SL kuralını kullandığınız **kural defterinde yazılı** olmalıdır (7.1) ve işlem ortasında değiştirilmez.
+
+</details>
+
+**2. Order block: üç giriş, üç R (ters çevirme).** OB gövdesi 102,30–102,66, fitil low 102,18, SL 102,08, TP1 = 103,28. OB open / MT / OB close girişlerinin R'leri? Hangisi hangi bedeli ödüyor?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — **OB open (yakın kenar) 102,66:** $1R = 0{,}58$; ödül 0,62 → **1,1R**.
+
+Adım 2 — **MT 102,48:** $1R = 0{,}40$; ödül 0,80 → **2,0R**.
+
+Adım 3 — **OB close (uzak kenar) 102,30:** $1R = 0{,}22$; ödül 0,98 → **4,5R**.
+
+Adım 4 — takas: R büyüdükçe fiyatın kutunun dibine kadar inmesi gerekir → **dolum olasılığı düşer**.
+
+**Cevap:** 1,1R / 2,0R / 4,5R. Tek bir kutu üç farklı işlem üretir; seçim "hangisi daha iyi" değil, **dolum kesinliği ↔ R:R** ekseninde nerede durduğunuzdur. Bu dersin varsayılanı MT'dir.
+
+</details>
+
+**3. Karar — ekranda dört aday, hangisine emir?** Bullish bias, alış aranıyor. (i) H4 FVG'nin *içindeki* 15m OB, dokunulmamış, stop 18 puan · (ii) tek başına duran volume imbalance, HTF array dışında, stop 9 puan · (iii) iki kez test edilmiş breaker, HTF içinde, stop 14 puan · (iv) premium'da duran taze OB, stop 11 puan.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — kural 1 (HTF önce) + kural 2 (çakışma): (ii) HTF array'in dışında ve tek katman → **elenir**, stopu en küçük olsa bile.
+
+Adım 2 — kural 3 (premium/discount testi): (iv) yanlış yarıda → **elenir**, "sıralaması ne olursa olsun".
+
+Adım 3 — kural 4 (tazelik): (iii) iki kez test edilmiş → **listeden düşer**.
+
+Adım 4 — kural 6 (stop bütçesi) ancak hayatta kalanlar arasında çalışır; geriye (i) kalır.
+
+**Cevap: (i).** Ders: stop bütçesi bir **eleme** kriteri değil, **beraberlik bozucudur**. 9 puanlık stopu olan (ii)'yi seçmek, karar ağacının ilk üç maddesini atlamaktır — 4.7'deki sıralamanın "ölçülmemiş, öğretilen" olması bu maddeleri gereksiz kılmaz; tersine, elemeler ölçülebilir maddelerden (konum, tazelik, HTF içi olma) gelir.
+
+</details>
+
+**4. NWOG: CE ve "TP değil, BE tetiği" ayrımı (tuzak).** Cuma kapanış 18402,50, Pazar açılış 18371,00, SL 18363. CE kaçtır? CE girişiyle 18455 hedefinin R'si? Neden NWOG'un üst kenarı (18402,50) TP olarak yazılmaz?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — genişlik $= 31{,}5$ puan; $CE = (18371{,}00 + 18402{,}50)/2 = \mathbf{18386{,}75}$.
+
+Adım 2 — giriş 18387, SL 18363 → $1R = 24$ puan.
+
+Adım 3 — 18455 → $+68$ puan $= \mathbf{2{,}83R}$.
+
+Adım 4 — üst kenar 18402,50 → $+15{,}5 = 0{,}65R$, yani **1R'nin altında**. 1R'nin altındaki bir "hedef" beklentiye katkı yapamaz: %50 isabetle bile $0{,}5 \times 0{,}65 - 0{,}5 \times 1{,}00 < 0$.
+
+**Cevap:** CE 18386,75 · 2,83R · üst kenar yalnız **BE tetiğidir**. Aynı desen dersin üç ayrı yerinde çıkar ve hepsinde aynı kararı verir: ORG'de gap kapanışı **0,83R** (6.12), midnight open reversion'da açılış çizgisi **0,94R** (5.2c), CBDR'de CBDR low **1,05R** (2.9). Kural: 1R'ye yakın seviyeler hedef değil, **kısmi kâr ve BE tetiğidir**.
+
+</details>
+
+**Grafikle doğrula.** Şekil 21'de üç kutunun kesiştiği bandın neden tek bir kutuya yeğlendiğini; Şekil 22'nin alt panelinde beş NWOG'dan yalnız birinin "ders kitabı" gibi davrandığını sayın.
+
+</div>
+
+
 ---
 
 ## Bölüm 5 — Zaman: seanslar, kill zone'lar, Power of Three ve günlük/haftalık profil
 
 SMC'de "nerede" kadar "ne zaman" da sorulur. Bu bölüm ICT'nin zaman çerçevesini NY saati, UTC ve **Türkiye saati (TSİ)** ile birlikte verir.
 
-### 5.1 Saat dönüşümü
+### 5.1 Saat dönüşümü: NY, UTC ve TSİ arasında nasıl geçilir
 
 ICT'nin özgün saatleri New York yerel saatiyledir. NY = UTC−4 (yaz: Mart 2. Pazar – Kasım 1. Pazar), UTC−5 (kış). **TSİ = UTC+3 (sabit).** Dolayısıyla:
 
@@ -1006,6 +1254,8 @@ Yukarıdaki 12 profil bir **şablon** listesidir; hiçbiri ölçülmemiştir. Bu
 
 <GrafikEmbed src="/arastirma/smc-teknik-analiz/29_gercek_haftanin_gunu_profili.html" baslik="Gerçek veri — haftalık high ve low hangi güne düşüyor? Dört enstrüman, iki yıl, %20 şans çizgisi ve %95 güven bandı" no="29" yukseklik={700} />
 
+**Çıpa: 19.08.2024 – 19.08.2026 günlük örneklemi, dört enstrüman** — örneklem penceresidir; başka pencerede sayılar değişir. Aşağıdaki yüzdeler bir ölçümdür; **"hangi güne düşer" sorusunun kendisi** ise takvimden bağımsız, her yıl tekrarlanan bir **periyodisite** sorusudur — tıpkı kill zone saatleri gibi: gün adı ve saat takvim değil ritimdir, bu yüzden göreli dile çevrilmez, olduğu gibi kalır. Genelleştirilen şey ölçüm penceresidir, sorunun kendisi değil.
+
 **Şekil 29 nasıl okunur.** Ölçüm: günlük mumlar, yalnız Pazartesi–Cuma ve **5 barlık tam haftalar**, 19 Ağu 2024 – 19 Ağu 2026. İki panel: üstte haftalık **high**'ın, altta haftalık **low**'un hangi güne düştüğünün yüzdesi; dört enstrüman yan yana. Yatay çizgi %20 (şans beklentisi), gölgeli bant $n \approx 92$ için %95 güven aralığı (≈ %11,8–%28,2) — bir çubuğun bandın **dışına** çıkması gerekir ki "şans değil" diyebilelim.
 
 | Enstrüman | n | HIGH % (Pzt→Cum) | LOW % (Pzt→Cum) |
@@ -1023,9 +1273,62 @@ Bunu nasıl okumalı? Üç şerhle. (i) İki yıl ve ~90 hafta küçük bir örn
 
 **Dersin cümlesi:** *Haftanın günü etkisi bir zamanlar ölçüldü, sonra eridi. ICT'nin "Salı haftanın dibidir" şablonu ile bu literatür aynı şey değildir; ICT şablonu ölçülmemiştir, ölçülen etki ise artık yoktur. Şablonu yalnız "tanıma aracı" olarak kullanın — ve kendi enstrümanınızda kendiniz sayın; Şekil 29'ın kodu bunun nasıl yapılacağını gösterir.* Hâlâ ölçülebilen takvim etkileri (ay dönümü, opsiyon vadesi) Bölüm 19'da.
 
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 5 · Zaman katmanı</span>
+
+**1. Saat dönüşümü (doğrudan uygulama).** NY AM 2 makrosu 09:50–10:10 NY. ABD yaz saatinde ve kış saatinde TSİ karşılıkları nedir? Fark neden ABD'den geliyor?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — yaz: $\text{TSİ} = \text{NY} + 7$ → **16:50–17:10**.
+
+Adım 2 — kış: $\text{TSİ} = \text{NY} + 8$ → **17:50–18:10**.
+
+Adım 3 — Türkiye kalıcı **UTC+3**'tür; saat kaydırmaz. ABD ise yaz saati uygular (18.1). Dolayısıyla kayan taraf ABD'dir; sizin takviminizdeki saat yılda iki kez bir saat oynar.
+
+**Cevap:** 16:50–17:10 (yaz) / 17:50–18:10 (kış). Pratik korunma: grafiği daima **"New York"** saat diliminde tutun, TSİ dönüşümünü yalnız takvime alarm yazarken yapın.
+
+</details>
+
+**2. Midnight open sapması (ters çevirme).** ES: midnight open 5284,00, ADR 62 puan, gece dibi 5262,50. $\Delta_{\text{mo}}$ kaçtır, kontrol listesinin sapma bandına giriyor mu? Aynı gün dip 5225 olsaydı karar ne değişirdi?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $\Delta_{\text{mo}} = \dfrac{5262{,}50 - 5284{,}00}{62} \times 100 = -34{,}7 \approx \mathbf{-\%35}$.
+
+Adım 2 — kontrol listesi bandı **0,2–0,6 ADR** → %35 banttadır ✓. Judas adayı; kurgu "geri dönüş".
+
+Adım 3 — dip 5225 olsaydı: $\Delta = (5225-5284)/62 = -\%95$ → 1,0 ADR'ye yakın. Bu **Judas değil trend günüdür** (5.2c(g)); geri dönüş kurgusu ölür.
+
+**Cevap:** −%35, bant içinde, kurgu geçerli. Ders: midnight open bir **bias aracıdır**, ortalamaya dönüş oyuncağı değil. Sapma bandının kontrol listesinde bulunma sebebi 5.2c(h)'deki kaybeden örnektir.
+
+</details>
+
+**3. Karar — şablon mu, ölçüm mü?** "Classic Tuesday Low" profili haftalık dibi Salı'ya koyar. Şekil 29'un ölçümünde BIST'te Salı dibi **%7**, güven bandı **%11,8–%28,2**. Salı sabahı ne yaparsınız?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — %7, bandın **altındadır** — yani şans beklentisinden bile seyrektir. "Salı dibi bekle" bir beklenti olarak bu örneklemde desteklenmiyor.
+
+Adım 2 — ama şablonun işlevi 5.4'ün altındaki kutuda yazılıdır: profil *bekleyeceğiniz* değil, *tanıyacağınız* hareketi anlatır.
+
+Adım 3 — dolayısıyla karar: gün adı bir **filtre değildir**. Filtre yine sweep + displacement + MSS zinciridir. Salı dibi oluştuysa hafta profil 1 olarak adlandırılır ve genişleme aranır; oluşmadan Salı dibi *beklenerek* pozisyon alınmaz.
+
+**Cevap:** Şablonu tanıma aracı olarak tutun, beklenti olarak kullanmayın. Ve kendi enstrümanınızda kendiniz sayın — Şekil 29'un ölçümü tam olarak bunun nasıl yapılacağını gösterir.
+
+</details>
+
+**Grafikle doğrula.** Şekil 25'te 08:30 itişinin kaç mumda geri alındığını; Şekil 29'da hangi çubukların güven bandının **dışına** çıktığını (yalnız birkaçı) işaretleyin.
+
+</div>
+
+
 ---
 
-## Bölüm 6 — Giriş modelleri: adım adım, grafik üstünde
+## Bölüm 6 — Giriş modelleri: sweep'ten emre giden dizi (klasik · 2022 · SB · Unicorn · ORG)
 
 Buraya kadar öğrendiğiniz her parça tek bir dizide birleşir: **HTF bias → likidite haritası → sweep → displacement + MSS → PD array (FVG/OB) ∩ OTE'ye geri çekilme → giriş.** Bu bölüm o diziyi tek bir işlemin üç katmanı üstünde (Şekil 30–32), ardından ICT'nin adlandırılmış modelleriyle (2022 modeli, Silver Bullet, Unicorn, Judas, MMBM/MMSM) anlatır.
 
@@ -1149,7 +1452,9 @@ Bu tablo, katalog boyunca tekrar eden dengeyi somutlaştırır: **dolum kesinli�
 
 **(i) Sık yapılan üç hata.** (1) *Her fitili sweep saymak* — düzeltme: seviyenin 2 seans tutmuş olması **ve** gövdenin içeride kapanması, ikisi birden. (2) *MSS beklemeden geri almada girip stopu fitilin hemen üstüne koymak* — düzeltme: Tetik A kullanılacaksa stop **sweep fitilinin ötesinde + tampon** olmalıdır; "hemen üstü" ikinci bir fitille alınır. (3) *Aynı seviyeyi ikinci kez denemek* — düzeltme: bir seviye bir kez süpürüldüyse oradaki likidite tüketilmiştir; ikinci deneme için yeni bir havuz gerekir.
 
-### 6.5 ICT 2022 modeli (10 adım, innercircletrader.net)
+### 6.5 ICT 2022 modeli: 10 adımlık icra dizisi (innercircletrader.net)
+
+> **Addaki "2022" bir tarih değildir.** ICT'nin o yıl yayımladığı mentorluk serisinin adıdır ve topluluk modeli bugün de bu adla anar. Model bir takvim yılına bağlı değildir; kuralları (00:00–03:00 aralığı, 03:00 sonrası süpürme, displacement FVG, minimum 1:3) her yıl aynıdır. Aynı şey Bölüm 13 kataloğundaki **M2 "ICT 2022 Mentorship"** satırı için de geçerlidir.
 
 1. Günlük/4H bias.
 2. **00:00–03:00 NY** aralığının high/low'unu işaretle.
@@ -1212,7 +1517,7 @@ Komisyon + spread'i 0,05R varsayarsak net +0,55R. Aynı model hedefi 1:1'e indir
 
 **(i) Sık yapılan üç hata.** (1) *Aralığı kapanmadan ölçmek.* (2) *FVG'siz displacement'ı model saymak.* (3) *1:3 çıkmayan kurguyu "az da olsa alayım" diye almak* — yukarıdaki aritmetik bu alışkanlığın bedelini işlem başına 0,80R olarak veriyor.
 
-### 6.6 Silver Bullet
+### 6.6 Silver Bullet — bir saatlik pencerede tek FVG kuralı
 
 - Pencereler (NY): **03:00–04:00**, **10:00–11:00**, **14:00–15:00** (TSİ yaz: 10–11, 17–18, 21–22).
 - Pencereden **önce** 15m'de likidite haritası (PDH/PDL, seans H/L, EQH/EQL).
@@ -1480,11 +1785,68 @@ Yani 0.62'den 0.79'a inmek TP1'in R çarpanını **2,0 kat** büyütür (1,29R �
 
 **(i) Sık yapılan üç hata.** (1) *Forex'te ORG aramak.* (2) *09:30 mumunun kendisini FPFVG saymak.* (3) *Gap kapanışını tek hedef yapmak.*
 
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 6 · Model aritmetiği</span>
+
+**1. 1:3 eşiğinin aritmetiği (doğrudan uygulama).** 2022 modeli minimum 1:3 şart koşuyor. Başabaş isabet oranı nedir? %40 isabetle işlem başına beklenti? Aynı %40 ile hedef 1:1'e indirilseydi?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $p^{*} = \dfrac{1}{1+R} = \dfrac{1}{1+3} = \mathbf{\%25}$.
+
+Adım 2 — $E[R] = 0{,}40 \times 3 - 0{,}60 \times 1 = 1{,}20 - 0{,}60 = \mathbf{+0{,}60R}$.
+
+Adım 3 — 1:1'de: $E[R] = 0{,}40 \times 1 - 0{,}60 \times 1 = \mathbf{-0{,}20R}$.
+
+**Cevap:** %25 · +0,60R · −0,20R. Aynı model, aynı isabet, yalnız hedef farkı — ve işaret değişiyor. "Hedefte yakın ve güzel bir havuz var" diyerek 1:3'ü 1:1'e indirmek, modeli kârlıdan zararlıya çeviren tek karardır (6.5.1'in "en sık atlanan üç şart" tablosu).
+
+</details>
+
+**2. Ters soru — hangi isabet gerekir?** Silver Bullet NY PM penceresinde hedef küçülüyor ve gerçekçi R:R 1:1,5'e iniyor. Başabaş isabet ne olur? %40 isabetle beklenti?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $p^{*} = 1/(1+1{,}5) = \mathbf{\%40}$.
+
+Adım 2 — $E[R] = 0{,}40 \times 1{,}5 - 0{,}60 \times 1 = 0{,}60 - 0{,}60 = \mathbf{0{,}00R}$.
+
+Adım 3 — yani %40 isabetle PM penceresi **tam başabaştır**; maliyet (spread + slipaj, Bölüm 14) düşüldüğünde negatiftir.
+
+**Cevap:** %40 · 0,00R. 6.6.1'deki "PM'de hedefi küçült, stopu genişlet, **boyutu düşür**" kuralının aritmetik karşılığı budur — ve PM penceresinin neden "deneyimli; en zor pencere" diye etiketlendiğini açıklar.
+
+</details>
+
+**3. Tuzak — ORG'de gap kapanışını hedeflemek.** ORG kurgusu (6.12): giriş 20 030 (short), SL 20 066, gap'in tam kapanışı 20 000, gece seansı düşüğü 19 940. Yalnız gap kapanışını hedefleyen bir işlemin beklentisi %40 isabetle nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $1R = 20\,066 - 20\,030 = 36$ puan.
+
+Adım 2 — gap kapanışı: $20\,030 - 20\,000 = 30$ puan $= \mathbf{0{,}83R}$.
+
+Adım 3 — $E[R] = 0{,}40 \times 0{,}83 - 0{,}60 \times 1{,}00 = 0{,}332 - 0{,}600 = \mathbf{-0{,}27R}$.
+
+Adım 4 — asıl hedef 19 940: $+90$ puan $= \mathbf{2{,}5R}$ → $E[R] = 0{,}40 \times 2{,}5 - 0{,}60 = +0{,}40R$.
+
+**Cevap:** −0,27R vs +0,40R. Gap kapanışı bir **TP değil**, kısmi kâr ve BE tetiğidir; asıl hedef ötesindedir. Aynı ders Bölüm 4 pratiğindeki NWOG üst kenarı ve 5.2c'deki midnight open için de geçerliydi — bu, dersteki en çok tekrarlanan tek aritmetik uyarıdır.
+
+</details>
+
+**Grafikle doğrula.** Şekil 35'in kenar kutusundaki iki beklenti sayısının işaretini; Şekil 37'de üç Silver Bullet penceresinin hedef oku uzunluklarını (54 / 92 / 40 birim) ve stopların **daralmadığını** karşılaştırın.
+
+</div>
+
+
 ---
 
 ## Bölüm 7 — Risk ve pozisyon yönetimi: stop, hedef, boyut, kısmi/BE/trailing, geçersizleşme
 
-### 7.1 Stop yerleşimi
+**Bu bölümde.** Giriş fiyatı bulunduktan *sonra* başlayan her şey: stopun yapıdan nasıl türetildiği, hedeflerin hangi sırayla seçildiği, boyutun stoptan nasıl hesaplandığı, kısmi kâr/BE/trailing şemaları ve SL'e varmadan çıkmayı gerektiren altı geçersizleşme işareti. Bölüm 12'nin bulgusu şudur: pozitif beklenti — varsa — girişten değil, bu bölümdeki kararlardan gelir.
+
+### 7.1 Stop yerleşimi: her modelde SL tam olarak nereye konur
 
 | Model | SL yeri | Not |
 |---|---|---|
@@ -1497,11 +1859,11 @@ Yani 0.62'den 0.79'a inmek TP1'in R çarpanını **2,0 kat** büyütür (1,29R �
 
 Kurallar: **SL yapıdan türetilir; pozisyon büyüklüğü SL'den türetilir** ("size is derived from the structure, not the other way around"). Stop OTE hesabında 1.0'ın ötesindedir; 1.0 gövdeyle kırılırsa fikir geçersizdir. **Asla stopu geriye (riski büyütecek yönde) taşımayın.**
 
-### 7.2 Hedef seçimi
+### 7.2 Hedef seçimi: TP'ler hangi sırayla belirlenir
 
 Öncelik sırası: (1) **karşı likidite** — süpürülen aralığın karşı ucu, EQH/EQL, PDH/PDL, seans H/L; (2) **HTF PD array** — HTF FVG/OB'nin yakın kenarı; (3) **dış likidite (ERL)** — dealing range dışı havuz; (4) fib uzantıları −0.27 (T1), −0.62 (T2), −1.0, −2.0/−2.5, −4.0. İki sistem çakışıyorsa (ör. −1.0 ≈ PDH) hedef oradadır. **İç/dış alternasyonu:** fiyat ERL'den IRL'ye, IRL'den ERL'ye salınır → hedef "diğeri"dir.
 
-### 7.3 R:R ve pozisyon büyüklüğü
+### 7.3 R:R ve pozisyon büyüklüğü: boyut SL'den nasıl türetilir
 
 $$
 R{:}R = \frac{TP - \text{Giriş}}{\text{Giriş} - SL}
@@ -1569,6 +1931,70 @@ Yalnızca: (a) ilk pozisyon en az +1R'de ve SL en az BE'de; (b) yeni bir onaylı
   <span class="etiket">Neden yönetim, girişten önemli</span>
   Bölüm 12'deki backtest'lerin ortak bulgusu: giriş sinyalinin isabeti (%50–56) tek başına maliyeti karşılamaz. Pozitif beklenti — varsa — kısmi kârın, yapısal trailing'in ve erken geçersizleşme çıkışının R-dağılımını sağa çekmesinden gelir. Şekil 43 ile 44'nin toplamı (+2,5R, −0,4R) bunun tek örneğidir; günlüğünüzde yüz örneğe ulaşınca kendi dağılımınızı görürsünüz.
 </div>
+
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 7 · Boyut, beklenti ve yönetim</span>
+
+**1. Pozisyon boyutu (doğrudan uygulama).** 25.000 USD hesap, işlem başına %1 risk, NQ'da SL 25 puan, 20 USD/puan. Kaç kontrat? MNQ (2 USD/puan) ile kaç?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — risk tutarı $= 25{.}000 \times 0{,}01 = 250$ USD.
+
+Adım 2 — NQ: $\dfrac{250}{25 \times 20} = \mathbf{0{,}5}$ kontrat — bölünemez, işlem NQ'da alınamaz.
+
+Adım 3 — MNQ: $\dfrac{250}{25 \times 2} = \mathbf{5}$ mikro kontrat.
+
+**Cevap:** 0,5 NQ = 5 MNQ. Ders: enstrüman seçimi bir **risk kararıdır**; kontrat büyüklüğü hesabınıza uymuyorsa mikro sürüme geçilir, risk yüzdesi büyütülmez.
+
+</details>
+
+**2. Ters soru — SL genişleyince.** Aynı hesapta stop 40 puana çıktı ve o gün risk %0,5'e indirildi. Kaç MNQ?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — risk tutarı $= 25{.}000 \times 0{,}005 = 125$ USD.
+
+Adım 2 — $\dfrac{125}{40 \times 2} = 1{,}56$ → **1 MNQ** (aşağı yuvarlanır).
+
+**Cevap:** 1 MNQ. Ders 7.1'in tek cümlesidir: *SL yapıdan türetilir, boyut SL'den türetilir* — tersi değil. Stop geniş çıktı diye stopu daraltmak değil, **boyutu küçültmek** doğrudur; boyut sığmıyorsa işlem atlanır.
+
+</details>
+
+**3. Yönetimin değeri (karar).** 7.5.1'in üç senaryosu (+1,41R / +0,50R / −0,40R) %35/%40/%25 yerine **%30/%45/%25** gelseydi $E[R]$ ne olur? Aynı dağılım kısmi kâr ve erken çıkış **olmadan** (yalnız TP2 ya da SL) ne verir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — yönetimli: $0{,}30 \times 1{,}41 + 0{,}45 \times 0{,}50 + 0{,}25 \times (-0{,}40) = 0{,}423 + 0{,}225 - 0{,}100 = \mathbf{+0{,}548R}$.
+
+Adım 2 — yönetimsiz: (a) senaryosu TP2'de biter (+2,00R), (b) ve (c) SL'e gider (−1,00R): $0{,}30 \times 2{,}00 + 0{,}70 \times (-1{,}00) = 0{,}60 - 0{,}70 = \mathbf{-0{,}10R}$.
+
+Adım 3 — fark **0,65R/işlem**. Yüz işlemde 65R.
+
+**Cevap:** +0,548R vs −0,10R. Aynı giriş kalitesi, aynı piyasa, aynı olasılıklar; işareti değiştiren tek şey **çıkış davranışıdır**. Bölüm 12'nin "edge, varsa, yönetimden gelir" cümlesinin sayısı budur.
+
+</details>
+
+**4. Tuzak — erken BE.** Trader T1'e ulaşmadan stopu BE'ye çekiyor ve dağıtım bacağındaki normal geri çekilmelerde atılıyor. Senaryo (a) ve (b) 0R ile kapanıyorsa $E[R]$ ne olur?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $E[R] = 0{,}35 \times 0 + 0{,}40 \times 0 + 0{,}25 \times (-0{,}40) = \mathbf{-0{,}10R}$.
+
+Adım 2 — karşılaştırma: kuralına uyulduğunda aynı dağılım $+0{,}59R$ veriyordu (7.5.1).
+
+**Cevap:** −0,10R. Tek bir satır — "T1'den önce BE yok" (7.4) — pozitif beklentili bir sistemi negatife çeviriyor. ICT çevresinde **en çok bildirilen hata** budur; istisnası yalnız haber öncesi ve seans sonudur.
+
+</details>
+
+**Grafikle doğrula.** Şekil 43'te her stop yükseltmesinin bir **yapısal olaya** (yeni HL + BOS) bağlı olduğunu; Şekil 45'te üç panelin girişi ve SL'i **aynıyken** sonuçların nasıl ayrıştığını izleyin.
+
+</div>
+
 
 ---
 
@@ -1661,6 +2087,8 @@ ICT kaynaklarında dolaşan iki liste (8 maddelik "yapı-likidite" listesi ile 1
 
 ## Bölüm 9 — Çoklu zaman dilimi: HTF bias → orta harita → LTF tetik
 
+**Bu bölümde.** Üç zaman diliminin iş bölümü tek tabloda: hangisi *yönü* verir, hangisi *haritayı* çizer, hangisi *tetiği* üretir — ve bunları karıştırmanın tipik bedeli.
+
 | Katman | Zaman dilimi | Görev | Çıktı |
 |---|---|---|---|
 | Bias | Günlük + H4 | Dealing range, premium/discount, HTF PD array; **draw on liquidity** | "Bugün alıcıyım / satıcıyım / yokum" |
@@ -1675,7 +2103,9 @@ ICT kaynaklarında dolaşan iki liste (8 maddelik "yapı-likidite" listesi ile 1
 
 ---
 
-## Bölüm 10 — Araçlar ve ayarlar: PD array ailesinin geri kalanı, fib ayarları, indikatörler ve tuzakları
+## Bölüm 10 — Araç ayarları: PD array'in geri kalanı, ICT fib ayarı ve indikatör tuzakları
+
+**Bu bölümde.** Bölüm 4'te sırası gelmeyen array'ler (rejection block, propulsion block, volume imbalance, BPR), TradingView'da ICT fib aracının tam ayarı ve SMC indikatörlerinin ne yapıp ne yapamadığı. Ekranın *kendisini* kurmak Bölüm 17'de.
 
 ### 10.1 Rejection block, propulsion block, volume imbalance, BPR
 
@@ -1703,7 +2133,9 @@ LuxAlgo SMC (TradingView'da en çok kullanılan) ve benzerleri OB'yi "yapı kır
 
 ---
 
-## Bölüm 11 — Tipik hatalar ve tuzaklar
+## Bölüm 11 — Tipik hatalar: çizim, zamanlama, yönetim ve psikoloji tuzakları
+
+**Bu bölümde.** Dersteki kuralların en sık ihlal edilen hâlleri dört kümede toplanmıştır: yapı/likidite çizimi, zamanlama, pozisyon yönetimi ve karar psikolojisi. Her madde bir kuralın *negatifidir* — hangi bölüme geri dönüleceği yanında yazılıdır.
 
 **Yapı ve likidite hataları**
 
@@ -1747,9 +2179,11 @@ LuxAlgo SMC (TradingView'da en çok kullanılan) ve benzerleri OB'yi "yapı kır
 
 Bu bölüm dersin en önemli bölümüdür; grafiklerin son üçü de burada. Önce gerçek veri üstünde mekanik tespitin neye benzediğine bakalım, sonra literatürü tartalım.
 
-### 12.1 Gerçek veri üzerinde mekanik tespit
+### 12.1 Gerçek veri üzerinde mekanik tespit: kurallar filtresiz uygulanınca ne görünür
 
 Aşağıdaki üç grafik, dersteki tanımların **mekanik** (bağlamsız) uygulamasıdır (veri pencereleri scriptte tarih olarak pinlidir — EURUSD 20 Tem–19 Ağu 2026 içinden son 260 saatlik bar, altın 19 Haz–19 Ağu içinden son 220 bar, BTC 19 Kas 2025–19 Ağu 2026 içinden son 200 gün — böylece script yeniden koşsa da grafik ve bu paragraflardaki sayılar birbirini tutar; script ayrıca `ozet.json`'a aynı sayıları yazar): swing'ler $2k+1$ mum fraktalıyla, BOS/CHoCH onaylı swing'in gövde kapanışıyla aşılmasıyla, sweep "fitil ötede + gövde içeride" kuralıyla, FVG üç-mum kuralı + ATR filtresiyle, OB "son gövde-kapanışlı kırılımın bacağındaki son zıt renkli mumun gövdesi" tanımıyla bulunmuştur. Kill zone, HTF bias, sweep-öncesi hikâye gibi *filtreler yoktur*. Yani bir indikatörün göreceği şeyi görüyorsunuz.
+
+**Çıpa: EURUSD 04–18.08.2026 · altın 05–19.08.2026 · BTC 30.01–17.08.2026** — üç örneklem penceresidir; başka pencerede sayılar değişir. Pencereler scriptte pinlidir ki metin ile grafik hep birbirini tutsun. Aşağıdaki üç grafikte **yöntem** kalıcıdır, **sayılar** bu pencerelere aittir.
 
 <GrafikEmbed src="/arastirma/smc-teknik-analiz/48_gercek_eurusd_1h_yapi.html" baslik="Gerçek veri — EURUSD 1h, 04–18 Ağustos 2026: 7-mum swing'ler, HH/HL/LH/LL, mekanik BOS/CHoCH ve sweep tespiti" no="48" yukseklik={560} />
 
@@ -1765,10 +2199,10 @@ Aşağıdaki üç grafik, dersteki tanımların **mekanik** (bağlamsız) uygula
 
 <div class="not">
   <span class="etiket">Not — gerçek grafikler yenilenir</span>
-  Şekil 48–50'nin veri pencereleri scriptte tarih olarak pinlidir (`GERCEK_PENCERE`); script yeniden koşunca aynı pencere çekilir ve yukarıdaki sayılar (BOS/CHoCH dizisi, FVG/OB adedi, dealing range seviyeleri) geçerli kalır. Pencere bilinçli olarak ileri alınırsa `ozet.json`'daki yeni sayılarla bu üç paragraf ve başlıklar birlikte güncellenir — "grafik yenilendi, metin eskidi" durumu böyle önlenir. Sentetik 25 grafik sabit tohumla birebir aynı çıkar. Yfinance'in başarısız olduğu durumda script gerçek grafiği atlar ve raporlar; sahte "gerçek" veri üretilmez.
+  Şekil 48–50'nin veri pencereleri scriptte tarih olarak pinlidir (`GERCEK_PENCERE`); script yeniden koşunca aynı pencere çekilir ve yukarıdaki sayılar (BOS/CHoCH dizisi, FVG/OB adedi, dealing range seviyeleri) geçerli kalır. Pencere bilinçli olarak ileri alınırsa `ozet.json`'daki yeni sayılarla bu üç paragraf ve başlıklar birlikte güncellenir — "grafik yenilendi, metin eskidi" durumu böyle önlenir. Sentetik/şematik 51 grafik sabit tohumla birebir aynı çıkar. Yfinance'in başarısız olduğu durumda script gerçek grafiği atlar ve raporlar; sahte "gerçek" veri üretilmez.
 </div>
 
-### 12.2 Kanıta dayalı olan
+### 12.2 Kanıta dayalı olan — hangi iddianın arkasında ölçüm var
 
 - **Stop kümelenmesi ve kaskad:** Osler 2003/2005 (RBS emir defteri; 15 dk ufkunda p&lt;0,001), yuvarlak sayı etkisi (Harris 1991; Bhattacharya, Holden & Jacobsen 2012 — yuvarlak sayı etrafında al-sat dengesizliği; Bourghelle-Cellier). "Likidite havuzu var ve süpürülür" önermesi sağlamdır.
 - **Gün içi volatilite kümelenmesi:** Wood-McInish-Ord 1985, Harris 1986, Andersen-Bollerslev 1997/98, Ito-Hashimoto 2006, Clifton-Plumb (RBA RDP 2007-04). Kill zone saatlerinde hareket olur — doğru.
@@ -1776,7 +2210,7 @@ Aşağıdaki üç grafik, dersteki tanımların **mekanik** (bağlamsız) uygula
 - **Kısa vadeli dönüş / likidite sağlama primi:** Nagel 2012 ve ilgili literatür.
 - **FVG'lerin bir kısmının kısmen görülmesi:** edgeful (YM vadeli, 6 ay): bullish FVG'lerin %60,7'si, bearish'lerin %63,2'si aynı seansta gövdeyle **dolmuyor** (fitille %52,4 / %50,4 dolmuyor); 30 dk FVG'ler "sweet spot", seans başına 3–5 setup. Yorum: "gap'ler dolar" mitine karşı kanıt; FVG'yi destek/direnç olarak kullanmanın kısmi desteği — ama işlem edge'i ölçmez.
 
-### 12.3 Kanıtı olmayan / spekülatif
+### 12.3 Kanıtı olmayan / spekülatif — hangi iddia yalnız anlatı
 
 - Kasıtlı, merkezî bir "algoritma"nın (IPDA) retail'i avladığı; "kurum OB'de emir bıraktı" iddiası — hiçbir birincil veri (emir defteri, kurumsal akış) yok.
 - AMD/PO3'ün her gün tekrarlanan öngörülebilir bir dizi olduğu (test edilmemiş).
@@ -1785,7 +2219,7 @@ Aşağıdaki üç grafik, dersteki tanımların **mekanik** (bağlamsız) uygula
 - Kaynak iddiaları: OB ilk test %74 / ikinci %58 / üçüncü %41; Silver Bullet %55–65 (1:3); yapısal yönetimde T1 %74 vs elle %39 — tanıtım siteleri (ictkillzone, innercircletrader.net) tarafından metodoloji verilmeden yazılmıştır; bu derste "iddia" olarak anıldı.
 - ICT/SMC'nin bir *sistem* olarak kârlılığı: 34 kaynaklı bir literatür taramasında hiçbir hakemli çalışma SMC/ICT'yi doğrulamıyor (IndicatorEdge).
 
-### 12.4 Backtest bulguları
+### 12.4 Backtest bulguları: bağımsız testler ne buldu
 
 | Çalışma | Kapsam | Bulgu |
 |---|---|---|
@@ -1797,7 +2231,7 @@ Aşağıdaki üç grafik, dersteki tanımların **mekanik** (bağlamsız) uygula
 | Vestinda | OB backtest | PF 1,13, yıllık ≈ %0,3 — pratikte sıfır |
 | Çeşitli türev kaynaklar | — | Gerçekçi isabet %50–65 (topluluğun iddia ettiği %70–80 değil) |
 
-### 12.5 Yapısal eleştiriler
+### 12.5 Yapısal eleştiriler — çerçevenin test edilemezlik ve geriye dönük uydurma sorunu
 
 1. **Tanımların öznelliği** → tekrarlanabilir test zor; her başarısızlık "OB geçersizdi" ile açıklanabilir (**yanlışlanamazlık**). İki bağımsız araştırmacı aynı veride farklı sinyal çıkarır (Sentient Trading Society, "Dumb Money Concepts").
 2. **Mekanizma kanıtı yok:** IPDA / kurumsal emir bloğu için birincil veri sunulmamıştır; kurumsal icra VWAP/TWAP, dark pool, algoritmik parçalamadır.
@@ -1871,15 +2305,68 @@ Bu konsept bir setup değildir; **hangi setupları eleyeceğinizi** öğretir. Y
 - Bir *sistem* olarak, mekanik uygulandığında maliyet sonrası edge gösterilememiştir. Edge — varsa — uygulayıcının seçiciliğinden (bağlam, bias, disiplin, yönetim) gelir ve **ölçülmesi gerekir**: kendi işlem günlüğü, en az 100 işlemlik forward test (1m için; en az 30–50 minimum), maliyet dahil, R-çarpanı dağılımı, **eşleştirilmiş rastgele seviye** karşılaştırması (aynı uzaklıkta rastgele seviyeye tepki).
 - Bu derste her iddia "kanıtlı / makul / spekülatif" etiketiyle sunuldu; **sayısal başarı oranı iddiası yazılmadı**. Sizin de yazmamanızı öneririz — ölçene kadar.
 
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 12 · Kanıt okuma</span>
+
+**1. Maliyet aritmetiği (doğrudan uygulama).** IndicatorEdge: en iyi varyantın brüt isabeti **%56,3**, ama 0,5 pip maliyet sonrası 54 varyantın **54'ü** negatif. Bu neden şaşırtıcı değil?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — 1:1'e yakın hedeflerde başabaş isabet $p^{*} = 1/(1+1) = \%50$. Brüt marj yalnız $56{,}3 - 50 = 6{,}3$ puandır.
+
+Adım 2 — EURUSD 1 dakikalık mekanik kurallarda tipik hedef mesafesi birkaç pip mertebesindedir; 0,5 pip'lik gidiş-dönüş maliyeti bu ölçekte R'nin belirgin bir yüzdesini yer.
+
+Adım 3 — 6,3 puanlık marj bu kaybı karşılayamaz → beklenti sıfırın altına düşer.
+
+**Cevap:** Brüt isabet oranı **tek başına hiçbir şey söylemez** — 15.5'teki metrik tablosunun ilk satırının aynen yazdığı gibi. Karar metriği isabet değil, **maliyet sonrası beklenti ve onun güven aralığıdır**.
+
+</details>
+
+**2. Örneklem okuma (karar).** Şekil 14: net SMT $n = 16$, 24 saatlik medyan ilerleme 48,9 pip; teyit $n = 187$, medyan 51,6 pip. "SMT çürütüldü" demek doğru mu?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — hayır. $n = 16$ ile iki medyan arasındaki 2,7 pip'lik farkı gürültüden ayırmak mümkün değildir.
+
+Adım 2 — doğru cümle: *"bu örneklemde SMT'nin teyide üstünlüğü **görünmüyor**."* Yokluğun kanıtı, kanıtın yokluğu değildir — ama ikisi de "ekstra ağırlık ver" demek için gerekçe **değildir**.
+
+Adım 3 — karar: SMT tie-breaker kalır (3.7); ağırlık çarpanına dönüşmesi için kendi enstrümanınızda, kendi tanımınızla, yeterli $n$ ile ölçülmesi gerekir.
+
+**Cevap:** Doğru değil; doğru okuma "ölçmeden kullanma" ilkesidir. Grafiğin üstündeki dürüstlük şerhi tam olarak bunu söyler.
+
+</details>
+
+**3. Karar — FVG'yi çöpe atmalı mı?** edgeful'un YM verisinde bullish FVG'lerin **%60,7'si** aynı seans içinde gövdeyle dolmuyor. Bu bulgu FVG'yi kullanılamaz yapar mı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — bulgu **"gap dolar"** iddiasını vurur: hedef tezi olarak FVG zayıftır (seans içi dolum ≈ %39).
+
+Adım 2 — ama dersin FVG kullanımı bu değildir. 4.2(a): *"FVG bir yön göstergesi değildir; yönü displacement ve MSS verir, FVG yalnız **adres** yazar."*
+
+Adım 3 — yani tez "boşluk dolacak" değil, "sweep + displacement + MSS zinciri kuruldu, geri çekilmede emir buraya konur"dur. Bulgu bu kullanımı değil, **karşı-trend gap doldurma** kullanımını çürütür.
+
+**Cevap:** Hayır — ama iki kullanımı kesin biçimde ayırır. FVG adres yazar, yön vermez. Aynı ayrım NWOG/NDOG için de geçerlidir (4.8'in kanıt statüsü notu).
+
+</details>
+
+**Grafikle doğrula.** Şekil 48–50'de mekanik tanımlar **filtresiz** uygulandığında kaç aday çıktığını sayın; sonra Bölüm 6'nın giriş modellerindeki filtreleri (kill zone, HTF bias, adlandırılmış havuz) uygulayıp kaçının hayatta kaldığını karşılaştırın. Aradaki fark, "bileşen vs sistem" tartışmasının (12.5) somut hâlidir.
+
+</div>
+
+
 ---
 
-## Bölüm 13 — Setup kataloğu: on beş model tek tabloda
+## Bölüm 13 — Setup kataloğu: on beş model tek tabloda — hangisi bana uygun?
 
 Bölüm 6 modelleri **tanıttı**; Bölüm 6.4.1–6.12 en çok kullanılanları adım adım açtı. Bu bölüm katalogun tamamını tek sayfada toplar ve "hangi model, hangi gün, hangi enstrümanda **kullanılmaz**" sorusuna cevap verir — çünkü bir modelin ne zaman kullanılmayacağını bilmek, nasıl kullanılacağını bilmekten daha az anlatılan ama daha çok para kazandıran bilgidir.
 
 **Kanıt seviyesi etiketleri.** Bu bölümdeki sayılar üç sınıfa ayrılır: **[T] tanım** (saat penceresi, fib seviyesi — tanımı gereği doğru), **[H] hesap** (bu derste elle yapılan aritmetik), **[K] kaynak iddiası** (bir eğitim sitesinin verdiği, bağımsız doğrulaması olmayan sayı). Metinde yalnız **karışma riski olan** yerlere etiket konur; aşağıdaki katalog tablosunda "Tipik R:R" sütunu bütünüyle **[K]**, zaman kısıtı sütunu ise bütünüyle **[T]**'dir. İnternette dolaşan "%72 kazanır" tipi rakamların neredeyse tamamı satıcı içeriğidir; örneklem, enstrüman, dönem, slipaj varsayımı ve hayatta kalma yanlılığı belirtilmez. Bunları derse almanın tek meşru yolu **kimin iddia ettiğini yazmak ve doğrulanmadığını söylemektir**.
 
-### 13.1 Katalog
+### 13.1 Katalog: on beş modelin koşul, tetik, saat ve R:R sütunları
 
 | # | Model | Ön şart (piyasa koşulu) | TF seti | Zaman kısıtı (NY) | Tipik R:R | Ne zaman KULLANMA | Ders içi yeri |
 |---|---|---|---|---|---|---|---|
@@ -1901,7 +2388,7 @@ Bölüm 6 modelleri **tanıttı**; Bölüm 6.4.1–6.12 en çok kullanılanları
 | M14 | **Judas swing** | Seans açılışında ters yön hamlesi | H1 · 15m · 5m | Açılış +1–2 saat | 1:3 | Açılıştan önce pozisyon açtıysanız | 6.8, Şekil 26 |
 | M15 | **Klasik (sweep→MSS→FVG/OB)** | Dersin omurgası; her koşulda | H4 · 15m · 5m | Kill zone | 1:2–1:3 | Bias yoksa; premium/discount yanlışsa | 6.1–6.3, Şekil 30–32 |
 
-### 13.2 Katalog nasıl okunur
+### 13.2 Katalog nasıl okunur — sütunlardan kendi kısa listenize
 
 Modeller üç işlev grubuna ayrılır ve bu ayrım, "hangi modeli kullanayım" sorusunun yanlış soru olduğunu gösterir:
 
@@ -1938,7 +2425,7 @@ Bölüm 6'daki adım adım derslerin tamamı aşağıdaki dokuz başlığı taki
 
 Bu bölüm "model doğru, hesap yine de eridi" sınıfı sorunları ele alır. Bölüm 6 emrin **nereye** konacağını söyledi; burada emrin borsaya giderken neye çarptığını konuşuyoruz.
 
-### 14.1 Emir tipi seçimi
+### 14.1 Emir tipi seçimi — limit · stop · market: hangisi hangi modelde
 
 | Emir | Nerede kullanılır | Avantaj | Risk |
 |---|---|---|---|
@@ -2044,7 +2531,7 @@ Prop (funded) hesaplar SMC gün içi işlemcileri arasında yaygındır ve kişi
 
 ---
 
-## Bölüm 15 — Backtest protokolü ve ölçüm
+## Bölüm 15 — Backtest protokolü: edge'i ölçmek (kayıt · MAE/MFE · beklenti · tuzaklar)
 
 12.6 "ölçmeniz gerekir" dedi. Bu bölüm o cümlenin **prosedürüdür**.
 
@@ -2259,9 +2746,79 @@ Sonucu kabul etmeden önce bu listeyi geçin; bir tanesi bile "evet" ise sonuç 
 
 **Sık yapılan üç hata (backtest).** (1) *Oturumu iyi giden yerde bitirmek* — oturumu **takvimle** bitirin, sonuçla değil. (2) *Kaçırılan setup'ları kaydetmemek* — gerçek işlem sıklığınızı bilemezsiniz ve canlıda "neden bu kadar az işlem var" şoku yaşarsınız. (3) *Maliyeti sonradan eklemek* — IndicatorEdge'in 54 varyantı **brüt pozitife yakınken maliyetle negatife düştü**; bu tuzağın klinik örneğidir.
 
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 15 · Ölçüm ve kalibrasyon</span>
+
+**1. Ardışık kayıp beklentisi (doğrudan uygulama).** Kayıp oranı $q = 0{,}60$, örneklem $N = 100$. Beklenen en uzun kayıp serisi kaçtır? İşlem başına %1 riskle bu serinin hesaba maliyeti?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $L_{\max} \approx \dfrac{\ln\big(N(1-q)\big)}{\ln(1/q)} = \dfrac{\ln(40)}{\ln(1{,}667)} = \dfrac{3{,}689}{0{,}511} = \mathbf{7{,}2}$.
+
+Adım 2 — çekilme $\approx 1-(1-r)^{k} = 1 - 0{,}99^{7} = \mathbf{\%6{,}8}$.
+
+**Cevap:** ~7 ardışık kayıp · ~%6,8 çekilme — ve bu **normaldir**, matematik onu zaten vaat eder. Bunu "model öldü" diye okuyup sistemi terk etmek 15.5'in yazdığı en pahalı hatadır. Tablo masanın duvarına asılır.
+
+</details>
+
+**2. Ters soru — aynı seri, farklı risk.** Aynı 7'li seriyi işlem başına %3 riskle taşısaydınız? Ya $q = 0{,}65$ ve $N = 500$ olsaydı (%1 ve %3 riskle)?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — %3, $k=7$: $1 - 0{,}97^{7} = \mathbf{\%19{,}2}$.
+
+Adım 2 — $q = 0{,}65$, $N = 500$ → tablodan $L_{\max} = \mathbf{12{,}0}$.
+
+Adım 3 — %1, $k=12$: $1-0{,}99^{12} = \%11{,}4$. %3, $k=12$: $1-0{,}97^{12} = \mathbf{\%30{,}6}$.
+
+**Cevap:** %19,2 · %11,4 · %30,6. 7.3'teki **"%2 mutlak üst sınır"** kuralı bu tablodan doğar: aynı sistem, aynı seri, üç kat risk → üç kat değil, **hızlanan** bir çekilme. %30'luk bir çekilmeden çıkmak için %43 kazanç gerekir.
+
+</details>
+
+**3. MAE kalibrasyonu (karar).** Kurgu örneklem: 42 kazanan × ortalama **+2,40R**, 58 kaybeden × ortalama **−0,96R**; kazananların $M_{90} = 0{,}57R$, mevcut SL 1,00R. $E[R]$ nedir ve stopun son %43'ü ne yapıyor? Doğru düzeltme nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $E[R] = 0{,}42 \times 2{,}40 - 0{,}58 \times 0{,}96 = 1{,}008 - 0{,}557 = \mathbf{+0{,}451R}$.
+
+Adım 2 — 0,57R ile 1,00R arasındaki bant kazanan işlemlerin yalnız **%9,5'ini** kurtarıyor; ama **her** kaybeden işlemde tam olarak ödeniyor.
+
+Adım 3 — yanlış düzeltme: stopu keyfî olarak 0,60R'ye çekmek. SMC'de SL **yapısaldır** (7.1) — yapının içine çekilen stop, aynı seviyenin ikinci fitiliyle alınır ve modelin öngördüğünden çok daha sık tetiklenir.
+
+Adım 4 — doğru düzeltme: kazananların MAE'si sistematik yüksekse **giriş çok erkendir**. Çözüm daha derin bir OTE/CE ya da teyitli giriş — yani stopu değil, **giriş yerini** iyileştirmek.
+
+**Cevap:** +0,451R; stopun son %43'ü pahalı sigortadır; düzeltme girişte yapılır, stopta değil.
+
+</details>
+
+**4. Tuzak — çıkış şeması (TP kalibrasyonu).** MFE merdiveni: %39 hiç 1R'ye gelmiyor · %23 1R'ye gelip 2R'ye gelmiyor · %14 2R'ye gelip 3R'ye gelmiyor · %24 3R+. 50/25/25 şemasının $E[R]$'si nedir? Çıplak 3R hedefi ne verir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — 50/25/25: $0{,}39(-1{,}00) + 0{,}23(+0{,}50) + 0{,}14(+1{,}40) + 0{,}24(+1{,}75)$
+
+Adım 2 — $= -0{,}390 + 0{,}115 + 0{,}196 + 0{,}420 = \mathbf{+0{,}341R}$.
+
+Adım 3 — çıplak 3R: $0{,}24 \times 3{,}00 - 0{,}76 \times 1{,}00 = 0{,}72 - 0{,}76 = \mathbf{-0{,}04R}$.
+
+Adım 4 — en iyi **tek** hedef 1,0R'dir ve $+0{,}22R$ verir; ölçekli çıkış onu da geçer.
+
+**Cevap:** +0,341R vs −0,04R. Aynı işlemler, aynı fiyatlar, aynı girişler — fark **yalnız çıkış şemasında**. 7.4'teki 50/25/25 şablonunun sayısal gerekçesi budur; ve "büyük hedef daha kârlıdır" sezgisinin neden yanlış olduğunu gösterir.
+
+</details>
+
+**Grafikle doğrula.** Şekil 54'te bootstrap konisinin genişliğini (aynı sistem +13,7R ile +77,8R arasında herhangi bir eğri üretebilir) ve $t = 2{,}33$ değerinin sınırda oluşunu; Şekil 55'in alt panelinde tek hedefli beklenti eğrisinin **3R'de negatife düştüğü** noktayı işaretleyin.
+
+</div>
+
+
 ---
 
-## Bölüm 16 — İşlem günlüğü, risk mimarisi ve disiplin
+## Bölüm 16 — Günlük, risk mimarisi ve disiplin: hesabı ne yaşatır, ne öldürür?
 
 Bölüm 15 ölçümün *nasıl* yapılacağını verdi. Bu bölüm ölçümün **ne zaman hangi karara dönüştüğünü** ve hesabı yaşatan çerçeveyi kurar. Bölüm 7 işlem başına riski, burası portföy ve zaman boyutunu ele alır; hiçbir maddesi 7.3'ün yerine geçmez, üstüne eklenir.
 
@@ -2457,7 +3014,7 @@ Kademe atlanmaz. K0'daki %0,10 risk "anlamsız" hissettirir; amacı budur.
 
 ---
 
-## Bölüm 17 — Araçlar ve ekran kurulumu
+## Bölüm 17 — Ekran kurulumu: şablon, alarm ve indikatörlerin doğru yeri
 
 Bölüm 10 fib ayarlarını ve indikatör tuzaklarını verdi. Burası **ekranın kendisini** kuruyor: ne nerede durur, hangi alarm kurulur, indikatör hangi işi yapar hangi işi yapmaz.
 
@@ -2498,7 +3055,7 @@ Bölüm 10 fib ayarlarını ve indikatör tuzaklarını verdi. Burası **ekranı
 | **Trend çizgisi** | Yalnız **trendline liquidity** haritalamak için (3.6) | Kırılım sinyali olarak **kullanılmaz** |
 | Kullanılmayan | Kanallar, Gann, Elliott araçları, pitchfork | Bu modelin parçası değil |
 
-### 17.2 Alarm kurulumu
+### 17.2 Alarm kurulumu — ekrana bakmadan pencereyi kaçırmamak
 
 Alarm, kill zone dışında ekranda oturmamanın tek yoludur. **Temel kural:** *uyandırıcı* alarmlar **bar kapanışında**, *hazırlayıcı* alarmlar yaklaşma mesafesinde kurulur. Bar-içi tetiklenen alarm, sonradan geri alınan bir fitilde çalar; bar kapanışı bunu engeller — ve bu, dersin "yapı için gövde" kuralının alarm ayarına yansımasıdır.
 
@@ -2533,7 +3090,7 @@ Alarm, kill zone dışında ekranda oturmamanın tek yoludur. **Temel kural:** *
 
 ---
 
-## Bölüm 18 — Piyasa seçimi ve Türkiye uyarlaması
+## Bölüm 18 — Türkiye uyarlaması: hangi saat, hangi enstrüman, hangi kural taşınır?
 
 Bu bölümün amacı SMC'yi Türkiye piyasasına "çevirmek" değil, **hangi parçasının taşındığını ve hangisinin taşınmadığını** dürüstçe ayırmaktır.
 
@@ -2589,6 +3146,8 @@ Türkiye 2016'dan beri yaz saati uygulamaz; yıl boyunca **UTC+3**'tür. ABD ve 
 | **Likidite penceresi** | Yerli banka akışı TSİ 09:00–18:00; dışında spread genişler | Gece USDTRY işlemi maliyetlidir |
 
 <GrafikEmbed src="/arastirma/smc-teknik-analiz/57_gercek_tsi_seans_profili.html" baslik="Gerçek veri — TSİ saatlerine göre saatlik oynaklık profili: (a) USD/TRY, (b) BIST 100; kill zone ve 15:30 bantlarıyla" no="57" yukseklik={760} />
+
+**Çıpa: USD/TRY 02.11.2023 – 19.08.2026 · BIST 100 29.09.2023 – 19.08.2026, saatlik** — örneklem penceresidir; başka pencerede baz puanlar değişir. Buna karşılık **saat etiketleri** (TSİ 09:00–10:00 tepesi, 12:00–17:00 platosu) takvim değil periyodisitedir: seans saatleri değişmedikçe her yıl aynı yerdedir.
 
 **Şekil 57 nasıl okunur.** İki panel, saatlik mum menzili $(H-L)/C$ baz puan cinsinden, yalnız Pazartesi–Cuma; üstlerine kill zone / 15:30 / NY bantları bindirilmiş.
 
@@ -2739,7 +3298,9 @@ Aşağıdaki sıra, dersteki tüm katmanların doğru sırayla yerleştiği tek 
 
 ---
 
-## Özet tablo — tüm sayısal sabitler
+## Özet tablo — tüm sayısal sabitler tek yerde: eşik, oran ve kaynağı
+
+**Bu tablo nasıl kullanılır.** Ders boyunca dağılmış her eşik, oran ve sabit burada tek sayfada toplanır; "Not / kaynak" sütunu her satırın **statüsünü** taşır — ICT'nin özgün kuralı mı, türev kaynak mı, bu dersin editoryal önerisi mi, yoksa ölçülmüş bir bulgu mu. Ölçüm satırları (SMT, haftanın günü, TSİ profili) bir örneklem penceresine aittir; pencereleri kendi bölümlerindeki `Çıpa:` satırlarında yazılıdır. **Saat ve seans satırları takvimden bağımsızdır**, her yıl aynıdır.
 
 | Kavram | Sabit / eşik | Not / kaynak |
 |---|---|---|
@@ -2833,7 +3394,7 @@ Aşağıdaki sıra, dersteki tüm katmanların doğru sırayla yerleştiği tek 
 
 ---
 
-## Sözlük
+## Sözlük — dersteki her kısaltmanın tek satırlık karşılığı
 
 | Terim | Açıklama |
 |---|---|
@@ -2923,7 +3484,7 @@ Aşağıdaki sıra, dersteki tüm katmanların doğru sırayla yerleştiği tek 
 
 ---
 
-## Kaynaklar
+## Kaynaklar — birincil ICT/SMC metinleri, akademik çalışmalar ve backtest derlemeleri
 
 **Birincil / özgün öğreti ve doğrudan türevleri**
 

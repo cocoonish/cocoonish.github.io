@@ -1,11 +1,16 @@
 ---
 title: 'Risk ve Hedge: DV01 Konvansiyonları, FX Forward ve OIS ile Hedge'
-description: 'Aynı forward için 72.500 mü, 114.400 mü, 110.000 mi? Konvansiyonun DV01''i 1,5 kat oynatması; DF² mekaniği, bump-and-reprice, cross-curve risk, OIS hedge nominalinin boyutlanması ve geriye kalan artık riskler — 20 mn USD vakasıyla, iki interaktif araçla.'
+description: 'Aynı forward için 72.500 mü, 114.400 mü, 110.000 mi? Konvansiyonun DV01''i 1,5 kat oynatması; DF² mekaniği, bump-and-reprice, cross-curve risk, OIS hedge nominalinin boyutlanması ve geriye kalan artık riskler — 20 mn USD vakasıyla, üç interaktif araçla. Ders bittiğinde bir FX forward''ın TRY ve USD DV01''ini elle hesaplayabilir, risk sisteminin çıktısıyla mutabakatını kurabilir, doğru yönde ve doğru büyüklükte OIS hedge''i boyutlayabilir ve hedge sonrası kalan basis / konveksite / FX artıklarını isimlendirebilir hâle gelirsiniz. Yedi bölüm, 20 çözümlü alıştırma, on adımlık hedge prosedürü.'
 pubDate: 2026-08-08
-updatedDate: 2026-08-08
+updatedDate: 2026-08-20
 tags: ['dv01', 'risk', 'hedge', 'forward', 'ois', 'konvansiyon', 'ders']
 durum: 'aktif'
 kaynak: 'TRY faiz konvansiyonları ve OIS hedge çalışma notu (20 mn USD forward vakası)'
+ozet: "Bir FX forward'ın DV01'ini konvansiyon konvansiyon hesaplatır, sonra doğru yönde ve doğru büyüklükte OIS hedge'ini boyutlandırıp geriye kalan artık riskleri isimlendirtir."
+seviye: "orta"
+onkosul:
+  - faiz-egrisi-ve-konvansiyonlar
+  - enstruman-fiyatlama
 ---
 
 import Dv01KonvansiyonHesaplayici from '../../components/Dv01KonvansiyonHesaplayici.astro';
@@ -16,15 +21,53 @@ Aynı forward işlemi için elle hesaplanan TRY DV01'i **72.500 TL/bp**, sürekl
 
 Ders iki katmanı tek yerde toplar. **2. bölüm** outright USDTRY forward'ın risk anatomisini kurar: iki bacaklı nakit akışı, $DF^2$'nin kesir türevinden doğuşu, işlem faizi ile eğri faizi ayrımı, bump-and-reprice ve carry / P&L ayrıştırması. **3. bölümden itibaren** aynı vaka üzerinden konvansiyon meselesine geçilir ve hedge nominaline kadar gidilir. Eğri bootstrap tarafı için [Faiz Teorisi ve Eğri İnşası](/arastirma/faiz-egrisi-ve-konvansiyonlar/), asset swap tarafı için [Trade Pratiği](/arastirma/trade-pratigi/) temeli kurar. Bu dersin kendi katkısı üç halkayı birbirine bağlamaktır: **konvansiyon ile DV01 arasındaki mekanik bağ**, **sistem çıktısının mutabakatı** ve **hedge nominalinin doğru boyutlanması**.
 
-### Bu ders hakkında
-
-<div class="not"><span class="etiket">Çözülen asıl soru</span> Elimizde 20 mn USD'lik, 70,35 kurundan, 01.11.2027 vadeli bir USDTRY forward var. TRY DV01'ini elle hesaplayınca yaklaşık <strong>72.500 TL/bp</strong>, sürekli faizle <strong>114.400 TL/bp</strong>, kurumsal risk sisteminde ise yaklaşık <strong>110.000 TL/bp</strong> çıkıyor. Hangisi doğru ve fark nereden geliyor? Cevap tek bir kelimede: <strong>konvansiyon</strong>. G10 piyasalarında kimsenin fark etmediği bu ayrım, %45 faiz ortamında DV01'i 1,5 kata kadar oynatır. Ders bu farkı teoriden sisteme, oradan hedge nominaline kadar aynı işlem üzerinden kapatır; her bölüm aynı vakaya geri döner.</div>
+<div class="not"><span class="etiket">Çözülen asıl soru</span> Elimizde 20 mn USD'lik, 70,35 kurundan, 01.11.2027 vadeli bir USDTRY forward var. TRY DV01'ini elle hesaplayınca yaklaşık <strong>72.500 TL/bp</strong>, sürekli faizle <strong>114.400 TL/bp</strong>, kurumsal risk sisteminde ise yaklaşık <strong>110.000 TL/bp</strong> çıkıyor. Hangisi doğru ve fark nereden geliyor? Cevap tek bir kelimede: <strong>konvansiyon</strong>. G10 piyasalarında kimsenin fark etmediği bu ayrım, %45 faiz ortamında DV01'i 1,5 kata kadar oynatır. Ders bu farkı teoriden sisteme, oradan hedge nominaline kadar aynı işlem üzerinden kapatır; her bölüm aynı vakaya geri döner. <em>Çıpa: bu işlemin bütün parametreleri Bölüm 1'deki çıpa kutusunda; sayılar tek bir işlem fotoğrafına aittir, yöntem her koşulda geçerlidir.</em></div>
 
 Ders üç katmanı birbirine bağlamak için yazıldı: (i) faiz konvansiyonlarının ve iskonto faktörü matematiğinin sağlam temeli, (ii) bu teorinin bir risk sisteminde nasıl gerçeklendiği ve sistem çıktısının nasıl okunacağı, (iii) forward pozisyonunun OIS ile delta-nötr hale getirilmesi ve geriye kalan artık risklerin ayrıştırılması. Hedef okuyucu masa seviyesinde çalışan, teori ile sistem çıktısı arasındaki boşluğu kapatmak isteyen bir uygulayıcıdır.
 
+<div class="not gezinme">
+  <span class="etiket">Bu derste ne var</span>
+
+  **Amaç.** Ders bittiğinde bir FX forward'ın iki bacağının DV01'ini üç ayrı konvansiyonda elle hesaplayabilir, kurumsal risk sisteminin bastığı sayıyı bu üç değerden hangisine oturduğunu göstererek mutabık kılabilir, doğru yönde ve doğru büyüklükte OIS hedge'i boyutlayabilir ve hedge sonrası kitapta kalan artık riskleri (basis, konveksite, USD faizi, FX delta) tek tek isimlendirebilir hâle gelirsiniz.
+
+  **Yapı.** Ders **tek akıştır**, sırayla okunur: 1–2 zemini kurar (vaka ve risk anatomisi), 3–4 asıl meseleyi (konvansiyon ve fiyatlama) açar, 5–6 hedge aracını ve uygulamayı getirir, 7 masa kontrol listesidir. Ek A–E hızlı başvurudur. Acelesi olan doğrudan **6.5** (hedge nominali) ve **7** (kontrol listesi) ile başlayabilir, ama 3.2'deki $1/DF$ oranını görmeden 6.5 anlamsızdır.
+
+  | Bölüm | Konu | Ne kazanırsın | Uzunluk |
+  |---|---|---|---|
+  | **1** | çalışılan vaka, DF ve eşdeğer zero'ların kurulumu | ders boyunca kullanılacak her sayıyı kendin türetmek | ~10 dk |
+  | **2** | forward'ın risk anatomisi, $DF^2$, carry, sistem temsili | iki bacaklı riski ayrıştırıp bir sheet kurmak | ~25 dk |
+  | **3** | konvansiyon: aynı işlemin üç DV01'i | bir DV01 rakamını görünce hangi dilde konuşulduğunu anlamak | ~20 dk |
+  | **4** | CIP, MtM, DV01 tabanının $K$ olması, aged pozisyon | eski/off-market pozisyonu doğru risklendirmek | ~20 dk |
+  | **5** | OIS mekaniği, annuity, TLREF bileşiklemesi | hedge aracının PV01'ini sıfırdan hesaplamak | ~15 dk |
+  | **6** | uçtan uca hedge, mutabakat, artık riskler, kaybeden vaka | delta-nötr kitabı kurup neyin kaldığını bilmek | ~30 dk |
+  | **7** | tuzak listesi, on adımlık prosedür, sistem kontrolü | masada tek sayfalık denetim rutini | ~10 dk |
+
+  **Önce şunu oku.** [Faiz Teorisi ve Eğri İnşası](/arastirma/faiz-egrisi-ve-konvansiyonlar/) (iskonto faktörü, bootstrap, TLREF mekaniği) · [Trade Pratiği](/arastirma/trade-pratigi/) (asset swap, OIS pay/receive kararı). Burada bu ikisi **veri kabul edilir**; eğri inşası yeniden anlatılmaz.
+
+  **İçinde ne var.** 3 interaktif hesap aracı · 0 grafik · 10 tablo · 6 pratik bloğu (20 çözümlü alıştırma) · 5 ek (formül kâğıdı, Python, Excel, sözlük, sistem kontrolü).
+
+  **Tarih dili.** Rehber metninde ay adı ve yıl kullanılmaz; yöntem her koşulda geçerlidir. Vade ve gün sayıları **göreli** yazılır: $t$ = vadeye kalan yıl kesri, $\tau_i$ = $i$'inci periyodun gün kesri, "vade" = tek bullet ödemesinin günü. Sayısal seviyeler ise tek bir işlem fotoğrafına aittir ve **çıpalıdır** — her tarihli blok kendi `Çıpa:` satırını taşır.
+
+</div>
+
 Sayısal örnekler tek bir "çalışılan vaka" etrafında kurgulandı ki her formül elle takip edilebilsin. Bazı girdiler (spot, valör/gün sayısı) illüstratiftir ve bölümlerde açıkça işaretlenmiştir; bunları kendi eğrinizden okuduğunuz değerlerle güncellediğinizde mantık aynen korunur, yalnızca sayılar oransal kayar. Yöntemin değeri de buradadır: sayılar değişse bile *oranlar* — özellikle $1/DF$ faktörü — aynı kalır.
 
-## 1. Çalışılan Vaka
+## 1 — Çalışılan vaka: hangi işlemi, hangi parametrelerle takip edeceğiz?
+
+Bu bölümde ders boyunca peşini bırakmayacağımız tek işlemi tanımlar, parametre tablosunu kurar ve türetilen iki temel büyüklüğü ($DF_{TRY}$ ve eşdeğer zero gösterimleri) adım adım elle hesaplarız.
+
+<div class="not">
+  <span class="etiket">Çıpa — bu bölümdeki sayılar hangi işleme ait</span>
+
+  **Çıpa: 20 mn USD'lik, 70,35 kontrat kurundan, 01.11.2027 vadeli tek bir USDTRY forward** — bir işlem fotoğrafıdır, kural değildir.
+  Spot $\approx 47{,}50$ (illüstratif) · TRY zero %45 simple · USD zero %3,50 simple · $t \approx 1{,}2822$ yıl (ACT/365).
+  Bölümlerdeki tüm seviyeler, DV01'ler ve hedge nominalleri bu tek fotoğrafa aittir;
+  **yöntem** her vade ve her faiz seviyesinde geçerlidir, **sayılar** değildir.
+  Kendi valörünüzü, spotunuzu ve eğrinizi girdiğinizde oranlar korunur — özellikle $1/DF$ faktörü.
+
+</div>
+
+### 1.1 — İşlem künyesi: parametre tablosu ve her satırın ne işe yaradığı
 
 Aşağıdaki işlem dersin tamamında referans alınacaktır. TRY DV01'in gerçek tabanının **1,407 mlr TRY** olduğuna, 20 mn USD olmadığına şimdiden dikkat edin; bunun nedeni Bölüm 4.3'te matematiksel olarak gösterilecek. Sezgi: forward'ın TRY bacağı vadede ödenecek sabit bir TL tutarıdır ve o tutar işlem anında kilitlenmiştir — risk, USD nominalinde değil, kilitlenen TL borcundadır.
 
@@ -39,13 +82,69 @@ Aşağıdaki işlem dersin tamamında referans alınacaktır. TRY DV01'in gerçe
 | Spot ($S$) | $\approx 47{,}50$ | illüstratif — kendi spotunuzla güncelleyin |
 | Gün sayısı (TRY) | ACT/365; $\approx 468$ gün $\to t \approx 1{,}2822$ | valör kabulüne göre ayarlanır |
 
-Bu parametrelerden türetilen ve ders boyunca tekrar tekrar kullanılacak iki temel büyüklük, TRY iskonto faktörü ve onun eşdeğer faiz gösterimleridir. Bölüm 1'de hesaplanacaklar; burada özetle $DF_{TRY} = 0{,}63412$ ve buna karşılık gelen sürekli zero $\approx \%35{,}53$'tür.
+Bu parametrelerden türetilen ve ders boyunca tekrar tekrar kullanılacak iki temel büyüklük, TRY iskonto faktörü ve onun eşdeğer faiz gösterimleridir. 1.2'de adım adım hesaplanacaklar; burada özetle $DF_{TRY} = 0{,}63412$ ve buna karşılık gelen sürekli zero $\approx \%35{,}53$'tür.
 
-## 2. USDTRY forward'ın risk anatomisi: DF² nereden geliyor
+Tablonun her satırı ileride belirli bir yerde işe yarayacak; hangisinin nerede kullanılacağını baştan bilmek okumayı kolaylaştırır:
+
+| Parametre | Nerede kullanılır | Neden kritik |
+|---|---|---|
+| $N_{USD} = 20$ mn | USD bacağı DV01'i, FX delta | USD faiz riskinin tabanı |
+| $K = 70{,}35$ | TRY bacak nominali, MtM, TRY DV01 tabanı | **aged pozisyonda tek doğru taban** (4.3, 4.5) |
+| Vade → $t = 1{,}2822$ | her iki bacağın $DF$'i, durasyon, konveksite | DV01'e **doğrusal** girer; valör hatası doğrudan orantılı hata |
+| TRY zero %45 (simple) | $DF_{TRY}$, üç konvansiyon karşılaştırması | konvansiyon makasının kaynağı (3.2) |
+| USD zero %3,50 (simple) | $DF_{USD}$, CIP, USD DV01 | düşük faiz → $DF^2$ hatası burada **saklanır** (2.8) |
+| Spot $S \approx 47{,}50$ | USD bacağının TL'ye çevrimi, display currency | sayıyı çevirir, riski **kesmez** (2.1) |
+
+### 1.2 — Vakanın kurulumu: DF'yi ve üç eşdeğer zero'yu elle çıkarmak
+
+Ders boyunca kullanılacak sayıların hiçbiri gökten inmiyor; hepsi bu altı adımdan çıkıyor. Bir kez elle yürütün, sonra araca güvenin.
+
+**Adım 1 — gün kesri.** ACT/365 tabanında $t = 468 / 365 = 1{,}28219\ldots \approx 1{,}2822$ yıl. Gün sayısı valör kabulüne (spot valör mü, işlem günü mü) göre bir–iki gün oynayabilir; oynadığı kadar DV01 de oynar, çünkü $t$ formüle çarpan olarak girer.
+
+**Adım 2 — TRY iskonto faktörü (simple kotasyondan).**
+
+$$
+DF_{TRY} = \frac{1}{1 + 0{,}45 \times 1{,}2822} = \frac{1}{1{,}576990} = 0{,}634121
+$$
+
+**Adım 3 — USD iskonto faktörü.** Aynı mantık, kendi kotasyonuyla:
+
+$$
+DF_{USD} = \frac{1}{1 + 0{,}0350 \times 1{,}2822} = \frac{1}{1{,}044877} = 0{,}957053
+$$
+
+**Adım 4 — sürekli eşdeğer zero.** $DF = e^{-z_c t}$ tanımını ters çevirin:
+
+$$
+z_c = -\frac{\ln DF_{TRY}}{t} = -\frac{\ln 0{,}634121}{1{,}2822} = \frac{0{,}455584}{1{,}2822} = 0{,}35532 \;\to\; \%35{,}53
+$$
+
+**Adım 5 — yıllık bileşik eşdeğer zero.** $DF = (1+z_a)^{-t}$ tanımından:
+
+$$
+z_a = DF_{TRY}^{-1/t} - 1 = e^{z_c} - 1 = e^{0{,}35532} - 1 = 1{,}42665 - 1 = 0{,}42665 \;\to\; \%42{,}66
+$$
+
+**Adım 6 — sağlama.** Üç zero aynı $DF$'yi vermeli: $1/(1{,}45^{0}\ldots)$ değil, doğrudan tanımlardan —
+simple $1/(1+0{,}45 \cdot 1{,}2822) = 0{,}6341$, yıllık $1{,}42665^{-1{,}2822} = 0{,}6341$, sürekli $e^{-0{,}35532 \cdot 1{,}2822} = 0{,}6341$. Üçü tutuyorsa kurulum sağlamdır.
+
+Buradaki asıl ders şudur: **%45, %42,66 ve %35,53 aynı fiyatın üç ayrı dildeki telaffuzudur.** Hiçbiri diğerinden "daha doğru" değildir; ama DV01 bu dillerden birinde bump yapmakla ölçüldüğü için, dilin kendisi cevabı değiştirir. Bölüm 3'ün tamamı bu cümlenin açılımıdır.
+
+Son bir tanım, ileride tekrar tekrar kullanılacak: TRY bacak nominali işlem anında kilitlenir,
+
+$$
+N_{TRY} = N_{USD} \times K = 20.000.000 \times 70{,}35 = 1.407.000.000\ \text{TRY}
+$$
+
+ve bu sayı bir daha **asla** değişmez — piyasa ne yaparsa yapsın. Riskin "kolu" budur.
+
+## 2 — Forward'ın risk anatomisi: DF² nereden geliyor, iki bacak nasıl ayrışır?
+
+Bu bölümde forward'ın nakit akışından başlayıp DV01 formülünü türetir, kurumsal sistemin bu riski nasıl temsil ettiğini okur, carry'yi P&L raporunda buluruz.
 
 Bir outright USDTRY forward pozisyonunun faiz riski, tek bir sayı gibi görünse de iki ayrı para biriminin iki ayrı eğrisine dağılmış iki ayrı duyarlılıktır. Bu ders, forward'ın nakit akışı anatomisinden başlayıp DV01 formülünün türetilmesine, kurumsal risk sistemlerinin bu riski nasıl temsil ettiğine, günlük taşıma maliyetinin (carry) P&L raporlarında nasıl izlendiğine ve TLREF OIS ile hedge boyutlamaya kadar zincirin tamamını kurar. Bölüm sonundaki interaktif hesaplayıcı, derste türetilen her formülü gerçek bir işlem örneği üzerinde adım adım doğrular.
 
-### 2.1 Forward'ın Anatomisi: N, Nakit Akışları ve Spotun Rolü
+### 2.1 — Forward'ın anatomisi: N, nakit akışları ve spotun gerçek rolü
 
 Bir outright USDTRY forward, vadede tek bir gün gerçekleşecek iki nakit akışından ibarettir. Başka hiçbir ödeme yoktur; spot tarihinde para el değiştirmez. Long (Buy) 1 milyon USD forward işleminde vadede 1.000.000 USD alınır ve karşılığında $N_{TRY} = N_{USD} \times K$ tutarında TRY ödenir. Burada $K$ işlem anında kilitlenen forward kurudur ve $N_{TRY}$ bu andan itibaren sabittir — piyasa ne yaparsa yapsın değişmez. "N" (notional, yani anapara büyüklüğü) ile kastedilen soyut bir parametre değil, vadede fiilen el değiştirecek para miktarlarıdır. Bu nokta önemlidir, çünkü ileride göreceğimiz DV01 formüllerinde notional'lar işlem anında donmuş sabitler olarak yer alır; faize duyarlı olan kısım yalnızca iskonto faktörleridir.
 
@@ -56,7 +155,7 @@ PV = N_{USD} \times S \times DF_{USD} \;-\; N_{TRY} \times DF_{TRY} \qquad \text
 $$
 Burada $S$ spot kur, $DF_{USD}$ ve $DF_{TRY}$ ise her bacağın kendi eğrisinden gelen iskonto faktörleridir.
 
-### 2.2 DV01 Türetmesi: DF² Nereden Geliyor
+### 2.2 — DV01 türetmesi: kesirin türevi neden $DF^2$ bırakır?
 
 Para piyasası (simple, yani bileşiksiz) konvansiyonunda iskonto faktörü $DF = 1/(1 + r\tau)$ bir kesirdir; $\tau$ gün sayısı bölü yıl tabanıdır. DV01 için bu kesirin faize göre türevi gerekir. Herhangi bir $1/f$ ifadesinin türevi $-f'/f^2$ olduğundan, $f = 1 + r\tau$ ve $f' = \tau$ ile:
 
@@ -79,13 +178,13 @@ $10^{-4}$ çarpanı 1 baz puanı (0,0001) temsil eder; DV01 tanım gereği "faiz
 
 <div class="not"><span class="etiket">Kritik kural</span>İki DV01 asla toplanmaz. Farklı para birimlerine ve farklı eğrilere aittirler; TRY faizi ile USD faizi birbirinden bağımsız hareket edebildiği için toplamları anlamlı bir risk ölçüsü değildir. Risk yönetiminde ayrı satırlarda izlenir ve ayrı enstrümanlarla kapatılırlar.</div>
 
-### 2.3 İşlem Faizi ve Eğri Faizi Ayrımı
+### 2.3 — İşlem faizi vs eğri faizi: hangisi notional'ı, hangisi riski belirler?
 
 İki farklı faiz seti iki farklı iş yapar ve karıştırılmamalıdır. İşlem (trade) faizleri yalnızca $K$'yı ve dolayısıyla $N_{TRY}$'yi kilitler; bunlar kontratın parçasıdır ve bir daha değişmez. Değerleme (revaluation / zero curve) faizleri ise günlük mark-to-market (MTM, pozisyonun güncel piyasa değeri) ve DV01 hesabında kullanılır; her gün piyasayla birlikte kayar. Ayrımın pratik sonucu şudur: DV01 formülündeki $DF^2$ her zaman eğri faizinden gelir, notional ise işlem faizinden kilitlenmiştir. Yani riskin "kolu" (notional) geçmişte sabitlenmiş, riskin "menteşesi" (iskonto) bugünün piyasasındadır.
 
 İşlem sonrası eğri hareket ettiğinde MTM sıfırdan uzaklaşır: TRY faizi işlem seviyesinin üzerine çıktıysa long USD pozisyonunda TRY borcunun PV'si düşer ve MTM pozitife döner. Sayfadaki hesaplayıcıda "İşlem forward kuru K" alanı bu ayrımı taşır: boş bırakılırsa eğriden fair forward alınır (MTM = 0), gerçek işlem kuru girilirse MTM piyasa hareketini gösterir.
 
-### 2.4 Bump-and-Reprice ve Convexity
+### 2.4 — Bump-and-reprice ve konveksite: analitik türevle sistem farkı nereden?
 
 Kurumsal risk sistemleri genellikle analitik türev almaz; her eğri pillar'ını (eğrinin kote edilen vade noktalarını) 1 baz puan bumplayıp (kaydırıp) portföyü yeniden fiyatlar ve PV farkını raporlar. Bu yaklaşıma bump-and-reprice denir. Analitik formülle bump sonucu arasında kuruş mertebesinde bir fark kalır; bu convexity'dir (dışbükeylik). Nedeni geometriktir: DF faize göre dışbükey bir eğri çizdiğinden, analitik türev tek noktadaki teğet eğimini, tek taraflı bump ise 1 baz puanlık gerçek kirişi ölçer — teğet ile kiriş, eğri büküldüğü ölçüde ayrışır. Çift taraflı (central) bump bu ikinci derece yanlılığı sıfırlar ve analitik değerle birebir tutar:
 
@@ -94,7 +193,7 @@ DV01_{central} = \frac{PV(r + 1\,\text{bp}) - PV(r - 1\,\text{bp})}{2}
 $$
 Sayfadaki hesaplayıcının doğrulama bölümü tek taraflı bump'ı formülle üretir; analitik satırla arasındaki minik fark convexity'nin kendisidir ve büyükse kurulumda hata var demektir. Yani bu fark bir hata payı değil, kurulumun sağlığını ölçen bir teşhis aracıdır.
 
-### 2.5 Kurumsal Risk Sistemlerinde Temsil
+### 2.5 — Kurumsal sistemde temsil: dual-curve delta ladder nasıl okunur?
 
 Kurumsal risk sisteminde dual-curve discounting (her bacağın kendi bağımsız eğrisiyle iskontolanması) aktifse — TRY bacağı bağımsız TLREF OIS eğrisinde, USD bacağı SOFR OIS'te — forward iki ayrı delta ladder üretir: USD curve delta ve TRY curve delta, tenor bucket'larına (vade kovalarına) dağılmış halde. Tek bir bullet forward (tek nakit akışlı, ara ödemesiz) için delta ağırlıklı olarak vadeye denk gelen pillar'a oturur ve interpolasyona göre komşu pillar'lara taşar. Spot duyarlılığı ($FX\ delta \approx N_{USD} \times DF_{USD}$) faiz deltasından tamamen ayrı bir satırda raporlanır. Birçok sistemin PV01 işaret konvansiyonu $\Delta PV / +1\,\text{bp}$'dir; ders kitabı DV01'inin negatifi olduğu için sistem çıktısıyla karşılaştırırken işaret kontrol edilmelidir.
 
@@ -102,7 +201,7 @@ Alternatif kurulum, forward'ı FX forward points eğrisine karşı risklendirmek
 
 TRY bacağının hangi eğriye düştüğü ayrıca önemlidir. TRY discounting FX-swap-implied eğriden (FX swap fiyatlarından geri çıkarılan örtük TRY faizi) yapılıyorsa risk forward points'e döner ve temiz bir TLREF DV01 çıkmaz. Bağımsız TLREF OIS eğrisi tanımlıysa forward hem TLREF DV01'i hem de FX-implied TRY overnight ile TLREF arasındaki basis'e (iki benzer faiz arasındaki yapısal farka) karşı ayrı bir duyarlılık taşır.
 
-### 2.6 Carry, Maliyet Takibi ve P&L Variance
+### 2.6 — Carry ve P&L variance: "bugün neden para kaybettik" nasıl ayrışır?
 
 Long USD/TRY forward taşımanın maliyeti negatif carry'dir: yüksek TRY faizini ödeyip düşük USD faizini kazanırsınız ve bu, forward priminin ($K - S$) vade boyunca erimesi olarak P&L'e akar. Spot sabit kalırsa toplam maliyet $(S - K) \times N_{USD}$'dir; günlük ortalaması hesaplayıcıda üretilir, ancak roll-down (vade kısaldıkça forward kurun spota yakınsaması) lineer değildir, vadeye yaklaştıkça profil değişir.
 
@@ -110,7 +209,7 @@ Kurumsal risk sistemlerinde bu maliyet P&L variance (günlük K/Z ayrıştırma)
 
 Hazır dekompozisyon yetmiyorsa sistemin senaryo/simülasyon modülünde izole koşular kurulur: yalnızca valuation date'i bir gün kaydırmak saf theta'yı, yalnızca TRY eğrisini dünküyle değiştirmek TRY rate P&L'ini, yalnızca spotu değiştirmek FX delta P&L'ini verir. Dört koşunun toplamı ile gerçek günlük $\Delta PV$ arasındaki fark unexplained'dir (açıklanamayan kalıntı) ve küçük olmalıdır. Efekt etiketleri ve bucket tanımları kuruma özel konfigürasyondur; en sağlıklı doğrulama, tek bir forward için variance raporundaki time effect'i hesaplayıcıdaki günlük carry ile karşılaştırmaktır.
 
-### 2.7 OIS Hedge ve Basis Residual
+### 2.7 — OIS hedge ve basis artığı: DV01 sıfırken P&L neden hâlâ sızar?
 
 TRY bacağının DV01'i matched-maturity (vadesi eşleştirilmiş) TLREF OIS ile kapatılır. Long USD forward'da TRY borçlusu olduğunuz için receive-fixed OIS gerekir: borç tarafı faiz artışından kazanır, receive-fixed OIS faiz artışından kaybeder ve iki duyarlılık birbirini sıfırlar. Gereken notional:
 
@@ -121,7 +220,7 @@ Bu değer, bullet bir nakit akışı için forward TRY bacağının iskonto edil
 
 <div class="not"><span class="etiket">Kritik uyarı</span>OIS hedge DV01'i sıfırlar ama carry'leri birebir sıfırlamaz. Forward'ın gerçek ekonomik TRY fonlama maliyeti FX-swap-implied overnight'tan, OIS'in carry'si TLREF'ten akar. İkisi ayrıştığı sürece — ki bu bilinen ve yapısal bir basis'tir — DV01 defterde sıfır görünse bile P&L variance'ın time effect satırında net bir residual kalır. Bu residual, taşınan basis riskinin günlük maliyetidir ve basis'i soyut bir kavram olarak değil, her gün raporda okunan bir sayı olarak izlemenin en pratik yoludur.</div>
 
-### 2.8 Sık Yapılan Hatalar
+### 2.8 — Sık yapılan dört hata: $DF^2$, day-count, toplama, etiket
 
 Birinci hata, DF'nin karesinin alınmamasıdır: $dDF/dr = -\tau \cdot DF^2$ olduğundan tek DF kullanmak DV01'i $1/DF$ kadar şişirir. Düşük faizli USD bacağında ($DF \approx 0{,}997$) fark yuvarlamada kaybolur ve hata saklanır; yüksek faizli TRY bacağında yüzde 3–4'e çıkar. Hatanın sinsi yanı budur: düşük faizli ortamda kurulan ve "doğru çalışan" bir sheet, yüksek faizli para birimine taşındığında sessizce yanlış üretmeye başlar.
 
@@ -131,19 +230,19 @@ Birinci hata, DF'nin karesinin alınmamasıdır: $dDF/dr = -\tau \cdot DF^2$ old
 
 Dördüncüsü etiket karışıklığıdır: "DV01_TRY" başlıklı bir hücre bazen TRY bacağının DV01'i değil, USD bacağı DV01'inin spot ile TRY'ye çevrilmiş hali olabilir (aynı riskin iki para biriminde gösterimi). Sayı doğru olsa bile yanlış bacağa atfedilirse hedge yanlış eğriye kurulur; hangi büyüklüğün hangi bacağa ait olduğu mutlaka formülden teyit edilmelidir.
 
-### 2.9 İnteraktif Hesaplayıcının Kullanımı
+### 2.9 — Hesaplayıcıyı kullanmak: kendi sayılarınızla aynı DV01'i üretin
 
 Derste türetilen zincirin tamamı aşağıdaki araçta çalışır durumda. Araç, girdi alanları dışında hiçbir müdahale gerektirmez; tüm ara hesaplar otomatik akar.
 
-Girdi alanları: spot kur, başlangıç ve vade tarihleri, yön (B/S — Buy long USD, Sell short USD), USD notional, opsiyonel işlem kuru $K$, TRY OIS zero faizi ve iki USD SOFR pillar'ı (gün ve faiz). Araç gün sayılarını tarihlerden kendisi türetir, USD faizini iki pillar arasında lineer interpolasyonla bulur ve iskonto faktörlerini doğru day-count'larla (TRY için ACT/365, USD için ACT/360) ayrı ayrı üretir — yani bölüm 8'deki ikinci hatayı yapısal olarak imkânsız kılar.
+Girdi alanları: spot kur, başlangıç ve vade tarihleri, yön (B/S — Buy long USD, Sell short USD), USD notional, opsiyonel işlem kuru $K$, TRY OIS zero faizi ve iki USD SOFR pillar'ı (gün ve faiz). Araç gün sayılarını tarihlerden kendisi türetir, USD faizini iki pillar arasında lineer interpolasyonla bulur ve iskonto faktörlerini doğru day-count'larla (TRY için ACT/365, USD için ACT/360) ayrı ayrı üretir — yani 2.8'deki ikinci hatayı yapısal olarak imkânsız kılar.
 
-Çıktılar dört blokta toplanır ve dersin bölümleriyle birebir eşleşir: MTM değerlemesi (bölüm 1 ve 3), doğru $DF^2$ formülüyle bacak bazında DV01'ler — TRY/bp ve USD/bp cinsinden (bölüm 2), bump-and-reprice doğrulaması (bölüm 4) ve carry ile TLREF OIS hedge notional'ı (bölüm 6 ve 7). Ayrıca "yaygın hata kontrolü" satırı, tek DF ile hesaplanmış yanlış DV01'i ve doğrudan farkını gösterir — kendi sheet'lerinizi denetlerken referans olarak kullanılabilir: kendi hesabınız araçtaki "hatalı" satıra yakınsıyorsa kare terimini atlıyorsunuz demektir.
+Çıktılar dört blokta toplanır ve dersin alt bölümleriyle birebir eşleşir: MTM değerlemesi (2.1 ve 2.3), doğru $DF^2$ formülüyle bacak bazında DV01'ler — TRY/bp ve USD/bp cinsinden (2.2), bump-and-reprice doğrulaması (2.4) ve carry ile TLREF OIS hedge notional'ı (2.6 ve 2.7). Ayrıca "yaygın hata kontrolü" satırı, tek DF ile hesaplanmış yanlış DV01'i ve doğrudan farkını gösterir — kendi sheet'lerinizi denetlerken referans olarak kullanılabilir: kendi hesabınız araçtaki "hatalı" satıra yakınsıyorsa kare terimini atlıyorsunuz demektir.
 
 $K$ alanı boşken MTM sıfırdır (fair forward); gerçek işlem kurunuzu girdiğinizde MTM, eğrinin işlem seviyesinden ne kadar uzaklaştığını gösterir.
 
 <ForwardDv01Hesaplayici />
 
-Örnek işlem (3–31 Temmuz 2026, spot 46,6950, TRY %39,69, USD interp %3,645, 1 milyon USD Buy) için doğrulanmış değerler:
+**Çıpa: 03–31.07.2026 örnek işlemi** (spot 46,6950 · TRY %39,69 · USD interp %3,645 · 1 mn USD Buy) — o günün kotasyonlarından üretilmiş bir anlık görüntüdür, kural değildir; başka bir gün ve başka bir vade ile sayılar değişir, formüller değişmez. Doğrulanmış değerler:
 
 | Büyüklük | Değer | Birim |
 | --- | --- | --- |
@@ -155,11 +254,90 @@ $K$ alanı boşken MTM sıfırdır (fair forward); gerçek işlem kurunuzu girdi
 | Günlük ortalama carry | −45.918 | TRY/gün |
 | TLREF OIS hedge notional (receive-fixed) | 46.562.983 | TRY |
 
-<div class="not"><span class="etiket">Etiket tuzağının somut örneği</span>Bu örnekte USD bacağı DV01'inin TRY karşılığı (361,13) ile TRY bacağının tek-DF hatalı değeri (357,20) tesadüfen yakındır. Bir sheet'te ₺361 gibi bir değer görüldüğünde bunun hangi bacağa ait olduğu ve hangi formülden geldiği ancak hücre formülü açılarak ayırt edilebilir — bölüm 8'deki etiket uyarısının somut örneğidir.</div>
+<div class="not"><span class="etiket">Etiket tuzağının somut örneği</span>Bu örnekte USD bacağı DV01'inin TRY karşılığı (361,13) ile TRY bacağının tek-DF hatalı değeri (357,20) tesadüfen yakındır. Bir sheet'te ₺361 gibi bir değer görüldüğünde bunun hangi bacağa ait olduğu ve hangi formülden geldiği ancak hücre formülü açılarak ayırt edilebilir — 2.8'deki etiket uyarısının somut örneğidir.</div>
 
-## 2. Durasyon, DV01 ve Konvansiyon Meselesinin Kalbi
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 2 · Risk anatomisi</span>
 
-### 2.1 Durasyon matematiği
+**1. Doğrudan uygulama — TRY bacağının DV01'i.** Yukarıdaki çıpalı örnek işlemin ($1$ mn USD Buy, 28 günlük vade, TRY zero %39,69 simple, ACT/365) TRY bacak DV01'ini doğru formülle elle hesaplayın. Verilen: $N_{TRY} = 47.980.692$ TRY. Beklenen cevap: tabloda yazan **+346,64 TL/bp**.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — gün kesri: $\tau_{TRY} = 28/365 = 0{,}076712$.
+
+Adım 2 — iskonto faktörü: $DF_{TRY} = 1/(1 + 0{,}3969 \times 0{,}076712) = 1/1{,}030447 = 0{,}970451$.
+
+Adım 3 — kare terim: $DF_{TRY}^2 = 0{,}941775$.
+
+Adım 4 — DV01: $47.980.692 \times 0{,}076712 \times 0{,}941775 \times 10^{-4}$
+$= 3.680.660 \times 0{,}941775 \times 10^{-4} = 346{,}64$ TL/bp.
+
+**Cevap:** +346,64 TL/bp — tablodaki doğrulanmış değerle birebir.
+
+**Araçla doğrula:** *Forward DV01 hesaplayıcısı*na tarihleri, spot 46,6950, TRY %39,69, USD pillar'larını ve 1 mn USD Buy'ı girin; "DV01 TRY bacağı" satırı 346,64 okumalı.
+
+</details>
+
+**2. Ters çevirme — tek-DF hatası ne kadar şişirir?** Aynı işlemde biri kare terimini unutup $N\,\tau\,DF \times 10^{-4}$ yazsa hangi sayıyı bulurdu, hata yüzde kaç olurdu ve bu oranın kapalı formu nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — kare terimsiz: $3.680.660 \times 0{,}970451 \times 10^{-4} = 357{,}19$ TL/bp (tabloda 357,20).
+
+Adım 2 — oran: $357{,}19 / 346{,}64 = 1{,}03046$.
+
+Adım 3 — kapalı form: oran her zaman $1/DF = 1/0{,}970451 = 1{,}03046$ ✓ — yani hata **tam olarak $1/DF$ kadardır**, tesadüf değildir.
+
+Adım 4 — ölçek dersi: burada %3,0; ana vakamızda $DF = 0{,}6341$ olduğu için $1/DF = 1{,}577$, yani **%57,7**. Aynı hata, faiz ve vade arttıkça patlar.
+
+**Cevap:** 357,19 TL/bp; %3,0 fazla; oran $= 1/DF$.
+
+</details>
+
+**3. Diğer bacak — USD tarafı.** Aynı örnek işlemin USD bacağı DV01'ini TL cinsinden hesaplayın. Verilen: $N_{USD} = 1$ mn, $S = 46{,}6950$, USD interp %3,645, **ACT/360**. Beklenen: tabloda yazan **−361,13 TL/bp**.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — USD gün kesri **ACT/360**: $\tau_{USD} = 28/360 = 0{,}077778$. (TRY'nin 0,076712'si değil — bu 2.8'deki ikinci hata.)
+
+Adım 2 — $DF_{USD} = 1/(1 + 0{,}03645 \times 0{,}077778) = 1/1{,}002835 = 0{,}997173$; $DF_{USD}^2 = 0{,}994354$.
+
+Adım 3 — DV01: $1.000.000 \times 46{,}6950 \times 0{,}077778 \times 0{,}994354 \times 10^{-4}$
+$= 46.695.000 \times 0{,}077778 = 3.631.833$; $\times 0{,}994354 = 3.611.325$; $\times 10^{-4} = 361{,}13$ TL/bp.
+
+Adım 4 — işaret: long USD = USD alacaklısı → USD faizi artınca alacağın PV'si düşer → **negatif**: −361,13 TL/bp.
+
+**Cevap:** −361,13 TL/bp (≈ −7,73 USD/bp). Dikkat: bu sayı 346,64 ile **toplanmaz** — iki ayrı eğriye aittir.
+
+</details>
+
+**4. Tuzak — carry'nin günlük ortalaması.** Aynı örnekte fair forward $F = 47{,}9807$, spot $S = 46{,}6950$. Long USD forward'ı 28 gün taşımanın toplam ve günlük maliyeti nedir? İşareti yorumlayın.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — spot sabit kalırsa toplam maliyet $(S - F) \times N_{USD} = (46{,}6950 - 47{,}9807) \times 1.000.000 = -1.285.700$ TL.
+
+Adım 2 — günlük ortalama: $-1.285.700 / 28 = -45.918$ TL/gün — tablodaki değer.
+
+Adım 3 — yorum: **negatif carry**. Yüksek TRY faizini ödeyip düşük USD faizini kazanıyorsunuz; forward primi ($F-S = 1{,}2857$ TL) vade boyunca eriyor ve bu erime her gün P&L'in time effect satırına düşüyor (2.6).
+
+Adım 4 — tuzak: bu "ortalama"dır. Roll-down doğrusal değildir; vadeye yaklaştıkça günlük erime profili değişir, tek bir günün gerçek theta'sı 45.918'den sapar.
+
+**Cevap:** toplam −1.285.700 TL, günlük ortalama −45.918 TL/gün; kaçınılmaz ve önceden bilinen bir gider.
+
+</details>
+
+</div>
+
+## 3 — Konvansiyon meselesinin kalbi: aynı işlem neden üç farklı DV01 verir?
+
+Bu bölümde durasyondan DV01'e köprüyü kurar, bump'ın hangi konvansiyonda yapıldığının sonucu nasıl $1/DF$ kat değiştirdiğini türetir ve masada kullanılacak iki sağlama refleksini veririz.
+
+### 3.1 — Durasyon matematiği: Macaulay, modifiye ve DV01 arasındaki köprü
 
 **Macaulay durasyonu**, nakit akışlarının bugünkü-değer ağırlıklı ortalama geri dönüş süresidir. **Modifiye durasyon** ise fiyatın getiriye analitik yüzde hassasiyetidir:
 
@@ -173,7 +351,15 @@ DV01 = D_{mod} \cdot P \cdot 10^{-4}
 $$
 Konveksite (ikinci türev) burada ikincil kalır ama Bölüm 6.7'de hedge artık riskinde tekrar karşımıza çıkacaktır.
 
-### 2.2 DV01'in analitik türetilişi — kotasyona göre değişen türev
+**Vakamızda sayısal olarak.** TRY bacağı tek bulletlidir, dolayısıyla $D_{Mac} = t = 1{,}2822$ yıl. Modifiye durasyon konvansiyona bağlıdır: sürekli bump dilinde $D_{mod} = D_{Mac} = 1{,}2822$; simple bump dilinde $D_{mod} = t \cdot DF = 1{,}2822 \times 0{,}63412 = 0{,}8130$; yıllık bileşikte $D_{mod} = t/(1+z_a) = 1{,}2822/1{,}42665 = 0{,}8987$. Fiyat $P = N \cdot DF = 1{,}407 \text{ mlr} \times 0{,}63412 = 892{,}2$ mn TRY. $DV01 = D_{mod} \cdot P \cdot 10^{-4}$ formülünü üçüne de uygulayın:
+
+- sürekli: $1{,}2822 \times 892{,}2 \text{ mn} \times 10^{-4} = 114{,}4$ bin TL/bp
+- yıllık: $0{,}8987 \times 892{,}2 \text{ mn} \times 10^{-4} = 80{,}2$ bin TL/bp
+- simple: $0{,}8130 \times 892{,}2 \text{ mn} \times 10^{-4} = 72{,}5$ bin TL/bp
+
+Üç sayı da 3.2'de bağımsız olarak türetilecek olanlarla birebir aynı. Yani "durasyon" ile "DV01" iki ayrı büyüklük değil, aynı büyüklüğün yüzde ve para gösterimidir — ve **konvansiyon belirsizliği ikisine de aynı şekilde bulaşır.**
+
+### 3.2 — DV01'in türevi: bump hangi dilde yapılırsa cevap o dilde çıkar
 
 DV01, faizde 1 baz puanlık değişimin değere etkisidir: $DV01 = (\partial V/\partial z) \times 10^{-4}$. Tek bulletli bir bacak için $V = N \cdot DF$, dolayısıyla $DV01 = N \cdot (\partial DF/\partial z) \times 10^{-4}$.
 
@@ -209,7 +395,68 @@ Aşağıdaki araçla bu bağı kendi girdilerinizle test edebilirsiniz: nominal,
 
 <Dv01KonvansiyonHesaplayici />
 
-### 2.3 Par (Quote) DV01 vs Zero-Curve DV01
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 3 · Konvansiyon</span>
+
+**1. Doğrudan uygulama — makas nereden açılıyor?** Yukarıdaki faiz-seviyesi tablosunun %25 satırını doğrulayın: $DF = 0{,}757$, DV01 simple 103,5 bin TL, DV01 sürekli 136,6 bin TL. Oranın 1,321 çıktığını iki ayrı yoldan gösterin.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — birinci yol, doğrudan bölme: $136{,}6 / 103{,}5 = 1{,}3198 \approx 1{,}320$.
+
+Adım 2 — ikinci yol, kimlik: $1/DF = 1/0{,}757 = 1{,}3210$.
+
+Adım 3 — üçüncü doğrulama, kapalı form: $1 + z_s t = 1 + 0{,}25 \times 1{,}2822 = 1{,}3206$. Üçü de aynı sayı.
+
+Adım 4 — genelleme: oran **yalnızca $z_s t$ çarpımına** bağlıdır. Vadeyi ikiye katlamak ile faizi ikiye katlamak makası aynı ölçüde açar; TRY'yi özel yapan şey ikisinin **birlikte** büyük olmasıdır.
+
+**Cevap:** 1,321 — ve bu $1/DF = 1 + z_s t$ kimliğinin kendisidir.
+
+**Araçla doğrula:** *DV01 konvansiyon hesaplayıcısı*na nominal 1.407 mn, $t = 1{,}2822$, zero %25 girin; "cont/simple oranı" satırı 1,321 okumalı.
+
+</details>
+
+**2. Ters çevirme — sistem hangi dilde konuşuyor?** Bir risk sistemi ana vakamızın TRY bacağı için **80.200 TL/bp** basıyor. Hangi konvansiyonda bump yapıldığını bulun ve ima edilen zero'yu geri çözün.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — braket: kabul edilebilir aralık $[72{,}5\text{k};\ 114{,}4\text{k}]$. 80,2k aralığın içinde, alt uca yakın.
+
+Adım 2 — üç formülü dene: simple 72,5k ✗, sürekli 114,4k ✗, yıllık bileşik $N \frac{t}{1+z_a} DF \times 10^{-4}$ ✓.
+
+Adım 3 — geri çözme: sürekli değeri yıllık değere bölün, $1+z_a$ çıkar:
+$114.395 / 80.200 = 1{,}4264 \;\Rightarrow\; z_a = \%42{,}64$.
+
+Adım 4 — mutabakat: 1.2'de hesapladığımız yıllık eşdeğer zero %42,66'ydı. Fark yuvarlamadan; sistem **yıllık bileşik** bump yapıyor.
+
+**Cevap:** yıllık bileşik konvansiyon; ima edilen $z_a \approx \%42{,}65$.
+
+</details>
+
+**3. Karar — hangi sayıyla hedge kurulur?** Forward DV01'ini sürekli konvansiyonda (114,4k) ölçtünüz, ama OIS PV01'ini yanlışlıkla simple konvansiyona karşılık gelen ölçekte aldınız ve hedge nominalini 72.543/98 formülüyle kurdunuz. Kitapta ne kadar açık DV01 kalır, 50 bp'lik bir harekette bu kaç TL'dir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — yanlış nominal: $72.543 / 98 = 740{,}2$ mn TRY receiver OIS.
+
+Adım 2 — bu nominalin gerçek DV01 katkısı: $740{,}2 \times 98 = 72.540$ TL/bp.
+
+Adım 3 — kalan açık: $114.395 - 72.540 = 41.855$ TL/bp — yani riskin **%37'si** hedge edilmemiş.
+
+Adım 4 — 50 bp'lik paralel hareket: $41.855 \times 50 = 2{,}09$ mn TL beklenmedik P&L.
+
+Adım 5 — teşhis: rapor "net DV01 ≈ 0" göstermez; gösteriyorsa iki bacağı da aynı yanlış dilde ölçüyorsunuz demektir ve gerçek açık gizlenmiştir.
+
+**Cevap:** 41.855 TL/bp açık; 50 bp'de ≈ 2,09 mn TL. Kural: **forward ile OIS aynı sensitivity tanımında ölçülür.**
+
+</details>
+
+</div>
+
+### 3.3 — Par (quote) DV01 vs zero-curve DV01: "1 bp" kimin dilinde söylendi?
 
 Bir risk sisteminde iki farklı sensitivity tanımı vardır ve ikisi farklı sayı üretir:
 
@@ -222,22 +469,24 @@ Ayrımın pratik anlamı şu sorudur: "1 baz puan" kimin dilinde söylendi? Zero
 
 Hedge açısından pratik kural nettir: **hedge aracını (OIS) hangi sensitivity tanımında ölçüyorsanız, forward'ı da aynı tanımda ölçmelisiniz.** Birini par, diğerini zero bump ile ölçerseniz hedge oranınız 1,5 kata varan oranda şaşar (Bölüm 6.5).
 
-### 2.4 Hangi eğrinin bump'landığı sonucu belirler
+### 3.4 — Hangi eğri bump'landı: TRY DISC satırı mı, USD/SOFR satırı mı?
 
 Sensitivity yalnızca konvansiyona değil, **hangi eğriye** uygulandığına da bağlıdır. Sistemin IR delta raporu her eğri için ayrı satır verir: TRY DISC satırı forward'ın TRY bacağının hassasiyetini, USD/SOFR satırı ise USD bacağının hassasiyetini gösterir. Rapor "display currency = TRY" ile çalışıyorsa, USD satırı da TL'ye çevrilerek gösterilir — ve işte tuzak buradadır.
 
 Tuzak: USD bacağının TL'ye çevrilmiş DV01'ini, TRY DV01 sanmak. Bölüm 6.4'te bu iki sayının vakamızda tesadüfen çok yakın ($\approx 114$k ve $\approx 116$k) çıktığını göreceğiz. Tam da bu yüzden, sistem çıktısını doğrularken **sayının kendisine değil, hangi eğri/bacak satırından geldiğine** — yani kolon etiketine — bakmak şarttır.
 
-### 2.5 Sağlama refleksleri
+### 3.5 — Sağlama refleksleri: braket kontrolü ve nominal geri-çözme
 
 Sistemin verdiği her DV01'i iki hızlı kontrolle sınırlayın. Bu iki refleks, dersin geri kalanını hatırlamasanız bile masada işinizi görür:
 
 - **Braket kontrolü.** Tek bulletli bir bacak için DV01 mutlaka $[\,N\,t\,DF^{2},\; N\,t\,DF\,] \times 10^{-4}$ aralığında olmalıdır — simple alt sınır, sürekli üst sınır; başka hiçbir konvansiyon bu aralığın dışına çıkamaz. Vakamızda bu aralık 72,5k – 114,4k. Sistem 110k diyorsa üst uçtasınız demektir; bu da sürekli (zero) bump'a işaret eder.
 - **Nominal geri-çözme.** $DV01 / (t \cdot DF \times 10^{-4}) \approx$ ima edilen bacak nominali. 110k'yı çözerseniz yaklaşık 1,35 mlr TRY çıkar; bu bizim 1,407 mlr'a yakındır $\to$ tutarlı. Eğer bu tersine hesaptan 20 milyon mertebesinde bir sayı çıksaydı, yanlış bacağı (USD, dönüştürülmemiş) okuyordunuz demektir.
 
-## 3. FX Forward Risk Analizi ve Fiyatlama
+## 4 — FX forward fiyatlama: CIP, swap puanı ve DV01 tabanının neden $K$ olduğu
 
-### 3.1 CIP ve swap puanları
+Bu bölümde forward kurunu arbitrajsızlıktan türetir, MtM'i tek satıra indirger, DV01 tabanının güncel forward değil kontrat kuru olduğunu ispatlar ve aged pozisyonda bu farkın kaç para ettiğini ölçeriz.
+
+### 4.1 — CIP ve swap puanları: forward kuru faiz farkından nasıl doğar?
 
 **Kapalı faiz paritesi** (Covered Interest Parity, CIP), forward kurunu spot ve iki faizden belirler. Mantık arbitrajsızlıktır: bugün TL borçlanıp USD alıp USD'de yatırmak ile forward'dan USD almak aynı sonucu vermelidir, aksi halde risksiz kâr doğar.
 
@@ -250,7 +499,7 @@ Kontrat kurumuz $K = 70{,}35$ olduğundan, güncel forward $F = 71{,}69$'un alt�
 
 **Not.** TRY'de onshore ve offshore forward'lar farklı fiyatlanabilir; CIP'ten sapmalar (cross-currency basis) sermaye kontrolleri ve TL likidite koşullarıyla açılıp kapanır. Buradaki formül temiz CIP'i verir; piyasa fiyatı basis kadar sapabilir.
 
-### 3.2 Forward'ı iki sıfır-kuponlu bond gibi görmek
+### 4.2 — İki sıfır kuponlu bond bakışı: MtM'i tek satıra indirgemek
 
 Long USD/TRY forward, vadede USD alacağı (varlık) ile TRY borcunun (yükümlülük) toplamıdır. TRY cinsinden bugünkü değer, iki bacağın bugünkü değerlerinin farkıdır:
 
@@ -266,7 +515,7 @@ $$
 
 İki bacaklı bakışı elde tutun: bir sonraki iki bölüm — DV01 tabanı ve cross-curve riski — doğrudan bu ayrıştırmadan çıkar.
 
-### 3.3 Kontrat kuru K vs güncel forward F — ve DV01'in işareti
+### 4.3 — $K$ mi $F$ mi: DV01 tabanı neden kontrat kurudur ($F$ sadeleşir)?
 
 Neden DV01'de $K$ kalır, $F$ değil? $V = N(F-K) \cdot DF_{TRY}$ ifadesinde **hem $F$ hem $DF_{TRY}$**, TRY faizine bağlıdır; ikisini birden türetmek gerekir. $F = S \cdot DF_{USD}/DF_{TRY}$ olduğundan $\partial F/\partial r_{TRY} = -(F/DF_{TRY}) \cdot \partial DF_{TRY}/\partial r_{TRY}$. Zincir kuralıyla:
 
@@ -281,23 +530,129 @@ $F$ terimi **tam olarak** sadeleşir; geriye yalnızca kontrat kuru $K$ kalır. 
 
 <div class="not"><span class="etiket">Ama işaret sisteme göre ters görünebilir</span> Hedge nominalini <strong>büyüklük</strong> belirlediği için asıl kritik olan odur; yine de yönü sistemden okurken dikkat gerekir. DV01'in işareti (i) tanıma ($\partial V/\partial r$ mi, $-\partial V/\partial r$ mi, yoksa mutlak "dollar duration" mı), (ii) bacağın pay/receive booking yönüne, (iii) sistemin orana mı yoksa iskonto faktörüne mi duyarlılık raporladığına göre değişir. Bazı sistemler tahvil geleneğiyle DV01'i "getiri +1 bp'de fiyat değişimi" olarak tanımlar ve long pozisyonda negatif gösterir; bazıları hedge nominali yönünü yansıtır. <strong>Kural: etikete güvenmeyin</strong> — test valülasyonunda eğriyi +1 bp kaydırın, P&L artıyor mu azalıyor mu ampirik olarak görün. Bu efektif yön, receiver mı payer mı OIS gireceğinizi belirler (Bölüm 6.5); o yüzden büyüklük kadar önemlidir.</div>
 
-### 3.4 Cross-curve risk
+### 4.4 — Cross-curve risk: iki eğri, iki DV01, tek toplama yasağı
 
 Forward'ın iki bacağı iki ayrı eğriye duyarlıdır ve bu eğriler **bağımsız** şoklanabilir. TRY eğrisi +1 bp $\to$ yaklaşık +114k TL; USD (SOFR) eğrisi +1 bp $\to$ ayrı bir hassasiyet (Bölüm 6.4). Tek bir birleşik "faiz DV01" yoktur ve iki sayı toplanmaz.
 
 Pratikte TRY DV01 ve USD DV01 ayrı ayrı ölçülür, ayrı bucket'larda tutulur ve ayrı enstrümanlarla hedge edilir — TRY tarafı OIS, USD tarafı SOFR swap veya kitabın içinde doğal netleşme. Cross-curve düşünmemek, "faizi hedge ettim" yanılgısıyla USD tarafını açıkta bırakmaya yol açar.
 
-## 4. OIS Ürün Mekaniği ve Hedge Aracı
+### 4.5 — Aged pozisyon: $K$ piyasadan uzaklaşınca DV01 ne kadar şaşar?
 
-### 4.1 Yapı
+4.3'ün teorik sonucu ("taban $K$'dır, $F$ değil") kâğıt üzerinde temiz görünür ama masada asıl bedeli aged — yani kurulduğu günden bu yana piyasanın altından kaydığı — pozisyonlarda öder. Farkı ölçelim.
+
+**Kurulum.** Aynı vaka, tek fark: kontrat kuru $K = 50{,}00$ olsun (çok daha eski, çok daha düşük kurdan girilmiş bir işlem). Güncel forward hâlâ $F = 71{,}69$, $DF_{TRY} = 0{,}63412$, $t = 1{,}2822$.
+
+**Adım 1 — doğru taban.** $N_{TRY} = 20 \text{ mn} \times 50{,}00 = 1{,}000$ mlr TRY.
+
+$$
+DV01_{doğru} = 1{,}000 \times 10^{9} \times 1{,}2822 \times 0{,}63412 \times 10^{-4} = 81.297\ \text{TL/bp}
+$$
+
+**Adım 2 — yanlış taban (güncel forward kullanılırsa).** $N_{TRY}^{yanlış} = 20 \text{ mn} \times 71{,}69 = 1{,}4338$ mlr TRY.
+
+$$
+DV01_{yanlış} = 1{,}4338 \times 10^{9} \times 1{,}2822 \times 0{,}63412 \times 10^{-4} = 116.564\ \text{TL/bp}
+$$
+
+**Adım 3 — hata büyüklüğü.** $116.564 / 81.297 = 1{,}434$ → **%43,4 fazla risk raporlanır.** Hedge de aynı oranda büyük kurulur: doğru nominal $81.297/98 = 830$ mn TRY receiver iken, yanlış hesap $116.564/98 = 1.190$ mn ister. Aradaki 360 mn'luk fazla receiver OIS, **kitaba yeni ve ters yönlü bir faiz riski ekler** — hedge değil, gizli bir pozisyondur.
+
+**Adım 4 — kalan açık.** Fazla hedge sonrası net DV01 $= 81.297 - 1.190 \times 98 = 81.297 - 116.620 = -35.323$ TL/bp. Yani kitap "nötr" sanılırken aslında **ters yöne** 35 bin TL/bp taşımaktadır; 50 bp'lik bir harekette 1,77 mn TL.
+
+**Adım 5 — MtM sağlaması.** $V = 20 \text{ mn} \times (71{,}69 - 50{,}00) \times 0{,}63412 = 20 \text{ mn} \times 21{,}69 \times 0{,}63412 \approx +275{,}1$ mn TRY. Pozisyon derin in-the-money; tam da bu yüzden $K$ ile $F$ arasındaki makas büyük ve hata görünür hâle geliyor.
+
+**Genel kural.** Hata oranı doğrudan $F/K$'dır: $71{,}69/50{,}00 = 1{,}434$. Pozisyon ne kadar aged ise oran o kadar 1'den uzaklaşır. At-the-money bir işlemde ($K \approx F$) hata yok sayılabilir — hatanın bu şekilde **yeni işlemlerde saklanıp eski işlemlerde patlaması**, sheet'lerin yıllarca fark edilmeden yanlış çalışmasının tipik nedenidir.
+
+**Ne zaman geçersiz.** Bu analiz forward'ın vadesinde tek bullet ödemesi olduğunu varsayar. Non-deliverable (NDF) yapılarda uzlaşma net nakit üzerinden ve çoğu zaman farklı bir fixing kaynağıyla yapılır; taban yine $K$'dır ama uzlaşma kuru riski ayrı bir kalem olarak eklenir.
+
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 4 · Fiyatlama ve taban</span>
+
+**1. Doğrudan uygulama — CIP ile forward kuru.** 2.9'daki çıpalı örnek işlem için ($S = 46{,}6950$, TRY %39,69 simple, USD %3,645 simple, 28 gün) fair forward kurunu hesaplayın. Beklenen: **47,9807**.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $DF_{TRY} = 1/(1+0{,}3969 \times 28/365) = 0{,}970451$.
+
+Adım 2 — $DF_{USD} = 1/(1+0{,}03645 \times 28/360) = 0{,}997173$ (**ACT/360**).
+
+Adım 3 — CIP: $F = S \cdot DF_{USD}/DF_{TRY} = 46{,}6950 \times (0{,}997173/0{,}970451) = 46{,}6950 \times 1{,}027535$.
+
+Adım 4 — $= 47{,}9807$ ✓ tablodaki değer.
+
+Adım 5 — swap puanı: $F - S = 1{,}2857$ TL, 28 günde. Tamamı faiz farkından: TRY faizi USD'nin ~11 katı.
+
+**Cevap:** 47,9807 TRY/USD.
+
+</details>
+
+**2. Ters çevirme — MtM'den ima edilen kur.** Ana vakada MtM $+17{,}0$ mn TRY okunuyor, $DF_{TRY} = 0{,}63412$, $N_{USD} = 20$ mn, $K = 70{,}35$. Piyasanın ima ettiği forward kuru nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — formül: $V = N_{USD}(F-K)DF_{TRY} \Rightarrow F = K + \dfrac{V}{N_{USD} \cdot DF_{TRY}}$.
+
+Adım 2 — payda: $20.000.000 \times 0{,}63412 = 12{,}682$ mn.
+
+Adım 3 — $F = 70{,}35 + 17{,}0/12{,}682 = 70{,}35 + 1{,}3405 = 71{,}69$ ✓.
+
+Adım 4 — kontrol: 4.1'de CIP'ten bağımsız olarak 71,69 bulmuştuk. İki yol aynı sayıya çıkıyorsa kurulum tutarlıdır.
+
+**Cevap:** $F \approx 71{,}69$.
+
+</details>
+
+**3. Karar — aged pozisyonu kim doğru risklendirir?** İki masa aynı pozisyonu raporluyor: A masası 81.297 TL/bp, B masası 116.564 TL/bp. Hangisi doğru, yanlış olan hangi hatayı yapmış, düzeltilmezse kitapta ne kalır?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — braket refleksi işe yaramaz: iki sayı da makul mertebede.
+
+Adım 2 — nominal geri-çözme: $81.297/(1{,}2822 \times 0{,}63412 \times 10^{-4}) = 1{,}000$ mlr → $1{,}000\text{ mlr}/20\text{ mn} = 50{,}00$ = kontrat kuru ✓.
+$116.564$ için aynı işlem $1{,}4338$ mlr → $71{,}69$ = **güncel forward** ✗.
+
+Adım 3 — teşhis: B masası tabanı $F$ ile kurmuş; 4.3'te $F$'in türevde sadeleştiğini ispatlamıştık.
+
+Adım 4 — sonuç: B'nin hedge'i 360 mn TRY fazla receiver; net kitap $-35.323$ TL/bp ters yönde açık.
+
+**Cevap:** A doğru. Teşhis aracı sayının kendisi değil, **nominal geri-çözmenin kontrat kurunu verip vermediği**.
+
+</details>
+
+**4. Tuzak — işaret.** Sistem TRY DISC satırında $-114$k gösteriyor. Pozisyon long USD/TRY forward. Receiver mı payer OIS mi gireceksiniz? Cevabı sayının işaretinden **vermeyin**.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — teori (4.3): $\partial V/\partial r_{TRY} > 0$; long USD forward TRY faizi artınca kazanır.
+
+Adım 2 — sistemin eksi işareti muhtemelen $-\partial V/\partial r$ (tahvil geleneği) tanımından geliyor; etiket teşhis için yetersiz.
+
+Adım 3 — ampirik test: valuation'da TRY eğrisini **+1 bp** kaydırıp yeniden fiyatlayın. P&L artıyorsa pozisyon faiz artışından kazanıyor demektir.
+
+Adım 4 — karar: faiz artışından kazanan pozisyonu nötrlemek için faiz artışında **kaybeden** enstrüman gerekir → **receiver OIS** (5.4).
+
+**Cevap:** receiver OIS — ama kararı işaretten değil, +1 bp testinden alın.
+
+</details>
+
+</div>
+
+## 5 — OIS ürün mekaniği: hedge aracı nasıl çalışır, DV01'ini nereden alır?
+
+Bu bölümde hedge aracının kendisini söker: nominal neden el değiştirmez, annuity nedir, TLREF nasıl bileşiklenir ve receiver/payer kararı hangi işaretten okunur.
+
+### 5.1 — Yapı: nominal el değiştirmez, NPV neden sıfır başlar?
 
 **Overnight Indexed Swap (OIS)**, bir sabit bacak ile bir TLREF değişken bacağın takasıdır. Nominal el değiştirmez; yalnızca faiz akışları netleşir. İşlem başında piyasa değeri sıfırdır ($NPV = 0$), çünkü sabit oran (par swap oranı) değişken bacağın bugünkü değerini tam karşılayacak şekilde kote edilir. OIS, yurt içi TL faiz riskini almanın/vermenin en temiz aracıdır; kredi ve fonlama gürültüsü minimumdur — bu yüzden hedge aracı olarak tercih edilir.
 
-### 4.2 Çeyreklik uzlaşma
+### 5.2 — Çeyreklik uzlaşma: ara nakit akışları hedge'i nasıl bozar?
 
 Standart OIS 3 (veya 6) aylık periyotlarda netleşir. Her periyot sonunda, o dönem boyunca gerçekleşen TLREF'in bileşiklenmiş değeri ile sabit oran arasındaki fark ödenir. Bu **ara nakit akışları**, işlemin risk profilini tek-bulletli forward'dan ayırır ve Bölüm 6.7'deki konveksite / nakit akışı uyuşmazlığı riskinin kaynağıdır. Yani hedge aracı, hedge edilen şeyle aynı takvimde nefes almaz.
 
-### 4.3 Sabit bacak DV01 / PV01 (annuity)
+### 5.3 — Sabit bacak PV01'i: annuity nedir, neden curve DV01'e eşit sayılır?
 
 Sabit bacağın faize hassasiyeti, çeyreklik iskonto faktörlerinin akış-ağırlıklı toplamıyla (**annuity**) ölçülür:
 
@@ -306,7 +661,7 @@ A = \sum_i \tau_i \cdot DF_i, \qquad PV01 = A \cdot N_{OIS} \times 10^{-4}
 $$
 Burada $\tau_i$ her periyodun gün-kesridir. Par bir OIS'in curve DV01'i, iyi bir yaklaşımla bu annuity-tabanlı PV01'e eşittir; nedeni, değişken bacağın yeniden fiyatlanmasının sabit bacağın duyarlılığını büyük ölçüde dengelemesidir (her reset'te değişken bacak par'a döner, dolayısıyla kendi başına neredeyse duyarsızdır). Vakamızın vadesine (1,28 yıl, çeyreklik) uygun düz-eğri annuity'sini Bölüm 6.5'te hesaplayacağız ($A \approx 0{,}984$).
 
-### 4.4 Receiver vs Payer OIS
+### 5.4 — Receiver mı payer mı: hedge yönü hangi işaretten okunur?
 
 | Pozisyon | Sabit bacak | Faiz $\uparrow$ olunca | Durasyon |
 |---|---|---|---|
@@ -315,13 +670,103 @@ Burada $\tau_i$ her periyodun gün-kesridir. Par bir OIS'in curve DV01'i, iyi bi
 
 Hedge yönü buradan gelir. Forward'ın TRY DV01'i pozitifse (faiz artınca kazanıyorsa), onu nötrlemek için faiz artınca **kaybeden** bir pozisyon gerekir $\to$ **receiver OIS**. Sezgisel doğrulama: forward'ın TRY bacağı bir TRY yükümlülüğüdür (short tahvil); onu bir long tahvil pozisyonuyla (receiver OIS, sabit alıcı) dengelersiniz.
 
-## 5. Uygulamalı Vaka: 20 mn USD Forward'ın OIS ile Hedge'i
+### 5.5 — TLREF bileşiklemesi: bir periyodun uzlaşması adım adım
 
-### 5.1 Parametreler
+OIS'in değişken bacağı "TLREF" demekle bitmez; periyot boyunca **günlük bileşiklenmiş** TLREF ödenir. Bu bileşikleme, simple kotasyonla arasında görmezden gelinemeyecek bir fark açar — ve o fark tam olarak 3. bölümdeki konvansiyon meselesinin değişken bacaktaki kardeşidir.
 
-Bölüm 0'daki tabloyu özetliyoruz: $N_{USD} = 20$ mn, $K = 70{,}35$, TRY bacak $= 1{,}407$ mlr, $t = 1{,}2822$, $DF_{TRY} = 0{,}63412$ (simple %45), $DF_{USD} = 0{,}95705$ (simple %3,50). Sürekli eşdeğer TRY zero $= \%35{,}53$.
+**Kurulum.** 100 mn TRY nominalli bir OIS'in bir çeyreği: 91 gün, TLREF dönem boyunca sabit %45, sabit bacak da %45, ACT/365.
 
-### 5.2 Forward TRY DV01'inin izole hesabı
+**Adım 1 — günlük oran.** $0{,}45/365 = 0{,}00123288$ (gün başına).
+
+**Adım 2 — 91 günlük bileşik büyüme.**
+
+$$
+\prod_{i=1}^{91}\left(1 + \frac{TLREF_i}{365}\right) = (1{,}00123288)^{91} = e^{91 \times 0{,}00123212} = e^{0{,}112123} = 1{,}118650
+$$
+
+Yani dönem getirisi **%11,8650**.
+
+**Adım 3 — değişken bacak ödemesi.** $100 \text{ mn} \times 0{,}118650 = 11.865.000$ TL.
+
+**Adım 4 — sabit bacak ödemesi (simple, bileşiksiz).** $100 \text{ mn} \times 0{,}45 \times 91/365 = 100 \text{ mn} \times 0{,}1121918 = 11.219.178$ TL.
+
+**Adım 5 — net uzlaşma.** Receiver (sabit alan, TLREF ödeyen) net **öder**:
+
+$$
+11.865.000 - 11.219.178 = 645.822\ \text{TL}
+$$
+
+**Adım 6 — yıllık eşdeğere çevirme.** Bileşik getiriyi simple dile çevirin: $0{,}118650 \times 365/91 = 0{,}47590 \to \%47{,}59$. Sabit bacak %45 kote edildiği hâlde değişken bacak fiilen **%47,59** ödemiş; fark **259 bp**.
+
+**Ders.** Aynı "%45" iki bacakta iki farklı para demektir. Bu yüzden par OIS oranı %45 değil, bileşiklemeyi telafi eden **daha düşük** bir seviyede kote edilir; piyasa bunu zaten fiyatlar. Sizin işiniz, **kendi tablonuzda** sabit bacağı simple, değişken bacağı bileşik hesaplayıp aradaki farkı "kâr" sanmamaktır. Bileşikleme etkisi faiz seviyesinin karesiyle büyür: %10 faizde aynı hesap yaklaşık 12 bp fark verirken %45'te 259 bp'ye çıkar.
+
+**Ne zaman geçersiz.** TLREF dönem boyunca sabit varsayıldı. Gerçekte her gün değişir; ayrıca lookback / payment delay konvansiyonları çarpımın hangi günleri kapsadığını kaydırır. Mekanik aynıdır, çarpımın sınırları değişir.
+
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 5 · OIS mekaniği</span>
+
+**1. Doğrudan uygulama — annuity satırı.** 6.5'te kullanacağımız annuity tablosunun $t=0{,}50$ satırını sürekli zero %35,53 ile yeniden üretin: $DF$ ve $\tau \cdot DF$ kaç?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $DF = e^{-z_c t} = e^{-0{,}35531 \times 0{,}50} = e^{-0{,}177655}$.
+
+Adım 2 — $= 0{,}83723$ ✓ (tabloda 0,8372).
+
+Adım 3 — $\tau \cdot DF = 0{,}25 \times 0{,}83723 = 0{,}20931$ ✓ (tabloda 0,2093).
+
+Adım 4 — kontrol: son satırda $t = 1{,}2822$ için $DF = e^{-0{,}35531 \times 1{,}2822} = e^{-0{,}45558} = 0{,}63412$ — vakamızın $DF_{TRY}$'si ✓. Eğri düz varsayıldığı için annuity'nin son iskonto faktörü forward'ınkiyle birebir aynı çıkmalı.
+
+**Cevap:** $DF = 0{,}8372$, $\tau \cdot DF = 0{,}2093$.
+
+</details>
+
+**2. Ters çevirme — birim PV01.** Annuity $A = 0{,}984$ verildiğinde 1 mn TRY nominalli OIS'in PV01'i kaç TL/bp'dir? Peki 1,16 mlr nominalin toplam PV01'i?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $PV01 = A \cdot N \times 10^{-4} = 0{,}984 \times 1.000.000 \times 10^{-4} = 98{,}4$ TL/bp.
+
+Adım 2 — 1,16 mlr için: $0{,}984 \times 1{,}16 \times 10^{9} \times 10^{-4} = 114.144$ TL/bp.
+
+Adım 3 — mutabakat: forward'ın sürekli DV01'i 114.395 TL/bp. Fark yuvarlamadan (%0,2).
+
+**Cevap:** 98,4 TL/bp per mn; 1,16 mlr için ≈ 114,1 bin TL/bp — hedge tutuyor.
+
+**Araçla doğrula:** *Forward–OIS hedge hesaplayıcısı*nda annuity ve PV01 satırlarını okuyun.
+
+</details>
+
+**3. Karar — bileşikleme farkını kim öder?** Yukarıdaki 91 günlük periyotta receiver 645.822 TL net ödedi. Bu bir zarar mıdır? Kitapta nasıl görünmeli?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — hayır, sürpriz değil: par OIS oranı bu bileşiklemeyi zaten fiyatlar; %45 sabit bacak burada **varsayımsal** olarak eşit alındı.
+
+Adım 2 — gerçek bir par OIS'te sabit oran, değişken bacağın bugünkü değerini tam karşılayacak seviyede kote edilir → başlangıçta $NPV = 0$ (5.1).
+
+Adım 3 — zarar ancak **gerçekleşen TLREF**, işlem anında fiyatlanan forward TLREF patikasından sapmışsa doğar. Bu bir görüş riskidir, mekanik değil.
+
+Adım 4 — kitapta: bileşikleme mekaniği **değerlemede**, sapma ise P&L variance'ın market data effect satırında görünür (2.6).
+
+**Cevap:** Zarar değil, mekanik. Zarar ölçüsü gerçekleşen ile fiyatlanan TLREF farkıdır.
+
+</details>
+
+</div>
+
+## 6 — Uygulamalı hedge: 20 mn forward'ı OIS ile delta-nötr yapmak
+
+Bu bölümde dersin tamamını tek zincirde birleştiririz: parametre → üç DV01 → sistem mutabakatı → hedge nominali → artık riskler → hedge'in çalışmadığı örnek.
+
+### 6.1 — Parametreler: vaka özeti ve türetilen büyüklükler
+
+Bölüm 1'deki tabloyu özetliyoruz: $N_{USD} = 20$ mn, $K = 70{,}35$, TRY bacak $= 1{,}407$ mlr, $t = 1{,}2822$, $DF_{TRY} = 0{,}63412$ (simple %45), $DF_{USD} = 0{,}95705$ (simple %3,50). Sürekli eşdeğer TRY zero $= \%35{,}53$.
+
+### 6.2 — Forward TRY DV01'i: üç konvansiyon, üç doğru cevap
 
 TRY bacağı tek bulletli bir zero-coupon bond'dur. Üç bump konvansiyonunda DV01:
 
@@ -335,7 +780,7 @@ TRY bacağı tek bulletli bir zero-coupon bond'dur. Üç bump konvansiyonunda DV
 
 Bu üç sayı yanlış değil; **farklı soruların doğru cevaplarıdır.** "Simple par kotasyonu 1 bp oynarsa" sorusu 72,5k'yı, "sürekli zero eğriyi 1 bp bump'larsam" sorusu 114,4k'yı verir. Sorunun kendisi belirlenmeden cevabın doğruluğu tartışılamaz.
 
-### 5.3 Sistem çıktısıyla mutabakat — "neden 110k?"
+### 6.3 — Sistem mutabakatı: rapor neden 110k diyor, kalan %3 nereden?
 
 Kurumsal risk sistemi TRY DISC satırında yaklaşık **110k** gösteriyor. Bu, sürekli zero bump sonucumuz olan 114,4k'ya oturur. Kalan yaklaşık **%3**'lük fark üç kaynaktan gelir: eğrinin gerçekte düz %45 olmaması (pillar yapısı ve eğim), log-lineer interpolasyon, ve gün sayımı / valör incelikleri. Yani sistem "yanlış" değil; bizim düz-eğri elle-hesabımız bir yaklaşımdı, sistem gerçek eğriyi kullanıyor. Mutabakatın doğru okunuşu şudur: **mertebe ve konvansiyon tutuyorsa mutabakat sağlanmıştır**; son basamağı kovalamak yerine farkın kaynağını isimlendirebilmek yeterlidir.
 
@@ -349,7 +794,7 @@ Kurumsal risk sistemi TRY DISC satırında yaklaşık **110k** gösteriyor. Bu, 
 - TRY eğrisinin rate type'ına bakın $\to$ Exponential (sürekli) ACT/365 mi?
 - Sensitivity tanımında bump zero curve'e mi, yoksa market quote'a mı uygulanıyor?
 
-### 5.4 USD bacağının kendi DV01'i
+### 6.4 — USD bacağının DV01'i: 116k ile 114k'nın tehlikeli yakınlığı
 
 USD bacağı da tek bulletli bir zero'dur; $N = 20$ mn USD, $DF_{USD} = 0{,}95705$. Sürekli bump ile:
 
@@ -360,7 +805,7 @@ TL karşılığı (display currency TRY, $S = 47{,}50$): $2.454 \times 47{,}50 \
 
 Bu $\approx 116$k, TRY DV01'imiz $\approx 114$k'ya **tehlikeli derecede yakındır** — 6.3'teki tesadüfi çakışma tuzağının kaynağı budur. İki sayı iki ayrı riski temsil eder: 116k USD faiz eğrisine, 114k TRY faiz eğrisine duyarlılıktır. Ayrı raporlanır, ayrı hedge edilir. Klasik masa hatası, USD satırını TRY satırıyla karıştırıp aynı riski iki kez saymak — veya birini hiç saymamaktır.
 
-### 5.5 Hedge yönü ve nominal eşitleme (hedge ratio)
+### 6.5 — Hedge nominali: forward DV01'ini OIS PV01'ine çevirmek
 
 Forward'ın TRY DV01'i pozitif $\to$ **receiver OIS** (sabit al, TLREF öde). Gerekli nominal:
 
@@ -391,15 +836,15 @@ Aşağıdaki araç bu zinciri uçtan uca kurar: konvansiyon seçimi $\to$ forwar
 
 <ForwardOisHedgeHesaplayici />
 
-### 5.6 Artık risk 1: Basis
+### 6.6 — Artık risk 1 · basis: iki eğri ayrışınca nötr kitap ne yapar?
 
 Forward FX-swap implied TRY eğrisinden, OIS ise TLREF eğrisinden fiyatlanır (Bölüm 2.5). Faiz seviyesini nötrlediniz ama bu iki eğrinin **arasının** (cross-currency / TLREF basis) hareketine açıksınız. Basis 10 bp açılırsa, hedge'in net DV01'i sıfır olsa bile net MtM oynar — çünkü forward bir eğriden, hedge başka bir eğriden değerlenir. Net DV01'in sıfır olması, iki eğrinin **birlikte** hareket ettiği varsayımına dayanır; basis tam da bu varsayımın bozulmasıdır.
 
 Bu riski görünür kılmak için basis'i ayrı bir sensitivity faktörü olarak bucket'layın; TRY'de basis, G10'a kıyasla büyük ve oynak olabildiğinden ihmal edilecek bir kalem değildir.
 
-### 5.7 Artık risk 2: Nakit akışı uyuşmazlığı / konveksite
+### 6.7 — Artık risk 2 · konveksite: akış takvimi uyuşmazlığının bedeli
 
-Forward **tek ödemelidir** (01.11.2027'de tek bullet). Standart OIS ise **her çeyrek uzlaşır.** Ara dönemlerde OIS zarar yazarsa bu MtM zararını fonlamanız, kâr yazarsa yeniden yatırmanız gerekir — ve bu fonlama / yeniden-yatırım oranı belirsizdir. Bu, klasik **convexity bias / funding of MTMs** etkisidir: mükemmel DV01 eşleşmesine rağmen, akış takviminin uyuşmaması ikinci-derece bir P&L sızıntısı yaratır.
+Forward **tek ödemelidir**: bütün nakit akışı vade gününde, tek bullet olarak gerçekleşir (vakamızda 01.11.2027 — çıpa kutusuna bakın). Standart OIS ise **her çeyrek uzlaşır.** Ara dönemlerde OIS zarar yazarsa bu MtM zararını fonlamanız, kâr yazarsa yeniden yatırmanız gerekir — ve bu fonlama / yeniden-yatırım oranı belirsizdir. Bu, klasik **convexity bias / funding of MTMs** etkisidir: mükemmel DV01 eşleşmesine rağmen, akış takviminin uyuşmaması ikinci-derece bir P&L sızıntısı yaratır.
 
 Büyüklük hissi için: forward'ın konveksitesi (sürekli, tek bullet) $N \cdot t^{2} \cdot DF \times 10^{-8}$ mertebesindedir; vakamızda yaklaşık **14,7 TL/bp²**. 50 bp'lik paralel bir hareket için ikinci-derece etki:
 
@@ -410,7 +855,7 @@ OIS'in kendi konveksitesi bunun bir kısmını dengeler; net artık, birinci-der
 
 <div class="not"><span class="etiket">Çözüm: Zero-Coupon OIS</span> Standart OIS yerine tek ödemeli bir <strong>Zero-Coupon OIS</strong> kullanın — tek-bulletli yapısı forward'ın vade-sonu ödemesiyle birebir örtüşür, ara nakit akışı olmaz, konveksite/fonlama sapması büyük ölçüde ortadan kalkar. Trade-off: ZC-OIS likiditesi standart OIS'ten düşüktür, dolayısıyla giriş/çıkış maliyeti (bid/ask) daha yüksek olabilir. Karar, taşınacak sürenin uzunluğuna bakar: kısa taşımada bid/ask baskın, uzun taşımada konveksite sızıntısı baskındır.</div>
 
-### 5.8 Hedge sonrası P&L ve kalan risk özeti
+### 6.8 — Hedge sonrası P&L: senaryo tablosu ve kalan dört risk
 
 Delta-nötr receiver OIS ($\approx 1{,}16$ mlr) kurulduğunda, TRY faiz eğrisindeki paralel kaymalara karşı forward ile OIS birbirini **birinci derecede** götürür. İllüstratif senaryo (basis sabit varsayımıyla):
 
@@ -430,9 +875,125 @@ Tablo birinci-derece nötrlüğü gösterir; net kalıntı konveksite (Bölüm 6
 
 "TRY DV01'i nötrledim" demek, "tüm riski nötrledim" demek değildir. Hedge, riski yok etmez; onu daha küçük, daha iyi anlaşılan ve daha ucuz taşınan bir riske dönüştürür.
 
-## 6. Yaygın Hatalar ve Kontrol Listesi
+### 6.9 — Kaybeden vaka: delta-nötr kitabın para kaybettiği hafta
 
-Bu bölüm, ders boyunca işaretlenen tuzakların masada kullanılacak bir kontrol listesidir.
+Ders boyunca hedge'in çalıştığı hâli gördük. Şimdi çalışmadığı hâli — çünkü bir yöntemin sınırını bilmeden o yöntem kullanılamaz. Aşağıdaki senaryo illüstratiftir; amaç büyüklük mertebesini ve teşhis sırasını göstermektir.
+
+**Kurulum.** Kitap 6.5'e göre kurulmuş: long 20 mn USD forward + 1,16 mlr TRY receiver OIS. Net TRY DV01 ≈ 0. Bir hafta içinde üç şey aynı anda oluyor.
+
+**Olay 1 — TLREF OIS eğrisi 40 bp yükseliyor, FX-implied TRY eğrisi sabit kalıyor.** Yani basis 40 bp daralıyor (6.6).
+
+- Receiver OIS'in kaybı: $114.144 \times 40 = 4{,}566$ mn TL zarar.
+- Forward'ın kazancı: FX-implied eğri kıpırdamadığı için **sıfır**.
+- Net: **−4,57 mn TL.** Net DV01 defterde sıfır, P&L eksi.
+
+Bu, "delta-nötr" kelimesinin tam olarak neyi vaat edip neyi etmediğini gösterir: iki eğrinin **birlikte** hareket edeceğini vaat eder. Ayrıştıkları gün nötrlük yoktur.
+
+**Olay 2 — spot 47,50'den 52,00'ye gidiyor.** FX delta hedge edilmemişti (6.8, madde 4).
+
+- FX delta $\approx N_{USD} \times DF_{USD} = 20 \text{ mn} \times 0{,}95705 = 19{,}14$ mn USD.
+- P&L $\approx 19{,}14 \text{ mn} \times (52{,}00 - 47{,}50) = +86{,}1$ mn TL.
+
+Bu kalem **lehinize** çıktı; ama planlanmış bir görüş değildi. Kazanç da kayıp kadar tehlikelidir: hedge'in çalıştığı sanılır, oysa çalışan şey hedge değil, hedge edilmemiş bir yön riskidir.
+
+**Olay 3 — OIS'in çeyreklik uzlaşması geliyor.** 5.5'teki mekanikle receiver, dönem net ödemesini nakden yapar. Forward'dan hiçbir nakit gelmez (tek bullet, vade sonunda). Fonlama ihtiyacı doğar; fonlama oranı TLREF'in üzerindeyse bu, 6.7'deki konveksite/fonlama sızıntısının **gerçekleşmiş** hâlidir.
+
+**Teşhis sırası (bu sırayla bakın).**
+
+1. **Net DV01 gerçekten sıfır mıydı?** Her iki bacağı da aynı sensitivity tanımında yeniden ölçün (3.3). Değilse sorun basis değil, ölçüm dilidir.
+2. **İki eğri ayrı mı hareket etti?** TLREF OIS ile FX-implied TRY overnight'ı yan yana koyun. Ayrıştıysa kayıp basis kalemidir — beklenen ve bütçelenmesi gereken bir kalem.
+3. **Spot ne yaptı?** FX delta P&L'i ayrı satırda izole edin; faiz P&L'i ile karıştırmayın.
+4. **Nakit akışı takvimi ne yaptı?** Ara uzlaşma olduysa fonlama maliyetini time effect satırından okuyun.
+5. **Artık ne kaldı?** Dördünün toplamı ile gerçek $\Delta PV$ arasındaki fark unexplained'dir; büyükse kurulumda hata vardır (2.6).
+
+**Tezin geçersizleştiği yer.** "OIS ile TRY faiz riskini kapattım" tezi şu üç işaretten biri görüldüğünde çöker ve pozisyon yeniden kurulmalıdır: (i) basis tarihsel bandının dışına çıkıyor ve trend hâline geliyor; (ii) FX-implied TRY eğrisi ile TLREF OIS eğrisi arasında likidite kopuyor, yani hedge'i ayarlamak için gereken enstrüman kotasyonu genişliyor; (iii) pozisyonun vadesi kısalıp OIS'in kalan kupon sayısı azaldıkça annuity ile bullet duyarlılığı arasındaki oran bozuluyor — o noktada nominal yeniden boyutlanmalı, aksi hâlde hedge yavaşça kayar.
+
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 6 · Uçtan uca hedge</span>
+
+**1. Doğrudan uygulama — yarım pozisyon.** İşlem 20 mn USD yerine 10 mn USD olsaydı ($K$, vade, eğri aynı), sürekli konvansiyonda TRY DV01'i ve gereken receiver OIS nominali ne olurdu?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — taban: $N_{TRY} = 10 \text{ mn} \times 70{,}35 = 703{,}5$ mn TRY.
+
+Adım 2 — DV01: $703{,}5 \times 10^{6} \times 1{,}2822 \times 0{,}63412 \times 10^{-4} = 57.198$ TL/bp (tam yarısı — DV01 nominalde **doğrusaldır**).
+
+Adım 3 — hedge: $57.198 / 98{,}4 = 581{,}3$ mn TRY receiver.
+
+Adım 4 — sağlama: $1.167/2 = 583{,}5$ mn; yuvarlama farkı.
+
+**Cevap:** ≈ 57,2 bin TL/bp; ≈ 581 mn TRY receiver OIS.
+
+**Araçla doğrula:** *Forward–OIS hedge hesaplayıcısı*nda nominali 10 mn yapıp "gerekli OIS nominali" satırını okuyun.
+
+</details>
+
+**2. Ters çevirme — basis şoku kaç para?** Delta-nötr kitapta TLREF OIS eğrisi 10 bp yükselirken FX-implied TRY sabit kalırsa net P&L nedir? Ya 25 bp'de?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — OIS bacağı: receiver, faiz artışında kaybeder → $-114.144 \times 10 = -1{,}141$ mn TL.
+
+Adım 2 — forward bacağı: değerlendiği eğri kıpırdamadı → 0.
+
+Adım 3 — net: **−1,14 mn TL** (10 bp), **−2,85 mn TL** (25 bp). Doğrusal, çünkü basis birinci derece bir kalemdir.
+
+Adım 4 — karşılaştırma: aynı 25 bp paralel (her iki eğri birlikte) hareketinde net ≈ 0 olurdu (6.8 tablosu). Fark tamamen **eğrilerin birlikte mi ayrı mı** hareket ettiğinden geliyor.
+
+**Cevap:** −1,14 mn / −2,85 mn TL. Basis, DV01 nötrlüğünün kör noktasıdır.
+
+</details>
+
+**3. Karar — standart OIS mi ZC-OIS mi?** Pozisyonu vadeye kadar (yaklaşık 1,28 yıl, beş uzlaşma) taşıyacaksınız. Konveksite/fonlama sızıntısının mertebesini hesaplayın ve ZC-OIS'in daha geniş bid/ask'ıyla karşılaştırarak karar verin.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — konveksite: $N t^2 DF \times 10^{-8} = 1{,}407 \times 10^{9} \times 1{,}6440 \times 0{,}63412 \times 10^{-8} = 14{,}67$ TL/bp².
+
+Adım 2 — 50 bp'lik hareket: $\tfrac12 \times 14{,}67 \times 50^2 = 18.338$ TL. 100 bp'de: $\tfrac12 \times 14{,}67 \times 100^2 = 73.350$ TL.
+
+Adım 3 — birinci dereceyle kıyas: 50 bp'de birinci derece 5,72 mn TL → konveksite oranı $18.338/5.720.000 = \%0{,}32$ (binde 3).
+
+Adım 4 — karar çerçevesi: taşıma uzun ve eğri oynaksa (birden çok 100 bp'lik salınım) sızıntı birikir → ZC-OIS. Taşıma kısa ve tek girişlikse bid/ask baskındır → standart OIS.
+
+Adım 5 — nicelik: ZC-OIS'in ek bid/ask maliyeti 114.144 TL/bp $\times$ ek spread (bp) olarak hesaplanır; 1 bp ek spread ≈ 114 bin TL. Yani ek spread 1 bp'yi aşıyorsa, 100 bp'lik tek bir salınımın konveksite kazancı (73 bin TL) bunu karşılamaz.
+
+**Cevap:** Bu vadede ve bu boyutta standart OIS makul; sızıntı binde 3 mertebesinde. ZC-OIS ancak ek spread ~0,5 bp'nin altındaysa kazandırır.
+
+</details>
+
+**4. Tuzak — "netleyeyim" refleksi.** Bir junior, USD bacağı DV01'ini (≈ 116k TL/bp, negatif) TRY bacağıyla (≈ +114k) netleyip "net risk 2k, hedge'e gerek yok" diyor. Nerede yanlış, ne kadar risk açıkta kalır?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — iki sayı iki ayrı eğriye aittir: 114k TRY OIS eğrisine, 116k USD SOFR eğrisine (2.2, 4.4).
+
+Adım 2 — netleme ancak iki eğri **birebir birlikte** hareket ederse geçerli olurdu; TRY ve USD faizleri bağımsızdır.
+
+Adım 3 — senaryo: TRY +50 bp, USD −20 bp aynı hafta. TRY bacağı $+114.395 \times 50 = +5{,}72$ mn; USD bacağı $-116.580 \times (-20) = +2{,}33$ mn → toplam +8,05 mn. Ters senaryoda ($-50$/$+20$) $-8{,}05$ mn.
+
+Adım 4 — yani "net 2k" sanılan pozisyon, tek bir haftada ±8 mn TL oynayabilir.
+
+Adım 5 — doğrusu: iki risk ayrı bucket, ayrı enstrüman — TRY tarafı receiver OIS, USD tarafı SOFR swap veya kitap içi doğal netleşme.
+
+**Cevap:** Netleme geçersiz; açıkta kalan gerçek risk her iki DV01'in **kendisi** kadardır, farkı kadar değil.
+
+</details>
+
+</div>
+
+## 7 — Masa kontrol listesi: hangi hata nerede yakalanır?
+
+Bu bölümde dersin tamamını tek sayfalık denetim rutinine indirger, sıfırdan delta-nötre giden on adımlık prosedürü ve sistem konfigürasyonu kontrolünü veririz.
+
+### 7.1 — Yedi tuzak: her birinin belirtisi, teşhisi ve panzehiri
+
+Bu liste, ders boyunca işaretlenen tuzakların masada kullanılacak hâlidir.
 
 **1. USD bacak DV01'ini TRY DV01 sanmak.** Display currency TRY iken USD satırı da TL görünür; vakamızda $\approx 116$k ile TRY'nin $\approx 114$k'sına yakın. Her zaman curve kolonunu kontrol edin, sayıya güvenmeyin.
 
@@ -448,7 +1009,24 @@ Bu bölüm, ders boyunca işaretlenen tuzakların masada kullanılacak bir kontr
 
 **7. Basis ve konveksiteyi "sıfır" saymak.** TRY'de FX-implied vs TLREF basis büyük olabilir; standart OIS ile hedge'de nakit akışı uyuşmazlığı birikir. Ayrı bucket'layın.
 
-#### Risk sistemi hızlı kontrol listesi
+### 7.2 — Hedge kurma prosedürü: sıfırdan delta-nötre on adım
+
+Bu, yukarıdaki tuzakların hepsini yapısal olarak devre dışı bırakan işlem sırasıdır. Sıra önemlidir: her adım bir öncekinin çıktısını denetler.
+
+1. **İşlem künyesini dondur.** $N_{USD}$, $K$, vade, valör konvansiyonu. $K$'yı işlem teyidinden okuyun, sistemden değil — sistem bazen güncel forward'ı gösterir (4.3).
+2. **Gün kesirlerini ayrı ayrı çıkar.** TRY için ACT/365, USD için ACT/360. Tek hücreyi iki bacağa beslemek %1,4'lük sessiz bir sapmadır (2.8).
+3. **İki $DF$'yi kendi eğrisinden üret.** $DF_{TRY}$ TLREF OIS eğrisinden, $DF_{USD}$ SOFR'dan. Hangi eğriden geldiğini not düşün — 6.6'daki basis kalemi buradan doğar.
+4. **Üç eşdeğer zero'yu hesapla** (1.2). Aynı $DF$'yi vermiyorlarsa dur; ileri gitme.
+5. **Braketi kur.** $[\,N t DF^2;\ N t DF\,] \times 10^{-4}$. Bu, kabul edilebilir DV01 aralığıdır; her sonraki sayı bu aralığın içinde olmalı (3.5).
+6. **Sensitivity tanımını yaz.** Zero-curve bump mı, market-quote bump mı; hangi konvansiyonda. Bu cümleyi yazmadan hedge kurmayın — 3.3'ün tamamı bu adımdır.
+7. **Forward DV01'ini o tanımda hesapla**, hem TRY hem USD bacağı için, **ayrı satırlarda**. Toplamayın (4.4).
+8. **Sistemle mutabık ol.** Braket + nominal geri-çözme; mertebe ve konvansiyon tutuyorsa mutabakat tamamdır, son basamağı kovalamayın (6.3).
+9. **Yönü ampirik doğrula.** Eğriyi +1 bp kaydır, P&L'in yönüne bak; receiver/payer kararını **oradan** al, etiketten değil (5.4, 4.3 pratik 4).
+10. **OIS PV01'ini aynı tanımda ölç, nominali böl, artıkları listele.** $N_{OIS} = DV01_{fwd}/PV01_{birim}$; sonra kalan dört kalemi (basis, konveksite, USD faizi, FX delta) ayrı bucket'lara yaz (6.8).
+
+**Sonrası — günlük rutin.** Her gün üç satır okunur: (i) net TRY DV01 hâlâ sıfır mı; (ii) basis nerede, bandın içinde mi; (iii) P&L variance'ın unexplained satırı küçük mü. Üçü de yeşilse hedge çalışıyordur. Biri kırmızıysa 6.9'daki teşhis sırasını uygulayın.
+
+### 7.3 — Risk sistemi hızlı kontrol listesi: konfigürasyonda ne aranır
 
 - Eğri rate type: Exponential / Continuous ACT/365 mi?
 - İnterpolasyon: log-lineer (log-$DF$) mi?
@@ -457,7 +1035,48 @@ Bu bölüm, ders boyunca işaretlenen tuzakların masada kullanılacak bir kontr
 - Display currency ve FX-implied TRY vs TLREF-OIS eğri ayrımı doğru mu?
 - Bump size (1 bp) ve paralel mi, pillar-bazlı mı uygulanıyor?
 
-## Ek A — Formül Kağıdı
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 7 · Teşhis</span>
+
+**1. Teşhis — üç satırlık rapor.** Bir risk raporu şu üç satırı basıyor: `TRY DISC: 110.000`, `USD SOFR: 116.580`, `FX delta: 19.141.000 USD`. Pozisyon ana vakamız. Her satırın hangi formülden geldiğini gösterin ve hangisinin hangi enstrümanla kapatılacağını yazın.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — `TRY DISC: 110.000`: braket $[72.543;\ 114.395]$ içinde, üst uca yakın → sürekli zero bump. Kalan %3 eğri eğimi ve interpolasyondan (6.3). Kapatma: **receiver TLREF OIS**, $110.000/98{,}4 = 1.118$ mn TRY.
+
+Adım 2 — `USD SOFR: 116.580`: $N_{USD} t DF_{USD} \times 10^{-4} \times S = 20 \text{ mn} \times 1{,}2822 \times 0{,}95705 \times 10^{-4} \times 47{,}50 = 116.580$ TL/bp. Kapatma: **pay-fixed SOFR swap** ya da kitap içi doğal netleşme (6.4).
+
+Adım 3 — `FX delta: 19.141.000 USD`: $N_{USD} \times DF_{USD} = 20 \text{ mn} \times 0{,}95705 = 19{,}141$ mn USD. Faiz riskinden bağımsız; kapatma **spot/forward FX** ile (6.8, madde 4).
+
+Adım 4 — yasak: bu üç sayının hiçbiri diğeriyle toplanmaz veya netlenmez.
+
+**Cevap:** Sırasıyla TRY faiz, USD faiz ve FX riski; üç ayrı bucket, üç ayrı enstrüman.
+
+</details>
+
+**2. Tuzak — mutabakat yapılmadan hedge.** Bir masa 7.2'nin 6. adımını (sensitivity tanımını yazmak) atlayıp doğrudan 10. adıma geçiyor ve raporun bastığı 110.000'i OIS'in simple ölçekli PV01'ine bölüyor. Hangi tuzaklara aynı anda düşülür, kitapta ne kalır?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — düşülen tuzaklar: 2 numara (kotasyon ile bump konvansiyonunu karıştırmak) ve 5 numara (forward ile OIS'i farklı tanımda eşlemek).
+
+Adım 2 — nominal: forward sürekli dilde (110.000) ama OIS simple ölçekte alınırsa hedge nominali $110.000 / (98{,}4 / 1{,}577) = 110.000/62{,}4 = 1.763$ mn TRY — gereğinden **%51 fazla**.
+
+Adım 3 — gerçek net DV01: $110.000 - 1.763 \times 98{,}4 = 110.000 - 173.479 = -63.479$ TL/bp, **ters yönde**.
+
+Adım 4 — 50 bp'lik harekette: $63.479 \times 50 = 3{,}17$ mn TL beklenmedik P&L.
+
+Adım 5 — panzehir: 5. adımdaki braket ve 6. adımdaki tek cümlelik tanım yazımı. İkisi 30 saniye alır, bu hatayı imkânsız kılar.
+
+**Cevap:** ≈ 63,5 bin TL/bp ters açık; 50 bp'de ≈ 3,17 mn TL. Prosedürün sırası estetik değil, denetimdir.
+
+</details>
+
+</div>
+
+## Ek A — Formül kâğıdı: tek sayfada bütün türetmeler
 
 **İskonto faktörü**
 
@@ -504,7 +1123,32 @@ $$
 $$
 N_{OIS} = \frac{DV01_{fwd}}{PV01_{OIS,\,\text{birim}}}
 $$
-## Ek B — Python ile Yeniden Üretim (numpy)
+
+**Konveksite (tek bullet, sürekli)**
+
+$$
+C = N\,t^{2}\,DF \times 10^{-8}, \qquad \Delta PV_{2.\text{derece}} = \tfrac{1}{2}\,C\,(\Delta r)^{2}
+$$
+
+**TLREF bileşiklemesi (bir periyot)**
+
+$$
+\text{değişken bacak} = N\left[\prod_{i=1}^{n}\left(1+\frac{TLREF_i}{365}\right) - 1\right], \qquad
+z_{simple\ eşdeğer} = \left(\prod_i - 1\right)\frac{365}{n}
+$$
+
+**DV01 braketi (sağlama)**
+
+$$
+N\,t\,DF^{2} \times 10^{-4} \;\le\; DV01 \;\le\; N\,t\,DF \times 10^{-4}
+$$
+
+**Nominal geri-çözme (teşhis)**
+
+$$
+N_{ima} = \frac{DV01}{t \cdot DF \times 10^{-4}} \qquad \text{(sürekli tanımda)}
+$$
+## Ek B — Python ile yeniden üretim: vakanın tamamı 30 satırda
 
 ```python
 import numpy as np
@@ -552,16 +1196,16 @@ hedge_notional = dv01_cont / pv01_per_1mn * 1e6     # ~1,16 mlr TRY
 # çekilen gerçek iskonto eğrisinden türet (kendi bootstrap'inle).
 ```
 
-## Ek C — Excel ile Aynı Hesap
+## Ek C — Excel ile aynı hesap: hücre hücre karşılıklar
 
-- `DF_try = 1/(1+0,45*t)` ; `t = (TARİH(2027;11;1) − valör)/365`
+- `DF_try = 1/(1+0,45*t)` ; `t = (vade − valör)/365` — vaka için `t = (TARİH(2027;11;1) − valör)/365`; kendi vadenizle değiştirin
 - Sürekli DV01: `=N_try*t*DF_try*0,0001`
 - Simple DV01: `=N_try*t*DF_try^2*0,0001`
 - Forward: `=S*DF_usd/DF_try` ; MtM: `=N_usd*(F−K)*DF_try`
 - OIS annuity: çeyreklik `ÇARPIMTOPLA(tau_aralık; DF_aralık)`
 - Hedge nominali: `=dv01_cont/(annuity*0,0001)/1e6`
 
-## Ek D — Sözlük
+## Ek D — Sözlük: derste geçen on beş terim
 
 | Terim | Açıklama |
 |---|---|
@@ -575,8 +1219,13 @@ hedge_notional = dv01_cont / pv01_per_1mn * 1e6     # ~1,16 mlr TRY
 | Bullet | Tek ödemeli nakit akışı |
 | Annuity ($A$) | Akış-ağırlıklı iskonto faktörleri toplamı, $\sum \tau \cdot DF$ |
 | Aged / off-market | Kuru piyasadan sapmış eski işlem |
+| Braket | DV01'in olabileceği alt–üst sınır: $[N t DF^2;\ N t DF] \times 10^{-4}$ |
+| Konveksite ($C$) | İkinci derece faiz duyarlılığı, $N t^{2} DF \times 10^{-8}$ |
+| P&L variance | Günlük PV değişimini time / market data / new deal efektlerine bölen modül |
+| Unexplained | Efekt toplamı ile gerçek $\Delta PV$ arasındaki açıklanamayan kalıntı |
+| Dual-curve | Her bacağın kendi bağımsız eğrisiyle iskontolanması |
 
-## Ek E — Risk sistemi konfigürasyon kontrol listesi
+## Ek E — Sistem konfigürasyonu: kurulum denetim listesi
 
 - TRY eğrisi rate type (Exponential / Continuous ACT/365 mi?)
 - İnterpolasyon (log-lineer $DF$ mi?)

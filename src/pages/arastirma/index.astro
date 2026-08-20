@@ -1,35 +1,110 @@
 ---
-import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import KayitKarti from '../../components/KayitKarti.astro';
+import DersKarti from '../../components/DersKarti.astro';
+import { dersleriTopla } from '../../lib/dersListesi';
+import { kelimeYaz } from '../../lib/ders';
 
-const arastirmalar = (await getCollection('arastirma'))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .sort((a, b) => (a.data.durum === 'arsiv' ? 1 : 0) - (b.data.durum === 'arsiv' ? 1 : 0));
+const { gruplar, toplam } = await dersleriTopla();
+
+// Sayfa başındaki künye şeridi — hepsi derleme anında sayıldı.
+const kunye = [
+  { deger: String(toplam.ders), etiket: 'Ders' },
+  { deger: toplam.sure, etiket: 'Toplam okuma', alt: kelimeYaz(toplam.kelime) },
+  { deger: String(toplam.grafik), etiket: 'Grafik' },
+  { deger: String(toplam.arac), etiket: 'Hesap aracı' },
+  { deger: String(toplam.pratik), etiket: 'Pratik bloğu', alt: `${toplam.alistirma} alıştırma` },
+];
+
+// Grup içi kart numaraları hat boyunca ilerlesin diye tek sayaç.
+let sayac = 0;
 ---
 
-<Base title="Araştırma" description="Faiz, kur ve makro üzerine derinlemesine araştırma notları.">
+<Base
+  title="Araştırma"
+  description="Faiz, kur, opsiyon ve teknik analiz üzerine ders formatında araştırma notları — konu gruplarına ayrılmış, okuma süresi ve içerik ölçüleriyle."
+>
   <header class="liste-baslik yuksel">
     <p class="etiket kicker">02 — Bölüm</p>
     <h1>Araştırma</h1>
     <p class="alt">
-      Piyasa mekaniği üzerine daha uzun soluklu notlar: metodoloji, formüller ve
-      okurken denenebilen hesap araçları bir arada.
+      Piyasa mekaniği üzerine ders formatında uzun notlar: önce teori ve türetim, sonra
+      gerçek verilerle adım adım sayısal hesap. Her ders kendi başına okunabilir; aynı
+      konu grubundakiler ise birbirinin üstüne kurulur.
     </p>
+
+    <div class="kunye" aria-label="Araştırma bölümünün künyesi">
+      {
+        kunye.map((k) => (
+          <div class="kunye-hucre">
+            <span class="kunye-deger">{k.deger}</span>
+            <span class="kunye-etiket etiket">{k.etiket}</span>
+            {k.alt && <span class="kunye-alt">{k.alt}</span>}
+          </div>
+        ))
+      }
+    </div>
   </header>
-  <div class="kayit-izgara">
-    {
-      arastirmalar.map((a, i) => (
-        <KayitKarti href={`/arastirma/${a.id}/`} sira={i + 1} gecikme={i * 60} {...a.data} />
-      ))
-    }
-  </div>
+
+  <nav class="konu-haritasi yuksel" style="--d: 80ms" aria-label="Konu grupları">
+    <span class="etiket harita-baslik">Konu haritası</span>
+    <ul>
+      {
+        gruplar.map((g) => (
+          <li>
+            <a href={`#${g.grup.id}`}>
+              <span class="harita-no">{g.grup.no}</span>
+              <span class="harita-ad">{g.grup.baslik}</span>
+              <span class="harita-sayi">
+                {g.dersler.length} ders · {g.toplamSure}
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  {
+    gruplar.map((g, gi) => (
+      <section class="grup" id={g.grup.id}>
+        <div class="bolum-baslik yuksel" style={`--d: ${120 + gi * 40}ms`}>
+          <span class="no">{g.grup.no}</span>
+          <h2>{g.grup.baslik}</h2>
+          <span class="tumu grup-olcu">
+            {g.dersler.length} ders · {g.toplamSure}
+          </span>
+        </div>
+        <p class="grup-aciklama yuksel" style={`--d: ${140 + gi * 40}ms`}>
+          {g.grup.aciklama}
+          {g.grup.hat && (
+            <b class="hat-notu"> Yukarıdan aşağıya okunmak üzere sıralandı.</b>
+          )}
+        </p>
+        <div class="ders-izgara">
+          {g.dersler.map((d, i) => (
+            <DersKarti
+              href={d.href}
+              sira={++sayac}
+              title={d.data.title}
+              ozet={d.data.ozet}
+              description={d.data.description}
+              tags={d.data.tags}
+              durum={d.data.durum}
+              seviye={d.data.seviye}
+              olcum={d.olcum}
+              onkosullar={d.onkosullar}
+              gecikme={160 + gi * 40 + i * 50}
+            />
+          ))}
+        </div>
+      </section>
+    ))
+  }
 </Base>
 
 <style>
   .liste-baslik {
-    padding: 3rem 0 2.2rem;
-    max-width: 52ch;
+    padding: 3rem 0 1.6rem;
   }
   .kicker {
     color: var(--claret);
@@ -48,5 +123,136 @@ const arastirmalar = (await getCollection('arastirma'))
     font-size: 1.08rem;
     color: var(--ink-70);
     margin: 0;
+    max-width: 58ch;
+  }
+
+  /* ── Bölüm künyesi ─────────────────────────────────────── */
+  /* Şerit: esnek hücreler; satır kayarsa hücreler büyüyüp boşluk bırakmaz. */
+  .kunye {
+    margin-top: 1.8rem;
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+    border: 1px solid var(--ink-30);
+    border-left: 3px solid var(--claret);
+    background: var(--paper-2);
+    max-width: 760px;
+  }
+  .kunye-hucre {
+    flex: 1 1 8rem;
+    padding: 0.7rem 0.9rem 0.75rem;
+    border-right: 1px solid var(--ink-15);
+    border-bottom: 1px solid var(--ink-15);
+    margin: 0 -1px -1px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+  }
+  .kunye-deger {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.15;
+  }
+  .kunye-etiket {
+    color: var(--claret);
+    font-size: 0.625rem;
+  }
+  .kunye-alt {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--ink-50);
+  }
+
+  /* ── Konu haritası ─────────────────────────────────────── */
+  .konu-haritasi {
+    margin: 2.4rem 0 0;
+    border-top: 1px solid var(--ink);
+    padding-top: 0.7rem;
+  }
+  .harita-baslik {
+    color: var(--claret);
+    display: block;
+    margin-bottom: 0.7rem;
+  }
+  .konu-haritasi ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.4rem 2rem;
+  }
+  .konu-haritasi a {
+    display: block;
+    text-decoration: none;
+    padding: 0.4rem 0 0.5rem;
+    border-bottom: 1px solid var(--ink-15);
+  }
+  .konu-haritasi a:hover {
+    border-bottom-color: var(--claret);
+  }
+  .konu-haritasi a:hover .harita-ad {
+    color: var(--claret);
+  }
+  .harita-no {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--claret);
+    margin-right: 0.5rem;
+  }
+  .harita-ad {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 30;
+    font-size: 1.02rem;
+    font-weight: 560;
+    line-height: 1.25;
+    transition: color 0.15s ease;
+  }
+  .harita-sayi {
+    display: block;
+    margin-top: 0.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-50);
+  }
+
+  /* ── Gruplar ───────────────────────────────────────────── */
+  .grup {
+    scroll-margin-top: 2rem;
+  }
+  .grup-olcu {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-50);
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  .grup-aciklama {
+    max-width: 68ch;
+    margin: 0 0 1.7rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--ink-70);
+  }
+  .hat-notu {
+    font-weight: 600;
+    color: var(--claret);
+  }
+
+  .ders-izgara {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 0 2.5rem;
+  }
+  @media (max-width: 720px) {
+    .ders-izgara {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

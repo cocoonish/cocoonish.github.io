@@ -1,11 +1,14 @@
 ---
 title: 'Harmonik Patternler: Fibonacci Oranları, XABCD Kataloğu, PRZ ve İşlem Yönetimi'
-description: 'Gartley''den Carney''ye harmonik işlem çerçevesinin tamamı: Fibonacci oranlarının türetimi, retracement/extension/projeksiyon çizimi, Gartley–Bat–Alt Bat–Butterfly–Crab–Deep Crab–Shark–5-0–Cypher–AB=CD–Three Drives kataloğu, PRZ inşası ve teyidi, giriş/stop/hedef/R:R, adım adım pozisyon yönetimi, canlı tanıma karar ağacı, SMC köprüsü ve dürüst kanıt tartışması; ayrıca her pattern için dokuz adımlı işlem planı, ölçekli giriş, kaybeden senaryo çözümlemesi, RSI BAMM ve uyumsuzluk dereceleri, zaman analizi ve fraktal iç içe yapılar, 100 puanlık konfluens skoru, SMC birleşik modeli, tarayıcı algoritmasının sözde kodu ve repaint kanıtı, örneklem büyüklüğü aritmetiği ve TRY/BIST uyarlaması — 48 grafik üstünde.'
+description: 'Ders bittiğinde ekranda oluşmakta olan bir XABCD yapısını tanıyabilir, D''nin nerede tamamlanacağını önceden hesaplayabilir, PRZ''yi kurup giriş–stop–hedef–R:R planını yazabilir ve o planın kanıt değerini dürüstçe tartabilirsiniz. Gartley''den Carney''ye harmonik işlem çerçevesinin tamamı: Fibonacci oranlarının türetimi, retracement/extension/projeksiyon çizimi, Gartley–Bat–Alt Bat–Butterfly–Crab–Deep Crab–Shark–5-0–Cypher–AB=CD–Three Drives kataloğu, PRZ inşası ve teyidi, giriş/stop/hedef/R:R, adım adım pozisyon yönetimi, canlı tanıma karar ağacı, SMC köprüsü ve dürüst kanıt tartışması; ayrıca her pattern için dokuz adımlı işlem planı, ölçekli giriş, kaybeden senaryo çözümlemesi, RSI BAMM ve uyumsuzluk dereceleri, zaman analizi ve fraktal iç içe yapılar, 100 puanlık konfluens skoru, SMC birleşik modeli, tarayıcı algoritmasının sözde kodu ve repaint kanıtı, örneklem büyüklüğü aritmetiği ve TRY/BIST uyarlaması — 48 grafik ve 8 pratik bloğu (24 alıştırma) üstünde. Rehber metni takvimden bağımsızdır: kural ve katalog cümlelerinde ay adı/yıl kullanılmaz, tarihli sayılar yalnız gerçek-veri vakalarında ve çıpa ibaresiyle geçer.'
 pubDate: 2026-08-19
-updatedDate: 2026-08-19
+updatedDate: 2026-08-20
 tags: ['harmonik', 'fibonacci', 'gartley', 'bat', 'butterfly', 'crab', 'prz', 'fiyat-aksiyonu', 'ders', 'teknik-analiz']
 durum: 'aktif'
 kaynak: 'Scott M. Carney (harmonictrader.com pattern sayfaları, Harmonic Trading Vol. 1–2), H.M. Gartley Profits in the Stock Market (1935), Larry Pesavento Fibonacci Ratios with Pattern Recognition (1997), Thomas Bulkowski thepatternsite.com istatistikleri, Tsinaslanidis–Guijarro–Voukelatos (2022, ESWA), Bhattacharya–Kumar (2006), CXO Advisory, StockCharts ChartSchool, LuxAlgo, Trendoscope ve TradingView (reees) tarayıcı dokümanları, Liberated Stock Trader / QuantifiedStrategies backtest notları; sentetik ve yfinance (XU100, BTC-USD, GC=F, EURUSD) verisiyle üretilmiş 48 grafik. Derinleştirme bölümleri (13–18) için ek kaynaklar: Carney Turning Patterns into Profits Bölüm 6 (RSI BAMM), StockCharts/Fidelity Fibonacci Time Zones, TradingView WillyAlgoTrader dört faktörlü puanlama, Trendoscope Max Depth dokümanı, crypto10kx açık kaynak tespit+backtest projesi, Trader Dale absorpsiyon/delta notları.'
+ozet: "Oluşmakta olan bir XABCD yapısını tanıyıp D'nin nerede tamamlanacağını önceden hesaplatır; PRZ'yi kurdurup giriş–stop–hedef–R:R planını ve o planın kanıt değerini yazdırır."
+seviye: "orta"
+onkosul: []
 ---
 
 import GrafikEmbed from '../../components/GrafikEmbed.astro';
@@ -13,6 +16,35 @@ import GrafikEmbed from '../../components/GrafikEmbed.astro';
 Harmonik pattern'ler, teknik analizin en "geometrik" ailesidir: beş pivotun (X, A, B, C, D) birbirine Fibonacci oranlarıyla bağlandığı, tamamlanma noktasının **önceden** hesaplanabildiği yapılar. Bu özellik onları diğer formasyonlardan ayırır — omuz-baş-omuzda boynu kırılmadan bir şey bilemezsiniz; harmonikte ise C oluştuğu anda D'nin *nerede* olması gerektiği bellidir. Bu ders o çerçeveyi eksiksiz öğretir: her oranın nereden geldiğini, her pattern'in kesin tanımını, PRZ'nin nasıl inşa edildiğini, girişten çıkışa pozisyonun nasıl taşındığını ve — en önemlisi — ekranda oluşurken nasıl tanınacağını, 48 grafik üstünde.
 
 Bölüm 1–12 çerçevenin kendisini kurar. Bölüm 13'ten itibaren ders bir adım daha atar ve çerçeveyi **uygulanabilir prosedüre** çevirir: her pattern için dokuz adımlı bir işlem planı (tarama, kontrol listesi, tetik, emirler, senaryo ağacı, "bu setup öldü" işaretleri, kaybeden örnek, sık hatalar), RSI BAMM'ın beş aşaması ve uyumsuzluğun üç derecesi, zamanın dördüncü boyut olarak kullanımı, konfluensin 100 puanlık skora dönüştürülmesi, SMC ile birleşik kural seti, bir tarayıcının sözde kodu ve repaint'in gerçek veriyle kanıtı, örneklem büyüklüğünün acımasız aritmetiği ve TRY/BIST'e özgü uyarlamalar.
+
+<div class="not gezinme">
+  <span class="etiket">Bu derste ne var</span>
+
+  **Amaç.** Ders bittiğinde ekranda *oluşmakta olan* bir XABCD yapısını tanıyabilir, D'nin nerede tamamlanacağını yapı daha bitmeden hesaplayabilir, PRZ'yi kurup giriş–stop–hedef–R:R planını sayıyla yazabilir ve o planın kanıt değerini abartmadan tartabilirsiniz.
+
+  **Yapı.** Ders **tek akış** hâlinde numaralandırılmıştır (Bölüm 1–18) ama iki katmanı vardır: **Bölüm 1–12 çerçeveyi kurar** (matematik → katalog → PRZ → işlem → kanıt), **Bölüm 13–18 çerçeveyi prosedüre çevirir** (pattern bazında plan, teyit derecelendirme, zaman, skor, tarayıcı, istatistik). Sırayla okunması tasarlanmıştır; ancak Bölüm 4 (katalog) ve Bölüm 13 (planlar) başvuru bölümüdür — bir kez okunur, sonra dönülür.
+
+  | Bölüm | Katman | Konu | Ne kazanırsın | Uzunluk |
+  |---|---|---|---|---|
+  | **1–2** | mantık | Fibonacci türetimi; tarihçe ve "neden çalışsın?" | her oranı ezberlemeden **türetebilmek**; iddiaların hangisinin ölçülebilir olduğunu ayırmak | ~10 dk |
+  | **3–4** | kavram + katalog | XABCD, PRZ, tolerans; 13 pattern'in kesin oran tabloları | B'ye bakıp aday listesini ikiye indirmek; PRZ'yi üç sayıdan kurmak | ~20 dk |
+  | **5–8** | uygulama | T-bar, teyit, Type I/II; giriş–stop–hedef–R:R; yönetim; başarısızlık | tamamlanmış bir yapıyı emir setine çevirmek ve ne zaman çıkacağını bilmek | ~15 dk |
+  | **9–11** | uygulama | canlı tanıma, karar ağacı, çoklu zaman dilimi, SMC köprüsü, 14 tipik hata | pattern *oluşurken* çizmek; PRZ'ye gelince ne yapacağını ezberden bilmek | ~10 dk |
+  | **12** | kanıt | akademik ve yarı bağımsız testler; gerçek veri taraması | "%70 kazanır" iddiasını doğru sorularla okumak | ~5 dk |
+  | **13** | uygulama | her pattern için dokuz adımlı plan, emir ızgarası, kaybeden örnek | aynı pattern'i her seferinde aynı sırayla işlemek | ~30 dk |
+  | **14–17** | uygulama | RSI BAMM, uyumsuzluk dereceleri, zaman katmanı, 100 puanlık konfluens skoru, SMC birleşik model, tarayıcı sözde kodu | teyidi puana, puanı pozisyon boyuna çevirmek; repaint'i tanımak | ~25 dk |
+  | **18** | kanıt | örneklem aritmetiği; USD/TRY ve BIST uyarlaması | kendi kayıtlarınızı doğru okumak; TRY serisine özgü kuralları uygulamak | ~15 dk |
+  | **Ek A–C** | başvuru | sabitler tablosu (her sayının türetimi ve kanıt statüsü) · sözlük · kaynaklar | masada tek sayfalık başvuru; bir sayının nereden geldiğini tek bakışta bulmak | ~5 dk |
+
+  **Önce şunu oku.** Zorunlu ön koşul yok; mum grafiği, swing high/low, ATR ve RSI temelleri **veri kabul edilir**. Bölüm 10.2 ve 16.4 için [SMC — Smart Money Concepts](/arastirma/smc-teknik-analiz/) dersi (sweep, OB, FVG, CHoCH) faydalıdır ama zorunlu değildir; oradaki terimler burada da tanımlanır.
+
+  **İçinde ne var.** 48 grafik · 0 hesap aracı (bu ders elle çizim ve tarayıcı üstünedir) · 26 tablo · 8 pratik bloğu (24 alıştırma, hepsi çözümlü) · 1 tarayıcı sözde kodu · 3 ek: sabitler tablosu (Ek A), sözlük (Ek B), kaynaklar (Ek C).
+
+  **Sembol uyarısı.** Bu derste **T1 · T2 · T3 kâr alma kademeleridir** (T1 = 0.382 AD, T2 = 0.618 AD, T3 = A). Faiz derslerinde ([Faiz Teorisi ve Eğri İnşası](/arastirma/faiz-egrisi-ve-konvansiyonlar/), [Enstrüman Fiyatlama](/arastirma/enstruman-fiyatlama/), [Trade Pratiği](/arastirma/trade-pratigi/)) aynı harfler **PPK toplantı numarasını** gösterir. İki notasyonun ortak yanı yoktur; ders değiştirirken sembolü sıfırlayın.
+
+  **Tarih dili.** Bu bir rehberdir: kural, katalog ve tablo cümlelerinde **ay adı ve yıl kullanılmaz**. Zaman burada takvimle değil **bar** ve **oran** ile ölçülür — $t_{AB}$, $t_{CD}$, $\tau_1 = t_{BC}/t_{AB}$, "1.5 × pattern süresi", "13–34 bar". Takvim tarihi yalnız **gerçek-veri şekillerinde** (26, 29–32, 47, 48) geçer; her biri `Çıpa:` ibaresiyle işaretlidir ve **anlık görüntüdür, kural değildir** — başka bir pencerede sayılar değişir, yöntem değişmez.
+
+</div>
 
 <div class="not">
   <span class="etiket">Ders neyi vaat ediyor, neyi etmiyor</span>
@@ -143,11 +175,69 @@ Neden C'nin derinliği BC katsayısını belirler? Çünkü $|BC| = r_C\cdot|AB|
 
 **Şekil 05 nasıl okunur.** Üç panel: üstte CD = AB (C = 0.618 AB), ortada CD = 1.272·AB, altta CD = 1.618·AB. Her panelde CD'nin BC'nin kaç katı olduğu, D seviyesi, T1/T2 hedefleri (0.382 / 0.618 CD retracement) ve mavi ölçü çizgileriyle zaman simetrisi (AB: n bar, CD: n bar, $t_{CD}/t_{AB}$) işaretli. Nereye bakılır: yukarıdan aşağı CD uzadıkça D aşağı iner ve T1/T2 de onunla birlikte kayar; zaman oranı üç panelde de 0.618–1.618 bandındadır. Uygulama: bir XABCD pattern'inde AB=CD hesabını yaparken hangi katsayının (1.0 / 1.27 / 1.618) *diğer* PRZ sayılarıyla çakıştığına bakılır — çakışan alınır.
 
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 1 · Oranlar ve üç ölçüm</span>
+
+**1. Türetim.** 0.886'yı yalnız $\varphi$ ve karekök kullanarak yazın; sonra 1.13'ün 0.886 ile ilişkisini gösterin. (1.2'nin zinciri dışında hiçbir tablo kullanmayın.)
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $1/\varphi = \varphi - 1 = 0{,}618$.
+
+Adım 2 — $\sqrt{0{,}618} = 0{,}786$; $\sqrt{0{,}786} = 0{,}886$. İki kez karekök = üssü $1/4$: $0{,}886 = 0{,}618^{1/4} = \varphi^{-1/4}$.
+
+Adım 3 — ters çevir: $1/0{,}8866 = 1{,}1279$, yani $1{,}13 = \varphi^{1/4} = 1{,}618^{1/4}$.
+
+Adım 4 — kontrol: $1{,}1279^{4} = 1{,}618$ ✓
+
+**Cevap:** $0{,}886 = \varphi^{-1/4}$ · $1{,}13 = 1/0{,}886 = \varphi^{1/4}$ — ikisi X'in iki yanındaki aynı mesafedir. Alt Bat'in 1.13'ünün "Bat'in 0.886'sının aynası" olmasının sebebi budur (4.3).
+
+</details>
+
+**2. Ölçüm türü.** Bullish XA: $X = 40{,}00$, $A = 42{,}00$; gözlenen $B = 40{,}77$, $C = 41{,}74$ (3.3'ün Gartley'si). Şu üç seviyeyi hesaplayın ve her birinin **hangi ölçüm türü** olduğunu yazın: (i) 0.786 XA; (ii) 1.27 XA; (iii) 1.27 BC.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $|XA| = 2{,}00$; $|BC| = 41{,}74 - 40{,}77 = 0{,}97$.
+
+Adım 2 — (i) **retracement**, 2 nokta içeri: $42{,}00 - 0{,}786 \times 2{,}00 = 40{,}428$.
+
+Adım 3 — (ii) **extension**, 2 nokta dışarı (X'in altı): $42{,}00 - 1{,}27 \times 2{,}00 = 39{,}46$.
+
+Adım 4 — (iii) **projection**, 3 nokta (ölç–taşı): $41{,}74 - 1{,}27 \times 0{,}97 = 40{,}508$.
+
+**Cevap:** 40,428 (retracement) · 39,46 (extension) · 40,508 (projection). Hafıza kuralı: *retracement 2 nokta içeri · extension 2 nokta dışarı · projection 3 nokta.*
+
+</details>
+
+**3. Karar — katsayı seçimi.** Aynı yapıda $C = 0{,}786\,AB$ ölçüldü. 1.4'ün reciprocal tablosuna göre hangi BC katsayısı beklenir? 1.618 seçilirse PRZ'ye ne olur — sayıyla gösterin.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — reciprocal tablo: $C = 0{,}786 \Rightarrow$ BC $\approx 1{,}27$.
+
+Adım 2 — doğru seçim: $D_{BC} = 41{,}74 - 1{,}27 \times 0{,}97 = 40{,}508$; 0.786 XA = 40,428 ile bant **40,43–40,51** → genişlik 0,08 = XA'nın **%4'ü → sıkı**.
+
+Adım 3 — yanlış seçim: $D_{BC} = 41{,}74 - 1{,}618 \times 0{,}97 = 40{,}171$; AB=CD (40,51) ile bant **40,17–40,51** → genişlik 0,34 = XA'nın **%17'si → geniş**.
+
+**Cevap:** 1.27 beklenir; 1.618 PRZ'yi dört kattan fazla genişletir ve 3.4'ün eşiğine göre yapıyı işlem dışı bırakır. Katsayı seçimi bir tercih değil, C'nin derinliğinin sonucudur.
+
+</details>
+
+**Grafikle doğrula:** Şekil 04'te BC projeksiyon çizgilerinin birbirinden uzaklaşarak indiğini, Şekil 16'nın üçüncü panelinde 1.272 BC ile AB=CD'nin 0,01 puan içinde buluştuğunu görün.
+
+</div>
+
 ## Bölüm 2 — Tarihçe ve mantık: Gartley'den Carney'ye, ve neden çalışsın?
+
+*Bu bölümde:* çerçeveyi kuran üç kuşak (Gartley → Pesavento → Carney) ve "neden çalışsın?" sorusunun **ölçülebilir / makul / spekülatif** diye üçe ayrılmış cevabı — kataloğa girmeden önce hangi iddiaya ne kadar yaslanabileceğinizi belirler.
 
 ### 2.1 Üç kuşak
 
-**H.M. Gartley (1935).** *Profits in the Stock Market* kitabının 221–222. sayfalarında, bugün "Gartley 222" denen yapıyı tarif etti: bir trend hareketi, ardından iki bacaklı bir düzeltme ve düzeltmenin bitiminde trend yönünde giriş. Gartley **Fibonacci kullanmıyordu** — düzeltme derinliğini 1/3 ve 2/3 ile tanımlıyordu ve yapının "30 yılda 10'da 7 kârlı" olduğunu söylüyordu. Bu iddia kendi kitabındandır; yöntem ve örneklem yoktur.
+**H.M. Gartley (1935).** *Profits in the Stock Market* kitabının 221–222. sayfalarında, günümüzde "Gartley 222" denen yapıyı tarif etti: bir trend hareketi, ardından iki bacaklı bir düzeltme ve düzeltmenin bitiminde trend yönünde giriş. Gartley **Fibonacci kullanmıyordu** — düzeltme derinliğini 1/3 ve 2/3 ile tanımlıyordu ve yapının "30 yılda 10'da 7 kârlı" olduğunu söylüyordu. Bu iddia kendi kitabındandır; yöntem ve örneklem yoktur.
 
 **Larry Pesavento (1997).** *Fibonacci Ratios with Pattern Recognition* ile Gartley yapısına Fibonacci oranlarını yerleştirdi (B = 0.618, D = 0.786 — Carney de 1998'de aynı adımı kendine atfeder; öncelik tartışmalıdır) ve "40 yıl deneyimle %70 iddiasını doğruladığını" söyledi — yayımlanmış test yoktur. Bryce Gilmore ile birlikte Butterfly yapısını tanımladı; zaman-fiyat simetrisi vurgusu ondan gelir.
 
@@ -174,7 +264,9 @@ Ders boyunca üç etiket kullanacağız: **(i) ölçülebilir** mikroyapı argü
   Çünkü kataloğa girince oranların kesinliği (0.886, 1.13, 2.24…) bir bilimsellik hissi yaratır. O his yanıltıcıdır: oranlar kesindir ama oranların <em>fiyatı döndürdüğü</em> iddiası kesin değildir. Katalog bir dil öğretir; dilin gramerini bilmek şart, ama gramer bilmek şiirin iyi olduğunu kanıtlamaz.
 </div>
 
-## Bölüm 3 — Yapı taşları: XABCD, PRZ, tolerans ve hiyerarşi
+## Bölüm 3 — Yapı taşları: bir PRZ nasıl kurulur ve ne zaman "sıkı" sayılır?
+
+*Bu bölümde:* XABCD terimleri, PRZ'nin formülü, iki uçtan uca sayısal örnek, tolerans bantları ve pattern hiyerarşisi — dersin geri kalanı bu zeminin üstüne kurulur.
 
 ### 3.1 XABCD çerçevesi ve terimler
 
@@ -238,13 +330,69 @@ Carney'ye göre D'nin X'e göre konumu, beklenen dönüşün türünü belirler:
 
 Bulkowski'nin verisi (bull piyasa, 2020 güncellemesi) bu hiyerarşiyi kısmen destekler: en iyi sıralama Bat (1/5), Butterfly (2/5), Crab (3/5), AB=CD (4/5), Gartley (5/5).
 
-## Bölüm 4 — Katalog: her pattern'in kesin tanımı
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 3 · PRZ, tolerans ve stop mesafesi</span>
+
+**1. Doğrudan uygulama.** EUR/USD ölçeğinde bir Bat: $X = 1{,}0850$, $A = 1{,}1050$, $B = 0{,}50\,XA$, $C = 0{,}618\,AB$. Üç D adayını hesaplayın; PRZ'yi pip ve XA'nın yüzdesi olarak yazın; 3.2'nin genişlik kuralına göre etiketi nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $|XA| = 0{,}0200$ (200 pip); $B = 1{,}0950$; $|AB| = 0{,}0100$; $C = 1{,}0950 + 0{,}618 \times 0{,}0100 = 1{,}1012$; $|BC| = 0{,}0062$.
+
+Adım 2 — $D_{XA} = 1{,}1050 - 0{,}886 \times 0{,}0200 = \mathbf{1{,}0873}$.
+
+Adım 3 — $D_{BC} = 1{,}1012 - 2{,}0 \times 0{,}0062 = \mathbf{1{,}0888}$.
+
+Adım 4 — $D_{AB=CD} = 1{,}1012 - 1{,}27 \times 0{,}0100 = \mathbf{1{,}0885}$.
+
+Adım 5 — PRZ = 1,0873–1,0888 → **15 pip** = $0{,}0015/0{,}0200 = $ **%7,5**.
+
+**Cevap:** 15 pip · %7,5 → "geniş"in eşiğinde, **kabul sınırı** (%5–8). Tam pozisyon değil.
+
+</details>
+
+**2. Ters çevirme.** Aynı yapının "sıkı" (≤ %3) sayılabilmesi için üç sayının en fazla kaç pip'e sığması gerekir? Ve bandı en uzak sayıyı atarak daraltmak mümkün müdür?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $0{,}03 \times 200 = \mathbf{6}$ pip.
+
+Adım 2 — mevcut üçlüde 1,0885 ile 1,0888 arası yalnız 3 pip; ama bu ikisi (2.0 BC ve 1.27 AB=CD) 16.1'in **bağımsızlık şartına** göre aynı geometriden türer, kümede **tek** sayılır.
+
+Adım 3 — bağımsız üçüncü sayı 0.886 XA'dır (1,0873) ve 12–15 pip uzaktadır. Onu atmak, bandı daraltmak değil **tek bağımsız hesabı silmek** olur.
+
+**Cevap:** 6 pip gerekir; daraltma **yapılamaz**. Yapı sıkı olamaz, kabul sınırında kalır → pozisyon boyu düşer. Ders: PRZ'yi "daraltmak" için sayı atmak, konfluensi şişirmenin ters yönden hâlidir.
+
+</details>
+
+**3. Karar.** 3.3'ün XA'sında ($X = 40{,}00$, $A = 42{,}00$, stop 39,95) yapı Gartley yerine Bat olsaydı risk ne olurdu? İki riski karşılaştırın ve farkın **geometrik** sebebini tek cümlede yazın.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — Gartley: $D = 40{,}428$, PRZ ortası ≈ 40,47 → risk $= 40{,}47 - 39{,}95 = \mathbf{0{,}52}$.
+
+Adım 2 — Bat: $D = 42{,}00 - 0{,}886 \times 2 = 40{,}228$ → risk $= 40{,}228 - 39{,}95 = \mathbf{0{,}28}$.
+
+Adım 3 — geometrik sebep: 0.886 ile 1.0 arası XA'nın **%11,4'ü**, 0.786 ile 1.0 arası **%21,4'ü**.
+
+**Cevap:** Bat'in riski Gartley'nin yaklaşık **yarısı**; sebep pattern'in "iyiliği" değil, D'nin X'e olan mesafesidir.
+
+</details>
+
+**Grafikle doğrula:** Şekil 20'nin dört panelinde kırmızı risk kutularının boy farkına bakın — Bat'inki en küçük, Crab'inki en büyük; sayılar 6.3'ün tablosuyla eşleşir.
+
+</div>
+
+## Bölüm 4 — Katalog: 13 pattern'in oran tabloları — hangisi hangisinden nasıl ayrılır?
 
 Aşağıdaki oranlar Carney'nin harmonictrader.com sayfaları ile *Harmonic Trading* ciltlerinden; Cypher için Oglesbee/topluluk kaynakları; Nen Star ve Swan'lar için LuxAlgo/topluluk pencereleri. Bullish yönler yazılmıştır; bearish için tüm yönleri ters çevirin. "≈" bandı yoksa Carney'nin ideal değeri esastır. Her alt bölümde aynı sıra: oran tablosu → ayırt edici nokta → grafik → PRZ inşası → geçersizlik → tipik hedefler.
 
 Şablon grafiklerin (Şekil 06–14) ortak dili: mumlar üstünde XABCD zikzağı, her bacağın ortasında oran etiketi (B = … XA, C = … AB, D = … XA + BC oranı + AB=CD katı), turuncu **PRZ kutusu** içinde 2–3 seviye çizgisi (oran → fiyat), kırmızı kesikli **geçersizlik** çizgisi ve altta pattern notu. Bullish/bearish çifti olarak çizilen şekillerde (06, 07, 09, 10) üst panel bullish (M), alt panel bearish (W); 08, 11 ve 12 farklı iki kurguyu, 13 ve 14 ise tek paneli kullanır.
 
-### 4.1 Gartley
+### 4.1 Gartley — B = 0.618 XA · D = 0.786 XA (X aşılmaz)
 
 | Bacak | Oran |
 |---|---|
@@ -263,7 +411,7 @@ Aşağıdaki oranlar Carney'nin harmonictrader.com sayfaları ile *Harmonic Trad
 
 **PRZ inşası:** $D_{XA} = A - 0.786\,(A-X)$; $D_{BC} = C - 1.27\,(C-B)$ (C derinse, 0.786) veya $1.618$ (C sığsa, 0.382–0.5); $D_{AB=CD} = C - (A-B)$. Bölüm 3.3'teki sayısal örnek tam olarak budur. **Geçersizlik:** fiyat 0.886 XA'yı geçerse yapı Bat'e evrilir; X'i geçerse tamamen geçersiz. **Hedefler:** T1 = 0.382 AD, T2 = 0.618 AD, T3 = A; ara: B ve C. Bulkowski (bull piyasa, "mükemmel" pattern'ler): D'de dönüş %90, break-even başarısızlık %14, A'ya ulaşma %45 — beş pattern arasında **en zayıf** sıra (5/5).
 
-### 4.2 Bat
+### 4.2 Bat — B ≤ 0.50 XA · D = 0.886 XA (kataloğun en dar stopu)
 
 | Bacak | Oran |
 |---|---|
@@ -282,7 +430,7 @@ Aşağıdaki oranlar Carney'nin harmonictrader.com sayfaları ile *Harmonic Trad
 
 **PRZ inşası:** $D_{XA} = A - 0.886\,(A-X)$; $D_{BC} = C - r\,(C-B)$, $r \in [1.618, 2.618]$; $D_{AB=CD} = C - 1.27\,(A-B)$. **Geçersizlik:** 1.0 XA (X noktası) — fiyat X'in ötesinde kapanırsa 1.13 XA'ya bakılır (Alt Bat'e evrilme, 4.3). **Hedefler:** T1 0.382 AD, T2 0.618 AD, T3 A. Bulkowski: D'de dönüş %91, BE başarısızlık %10, A'ya ulaşma %58 — **en iyi sıra (1/5)**.
 
-### 4.3 Alternate Bat
+### 4.3 Alternate Bat — B ≤ 0.382 XA · D = 1.13 XA (X süpürülür)
 
 | Bacak | Oran |
 |---|---|
@@ -301,7 +449,7 @@ Aşağıdaki oranlar Carney'nin harmonictrader.com sayfaları ile *Harmonic Trad
 
 **PRZ inşası:** $D_{XA} = A - 1.13\,(A-X)$; $D_{BC} = C - r\,(C-B)$, $r \in [2.0, 3.618]$; $D_{AB=CD} = C - 1.618\,(A-B)$. **Geçersizlik:** 1.272 XA. **Hedefler:** standart üçlü; X'in geri kazanılması (fiyatın X'in üstüne kapanması) ilk teyittir.
 
-### 4.4 Butterfly
+### 4.4 Butterfly — B = 0.786 XA · D = 1.27 XA (X'in ötesi)
 
 | Bacak | Oran |
 |---|---|
@@ -320,7 +468,7 @@ Aşağıdaki oranlar Carney'nin harmonictrader.com sayfaları ile *Harmonic Trad
 
 **PRZ inşası:** $D_{XA} = A - 1.27\,(A-X)$; $D_{BC} = C - 1.618\,(C-B)$ (2.0–2.618 aşırı); $D_{AB=CD} = C - 1.27\,(A-B)$. **Geçersizlik:** 1.618 XA (1.27 tutmazsa yapı 1.618 Butterfly'a evrilebilir; 1.618'i de geçerse geçersiz). **Hedefler:** standart üçlü; büyük dönüşlerde 1.27–1.618 AD veya StockCharts'ın "D + 0.618–0.786 XA" ve "D + 1.27–1.618 XA" bantları. Bulkowski: D'de dönüş %91, BE başarısızlık %11, A'ya ulaşma %39; sıra 2/5.
 
-### 4.5 Crab
+### 4.5 Crab — B ≤ 0.618 XA · D = 1.618 XA (en keskin dönüş)
 
 | Bacak | Oran |
 |---|---|
@@ -339,7 +487,7 @@ Aşağıdaki oranlar Carney'nin harmonictrader.com sayfaları ile *Harmonic Trad
 
 **PRZ inşası:** $D_{XA} = A - 1.618\,(A-X)$; $D_{BC} = C - r\,(C-B)$, $r \in \{2.618, 3.14, 3.618\}$; $D_{AB=CD} = C - 1.27\,(A-B)$ veya $1.618$. **Geçersizlik:** 2.0 XA / 2.24 XA. **Hedefler:** standart; Crab'de 0.382 AD bile fiyat olarak büyüktür. Bulkowski: D'de dönüş %92, BE başarısızlık %7 (en düşük), A'ya ulaşma %33 (en düşük) — yani **tepki en güvenilir, tam dönüş en nadir**; sıra 3/5.
 
-### 4.6 Deep Crab
+### 4.6 Deep Crab — B = 0.886 XA · D = 1.618 XA (Crab'in derin B'lisi)
 
 | Bacak | Oran |
 |---|---|
@@ -358,7 +506,7 @@ Aşağıdaki oranlar Carney'nin harmonictrader.com sayfaları ile *Harmonic Trad
 
 **PRZ inşası / geçersizlik / hedefler:** Crab ile aynı; geçersizlik 2.0 XA.
 
-### 4.7 Shark (0-X-A-B-C)
+### 4.7 Shark (0-X-A-B-C) — B, X'i geçer · PRZ = 0.886–1.13 · 0X
 
 | Bacak | Oran |
 |---|---|
@@ -369,7 +517,7 @@ Aşağıdaki oranlar Carney'nin harmonictrader.com sayfaları ile *Harmonic Trad
 
 **Ayırt edici nokta:** Klasik M/W çerçevesinin *dışında*. Etiketler 0-X-A-B-C'dir; B, **X'i geçer** (AB = 1.13–1.618·XA ⇒ B, X'in ötesinde) — klasik XABCD etiketinde C'nin A'yı geçmesine denk gelen bu ihlal, Shark'ta tanımın kendisidir. (B'nin A'nın ters yönündeki bir sonraki pivot olması zaten trivialdir; tanımı taşıyan şey B'nin *X'i* aşmasıdır.) C hem 0X'in 0.886–1.13'ü hem AB'nin 1.618–2.24'üdür; işlem C'de yapılır. Mantık: "başarısız impuls dalgası" / tuzak kırılım — B'de A'yı geçen kırılım alıcıları, C'ye kadar süren sert karşı hareketle tuzağa düşer. Carney'ye göre Shark sert ama kısa süreli tepki verir; **5-0'ın öncülüdür**.
 
-### 4.8 5-0 (0-X-A-B-C-D)
+### 4.8 5-0 (0-X-A-B-C-D) — D = 0.50 BC · reciprocal AB=CD
 
 | Bacak | Oran |
 |---|---|
@@ -386,7 +534,7 @@ Aşağıdaki oranlar Carney'nin harmonictrader.com sayfaları ile *Harmonic Trad
 
 **Şekil 12 nasıl okunur.** Üst panel Shark: 0-X-A-B-C etiketleri; B = 1.13 XA uzantısı, **X'in üstüne çıkmış** ("klasik etikette C'nin A'yı geçmesine denk ihlal — Shark'ta tanım" notu; altın çizgi X: X'i geçen B = tuzak kırılım); C = 2.00 AB uzantısı ve 1.065·0X; PRZ kutusu 0.886–1.13·0X bandı, içinde 1.618 / 2.24 AB çizgileri; stop 1.13·0X'in ötesinde. Alt panel aynı yapının devamı: C'den sonra D = 0.50 BC = reciprocal AB=CD (C + AB uzunluğu, ok ile) → 5-0 tamamlanışı; işlem yönü C→D bacağına karşı; hedef 0.382 CD. Nereye bakılır: üst panelde B'nin X'i geçtiği yer — klasik pattern arayan göz burada "geçersiz" der ve Shark'ı kaçırır (Bölüm 11, hata 9). Altta D'nin hem 0.50 BC hem reciprocal AB=CD ile çakışması, 5-0'ın PRZ'sidir.
 
-### 4.9 Cypher
+### 4.9 Cypher — C, A'yı geçer · D = 0.786 XC (XA'dan değil)
 
 | Bacak | Oran |
 |---|---|
@@ -403,7 +551,7 @@ Aşağıdaki oranlar Carney'nin harmonictrader.com sayfaları ile *Harmonic Trad
 
 **Geçersizlik:** X. **Hedefler:** 0.382 / 0.618 CD.
 
-### 4.10 Three Drives (üç sürüş)
+### 4.10 Three Drives (üç sürüş) — 0.618 düzeltmeler · 1.27 projeksiyonlar · zaman simetrisi
 
 | Öğe | Oran |
 |---|---|
@@ -419,7 +567,7 @@ Aşağıdaki oranlar Carney'nin harmonictrader.com sayfaları ile *Harmonic Trad
 
 **Şekil 14 nasıl okunur.** Drive 1 → düzeltme A (0.618) → drive 2 (1.272·düzeltme A) → düzeltme B (0.618) → drive 3 (1.272·düzeltme B). 1.272 ve 1.618 projeksiyon çizgileri, PRZ, drive1→2 / drive2→3 bar sayıları (zaman simetrisi ölçüleri), stop drive 3'ün altı, hedefler 0.618·son bacak ve düzeltme A tepesi. Nereye bakılır: iki drive arası bar sayısının benzerliği — sayılar çok orantısızsa (biri 8, diğeri 30 bar) yapı zayıftır (Bölüm 11, hata 7).
 
-### 4.11 Nen Star, White Swan, Black Swan (topluluk tanımları)
+### 4.11 Nen Star · White Swan · Black Swan — topluluk tanımları (grafiksiz, kaynağa göre değişir)
 
 | Pattern | B | C | D: BC | D: XA |
 |---|---|---|---|---|
@@ -449,7 +597,61 @@ Bu üçü için grafik üretilmedi çünkü tanımları kaynağa göre değişir
 
 **Bu katalogdan işlem planına.** Yukarıdaki alt bölümler her pattern'in *tanımını* verdi. Aynı pattern'lerin ekranı açtığınız andan pozisyonun kapandığı ana kadar giden adım adım işlem planları — tarama prosedürü, sert kapı / yumuşak kalite ayrımlı kontrol listesi, tetik, R cinsinden emir hesabı, senaryo ağacı, kaybeden örnek ve o pattern'e özgü üç hata — Bölüm 13'tedir. Katalogla plan bilerek ayrılmıştır: tanım değişmez, plan ise kendi risk toleransınıza göre kalibre edilir.
 
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 4 · Katalog ve ayrım kuralları</span>
+
+**1. Doğrudan uygulama.** Bir XA'da $B = 0{,}50\,XA$ ölçtünüz. Şekil 15'in haritasına göre hangi pattern'ler **aday**, hangileri **elenir**?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — B kapıları: Gartley 0.618 · Bat 0.382–0.50 · Alt Bat ≤ 0.382 · Butterfly 0.786 · Crab ≤ 0.618 · Deep Crab 0.886.
+
+Adım 2 — 0,50 hangi kapılardan geçer: **Bat** (0.382–0.50 bandının üst ucu) ve **Crab** (≤ 0.618).
+
+Adım 3 — elenenler: Gartley (0.618 değil), Butterfly (0.786), Deep Crab (0.886), Alt Bat (≤ 0.382 değil).
+
+**Cevap:** aday **Bat** ve **Crab**; diğer dördü elenir. "B sınıflandırır" kuralının tam olarak yaptığı iş budur: altı adaydan ikisi kalır.
+
+</details>
+
+**2. Ters soru.** Aynı yapıda BC projeksiyonunu **1.27** ölçtünüz. Hangi pattern kalır?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — Bat'in imzası **BC ≥ 1.618** (4.2). 1.27 → Bat düşer; Carney'nin kendi ifadesi: "BC 1.27 veya altıysa yapı Bat değil Gartley'dir."
+
+Adım 2 — Crab'in BC bandı 2.618–3.618 (4.5). 1.27 → Crab düşer.
+
+Adım 3 — Gartley kolu açılır mı? Gartley'nin B kapısı 0.588–0.648 (13.2); ölçülen B = 0,50 **dışarıda**.
+
+**Cevap:** **Hiçbiri — pattern yok.** Ders: sert kapıdan geçemeyen yapı toleransı büyüterek kurtarılmaz; tolerans üçüncü bir seçenek değildir (13.1c).
+
+</details>
+
+**3. Tuzak — Cypher'ı yanlış referansla ölçmek.** Bullish Cypher: $X = 100$, $A = 120$, $C = 1{,}272\,XA = 125{,}44$. D'yi (i) doğru referansla, (ii) 11. bölümün 8. hatasıyla hesaplayın; fark XA'nın yüzde kaçı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — doğru: D = **XC**'nin 0.786 retracement'ı. $|XC| = 125{,}44 - 100 = 25{,}44$ → $D = 125{,}44 - 0{,}786 \times 25{,}44 = \mathbf{105{,}44}$.
+
+Adım 2 — yanlış: 0.786 **XA** → $120 - 0{,}786 \times 20 = \mathbf{104{,}28}$.
+
+Adım 3 — fark $= 1{,}16$ birim $= 1{,}16/20 = $ **XA'nın %5,8'i**.
+
+**Cevap:** 105,44 vs 104,28; fark %5,8 — yani tipik bir PRZ genişliği kadar. Yanlış referans PRZ'yi kaydırmaz, **tamamen başka bir yere** koyar; limit emir dolmaz ya da yanlış yerde dolar.
+
+</details>
+
+**Grafikle doğrula:** Şekil 13'te gri "0.786 XA — YANLIŞ referans" çizgisinin PRZ'den ne kadar uzakta durduğuna bakın; Şekil 15'te 0,50 B çizgisinden sağdaki D adaylarına ok çekin.
+
+</div>
+
 ## Bölüm 5 — PRZ inşası ve teyit: T-bar, dönüş mumu, RSI, Type I / Type II
+
+*Bu bölümde:* PRZ'nin üç sayıdan adım adım inşası, T-bar'ın tanımı, üç teyit sınıfı ve Carney'nin Type I / Type II ayrımı — yani "D'ye geldi" ile "girilir" arasındaki fark.
 
 ### 5.1 PRZ'yi adım adım kurmak
 
@@ -498,7 +700,9 @@ Carney'nin ayrımı (Vol. 2):
 
 **Teyidin derinleştirilmesi.** Bu bölüm teyidi üç sınıfa ayırdı ve "en az biri, tercihen ikisi" dedi. Teyit aslında ikili (var/yok) değil derecelidir; uyumsuzluğun üç türü vardır ve **biri pattern'in aleyhine kanıttır**; RSI BAMM'ın beş aşaması harmonik PRZ ile aritmetik olarak çakışabilir; ve teyit kalemleri sayısal bir skora dönüştürülebilir. Bunların tamamı Bölüm 14'tedir. Bu bölümün kuralları (T-bar tanımı, Type I / Type II ayrımı, teyit sınıfları) aynen geçerlidir; Bölüm 14 onların üstüne derece ve puan koyar.
 
-## Bölüm 6 — Giriş, stop, hedef ve R:R
+## Bölüm 6 — Giriş, stop, hedef, R:R: PRZ'ye gelince emirler tam olarak nereye konur?
+
+*Bu bölümde:* dört giriş türü, pattern bazında stop referansı, T1/T2/T3 formülleri, R:R eşiği ve uçtan uca sayısal bir Bat örneği — tanımın emir setine dönüştüğü yer.
 
 ### 6.1 İşlemin anatomisi tek grafikte
 
@@ -574,7 +778,63 @@ $E$ giriş, $S$ stop. Kabul eşiği (uygulamacı): $T_1$ için ≥ 1:1, $T_2$ i�
 
 X = 100, A = 200, B = 150 (0.5 XA), C = 190 (0.8 AB). D adayları: 0.886 XA → 111.4; 1.618 BC → 125.3; 1.27 AB=CD → 126.5. PRZ ≈ 111–127 → XA'nın %15'i → **gevşek**. Yeniden bak: 2.0 BC → 190 − 2.0×40 = 110; yalnız 0.886 XA (111.4) ve 2.0 BC (110) kümesi alınırsa PRZ 110–112 → sıkı. Giriş 112; stop X − 1 ATR (ATR = 2) = 98 → risk 14. T1 = 112 + 0.382·(200 − 112) = 145.6 → R:R 2.4:1; T2 = 112 + 0.618·88 = 166.4 → 3.9:1. Öğrenciye ödev: Bulkowski'nin Bat oranlarıyla (B'ye %86, C'ye %64, A'ya %58) beklenen değeri hesaplayın; sonra aynı hesabı stop 96'ya (2 ATR) çekerek tekrarlayın ve R:R'nin ne kadar bozulduğunu görün.
 
-## Bölüm 7 — Pozisyon yönetimi adım adım
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 6 · Emirler, R:R ve pozisyon boyu</span>
+
+**1. Doğrudan uygulama.** 6.6'nın Bat'i: $X = 100$, $A = 200$, PRZ 110–112, giriş 112, ATR = 2, stop $= X - 1\,ATR = 98$. $1R$, T1, T2 ve iki R:R'yi yazın.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $R = 112 - 98 = \mathbf{14}$.
+
+Adım 2 — $T_1 = 112 + 0{,}382 \times (200-112) = 112 + 33{,}6 = \mathbf{145{,}6}$ → R:R $= 33{,}6/14 = \mathbf{2{,}4}$.
+
+Adım 3 — $T_2 = 112 + 0{,}618 \times 88 = \mathbf{166{,}4}$ → R:R $= 54{,}4/14 = \mathbf{3{,}9}$.
+
+**Cevap:** 1R = 14 · T1 = 145,6 (2,4:1) · T2 = 166,4 (3,9:1).
+
+*Not — iki ölçüm konvansiyonu.* Burada hedefler **girişten** ölçüldü (6.6'nın kendi kurgusu). 13.1(e)'den itibaren hedefler **D'den** ölçülür ($T_1 = D + 0{,}382\,(A-D)$), R:R ise yine girişten. İkisi karıştırılırsa sayılar birbirini tutmaz — hangi konvansiyonda olduğunuzu her seferinde yazın.
+
+</details>
+
+**2. Ters çevirme — tampon duyarlılığı.** Aynı işlemde stop 6.3'ün üst sınırına, yani $2\,ATR$'ye (96) çekilirse T1 R:R'si ne olur? Bozulma yüzde kaç?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $R = 112 - 96 = 16$.
+
+Adım 2 — R:R $= 33{,}6/16 = \mathbf{2{,}1}$.
+
+Adım 3 — bozulma $= (2{,}4-2{,}1)/2{,}4 = $ **%12,5**.
+
+**Cevap:** 2,1:1 · %12,5 aşınma. 6.3'ün "harmonikte 2 ATR çoğu zaman R:R'yi bozar, 0,5–1 ATR yaygın uygulamadır" cümlesinin aritmetik karşılığı budur. Ters uç da vardır: stop PRZ'nin **içine** (ör. 111) konamaz — T-bar süpürür ve 8.1'in geçersizlik kriteri hiç çalışmadan stop olursunuz.
+
+</details>
+
+**3. Karar — hangi pattern'de pozisyon küçültülür?** Aynı XA = 100 birimde ($X = 100$, $A = 200$): Bat (D = 111,4; geçersizlik X = 100) ve Butterfly (D = 1,27 XA; geçersizlik 1,618 XA). Stop mesafelerini hesaplayın; hangisinde pozisyon küçültülür?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — Butterfly D $= 200 - 1{,}27 \times 100 = \mathbf{73}$; geçersizlik $= 200 - 1{,}618 \times 100 = \mathbf{38{,}2}$.
+
+Adım 2 — stop mesafeleri: Bat $= 111{,}4 - 100 = \mathbf{11{,}4}$ (XA'nın %11,4'ü) · Butterfly $= 73 - 38{,}2 = \mathbf{34{,}8}$ (%34,6).
+
+Adım 3 — pozisyon büyüklüğü $= $ risk tutarı $/(E-S)$; aynı hesap riskiyle Butterfly pozisyonu Bat'inkinin yaklaşık **üçte biri** olur.
+
+**Cevap:** Butterfly'da küçültülür. Ve dersin cümlesi: **R:R bir pattern özelliği değil, bir plan özelliğidir** — Şekil 34'te aynı Gartley'nin iki satırı 1,31 ve 2,61 verir; fark yalnız stop seçimidir.
+
+</details>
+
+**Grafikle doğrula:** Şekil 18'de giriş PRZ ortasında ve stop X'e yapışıkken T2'nin 3,2 çıktığını, Şekil 20'de aynı Bat'in aynı hedefte 2,6 verdiğini karşılaştırın — fark giriş varsayımıdır.
+
+</div>
+
+## Bölüm 7 — Pozisyon yönetimi: girişten çıkışa pozisyon nasıl taşınır? (kısmi · BE · trailing)
+
+*Bu bölümde:* kısmi kâr kademeleri, stopu BE'ye çekme, iki trailing yöntemi, zaman stopu ve Type I sonrası retest girişi — dokuz maddelik birleşik kural seti hâlinde.
 
 ### 7.1 Kural seti (Carney "Trade Management" + uygulamacı)
 
@@ -612,7 +872,9 @@ Neden T1'de kısmi kâr zorunlu? Çünkü Bölüm 5.4: çoğu dönüş Type I il
 8. **Zaman stopu:** T1'e 1.5 × pattern süresi içinde ulaşılmadıysa pozisyonu küçült/kapat.
 9. **Type I sonrası retest:** BE stop tutmuşsa ikinci giriş.
 
-## Bölüm 8 — Başarısızlık ve geçersizleşme
+## Bölüm 8 — Başarısızlık: bu setup ne zaman öldü ve sonrasında ne yapılır?
+
+*Bu bölümde:* başarısızlığın iki kriteri, evrilme kontrolü, PRZ'nin destekten dirence rol değiştirmesi ve dört uyarı işareti.
 
 ### 8.1 Başarısızlık tanımı ve rol değişimi
 
@@ -721,13 +983,69 @@ Bu ağaç Şekil 17'nin alt notunda, Şekil 23'te (geçersiz dal) ve Şekil 21'd
 - **AB=CD ölçümü:** A→B mesafesi ölçü aracıyla, C'den aşağı kopyalanmış paralel çizgi.
 - **Tarayıcılar (Trendoscope, PatternsHunters, TRN, reees):** mantık = zigzag pivotları + oran toleransı eşleştirme; C oluştuğunda projeksiyon çizerler. Hataları: (i) zigzag ileriye bakar — son pivot teyit edilene kadar pattern **repaint** eder; (ii) tolerans %8+ ile "her yerde pattern"; (iii) yanlış X (küçük pivotlar); (iv) HTF bağlamı ve teyit yok. **Kural: tarayıcıyı aday listesi olarak kullan, manuel doğrula; "confirmed bars only" / repaint kapalı ayarı.**
 
+**Çıpa: 06.10–03.11.2025 GC=F 1h örneklemi** — örneklem penceresidir; başka pencerede pivot sayıları da, bulunan pattern de değişir. Sabit kalan **yöntem**tir: $n$'i seç, sabitle, karşılaştırmayı hep aynı $n$ ile yap.
+
 <GrafikEmbed src="/arastirma/harmonik-patternler/26_zigzag_hassasiyet_gercek.html" baslik="Gerçek veri — GC=F (altın vadeli), 1h, 2025-10-06 → 2025-11-03: pivot n = 5 / 8 / 20 aynı seriyi nasıl okur?" no="26" yukseklik={900} />
 
 **Şekil 26 nasıl okunur.** Aynı 451 barlık saatlik altın penceresi, üç panelde üç zigzag: n = 5 (47 pivot), n = 8 (28 pivot), n = 20 (12 pivot) — sayılar grafiğin panel notlarından; script yeniden koşarsa RAPOR çıktısından tekrar okunur. Yalnız n = 8'de bir eşleşme (bullish Butterfly, turuncu zikzak) çıkıyor; n = 5 ve n = 20'de sıfır. Başlık altındaki uyarı: parametre hassasiyeti ve repaint. Nereye bakılır: n = 5 panelinde zikzağın her küçük salınımı pivot sayması — burada X adayı çok, hepsi zayıf; n = 20 panelinde ise XA bacağı bile tek parça olarak görünmüyor. Ders çıkarımı: pivot ayarı bir "doğru" değeri olan parametre değil, *seçtiğiniz ve sabit tuttuğunuz* bir karardır; değiştirdiğinizde bulduğunuz pattern'ler değişir. Sonuçları karşılaştırırken n'i sabit tutmayan bir backtest anlamsızdır.
 
 Bu dersteki gerçek-veri grafikleri (Şekil 26 ve 29–32) tam olarak bu tarayıcı mantığıyla üretildi: fraktal pivot $n$ → ardışık 5 pivot → oran bantları (Gartley B 0.588–0.648 / D 0.75–0.82 / BC 1.13–1.70; Bat B 0.36–0.52 / D 0.85–0.92 / BC 1.6–2.7; Butterfly B 0.75–0.82 / D 1.22–1.66 / BC 1.6–2.7 (geçersizlik 1.618); Crab B 0.36–0.65 / D 1.55–1.70 / BC 2.5–3.7; Alt Bat B 0.30–0.40 / D 1.10–1.16; C 0.382–0.886 ve C A'yı aşmaz). Bulguları Bölüm 12.1'de.
 
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 9 · Canlı tanıma ve eleme</span>
+
+**1. Doğrudan uygulama — karar ağacı.** Fiyat PRZ'ye **3,6 ATR** boyunda tek bir mumla girdi ve kapanış PRZ'nin **altında**. 9.3'ün ağacına göre ne yaparsınız; sonraki mumda hangi iki gözlemi ayırt edersiniz?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — iki uyarı işareti birden: "aşırı fiyat aralığı" (> 2 ATR, 8.2/3) ve "tail close" (8.2/2). Teyitsiz giriş **yok**; ölçekli girişin limit dilimi bile iptal edilir (Şekil 24b).
+
+Adım 2 — ağacın dalı: *kapanış PRZ dışında → ertesi mumu bekle.*
+
+Adım 3 — iki gözlem: (i) **PRZ içine geri kapanış** → sweep senaryosu, yapı hâlâ geçerli ve bu **en güçlü teyittir**; (ii) **geri kapanmama** → 8.1'in iki kriteri tamamlandı, **geçersiz** — ters yön için PRZ retesti beklenir (rol değişimi).
+
+**Cevap:** girme, bir mum bekle; ayrım "geri kapanış var mı" sorusudur. Dev mumun boyu satıcının tükendiğini değil, **agresif olduğunu** söyler.
+
+</details>
+
+**2. Ters çevirme — parametre duyarlılığı.** 12.1'in saatlik tarama sayıları: EUR/USD $n=5 \to 8$ aday, $n=12 \to 5$; GC=F $n=5 \to 7$, $n=12 \to 2$. Hangi enstrümanda pivot ayarı sonucu daha çok değiştiriyor?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — EUR/USD: $5/8 = 0{,}63$ → **−%38**.
+
+Adım 2 — GC=F: $2/7 = 0{,}29$ → **−%71**; aday sayısı **3,5 kat** değişiyor.
+
+**Cevap:** GC=F. Sonuç: $n$ sabitlenmeden iki tarama karşılaştırılamaz; "şu pattern şu piyasada daha çok çıkıyor" cümlesi, $n$ yazılmadığı sürece anlamsızdır (Şekil 26).
+
+</details>
+
+**3. Karar — sert kapı mı, kalite mi?** Bir aday: $B = 0{,}55\,XA$ · $C = 0{,}70\,AB$ · BC $= 1{,}9$ · PRZ genişliği XA'nın %6'sı · $\tau_2 = 2{,}4$. Hangi maddeler sert kapı, hangileri kalite? İşlem var mı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — sert kapılar (13.1c): B bandı, C bandı, BC katsayısı.
+
+Adım 2 — B = 0,55: Gartley kapısı 0,588–0,648 → **hayır**; Bat kapısı 0,36–0,52 → **hayır**; Crab B ≤ 0,618 → evet, ama Crab'in BC'si 2,618–3,618, ölçülen 1,9 → **hayır**.
+
+Adım 3 — C = 0,70 AB (0,382–0,886 bandında) tek başına bir şey kurtarmaz.
+
+Adım 4 — kalite maddelerine (PRZ %6, $\tau_2 = 2{,}4$) **bakmaya bile gerek yok**.
+
+**Cevap:** **İşlem yok.** Sıra önemlidir: önce sert kapı, sonra kalite. Ters sırayla okuyan işlemci "PRZ %6, fena değil" diyerek zaten var olmayan bir pattern'i işlemeye kalkar (11. bölüm, hata 1).
+
+</details>
+
+**Grafikle doğrula:** Şekil 25'in ② panelinde B onaylandığında ekrandaki çizgi sayısının *azaldığını* görün — iyi canlı tanıma aday listesini daraltmaktır, genişletmek değil.
+
+</div>
+
 ## Bölüm 10 — Çoklu zaman dilimi ve bağlam: trend, SMC ve likidite
+
+*Bu bölümde:* HTF / işlem TF'si / LTF iş bölümü ve harmonik ile SMC'nin aynı olayı iki ayrı dille anlattığını gösteren sözlük eşlemesi.
 
 ### 10.1 Üç katmanlı akış
 
@@ -765,7 +1083,9 @@ Sözlük eşlemesi:
   HTF trend yönündeki retracement pattern'i (Bat/Gartley) "trend devamı" işlemidir; hedef A'ya kadar makul. HTF'ye <em>karşı</em> extension pattern'i (Crab/Butterfly) ise "uç süpürme tepkisi"dir; temerrüt varsayımı reaction (T1, en fazla T2), trend dönüşü değil. Bu ayrımı yapmayan işlemci Crab tepesinde A'yı bekleyip T1'de aldığı kârı geri verir (Bölüm 11, hata 6).
 </div>
 
-## Bölüm 11 — Tipik hatalar ve tuzaklar
+## Bölüm 11 — Tipik hatalar: 14 tuzak ve her birinin dersteki panzehiri
+
+*Bu bölümde:* derste tek tek açıklanan hataların tek listede toplanmış hâli — işlem öncesi son okuma listesi olarak da kullanılabilir.
 
 1. **Zorlama pattern:** X'i pattern çıksın diye seçmek; toleransı %5→%10 açınca her yerde pattern görülür — TradingView göstergesi bile bunu uyarır. Bulkowski: "gerçek grafikte pattern çentikli, ideal diyagram gibi değil."
 2. **D'ye geldi diye girmek** (teyitsiz, T-bar'sız).
@@ -784,7 +1104,17 @@ Sözlük eşlemesi:
 
 ## Bölüm 12 — Kanıt ve eleştiri: gerçekten edge var mı?
 
+*Bu bölümde:* bu ders için yapılan gerçek veri taraması, savunucu iddiaların kaynak denetimi, bağımsız/yarı bağımsız testler ve dört maddelik dürüst sentez.
+
 ### 12.1 Gerçek veri denemeleri — bu ders için yapılan tarama
+
+<div class="not">
+  <span class="etiket">Çıpa — bu bölümdeki gerçek veri hangi pencereye ait</span>
+
+  **Çıpa:** Şekil 29 — BIST 100 (XU100.IS) 1d, **22.05–14.08.2026** · Şekil 30 — BTC-USD 1h, **26.06–01.07.2026** · Şekil 31 — GC=F 1h, **22.10–30.10.2025** · Şekil 32 — EUR/USD 1h, **08.07–14.07.2025**. Dördü de **örneklem penceresidir; başka pencerede sayılar değişir.**
+  Bu bölümdeki oranlar, PRZ genişlikleri ve "T2'ye ulaştı / stop çalıştı" sonuçları bu dört fotoğrafa aittir; **yöntem** (tarayıcı mantığı, PRZ eşiği, kontrol listesi) her koşulda geçerlidir, **sayılar** değildir. Dört örnek dört gözlemdir — 18.3'ün aritmetiğine göre kanıt değil, yalnızca örnektir.
+
+</div>
 
 Bölüm 9.5'teki tarayıcı mantığı yfinance verisine uygulandı: EURUSD=X, GC=F, BTC-USD, XU100.IS, USDTRY=X (2 yıl günlük: 495–730 bar) ve EURUSD=X, BTC-USD, GC=F (730 gün saatlik: 13.7–17.5 bin bar). Sayılar scriptteki `tarama_ozeti()` çıktısından (RAPOR; `_veri/tarama_ozeti.txt`), $n$ = 5 / 6 / 8 / 10 / 12 ile — yeniden koşulunca aynı yerden okunur. Bulgular:
 
@@ -834,7 +1164,7 @@ Bölüm 9.5'teki tarayıcı mantığı yfinance verisine uygulandı: EURUSD=X, G
 4. Edge, varsa, **seçim ve yönetimden** gelir: HTF bağlamı, teyit, kısmi kâr, BE, önceden tanımlı R:R + küçük stop + yakınsama disiplini. Blind limit + geniş tolerans backtestlerde kaybediyor.
 5. Her başarı oranı, tolerans / repaint / hayatta kalma yanlılığı sorularıyla birlikte okunmalı. Backtest'lerin çoğu öznel; kendi kurallarınızla (sabit pivot $n$, sabit tolerans, teyit tanımı) yeniden ölçmeden edge varsaymayın.
 
-## Bölüm 13 — Pattern bazında adım adım işlem planları
+## Bölüm 13 — Pattern bazında işlem planları: tarama → kontrol → tetik → emir → yönetim
 
 Bölüm 4 kataloğu "bu yapı **nedir**" sorusunu, Bölüm 5–7 ise girişin, stopun, hedefin ve yönetimin **genel** kurallarını verdi. Bu bölüm ikisini birleştirir: her pattern için ekranı açtığınız andan pozisyonun kapandığı ana kadar giden tek bir prosedür. Amaç yeni bir kural seti kurmak değil, var olan kuralları pattern'e özgü sayılarla ve *sırayla* uygulanabilir hâle getirmektir.
 
@@ -1122,7 +1452,63 @@ Her pattern dersinin (h) maddesi bir kaybeden örnek ister. Aşağıdaki grafik 
 
 Nereye bakılır: üçünün de kaybettiği. Bu grafiğin dersi "iyi yönetim kaybı kâra çevirir" değil — çeviremez. Dersi şudur: **yönetim, kaybın büyüklüğünü belirler; pattern kalitesi ise kaybın sıklığını.** Bölüm 12.4'ün "edge varsa seçim ve yönetimden gelir" cümlesinin aritmetik karşılığı budur: 100 işlemde kaybedenlerin ortalaması −1.00R yerine −0.30R ise, aynı kazanma oranıyla beklenen değer işaret değiştirebilir. Ve dikkat: bu bir vaat değil, bir *aritmetik olasılık*tır — kendi kayıtlarınızda ölçülmeden varsayılmaz.
 
-## Bölüm 14 — RSI BAMM ve momentum teyidinin derecelendirilmesi
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 13 · Plan, ölçekleme ve kaybın büyüklüğü</span>
+
+**1. Doğrudan uygulama — iki stop, iki işlem.** Gartley, XA = 100 normalizasyonu ($X = 100$, $A = 200$), tampon $0{,}75\,ATR = 1{,}5$, giriş = ideal D. Geniş (X altı) ve dar (0.886 XA altı) stopla $1R$ ve T1 R:R'sini yazın.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $D = 200 - 0{,}786 \times 100 = \mathbf{121{,}4}$; $T_1 = 121{,}4 + 0{,}382 \times (200-121{,}4) = \mathbf{151{,}4}$ → hedefe mesafe 30,0.
+
+Adım 2 — geniş: $S = 100 - 1{,}5 = 98{,}5$ → $R = 22{,}9$ → R:R $= 30{,}0/22{,}9 = \mathbf{1{,}31}$.
+
+Adım 3 — dar: $S = 111{,}4 - 1{,}5 = 109{,}9$ → $R = 11{,}5$ → R:R $= 30{,}0/11{,}5 = \mathbf{2{,}61}$.
+
+**Cevap:** 1,31 vs 2,61 — **iki kat fark**, yalnız stop seçiminden. Gerekçe: 0.886'nın kapanışla aşılması zaten "artık Bat" demektir; yapı değiştiyse eski planın stopu da geçerliliğini yitirir.
+
+</details>
+
+**2. Ters çevirme — ölçekli girişin aritmetiği.** 13.13'ün üç dilimi: %30 @ 103,00 (SL 101,50) · %40 @ 104,20 (SL 101,00) · %30 @ 103,10 (SL 102,30). Ortalama girişi ve ağırlıklı riski hesaplayın; T1 = 109,05'te R:R nedir? Tek emirle (giriş 103,20, SL 99,50) girilseydi?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — ortalama giriş $= 0{,}3(103{,}00) + 0{,}4(104{,}20) + 0{,}3(103{,}10) = 30{,}90 + 41{,}68 + 30{,}93 = \mathbf{103{,}51}$.
+
+Adım 2 — ağırlıklı risk $= 0{,}3(1{,}50) + 0{,}4(3{,}20) + 0{,}3(0{,}80) = 0{,}45 + 1{,}28 + 0{,}24 = \mathbf{1{,}97}$.
+
+Adım 3 — ölçekli R:R $= (109{,}05 - 103{,}51)/1{,}97 = 5{,}54/1{,}97 = \mathbf{2{,}81}$.
+
+Adım 4 — tek emir: $R = 103{,}20 - 99{,}50 = 3{,}70$ → $(109{,}05-103{,}20)/3{,}70 = \mathbf{1{,}58}$.
+
+**Cevap:** 2,81R vs 1,58R — **1,78 kat**. Kazanç fiyattan değil **stop yapısından** gelir: iki dilim kendi mikro yapısının altına stop koyabildiği için ağırlıklı risk tek bir "PRZ altı" stopundan küçüktür. Bedeli: birinci dilim tek başına stop olabilir ve işlem yarım kalır. Ölçekleme R:R'yi iyileştirir, **kazanma oranını değil**.
+
+</details>
+
+**3. Karar — yönetimin beklenen değere etkisi.** Şekil 36'nın üç yönetim tarzı: kurala uyan −0,19R · kısmi alıp stopu bekleyen −0,53R · hiçbir şey yapmayan −1,00R. Kendi kayıtlarınızda kazanma oranı **%40** ve kazananların ortalaması **+2,0R** ise üç tarzın işlem başına beklenen değeri nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $BD = 0{,}40 \times 2{,}0 + 0{,}60 \times (\text{ortalama kayıp}) = 0{,}80 + 0{,}60 \times (\text{kayıp})$.
+
+Adım 2 — kurala uyan: $0{,}80 - 0{,}60 \times 0{,}19 = 0{,}80 - 0{,}114 = \mathbf{+0{,}69R}$.
+
+Adım 3 — kısmi alıp bekleyen: $0{,}80 - 0{,}318 = \mathbf{+0{,}48R}$.
+
+Adım 4 — hiçbir şey yapmayan: $0{,}80 - 0{,}600 = \mathbf{+0{,}20R}$.
+
+**Cevap:** +0,69R / +0,48R / +0,20R. Aynı kazanma oranıyla **üç buçuk kat** fark. Uyarı: bu bir vaat değil aritmetiktir — %40 ve +2,0R **sizin** kayıtlarınızdan gelmelidir; 18.3'e göre 40 işlemlik bir kayıt bu iki sayıyı bile güvenilir vermez.
+
+</details>
+
+**Grafikle doğrula:** Şekil 34'te Gartley'nin iki satırının boy farkına, Şekil 35'in kutusundaki 2,81R / 1,58R karşılaştırmasına ve Şekil 36'nın alt panelindeki üç sonuca bakın.
+
+</div>
+
+## Bölüm 14 — Teyidi derecelendirmek: RSI BAMM, uyumsuzluğun üç türü ve teyit skoru
 
 Bölüm 5.3 teyidi üç sınıfa ayırdı (dönüş mumu / momentum uyumsuzluğu / yapı kırılımı) ve Bölüm 6.3'ün tablosu RSI BAMM'ın stop kurallarını "ikincil kaynak" etiketiyle listeledi. Bu bölüm ikisini tamamlar: RSI BAMM'ın beş aşaması ve teyidin ikili değil **üç kademeli** okunması.
 
@@ -1206,7 +1592,7 @@ Nereye bakılır: ikinci vaka (Gizli). İşlemcilerin belirgin bir kısmı gizli
 
 Nereye bakılır: "veri yok" satırı. Bir skor sisteminin dürüstlüğü, elde olmayan veriyi sıfır puanla cezalandırmamasında görülür. Aksi hâlde spot FX işlemcisi, yalnızca enstrüman seçimi yüzünden hiçbir setup'ta tam puan alamaz — ve skor, kalite yerine veri erişimini ölçmeye başlar.
 
-## Bölüm 15 — Zaman analizi ve fraktal yapılar
+## Bölüm 15 — Zaman ekseni: bacak süre oranları, zaman stopu ve iç içe pattern'ler
 
 Mevcut derste zaman iki yerde geçiyordu: kontrol listesinde $t_{CD}/t_{AB} \in [0.618,\ 1.618]$ ve Bölüm 7.1'in zaman stopu. Bu bölüm zamanı tam bir katmana çevirir — fiyat ekseninin yanına dördüncü boyut olarak.
 
@@ -1263,7 +1649,9 @@ Nereye bakılır: turuncu bandın üç panelde de aynı fiyat aralığını gös
 
 Bölüm 13.13'ün üç dilimli tablosu fiyat tarafını verdi; zaman tarafı şudur: üç dilim **aynı bar içinde** açılmaz. Birinci dilim LTF yapının tamamlanmasını, ikincisi CHoCH mumunun kapanışını, üçüncüsü retest'in higher low üretmesini bekler — tipik olarak 3–15 M15 barı, yani birkaç saat. Bu gecikme bir maliyet değil, filtredir: pozisyonun tamamına ulaşmadan yapı bozulursa riskin yalnız %30'u sahadadır. Ve tersi de doğrudur: hızlı giden bir dönüşte üçüncü dilim hiç açılmaz — ölçekli giriş, **en iyi işlemlerde en küçük pozisyonu** verir. Bu takas açıkça bilinmelidir; ölçeklemenin bedava öğle yemeği olmadığı yer burasıdır.
 
-## Bölüm 16 — Konfluens skoru ve SMC ile birleşik model
+## Bölüm 16 — Konfluens skoru: 100 puanı pozisyon boyuna çevirmek + SMC birleşik model
+
+*Bu bölümde:* konfluensin bağımsızlık şartı, 100 puanlık skor tablosu, skorun kendi verinizle kalibrasyonu ve harmonik + SMC birleşik kural seti.
 
 ### 16.1 Küme (cluster) nedir — ve bağımsızlık şartı
 
@@ -1340,7 +1728,59 @@ Bölüm 9.4'ün listesine eklenen altı madde — o liste silinmez, bu maddeler 
 
 *Harmonik "nerede" der, SMC "neden ve ne zaman" der.* Harmonik PRZ olmadan bir SMC girişi keyfî bir seviyededir; SMC teyidi olmadan bir harmonik girişi bir orandan ibarettir. İkisi çakışmadığında **bekleme maliyeti sıfırdır** — ve birleşik modelin tek gerçek, ölçülebilir avantajı budur: **daha az işlem.** Daha yüksek kazanma oranı vaat edilmiyor; vaat edilen, aynı sermayeyle daha az sayıda ama daha iyi tanımlanmış riske girmektir.
 
-## Bölüm 17 — Tarayıcı algoritması ve otomasyon
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 16 · Konfluens, skor ve birleşik model</span>
+
+**1. Doğrudan uygulama — bağımsızlık denetimi.** Bir PRZ'de sekiz çakışma etiketi sayıldı; ikisi aynı XA'dan türüyor (1.272 BC ve AB=CD). Kaç **bağımsız** hesap vardır ve 16.2'nin konfluens kalemi kaç puan verir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — bağımsızlık şartı (16.1): aynı XA'dan türeyen hesaplar kümede ayrı ayrı sayılmaz. Şekil 44'ün denetim sütunu bu iki satırı **gri** işaretler ve sayımdan düşürür: $8 - 2 = \mathbf{6}$ bağımsız hesap. (Neden ikisi birden düşer: 1.272 BC ile AB=CD, PRZ'nin *tanımına* zaten girmiş olan aynı geometrinin iki okumasıdır — Şekil 16'da 105,00 ve 104,99; kümeye getirdikleri yeni bilgi sıfırdır.)
+
+Adım 2 — 16.2'nin kalemi **ikilidir**: "PRZ'de ≥ 2 bağımsız sayı → 10 puan". 6 ≥ 2 olduğu için puan **tam alınır**.
+
+**Cevap:** 6 bağımsız hesap · **10/10 puan**. Kritik gözlem: 8'i 6'ya indirmek bu setup'ta **hiç puan kaybettirmez** — konfluens şişirmesinin zararı iyi setup'ta değil, eşiğe bir-iki puan uzaktaki setup'ta çıkar.
+
+</details>
+
+**2. Ters soru — eşik etkisi.** Şekil 44'ün Setup B'si 51 puan (yapı 24 + zaman 7 + bağlam 10 + teyit 10). Konfluens haksız şişirilip o 10 puan alınırsa skor kaç olur, karar nasıl değişir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $51 + 10 = \mathbf{61}$.
+
+Adım 2 — eşikler (16.2): ≥ 75 tam pozisyon · **60–74 yarım (%0,5 risk)** · 45–59 yalnız kâğıt üstünde takip · < 45 yok.
+
+Adım 3 — karar **45–59 bandından 60–74 bandına** geçer: "takip" iken **yarım pozisyona** dönüşür.
+
+**Cevap:** 61 puan; hiç açılmaması gereken bir pozisyon açılır. Skorun işlevi tahmin değil **tutarlılıktır**: aynı setup'a iki farklı günde aynı boyutu vermek. Şişirme tam olarak bu işlevi bozar.
+
+</details>
+
+**3. Karar — A durumu stopu.** Şekil 45'in Butterfly'ı: $D = 94{,}56$, sweep dibi 91,20, giriş 95,60, klasik stop 86,90, sweep stopu 90,80, $T_1 = 104{,}30$. İki R:R'yi ve risk azalmasını hesaplayın. Aynı yapıda **CHoCH olmasaydı** ne yapardınız?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — klasik: $R = 95{,}60 - 86{,}90 = 8{,}70$ → R:R $= (104{,}30-95{,}60)/8{,}70 = 8{,}70/8{,}70 = \mathbf{1{,}00}$.
+
+Adım 2 — sweep stopu: $R = 95{,}60 - 90{,}80 = 4{,}80$ → R:R $= 8{,}70/4{,}80 = \mathbf{1{,}81}$.
+
+Adım 3 — risk azalması $= (8{,}70-4{,}80)/8{,}70 = $ **%45** (bu kurgunun sayısı; sweep fitilinin derinliğine göre her işlemde değişir).
+
+Adım 4 — CHoCH yoksa bu **B durumudur**: likidite alındı ama yapı dönmedi → **işlem yok**. Sweep tek başına dönüş değildir; devam sweep'i olabilir.
+
+**Cevap:** 1,00 → 1,81 (%45 daha az risk); CHoCH yoksa hesap hiç yapılmaz. Kuralın savunulabilir tarafı emir akışı anlatısı değil **aritmetiktir**: daha yakın stop, aynı hedefle daha yüksek R:R — anlatı yanlış olsa bile risk küçülmüştür.
+
+</details>
+
+**Grafikle doğrula:** Şekil 44'te gri işaretli iki satırı, Şekil 45'in A panelinde iki kırmızı kutunun boy farkını ve B panelindeki "İŞLEM YOK" damgasını karşılaştırın.
+
+</div>
+
+## Bölüm 17 — Tarayıcı algoritması: nasıl yazılır, nerede repaint eder?
 
 Bölüm 9.5 tarayıcı mantığını üç cümlede özetliyordu. Bu bölüm onu **yazılabilir** hâle getirir — ve yazarken verilen her kararın hangi yanlılığı ürettiğini gösterir.
 
@@ -1408,6 +1848,8 @@ Nereye bakılır: adım 8'in konumu. Teyit ve geçersizlik, akışın *sonunda* 
 
 ### 17.3 Repaint'in görsel kanıtı — gerçek veri
 
+**Çıpa: 21–25.02.2025 BTC-USD 1h örneklemi** — örneklem penceresidir; başka pencerede sayılar değişir. Repaint'in *varlığı* ise pencereye bağlı değildir: zigzag tabanlı her tarayıcıda aynı mekanizma çalışır.
+
 <GrafikEmbed src="/arastirma/harmonik-patternler/47_repaint_gercek_btc.html" baslik="Gerçek veri — BTC-USD, 1h: repaint'in görsel kanıtı" no="47" yukseklik={1020} />
 
 **Şekil 47 nasıl okunur.** Aynı pencere iki anda. **Üst panelde** karar anı 2025-02-24 17:00 UTC'de ekranda görünen hâl: X = 94.918,84 (2025-02-21 20:00) · A = 96.893,48 · B = 95.280,58 · C = 96.476,52 · **geçici** D = 93.901,58 (2025-02-24 15:00). Ölçülen oranlar: $r_B = 0.817$ (Butterfly bandı 0.75–0.82 ✓), $r_C = 0.741$ ✓, $r_D = 1.515$ XA (band 1.22–1.66 ✓), $r_{BC} = 2.153$ (band 1.60–2.70 ✓) → tarayıcı **bullish Butterfly sinyali** üretir. (Bu tarayıcının bantları dersin sert kapılarından bilerek biraz geniştir: B için 0.75–0.82, dersin kapısı 0.756–0.816; D için 1.22–1.66, kataloğun kapısı 1.272–1.618. Örnek, gerçek tarayıcıların tipik toleransıyla üretilmiş bir **yanlış pozitiftir** — dersin kendi kapısı uygulansaydı $r_B = 0.817$ sınırın bir puan dışında kalır ve sinyal hiç doğmazdı. 17.2'nin "tolerans sabit tutulur" kuralı burada da geçerlidir: değişen tolerans değil, *kimin* toleransı olduğudur.) **Alt panelde** aynı pencere, pivot kesinleştikten sonra: gerçek dip **86.128,44** (2025-02-25 16:00) — geçici D'den **25 bar sonra** ve geçici D'nin **%8.28 altında** (aynı fark, kesin dibe göre bakılırsa %9.03 yukarısı). Aynı X-A-B-C ile kesin D kullanılınca $r_D = 5.452$, $r_{BC} = 8.653$ → **hiçbir pattern bandında değil; pattern yok.**
@@ -1420,7 +1862,9 @@ Nereye bakılır: üst panelde çizilen PRZ'nin alt panelde nereye düştüğü.
 - **Python.** `scipy.signal.argrelextrema` ya da basit bir fraktal döngüyle pivot; pandas ile oran matrisi; `yfinance` / `ccxt` ile veri. Bu dersin Şekil 26, 29–32, 47 ve 48'i tam olarak bu yolla üretildi.
 - **MT4 / MT5.** ZigZag tabanlı harmonik göstergeler yaygındır; hemen hepsi zigzag repaint'ini taşır.
 
-## Bölüm 18 — İstatistik derinleştirme ve TRY / BIST uyarlaması
+## Bölüm 18 — İstatistik ve yerel uyarlama: kaç işlem yeter, USD/TRY ve BIST'te ne değişir?
+
+*Bu bölümde:* pattern × piyasa kırılımı, örneklem büyüklüğünün acımasız aritmetiği, USD/TRY ve BIST'e özgü kurallar ve uçtan uca gerçek bir EUR/USD örneği.
 
 ### 18.1 Pattern × piyasa × zaman dilimi: ne biliyoruz, ne bilmiyoruz
 
@@ -1480,6 +1924,8 @@ Düzeltmenin asıl ısırdığı yer **trend yönündeki** kurgudur: çok günl�
 
 Bu bölümün ve Bölüm 13'ün sınavı tek bir gerçek işlemdir: tarayıcının bulduğu bir yapıyı, ders boyunca kurulan tüm kontrol listesinden geçirmek ve sonucu — hangi yöne çıkarsa çıksın — olduğu gibi yazmak.
 
+**Çıpa: 28.04–01.05.2025 EUR/USD 1h örneklemi** — örneklem penceresidir; başka pencerede sayılar değişir. Aşağıdaki plan, **kontrol listesinin** bu tek fotoğrafa uygulanışıdır; sonucun lehte çıkması listeyi doğrulamaz (18.3).
+
 <GrafikEmbed src="/arastirma/harmonik-patternler/48_gercek_eurusd_crab_plan.html" baslik="Gerçek veri — EUR/USD, 1h: tarayıcının bulduğu bullish Crab ve adım adım plan" no="48" yukseklik={720} />
 
 **Şekil 48 nasıl okunur.** Pivotlar (fraktal $n = 12$): X = 1,13353 (2025-04-28 06:00) · A = 1,14286 · B = 1,13753 · C = 1,14207 · D = **1,12701** (2025-05-01 15:00). Ölçülen oranlar: $r_B = 0.571$ · $r_C = 0.853$ · $r_D = 1.699$ XA · $r_{BC} = 3.31$ — Crab bantlarının içinde.
@@ -1492,7 +1938,61 @@ Bu bölümün ve Bölüm 13'ün sınavı tek bir gerçek işlemdir: tarayıcın�
 
 **Sonuç ve dersin en önemli cümlesi.** Bu işlem **T2'ye ulaştı**. Grafikte bu, gizlenmeden yazılıdır — ve yanında şu not durur: *kötü puanlı bir setup'ın kazanması puanlamayı yanlışlamaz; tek gözlemin hiçbir şey göstermediğini gösterir.* Bölüm 18.3'ün aritmetiği tam da budur: bir işlem, %50'lik bir süreçten de %80'lik bir süreçten de aynı olasılıkla gelebilir. Nereye bakılır: kontrol listesindeki beş "evet"in **hangileri** olduğu — sert kapılar. Bir sistemin dürüstlüğü, kendi kurallarına uymayan ama kazanan işlemi de kaydetmesindedir; aksi hâlde kayıtlar kuralları değil, kuralların anısını ölçer.
 
-## Özet tablo — tüm sayısal sabitler
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 18 · Örneklem, carry ve yerel kısıtlar</span>
+
+**1. Doğrudan uygulama — kaç işlem yeter?** $p = 0{,}45$ varsayımıyla, kazanma oranını ±%10 ve ±%5 hassasiyetle kestirmek için gereken işlem sayısı nedir? Sonucu "40 işlemde %65 kazandım" cümlesine uygulayın.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $n \approx p(1-p)\left(\dfrac{1{,}96}{d}\right)^{2}$; $p(1-p) = 0{,}45 \times 0{,}55 = 0{,}2475$.
+
+Adım 2 — $d = 0{,}10$: $(1{,}96/0{,}10)^2 = 384{,}16$ → $n = 0{,}2475 \times 384{,}16 \approx \mathbf{95}$.
+
+Adım 3 — $d = 0{,}05$: $(1{,}96/0{,}05)^2 = 1536{,}64$ → $n = 0{,}2475 \times 1536{,}64 \approx \mathbf{380}$.
+
+Adım 4 — 40 işlem, ±%10'un bile yarısı kadar örneklem: "%65" cümlesi gerçek oranın kabaca **%50 ile %80 arasında** olmasıyla uyumludur.
+
+**Cevap:** ~95 ve ~380 işlem. 16.3'ün 50 işlemlik kalibrasyon ödevi kovaları *ayırt etmeye* değil, yalnız yönü sezmeye yeter — elli işlemin verdiği şey kanıt değil **hipotezdir**.
+
+</details>
+
+**2. Ters çevirme — carry düzeltmesi.** 18.4'ün formülü: $R_{net} = R - \dfrac{\text{swap}}{E-S}$. Kâğıt üstünde **2,0R** olan çok günlük bir **long USD/TRY** işleminde toplam taşıma maliyeti $1R$'ın %15'i kadarsa net sonuç kaç R? Aynı işlem **short USD/TRY** olsaydı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — long USD/TRY = TRY'yi satan taraf → faiz farkı **aleyhte**: $R_{net} = 2{,}0 - 0{,}15 = \mathbf{1{,}85R}$ (**%7,5** aşınma).
+
+Adım 2 — short USD/TRY = TRY'yi tutan taraf → faiz farkı **lehte**: $R_{net} = 2{,}0 + 0{,}15 = \mathbf{2{,}15R}$.
+
+Adım 3 — ama yön: short USD/TRY, taşıyıcı trende **karşıdır**. 18.4'ün kuralı gereği bu kurgu yalnız **reaction** hedefiyle ve **yarım pozisyonla** işlenir; carry avantajı yönü düzeltmez.
+
+**Cevap:** 1,85R ve 2,15R. Ders: TRY'de "kâğıt üstünde 2R" ile "hesapta 2R" arasındaki farkın başlıca sebebi carry'dir ve düzeltme, asıl **trend yönündeki** kurguyu ısırır. Taşıma süresi uzadıkça aşınma doğrusal büyür — zaman stopunun (15.3) TRY'deki ikinci gerekçesi budur.
+
+</details>
+
+**3. Karar — BIST'te "sıkı" PRZ.** Bir BIST hissesinde PRZ genişliği XA'nın **%2,8'i** ve **6 fiyat adımı**. 18.5'e göre işlem yapılır mı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — yüzde ölçüsü (3.2): %2,8 < %3 → "**sıkı**".
+
+Adım 2 — adım ölçüsü (18.5): "Altı adımlık bir PRZ, yüzde olarak ne kadar dar görünürse görünsün, işlem yapılabilir bir bölge **değildir**." Fiyat adımı PRZ'yi yapay olarak daraltmıştır.
+
+Adım 3 — ek iki kısıt: BIST'te gap riski nedeniyle **teyitli giriş** varsayılandır (limit giriş güvenilmez) ve pozisyon boyu "stop çalışırsa 1R" değil "**gap 2R götürebilir**" varsayımına göre kurulur.
+
+**Cevap:** **Hayır.** İki ölçü çatıştığında mutlak ölçü (adım sayısı) kazanır — çünkü emir defteri yüzdeyle değil adımla çalışır. Aynı mantık düşük derinlikli hisselerde T-bar'ı da şüpheli kılar: gördüğünüz fitil kurumsal savunma değil, tek bir emrin izi olabilir.
+
+</details>
+
+**Metinle doğrula:** 18.3'ün $n$ formülünü kendi kayıt sayınızla, 18.4'ün $R_{net}$ düzeltmesini son çok günlük TRY işleminizle, 18.5'in adım kuralını izleme listenizdeki en küçük fiyatlı hisseyle bir kez hesaplayın.
+
+</div>
+
+## Ek A — Sabitler tablosu: derste geçen her sayı, türetimi ve kanıt statüsü
 
 | Sabit | Değer | Türetim / kullanım / statü |
 |---|---|---|
@@ -1585,7 +2085,7 @@ Bu bölümün ve Bölüm 13'ün sınavı tek bir gerçek işlemdir: tarayıcın�
 | BIST kuralları | Teyitli giriş varsayılan (gap); PRZ genişliği adım sayısıyla birlikte yazılır; haftalık+ TF'de reel seri kontrolü | Ders kararı [D] |
 | Gerçek EUR/USD Crab | $r_B$ 0.571 · $r_C$ 0.853 · $r_D$ 1.699 · $r_{BC}$ 3.31; PRZ %23.0 XA; 1R = 0,00221; T1 2.4R / T2 4.1R / T3 6.8R; 5/9 EVET; T2'ye ulaştı | Şekil 48, gerçek veri [T] — tek gözlem |
 
-## Sözlük
+## Ek B — Sözlük: derste geçen her terimin tek cümlelik tanımı
 
 - **XABCD:** beş pivotlu harmonik yapı; XA impuls, AB/BC düzeltme, CD tamamlanış.
 - **Retracement / extension / projection:** aynı bacağın içine düzeltme (2 nokta) / ötesine uzantı (2 nokta) / bir bacağın başka noktadan taşınması (3 nokta).
@@ -1625,7 +2125,7 @@ Bu bölümün ve Bölüm 13'ün sınavı tek bir gerçek işlemdir: tarayıcın�
 - **maxSpan:** tarayıcıda X ile D arasında izin verilen azami bar sayısı.
 - **Barconfirmed / lookahead:** sinyalin kapanmış bar üzerinden üretilmesi ve geleceğe bakmama ayarı; repaint'i önleyen iki teknik koşul.
 
-## Kaynaklar
+## Ek C — Kaynaklar: birincil metinler, bağımsız testler ve araç dokümanları
 
 **Carney (birincil):**
 1. Gartley: https://harmonictrader.com/harmonic-patterns/gartley-pattern/

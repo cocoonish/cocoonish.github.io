@@ -1,19 +1,80 @@
 ---
 title: 'Bloomberg HRA ile Korelasyon ve Göreli Değer Analizi'
-description: 'HRA panelindeki her parametrenin okunması: beta/alpha, R², t-test ve güvenilirlik, Last T-Value ile rich/cheap sinyali, ima edilen hareket, Excel/Python replikasyonu ve operasyonel monitör listesi.'
+description: "HRA panelindeki her parametrenin okunması: beta/alpha ve durasyon köprüsü, R²'nin hedge diline (volatilite azaltımına) çevrilmesi, t-test ve büyük N tuzağı, Last T-Value ile rich/cheap sinyali, ima edilen hareket ve fair value cetveli, kointegrasyon · HAC · rolling beta eksikleri, Excel/Python replikasyonu ve operasyonel monitör listesi — 10 pratik bloğu, 39 çözümlü alıştırma."
 pubDate: 2026-07-17
+updatedDate: 2026-08-20
 tags: ['korelasyon', 'regresyon', 'bloomberg', 'rv', 'ders']
 durum: 'aktif'
 kaynak: 'Bloomberg HRA rehberi (temsili örnek: XLBNK vs TURKGB 2033)'
+ozet: "Bloomberg HRA panelindeki her parametreyi okutur: beta/alpha–durasyon köprüsü, R²'nin hedge diline (volatilite azaltımına) çevrilmesi ve rich/cheap sinyalinin dürüst sınırları."
+seviye: "orta"
+onkosul: []
 ---
 
 Bloomberg'in **HRA (Historical Regression Analysis)** fonksiyonu, iki enstrüman arasındaki tarihsel ilişkiyi tek ekranda regresyona döker: eğim, kesişim, ilişki gücü, güvenilirlik istatistikleri ve son gözlemin konumu. Bu ders, paneldeki her parametreyi aynı şablonla işler: tanım ve formül · örnekteki değer · hedef eşikler · düşük/yüksek ne anlama gelir.
 
-<div class="not"><span class="etiket">Temsili örnek</span> Ders boyunca tüm parametreler tek bir canlı kurulum üzerinden okunuyor: Y = XLBNK (BIST Liquid Banks Index), X = TURKGB 26.2 10/05/2033 (5 Ekim 2033 vadeli, %26,2 kuponlu sabit kuponlu DİBS). Frekans haftalık yüzde getiri, pencere 19.07.2024 – 10.07.2026, gözlem sayısı N = 103. Metindeki bütün sayısal değerler bu kurulumun panel çıktısından alınmıştır.</div>
+<div class="not">
+  <span class="etiket">Çıpa — bu dersteki sayılar hangi ekrana ait</span>
 
-## 1. HRA'nın Mantığı ve Ekran Kurulumu
+  **Çıpa: 10.07.2026 kapanışlı HRA çıktısı** — anlık görüntüdür, kural değildir.
+  Ders boyunca bütün parametreler tek bir kurulum üzerinden okunuyor: Y = XLBNK
+  (BIST Liquid Banks Index), X = TURKGB 26.2 10/05/2033 (5 Ekim 2033 vadeli, %26,2
+  kuponlu sabit kuponlu DİBS). Frekans haftalık yüzde getiri, örneklem penceresi
+  19.07.2024 – 10.07.2026 (2 yıl), gözlem sayısı N = 103, son kapanışlar XLBNK
+  14,438.82 · TURKGB 2033 83.10. Metindeki bütün sayısal değerler bu kurulumun
+  panel çıktısından alınmıştır: **yöntem** her koşulda geçerlidir, **sayılar**
+  yalnızca bu fotoğrafa aittir. Kendi ekranınızda pencereyi kaydırdığınızda
+  $\beta$, $R^2$ ve LTV değişir — değişmeyen şey okuma sırasıdır.
 
-### 1.1 HRA ne yapar, ne yapmaz
+</div>
+
+<div class="not gezinme">
+  <span class="etiket">Bu derste ne var</span>
+
+  **Amaç.** Ders bittiğinde bir HRA ekranını açıp on beş alanının her birini tek tek
+  okuyabilecek; ilişkinin **var olup olmadığını** (t-Test), **ne kadar güçlü**
+  olduğunu ($R^2$, SEE) ve **şu anda ne söylediğini** (Last T-Value) ayrı ayrı
+  karara bağlayabilecek; aynı çıktıdan hedge oranı, senaryo tablosu ve rich/cheap
+  monitörü üretebileceksiniz.
+
+  **Yapı.** Ders **tek akıştır** (1 → 10) ve sırayla okunur: Bölüm 1 ekranı kurar,
+  2–5 panelin alanlarını dört aileye ayırıp tek tek işler, 6 amaca göre eşikleri
+  koyar, 7 hepsini tek çıktıda birleştirip karara bağlar, 8 tuzakları ve HRA'nın
+  yapmadığı testleri ekler, 9 replikasyonu verir, 10 ise paneli bir adil değer
+  cetveline dönüştürür. Ekler (A–C) sonradan masada tek başına kullanılan başvuru
+  sayfalarıdır.
+
+  | Bölüm | Konu | Ne kazanırsın | Uzunluk |
+  |---|---|---|---|
+  | **1** | ekran kurulumu, parametreler, kurma prosedürü | ayarların sonucu nasıl değiştirdiğini görmek; yanlış kurulmuş ekranı bir bakışta tanımak | ~20 dk |
+  | **2–3** | $\beta$, $\alpha$ · R, $R^2$, SEE | tepkinin büyüklüğünü ilişkinin gücünden ayırmak; hedge'in gerçek katkısını TL'ye çevirmek | ~30 dk |
+  | **4–5** | güvenilirlik ve son nokta | "anlamlı" ile "güçlü"yü karıştırmamak; LTV'yi sinyal bandına oturtmak | ~30 dk |
+  | **6–7** | amaca göre eşikler, uçtan uca okuma | bir paneli tek oturumda karara bağlamak; kaybeden okumaları tanımak | ~25 dk |
+  | **8–9** | tuzaklar; HAC, rolling beta, kointegrasyon; replikasyon | HRA'nın eksik bıraktığı testleri kendi altyapınızda kurmak | ~30 dk |
+  | **10** | ima edilen hareket ve göreli değer | "geride kaldı" anlatısını sigma diline çevirip pozisyona ya da redde bağlamak | ~45 dk |
+  | **Ek A–C** | parametre özeti · formül kartı · monitör rutini | masada tek sayfalık başvuru; günlük/haftalık/aylık kontrol listesi | ~10 dk |
+
+  **Önce şunu oku.** Zorunlu ön koşul yok; ortalama, standart sapma ve kovaryans
+  kavramları yeterlidir. Tahvil tarafındaki durasyon köprüsü için
+  [Faiz Teorisi ve Eğri İnşası](/arastirma/faiz-egrisi-ve-konvansiyonlar/) ve
+  [Enstrüman Fiyatlama](/arastirma/enstruman-fiyatlama/); hedge boyutlandırma ve
+  DV01 dili için [Risk ve Hedge](/arastirma/risk-ve-hedge/) yardımcı olur.
+
+  **İçinde ne var.** 0 grafik · 0 hesap aracı (bütün hesaplar Excel kolon tarifi ve
+  Python bloklarıyla yapılır) · 42 tablo · 10 pratik bloğu (39 çözümlü alıştırma)
+  · 3 ek: parametre özeti, formül kartı, operasyonel monitör listesi.
+
+  **Tarih dili.** Yöntem anlatan her cümle görelidir: "örneklem penceresi", "son
+  gözlem", "$k$ hafta önce", "örneklemin en uç haftası". Takvim yalnızca **ölçüm**
+  cümlelerinde geçer ve her zaman `Çıpa:` ile işaretlenir — yukarıdaki kutu dersin
+  ana çıpasıdır. Bir yıl sonra sayılar farklı olacaktır; **okuma sırası** aynı
+  kalacaktır.
+
+</div>
+
+## 1 — HRA'nın mantığı ve ekran kurulumu: hangi ayar hangi sonucu değiştirir?
+
+### 1.1 — HRA ne yapar, ne yapmaz: dört kullanım alanı, dört eksik test
 
 HRA, iki enstrüman arasındaki tarihsel ilişkiyi tek bir doğrusal denkleme indirger: seçtiğiniz pencere ve frekansta sıradan en küçük kareler regresyonu (OLS — artıkların karelerinin toplamını en küçükleyen doğruyu bulan standart yöntem) koşar ve sonuçları saçılım grafiği ile istatistik paneli olarak sunar. Masada dört ana kullanım alanı vardır:
 
@@ -24,14 +85,14 @@ HRA, iki enstrüman arasındaki tarihsel ilişkiyi tek bir doğrusal denkleme in
 
 HRA'nın yapmadıkları da en az yaptıkları kadar önemlidir — çünkü panel çıktısı fazlasıyla "bitmiş" görünür ve eksik testleri kullanıcının kendisinin eklemesi gerekir. HRA **kointegrasyon testi yapmaz**, **nedensellik söylemez**, standart hataları otokorelasyon ve değişen varyansa karşı **düzeltmez** (Newey-West düzeltmesi yoktur) ve betanın zaman içinde değiştiğini **göstermez**. Bunların hepsi Bölüm 8'de ele alınıyor.
 
-### 1.2 Model
+### 1.2 — Model: panelin her istatistiği hangi bileşeni ölçer
 
 $$
 Y_t = \beta \, X_t + \alpha + \varepsilon_t
 $$
 Reg On = Percent seçiliyken $Y_t$ ve $X_t$, seçilen frekanstaki yüzde fiyat değişimleridir (temsili örnekte haftalık yüzde değişim). $\beta$ eğim, $\alpha$ kesişim (intercept), $\varepsilon$ ise modelin açıklayamadığı artıktır (residual). Panelde gördüğünüz her istatistik bu üç bileşenden birini ölçer: $\beta$ ve $\alpha$ katsayıları; R, $R^2$ ve SEE ilişkinin gücünü; standart hatalar, t-Test ve Significance katsayıların güvenilirliğini; Last T-Value / P-Value / Spread / Ratio ise son gözlemin konumunu.
 
-### 1.3 Y ve X seçimi — sıralama neden önemli
+### 1.3 — Y ve X seçimi: ters regresyonun betası neden 1/β değildir
 
 Temsili örnekte Y = XLBNK (BIST Liquid Banks Index), X = TURKGB 26.2 10/05/2033'tür; HRA ekranındaki sarı **Indep** kutusu bağımsız değişkeni gösterir. Kural: **açıklamak veya hedge etmek istediğiniz varlık Y, açıklayıcı ya da hedge aracı olan varlık X olmalıdır.**
 
@@ -42,7 +103,7 @@ $$
 $$
 Örnekte $\beta_{Y|X} = 1.514$ ve $R^2 \approx 0.389$ olduğundan, ters regresyon $\beta_{X|Y} = 0.389 / 1.514 \approx 0.257$ verir — $1/1.514 = 0.66$ değil. $R^2 = 1$ olmadıkça iki yön simetrik değildir. Yanlış yönde kurulmuş bir HRA'dan alınan beta ile hedge boyutlandırmak, pozisyonu ciddi şekilde yanlış ölçeklendirir.
 
-### 1.4 HRA parametreleri tek tek
+### 1.4 — Parametreler tek tek: hangi kutu regresyonun tanımını değiştirir
 
 HRA ekranındaki her parametre regresyonun tanımını değiştirir; aynı enstrüman çifti için bile farklı parametre setleri farklı beta ve $R^2$ üretir. Aşağıdaki tablo her parametrenin işlevini ve masa önerisini verir (fonksiyon ve alan adları Bloomberg'deki halleriyle bırakılmıştır):
 
@@ -59,7 +120,7 @@ HRA ekranındaki her parametre regresyonun tanımını değiştirir; aynı enstr
 | **LCL (Reg On yanında)** | Yerel para birimi; iki enstrüman farklı para birimindeyse ortak para birimine çevirme seçeneği. | Temsili örnekte ikisi de TL — LCL doğru. |
 | **Statistics / Transformations sekmeleri** | Sağ panel: istatistikler veya seriye dönüşüm (log, fark vb.) uygulama. | Bu ders Statistics panelini satır satır işliyor. |
 
-### 1.5 Grafik elemanları
+### 1.5 — Grafik elemanları: saçılım, doğru, kırmızı yıldız, kenar histogramları
 
 HRA ekranının ana grafiği bir saçılım (scatter) grafiğidir; beş elemanı vardır:
 
@@ -69,26 +130,154 @@ HRA ekranının ana grafiği bir saçılım (scatter) grafiğidir; beş elemanı
 - **Kenar histogramları:** sol eksende Y'nin, alt eksende X'in marjinal dağılımı ve üzerine oturtulmuş normal eğri. Kalın kuyruklar ve -%13/-%14 civarındaki tekil çubuklar uç haftaları ele verir.
 - **Alt panel:** iki serinin fiyat zaman serisi (temsili örnekte son değerler: XLBNK 14,438.82 ve TURKGB 2033 83.10). Regresyonun "hammaddesini" görsel olarak doğrulamak için kullanın.
 
-### 1.6 Örnek kurulumun değerlendirmesi
+### 1.6 — Kurulum denetimi: doğru yapılanlar ve gözden kaçan Winsorize
 
-Temsili kurulum büyük ölçüde doğrudur: Percent seçili (seviye regresyonu tuzağına düşülmemiş), haftalık frekans, 2 yıllık pencere (19.07.2024 – 10.07.2026 arası 104 haftalık fiyat gözlemi, yani 103 getiri; panelin Number of Points = 103 değeriyle birebir tutarlı), Lag = 0, LCL açık.
+Temsili kurulum büyük ölçüde doğrudur: Percent seçili (seviye regresyonu tuzağına düşülmemiş), haftalık frekans, 2 yıllık pencere (çıpa penceresi 19.07.2024 – 10.07.2026: 104 haftalık fiyat gözlemi, yani 103 getiri; panelin Number of Points = 103 değeriyle birebir tutarlı), Lag = 0, LCL açık.
 
-<div class="not"><span class="etiket">Dikkat</span> Saçılımda X ekseninde -%13/-%14'e uzanan noktalar duruyor ve regresyon doğrusu bu uçlara kadar çizilmiş. $\sigma_X$ yaklaşık %2.4 iken (türetme Bölüm 7.3'te) bu noktalar $2\sigma$ sınırı olan yaklaşık %4.9'un çok ötesinde — yani Winsorize bu hesapta fiilen devrede DEĞİL. Söz konusu uç hafta büyük olasılıkla 17–21 Mart 2025 (siyasi şok haftası). Winsorize'ı açıp $\beta$'nın ne kadar değiştiğine bakmak, bu analizde atlanmaması gereken ilk duyarlılık testidir (Bölüm 8.6).</div>
+<div class="not"><span class="etiket">Dikkat</span> Saçılımda X ekseninde -%13/-%14'e uzanan noktalar duruyor ve regresyon doğrusu bu uçlara kadar çizilmiş. $\sigma_X$ yaklaşık %2.4 iken (türetme Bölüm 7.3'te) bu noktalar $2\sigma$ sınırı olan yaklaşık %4.9'un çok ötesinde — yani Winsorize bu hesapta fiilen devrede DEĞİL. Söz konusu hafta örneklemin **en uç gözlemidir**; hangi takvim haftasına denk düştüğü her ekranda değişir. Çıpa: 17–21.03.2025 haftası (siyasi şok) — tarihsel epizottur, kural değildir. Winsorize'ı açıp $\beta$'nın ne kadar değiştiğine bakmak, bu analizde atlanmaması gereken ilk duyarlılık testidir (Bölüm 8.6).</div>
 
-## 2. Eğim ve Kesişim: Raw Beta, Adjusted Beta, Alpha
+### 1.7 — Ekranı kurma prosedürü: sekiz adımda doğru HRA
+
+Buraya kadarki alt bölümler ayarların ne yaptığını anlattı; bu alt bölüm onları bir
+**sıraya** koyar. Sıra önemlidir: sonraki adımların doğruluğu öncekilere bağlıdır ve
+atlanan her adım, panelin en sonunda okunacak tek bir sayıyı sessizce bozar.
+
+1. **Amacı yaz.** Hedge mi, pairs/RV mi, makro sinyal mi? Eşik seti buna göre
+   değişir (Bölüm 6.1). Amaç yazılmadan açılan ekran, sonuçtan sonra amaç seçmeye
+   — yani kendi kendini doğrulamaya — davetiyedir.
+2. **Y ve X'i sırala.** Açıklanacak/hedge edilecek varlık Y, açıklayıcı/hedge aracı
+   X. Yanlış sıra betayı $R^2$ kadar bozar (Bölüm 1.3).
+3. **Data alanını seç.** Fiyat–fiyat karşılaştırmasında PX_LAST; faiz duyarlılığını
+   doğrudan ölçecekseniz YLD_YTM_MID. İki enstrümanda **aynı türde** alan olmalı —
+   birinde fiyat, ötekinde getiri kullanmak betanın birimini anlamsızlaştırır.
+4. **Reg On = Percent.** Tek satırlık kural; ihlali bütün istatistikleri
+   kullanılamaz hâle getirir (Bölüm 8.1).
+5. **Frekansı ufka eşle.** Haftalık rebalance edeceksen haftalık; günlük P&L
+   yönetiyorsan günlük. Frekans hem $\beta$'yı hem N'i değiştirir (Bölüm 8.4).
+6. **Pencereyi rejime göre seç, N'i kontrol et.** Amaç eşiğinin altında N varsa
+   (hedge için 60, pairs için 100) pencereyi uzat; uzatınca rejim karışıyorsa
+   frekansı yükselt. Bu iki bedelin dengesi Bölüm 4.5'teki planlama tablosundadır.
+7. **Lag = 0 ile başla, sonra Lag = 1'i dene.** Eşzamanlı ilişki ana sonuçtur;
+   Lag = 1 sonucu ayrı bir iddiadır (öncülük) ve ayrı not edilir (Bölüm 10.12).
+8. **Dayanıklılık çaprazı: Winsorize aç/kapa + Non-Param.** Üç sonucu yan yana
+   yazın. Birbirine yakınsa ilişki dokunun genelinden gelir; ayrışıyorsa birkaç uç
+   haftadan (Bölüm 8.6).
+
+#### Ekran künyesi — her analizin başına yazılacak yedi satır
+
+Aynı çift için farklı günlerde alınmış iki çıktı, künye olmadan karşılaştırılamaz.
+Künye aynı zamanda dersin çıpa kutusunun kişisel hâlidir:
+
+| Alan | Ne yazılır | Bu dersteki çıpa değeri |
+|---|---|---|
+| Y / X | tam enstrüman adı, tercihen ISIN | XLBNK Index / TURKGB 26.2 10/05/2033 |
+| Data alanı | PX_LAST · YLD_YTM_MID · toplam getiri | PX_LAST (temiz fiyat) |
+| Reg On | Percent / Price | Percent |
+| Frekans | Daily / Weekly / Monthly | Weekly (Cuma kapanışı) |
+| Pencere · N | başlangıç–bitiş · gözlem sayısı | 19.07.2024 – 10.07.2026 · N = 103 |
+| Lag · Winsorize · LCL | üç ayarın hâli | 0 · kapalı · açık (ikisi de TL) |
+| Çekim anı | çıktının alındığı tarih | 10.07.2026 kapanışı |
+
+<div class="not"><span class="etiket">Tipik hata</span> Künyeyi yazmadan ekran görüntüsü almak. Bir hafta sonra "beta 1.51'di" cümlesinin hangi pencereden, hangi frekanstan geldiği hatırlanmaz; iki analiz arasındaki fark ilişkinin değişmesinden mi ayarın değişmesinden mi bilinemez. Kural: <strong>künyesiz sayı, sayı değildir.</strong></div>
+
+<div class="pratik">
+  <span class="etiket">Pratik — 1 · Ekran kurulumu</span>
+
+**1. Ters yön.** Meslektaşınız aynı çifti ters kurmuş: Y = TURKGB 2033, X = XLBNK.
+Sizin ekranınızda $\beta = 1.514$ ve $R^2 = 0.389$. Onun ekranında beta kaç çıkar?
+"$1/1.514 = 0.66$" cevabı neden yanlış?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — kural: $\beta_{Y|X}\cdot\beta_{X|Y} = R^2$ (Bölüm 1.3).
+
+Adım 2 — $\beta_{X|Y} = R^2/\beta_{Y|X} = 0.389/1.514 = 0.257$.
+
+Adım 3 — neden $1/\beta$ değil: OLS yalnızca **dikey** hataları en küçükler.
+Eksenler değişince en küçüklenen hata da değişir. $1/\beta$ ancak $R^2 = 1$ iken
+doğrudur; burada $0.66$ ile $0.257$ arasında **2.6 kat** fark var.
+
+**Cevap:** 0.257. Ters yönde iş yapacaksanız HRA'yı ters kurup ikinci betayı ayrıca
+not edin.
+
+</details>
+
+**2. Gözlem denetimi.** 2 yıllık haftalık pencere kurdunuz ama panel Number of
+Points = 99 gösteriyor. Kaç olmalıydı, fark nereden gelir, nasıl teşhis edersiniz?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — beklenen: 2 yıl × 52 ≈ 104 haftalık **fiyat** gözlemi → getiri sayısı bir
+eksik: **103**.
+
+Adım 2 — fark: $103 - 99 = 4$ hafta. Regresyon yalnızca **iki serinin de** fiyatı
+olan haftaları kullanır; dört haftada iki taraftan biri boştur (tatil, ihraç
+öncesi kotasyon yokluğu, tahvilde işlem görmeyen hafta).
+
+Adım 3 — teşhis: iki seriyi ayrı ayrı çekip hafta sayılarını karşılaştırın; eksik
+haftaların hangi seride olduğu doğrudan görünür (Bölüm 9.3).
+
+**Cevap:** 103 olmalıydı; 4 hafta veri hizası kaybı. N eşiğin (60) çok üstünde
+olduğu için sonuç bozulmaz, ama künyeye yazılır.
+
+</details>
+
+**3. Yanlış kurulmuş ekran.** Elinize gelen çıktıda: Reg On = Price, 5Y günlük,
+$R^2 = 0.94$, $t = 45$. Sunumda "neredeyse mükemmel ilişki" yazıyor. Ne dersiniz?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — kontrol listesinin 1. adımı: Reg On = Price → **dur**. Seviye
+regresyonunda iki trendli seri arasında sahte $R^2$ doğar (Bölüm 8.1).
+
+Adım 2 — büyüklük kanıtı değil: $N \approx 1250$'de küçük bir ilişki bile devasa
+$t$ üretir (Bölüm 4.3).
+
+Adım 3 — doğru aksiyon: aynı pencereyi Percent ile yeniden koş; $R^2$ tipik olarak
+0.9'lardan 0.2–0.4 bandına düşer. Seviye ilişkisi gerçekten sorunuzsa aleti
+değiştirin: kointegrasyon testi (Bölüm 8.2).
+
+**Cevap:** Sonuç kullanılamaz; ekran yeniden kurulur.
+
+</details>
+
+**4. Winsorize devrede mi?** Saçılımda X ekseni −%13.5'e uzanıyor ve $\sigma_X
+\approx 2.4$. Winsorize $2\sigma$ ile açık olsaydı ne görürdünüz?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — sınır: $2\sigma_X = 2 \times 2.4 = 4.8$, yani ±%4.8.
+
+Adım 2 — açık olsaydı −%13.5'lik gözlem −%4.8'e kırpılır ve saçılımın sol ucu
+orada biterdi. Uç noktalar duruyorsa Winsorize **kapalıdır**.
+
+Adım 3 — sonuç: beta ve $R^2$, örneklemin en uç haftasının etkisini tam taşıyor.
+İlk duyarlılık testi Winsorize'ı açıp farkı ölçmektir (Bölüm 8.6).
+
+**Cevap:** Kapalı; grafik bunu tek bakışta ele veriyor.
+
+</details>
+
+</div>
+
+## 2 — Eğim ve kesişim (Raw β · Adjusted β · α): tepki ne kadar büyük?
 
 Bu bölümden itibaren her parametre aynı şablonla işleniyor: tanım ve formül · örnekteki değer · nasıl okunur · değer aralıkları (düşük/yüksek ne demek) · tuzaklar.
 
-### 2.1 Raw BETA — örnekte 1.514
+### 2.1 — Raw Beta: X %1 oynadığında Y ne yapar? (örnekte 1.514)
 
-#### Tanım ve formül
+#### Tanım ve formül — Raw β (regresyon eğimi)
 
 $$
 \beta = \frac{\operatorname{Cov}(X, Y)}{\operatorname{Var}(X)} = \rho \cdot \frac{\sigma_Y}{\sigma_X}
 $$
 $\beta$, X'teki %1'lik harekete Y'nin verdiği ortalama tepkidir. İkinci eşitlik kritik sezgiyi verir: **beta = korelasyon çarpı volatilite oranı.** Yani yüksek beta iki farklı kaynaktan gelebilir — güçlü ilişki ($\rho$) veya Y'nin X'ten çok daha oynak olması ($\sigma_Y/\sigma_X$). Aynı betaya hem sıkı ilişkili sakin bir çiftte hem de gevşek ilişkili ama Y'si çok oynak bir çiftte rastlayabilirsiniz; ikisinin hedge kalitesi bambaşkadır. Bu yüzden beta asla R ve $R^2$'den bağımsız okunmaz.
 
-#### Örnekteki değerin okunması
+#### Örnekteki değerin okunması — Raw β = 1.514 ne diyor?
 
 $\beta = 1.514$: TURKGB 2033'ün fiyatı bir haftada %1 yükseldiğinde XLBNK ortalama %1.514 yükselir (ve tersi). Birim vurgusu önemli: X, tahvilin **fiyat yüzdesidir**, faizin baz puanı değildir. Faiz diline çevirmek için durasyon köprüsü gerekir:
 
@@ -97,7 +286,7 @@ $$
 $$
 Örnek: 2033 tahvilinin modifiye durasyonu yaklaşık 2.4 varsayılırsa (gerçek değeri YAS/DES'ten teyit edin), 100 bp faiz indirimi tahvili yaklaşık +%2.4 yukarı taşır; XLBNK için ima $1.514 \times 2.4 \approx 3.6$, yani yaklaşık +%3.6. Masada betayı bu dile çevirip konuşmak çok daha kullanışlıdır.
 
-#### Değer aralıkları — düşük/yüksek ne anlama gelir
+#### Değer aralıkları — Raw β: düşük/yüksek ne anlama gelir
 
 | $\beta$ aralığı | Anlamı | Masa yorumu |
 |---|---|---|
@@ -109,7 +298,7 @@ $$
 | $1.2 < \beta \le 2.0$ | Kaldıraçlı tepki | Temsili örnek (1.514) burada. Y, X'in temasını kaldıraçla yaşıyor — kaldıraçlı bilançolu banka hissesinin tahvile tepkisi için tipik ve iktisaden tutarlı. |
 | $\beta > 2$ | Aşırı kaldıraç / şüphe | Önce doğrulayın: ölçek hatası (yield ile fiyat karışması), tek outlier'ın sürüklediği eğim ya da $\sigma_X$'in anormal düşüklüğü. Winsorize aç/kapa testi şart. |
 
-#### "Kaç olmalı?" sorusunun doğru cevabı
+#### "β kaç olmalı?" — sorunun doğru cevabı
 
 $\beta$'nın kendisi için "iyi/kötü" eşiği yoktur — beta bir ölçümdür, hedef değildir. Değerlendirilecek olan üç şeydir: (1) anlamlılık (t-Test büyüklüğü, Bölüm 4.3), (2) hassasiyet ($SE(\beta)/\beta$ oranı, Bölüm 4.1) ve (3) istikrar (farklı pencerelerde aynı bölgede kalıp kalmadığı, Bölüm 8.3). Temsili örnekte %95 güven aralığı:
 
@@ -120,36 +309,36 @@ Yani "gerçek" beta 1.2 de olabilir, 1.8 de. Hedge boyutlandırırken bu aralı�
 
 <div class="not"><span class="etiket">Tuzak</span> Beta simetrik bir ortalamadır: tahvilin yükseldiği VE düştüğü haftaların karışımı. Kriz haftalarında gerçekleşen beta çok daha yüksek olabilir — stres dönemlerinde tüm varlıkları aynı ortak faktör sürüklediği için korelasyonlar 1'e yakınsar. Asimetriden şüpheleniyorsanız Beta +/- kutusunu işaretleyip düşüş-betasını ayrıca ölçün.</div>
 
-### 2.2 Adjusted BETA — örnekte yaklaşık 1.34
+### 2.2 — Adjusted Beta: Blume düzeltmesi ne zaman kullanılır? (örnekte ≈1.34)
 
-#### Tanım ve formül
+#### Tanım ve formül — Adjusted β (Blume düzeltmesi)
 
 $$
 \beta_{adj} = 0.67 \times \beta_{raw} + 0.33 \times 1.0
 $$
 Blume (1971) düzeltmesi: betaların zaman içinde 1'e döndüğü (mean reversion) ampirik bulgusuna dayanarak, ileriye dönük tahmin için ham betayı 1'e doğru çeker. Sezgisi şudur: örneklemde uç çıkan betalar kısmen örneklem şansıyla abartılmıştır; geleceğe taşırken 1'e çekmek bu abartıyı törpüler. Temsili örnekte: $0.67 \times 1.514 + 0.33 = 1.344$ (panelde 1.3 olarak kırpılmış görünür).
 
-#### Hangisini kullanmalı
+#### Hangisini kullanmalı — Raw β mı, Adjusted β mı?
 
 - **Raw beta:** tarihsel ilişkiyi ölçüyorsanız, hedge oranı hesaplıyorsanız, geçmiş P&L'i açıklıyorsanız. Masadaki işlerin %90'ı budur.
 - **Adjusted beta:** 6–12 ay ileriye dönük beta tahmini yapıyorsanız (CAPM, sermaye maliyeti, uzun vadeli portföy betası). Hisse senetleri için tasarlanmıştır.
 
 Mekanik sonuç: Raw 1'in üstündeyse Adjusted daha küçük, Raw 1'in altındaysa Adjusted daha büyük çıkar. İkisi arasındaki fark büyükse (örnekte 1.51'e karşı 1.34) ve hedge'i Adjusted ile kurarsanız, tarihsel ilişkiye göre sistematik olarak **eksik hedge** etmiş olursunuz. Tahvil–endeks ilişkisinde Blume'un hisse-evreni varsayımının geçerliliği zaten tartışmalıdır — bu iş için Raw kullanın.
 
-### 2.3 ALPHA (Intercept) — örnekte 0.408
+### 2.3 — Alpha (kesişim): X yerinde sayarken Y ne kazanır? (örnekte 0.408)
 
-#### Tanım
+#### Tanım — α (kesişim)
 
 $\alpha$, X'in hareketi sıfır olduğunda Y'nin ortalama getirisidir; regresyon doğrusunun dikey ekseni kestiği nokta. Temsili örnekte haftalık %0.408: tahvil yerinde saysa bile banka endeksi haftada ortalama %0.41 yukarı sürüklenmiş. Bileşik yıllığa çevirisi $(1.00408)^{52} - 1 \approx 0.236$, yani yaklaşık %23.6 — TL nominal getiri ortamında (enflasyon + hisse risk primi) şaşırtıcı olmayan bir sürüklenme.
 
-#### Önce anlamlılık: alpha gerçek mi?
+#### Önce anlamlılık — α gerçek mi, gürültü mü?
 
 $$
 t(\alpha) = \frac{\alpha}{SE(\alpha)} = \frac{0.408}{0.46} \approx 0.89
 $$
 $\lvert t \rvert < 2$ olduğundan bu alpha istatistiksel olarak sıfırdan ayırt edilemiyor. %23.6'lık yıllık sürüklenme bir nokta tahminidir ama etrafındaki belirsizlik devasadır: haftalık standart hata 0.46 iken yıllık güven aralığı kabaca -%20 ile +%80 arasına yayılır. Bu alpha üzerine strateji kurulmaz.
 
-#### Değer aralıkları ve kullanım amaçları
+#### Değer aralıkları ve kullanım amaçları — α
 
 | Durum | Yorum |
 |---|---|
@@ -160,15 +349,144 @@ $\lvert t \rvert < 2$ olduğundan bu alpha istatistiksel olarak sıfırdan ayır
 
 <div class="not"><span class="etiket">Kural</span> Hedge işinde alpha önemsizdir (getiri farkı taşınır, risk hedge edilir). Pairs işinde alpha kritiktir: anlamlı ve büyük bir alpha, spread'in durağan değil trendli olduğunun ilk işaretidir — böyle bir çiftte "ortalamaya dönüş" beklemek yapısal olarak yanlıştır (Bölüm 8.2).</div>
 
-## 3. İlişkinin Gücü: R, R², Std Dev of Error
+### 2.4 — Betayı elle üretmek: kovaryanstan hedge oranına altı satırlık hesap
 
-### 3.1 R (Correlation) — örnekte yaklaşık 0.62
+Panelin verdiği $\beta$'yı bir kez de elle üretmek iki şey kazandırır: formülün
+hangi girdiye ne kadar duyarlı olduğunu görürsünüz ve panel yuvarladığında (ya da
+kendi replikasyonunuz tutmadığında) nereye bakacağınızı bilirsiniz. Çıpa
+kurulumunun türetilmiş girdileri: $\rho = 0.624$, $\sigma_Y = 5.9$, $\sigma_X = 2.4$
+(hepsinin nereden geldiği Bölüm 7.3'te).
 
-#### Tanım
+| Adım | Hesap | Sonuç |
+|---|---|---|
+| 1. Kovaryans | $\mathrm{Cov}(X,Y) = \rho\cdot\sigma_X\cdot\sigma_Y = 0.624 \times 2.4 \times 5.9$ | 8.84 |
+| 2. X'in varyansı | $\mathrm{Var}(X) = \sigma_X^2 = 2.4^2$ | 5.76 |
+| 3. Eğim | $\beta = 8.84 / 5.76$ | **1.53** |
+| 4. Panel karşılaştırması | panel 1.514; fark yuvarlamadan ($\sigma$'lar iki haneye kırpıldı) | ≈ %1 sapma |
+| 5. Kesişim | $\alpha = \bar{Y} - \beta\bar{X}$; getiri regresyonunda $\bar{X} \approx 0$ olduğundan $\alpha \approx \bar{Y}$ | 0.408 ≈ Y'nin haftalık ortalaması |
+| 6. Hedge oranı | minimum varyans hedge = $\beta$; 100 mn TL Y için $1.514 \times 100$ | 151.4 mn TL X (short) |
+
+Üç ders çıkar. Birincisi: $\beta$ **iki bileşenin çarpımıdır** — ilişki ($\rho$) ve
+volatilite oranı ($\sigma_Y/\sigma_X = 5.9/2.4 = 2.46$); $0.624 \times 2.46 = 1.53$.
+İkincisi: $\sigma_X$ paydada kare olarak durduğu için X'in oynaklığındaki küçük bir
+ölçüm hatası betayı iki katına kadar oynatabilir. Üçüncüsü: 5. satır alpha'nın
+neden çoğu getiri regresyonunda basitçe "Y'nin ortalama getirisi" olduğunu gösterir
+— X'in ortalaması sıfıra yakın olduğu sürece.
+
+<div class="not"><span class="etiket">Duyarlılık</span> Aynı hesabı $\rho$'yu 0.624 yerine 0.55 alarak tekrarlayın: $\beta = 0.55 \times 2.46 = 1.35$. Yani korelasyondaki 0.07'lik bir kayma hedge oranını 15 mn TL değiştirir. Beta hassasiyeti tartışması (Bölüm 4.1) tam olarak bu duyarlılığın istatistiksel ifadesidir.</div>
+
+### 2.5 — Beta ve alpha okumasında sekiz tipik hata
+
+1. **Yield ile fiyatı karıştırmak.** X faiz (bp) iken beta "yüzde tepki" gibi
+   okunursa büyüklük 100 kat şaşar. Birimi her zaman künyeye yazın (Bölüm 1.7).
+2. **Betayı $R^2$'siz okumak.** 1.514, $R^2 = 0.39$ ile de $R^2 = 0.90$ ile de
+   çıkabilir; hedge kalitesi ikisinde bambaşkadır.
+3. **Adjusted beta ile hedge kurmak.** Tarihsel ilişkiye göre sistematik **eksik
+   hedge** üretir (Bölüm 2.2).
+4. **Alpha'ya strateji kurmak.** $t(\alpha) < 2$ iken yıllığa çevrilmiş alpha,
+   güven aralığı devasa bir nokta tahmindir.
+5. **Nominal ile piyasa değerini karıştırmak.** Percent regresyonunda hedge
+   **piyasa değeri** üzerinden kurulur; nominale çeviri ayrı bir adımdır (7.5).
+6. **Kriz betasını normal beta sanmak.** Uç haftalar dahilken ölçülen beta stres
+   betasına yakındır; günlük P&L yönetimi için fazla yüksek olabilir (8.6).
+7. **Ters yönde beta kullanmak.** $\beta(X|Y) \ne 1/\beta(Y|X)$ (1.3, 10.16).
+8. **Tek noktaya güvenmek.** Beta bir aralıktır: $[\beta - 2\mathrm{SE},\ \beta +
+   2\mathrm{SE}]$ yazılmadan hedge boyutu konuşulmaz (4.1).
+
+<div class="pratik">
+  <span class="etiket">Pratik — 2 · Eğim ve kesişim</span>
+
+**1. Beta'yı bileşenlerinden üret.** $\rho = 0.624$, $\sigma_Y = 5.9$,
+$\sigma_X = 2.4$. Beta kaç? Panelin 1.514'ünden farkı nasıl açıklarsınız?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $\beta = \rho\cdot\sigma_Y/\sigma_X = 0.624 \times 5.9 / 2.4$.
+
+Adım 2 — $5.9/2.4 = 2.458$; $0.624 \times 2.458 = 1.534$.
+
+Adım 3 — fark: $\sigma_Y$ ve $\sigma_X$ zaten panelden **türetilmiş** ve iki haneye
+yuvarlanmış değerlerdir (Bölüm 7.3). ≈ %1'lik sapma yuvarlamadandır; %5'i aşan bir
+sapma görürseniz sorun yuvarlamada değil veridedir.
+
+**Cevap:** ≈ 1.53; panelle tutarlı.
+
+</details>
+
+**2. Faiz senaryosunu endekse çevir.** Politika beklentisi 150 bp indirim yönünde
+kayıyor ve 2033 tahvilinin modifiye durasyonu ≈ 2.4. XLBNK için ima edilen seviye
+nedir? (Başlangıç 14,438.82.)
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — faiz → tahvil fiyatı: $\Delta P\% \approx -D_{mod}\cdot\Delta y =
+-2.4 \times (-1.50) = +3.60$, yani +%3.6.
+
+Adım 2 — tahvil → endeks: $\Delta Y_{\text{ima}} = 1.514 \times 3.60 + 0.408 =
+5.86$, yani +%5.86.
+
+Adım 3 — seviye: $14{,}438.82 \times 1.0586 \approx 15{,}285$.
+
+Adım 4 — bant: haftalık SEE = 4.6 → $1\sigma$ aralığı ≈ 14,582 – 15,988. Nokta
+tahmin değil, bant konuşulur (Bölüm 10.2).
+
+**Cevap:** ≈ 15,285; $1\sigma$ bandı ≈ 14,580 – 15,990.
+
+</details>
+
+**3. Adjusted beta ile hedge: hata ne kadar?** 100 mn TL XLBNK long pozisyonunu
+Adjusted beta (1.344) ile hedge ederseniz, Raw beta (1.514) hedge'ine göre eksiğiniz
+kaç TL ve bu ne demek?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — Raw hedge: $1.514 \times 100 = 151.4$ mn TL.
+
+Adım 2 — Adjusted hedge: $1.344 \times 100 = 134.4$ mn TL.
+
+Adım 3 — fark: $151.4 - 134.4 = 17.0$ mn TL → hedge'in %11.2'si eksik.
+
+Adım 4 — anlamı: tahvil %1 hareket ettiğinde 0.17 mn TL'lik sistematik, **yönlü**
+artık kalır — hedge değil, küçültülmüş bir yön pozisyonudur. Tarihsel ilişkiyi
+hedge ediyorsanız Raw kullanın (Bölüm 2.2).
+
+**Cevap:** 17.0 mn TL eksik hedge (%11.2).
+
+</details>
+
+**4. Tuzak — aynı beta, çeyrek $R^2$.** Y'nin volatilitesi iki katına çıkıyor
+($\sigma_Y$: 5.9 → 11.8), $\beta$ ve $\sigma_X$ değişmiyor. $\rho$ ve $R^2$ ne olur?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $\beta = \rho\sigma_Y/\sigma_X$ sabit kalacaksa: $\rho = \beta\sigma_X/
+\sigma_Y = 1.514 \times 2.4 / 11.8 = 0.308$.
+
+Adım 2 — $R^2 = 0.308^2 = 0.095$.
+
+Adım 3 — yorum: **beta aynı, ilişki dörtte bir.** Hedge sonrası kalan vol
+$\mathrm{SEE} = \sigma_Y\sqrt{1-R^2} = 11.8 \times 0.951 = 11.2$ — neredeyse
+hedge'siz hâl. Beta'nın tek başına hiçbir şey söylemediğinin en temiz kanıtı budur.
+
+**Cevap:** $\rho = 0.31$, $R^2 = 0.095$; aynı hedge oranı, kozmetik hedge.
+
+</details>
+
+</div>
+
+## 3 — İlişkinin gücü (R · R² · SEE): hedge riski gerçekte ne kadar azaltır?
+
+### 3.1 — R (korelasyon): birlikte hareket nasıl sınıflandırılır? (örnekte ≈0.62)
+
+#### Tanım — R (korelasyon katsayısı)
 
 Pearson korelasyon katsayısı: $-1$ ile $+1$ arasında, doğrusal birlikte hareketin yönünü ve sıkılığını ölçer. Tek değişkenli regresyonda $R^2 = \rho^2$ olduğundan panel ikisini birden verir; temsili örnekte $R \approx 0.624$ (türetme Bölüm 7.3).
 
-#### Değer aralıkları — haftalık getiri bazlı finansal seriler için pratik skala
+#### Değer aralıkları — R: haftalık getiri skalası
 
 | $\lvert R \rvert$ | Sınıf | Ne anlama gelir |
 |---|---|---|
@@ -181,9 +499,9 @@ Pearson korelasyon katsayısı: $-1$ ile $+1$ arasında, doğrusal birlikte hare
 
 <div class="not"><span class="etiket">Kritik şart</span> Bu skala YALNIZCA Reg On = Percent (getiri) için geçerlidir. Price (seviye) regresyonunda trend taşıyan herhangi iki seri kolayca $R > 0.9$ üretir ve bu tamamen sahtedir (Bölüm 8.1). Seviye üzerinden hesaplanmış bir R'ye bu tabloyu uygulamak, HRA'daki en yaygın ve en pahalı hatadır.</div>
 
-### 3.2 R² (Correlation²) — örnekte yaklaşık 0.39
+### 3.2 — R²: açıklanan varyans payı ve hedge diline çevirisi (örnekte ≈0.39)
 
-#### Tanım
+#### Tanım — R² (açıklanan varyans payı)
 
 Belirlilik katsayısı: Y'nin varyansının X tarafından açıklanan payı. Temsili örnekte $R^2 = 0.389$: XLBNK'nin haftalık hareketlerinin %39'u tahvil fiyatı hareketiyle açıklanıyor; %61'i başka faktörlerden geliyor — hisse risk primi, banka-spesifik haberler (kârlılık, regülasyon, temettü), global risk iştahı, kur, endeks akımları.
 
@@ -203,7 +521,7 @@ $$
 | 0.70 | %70 | %45 | Ciddi hedge. Kalan risk yönetilebilir. |
 | 0.90 | %90 | %68 | Yüksek kaliteli hedge; basis riski ikincil. |
 
-#### Değer aralıkları
+#### Değer aralıkları — R²
 
 | $R^2$ | Sınıf | Kullanım kararı |
 |---|---|---|
@@ -215,9 +533,9 @@ $$
 
 <div class="not"><span class="etiket">Tuzak</span> $R^2$ pencereye ve frekansa duyarlıdır. Aynı çift günlükte 0.25, haftalıkta 0.39, aylıkta 0.55 verebilir (Bölüm 8.4). Raporlarken frekans ve pencereyi mutlaka birlikte söyleyin: "2Y haftalık R² 0.39" ifadesi tek başına "R² 0.39"dan çok daha bilgilendiricidir.</div>
 
-### 3.3 Std Dev of Error (SEE) — örnekte yaklaşık 4.6
+### 3.3 — SEE: hedge sonrası kalan risk kaç puan, kaç TL? (örnekte ≈4.6)
 
-#### Tanım
+#### Tanım — SEE (regresyonun standart hatası)
 
 $$
 SEE = \sigma_\varepsilon = \sigma_Y \cdot \sqrt{1 - R^2}
@@ -228,7 +546,7 @@ Artıkların ($\varepsilon$) standart sapması: regresyonun açıklayamadığı 
 - **$2\sigma$ bandı:** haftaların yaklaşık %5'inde sapma 9.2 puanı aşar.
 - **TL karşılığı:** 100 mn TL'lik hedge'li XLBNK pozisyonunda haftalık $1\sigma$ yaklaşık 4.6 mn TL artık P&L oynaklığı demektir.
 
-#### "Kaç olmalı?" — mutlak değil, göreli okuyun
+#### "SEE kaç olmalı?" — mutlak değil, göreli okuyun
 
 SEE'nin mutlak seviyesi tek başına anlamsızdır; Y'nin toplam volatilitesine oranlayın. Temsili örnekte Y'nin haftalık volatilitesi $\sigma_Y = SEE / \sqrt{1 - R^2} = 4.6 / 0.782 \approx 5.9$, yani haftalık %5.9 (yıllıklandırılmış yaklaşık %42). Hedge, haftalık volatiliteyi 5.9'dan 4.6'ya indiriyor — işte Bölüm 3.2'deki %22'lik azaltımın kendisi.
 
@@ -241,25 +559,141 @@ SEE'nin mutlak seviyesi tek başına anlamsızdır; Y'nin toplam volatilitesine 
 
 <div class="not"><span class="etiket">Bağlantı</span> SEE, Bölüm 5.1'deki Last T-Value'nun paydasıdır: son artık bölü SEE = Last T-Value. Yani $-0.47$'lik Last T-Value, son haftanın $-0.47 \times 4.6 \approx -2.2$ puanlık (yaklaşık -%2.2) bir sapma olduğunu söyler. Panel istatistikleri birbirinden bağımsız sayılar değil, aynı regresyonun farklı kesitleridir.</div>
 
-## 4. Güvenilirlik: Standart Hatalar, t-Test, Significance, N
+### 3.4 — Uçtan uca yürütme: $R^2$'den TL cinsinden artık riske
+
+Bölüm 3'ün üç alt bölümü ayrı ayrı ölçüler verdi; masada tek bir zincir olarak
+kullanılırlar. Aşağıdaki yürütme çıpa kurulumunun sayılarıyla, 100 mn TL'lik bir
+XLBNK pozisyonu için baştan sona koşuluyor — her satır bir önceki satırın çıktısını
+girdi alıyor:
+
+| # | Adım | Formül | Sonuç |
+|---|---|---|---|
+| 1 | İlişkinin gücü | $R^2 = \rho^2 = 0.624^2$ | 0.389 |
+| 2 | Varyans azaltımı | $= R^2$ | %38.9 |
+| 3 | Volatilite azaltımı | $1 - \sqrt{1-R^2} = 1 - \sqrt{0.611}$ | %21.8 |
+| 4 | Hedge'siz haftalık vol | $\sigma_Y$ | %5.9 |
+| 5 | Hedge'li haftalık vol | $\mathrm{SEE} = \sigma_Y\sqrt{1-R^2} = 5.9 \times 0.782$ | %4.6 |
+| 6 | Hedge'siz yıllık vol | $5.9 \times \sqrt{52}$ | ≈ %42.5 |
+| 7 | Hedge'li yıllık vol | $4.6 \times \sqrt{52}$ | ≈ %33.2 |
+| 8 | Haftalık $1\sigma$ (100 mn TL) | $0.046 \times 100$ | 4.6 mn TL |
+| 9 | Haftalık $2\sigma$ | $2 \times 4.6$ | 9.2 mn TL |
+| 10 | Yıllık $1\sigma$ | $0.332 \times 100$ | ≈ 33 mn TL |
+
+Cümlenin masadaki hâli: *"Bu hedge yıllık volatiliteyi %42.5'ten %33.2'ye
+indiriyor; 100 mn TL'lik pozisyonda haftalık tipik sapma 4.6 mn TL, kötü haftalarda
+9.2 mn TL."* Dikkat edin — hiçbir yerde "%39 risk azaldı" cümlesi geçmiyor. O sayı
+**varyans** dilindedir ve limit/stop kurgusunda kullanılamaz.
+
+#### Ters yön: risk bütçesinden pozisyon boyutuna
+
+Aynı zincir tersten de koşar ve pratikte daha sık kullanılır. Haftalık artık risk
+bütçeniz 3 mn TL ise taşıyabileceğiniz maksimum hedge'li pozisyon:
+
+$$
+V_{\max} = \frac{\text{risk bütçesi}}{\mathrm{SEE}} = \frac{3}{0.046} \approx 65 \text{ mn TL}
+$$
+
+Aynı bütçeyle **hedge'siz** taşınabilecek pozisyon $3/0.059 \approx 51$ mn TL'dir.
+Hedge'in gerçek katkısı işte bu: aynı risk bütçesiyle %28 daha büyük pozisyon —
+"riskin %39'unu sildim" değil.
+
+<div class="pratik">
+  <span class="etiket">Pratik — 3 · İlişkinin gücü</span>
+
+**1. İki $R^2$, iki hedge.** $R^2 = 0.389$ ve $R^2 = 0.65$ için volatilite
+azaltımını hesaplayın. Fark neden $R^2$ farkından çok daha küçük görünür?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $1 - \sqrt{1-0.389} = 1 - 0.782 = 0.218$ → **%21.8**.
+
+Adım 2 — $1 - \sqrt{1-0.65} = 1 - 0.592 = 0.408$ → **%40.8**.
+
+Adım 3 — neden: karekök. Varyans azaltımı 0.389 → 0.65 arasında 1.67 kat artarken
+volatilite azaltımı 1.87 kat artıyor ama ikisi de mutlak olarak küçük kalıyor;
+$R^2 = 0.75$'te bile vol azaltımı yalnızca %50'dir.
+
+**Cevap:** %21.8 ve %40.8.
+
+</details>
+
+**2. SEE'den toplam volatiliteye.** Panel yalnızca SEE = 4.6 ve $R^2 = 0.389$
+veriyor. Y'nin haftalık ve yıllık volatilitesi nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $\sigma_Y = \mathrm{SEE}/\sqrt{1-R^2} = 4.6/0.782 = 5.88$ → haftalık %5.9.
+
+Adım 2 — yıllık: $5.88 \times \sqrt{52} = 5.88 \times 7.21 = 42.4$ → ≈ %42.
+
+Adım 3 — makullük kontrolü: TL banka endeksi için %40'lar bandı beklenendir;
+%15 veya %90 çıksaydı önce veri hizasından şüphelenilirdi (Bölüm 9.3).
+
+**Cevap:** haftalık ≈ %5.9, yıllık ≈ %42.
+
+</details>
+
+**3. Risk bütçesinden boyuta.** Haftalık artık risk bütçeniz 8 mn TL. Hedge'li ve
+hedge'siz taşıyabileceğiniz maksimum XLBNK pozisyonu nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — hedge'li: $8/0.046 = 174$ mn TL.
+
+Adım 2 — hedge'siz: $8/0.059 = 136$ mn TL.
+
+Adım 3 — fark: 38 mn TL, yani **%28 daha büyük pozisyon**. Hedge'in katkısı risk
+bütçesi dilinde böyle konuşulur.
+
+**Cevap:** 174 mn TL (hedge'li) · 136 mn TL (hedge'siz).
+
+</details>
+
+**4. Karar.** $R^2$'yi 0.39'dan 0.65'e çıkarmanın üç yolu nedir ve hangisi bu
+çiftte en gerçekçidir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — **frekansı düşürmek** (haftalık → aylık): Epps etkisiyle $R^2$ yükselir
+ama N düşer (Bölüm 8.4, 4.5). 2 yılda 24 gözlem yetersizdir.
+
+Adım 2 — **doğru vadeyi seçmek:** 2Y/5Y/10Y DİBS'lerle koşup en yüksek $R^2$'yi
+veren vadeyi hedge aracı yapmak (Bölüm 8.8). Ucuz ve etkili.
+
+Adım 3 — **çok faktörlü kurmak:** tahvil + XU100 + USDTRY; $R^2$ tipik olarak 0.6+
+seviyesine çıkar (Bölüm 10.14). Ama artık "tahvile göre ucuz" değil, "üç faktöre
+göre ucuz" denir ve trade üç bacaklı olur.
+
+**Cevap:** En gerçekçi ikisi vade taraması ve çok faktörlü model; frekans düşürmek
+bu pencerede N'i kırar.
+
+</details>
+
+</div>
+
+## 4 — Güvenilirlik (SE · t-Test · Significance · N): bu betaya güvenilir mi?
 
 Bölüm 2–3 "ilişki ne söylüyor" sorusunu yanıtladı; bu bölüm "söylediğine ne kadar güvenebilirim" sorusunu yanıtlar. Katsayılar örneklemden örnekleme oynar — standart hatalar bu oynamanın büyüklüğünü, t-Test ve Significance ise oynamaya rağmen sonucun ayakta kalıp kalmadığını ölçer.
 
-### 4.1 Std Error of BETA — örnekte yaklaşık 0.188
+### 4.1 — SE(Beta): beta ne kadar hassas ölçüldü? (örnekte ≈0.188)
 
-#### Tanım
+#### Tanım — SE(β) (betanın standart hatası)
 
 $$
 SE(\beta) = \frac{SEE}{\sigma_X \cdot \sqrt{N - 1}}
 $$
 Beta tahmininin standart hatası: aynı ilişkiden farklı bir 103 haftalık örneklem çekseydiniz betanın tipik olarak ne kadar farklı çıkacağı. Formül üç kaldıracı gösterir: artık gürültüsü (SEE) küçüldükçe beta daha temiz ölçülür; X'in oynaklığı ($\sigma_X$) arttıkça doğrunun eğimi daha geniş bir X yelpazesine oturur ve daha iyi belirlenir; gözlem sayısı (N) arttıkça örneklem şansının payı küçülür.
 
-#### Nasıl okunur — iki pratik dönüşüm
+#### Nasıl okunur — SE(β)'nın iki pratik dönüşümü
 
 - **%95 güven aralığı:** $\beta \pm 1.96 \cdot SE = 1.514 \pm 0.368 \Rightarrow [1.15,\ 1.88]$. Hedge boyutunuz bu aralıkta nereye düşerse düşsün "modelle tutarlı"dır.
 - **Göreli hassasiyet:** $SE(\beta)/\beta = 0.188/1.514 \approx 0.124$, yani %12.4. Betanın kendisine oranlanmış hata payı — enstrümanlar arası karşılaştırma için en temiz metrik.
 
-#### Değer aralıkları
+#### Değer aralıkları — SE(β)
 
 | $SE(\beta)/\beta$ | Eşdeğer t | Yorum |
 |---|---|---|
@@ -273,20 +707,20 @@ $SE(\beta)/\beta$ ile t-Test aynı madalyonun iki yüzüdür: $t = \beta/SE(\bet
 
 <div class="not"><span class="etiket">Hedge pratiği</span> Aralık [1.15, 1.88] iken 100 mn TL'lik pozisyona 151 mn nominal hedge koymak "1.514'ün üç ondalığına" güvenmek demek değildir; 115–188 mn arasındaki her boyut istatistiksel olarak savunulabilir. Bu genişlik, hedge'in periyodik rebalance gerektirmesinin ve tek seferde kusursuz boyutlanamamasının matematiksel nedenidir.</div>
 
-### 4.2 Std Error of ALPHA — örnekte 0.46
+### 4.2 — SE(Alpha): alpha ne zaman sıfır sayılır? (örnekte 0.46)
 
 Aynı mantığın alpha'ya uygulanmışı: kesişim tahmininin standart hatası. Tek başına değil, $t(\alpha) = \alpha/SE(\alpha)$ oranı içinde okunur. Temsili örnekte $0.408/0.46 \approx 0.89 < 2$, yani alpha sıfırdan ayırt edilemiyor (Bölüm 2.3). Kural basittir: $SE(\alpha) > \alpha/2$ ise alpha'yı unutun. Not: $SE(\alpha)$, X'in ortalamasının sıfırdan uzaklığına da bağlıdır; getiri regresyonlarında X'in ortalaması sıfıra çok yakın olduğundan $SE(\alpha) \approx SEE/\sqrt N$ olur — burada $4.6/\sqrt{103} \approx 0.45$, panelin 0.46'sıyla tutarlı.
 
-### 4.3 t-Test — örnekte 8.02
+### 4.3 — t-Test: ilişki var mı? (örnekte 8.02 — ve büyük N tuzağı)
 
-#### Tanım
+#### Tanım — t-Test (eğimin t istatistiği)
 
 $$
 t = \frac{\beta}{SE(\beta)} = \frac{1.514}{0.188} \approx 8.0
 $$
 Sıfır hipotezi $H_0: \beta = 0$ ("ilişki yok") testinin istatistiği. Betanın, kendi ölçüm hatasının kaç katı olduğunu söyler. $\lvert t \rvert$ büyüdükçe "bu beta tesadüf" açıklaması imkansızlaşır.
 
-#### Değer aralıkları
+#### Değer aralıkları — t-Test bantları
 
 | $\lvert t \rvert$ | Güven düzeyi | Karar |
 |---|---|---|
@@ -307,7 +741,7 @@ $N = 103$'te $R = 0.20$ (yani $R^2 = 0.04$ — hareketin sadece %4'ü!) bile $t 
 
 Temsili örnekte $t = 8.02$ ve $R^2 = 0.39$ kombinasyonunun doğru okuması: "banka endeksi ile tahvil arasında kesin olarak var olan, ama endeks hareketinin ancak %39'unu açıklayan orta güçte bir ilişki."
 
-### 4.4 Significance — örnekte 0.00
+### 4.4 — Significance: t'nin olasılık dili (örnekte 0.00)
 
 t-Test'in p-değeri: ilişki gerçekte sıfırken bu kadar uç bir t görme olasılığı. t ile aynı bilgiyi taşır, sadece olasılık dilindedir; ikisinden birine bakmak yeter. Panel iki ondalık gösterdiğinden 0.00, $p < 0.005$ demektir ($t = 8.02$ için gerçek p değeri $10^{-12}$ mertebesindedir).
 
@@ -320,13 +754,13 @@ t-Test'in p-değeri: ilişki gerçekte sıfırken bu kadar uç bir t görme olas
 
 <div class="not"><span class="etiket">Hatırlatma</span> p-değeri de büyük N tuzağından muaf değildir — N arttıkça önemsiz ilişkiler de $p < 0.05$ üretir. p yalnızca "tesadüf mü" sorusunun cevabıdır; "işe yarar mı" sorusunun cevabı $R^2$ ve SEE'dedir.</div>
 
-### 4.5 Number of Points — örnekte 103
+### 4.5 — Number of Points: kaç gözlem yeter, frekans-pencere planı (örnekte 103)
 
-#### Tanım ve doğrulama
+#### Tanım ve doğrulama — N (gözlem sayısı)
 
-Regresyona giren gözlem (getiri) sayısı. Temsili örnekte pencere 19.07.2024 – 10.07.2026: 104 haftalık fiyat gözlemi, dolayısıyla 103 haftalık getiri. Panel değeriyle birebir tutarlı — bu tür çapraz kontroller, ekranın beklediğiniz veriyle çalıştığının en hızlı testidir.
+Regresyona giren gözlem (getiri) sayısı. Çıpa penceresinde (Çıpa: 19.07.2024 – 10.07.2026) 104 haftalık fiyat gözlemi, dolayısıyla 103 haftalık getiri var. Panel değeriyle birebir tutarlı — bu tür çapraz kontroller, ekranın beklediğiniz veriyle çalıştığının en hızlı testidir.
 
-#### Değer aralıkları
+#### Değer aralıkları — N
 
 | N | Sınıf | Yorum |
 |---|---|---|
@@ -345,27 +779,133 @@ Regresyona giren gözlem (getiri) sayısı. Temsili örnekte pencere 19.07.2024 
 | 2 yıl | ~500 | ~104 (temsili örnek) | 24 (yetersiz) |
 | 5 yıl | ~1250 | ~260 | 60 (asgari) |
 
-<div class="not"><span class="etiket">Temel trade-off</span> N'i büyütmenin iki yolu var — pencereyi uzatmak veya frekansı artırmak — ve ikisinin de bedeli var. Pencereyi uzatmak eski rejimleri karıştırır (2022'nin negatif reel faiz Türkiye'si ile 2025'in ortodoks programı aynı betayı üretmez). Frekansı artırmak mikro yapı gürültüsü ekler ve betayı sistematik aşağı çeker (Bölüm 8.4, Epps etkisi). TR varlıkları için 2Y haftalık, bu iki bedeli dengeleyen yaygın masa tercihidir; kritik kararlarda 1Y ve 5Y ile üçleme yapın (Bölüm 8.3).</div>
+<div class="not"><span class="etiket">Temel trade-off</span> N'i büyütmenin iki yolu var — pencereyi uzatmak veya frekansı artırmak — ve ikisinin de bedeli var. Pencereyi uzatmak eski rejimleri karıştırır: farklı politika rejimleri aynı çiftte bambaşka betalar verir — tarihsel örnek olarak negatif reel faiz yılları (2022) ile ortodoks programa dönüş yılları (2025). Frekansı artırmak mikro yapı gürültüsü ekler ve betayı sistematik aşağı çeker (Bölüm 8.4, Epps etkisi). TR varlıkları için 2Y haftalık, bu iki bedeli dengeleyen yaygın masa tercihidir; kritik kararlarda 1Y ve 5Y ile üçleme yapın (Bölüm 8.3).</div>
 
-## 5. Son Nokta Analizi: Last T-Value, Last P-Value, Spread, Ratio
+### 4.6 — Eksik alanı türetmek: SE · t · $R^2$ · N cebiri
+
+Panelin dört güvenilirlik alanı bağımsız değildir; birbirinden türer. Bu, iki işe
+yarar: (1) yuvarlanmış veya kırpılmış bir çıktıyı tamamlarsınız, (2) replikasyonunuz
+tutmadığında hangi girdinin bozuk olduğunu daraltırsınız.
+
+| Elinizde ne var | Ne türetirsiniz | Formül |
+|---|---|---|
+| $\beta$, $\mathrm{SE}(\beta)$ | $t$ | $t = \beta/\mathrm{SE}(\beta)$ |
+| $t$, $N$ | $R^2$, $R$ | $R^2 = t^2/(t^2+N-2)$ |
+| $R$, $N$ | $t$ | $t = R\sqrt{N-2}/\sqrt{1-R^2}$ |
+| $R^2$, $\sigma_Y$ | SEE | $\mathrm{SEE} = \sigma_Y\sqrt{1-R^2}$ |
+| SEE, $\sigma_X$, $N$ | $\mathrm{SE}(\beta)$ | $\mathrm{SEE}/(\sigma_X\sqrt{N-1})$ |
+| SEE, $N$ | $\mathrm{SE}(\alpha)$ | $\approx \mathrm{SEE}/\sqrt{N}$ (getiri regresyonunda) |
+| SEE, $\beta$, $R$ | $\sigma_X$, $\sigma_Y$ | $\sigma_Y = \mathrm{SEE}/\sqrt{1-R^2}$; $\sigma_X = R\sigma_Y/\beta$ |
+
+**Yürütme.** Diyelim ekran görüntüsünde yalnızca $\beta = 1.514$, $t = 8.02$ ve
+$N = 103$ okunabiliyor. Sırayla:
+
+1. $\mathrm{SE}(\beta) = \beta/t = 1.514/8.02 = 0.189$ → panelin 0.188'i ✓
+2. $R^2 = 8.02^2/(8.02^2 + 101) = 64.3/165.3 = 0.389$ → $R = 0.624$ ✓
+3. %95 aralık: $1.514 \pm 1.96 \times 0.189 = [1.14,\ 1.88]$ ✓
+4. $\mathrm{SE}(\beta)/\beta = 1/t = 1/8.02 = \%12.5$ ✓
+
+Üç sayıdan panelin güvenilirlik ailesinin tamamı çıktı. Çıkmayan tek şey SEE'dir:
+onun için Y'nin volatilitesi ya da SEE'nin kendisi gerekir — çünkü $t$ ve $R^2$
+**ölçekten bağımsızdır**, SEE ise Y'nin biriminde yaşar.
+
+<div class="pratik">
+  <span class="etiket">Pratik — 4 · Güvenilirlik</span>
+
+**1. SE(β)'yı formülden üret.** SEE = 4.6, $\sigma_X = 2.4$, $N = 103$. Panelin
+0.188'ini çıkarabiliyor musunuz?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $\mathrm{SE}(\beta) = \mathrm{SEE}/(\sigma_X\sqrt{N-1})$.
+
+Adım 2 — $\sqrt{102} = 10.10$; payda $= 2.4 \times 10.10 = 24.24$.
+
+Adım 3 — $4.6/24.24 = 0.190$ → panelin 0.188'i ✓ (fark yuvarlamadan).
+
+Adım 4 — okuma: paydadaki $\sqrt{N-1}$ yüzünden SE'yi yarıya indirmek için N'i
+**dört katına** çıkarmak gerekir. Pencereyi uzatmanın getirisi hızla azalır.
+
+**Cevap:** ≈ 0.190.
+
+</details>
+
+**2. Büyük N tuzağı.** $N = 103$ iken $R = 0.20$ olsaydı $t$ kaç olurdu? Panel ne
+derdi, siz ne derdiniz?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $t = R\sqrt{N-2}/\sqrt{1-R^2} = 0.20 \times \sqrt{101}/\sqrt{0.96}$.
+
+Adım 2 — $= 0.20 \times 10.05 / 0.980 = 2.05$.
+
+Adım 3 — panel "anlamlı" (p < 0.05) der; ama $R^2 = 0.04$ → hareketin %4'ü. Vol
+azaltımı $1-\sqrt{0.96} = \%2$. Hedge kozmetik.
+
+**Cevap:** $t \approx 2.05$; istatistiksel olarak var, pratik olarak yok.
+
+</details>
+
+**3. Pencereyi yarıya indirmek.** 2 yıl yerine 1 yıl (N = 52) çalışsaydınız,
+diğer her şey aynı kalmak üzere $\mathrm{SE}(\beta)$, $t$ ve %95 aralık ne olurdu?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — SE, $1/\sqrt{N-1}$ ile ölçeklenir: $\sqrt{102/51} = \sqrt{2} = 1.414$.
+
+Adım 2 — $\mathrm{SE}(\beta) = 0.188 \times 1.414 = 0.266$.
+
+Adım 3 — $t = 1.514/0.266 = 5.7$ (hâlâ ezici).
+
+Adım 4 — aralık: $1.514 \pm 1.96 \times 0.266 = [0.99,\ 2.03]$ — **1'in altına
+iniyor.** Yani "bire bir hedge" ile "iki kat hedge" aynı anda savunulabilir hâle
+gelir; hedge boyutu artık ölçülemiyor demektir.
+
+**Cevap:** SE 0.266, t 5.7, aralık [0.99, 2.03]. Anlamlılık korunur, **kullanılabilirlik** kaybolur.
+
+</details>
+
+**4. Tuzak yakalama.** Bir çıktı: $t = 2.3$, $N = 400$. $R^2$ kaç? Bu ilişkiyle ne
+yapılır?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $R^2 = t^2/(t^2+N-2) = 5.29/(5.29+398) = 0.0131$.
+
+Adım 2 — yorum: hareketin %1.3'ü. Vol azaltımı $1-\sqrt{0.987} = \%0.7$.
+
+Adım 3 — üstelik $t$, 2–3 bandında: HAC (Newey–West) düzeltmesiyle buharlaşabilir
+(Bölüm 8.5). Böyle bir sonuç ne hedge, ne pairs, ne de sinyal üretir.
+
+**Cevap:** $R^2 \approx 0.013$; kullanılmaz — ve önce HAC ile yeniden test edilir.
+
+</details>
+
+</div>
+
+## 5 — Son nokta (LTV · P-Value · Spread · Ratio): şu anda sapma var mı?
 
 Buraya kadarki istatistikler örneklemin TAMAMINI özetliyordu. Bu dördü ise yalnızca EN SON gözlemin tarihsel ilişkiye göre nerede durduğunu söyler — HRA'yı statik bir hedge aracından günlük takip edilebilir bir zenginlik/ucuzluk (rich/cheap) monitörüne çeviren kısım burasıdır.
 
-### 5.1 Last T-Value — örnekte -0.47
+### 5.1 — Last T-Value: son gözlem doğrudan kaç sigma uzakta? (örnekte −0.47)
 
-#### Tanım
+#### Tanım — LTV (Last T-Value)
 
 $$
 \text{Last T-Value} = \frac{\text{son artık}}{SEE} = \frac{Y_{son} - (\beta \cdot X_{son} + \alpha)}{SEE}
 $$
 Son gözlemin regresyon doğrusundan kaç standart sapma (SEE cinsinden) uzakta olduğu — saçılım grafiğindeki kırmızı yıldızın doğruya dik mesafesinin standardize hâli. Kısaltma olarak LTV kullanacağız. Temsili örnekte $-0.47$: son hafta XLBNK, tahvilin ima ettiği seviyenin $0.47 \times 4.6 \approx 2.2$ puan, yani yaklaşık %2.2 altında kapanmış.
 
-#### İşaret yorumu
+#### İşaret yorumu — LTV'nin işareti ne söyler
 
 - **Negatif:** Y modele göre UCUZ (doğrunun altında) — ilişkiye inanıyorsanız Y al / X sat yönü.
 - **Pozitif:** Y modele göre PAHALI (doğrunun üstünde) — Y sat / X al yönü.
 
-#### Değer aralıkları — sinyal bantları
+#### Değer aralıkları — LTV sinyal bantları
 
 | $\lvert LTV \rvert$ | Bölge | Aksiyon |
 |---|---|---|
@@ -377,11 +917,11 @@ Son gözlemin regresyon doğrusundan kaç standart sapma (SEE cinsinden) uzakta 
 
 Temsili örneğin okuması: bankalar tahvile göre hafif ucuz kalmış ama sapma tamamen gürültü sınırları içinde — trade sinyali yok. Bir izleme kuralı olarak LTV'yi gün sonlarında not edip $-2$'ye doğru derinleşme veya $+2$'ye doğru genişleme takibi yapmak, bu ekranı pasif bir analizden aktif bir monitöre çevirir.
 
-<div class="not"><span class="etiket">İnce nokta</span> Last T-Value regresyona GÖRE sapmadır; regresyonun kendisi yanlışsa (rejim değişmişse) "ucuz" etiketi tuzaktır. $\lvert LTV \rvert > 2$ gördüğünüzde ilk soru "ne alayım" değil, "ilişki hâlâ geçerli mi" olmalıdır. 2008'de, 2018 TL krizinde ve Mart 2025'te birçok "3 sigma ucuzluk" bir daha ortalamaya dönmedi — çünkü ortalamanın kendisi yer değiştirmişti.</div>
+<div class="not"><span class="etiket">İnce nokta</span> Last T-Value regresyona GÖRE sapmadır; regresyonun kendisi yanlışsa (rejim değişmişse) "ucuz" etiketi tuzaktır. $\lvert LTV \rvert > 2$ gördüğünüzde ilk soru "ne alayım" değil, "ilişki hâlâ geçerli mi" olmalıdır. Her büyük rejim kırılmasında birçok "3 sigma ucuzluk" bir daha ortalamaya dönmez — çünkü ortalamanın kendisi yer değiştirir. Tarihsel örnekler (geçmiş epizotlar): 2008 küresel krizi, 2018 TL krizi, 17–21.03.2025 şok haftası.</div>
 
-### 5.2 Last P-Value — örnekte 0.319
+### 5.2 — Last P-Value: aynı bilginin olasılık dili (örnekte 0.319)
 
-#### Tanım
+#### Tanım — Last P-Value
 
 Last T-Value'nun olasılık dili: normal dağılım varsayımıyla, son sapmanın bu kadar veya daha uç (tek kuyruk) görülme olasılığı. Doğrulama: $P(Z < -0.47) = 0.319$ — panel değeriyle birebir. Yani son haftaki sapma, ilişki tamamen normal seyrindeyken bile haftaların ~%32'sinde görülür: tamamen sıradan. Bir uyarı: bu çeviri normal dağılım varsayımına dayanır; kalın kuyruklu getiri serilerinde uç sapmaların gerçek olasılığı tablodakinden yüksek olabilir — bantları mekanik tetik değil, gösterge niyetine kullanın.
 
@@ -395,14 +935,14 @@ Last T-Value'nun olasılık dili: normal dağılım varsayımıyla, son sapmanı
 
 LTV ile aynı bilgiyi taşıdığı için ikisinden birini takip etmek yeterlidir; masalar genellikle sigma dilini (LTV) tercih eder çünkü pozisyon boyutlandırmayla doğrudan konuşur.
 
-### 5.3 Last Spread — örnekte -14,355.72
+### 5.3 — Last Spread: fiyat farkı hangi çiftlerde anlamlı? (örnekte −14,355.72)
 
 İki serinin son FİYAT farkı. Panel değeri X - Y tanımıyla birebir doğrulanıyor: 83.10 - 14,438.82 = -14,355.72. Spread yalnızca aynı ölçekteki enstrümanlarda anlamlıdır: iki tahvil fiyatı, iki hisse, nakit–vadeli çifti. Burada bir endeks puanı ile bir tahvil fiyatı arasındaki fark iktisadi hiçbir şey ifade etmez — bu çift için Spread'i yok sayın, Ratio'ya bakın.
 
 - **Ne zaman kullanılır:** benzer fiyat ölçeği + kointegrasyon şüphesi olan çiftlerde (ör. eğri komşusu iki DİBS). O durumda Last Spread'in tarihsel bandı, LTV ile birlikte RV monitörünün ikinci ekseni olur.
 - **Ne zaman kullanılmaz:** ölçekler farklıysa (temsili örnek) veya serilerden biri kupon/temettü nedeniyle mekanik sürüklenme taşıyorsa. Fiyat spread'i, toplam getiri spread'i değildir — tahvilin pull-to-par etkisi (fiyatın vadeye yaklaştıkça pariteye çekilmesi) spread'e trend olarak yansır.
 
-### 5.4 Last Ratio — örnekte 173.752
+### 5.4 — Last Ratio: oran monitörü ve log-oran tercihi (örnekte 173.752)
 
 Son fiyatların oranı, Y/X: 14,438.82 / 83.10 = 173.75 — doğrulandı. Oran ölçek problemini çözer (birimsizdir) ve pairs literatürünün klasik takip değişkenidir. Ancak iki uyarıyla:
 
@@ -411,11 +951,130 @@ Son fiyatların oranı, Y/X: 14,438.82 / 83.10 = 173.75 — doğrulandı. Oran �
 
 <div class="not"><span class="etiket">Özet</span> Bu çift için son-nokta takibinin doğru araçları LTV (+ P-Value) ve gerekirse log-Ratio'dur; Spread ölçek uyumsuzluğu nedeniyle devre dışıdır. LTV = -0.47 ve P = 0.319 birlikte "ilginç bir şey yok" diyor.</div>
 
-## 6. "İyi Korelasyon" Nedir? Amaca Göre Eşikler
+### 5.5 — LTV'yi elle üretmek: dört adımda son nokta okuması
+
+Panel LTV'yi hazır verir; elle üretmeyi bilmek üç durumda gerekir: (a) kendi
+monitörünüzü kurarken, (b) panelin son gözlemi sizin beklediğiniz hafta değilse,
+(c) henüz gerçekleşmemiş bir hafta için "bu kapanışta LTV kaç olur" sorusuna cevap
+verirken. Prosedür sabittir:
+
+1. **Son dönem getirilerini al:** $\Delta X_{son}$ ve $\Delta Y_{son}$ (aynı frekans,
+   aynı hafta kesimi — Bloomberg'de Cuma kapanışı).
+2. **İmayı hesapla:** $\Delta Y_{ima} = \beta\cdot\Delta X_{son} + \alpha$.
+3. **Artığı al:** $\varepsilon_{son} = \Delta Y_{son} - \Delta Y_{ima}$.
+4. **Standartlaştır:** $\mathrm{LTV} = \varepsilon_{son}/\mathrm{SEE}$ → Bölüm
+   5.1'deki bantlara oturt.
+
+#### Ters okuma: panelin LTV'sinden artığı geri çıkarmak
+
+Panel size getirileri değil yalnızca LTV'yi veriyorsa, sapmanın puan karşılığı tek
+çarpımla geri gelir: $\varepsilon_{son} = \mathrm{LTV}\times\mathrm{SEE} =
+-0.47 \times 4.6 = -2.16$ puan. Rapor cümlesi bu iki sayıyı **birlikte** taşımalı:
+*"son hafta modele göre ≈ %2.2 ucuz, yani $-0.47\sigma$ — gürültü bandında."*
+Yalnız puan söylemek sapmayı büyük gösterir; yalnız sigma söylemek TL etkisini
+gizler.
+
+#### Gün sonu monitör satırı
+
+Bu dersin operasyonel çıktısı tek bir defter satırıdır (Ek C'deki rutinin çekirdeği):
+
+| Tarih | $\Delta X$ | $\Delta Y$ | İma | Gap (puan) | LTV ($\sigma$) | Not |
+|---|---|---|---|---|---|---|
+| çekim günü | haftalık % | haftalık % | $\beta\Delta X+\alpha$ | $\Delta Y-$ ima | gap/SEE | katalizör var mı? |
+
+Defterin amacı seçim yanlılığını kesmektir: yalnız gap açıldığında bakan analist,
+kapanmayan sinyalleri hatırlamaz (Bölüm 10.17).
+
+<div class="pratik">
+  <span class="etiket">Pratik — 5 · Son nokta analizi</span>
+
+**1. LTV'yi elle üret.** Son hafta tahvil +%1.2, XLBNK +%0.5 yaptı. LTV kaç, hangi
+banttadır?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — ima: $1.514 \times 1.2 + 0.408 = 1.817 + 0.408 = 2.225$ → +%2.23.
+
+Adım 2 — artık: $0.5 - 2.225 = -1.725$ puan.
+
+Adım 3 — LTV: $-1.725/4.6 = -0.375$.
+
+Adım 4 — bant (5.1): $\lvert LTV\rvert < 1$ → **normal gürültü**, sinyal yok.
+
+**Cevap:** $-0.38\sigma$; konuşulmaz, deftere yazılır.
+
+</details>
+
+**2. Ters soru.** Aynı haftada ($\Delta X = +\%1.2$) LTV'nin $-2$ olması için XLBNK
+ne yapmalıydı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — gerekli artık: $-2 \times 4.6 = -9.2$ puan.
+
+Adım 2 — gerekli getiri: ima $+2.225$ → $2.225 - 9.2 = -6.98$.
+
+Adım 3 — yorum: tahvil +%1.2 yükselirken bankaların ≈ **−%7** yapması gerekirdi.
+$2\sigma$ sinyalinin bu çiftte ne kadar sert bir ayrışma demek olduğunu gösterir —
+ve geldiğinde nedeninin ekranda zaten konuşuluyor olacağını.
+
+**Cevap:** ≈ −%7.0.
+
+</details>
+
+**3. Oran monitörü vs regresyon.** Tahvil 83.10 → 85.00, XLBNK 14,438.82 → 15,000.
+Oran monitörü ne der, regresyon ne der?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — oran: $15{,}000/85 = 176.47$; önceki 173.75 → **+%1.57**. Oran monitörü
+"banka tahvile göre pahalılaştı" der.
+
+Adım 2 — getiriler: $\Delta X = 85/83.10 - 1 = +\%2.29$;
+$\Delta Y = 15{,}000/14{,}438.82 - 1 = +\%3.89$.
+
+Adım 3 — ima: $1.514 \times 2.29 + 0.408 = 3.87$. Gap $= 3.89 - 3.87 = +0.02$ puan
+→ LTV ≈ $+0.004\sigma$: **tam adil değerde.**
+
+Adım 4 — ders: $\beta = 1.514$ olan bir çiftte oran monitörünün örtük $\beta = 1$
+varsayımı her rallide sahte "pahalılaştı" sinyali üretir (Bölüm 10.6).
+
+**Cevap:** Oran "pahalı" der, regresyon "tam çizgide" der; haklı olan regresyondur.
+
+</details>
+
+**4. Zincir okuma.** Dört hafta üst üste LTV: $-1.2$, $-1.4$, $-1.6$, $-1.9$.
+Tek tek hiçbiri sinyal bandında değil. Kümülatif ne söyler?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — haftalık $z$'lerin toplamı: $-1.2-1.4-1.6-1.9 = -6.1$.
+
+Adım 2 — kümülatif normalizasyon (Bölüm 10.7): $z_{kum} = \sum z/\sqrt{k} =
+-6.1/\sqrt{4} = -3.05$.
+
+Adım 3 — puan karşılığı: $-6.1 \times 4.6 = -28.1$ puanlık kümülatif sapma;
+$\sigma_{kum} = \sqrt{4}\times 4.6 = 9.2$ → $-3.05\sigma$ ✓
+
+Adım 4 — okuma: **tek hafta sinyali yok, seri sinyali var.** Üstelik aynı işarette
+4 hafta, Bölüm 10.9'daki rejim kırılması ayak izinin ilk maddesidir. Doğru refleks
+alım değil, rolling beta ve katalizör kontrolüdür.
+
+**Cevap:** $-3.05\sigma$ kümülatif; rejim testi başlatılır.
+
+</details>
+
+</div>
+
+## 6 — "İyi korelasyon" eşikleri: hedge · pairs · makro sinyal için ayrı çıtalar
 
 "Korelasyon kaç olmalı?" sorusunun tek cevabı yoktur; cevap ekranı ne için kullandığınıza bağlıdır. Üç ana kullanım amacı için ayrı eşik setleri aşağıdadır. Eşikler istatistik kitabından değil masa pratiğinden gelir: "bu sayının altında bu işe girmem" çizgileridir.
 
-### 6.1 Amaca göre eşik tablosu
+### 6.1 — Amaca göre eşik tablosu: hedge · pairs · makro sinyal
 
 | Parametre | Hedge için | Pairs / RV için | Makro analiz / sinyal için |
 |---|---|---|---|
@@ -430,7 +1089,7 @@ Son fiyatların oranı, Y/X: 14,438.82 / 83.10 = 173.75 — doğrulandı. Oran �
 
 Temsili örnek ($R^2$ 0.39, t 8.0, N 103, $SE(\beta)/\beta$ %12.4) tabloya oturtulduğunda: **makro sinyal** kolonunun tüm eşiklerini geçiyor, **hedge** kolonunda $R^2$ şartına takılıyor, **pairs** kolonunda hem $R^2$ hem kointegrasyon eksik. Bölüm 7'deki nihai karar bu satırın açılımıdır.
 
-### 6.2 Yedi adımlı kontrol listesi
+### 6.2 — Yedi adımlı kontrol listesi: ekranı karara bağlamadan önce
 
 Herhangi bir HRA ekranını karara bağlamadan önce, sırayla:
 
@@ -444,15 +1103,83 @@ Herhangi bir HRA ekranını karara bağlamadan önce, sırayla:
 
 <div class="not"><span class="etiket">Altın kural</span> Dört istatistik ailesi dört farklı soruya cevap verir ve birbirinin yerine geçemez — t/Significance: "ilişki VAR mı?"; $R^2$/SEE: "ilişki GÜÇLÜ mü?"; SE($\beta$): "beta HASSAS mı?"; LTV/P-Value: "ŞU AN sapma var mı?". "İyi korelasyon", dördüne birden olumlu cevap verebilen ekrandır.</div>
 
-## 7. Temsili Bir HRA Çıktısının Uçtan Uca Okunması
+<div class="pratik">
+  <span class="etiket">Pratik — 6 · Amaca göre eşikler</span>
 
-Bölüm 1–6 panelin alanlarını tek tek işledi; bu bölüm hepsini temsili bir HRA çıktısı üzerinde birleştiriyor. Kurulum: $Y$ = XLBNK Index (BIST Banka endeksi), $X$ = TURKGB 2033 (TL cinsi sabit kuponlu DİBS), haftalık % getiri, 19.07.2024–10.07.2026 penceresi. Paneli okurken zihinsel sıra hep aynıdır: önce ilişki **var mı** (t-Test), sonra **ne kadar güçlü** (R², SEE), en son **şu anda ne söylüyor** (Last T-Value). Bu üç sorunun cevapları birbirinin yerine geçmez — aşağıdaki tablo tam da bu ayrımı satır satır uygular.
+**1. Üç panel, üç karar.** Aşağıdaki çıktılar için 6.1 tablosunu uygulayın:
 
-### 7.1 Tüm panel tek tabloda
+| Panel | $R^2$ | $\lvert t\rvert$ | N | $\mathrm{SE}(\beta)/\beta$ | $t(\alpha)$ | Reg On |
+|---|---|---|---|---|---|---|
+| A | 0.72 | 6.1 | 140 (2Y haftalık) | %9 | 0.7 | Percent |
+| B | 0.18 | 4.4 | 1250 (5Y günlük) | %22 | 1.1 | Percent |
+| C | 0.95 | 41 | 1250 (5Y günlük) | %2 | 3.4 | Price |
+
+<details>
+<summary>Çözüm</summary>
+
+**A —** $R^2 > 0.70$, $t > 3$, $N > 100$, SE/β < %15, $t(\alpha) < 2$: hedge kolonunun
+tamamını geçiyor; pairs için de aday, ama Engle–Granger testi (Bölüm 8.2)
+koşulmadan pairs açılmaz. **Karar: hedge EVET, pairs KOŞULLU.**
+
+**B —** $t = 4.4$ anlamlı görünüyor ama $N = 1250$'de bu beklenir (büyük N tuzağı).
+$R^2 = 0.18$ → vol azaltımı $1-\sqrt{0.82} = \%9$. SE/β = %22 gevşek.
+**Karar: yalnızca makro sinyal.** Ayrıca frekans günlük olduğu için beta Epps
+etkisiyle aşağı yanlıdır (8.4) — haftalıkla yeniden koşun.
+
+**C —** Kontrol listesinin **1. adımında durur**: Reg On = Price. $R^2 = 0.95$ ve
+$t = 41$ büyük olasılıkla sahtedir (8.1). **Karar: ekran yeniden kurulur.**
+
+</details>
+
+**2. Bu dersin paneli hangi kolonu geçiyor?** $R^2$ 0.389 · $t$ 8.02 · N 103 ·
+SE/β %12.4 · $t(\alpha)$ 0.89 değerlerini 6.1 tablosuna vurun.
+
+<details>
+<summary>Çözüm</summary>
+
+| Kolon | Geçiyor mu | Takıldığı yer |
+|---|---|---|
+| Hedge | HAYIR | $R^2 > 0.50$ şartı ($0.389$) |
+| Pairs / RV | HAYIR | $R^2$ + kointegrasyon testi yok |
+| Makro sinyal | EVET | $R^2 > 0.25$ ✓ · $t > 2$ ✓ · $N > 30$ ✓ · SE/β < %25 ✓ |
+
+**Cevap:** Yalnızca makro sinyal kolonu. Bölüm 7.4'teki nihai karar bu satırın
+açılımıdır.
+
+</details>
+
+**3. Eşiği hangi sayı belirler?** Hedge kolonunda $R^2 > 0.50$ şartı nereden
+geliyor — neden 0.30 değil?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $R^2 = 0.30$: vol azaltımı $1-\sqrt{0.70} = \%16$.
+
+Adım 2 — $R^2 = 0.50$: $1-\sqrt{0.50} = \%29$.
+
+Adım 3 — $R^2 = 0.70$: $1-\sqrt{0.30} = \%45$.
+
+Adım 4 — gerekçe: hedge'in maliyeti (spread, repo/fonlama, operasyon, basis
+takibi) sabittir; %16'lık bir vol azaltımı bu maliyeti tipik olarak karşılamaz.
+%29 savunulabilir alt sınırdır, %45 ciddi hedge'tir. Eşik istatistikten değil
+**maliyet-fayda**dan gelir.
+
+**Cevap:** Vol azaltımı eğrisinin maliyeti aştığı bölge; 0.50 pratik alt sınırdır.
+
+</details>
+
+</div>
+
+## 7 — Uçtan uca panel okuması: on iki satırlık çıktıdan tek karara
+
+Bölüm 1–6 panelin alanlarını tek tek işledi; bu bölüm hepsini temsili bir HRA çıktısı üzerinde birleştiriyor. Kurulum: $Y$ = XLBNK Index (BIST Banka endeksi), $X$ = TURKGB 2033 (TL cinsi sabit kuponlu DİBS), haftalık % getiri, çıpa penceresi 19.07.2024–10.07.2026. Paneli okurken zihinsel sıra hep aynıdır: önce ilişki **var mı** (t-Test), sonra **ne kadar güçlü** (R², SEE), en son **şu anda ne söylüyor** (Last T-Value). Bu üç sorunun cevapları birbirinin yerine geçmez — aşağıdaki tablo tam da bu ayrımı satır satır uygular.
+
+### 7.1 — Tüm panel tek tabloda: on iki satır, on iki yorum
 
 | Parametre | Değer | Bu örnekteki yorum |
 |---|---|---|
-| Kurulum | Haftalık %, 19.07.2024–10.07.2026, Lag 0 | Doğru kurulum: getiri bazlı, rejim açısından görece homojen 2 yıllık pencere. |
+| Kurulum | Haftalık %, çıpa penceresi 19.07.2024–10.07.2026, Lag 0 | Doğru kurulum: getiri bazlı, rejim açısından görece homojen 2 yıllık pencere. |
 | Raw Beta | 1.514 | Tahvil fiyatı %1 → bankalar %1.5. Kaldıraçlı tepki; iktisaden tutarlı (7.2). |
 | Adjusted Beta | 1.344 | İleriye dönük tahmin düzeltmesi; bu analizde kullanılmaz (Bölüm 2.2). |
 | Alpha | 0.408 (haftalık %) | $t(\alpha) = 0.89$ → sıfırdan ayırt edilemez. Yıllık ≈ %23.6'lık sürüklenme nokta tahmini, güvenilmez. |
@@ -465,7 +1192,7 @@ Bölüm 1–6 panelin alanlarını tek tek işledi; bu bölüm hepsini temsili b
 | Last Spread | −14,355.72 | $X - Y$ = 83.10 − 14,438.82. Ölçek uyumsuz → bu çiftte anlamsız, yok sayın. |
 | Last Ratio | 173.752 | $Y/X$ = 14,438.82 / 83.10. Takip edilecekse GP'de tarihsel bandıyla, tercihen log olarak. |
 
-### 7.2 Ekonomik mantık: banka endeksi neden tahvile β > 1 ile bağlı
+### 7.2 — Ekonomik mantık: banka endeksi neden tahvile β > 1 ile bağlı
 
 $\beta = 1.514$ rastgele bir sayı değil; Türk bankacılık iş modelinin faiz döngüsüne dört ayrı kanaldan maruz kalmasının toplamıdır. Regresyonun "kaldıraçlı" görünmesinin nedeni, aynı faiz şokunun banka bilançosuna birden fazla kapıdan aynı anda girmesidir:
 
@@ -476,7 +1203,7 @@ $\beta = 1.514$ rastgele bir sayı değil; Türk bankacılık iş modelinin faiz
 
 Dört kanal da aynı yöne çalıştığı için $\beta > 1$ doğaldır. Ancak dikkat: bu bir **ortak faktör** ilişkisidir — TCMB faiz döngüsü hem tahvili hem bankayı sürer. "Tahvil bankayı hareket ettiriyor" değil, "ikisi de faizi fiyatlıyor" (nedensellik tartışması Bölüm 8.7).
 
-### 7.3 Sayısal tutarlılık kontrolleri (panel değerleri eksik/yuvarlanmışsa böyle türetilir)
+### 7.3 — Sayısal tutarlılık kontrolleri: yuvarlanmış paneli elle tamamlamak
 
 Panel çıktısı bir rapora ya da nota kopyalanırken bazı alanlar yuvarlanmış veya kırpılmış gelebilir (1.5…, 0.3…, 4.6… gibi). Panel istatistikleri cebirsel olarak birbirine bağlı olduğundan tam değerler elle türetilebilir — ve aynı türetme, panelin (veya kendi replikasyonunuzun) doğru veriyle çalıştığının bağımsız kanıtıdır. Bu kontrolleri ritüel hâline getirin; tek bir tutarsızlık genellikle veri hizası hatasının ilk belirtisidir:
 
@@ -488,7 +1215,7 @@ Panel çıktısı bir rapora ya da nota kopyalanırken bazı alanlar yuvarlanmı
 - $\sigma(X) = \rho\cdot\sigma(Y)/\beta = 0.624 \cdot 5.9 / 1.514 \approx 2.4$ → haftalık ≈ %2.4 (yıllık ≈ %17.5) — 2033 DİBS fiyat oynaklığı olarak makul ✓
 - $P(Z < -0.47) = 0.319$: Last P-Value ile birebir ✓; $83.10 - 14438.82 = -14355.72$ ve $14438.82/83.10 = 173.75$: Spread/Ratio ✓
 
-### 7.4 Nihai karar: bu çıktıyla ne yapılır, ne yapılmaz
+### 7.4 — Nihai karar: hedge kısmi, pairs hayır, makro monitör evet
 
 | Kullanım | Karar | Gerekçe |
 |---|---|---|
@@ -496,7 +1223,7 @@ Panel çıktısı bir rapora ya da nota kopyalanırken bazı alanlar yuvarlanmı
 | Pairs / RV trade | HAYIR | $R^2$ pairs eşiğinin (0.5+) altında, kointegrasyon testi yok, üstelik LTV = −0.47 zaten sinyal vermiyor. Üç ayrı nedenle kapalı. |
 | Makro sinyal / monitör | EVET — asıl değeri bu | İlişki kesin ve orta güçte. LTV'nin −2'ye derinleşmesi "bankalar tahvil rallisine katılmıyor → hisse tarafında faiz-dışı endişe var" okuması verir; +2'ye genişlemesi tersini. Faiz indirim döngüsünde değerli bir çapraz-varlık göstergesi. |
 
-### 7.5 Hedge boyutlandırma örneği (yine de kurulacaksa)
+### 7.5 — Hedge boyutlandırma: piyasa değerinden nominale, kalan riske
 
 Diyelim ki 100 mn TL piyasa değerli XLBNK long pozisyonunun faiz bacağını bu tahville hedge edeceksiniz. Percent-percent regresyonda hedge, piyasa değeri üzerinden kurulur — beta yüzde getiriyi yüzde getiriye bağladığı için doğru eşleşme birimi nominal değil piyasa değeridir:
 
@@ -509,45 +1236,261 @@ Tahvil bacağı piyasa değeri $= \beta \times$ endeks pozisyonu $= 1.514 \times
 
 **Rebalance:** beta canlıdır. Aylık (veya $\lvert\mathrm{LTV}\rvert > 2$ sonrası) HRA'yı yenileyip hedge oranını güncellemek, [1.15, 1.88] genişliğindeki bir tahminle yaşamanın tek disiplinli yoludur.
 
-## 8. Tuzaklar ve İleri Konular
+### 7.6 — Kaybeden okuma: aynı panelden çıkarılabilecek üç yanlış sonuç
 
-### 8.1 Seviye regresyonu ve sahte ilişki (spurious regression)
+Bir paneli doğru okumayı öğrenmenin en hızlı yolu, aynı panelden çıkarılan yanlış
+cümleleri tanımaktır. Aşağıdaki üçü de gerçek masalarda sık duyulur ve üçü de
+**tam olarak bu çıktıdan** üretilebilir:
+
+| Yanlış cümle | Neden yanlış | Doğrusu |
+|---|---|---|
+| "$t = 8$, ilişki çok güçlü — bu tahville banka riskini hedge ederim." | $t$ ilişkinin **varlığını** ölçer, gücünü değil. Güç $R^2 = 0.389$'da: vol azaltımı yalnızca %22. | "İlişkinin varlığı kesin, gücü orta. Hedge faiz bacağını alır, hisse risk primi bacağını almaz." |
+| "Alpha yıllık ≈ %23.6 — tahvili short'layıp bankayı long tutmak bedava getiri." | $t(\alpha) = 0.89$: alpha sıfırdan ayırt edilemiyor. Yıllık güven aralığı kabaca −%20 ile +%80. Üstelik bu bir **taşıma** hesabı değil; repo, kupon ve fonlama hiç yok. | "Alpha sıfır kabul edilir; pozisyon kurulacaksa gerekçesi alpha değil, sapma (LTV) ve taşıma hesabıdır." |
+| "LTV $= -0.47$, bankalar ucuz — al." | $\lvert LTV\rvert < 1$ haftaların ≈ %68'inde görülür. Sinyal yok; ayrıca tek bacaklı alım, gap görüşünü yön görüşüyle karıştırır (10.4). | "Sapma gürültü bandında. İzlemeye alınır; $\lvert LTV\rvert \ge 2$ olursa önce teşhis sırası (10.5), sonra beta-nötr çift bacak konuşulur." |
+
+Ortak hata deseni üçünde de aynıdır: **panelin bir alanını, ait olmadığı sorunun
+cevabı gibi kullanmak.** Bölüm 6'daki altın kural bunun panzehiridir — dört soru,
+dört ayrı istatistik ailesi.
+
+<div class="pratik">
+  <span class="etiket">Pratik — 7 · Uçtan uca okuma</span>
+
+**1. Eksik panel.** Elinizdeki çıktıda yalnızca $\beta = 1.514$, $t = 5.0$,
+$N = 103$ okunabiliyor; ayrıca Y'nin haftalık volatilitesini %5.9 biliyorsunuz.
+$R^2$, SEE ve $\mathrm{SE}(\beta)$ nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $R^2 = t^2/(t^2+N-2) = 25/(25+101) = 0.198$ → $R = 0.445$.
+
+Adım 2 — $\mathrm{SEE} = \sigma_Y\sqrt{1-R^2} = 5.9 \times \sqrt{0.802} =
+5.9 \times 0.895 = 5.28$.
+
+Adım 3 — $\mathrm{SE}(\beta) = \beta/t = 1.514/5.0 = 0.303$ → SE/β = %20.
+
+Adım 4 — karar: $R^2 = 0.20$ hedge eşiğinin (0.50) çok altında; vol azaltımı
+$1-\sqrt{0.802} = \%10.5$. Aynı beta, yarı yarıya değersiz bir hedge.
+
+**Cevap:** $R^2 = 0.198$ · SEE = 5.28 · SE(β) = 0.303.
+
+</details>
+
+**2. Boyutlandırma.** 250 mn TL piyasa değerli XLBNK long pozisyonunun faiz bacağını
+bu tahville hedge edeceksiniz (temiz fiyat 83.10). Piyasa değeri, nominal ve
+haftalık kalan risk nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — piyasa değeri: $1.514 \times 250 = 378.5$ mn TL short.
+
+Adım 2 — nominal: $378.5/0.8310 = 455.5$ mn TL nominal DİBS (gerçek işlemde kirli
+fiyat kullanılır; işlemiş faiz nominali bir miktar düşürür).
+
+Adım 3 — kalan risk: $\mathrm{SEE} \times V_Y = 0.046 \times 250 = 11.5$ mn TL
+haftalık $1\sigma$; $2\sigma = 23$ mn TL.
+
+Adım 4 — belirsizlik bandı: $\beta \in [1.15,\ 1.88]$ → savunulabilir hedge
+287–470 mn TL piyasa değeri.
+
+**Cevap:** 378.5 mn TL piyasa değeri ≈ 455 mn TL nominal; haftalık $1\sigma$ 11.5 mn TL.
+
+</details>
+
+**3. Karar nasıl değişirdi?** Her şey aynı kalıp $R^2$ 0.62 olsaydı üç kullanım
+kararı (hedge / pairs / makro) nasıl değişirdi?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — vol azaltımı: $1-\sqrt{1-0.62} = 1-0.616 = \%38.4$ (0.389'da %21.8'di).
+
+Adım 2 — SEE: $5.9 \times 0.616 = 3.64$ → 100 mn TL'de haftalık $1\sigma$ 3.6 mn TL
+(4.6 yerine).
+
+Adım 3 — kararlar: **hedge** kolonu ($R^2 > 0.50$) geçilir → "kısmi" değil
+"kabul edilebilir hedge". **Pairs** için $R^2$ eşiği geçilir ama kointegrasyon ve
+half-life hâlâ ölçülmelidir (10.15). **Makro sinyal** zaten geçiyordu; cetvelin
+çözünürlüğü artar, 10.4'teki "9.2 puan" sinyal eşiği 7.3 puana iner.
+
+**Cevap:** Hedge EVET olur, pairs KOŞULLU aday olur, sinyal keskinleşir.
+
+</details>
+
+**4. Yanlış cümleyi bul.** Aşağıdakilerden hangisi bu panelden çıkarılamaz?
+(a) "Tahvil %1 çıkarsa bankalar ortalama %1.5 çıkar." (b) "Banka hareketinin %39'u
+tahvilden geliyor." (c) "Tahvil bankaları sürüklüyor." (d) "Hedge sonrası haftalık
+±%4.6 risk kalır."
+
+<details>
+<summary>Çözüm</summary>
+
+**(c) çıkarılamaz.** Regresyon nedensellik ölçmez; ikisini de süren üçüncü değişken
+politika faizi döngüsüdür (Bölüm 8.7). Lag testi (10.12) tipik olarak yalnız
+L = 0'da anlamlılık verir — yani eşzamanlı fiyatlama, öncülük değil.
+
+(a) $\beta$'nın tanımı ✓ · (b) $R^2$'nin tanımı ✓ · (d) SEE'nin tanımı ✓
+
+**Cevap:** (c).
+
+</details>
+
+</div>
+
+## 8 — Tuzaklar ve ileri konular: HRA nerede yanıltır, eksik testler nasıl eklenir?
+
+### 8.1 — Seviye regresyonu: sahte R² nasıl doğar (spurious regression)
 
 Reg On = Price ile iki trendli seriyi regrese ederseniz, aralarında hiçbir iktisadi bağ olmasa bile $R^2 > 0.9$ ve $t > 20$ görebilirsiniz (Granger–Newbold problemi). Sezgisi basit: iki seri de zamanla yukarı gidiyorsa, "zaman" değişkeni ikisini de açıklar ve regresyon bu ortak trendi sahte bir ilişki olarak raporlar. Nominal TL ortamında neredeyse her fiyat serisi trend taşıdığı için bu tuzak Türkiye'de özellikle keskindir: BIST ile konut fiyat endeksini seviyede regrese edin, "mükemmel ilişki" çıkar. Çözüm basittir: **daima Percent.** Seviye analizi gerekiyorsa (pairs'in gerçek matematiği), o işin doğru aleti regresyon değil kointegrasyon testidir (8.2).
 
-### 8.2 Korelasyon ≠ kointegrasyon — HRA'nın pairs için eksik bıraktığı
+### 8.2 — Korelasyon ≠ kointegrasyon: pairs için HRA'nın eksik bıraktığı test
 
 Getiri korelasyonu "aynı haftalarda aynı yöne gidiyorlar" der; kointegrasyon "fiyatları uzun vadede birbirine bağlı, aradaki makas kopmuyor" der. Pairs trade'in ihtiyacı ikincisidir ve HRA bunu test etmez. Ayrım kritiktir çünkü iki kavram bağımsızdır: yüksek getiri korelasyonlu iki varlık yıllar içinde kalıcı olarak ayrışabilir (her hafta aynı yöne gider ama biri hep biraz fazla gider — makas hiç kapanmaz); düşük günlük korelasyonlu iki varlık kointegre olabilir (kısa vadede bağımsız salınır ama uzun vadede aynı çapaya bağlıdır). Pratik yol: fiyat (log) serilerinde Engle–Granger / ADF testini Python'da koşmak (Bölüm 9.2'de hazır kod). LTV tetiğiyle pairs'e girmeden önce kointegrasyon p-değerinin $< 0.05$ olması masa şartı olmalıdır.
 
-### 8.3 Beta istikrarı ve rejim değişimi
+### 8.3 — Beta istikrarı: pencere değiştiğinde beta neden kayar (1Y/2Y/5Y ritüeli)
 
-OLS tek bir beta üretir; gerçekte beta zamanla değişir. Bu çiftte pencere 2024 ortası – 2026 ortasını, yani dezenflasyon/faiz indirim döngüsünün faiz temasının baskın olduğu dönemi kapsıyor — betanın 1.5 gibi yüksek çıkmasında bunun payı büyüktür. Faiz teması geri plana düştüğünde (örneğin kur veya aktif kalitesi öne çıktığında) beta gevşeyebilir. Kontrol ritüeli: aynı analizi 1Y / 2Y / 5Y ile üç kez koşun. Üç beta aynı bölgedeyse (ör. 1.3–1.7) ilişki sağlamdır; sıçrıyorsa tek betaya değil, kısa pencerenin betasına ağırlık verin ve hedge'i sık rebalance edin. Kendi altyapınızda 52 haftalık kayan (rolling) beta çizmek en temiz çözümdür (9.2).
+OLS tek bir beta üretir; gerçekte beta zamanla değişir. Kural: pencerenizin hangi **politika rejimi fazına** denk düştüğünü her zaman künyeye yazın — ölçtüğünüz beta o fazın betasıdır. Çıpa penceresi (19.07.2024 – 10.07.2026) dezenflasyon/faiz indirim döngüsünde faiz temasının baskın olduğu bir fazı kapsıyor — betanın 1.5 gibi yüksek çıkmasında bunun payı büyüktür. Faiz teması geri plana düştüğünde (örneğin kur veya aktif kalitesi öne çıktığında) beta gevşeyebilir. Kontrol ritüeli: aynı analizi 1Y / 2Y / 5Y ile üç kez koşun. Üç beta aynı bölgedeyse (ör. 1.3–1.7) ilişki sağlamdır; sıçrıyorsa tek betaya değil, kısa pencerenin betasına ağırlık verin ve hedge'i sık rebalance edin. Kendi altyapınızda 52 haftalık kayan (rolling) beta çizmek en temiz çözümdür (9.2).
 
-### 8.4 Frekans etkisi (Epps etkisi)
+### 8.4 — Frekans etkisi (Epps): günlük beta neden haftalıktan küçük çıkar
 
 Frekans yükseldikçe ölçülen korelasyon ve beta sistematik olarak **düşer**: asenkron fiyatlama (tahvil ve hisse aynı anda fiyatlanmaz), bid-ask sıçraması ve mikro yapı gürültüsü günlük getirilerde ilişkiyi seyreltir. Bu, Epps etkisi olarak bilinir — gürültü kısa ufukta sinyale baskındır, ufuk uzadıkça ortak faktör görünür hâle gelir. Aynı çift günlükte $R^2$ 0.25, haftalıkta 0.39, aylıkta 0.50+ verebilir — hiçbiri "yanlış" değildir, farklı ufukların cevabıdır. Kural: **frekansı hedge/trade ufkunuza eşleyin.** Haftalık rebalance edilen bir hedge için haftalık beta doğru betadır; günlük beta onu sistematik eksik gösterir.
 
-### 8.5 Otokorelasyon ve değişen varyans — SE'lerin iyimserliği
+### 8.5 — Otokorelasyon ve değişen varyans: HRA'nın t'si neden fazla iyimser
 
 OLS standart hataları, artıkların bağımsız ve sabit varyanslı olduğunu varsayar. Finansal getirilerde ikisi de ihlal edilir: volatilite kümelenir (GARCH etkisi), artıklar ardışık bağımlılık taşıyabilir. Sonuç: HRA'nın SE'leri gerçekte olduğundan dar, t-Test'i şişkin olabilir — model kendi kesinliğini abartır. HRA, Newey–West (HAC: otokorelasyon ve değişen varyansa dayanıklı standart hata) düzeltmesi sunmaz. Pratik kural: sınırda kararlar ($t$ 2–3 bandı) HRA t'sine emanet edilmez; Python'da HAC standart hatalarıyla doğrulanır (9.2). $t = 8$ gibi ezici değerlerde düzeltme sonucu değiştirmez ama $t = 2.3$'lük bir "anlamlılık" HAC ile buharlaşabilir.
 
-### 8.6 Uç değerler ve Winsorize pratiği
+### 8.6 — Uç değerler ve Winsorize: ilişki kaç haftaya dayanıyor?
 
-OLS, uç noktalara karesel ağırlık verir — hata karelerini minimize ettiği için örneklemin en büyük hareketi, düzinelerce sıradan haftadan daha fazla söz sahibidir. Tek bir −%14/−%25 haftası (bu örneklemde büyük olasılıkla 17–21 Mart 2025) hem betayı hem $R^2$'yi tek başına yukarı çekebilir. Standart ritüel: Winsorize (uç değerleri belirli bir eşiğe, ör. $2\sigma$'ya kırpma) kapalı ve açık iki kez koşmak. Fark küçükse ilişki dokunun genelinden geliyor demektir — güvenin. Fark büyükse ilişki birkaç kriz haftasının eseridir; bu durumda kendinize sorulacak soru şudur: **hedge'i normal haftalar için mi kuruyorum, kriz haftaları için mi?** Kriz hedge'i istiyorsanız uç haftaları kırpmamak (hatta Beta +/- alanıyla düşüş-betasını ayrıca ölçmek) doğrudur; günlük P&L yönetimi içinse winsorize'lı beta daha temsili olabilir. Non-Param seçeneği üçüncü bir çapraz kontroldür.
+OLS, uç noktalara karesel ağırlık verir — hata karelerini minimize ettiği için örneklemin en büyük hareketi, düzinelerce sıradan haftadan daha fazla söz sahibidir. Tek bir −%14/−%25 haftası (örneklemin en uç gözlemi; bu çıpada 17–21.03.2025 şok haftası) hem betayı hem $R^2$'yi tek başına yukarı çekebilir. Standart ritüel: Winsorize (uç değerleri belirli bir eşiğe, ör. $2\sigma$'ya kırpma) kapalı ve açık iki kez koşmak. Fark küçükse ilişki dokunun genelinden geliyor demektir — güvenin. Fark büyükse ilişki birkaç kriz haftasının eseridir; bu durumda kendinize sorulacak soru şudur: **hedge'i normal haftalar için mi kuruyorum, kriz haftaları için mi?** Kriz hedge'i istiyorsanız uç haftaları kırpmamak (hatta Beta +/- alanıyla düşüş-betasını ayrıca ölçmek) doğrudur; günlük P&L yönetimi içinse winsorize'lı beta daha temsili olabilir. Non-Param seçeneği üçüncü bir çapraz kontroldür.
 
-### 8.7 Ortak faktör ve nedensellik
+### 8.7 — Ortak faktör ve nedensellik: tahvil bankayı sürüklemiyor
 
 $\beta = 1.514$, tahvilin bankayı "sürüklediği" anlamına gelmez; ikisini de süren üçüncü değişken TCMB/global faiz döngüsüdür. Bunun pratik sonucu: ortak faktör sustuğunda (faiz beklentileri sabitken) ilişki geçici olarak buharlaşır ve LTV sapmaları faiz-dışı, tekrarlamayan nedenlerden gelir. Lag ayarı burada işe yarar: Lag = 1'de $t$ hâlâ anlamlıysa X'te fiyatlanan bilgi Y'ye gecikmeli geçiyor olabilir — gerçek bir öncülük sinyali. Lag'li $t$ anlamsızsa (tipik durum), iki varlık bilgiyi eşzamanlı fiyatlıyordur ve "tahvil önden gitti, banka gelecek" anlatısına dayanan trade'ler temelsizdir.
 
-### 8.8 Tek tahvil ve verim eğrisi
+### 8.8 — Tek tahvil sorunu: endeksin efektif durasyon noktası hangi vadede?
 
 X olarak tek bir tahvil (2033) seçmek, banka endeksini eğrinin tek bir noktasına bağlamaktır. Oysa bankanın faiz duyarlılığı eğrinin farklı bölgelerine dağılır: fonlama/NIM kısa uca (TLREF, 1Y), menkul portföy orta-uzun uca. Daha zengin resim için aynı HRA'yı 2Y / 5Y / 10Y benchmark DİBS'lerle ayrı ayrı koşup betaları karşılaştırın: hangi vade en yüksek $R^2$'yi veriyorsa endeksin "efektif durasyon noktası" orasıdır ve hedge aracı olarak onu seçmek artık riski görünür biçimde düşürür.
 
-## 9. Excel ve Python ile Replikasyon
+### 8.9 — Geçersizleşme: bu analizi ne zaman çöpe atarsınız?
+
+Her modelin bir son kullanma koşulu olmalıdır ve bu koşul **pozisyon açılmadan
+önce** yazılır. Aksi hâlde model, kendisini yanlışlayan veriyi "geçici sapma" diye
+yeniden yorumlar. Aşağıdaki beş tetikten herhangi biri, çıktının bir daha
+kullanılmadan yeniden kurulması demektir:
+
+| Tetik | Ölçüsü | Neden geçersizleştirir |
+|---|---|---|
+| Beta kayması | 52 haftalık rolling beta, kullanılan betadan $> 0.30$ uzaklaştı | Cetvelin eğimi değişti; üretilen her gap ölçüm hatası taşır (10.5 adım 2) |
+| İlişkinin zayıflaması | $R^2$, kısa pencerede uzun pencerenin yarısının altına indi | Ortak faktör susmuş olabilir (8.7); hedge kalitesi sessizce düşer |
+| Örneklem daralması | Geçerli gözlem sayısı amaç eşiğinin altına düştü (hedge 60, pairs 100) | Standart hatalar kullanılamaz hâle gelir (4.5) |
+| Yapısal katalizör | Regülasyon, sermaye artırımı, vergi, derecelendirme, endeks metodolojisi değişikliği | Y'nin iş modeli değişti; geçmiş beta yeni Y'yi tarif etmiyor (10.9) |
+| Kalıcı kopuş | Kümülatif gap, $\pm 2\sigma$ konisinin dışında 4+ hafta | Ortalamaya dönüş hipotezinin doğrudan reddi (10.11) |
+
+#### Yeniden kurma prosedürü
+
+1. **Kırılma tarihini belirle** — rolling beta grafiğinde eğimin kaydığı nokta ya
+   da katalizör tarihi.
+2. **Pencereyi oradan başlat.** N eşiğin altına düşüyorsa iki seçenek var: frekansı
+   yükseltmek (haftalık → günlük, Epps bedeliyle) veya karar vermeyi ertelemek.
+   Üçüncü seçenek — eski pencereyi kullanmaya devam etmek — seçenek değildir.
+3. **Yeni künyeyi yaz** (1.7) ve eski çıktıyı arşivle; iki künyeyi yan yana
+   saklamak, "beta neden değişti" sorusuna sonradan cevap verebilmenin tek yoludur.
+4. **Açık pozisyonları yeni betayla yeniden boyutlandır**, gap defterindeki eski
+   sinyalleri **geçersiz** işaretle — geriye dönük puanlamada onları başarı ya da
+   başarısızlık olarak saymayın.
+
+<div class="pratik">
+  <span class="etiket">Pratik — 8 · Tuzaklar</span>
+
+**1. Frekans seçimi.** Hedge'i haftada bir rebalance ediyorsunuz. Günlük veriyle
+ölçülmüş beta ile kurarsanız hata hangi yönde olur ve neden?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — Epps etkisi (8.4): frekans yükseldikçe ölçülen korelasyon ve beta
+sistematik olarak **düşer** (asenkron fiyatlama, bid-ask gürültüsü).
+
+Adım 2 — sonuç: günlük beta < haftalık beta → hedge nominali küçük kurulur →
+**sistematik eksik hedge**, yani artık pozisyon tahvile karşı net long kalır.
+
+Adım 3 — kural: frekansı rebalance ufkuna eşle. Haftalık rebalance → haftalık beta.
+
+**Cevap:** Eksik hedge yönünde; günlük beta bu ufuk için aşağı yanlıdır.
+
+</details>
+
+**2. Winsorize duyarlılığı.** Diyelim ki Winsorize'ı $2\sigma$ ile açtınız ve
+$\beta$ 1.514'ten 1.20'ye, $R^2$ 0.389'dan 0.30'a indi. 100 mn TL'lik pozisyonda ne
+değişir, hangi betayı seçersiniz?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — hedge farkı: $151.4 - 120.0 = 31.4$ mn TL, yani hedge'in %21'i.
+
+Adım 2 — yorum: fark büyük → ilişkinin önemli kısmı birkaç uç haftadan geliyor
+(8.6). İlişki "dokunun geneli" değil, "kriz haftaları" ilişkisi.
+
+Adım 3 — seçim amaca bağlı: **kriz hedge'i** istiyorsanız kırpmasız beta (1.514)
+doğrudur — koruma tam da o haftalarda gerekir. **Günlük P&L oynaklığını** yönetmek
+istiyorsanız winsorize'lı beta (1.20) daha temsilidir.
+
+Adım 4 — üçüncü çapraz kontrol: Non-Param tahmini. Üçü de 1.2–1.5 bandındaysa
+farkı yaşayabilirsiniz; biri dışarı düşerse veri kontrolü yapın.
+
+**Cevap:** Amaca göre seçilir; ama fark %21 ise bu tercih **yazılı** olmalıdır.
+
+</details>
+
+**3. Ekstrapolasyon.** Örneklemdeki X aralığı $[-\%13.7,\ +\%7.5]$. "Tahvil bir
+haftada +%10 yaparsa" senaryosunda ima ve bant nedir; sonucu nasıl sunarsınız?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — ima: $1.514 \times 10 + 0.408 = 15.55$ → +%15.6.
+
+Adım 2 — bant: $\sqrt{\mathrm{SEE}^2 + (\mathrm{SE}(\beta)\Delta X)^2 +
+\mathrm{SE}(\alpha)^2} = \sqrt{4.6^2 + (0.188\times10)^2 + 0.46^2} =
+\sqrt{21.16+3.53+0.21} = 4.99$ → ±%5.0.
+
+Adım 3 — uyarı: +%10, örneklemin üst ucunun (+%7.5) **dışında**. Model orada hiç
+veri görmedi; ne beta ne SEE o bölgede doğrulanmıştır. Bant hesabı bile iyimserdir.
+
+Adım 4 — sunum: "Model içi ima +%15.6 ± 5.0; ancak bu senaryo örneklem aralığının
+dışındadır ve ekstrapolasyondur" — ikinci cümle olmadan birinci cümle söylenmez.
+
+**Cevap:** +%15.6 ± 5.0, ekstrapolasyon etiketiyle.
+
+</details>
+
+**4. HAC kararı.** İki farklı çift için $t = 8.02$ ve $t = 2.3$ buldunuz.
+Hangisinde Newey–West düzeltmesi kararınızı değiştirebilir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — HAC, otokorelasyon ve değişen varyans nedeniyle **fazla dar** çıkan
+standart hataları genişletir; $t$ küçülür (8.5).
+
+Adım 2 — $t = 8.02$: SE iki katına çıksa bile $t = 4.0$ — karar değişmez.
+
+Adım 3 — $t = 2.3$: SE'de %20'lik bir genişleme $t$'yi 1.9'a indirir → "anlamlı"
+etiketi kaybolur. Sınırda kararlar HRA'nın $t$'sine emanet edilmez.
+
+**Cevap:** İkincisi. Kural: 2–3 bandındaki her $t$, HAC ile yeniden test edilir.
+
+</details>
+
+</div>
+
+## 9 — Replikasyon (Excel · Python): paneli kendi altyapınızda üretmek
 
 HRA'yı kendi altyapınızda birebir üretmek üç şey kazandırır: panel değerlerinin bağımsız doğrulaması, HRA'nın sunmadığı testler (HAC, rolling beta, kointegrasyon) ve otomasyon (monitör e-postası, limit alarmı).
 
-### 9.1 Excel
+### 9.1 — Excel: panelin her satırının formül karşılığı (EN/TR)
 
 $X$ getirileri A2:A104, $Y$ getirileri B2:B104 aralığında olsun (haftalık %, panelle aynı kurulum). Panelin her satırının Excel karşılığı:
 
@@ -566,7 +1509,7 @@ $X$ getirileri A2:A104, $Y$ getirileri B2:B104 aralığında olsun (haftalık %,
 
 LINEST/DOT $5\times 2$ boyutlu bir dizi döndürür — satır haritası: 1. satır $\beta$ ve $\alpha$; 2. satır $\mathrm{SE}(\beta)$ ve $\mathrm{SE}(\alpha)$; 3. satır $R^2$ ve SEE; 4. satır $F$ ve serbestlik derecesi; 5. satır SS(reg) ve SS(resid). Yani panelin neredeyse tamamı tek formülün içindedir.
 
-### 9.2 Python (xbbg + statsmodels)
+### 9.2 — Python (xbbg + statsmodels): HRA + HAC + rolling beta + kointegrasyon
 
 `xbbg`, Bloomberg terminal API'sine pandas arayüzü sağlayan açık kaynak kütüphanedir. Aşağıdaki blok HRA'nın tamamını, artı HRA'da olmayan üç testi üretir: HAC standart hataları, 52 haftalık rolling beta ve Engle–Granger kointegrasyonu. DİBS için görüntü adı (TURKGB …) yerine ISIN kullanmak (`'/isin/TRTXXXXXXXXX Govt'`) ticker sürprizlerini önler.
 
@@ -577,7 +1520,7 @@ import statsmodels.api as sm
 from statsmodels.tsa.stattools import coint
 
 Y, X = "XLBNK Index", "/isin/TRTXXXXXXXXX Govt"   # 2033 DIBS ISIN
-px = blp.bdh([Y, X], "PX_LAST", "2024-07-19", "2026-07-10", Per="W")
+px = blp.bdh([Y, X], "PX_LAST", "2024-07-19", "2026-07-10", Per="W")  # capa penceresi
 px.columns = px.columns.droplevel(1)
 ret = px.pct_change().dropna() * 100              # haftalik % getiri
 
@@ -611,11 +1554,114 @@ print("Engle-Granger p:", p_eg)   # < 0.05 ise pairs adayi
   OLS bloğunun çıktısı panelle eşleşmelidir: $\beta \approx 1.514$, $\mathrm{SE}(\beta) \approx 0.188$, $R^2 \approx 0.389$, $\mathrm{SEE} \approx 4.6$, $t \approx 8.0$, nobs = 103, LTV ≈ −0.47, LPV ≈ 0.319. Eşleşmiyorsa fark neredeyse her zaman veri hizasındadır: <code>Per="W"</code> haftalık örnekleme günü, temiz/kirli fiyat alanı veya eksik hafta doldurma. Bloomberg'in haftalık kesimi Cuma kapanışıdır.
 </div>
 
-## 10. "X Bu Kadar Gitti, Y Nerede Olmalı?" — İma Edilen Hareket ve Göreli Değer Analizi
+### 9.3 — Replikasyon tutmuyorsa: beş adımlı hata ayıklama sırası
+
+Kendi çıktınız panelle eşleşmediğinde sorunun **hangi sayının** farklı olduğuna
+bakarak nerede aranacağı daralır. Sırayla:
+
+| Belirti | Muhtemel neden | Kontrol |
+|---|---|---|
+| N farklı, diğerleri makul | Tarih hizası, haftalık kesim günü, tatil/eksik hafta doldurma | İki seriyi ayrı çekip hafta sayılarını karşılaştırın; Bloomberg haftalık kesimi Cuma kapanışıdır |
+| $\beta$ 100 kat büyük/küçük, $R^2$ aynı | Bir seri yüzde (2.5), diğeri oran (0.025) olarak beslenmiş | Getirileri tek yerde ölçekleyin: `pct_change()*100` her iki seride de |
+| $\beta$ farklı, $R^2$ aynı | Y/X ters kurulmuş | $\beta_1\cdot\beta_2 = R^2$ testi: çarpım $R^2$'yi veriyorsa iki yön aynı veridir |
+| $R^2$ belirgin düşük | Alan farkı: temiz/kirli fiyat, toplam getiri vs fiyat, kupon/temettü düzeltmesi | Her iki tarafta da aynı alan türü mü? PX_LAST ↔ PX_LAST |
+| Yalnız LTV farklı | Son gözlem tarihi farklı (bir hafta kayma) | Serinin son iki tarihini yazdırın; panelin çekim anıyla eşleşiyor mu (1.7 künyesi) |
+
+Genel kural: **panelin tamamı tutuyor da bir alan tutmuyorsa sorun o alandadır;
+hiçbiri tutmuyorsa sorun veri hizasındadır.** Cebirsel çapraz kontroller (Bölüm 7.3
+ve 4.6) hangi durumda olduğunuzu bir dakikada söyler.
+
+<div class="pratik">
+  <span class="etiket">Pratik — 9 · Replikasyon</span>
+
+**1. LINEST haritası.** $\mathrm{SE}(\beta)$, $R^2$ ve SEE, `LINEST`/`DOT`
+çıktısının hangi hücrelerindedir? Formülleri yazın.
+
+<details>
+<summary>Çözüm</summary>
+
+`LINEST` $5\times2$ dizisi döndürür (Bölüm 9.1):
+
+| Satır | 1. sütun | 2. sütun |
+|---|---|---|
+| 1 | $\beta$ | $\alpha$ |
+| 2 | $\mathrm{SE}(\beta)$ | $\mathrm{SE}(\alpha)$ |
+| 3 | $R^2$ | SEE |
+| 4 | $F$ | serbestlik derecesi |
+| 5 | SS(reg) | SS(resid) |
+
+- $\mathrm{SE}(\beta)$: `=INDEX(LINEST(B:B;A:A;TRUE;TRUE);2;1)`
+- $R^2$: `=INDEX(LINEST(B:B;A:A;TRUE;TRUE);3;1)`
+- SEE: `=INDEX(LINEST(B:B;A:A;TRUE;TRUE);3;2)`
+
+**Cevap:** Sırasıyla (2;1), (3;1), (3;2).
+
+</details>
+
+**2. Beta 100 kat.** Python'da $\beta = 151.4$ çıktı, $R^2$ ise panelle aynı
+(0.389). Teşhis?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $R^2$ ölçekten bağımsızdır; $\beta$ ölçeğe bağlıdır. İkisinin bu şekilde
+ayrışması **birim** sorununu işaret eder.
+
+Adım 2 — muhtemel neden: Y yüzde (`*100` uygulanmış), X oran (uygulanmamış) →
+$\beta$ 100 katına çıkar.
+
+Adım 3 — düzeltme: `ret = px.pct_change().dropna() * 100` satırının **iki seri
+için de** çalıştığından emin olun (sütun bazlı bir dönüşüm atlanmış olabilir).
+
+**Cevap:** Birim uyumsuzluğu; $R^2$'nin doğru olması bunun kanıtıdır.
+
+</details>
+
+**3. LTV'yi Excel'de kur.** `beta`, `alpha`, `SEE` adlandırılmış hücreler ve son
+satır 104. LTV formülü nedir; $t(\alpha) < 2$ ise ne değişir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — ima: `=beta*A104+alpha`.
+
+Adım 2 — LTV: `=(C104-(beta*A104+alpha))/SEE` (A = X getirisi, C = Y getirisi).
+
+Adım 3 — $t(\alpha) < 2$ ise tek dönemlik imada fark ihmal edilebilir, ama
+**kümülatif** monitörde alpha çıkarılır (Bölüm 10.7): `=(C104-beta*A104)/SEE`.
+
+Adım 4 — kontrol: son satırın sonucu panelin Last T-Value'suna eşit olmalı
+(bu çıpada ≈ −0.47).
+
+**Cevap:** `=(C104-(beta*A104+alpha))/SEE`; kümülatifte alpha atılır.
+
+</details>
+
+**4. Significance'ı elle.** $t = 8.02$, $N = 103$. İki kuyruklu p değeri hangi
+formülle çıkar, panelin 0.00'ı ne demek?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — serbestlik derecesi: $N - 2 = 101$.
+
+Adım 2 — `=T.DAĞ.2K(MUTLAK(8,02);101)` → $10^{-12}$ mertebesinde.
+
+Adım 3 — panel iki ondalık gösterir; 0.00 yalnızca "$p < 0.005$" demektir, sıfır
+demek değildir. Karşılaştırma yapacaksanız $p$ yerine $t$'yi kullanın: $t$ ondalık
+kaybetmez.
+
+**Cevap:** `T.DAĞ.2K(8,02;101)` ≈ $1.7\times10^{-12}$; panelin 0.00'ı bir yuvarlamadır.
+
+</details>
+
+</div>
+
+## 10 — İma edilen hareket: "X bu kadar gitti, Y nerede olmalı?" (fair value cetveli)
 
 Bu bölüm, HRA'nın hedge dışındaki ikinci büyük kullanımını işler: regresyonu bir **adil değer (fair value) cetveli** olarak kullanmak. "Tahvil bu hafta %2 yükseldi, o hâlde bankaların da şu kadar yükselmesi lazımdı — yükselmediyse geride kaldı" tarzı her okuma, aslında aşağıdaki matematiğin sözlü hâlidir. Bölüm 5'teki Last T-Value bu analizin panel tarafından hazır hesaplanmış özel hâlidir (yalnızca son hafta için); burada aynı mantık keyfi senaryolara, çok haftalık ufuklara, faiz senaryolarına ve pozisyon yönetimine kadar genelleştiriliyor. Bölümün omurgası dört sorudur: **sapma ne kadar** (10.1–10.3)? **Gerçek mi** (10.4–10.9)? **Nasıl oynanır** (10.10–10.14)? **Bu çiftte oynanır mı** (10.15–10.17)?
 
-### 10.1 Tek dönemlik ima: formül ve temsili örnek
+### 10.1 — Tek dönemlik ima: formül, gap ve gap'in sigmaya çevrilmesi
 
 $$
 \Delta Y_{\text{ima}} = \beta \cdot \Delta X + \alpha \qquad \text{gap} = \Delta Y_{\text{gerçek}} - \Delta Y_{\text{ima}} \qquad \text{gap}(\sigma) = \frac{\text{gap}}{\mathrm{SEE}}
@@ -626,7 +1672,7 @@ Alpha'yı dahil etmeli mi? Tek haftalık imada $\alpha = 0.408$ küçüktür ve 
 
 Son hafta için bu hesabı panel zaten yapıyor: gap$(\sigma)$ = Last T-Value. Bölüm 10'un katkısı, aynı cetveli (a) henüz gerçekleşmemiş senaryolara (10.3), (b) birden çok haftaya yayılmış "geride kaldı" anlatılarına (10.7), (c) ters yöne (10.16) ve (d) pozisyon/monitör tasarımına (10.10–10.13) uygulayabilmektir.
 
-### 10.2 "Olmalı" değil, "beklenir ± bant": koşullu dağılım
+### 10.2 — "Olmalı" değil "beklenir ± bant": koşullu dağılım ve bant genişliği
 
 Regresyon, X verildiğinde Y için tek bir sayı değil bir **dağılım** söyler: $\Delta Y \sim \mathcal{N}(\beta\cdot\Delta X + \alpha,\ \mathrm{SEE}^2)$. Yani +%2'lik tahvil haftasında bankalar için doğru cümle "+3.4 olmalı" değil, "beklenen +3.4; %68 ihtimalle −1.2 ile +8.0 arası; %95 ihtimalle −5.8 ile +12.6 arası" cümlesidir. Bandın bu genişliği $R^2 = 0.39$'un doğrudan sonucudur — banka hareketinin %61'i tahvilden gelmediği için tahvil, bankanın haftasını ancak bu kadar daraltabilir. Cetvelin çizgileri kalemle değil, SEE kalınlığında bir fırçayla çizilmiştir.
 
@@ -642,7 +1688,7 @@ $\beta$'nın kendisi de ±0.188 hatayla ölçüldüğü için, büyük $\lvert\D
   $\mathcal{N}(\cdot,\ \mathrm{SEE}^2)$ varsayımı normallik ister; oysa Bölüm 1.5'teki kenar histogramları kalın kuyrukları açıkça gösteriyor (−%13/−%14 haftaları). Gerçek dağılımın kuyrukları normalden şişkindir → $2\sigma$ dışı gerçekleşmeler teoride %5'ten, pratikte daha sık görülür. Bantları kriz haftalarında olduğundan dar sanmayın.
 </div>
 
-### 10.3 Senaryo tabloları: fiyat ve faiz senaryolarından ima edilen seviye
+### 10.3 — Senaryo tabloları: fiyat ve faiz senaryolarından ima edilen seviye
 
 #### Fiyat senaryoları (tek haftalık ufuk)
 
@@ -676,7 +1722,7 @@ Masada senaryo faizle konuşulur; zincir üç halkadır: $\Delta y$ (bp) → $\D
 - **Ufuk uyarısı:** bantlar **tek haftalık** SEE ile çizildi. −200 bp'lik hareket 8 haftaya yayılırsa ima edilen seviye aynı kalır ama bant $\sqrt{8}\times 4.6$ ≈ ±%13'e (≈ ±1,900 puan) açılır (10.7). Senaryo sunarken ufku mutlaka belirtin.
 - **Kullanım:** bu tablo komite/ALCO sunumlarının doğal formatıdır — "TCMB 100 bp inerse banka endeksi 15,000 civarı; 14,350 altı veya 15,700 üstü kapanış modele göre $1\sigma$+ sapmadır ve açıklama ister."
 
-### 10.4 Gap'in okunması: "geride kaldı" ne zaman gerçek bir şeydir?
+### 10.4 — Gap okuması: "geride kaldı" ne zaman gerçek bir fırsattır?
 
 | $\lvert\text{gap}\rvert$ ($\sigma$) | Bu çiftte puan karşılığı (haftalık) | Okuma |
 |---|---|---|
@@ -695,7 +1741,7 @@ $\lvert\text{gap}\rvert > 2\sigma$ gördüğünüzde iki açıklama yarışır: 
 
 "Banka geride kaldı → banka al" tek bacaklı düşüncedir ve gap görüşünü yön görüşüyle karıştırır: açık, tahvilin geri vermesiyle de kapanabilir (banka hiç kımıldamadan). Saf gap görüşünün doğru enstrümanı **beta-nötr çift bacaktır**: Y long + $\beta\cdot$X short (piyasa değeri oranı 1 : 1.514; tam matematiği 10.10'da). Tek bacak ancak "gap + yön" iki görüşünüz birden varsa savunulur — ve ikisi ayrı ayrı yazılmalıdır: "$-2\sigma$ ucuzluk + faiz indirimi devam edecek" iki ayrı iddiadır, ikisi de yanlışlanabilir olmalıdır.
 
-### 10.5 Gap neden açıldı? Dört adımlı teşhis sırası
+### 10.5 — Gap neden açıldı? Dört adımlı teşhis sırası
 
 $\lvert\text{gap}\rvert \geq 1\sigma$ gördüğünüzde "ucuz/pahalı" demeden önce şu sırayla eleyin — sıra önemlidir, ucuz açıklamalar önce gelir:
 
@@ -708,7 +1754,7 @@ $\lvert\text{gap}\rvert \geq 1\sigma$ gördüğünüzde "ucuz/pahalı" demeden �
 
 Dördü de temizse — mekanik değil, cetvel güncel, faktör genel değil, haber yok — elinizde gerçek bir akım/likidite kaynaklı sapma olma ihtimali yüksektir: ortalamaya dönüş hipotezinin en güçlü olduğu durum budur.
 
-### 10.6 Ratio/Spread monitörleri neden farklı konuşur: β = 1 tuzağı
+### 10.6 — Ratio/Spread monitörleri neden farklı konuşur: β = 1 tuzağı
 
 Masaların çoğu rich/cheap'i fiyat oranı ($Y/X$) veya fark ($Y-X$) bandıyla izler. Bu monitörlerin **örtük varsayımı** $\beta = 1$ ve $\alpha = 0$'dır: "X %5 gittiyse Y de %5 gitmeliydi." $\beta = 1.514$ olan bu çiftte bu varsayım her büyük haftada sistematik yanlış sinyal üretir:
 
@@ -718,7 +1764,7 @@ Masaların çoğu rich/cheap'i fiyat oranı ($Y/X$) veya fark ($Y-X$) bandıyla 
 
 Panelle bağ: Bölüm 5.3–5.4'teki Last Spread/Last Ratio bu yüzden bu çiftte "yok sayın" etiketi almıştı: ölçek uyumsuzluğunun ötesinde, $\beta = 1.514$'ken oran-tabanlı her band aslında **yanlış modeldir**. HRA'nın kendi LTV'si ise $\beta$'yı içerdiği için doğru monitördür.
 
-### 10.7 Çok dönemli analiz: "üç aydır tahvil rallisine katılmıyor"
+### 10.7 — Çok dönemli analiz: kümülatif "katılmıyor" anlatısı koni bandına vurulur
 
 Kümülatif okumalar masaların en sevdiği ve istatistiğin en acımasız olduğu yerdir. $k$ haftalık ufukta:
 
@@ -730,7 +1776,7 @@ $$
 - **Doğru görsel:** kümülatif artık (cumulative gap) grafiği + $\sqrt{k}$ ile büyüyen **koni** bandı. Yaygın hata: koninin yerine sabit $\pm 2\sigma$ yatay çizgisi çizmek — ufuk uzadıkça her seri o çizgiyi "aşar" ve sahte sinyal üretir. Alternatif: her noktada gap'i $\sqrt{k}$'ye bölüp normalize edin (10.11 ve 10.13'te hazır), o zaman yatay ±2 çizgisi doğru olur.
 - **Uzun ufuk uyarısı:** fiyat bazlı kümülatiflerde tahvilin kuponu ve pull-to-par etkisi (vade yaklaştıkça fiyatın 100'e çekilmesi) mekanik sürüklenme yaratır — 83.10'luk fiyat vadeye 100'e çekilir. 2–3 aydan uzun ufuklarda fiyat yerine toplam getiri serisi veya yield bazlı kurulum kullanın; aksi hâlde "tahvil geride" görüntüsünün bir kısmı matematiktir, piyasa değil.
 
-### 10.8 Uygulamalı senaryolar ve vaka: 17–21 Mart 2025 haftası
+### 10.8 — Üç kalibrasyon senaryosu ve şok haftası vakası: cetvel krizde ne dedi?
 
 #### Üç kalibrasyon senaryosu
 
@@ -744,7 +1790,7 @@ Senaryo B ve C bilerek sezgi kırıcıdır: bu çiftte göz "bariz ayrışma" g�
 
 #### Vaka: kriz haftasında fair value cetveli ne dedi?
 
-Saçılım grafiğinin sol alt ucundaki nokta (yaklaşık okuma: tahvil ≈ −%13.5, XLBNK ≈ −%25.5) büyük olasılıkla 17–21 Mart 2025 şok haftasıdır. Cetveli o haftaya uygulayalım:
+Çıpa: 17–21.03.2025 haftası — tarihsel epizottur, kural değildir. Saçılım grafiğinin sol alt ucundaki nokta (yaklaşık okuma: tahvil ≈ −%13.5, XLBNK ≈ −%25.5) bu şok haftasıdır. Aşağıdaki yürütme her örnekleme, o örneklemin **kendi en uç haftasına** aynen uygulanır:
 
 - İma: $1.514 \times (-13.5) + 0.408 \approx -20.0$ yani ≈ −%20.0 → gerçekleşen −%25.5 → gap ≈ −5.5 puan
 - Bant ($\Delta X = 13.5$ için, $\beta$ belirsizliği dahil): $\sqrt{4.6^2 + (0.188\cdot 13.5)^2} \approx 5.3$ → gap ≈ $-1.0\sigma$
@@ -756,7 +1802,7 @@ Dört ders:
 3. **Döngüsellik uyarısı:** aynı hafta $\beta$'yı ve $R^2$'yi yukarı çeken gözlemdir (Bölüm 8.6) — nokta hem doğruyu tanımlıyor hem doğruya "uyuyor". Winsorize'lı betayla yeniden puanlayıp sonucun dayanıklılığını kontrol edin.
 4. **Monitör davranışı:** $-1\sigma$ = "sinyal yok". Doğru refleks o hafta alım değil, 10.9'daki rejim ayak izlerini izlemeye almaktı: rolling beta kaydı mı, gap trendleşti mi? (Sonraki haftalarda toparlanma geldiği için bu vaka "geçici şok" sınıfında kapandı.)
 
-### 10.9 Rejim kırılması mı, ortalamaya dönüş mü? Beş ayak izi
+### 10.9 — Rejim kırılması mı, ortalamaya dönüş mü? Beş ayak izi
 
 $\lvert\text{gap}\rvert \geq 2\sigma$ sonrası iki hipotezi ayırt etmenin sistematik yolu — beş göstergeyi yan yana koyun:
 
@@ -770,7 +1816,7 @@ $\lvert\text{gap}\rvert \geq 2\sigma$ sonrası iki hipotezi ayırt etmenin siste
 
 Beşte dördü "dönüş" diyorsa convergence pozisyonu (makasın kapanmasına oynayan pozisyon) savunulabilir; beşte ikisi bile "rejim" diyorsa cetveli yeniden çizmek (pencereyi kırılma tarihinden başlatmak) pozisyon almaktan önce gelir. Rejim sonrası eski regresyonla üretilen her gap, eski haritayla yeni şehirde gezinmektir.
 
-### 10.10 Beta-nötr çift bacak: P&L matematiği, taşıma ve reward/risk
+### 10.10 — Beta-nötr çift bacak: P&L kimliği, taşıma ve reward/risk
 
 #### P&L kimliği
 
@@ -798,7 +1844,7 @@ $$
 
 Çarpıcı sonuç: oran SEE'den (dolayısıyla çiftten) **bağımsızdır** — hem beklenen kazanç hem risk aynı SEE ile ölçeklendiği için birbirini götürür ve convergence trade'inin bütün ekonomisi half-life'ta yaşar. $R^2$'nin ve kointegrasyonun rolü de tam budur: yüksek $R^2$ + kointegrasyon, half-life'ı kısaltır ve sahte sinyali azaltır. Hesap kabadır (sürüklenme yok sayıldı, erken çıkış opsiyonu ve stop'un kuyruk kesmesi ihmal edildi; güçlü dönüşte risk $\sqrt{t}$'den yavaş büyür) ama mertebesi doğrudur: $h$'yi ölçmeden (10.11) hiçbir gap taşınmamalıdır.
 
-### 10.11 Zaman boyutu: half-life ve Python monitörü
+### 10.11 — Zaman boyutu: half-life ölçümü ve Python monitörü
 
 HRA gap'in büyüklüğünü söyler, **ömrünü söylemez**. Oysa 10.10'un gösterdiği gibi pozisyon ekonomisinin tek belirleyicisi ömürdür. Kapanma hızı, kümülatif gap serisine AR(1) uydurularak tahmin edilir:
 
@@ -837,7 +1883,7 @@ print("phi:", round(phi, 3), "half-life (hafta):", round(hl, 1))
 
 Yorum anahtarı: $\varphi \approx 0$ veya pozitif → kümülatif gap rastgele yürüyüş/trend: "geride kalan yetişir" varsayımının veri desteği **yok** (kointegrasyon eksikliğinin ayak izi). $\varphi$ belirgin negatif + kısa half-life ($< 4$–6 hafta) → gap gerçekten elastik; 10.10 tablosuna göre taşınabilir. Half-life aynı zamanda stop ve hedef vadesinin doğal ölçüsüdür: pozisyonu 2–3 half-life'tan uzun taşımayın; o sürede kapanmayan açık, tezinizin yanlışlandığının ilanıdır.
 
-### 10.12 Öncü mü, artçı mı? Lag testi
+### 10.12 — Öncü mü, artçı mı? Lag testi ve lead-lag taraması
 
 "Tahvil önden gitti, banka yetişecek" cümlesi test edilebilir bir iddiadır: $Y(t)$'yi $X(t-1)$ ile regrese edin. HRA'da Lag alanına 1 yazmak tam olarak bunu yapar; ters yönü (banka öncü mü?) test etmek için Y ile X'i yer değiştirip aynı işlemi tekrarlayın. Python'da tarama:
 
@@ -856,7 +1902,7 @@ for L in range(0, 5):
 | L=1'de de $\lvert t\rvert > 2$ | X, Y'ye bir hafta öncülük ediyor (bilgi gecikmeli geçiyor). | İma bir haftalık **forecast**'e dönüşür; tek bacaklı (yönlü) gap trade bile savunulabilir hale gelir. Nadirdir; bulursanız likidite/aksiyon farkından gelir ve zamanla kapanır — periyodik yeniden test edin. |
 | L arttıkça $t$ hızla sönüyor | Normal: bilgi bir haftadan uzun sızmaz. | Uzun lag'lerde "anlamlılık" görürseniz çoklu test yanılgısından şüphelenin (5 lag × 2 yön = 10 test; biri şansla 2'yi aşar). |
 
-### 10.13 Excel'de gap monitörü: kolon kolon kurulum
+### 10.13 — Excel'de gap monitörü: on kolonluk masaüstü kurulum
 
 Python'suz masada aynı monitör 10 kolonda kurulur. `beta`, `alpha`, `SEE` adlandırılmış hücreler olsun (LINEST/DOT çıktısından — Bölüm 9.1):
 
@@ -875,7 +1921,7 @@ Python'suz masada aynı monitör 10 kolonda kurulur. `beta`, `alpha`, `SEE` adla
 
 Grafik: F kolonunu +H/−H koni çizgileriyle tek grafikte çizin (rejim izleme); I kolonunu yatay ±2 çizgileriyle ikinci grafikte çizin (sinyal izleme). Bu iki grafik + J kolonundaki renk, 10.4–10.9'daki bütün karar çerçevesinin masaüstü hâlidir.
 
-### 10.14 Çok faktörlü genişletme: tahvil + kur + endeks
+### 10.14 — Çok faktörlü genişletme: tahvil + kur + endeks artığı
 
 Gap'in %61'lik "açıklanamayan" kısmının önemli bölümü aslında başka ortak faktörlerdir: XU100 geneli, USDTRY, CDS. HRA tek-X'tir; çok faktörlü versiyon Python'da beş satırdır ve gap tanımını keskinleştirir — üç faktörlü artık, gerçekten banka-spesifik sinyaldir:
 
@@ -892,7 +1938,7 @@ gap3 = m3.resid                            # cok faktorlu gap
 - **Aşırı uydurma freni:** parametre başına en az 20 gözlem kuralı ($N = 103$'te en çok 4–5 faktör) ve karar metriği olarak düz $R^2$ değil **adjusted $R^2$**. Faktör eklemek her zaman düz $R^2$'yi artırır; adj $R^2$ artmıyorsa faktör gürültüdür.
 - **Yorum değişir:** çok faktörlü gap'te "banka tahvile göre ucuz" denmez; "banka, tahvil + endeks + kur'un ima ettiğine göre ucuz" denir — trade tasarımı da üç bacaklı nötrlemeye kayar (pratikte XU100 vadelisiyle iki bacak yeterli yaklaşımdır).
 
-### 10.15 Bu kullanım için eşikler — "fair value cetveli" hangi çiftlerde çalışır
+### 10.15 — Fair value cetveli hangi çiftlerde çalışır: sekiz eşik
 
 | Parametre | Fair value / catch-up için eşik | Gerekçe |
 |---|---|---|
@@ -907,11 +1953,11 @@ gap3 = m3.resid                            # cok faktorlu gap
 
 Bu örnek bu eşiklere vurulduğunda: $t$, $N$, $\mathrm{SE}/\beta$ geçiyor; $R^2$, kointegrasyon ve (ölçülmesi gereken) half-life geçmiyor. Sonuç: XLBNK–TURKGB çifti fair value cetveli olarak **"yumuşak"** kullanılır — yön ve büyüklük beklentisi oluşturur, senaryo tablosu üretir, sapmaları bağlama oturtur; ama tek başına alım-satım tetiği üretmez. Cetvel olarak **sertçe** kullanılabilecek çiftler, $R^2 > 0.65$ + kointegre + kısa half-life'lı olanlardır (tipik: eğri komşusu iki DİBS, aynı bankanın iki hisse sınıfı, endeks–VİOP kontratı).
 
-### 10.16 Yön tuzağı: "banka bu kadar gitti, tahvil nerede olmalı?"
+### 10.16 — Yön tuzağı: soruyu ters sorarsanız regresyonu da ters kurun
 
 Soruyu ters çevirmek masum görünür ama aynı regresyondan cevaplanamaz. OLS asimetriktir (Bölüm 1.3): X'i Y ile açıklamanın betası $1/\beta$ **değil**, $\beta(X|Y) = R^2/\beta = 0.389/1.514 = 0.257$'dir. Yanlış hesap: "banka +%3 → tahvil $3/1.514 = +2.0$ yani +%2.0 olmalı." Doğru hesap: $0.257\times 3 \approx +0.8$ yani ≈ +%0.8 ($\alpha$'sı da ters regresyondan gelir). Fark 2.6 kat — hedge'de olduğu gibi ima analizinde de yön hatası sonucu tamamen bozar. Sezgisi şudur: $R^2$ düşükken "Y'den X'e" çıkarım çok az bilgi taşır; regresyon bunu betayı küçülterek söyler. Pratik kural: soruyu hangi yönde soruyorsanız HRA'yı o yönde kurun (sorgulanan varlık = Y) — iki yönlü çalışıyorsanız iki analiz koşun, iki beta not edin.
 
-### 10.17 Bu kullanıma özgü tuzak listesi ve bölüm özeti
+### 10.17 — Bu kullanıma özgü dokuz tuzak ve bölüm özeti
 
 - **Ekstrapolasyon:** örneklemdeki X aralığı [−%13.7, +%7.5]. Bunun dışındaki senaryolar (ör. tahvil +%10) modeli hiç veri görmediği bölgede kullanmaktır — bant hesabı bile iyimserdir.
 - **Nedensellik dili:** "tahvil gitti, bankanın gitmesi LAZIM" cümlesi borç ilişkisi ima eder; gerçek mekanizma ortak faktördür (Bölüm 8.7). X'in hareketi Y'ye yükümlülük doğurmaz — sadece koşullu beklentiyi kaydırır.
@@ -928,7 +1974,96 @@ Soruyu ters çevirmek masum görünür ama aynı regresyondan cevaplanamaz. OLS 
   İma edilen hareket $= \beta\cdot\Delta X + \alpha$ bir cetveldir; cetvelin çizgileri SEE kadar kalındır ve ufukla $\sqrt{k}$ hızında kalınlaşır. Sapmayı önce sigma'ya çevirin (10.1), sonra dört adımlı teşhisten geçirin (10.5), oran monitörünün $\beta = 1$ yanılsamasına düşmeyin (10.6), kümülatif anlatıları koni bandına vurun (10.7), $2\sigma$'yı geçeni önce rejim ayak izleriyle sorgulayın (10.9), taşınacaksa half-life ekonomisiyle boyutlandırın (10.10–10.11) ve yönü ters soracaksanız regresyonu ters kurun (10.16). Bu çiftte ($R^2$ 0.39) cetvel bağlam kurar, tetik üretmez — sert kullanım için 10.15'teki eşikleri geçen çift arayın ya da 10.14'teki çok faktörlü versiyona geçin.
 </div>
 
-## Ek A. Tek Sayfalık Parametre Özeti
+<div class="pratik">
+  <span class="etiket">Pratik — 10 · İma edilen hareket</span>
+
+**1. Senaryo satırı üret.** 10.3'teki faiz senaryosu tablosuna −75 bp satırını
+ekleyin: ima edilen XLBNK seviyesi ve $1\sigma$ bandı nedir? (ModDur ≈ 2.4,
+başlangıç 14,438.82.)
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — tahvil: $\Delta X \approx -2.4 \times (-0.75) = +1.80$ → +%1.8.
+
+Adım 2 — ima: $1.514 \times 1.80 + 0.408 = 2.725 + 0.408 = 3.13$ → +%3.13.
+
+Adım 3 — seviye: $14{,}438.82 \times 1.0313 \approx 14{,}891$.
+
+Adım 4 — bant: ±%4.6 → $14{,}891 \times 0.954 = 14{,}206$ ve
+$14{,}891 \times 1.046 = 15{,}576$.
+
+**Cevap:** ≈ 14,891; $1\sigma$ bandı 14,206 – 15,576. (Bant 1,370 puan geniş —
+cetvelin çözünürlüğü budur.)
+
+</details>
+
+**2. Kümülatif anlatıyı sınayın.** "Altı haftadır tahvil %4 çıktı, bankalar sadece
+%1.5 — bariz geride kaldılar." $t(\alpha) = 0.89$ olduğunu biliyorsunuz. Ne dersiniz?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — alpha kararı: $t(\alpha) < 2$ → kümülatif imada $\alpha = 0$ (10.7).
+
+Adım 2 — ima: $1.514 \times 4.0 = 6.06$ puan.
+
+Adım 3 — gap: $1.5 - 6.06 = -4.56$ puan.
+
+Adım 4 — ufka göre bant: $\sigma_{kum} = \sqrt{6}\times 4.6 = 2.449 \times 4.6 =
+11.27$.
+
+Adım 5 — sigma: $-4.56/11.27 = -0.40\sigma$.
+
+**Cevap:** $-0.4\sigma$ — istatistiksel hiçlik. "4.6 puan geride" cümlesi doğru ama
+anlamsız; cetvel altı haftada 11.3 puan kalınlaşmıştır.
+
+</details>
+
+**3. Taşınır mı?** Kümülatif gap serisine AR(1) uydurdunuz ve $\varphi = -0.12$
+buldunuz. Half-life ve reward/risk nedir; pozisyon açılır mı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — half-life: $-\ln 2/\ln(1+\varphi) = -0.693/\ln(0.88) = 0.693/0.1278 =
+5.4$ hafta.
+
+Adım 2 — reward/risk: $1.5/\sqrt{2h} = 1.5/\sqrt{10.8} = 1.5/3.29 = 0.46$.
+
+Adım 3 — karar: 10.10 tablosuna göre $h = 4$'te bile "taşınmaz". 5.4 hafta,
+taşıma maliyeti sıfır olsa dahi yapısal olarak kayıp tarafındadır.
+
+Adım 4 — ek şart: 10.15'e göre half-life eşiği $< 4$–6 hafta (tercihen $< 2$);
+üstelik bu çiftte kointegrasyon da yok.
+
+**Cevap:** $h = 5.4$ hafta, R/R ≈ 0.46 → **açılmaz.**
+
+</details>
+
+**4. Ters yön.** "Bankalar bu hafta %4 çıktı, tahvil nerede olmalıydı?" sorusuna
+doğru cevap nedir; yaygın yanlış cevap ne verir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — yaygın yanlış: $4/1.514 = +\%2.64$.
+
+Adım 2 — doğru: soruda açıklanan varlık artık **tahvil**, yani regresyon ters
+kurulmalı: $\beta(X|Y) = R^2/\beta(Y|X) = 0.389/1.514 = 0.257$.
+
+Adım 3 — ima: $0.257 \times 4 = +\%1.03$ (kesişim de ters regresyondan alınır).
+
+Adım 4 — fark: 2.64 vs 1.03 → **2.6 kat**. $R^2$ düşükken Y'den X'e çıkarım az
+bilgi taşır; regresyon bunu betayı küçülterek söyler (10.16).
+
+**Cevap:** ≈ +%1.03; $1/\beta$ kısayolu sonucu 2.6 kat şişirir.
+
+</details>
+
+</div>
+
+## Ek A — Parametre özeti: ne ölçer · eşik · düşük/yüksek okuması
 
 | Parametre | Ne ölçer | Hedef / eşik | Düşükse | Yüksekse |
 |---|---|---|---|---|
@@ -948,7 +2083,7 @@ Soruyu ters çevirmek masum görünür ama aynı regresyondan cevaplanamaz. OLS 
 | Last Spread | Son fiyat farkı (bu örnekte $X-Y$) | Sadece aynı ölçekli çiftlerde | — | Ölçekler farklıysa yok say (bu örnek) |
 | Last Ratio | Son fiyat oranı ($Y/X$) | GP'de tarihsel bant ± $2\sigma$ ile izle | Banda göre Y ucuz | Banda göre Y pahalı; log-oran tercih et |
 
-## Ek B. Formül Kartı
+## Ek B — Formül kartı: dersin bütün denklemleri tek listede
 
 - $Y = \beta X + \alpha + \varepsilon$ — model (Percent modunda $X$, $Y$: dönemsel % getiriler)
 - $\beta = \mathrm{Cov}(X,Y)/\mathrm{Var}(X) = \rho\cdot\sigma(Y)/\sigma(X)$ — eğim; minimum varyans hedge oranı
@@ -967,7 +2102,7 @@ Soruyu ters çevirmek masum görünür ama aynı regresyondan cevaplanamaz. OLS 
 - Half-life $= -\ln 2/\ln(1+\varphi)$, $\Delta z(t) = c + \varphi\cdot z(t-1)$, $z$ = kümülatif gap
 - Ters ima: $\beta(X|Y) = R^2/\beta(Y|X)$ — asla $1/\beta$ kullanmayın
 
-## Ek C. Rich/Cheap Monitörü — Operasyonel Kontrol Listesi
+## Ek C — Rich/cheap monitörü: günlük · haftalık · aylık masa rutini
 
 Bölüm 10'daki çerçevenin masa rutinine çevrilmiş hâli. Amaç: gap analizini "panele bakınca akla gelen" bir şeyden, defteri tutulan bir sürece dönüştürmek.
 

@@ -1,0 +1,102 @@
+---
+/**
+ * Ders künyesi — yazının başındaki ölçüm şeridi.
+ * Bütün sayılar MDX gövdesinden derleme anında sayılır (src/lib/ders.ts);
+ * hiçbir ders dosyasına elle yazılmaz, dolayısıyla bayatlayamaz.
+ */
+import type { DersOlcum } from '../lib/ders';
+import { kelimeYaz } from '../lib/ders';
+import { SEVIYE_ETIKET } from '../lib/dersGruplari';
+
+interface Props {
+  olcum: DersOlcum;
+  seviye?: 'giris' | 'orta' | 'ileri';
+  guncellendi?: Date;
+}
+
+const { olcum, seviye, guncellendi } = Astro.props;
+
+const tarihKisa = (d: Date) =>
+  new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
+
+type Hucre = { deger: string; etiket: string; alt?: string };
+
+const hucreler: Hucre[] = [
+  { deger: olcum.sure, etiket: 'Okuma', alt: kelimeYaz(olcum.kelime) },
+  { deger: String(olcum.bolum), etiket: 'Bölüm' },
+];
+
+if (olcum.grafik > 0) hucreler.push({ deger: String(olcum.grafik), etiket: 'Grafik' });
+if (olcum.arac > 0) hucreler.push({ deger: String(olcum.arac), etiket: 'Hesap aracı' });
+if (olcum.pratik > 0)
+  hucreler.push({
+    deger: String(olcum.pratik),
+    etiket: 'Pratik bloğu',
+    alt: olcum.alistirma > 0 ? `${olcum.alistirma} çözümlü alıştırma` : undefined,
+  });
+if (olcum.tablo > 0) hucreler.push({ deger: String(olcum.tablo), etiket: 'Tablo' });
+if (seviye) hucreler.push({ deger: SEVIYE_ETIKET[seviye], etiket: 'Seviye' });
+if (guncellendi) hucreler.push({ deger: tarihKisa(guncellendi), etiket: 'Son güncelleme' });
+---
+
+<div class="ders-kunye" aria-label="Ders künyesi">
+  {
+    hucreler.map((h) => (
+      <div class="kunye-hucre">
+        <span class="kunye-deger">{h.deger}</span>
+        <span class="kunye-etiket etiket">{h.etiket}</span>
+        {h.alt && <span class="kunye-alt">{h.alt}</span>}
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  /* Şerit: esnek hücreler, aralarında ince ayraç. Hücreler satır sonuna
+     kadar büyüdüğü için satır kaydığında boş/karanlık kutu kalmaz; dıştaki
+     ayraç çizgileri negatif kenar boşluğu + overflow:hidden ile kırpılır. */
+  .ders-kunye {
+    max-width: var(--olcu);
+    margin: 1.2rem auto 0;
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+    border: 1px solid var(--ink-30);
+    border-left: 3px solid var(--claret);
+    background: var(--paper-2);
+  }
+  .kunye-hucre {
+    flex: 1 1 7.2rem;
+    padding: 0.7rem 0.9rem 0.75rem;
+    border-right: 1px solid var(--ink-15);
+    border-bottom: 1px solid var(--ink-15);
+    margin: 0 -1px -1px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+  }
+  .kunye-deger {
+    font-family: var(--font-mono);
+    font-size: 1.02rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .kunye-etiket {
+    color: var(--claret);
+    font-size: 0.625rem;
+  }
+  .kunye-alt {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    line-height: 1.3;
+    color: var(--ink-50);
+  }
+  @media (max-width: 640px) {
+    .kunye-hucre {
+      flex-basis: 6.2rem;
+      padding: 0.55rem 0.7rem 0.6rem;
+    }
+  }
+</style>

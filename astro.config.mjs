@@ -7,8 +7,7 @@ import rehypeKatex from 'rehype-katex';
 
 // https://astro.build/config
 export default defineConfig({
-  // Yayın adresi (GitHub Pages kullanıcı sitesi → kök yolda sunulur, base gerekmez).
-  // Kendi alan adınızı bağladığınızda burayı ve public/CNAME'i güncelleyin.
+  // TODO: kendi domainini aldığında burayı güncelle
   site: 'https://cocoonish.github.io',
   integrations: [mdx(), sitemap()],
   markdown: {

@@ -1,0 +1,237 @@
+---
+/**
+ * Ders kartı — araştırma listesi ve ana sayfa için.
+ * "Nerede ne var" sorusunu tek bakışta yanıtlar: ne öğrettiği, ne kadar
+ * sürdüğü, içinde kaç grafik/araç/pratik olduğu, hangi seviyede olduğu ve
+ * hangi dersten sonra okunması gerektiği. Sayılar src/lib/ders.ts ile
+ * MDX gövdesinden sayılır — kartta elle yazılı rakam yoktur.
+ */
+import { olcumSatiri, type DersOlcum } from '../lib/ders';
+import { SEVIYE_ETIKET } from '../lib/dersGruplari';
+
+interface Onkosul {
+  href: string;
+  title: string;
+}
+
+interface Props {
+  href: string;
+  sira: number;
+  title: string;
+  ozet?: string;
+  description: string;
+  tags?: string[];
+  durum?: 'aktif' | 'taslak' | 'arsiv';
+  seviye?: 'giris' | 'orta' | 'ileri';
+  olcum: DersOlcum;
+  onkosullar?: Onkosul[];
+  gecikme?: number;
+}
+
+const {
+  href,
+  sira,
+  title,
+  ozet,
+  description,
+  tags = [],
+  durum,
+  seviye,
+  olcum,
+  onkosullar = [],
+  gecikme = 0,
+} = Astro.props;
+
+const siraNo = `No ${String(sira).padStart(2, '0')}`;
+
+// Kartta gösterilecek metin: kısa özet varsa o, yoksa uzun açıklamanın ilk cümlesi.
+const ilkCumle = description.split(/(?<=[.!?:])\s+/)[0] ?? description;
+const kartMetni = ozet ?? ilkCumle;
+
+// 'ders' etiketi bütün derslerde var; ayırt etmediği için listede gösterilmez.
+const gorunenEtiketler = tags.filter((t) => t !== 'ders').slice(0, 5);
+
+// Ölçüm satırı — yalnızca sıfır olmayanlar yazılır (src/lib/ders.ts).
+const olcumler = olcumSatiri(olcum, { tablo: true });
+---
+
+<article class="ders-karti yuksel" style={`--d: ${gecikme}ms`}>
+  <div class="ust">
+    <span class="sira">{siraNo}</span>
+    {seviye && <span class={`seviye seviye--${seviye}`}>{SEVIYE_ETIKET[seviye]}</span>}
+    {durum === 'taslak' && <span class="rozet rozet--taslak">Hazırlanıyor</span>}
+    {durum === 'arsiv' && <span class="rozet rozet--arsiv">Arşiv</span>}
+  </div>
+
+  <h3><a href={href}>{title}</a></h3>
+  <p class="ne-ogretir">{kartMetni}</p>
+
+  <ul class="olcum" aria-label="Ders ölçüleri">
+    {olcumler.map((o) => <li>{o}</li>)}
+  </ul>
+
+  {
+    onkosullar.length > 0 && (
+      <p class="onkosul">
+        <span class="etiket">Önce oku</span>
+        {onkosullar.map((o, i) => (
+          <>
+            {i > 0 && <span class="ayrac"> · </span>}
+            <a href={o.href}>{o.title}</a>
+          </>
+        ))}
+      </p>
+    )
+  }
+
+  {
+    gorunenEtiketler.length > 0 && (
+      <div class="etiketler">
+        {gorunenEtiketler.map((t) => (
+          <span>#{t}</span>
+        ))}
+      </div>
+    )
+  }
+</article>
+
+<style>
+  .ders-karti {
+    position: relative;
+    border-top: 1px solid var(--ink-30);
+    padding: 1.05rem 0 1.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .ders-karti::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--claret);
+    transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .ders-karti:hover::before {
+    width: 100%;
+  }
+
+  .ust {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .sira {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--claret);
+    letter-spacing: 0.08em;
+  }
+  .seviye {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.12rem 0.4rem;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    color: var(--ink-50);
+  }
+  .seviye--giris {
+    color: var(--teal);
+  }
+  .seviye--orta {
+    color: var(--gold);
+  }
+  .seviye--ileri {
+    color: var(--claret);
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 30;
+    font-size: 1.28rem;
+    font-weight: 580;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  h3 a {
+    text-decoration: none;
+  }
+  h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .ne-ogretir {
+    margin: 0;
+    font-size: 0.97rem;
+    line-height: 1.55;
+    color: var(--ink-70);
+  }
+
+  .olcum {
+    list-style: none;
+    margin: 0.15rem 0 0;
+    padding: 0.45rem 0 0;
+    border-top: 1px dotted var(--ink-15);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    color: var(--ink-70);
+  }
+  .olcum li {
+    display: inline;
+  }
+  .olcum li + li::before {
+    content: '·';
+    color: var(--ink-30);
+    margin-right: 0.8rem;
+  }
+
+  .onkosul {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: var(--ink-50);
+  }
+  .onkosul .etiket {
+    color: var(--claret);
+    margin-right: 0.45rem;
+  }
+  .onkosul a {
+    position: relative;
+    z-index: 1;
+    color: var(--ink-70);
+    text-decoration-color: var(--ink-30);
+  }
+  .onkosul a:hover {
+    color: var(--claret);
+  }
+  .onkosul .ayrac {
+    color: var(--ink-30);
+  }
+
+  .etiketler {
+    margin-top: auto;
+    padding-top: 0.55rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.85rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-50);
+  }
+</style>

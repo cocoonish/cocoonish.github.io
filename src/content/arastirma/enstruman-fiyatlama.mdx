@@ -1,11 +1,15 @@
 ---
 title: 'Enstrüman Fiyatlama: Tahvil, Swap, Forward Swap ve Swaption'
-description: 'Kurulmuş bir iskonto eğrisinden enstrüman fiyatına: DİBS''in kirli fiyatı ve YTM''si, dört getiri konvansiyonu, par ve forward swap, Black/Bachelier swaption ve ASW''nin üç metriği — her biri gerçek kotasyonla, beş bağlı hesap aracıyla.'
+description: 'Kurulmuş bir iskonto eğrisinden enstrüman fiyatına: DİBS''in kirli fiyatı ve YTM''si, dört getiri konvansiyonu, durasyon–DV01–konveksite, par ve forward swap, carry & roll-down, Black/Bachelier swaption ve Greek''ler, ASW''nin üç metriği — her biri gerçek kotasyonla, adım adım sayısal yürütmeyle, altı bağlı hesap aracı ve beş pratik bloğuyla.'
 pubDate: 2026-08-08
-updatedDate: 2026-08-08
+updatedDate: 2026-08-20
 tags: ['faiz', 'tahvil', 'swap', 'swaption', 'asw', 'ders']
 durum: 'aktif'
 kaynak: 'Bloomberg TYSO (BDP mid), 24.04.2026 + DİBS YTM çalışma notu'
+ozet: "Kurulmuş bir iskonto eğrisini enstrüman fiyatına çevirir: DİBS'in kirli fiyatı ve YTM'si, par/forward swap, swaption Greek'leri ve ASW'nin üç metriği."
+seviye: "orta"
+onkosul:
+  - faiz-egrisi-ve-konvansiyonlar
 ---
 
 import EgriBootstrap from '../../components/EgriBootstrap.astro';
@@ -16,20 +20,65 @@ import TahvilHesaplayici from '../../components/TahvilHesaplayici.astro';
 import YtmHesaplayici from '../../components/YtmHesaplayici.astro';
 
 Eğri kurulduysa geri kalan her şey ondan okunur. Bu ders dört enstrümanı sırayla
-fiyatlar: **tahvil** (kirli fiyat, YTM ve dört getiri konvansiyonu), **par ve forward
-swap**, **swaption** (Black ve Bachelier) ve **asset swap** (üç ayrı metrik). Her biri
-önce türetilir, sonra gerçek kotasyonla hesaplanır ve bir araçla denenir.
+fiyatlar: **tahvil** (kirli fiyat, YTM, dört getiri konvansiyonu ve fiyat–getiri
+duyarlılığı), **par ve forward swap** (carry ve roll-down dâhil), **swaption**
+(Black, Bachelier, Greek'ler, smile) ve **asset swap** (üç ayrı metrik). Her biri
+önce türetilir, sonra gerçek kotasyonla uçtan uca hesaplanır, bir araçla denenir ve
+bölüm sonundaki pratik bloğunda elle tekrar edilir.
 
 <div class="not">
   <span class="etiket">Ön koşul</span>
   Bu ders iskonto eğrisini <b>veri kabul eder</b>. Eğrinin nasıl kurulduğu —
   konvansiyonlar, bootstrap, interpolasyon, TLREF patikası —
   <a href="/arastirma/faiz-egrisi-ve-konvansiyonlar/">Faiz Teorisi ve Eğri İnşası</a>
-  dersinde türetilir. Aşağıdaki araçlar o eğriyi paylaşır: sayfanın başındaki bootstrap
+  dersinde türetilir. Aşağıdaki araçlar o eğriyi paylaşır: sayfanın ortasındaki bootstrap
   aracına girdiğiniz kotasyonlar forward, swaption ve ASW araçlarına otomatik akar.
 </div>
 
-## 1. Tahvil tarafı: kirli fiyat, YTM ve getiri konvansiyonları
+<div class="not gezinme">
+  <span class="etiket">Bu derste ne var</span>
+
+  **Amaç.** Ders bittiğinde elinizdeki bir iskonto eğrisinden dört enstrümanın
+  fiyatını, duyarlılığını ve başabaşını kendi başınıza hesaplayabiliyor olacaksınız:
+  bir DİBS'in kirli fiyatı ve dört ayrı getirisi, herhangi iki tarih arasındaki
+  forward oran, bir swaption'ın primi ve Greek'leri, bir tahvilin eğriye göre
+  ucuzluğu.
+
+  **Yapı.** Ders **tek akışta, sırayla** okunur: Bölüm 1 tahvil tarafını tek başına
+  bitirir; Bölüm 2 eğriyi kurar; Bölüm 3, 4 ve 5 o eğriyi tüketir. Bölüm 1 tek başına
+  okunabilir, Bölüm 3–5 Bölüm 2'ye bağımlıdır.
+
+  | Bölüm | Konu | Ne kazanırsın | Uzunluk |
+  |---|---|---|---|
+  | **1** | tahvil: kirli fiyat, YTM, dört konvansiyon, DV01 | ekrandaki temiz fiyattan raporlanabilir getiriye ve risk sayısına gitmek | ~25 dk |
+  | **2** | eğriyi kurmak ve araçlara yaymak | tek eğriyi değiştirip dört aracın birlikte tepkisini okumak | ~5 dk |
+  | **3** | par swap, forward matrisi, spreadler, carry & roll | bir görüşü doğru vadeye ve doğru başabaşa oturtmak | ~25 dk |
+  | **4** | swaption: Black, Bachelier, Greek'ler, smile | prim, implied vol ve P&L atribüsyonunu ayırabilmek | ~25 dk |
+  | **5** | asset swap: üç metrik ve trade kurgusu | tahvilin eğriye göre ucuz mu pahalı mı olduğuna karar vermek | ~20 dk |
+
+  **Önce şunu oku.** [Faiz Teorisi ve Eğri İnşası](/arastirma/faiz-egrisi-ve-konvansiyonlar/)
+  (konvansiyonlar, bootstrap, log-linear interpolasyon, TLREF). Burada onlar
+  **veri kabul edilir**.
+
+  **İçinde ne var.** 6 hesap aracı (4'ü ortak eğriyi paylaşır) · 0 grafik ·
+  17 tablo · 5 pratik bloğu (15 çözümlü alıştırma).
+
+  **Tarih dili.** Yöntem anlatan cümlelerde ay adı ve yıl kullanılmaz:
+  **T1 · T2 · T3** = çıpa gününden sonraki sıradaki PPK toplantıları, **Y+1 · Y+2** =
+  önümüzdeki ve sonraki takvim yılı. **Sembol uyarısı:** T1 · T2 · T3 *toplantı
+  numarasıdır*; forward swap formüllerindeki küçük harfli $t_1$ · $t_2$ ise *yıl
+  cinsinden vadedir* (Bölüm 3.2). Büyük harf toplantı, küçük harf vade.
+  Sayısal seviyeler ise üç ayrı anlık görüntüye
+  aittir ve her bölümün başında çıpalanır: tahvil örnekleri **10.07.2026 valörü**,
+  eğri ve türevleri **24.04.2026 kapanışı**, ASW vakası **06.05.2026 kotasyonu**.
+  Yöntem her koşulda geçerlidir; sayılar değildir.
+
+</div>
+
+## 1 — Tahvil fiyatlama: temiz fiyattan getiriye, hangi konvansiyon hangi sayı?
+
+Bu bölümde ekranda gördüğünüz temiz fiyatı ödenen paraya, ödenen parayı da dört ayrı
+"getiri"ye ve tek bir risk sayısına çeviriyoruz.
 
 Ekranda "temiz fiyat 96,80" gördüğünüz kâğıdın getirisi kaçtır? Bu basit sorunun
 cevabı üç konvansiyon kararından geçer: işlemiş faiz nasıl sayılır, kesirli ilk dönem
@@ -37,7 +86,18 @@ cevabı üç konvansiyon kararından geçer: işlemiş faiz nasıl sayılır, ke
 gerçek bir DİBS üzerinde uçtan uca çözer; ilk kuponu henüz ödenmemiş kâğıt ve düzensiz
 kupon takvimli (ÖST tipi) genel durumu da aynı çerçeveye bağlar.
 
-### 1.1 Kirli fiyat, işlemiş faiz ve w
+<div class="not">
+  <span class="etiket">Çıpa — bu bölümdeki sayılar hangi ana ait</span>
+
+  **Çıpa: 10.07.2026 valörü** — anlık görüntüdür, kural değildir.
+  Bölüm 1'deki üç örnek kâğıt (02.10.2030 vadeli DİBS, 15.05.2031 vadeli yeni ihraç,
+  ÖST tipi düzensiz takvim) bu valöre göre çözülmüştür; gün sayıları, işlemiş faizler
+  ve çözülen getiriler o fotoğrafa aittir. **Yöntem** — dönem-payı işlemiş faiz,
+  kesirli üs $w$, Newton çözümü, dört konvansiyon, DV01 — her valörde aynıdır.
+
+</div>
+
+### 1.1 Kirli fiyat, işlemiş faiz ve w: ödenen para nasıl bulunur?
 
 Piyasa **temiz fiyat** kote eder; ödenen para **kirli fiyattır**:
 
@@ -62,8 +122,21 @@ $r = y_{kote}/2$ ile $(1+r)^{(i-1)+w}$'ye bölünür. Takvim günleri yalnız $w
 işlemiş faizin içinde yaşar; dönemler eşit sayılır. Bu, birazdan göreceğimiz ACT/365
 (XIRR) yaklaşımından farklı ve *kote* edilen getirinin tanımıdır.
 
-### 1.2 Gerçek örnek: 02.10.2030 vadeli, %33,90 kuponlu DİBS
+İki denklemin aynı iki tarihi paylaştığına dikkat edin: `geçen gün` ve `ilk kupona kalan
+gün` toplamı `dönem günü`ne eşittir, dolayısıyla
 
+$$
+w = 1 - \frac{\text{geçen gün}}{\text{dönem günü}}
+$$
+
+— yani işlemiş faiz kesri ile $w$ birbirinin tümleyenidir. Masada bu, tek bir hata
+kontrolüdür: $AI/(C/2)$ ile $w$'yi topladığınızda **1** çıkmıyorsa gün sayımında hata
+vardır. Kupon tarihi geçtiği gün $w=1$'e sıçrar, $AI$ sıfırlanır ve akış sayısı bir
+azalır; bu üçü aynı anda olmuyorsa takvim yanlış kurulmuştur.
+
+### 1.2 Uçtan uca örnek: bir DİBS'in kote getirisini elle çözmek
+
+Örnek kâğıt: **02.10.2030 vadeli, %33,90 kuponlu DİBS**.
 Girdiler (10.07.2026 valör): temiz fiyat **96,80**, yıllık kupon %33,90 → 6 aylık
 kupon 16,95. Takvim vadeden geriye 6'şar ay kurulur: kuponlar her 02.04 / 02.10;
 önceki kupon **02.04.2026**, ilk kupon 02.10.2026, kalan akış **9** (8 kupon + vadede
@@ -79,6 +152,8 @@ $$
 $$
 w = \frac{183-99}{183} = 0{,}459016
 $$
+
+Kontrol: $99/183 = 0{,}540984$ ve $0{,}540984 + 0{,}459016 = 1$ ✓.
 
 Deneme getirisiyle ($y=\%35{,}34$, $r=\%17{,}67$) iskonto tablosunun uçları:
 
@@ -99,7 +174,16 @@ y_{kote}^{*} = \%35{,}2491
 \qquad (r = \%17{,}6245)
 $$
 
-### 1.3 Getiri dönüşümleri: aynı fiyat, dört sayı
+**Newton adımını elle görmek.** Kök bulmanın tek satırlık hâli
+$y_{n+1} = y_n - f(y_n)/f'(y_n)$'dir; burada $f(y) = PV(y) - DP$ ve $f'(y)$ fiyatın
+getiriye türevi, yani **negatif** DV01'in 10.000 katıdır. Deneme noktasında
+$f = -0{,}1889$ ve fiyat–getiri eğiminin büyüklüğü 100 nominal başına ~2,08 fiyat
+puanı/100 bps olduğundan tek adımda düzeltme kabaca
+$0{,}1889/2{,}08 \approx 0{,}091$ puan, yani **~9 bps aşağı**: $35{,}34 - 0{,}09 =
+\%35{,}25$. Nitekim çözüm %35,2491. Fonksiyon hafif dışbükey olduğu için ikinci adım
+yalnız son haneleri oynatır — pratikte 3-4 iterasyon tam yakınsama demektir.
+
+### 1.3 Getiri dönüşümleri: aynı fiyat neden dört sayı verir?
 
 Aynı kâğıt, aynı fiyat — raporlama konvansiyonuna göre dört farklı "getiri":
 
@@ -117,7 +201,24 @@ farktır: dönemler 181-184 gün arasında oynadığından küçük ama sıfır 
 XIRR'den kote karşılığına dönüş: $2(\sqrt{1+Y}-1) = \%35{,}2182$ — kote %35,2491'in
 hemen yanına düşer ama üstüne oturmaz; hangi sayıyı raporladığınızı her zaman söyleyin.
 
-### 1.4 İlk kuponu henüz ödenmemiş kâğıt
+**Dönüşüm kartı.** Dört sayı arasında gidip gelmek tek çift formüldür; masada ezbere
+bilinmesi gereken budur:
+
+| Nereden → Nereye | Formül | Örnekte |
+| --- | --- | --- |
+| kote → dönemsel | $r = y/2$ | 35,2491 → 17,6245 |
+| dönemsel → kote | $y = 2r$ | 17,6245 → 35,2491 |
+| kote → yıllık bileşik | $Y = (1+y/2)^2-1$ | 35,2491 → 38,3553 |
+| yıllık bileşik → kote | $y = 2(\sqrt{1+Y}-1)$ | 38,3553 → 35,2491 |
+| yıllık bileşik → sürekli | $z = \ln(1+Y)$ | 38,3553 → 32,4655 |
+| sürekli → yıllık bileşik | $Y = e^{z}-1$ | 32,4655 → 38,3553 |
+
+Aradaki fark kozmetik değildir: aynı kâğıt için 35,25 ile 38,36 arasında **311 bps**
+vardır. Bir ASW spread'i, bir eğri karşılaştırması ya da bir rölatif değer tablosu
+yanlış satırdan beslenirse sonuç tamamen uydurmadır — ve hata, sayı "makul göründüğü"
+için gözden kaçar.
+
+### 1.4 İlk kuponu henüz ödenmemiş kâğıt: işlemiş faiz nereden başlar?
 
 Yeni ihraçta önceki kupon yoktur; işlemiş faiz **ihraç tarihinden** birikir. Formüller
 birebir aynıdır, yalnız referans tarih değişir. Örnek: 15.05.2026 ihraçlı, 15.05.2031
@@ -132,7 +233,14 @@ getirir (fark −0,1469), çözüm biraz altındadır. Aşağıdaki araçta vade
 valörü 10.07.2026, kuponu 32, temizi 93,10 yapın — takvim geriye kurulunca referans
 kendiliğinden ihraç tarihine (15.05.2026) oturur ve çözüm ekrana gelir.
 
-### 1.5 Düzensiz kupon takvimi: genel çözüm
+Buradaki kontrol yine tümleyen kuraldır: $56/184 = 0{,}304348$ ve
+$0{,}304348 + 0{,}695652 = 1$ ✓. Dikkat edilecek tek yapısal fark, akış sayısının
+**10** olmasıdır: 5 yıllık kâğıtta 10 yarı-dönem vardır ve valör ilk kupondan önce
+olduğu için hiçbiri düşmemiştir. İlk kupon ödendikten sonraki ilk gün aynı kâğıt
+9 akışa iner; fiyat sıçramaz, çünkü düşen akış tam olarak $AI$'nin sıfırlanmasıyla
+dengelenir.
+
+### 1.5 Düzensiz kupon takvimi (ÖST): gün/365 genel çözümü ve XIRR eşitliği
 
 Kupon tarihleri düzenli 6 ay değilse (ÖST'lerde tipik: 30-60-40-90-181 günlük
 dönemler), iki genelleme birden gerekir:
@@ -149,33 +257,317 @@ $AI = 100\times0{,}38\times20/365 = 2{,}0822$, kirli 106,5822; %36 deneme model 
 kote karşılığı $2(\sqrt{1{,}3647}-1)=\%33{,}24$'tür. İşlemiş faiz burada da gün/365
 ile sayılır — düzenli DİBS'in "dönem payı" mantığından farkına dikkat.
 
-### 1.5 Deneyin
+**İki dünyanın karşılaştırması** — aynı soruya iki farklı doğru cevap:
+
+| | Düzenli DİBS | Düzensiz (ÖST / gün-365) |
+| --- | --- | --- |
+| Kupon tutarı | sabit $C/m$ | $N c \cdot \text{gün}_i/365$ (değişken) |
+| İşlemiş faiz | dönem payı: $\frac{C}{m}\cdot\frac{\text{geçen}}{\text{dönem}}$ | $N c\cdot \text{geçen}/365$ |
+| İskonto üssü | $(i-1)+w$ (dönem) | $\text{gün}_i/365$ (takvim) |
+| Bileşikleme | 6 aylık, ×2 kote | yıllık bileşik |
+| Excel karşılığı | Hedef Ara + dönem tablosu | doğrudan `XIRR` |
+
+Kural: **hangi tarafta olduğunuzu ihraç izahnamesi söyler, ekran değil.** İki mantığı
+karıştırmanın tipik sonucu, işlemiş faizin birkaç kuruş yanlış çıkması ve getirinin
+10–30 bps kaymasıdır — küçük görünür, ama bir ASW spread'inin tamamı kadardır.
+
+### 1.6 Fiyat–getiri duyarlılığı: tam iskonto tablosu, durasyon, DV01 ve konveksite
+
+Getiriyi çözdükten sonra tablonun kendisi bedava bir risk raporudur. Aynı kâğıdın
+**çözülmüş** getirideki ($y^{*}=\%35{,}2491$, $r=\%17{,}6245$) tam tablosu:
+
+| Sıra | Tarih | Akış | Üs | İskonto | BD | BD × üs |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 02.10.2026 | 16,95 | 0,4590 | 0,92820 | 15,7329 | 7,2214 |
+| 2 | 02.04.2027 | 16,95 | 1,4590 | 0,78912 | 13,3756 | 19,5150 |
+| 3 | 02.10.2027 | 16,95 | 2,4590 | 0,67088 | 11,3714 | 27,9614 |
+| 4 | 02.04.2028 | 16,95 | 3,4590 | 0,57036 | 9,6675 | 33,4400 |
+| 5 | 02.10.2028 | 16,95 | 4,4590 | 0,48490 | 8,2190 | 36,6485 |
+| 6 | 02.04.2029 | 16,95 | 5,4590 | 0,41224 | 6,9875 | 38,1450 |
+| 7 | 02.10.2029 | 16,95 | 6,4590 | 0,35047 | 5,9405 | 38,3689 |
+| 8 | 02.04.2030 | 16,95 | 7,4590 | 0,29796 | 5,0504 | 37,6710 |
+| 9 | 02.10.2030 | 116,95 | 8,4590 | 0,25331 | 29,6249 | 250,5871 |
+| | | | | **Toplam** | **105,9697** | **489,5583** |
+
+Toplam sütun piyasa kirlisini birebir verir (105,9697) — çözümün sağlaması budur.
+Sağdaki sütundan üç sayı çıkar:
+
+$$
+D_{Mac}^{\text{dönem}} = \frac{\sum BD_i\cdot \text{üs}_i}{DP}
+= \frac{489{,}5583}{105{,}9697} = 4{,}6199 \text{ dönem} = \mathbf{2{,}3100\ yıl}
+$$
+
+$$
+D_{mod} = \frac{D_{Mac}^{\text{dönem}}}{1+r}\Big/2
+= \frac{4{,}6199}{1{,}176245}\Big/2 = \mathbf{1{,}9638}
+\qquad
+DV01 = D_{mod}\cdot DP\cdot 10^{-4} = \mathbf{0{,}020811}
+$$
+
+DV01 burada **100 nominal başınadır**; 100 mn TL nominal için 20.811 TL/bp,
+250 mn için 52.028 TL/bp. Dikkat: bölme $1+r$ ile (dönemsel getiri), ikiye bölme ise
+kote getirinin yıllıklaştırılması içindir — bu iki adımın sırası karıştırılırsa
+DV01 iki kat yanlış çıkar; masada en sık görülen tek satırlık hatadır.
+
+**Sağlama (yeniden fiyatlama).** Getiriyi ±1 bp oynatıp tabloyu yeniden çözersek:
+
+| Senaryo | Model kirli | Fark |
+| --- | --- | --- |
+| $y^{*}-1$ bp | 105,99048 | +0,020814 |
+| $y^{*}$ | 105,96967 | — |
+| $y^{*}+1$ bp | 105,94886 | −0,020807 |
+
+Analitik DV01 (0,020811) tam ortada — yani birinci derece yaklaşım 1 bp'de kusursuz.
+Asimetri (0,020814 vs 0,020807) ikinci derecedir ve **konveksite**nin ta kendisidir:
+
+$$
+C = \frac{P_{+} + P_{-} - 2P}{P\,(\Delta y)^2}
+= \frac{103{,}9218 + 108{,}0849 - 2\times105{,}9697}{105{,}9697\times(0{,}01)^2}
+= \mathbf{6{,}35}
+$$
+
+(±100 bps ile ölçüldü.) Konveksitenin işi büyük harekette görünür. 100 bps'lik şoklar:
+
+| Şok | Doğrusal tahmin | İkinci derece düzeltme | Toplam tahmin | Gerçek |
+| --- | --- | --- | --- | --- |
+| −100 bps | +2,0811 | +0,0337 | +2,1148 | **+2,1152** |
+| +100 bps | −2,0811 | +0,0337 | −2,0474 | **−2,0479** |
+
+Düzeltme terimi $\tfrac{1}{2}C\,P\,(\Delta y)^2 = 0{,}5\times6{,}35\times105{,}9697
+\times 10^{-4} = 0{,}0337$'dir ve **her iki yönde de pozitiftir**: uzun tahvil
+pozisyonu, doğrusal tahmine göre yükselişte biraz daha çok kazanır, düşüşte biraz
+daha az kaybeder. Konveksitenin bedeli getiriye gömülüdür — bedava değildir.
+
+**Ne zaman DV01 yetmez.** Kabaca 25 bps'ye kadar konveksite ihmal edilebilir
+(örneğimizde düzeltme 0,0021 fiyat puanı, DV01 tahmininin %0,4'ü). 100 bps'de
+düzeltme %1,6'ya, 300 bps'de %5'in üzerine çıkar. Kural: **düzeltme, doğrusal
+tahminin %5'ini aştığında tam yeniden değerleme yapın** — aynı eşik Bölüm 4'te
+swaption Greek atribüsyonu için de geçerlidir.
+
+### 1.7 Deneyin: YTM hesaplayıcısıyla kendi kâğıdınızı çözün
+
+Aşağıdaki araç yukarıdaki dört adımı (takvim → $AI$ ve $w$ → tablo → Newton) tek
+ekranda yapar. Varsayılan girdiler §1.2'nin kâğıdıdır: vade 02.10.2030, valör
+10.07.2026, kupon 33,90, temiz 96,80. "Gün sayıları" satırında 183/99, $w$ satırında
+0,4590, kirli satırında 105,9697 ve kote satırında %35,2491 okumalısınız — okumuyorsanız
+girdilerden biri kaymıştır.
 
 <YtmHesaplayici />
 
-### 1.6 Pratik notlar
+### 1.8 Masa notları ve tipik hatalar: hangi sayıyı kime söylüyorsunuz?
 
 - **Hedef Ara = Newton.** Excel'in Hedef Ara'sı tek bilinmeyenli kök bulmadır; araç
   aynı işi türevle yapar ve 3-4 iterasyonda yakınsar. Bootstrap dersindeki çözücüyle
   aynı iskelet — bir kez öğren, her yerde kullan.
 - **Valör T+0 varsayıldı.** BIST kesin hesapta valör kayarsa tüm gün sayıları
   kayar; araçta valörü işlem gününe göre girin.
-- **Kısa/uzun ilk kupon** standart 6 aydan saparsa Bölüm 5'in gün/365 yaklaşımına
+- **Kısa/uzun ilk kupon** standart 6 aydan saparsa §1.5'in gün/365 yaklaşımına
   geçilir — dönem-payı formülü yalnız düzenli takvimde anlamlıdır.
-- Kote getiri karşılaştırırken karşı tarafın hangi satırı (Bölüm 3 tablosu)
+- Kote getiri karşılaştırırken karşı tarafın hangi satırı (§1.3 tablosu)
   kullandığını teyit edin; %38,36 ile %35,25 aynı kâğıttır.
 
-## 2. Eğriyi kurun: sonraki araçların girdisi
+**Tipik hata listesi** — dördü de aynı gün içinde görülebilir:
+
+1. **Tümleyen kontrolünü atlamak.** $AI$ kesri ile $w$ toplamı 1 değilse takvim
+   yanlış; hata fiyata değil doğrudan getiriye geçer.
+2. **Kupon tarihini ileriye kurmak.** Takvim **vadeden geriye** kurulur. İhraçtan
+   ileriye kurarsanız son dönem kısa kalır ve tüm üsler kayar.
+3. **DV01'i dönemsel bırakmak.** $D_{mod}$ hesaplanırken ikiye bölünmezse DV01 iki
+   katı çıkar; pozisyon boyutu yarı yarıya yanlış olur.
+4. **Farklı gün kotasyonlarını karıştırmak.** Tahvilin YTM'si bir günden, eğri başka
+   günden gelirse ASW spread'i tamamen gürültüdür (bkz. Bölüm 5 çıpası).
+
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 1 · Tahvil fiyatlama</span>
+
+**1. Doğrudan uygulama — aynı kâğıt, farklı valör.** §1.2'nin DİBS'i (kupon %33,90,
+6 aylık kupon 16,95, kuponlar 02.04 / 02.10) bu kez **02.09.2026** valörle
+fiyatlanıyor. İşlemiş faiz ve $w$ kaç?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — takvim: önceki kupon 02.04.2026, ilk kupon 02.10.2026, dönem yine **183** gün.
+
+Adım 2 — geçen gün: 02.04 → 02.09 arası $30+31+30+31+31 = \mathbf{153}$ gün.
+
+Adım 3 — işlemiş faiz: $AI = 16{,}95\times\dfrac{153}{183} = \mathbf{14{,}1713}$.
+
+Adım 4 — kesirli üs: ilk kupona 30 gün kaldı → $w = 30/183 = \mathbf{0{,}163934}$.
+
+Adım 5 — tümleyen kontrolü: $153/183 = 0{,}836066$; $0{,}836066+0{,}163934 = 1$ ✓
+
+**Cevap:** $AI = 14{,}1713$ · $w = 0{,}163934$. Akış sayısı hâlâ 9'dur (ilk kupon
+henüz ödenmedi), ama artık neredeyse tam bir kuponluk işlemiş faiz ödüyorsunuz.
+
+**Araçla doğrula:** YTM hesaplayıcısında valörü 02.09.2026 yapın; "gün sayıları"
+183/153, $w$ 0,1639, işlemiş faiz 14,1713 okumalı.
+
+</details>
+
+**2. Ters çevirme — konvansiyon dönüşümü.** Bir broker size aynı kâğıt için
+"yıllık bileşik %38,3553" söylüyor. Kote (6A ×2) karşılığı nedir, ve iki sayı
+arasındaki fark kaç bps'dir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — dönüşüm kartından: $y = 2\left(\sqrt{1+Y}-1\right)$.
+
+Adım 2 — $\sqrt{1{,}383553} = 1{,}1762455$ → $y = 2\times0{,}1762455 = \mathbf{\%35{,}2491}$.
+
+Adım 3 — fark: $38{,}3553 - 35{,}2491 = 3{,}1062$ puan $= \mathbf{311\ bps}$.
+
+**Cevap:** %35,2491; aradaki fark 311 bps. Aynı kâğıt, aynı fiyat — yalnızca
+bileşikleme konvansiyonu değişti.
+
+</details>
+
+**3. Duyarlılık ve karar — pozisyon MTM'i.** Bu kâğıttan **250 mn TL nominal**
+aldınız. Getiri 25 bps yükselirse MTM etkisi nedir? Konveksite düzeltmesi anlamlı mı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — DV01 (100 nominal) = 0,020811 → 250 mn için
+$\dfrac{250{.}000{.}000}{100}\times0{,}020811 = \mathbf{52.028}$ TL/bp.
+
+Adım 2 — doğrusal etki: $52.028 \times 25 = \mathbf{-1.300.688}$ TL (getiri yükseldi,
+uzun pozisyon kaybetti).
+
+Adım 3 — konveksite düzeltmesi: $\tfrac12 C P (\Delta y)^2 =
+0{,}5\times6{,}35\times105{,}9697\times(0{,}0025)^2 = 0{,}0021$ fiyat puanı
+$\Rightarrow +5.258$ TL.
+
+Adım 4 — net: $-1.300.688 + 5.258 = \mathbf{-1.295.430}$ TL. Düzeltme, doğrusal
+tahminin **%0,4'ü** — %5 eşiğinin çok altında, ihmal edilebilir.
+
+**Cevap:** ≈ −1,30 mn TL; konveksite bu büyüklükte bir harekette anlamsızdır.
+
+</details>
+
+**4. Tuzak — hangi işlemiş faiz?** Bir ÖST, %38 kuponlu, son faiz ödemesinden 20 gün
+geçmiş, cari dönem 30 günlük. Bir stajyer DİBS formülüyle
+$AI = \frac{38}{2}\times\frac{20}{30} = 12{,}67$ yazıyor. Hata nerede, doğru sayı ne?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — hata: DİBS formülü **dönem payı** kullanır ve yarı-yıllık kuponu ($C/2 = 19$)
+30 günlük bir döneme dağıtır. Düzensiz takvimde kupon tutarı sabit değildir.
+
+Adım 2 — doğru mantık (§1.5): kupon **gün-oransaldır**, işlemiş faiz de öyle:
+$AI = 100\times0{,}38\times\dfrac{20}{365} = \mathbf{2{,}0822}$.
+
+Adım 3 — büyüklük farkı: 12,67 vs 2,0822 — altı katından fazla. Kirli fiyata
+doğrudan geçtiği için getiri yüzlerce bps yanlış çözülür.
+
+**Cevap:** 2,0822. Kontrol refleksi: 30 günlük bir dönemde işlemiş faiz asla bir
+yarı-yıllık kupona yaklaşamaz.
+
+</details>
+
+</div>
+
+## 2 — Eğriyi kurun: sayfanın motoru, bir bootstrap dört bağlı araç
+
+Bu bölümde tek bir eğri kurulur; sonraki üç bölümün bütün sayıları ondan türer.
 
 Aşağıdaki üç bölümün araçları (forward/MPC, swaption, ASW) bu bootstrap aracının
 yayınladığı eğriyi tüketir. Kotasyonları değiştirdiğinizde hepsi birlikte yeniden
 hesaplanır — eğri tek, tüketicileri çok.
 
+<div class="not">
+  <span class="etiket">Çıpa — eğri ve ondan türeyen her şey</span>
+
+  **Çıpa: 24.04.2026 kapanışı** (Bloomberg TYSO, BDP mid) — anlık görüntüdür,
+  kural değildir. Bölüm 2, 3 ve 4'teki bütün DF'ler, par oranlar, forward matrisi,
+  spreadler ve swaption primleri bu tek fotoğrafa aittir. **Yöntem** — bootstrap,
+  teleskop özdeşliği, forward formülü, Black/Bachelier — her eğride aynıdır.
+  Vade etiketleri (3M, 1Y, 2Y…) zaten görelidir ve takvime bağlı değildir;
+  "hangi toplantıyı fiyatlıyor" sorusu **T1 · T2 · T3** ile yanıtlanır.
+
+</div>
+
+Aracın mekaniği tek cümleyle: her pillar için o vadeye ait DF, **par denklemi
+sıfırlanana kadar** çözülür ($1 - DF(T) = R\sum \tau_i DF(t_i)$), aradaki çeyreklikler
+log-linear interpolasyonla doldurulur, çözüm Newton-Raphson'la yapılır. Doğrulama
+çıpaları aracın kendi içinde gömülüdür: varsayılan kotasyonlarla
+$DF(18M) = 0{,}581232$, $DF(2Y) = 0{,}494925$, $DF(10Y) = 0{,}090716$ çıkmalıdır.
+Bu üç sayıyı görmüyorsanız girdilerden biri değişmiştir.
+
+**Neden bu sayfada tek eğri var.** Aynı sayfadaki araçlar ortak durumu paylaşır:
+bootstrap eğriyi `window.tloisEgri` üzerinden yayınlar ve `egri-guncellendi` olayını
+tetikler; forward/MPC, swaption ve ASW araçları bu olayı dinler. Pratik sonucu şudur:
+bir kotasyonu değiştirdiğinizde **üç ekran birden** yeniden hesaplanır ve bir görüşün
+zincir boyunca nereye vurduğunu tek hamlede görürsünüz. Bu, dersin en öğretici
+düğmesidir — bir sayıyı oynatın, dört sonucu birden okuyun.
+
 <EgriBootstrap />
 
-## 3. Par swap, forward swap ve eğri spread'leri
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 2 · Eğri ve zincir</span>
 
-### 3.1 Par swap, gerçek takvimle
+**1. Doğrudan uygulama — üç zero konvansiyonu.** Varsayılan eğride
+$DF(2Y) = 0{,}494925$. Bu tek sayıdan basit, yıllık bileşik ve sürekli zero oranları
+hesaplayın.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — basit (TL kotasyon konvansiyonu):
+$R_s = \left(\frac{1}{DF}-1\right)\frac{1}{T} = \frac{2{,}020508-1}{2} = \mathbf{\%51{,}03}$.
+
+Adım 2 — yıllık bileşik: $\left(\frac{1}{DF}\right)^{1/T}-1 = 2{,}020508^{0{,}5}-1
+= \mathbf{\%42{,}14}$.
+
+Adım 3 — sürekli: $-\frac{\ln DF}{T} = \frac{0{,}703248}{2} = \mathbf{\%35{,}16}$.
+
+Adım 4 — okuma: aynı DF, üç sayı; aralarındaki fark **1.587 bps**. Bu yüzden bir
+"2 yıllık faiz" duyduğunuzda önce konvansiyonu sormak zorundasınız.
+
+**Araçla doğrula:** bootstrap tablosunda 2Y satırında "Zero % (basit)" ve
+"Zero % (sürekli)" sütunları bu iki sayıyı gösterir.
+
+</details>
+
+**2. Zincir — ön uçtaki bir şok forward'a nasıl büyüyerek geçer?** 1Y par
+kotasyonunu %39,46'dan %44,46'ya (+500 bps) taşıyın. 1Y×1Y forward oranına ne olur:
+500 bps'den az mı, çok mu değişir? Önce tahmin edin, sonra hesaplayın.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — sezgi: 1Y noktası yükselince o vadeye kadarki iskonto artar, ama 2Y pillar'ı
+sabit kaldığı için **1Y ile 2Y arasındaki** dilim tüm yükü sırtlanır. Forward,
+şoktan daha çok oynamalıdır.
+
+Adım 2 — DF etkisi: $DF(1Y)$ 0,687692'den **0,652078**'e düşer.
+
+Adım 3 — teleskopla yeniden hesap ($R_{2Y}$ değişmedi): forward
+%34,3501'den **%27,4005**'e iner.
+
+Adım 4 — büyüklük: −695 bps, yani şokun **1,39 katı**. Yön de terstir: ön uç
+sertleşti, ama piyasa 2Y'yi sabit tuttuğu için "bir yıl sonrasının" fiyatı çöktü.
+
+**Cevap:** forward 695 bps düşer — girdinin 1,39 katı. Ders: forward'lar iki
+pillar arasındaki **farkın** kaldıraçlı hâlidir; ön uç kotasyonundaki tek bir
+"düzeltme" bütün MPC okumanızı bozabilir.
+
+**Araçla doğrula:** bootstrap'ta 1Y'yi 44,46 yapın, ardından forward aracının
+A bloğunda $t_1=1$, $t_2=2$ ile oranı okuyun; swaption ve ASW ekranlarının da
+aynı anda değiştiğini görün.
+
+</details>
+
+</div>
+
+## 3 — Par ve forward swap: eğriden orana, par · forward matrisi · spreadler
+
+Bu bölümde eğriden tek tek oranlar okunur: bugün başlayan par swap, ileride başlayan
+forward swap, iki takvim tarihi arasındaki oran, eğri makasları ve pozisyonun carry'si.
+
+### 3.1 Par swap, gerçek takvimle: par oran formülü nereden gelir?
 
 Trade Ideas bölümü par oranı ideal grid'le değil **gerçek kupon takvimiyle** hesaplar:
 kupon tarihleri `WORKDAY(EDATE(spot,3i)−1, 1, tatiller)`, $\tau_i$ gerçek gün/365
@@ -185,27 +577,62 @@ $$
 R = \frac{DF(spot) - DF(T)}{\sum_i \tau_i\, DF(t_i)}
 $$
 
+Formülün türevi tek satırdır: swap başlangıçta sıfır değerlidir, yani sabit bacağın
+bugünkü değeri değişken bacağınkine eşittir. Değişken bacak, teleskoplanınca
+$DF(spot) - DF(T)$'ye çöker (ara ödemeler birbirini yer); sabit bacak ise
+$R\sum\tau_i DF(t_i)$'dir. Payda **annuity**'dir ve aynı zamanda swap'ın DV01'idir:
+1 bp'lik oran değişimi, nominal başına $A\times10^{-4}$ kadar PV oynatır.
+
 **Pratik — 1Y:** bitiş 27.04.2027, $DF_{end}=0{,}685766$, annuity $=0{,}789327$ →
 $R = \%39{,}39$; Bloomberg girdisi %39,46 ile fark ~1 bps — takvim ve interpolasyon
 artığı. Bu tablo scen/mkt sütunlarıyla çiftlidir: senaryo girince spread sütunu
 "benim patikam piyasadan kaç bps farklı fiyatlıyor" sorusunu tenor tenor yanıtlar.
 
-### 3.2 Forward starting swap: matris ve DV01
+İdeal grid ($\tau = 0{,}25$) ile gerçek takvim arasındaki fark burada 7 bps'dir ve
+her zaman aynı yöne gitmez: tatiller, ay sonu kaydırmaları ve 365'lik payda birlikte
+çalışır. Kural: **rölatif değer için ideal grid yeter, teyit ve teyitname için gerçek
+takvim şarttır.**
 
-Forward swap $T_1$'de başlar, $T_2$'de biter; par denkleminin tek değişen yeri sağ taraftır:
+### 3.2 Forward starting swap: teleskop özdeşliği, matris ve DV01
+
+Forward swap $t_1$'de başlar, $t_2$'de biter; par denkleminin tek değişen yeri sağ
+taraftır. **Notasyon uyarısı:** buradaki $t_1$ ve $t_2$ **yıl cinsinden vadedir**;
+Bölüm 3.3'teki **T1 · T2 · T3** ise PPK toplantı numarasıdır. Aynı harf, iki ayrı
+nesne — küçük harf vade, büyük harf toplantı.
 
 $$
-R_{fwd}(T_1,T_2) = \frac{DF(T_1)-DF(T_2)}{A_{fwd}},
-\qquad A_{fwd} = \sum_{t_i\in(T_1,T_2]} \tau_i DF(t_i)
+R_{fwd}(t_1,t_2) = \frac{DF(t_1)-DF(t_2)}{A_{fwd}},
+\qquad A_{fwd} = \sum_{t_i\in(t_1,t_2]} \tau_i DF(t_i)
 $$
 
-Teleskop özdeşliği pratik bir kısayol verir: $A_{fwd} = A(T_2)-A(T_1)$ ve
+Teleskop özdeşliği pratik bir kısayol verir: $A_{fwd} = A(t_2)-A(t_1)$ ve
 
 $$
-R_{fwd} = \frac{R_{T_2}A(T_2) - R_{T_1}A(T_1)}{A(T_2)-A(T_1)}
+R_{fwd} = \frac{R_{t_2}A(t_2) - R_{t_1}A(t_1)}{A(t_2)-A(t_1)}
 $$
 
 — forward, ayrı cashflow modellemeden iki spot par orandan türetilebilir.
+
+**Özdeşliği sayısal olarak yürütelim** (varsayılan ideal grid, $\tau=0{,}25$).
+Bootstrap'tan: $A(1Y) = 0{,}791455$, $A(2Y) = 1{,}352637$, $DF(1Y) = 0{,}687692$,
+$DF(2Y) = 0{,}494925$. Par kotasyonlar $R_{1Y} = \%39{,}46$, $R_{2Y} = \%37{,}34$.
+
+Adım 1 — forward annuity: $A_{fwd} = 1{,}352637 - 0{,}791455 = 0{,}561182$.
+
+Adım 2 — teleskop yolu:
+$R_{fwd} = \dfrac{0{,}3734\times1{,}352637 - 0{,}3946\times0{,}791455}{0{,}561182}
+= \dfrac{0{,}505075 - 0{,}312308}{0{,}561182} = \mathbf{\%34{,}3501}$.
+
+Adım 3 — doğrudan yol (kontrol):
+$\dfrac{0{,}687692 - 0{,}494925}{0{,}561182} = \mathbf{\%34{,}3501}$ ✓ — iki yol
+aynı sayıyı verir; özdeşlik böyle sağlanır.
+
+Adım 4 — DV01: $A_{fwd}\times 1\text{ mn}\times10^{-4} = \mathbf{56{,}12}$ TL/bp.
+
+Aşağıdaki gerçek takvimli matris 1Y×1Y için %34,25 ve DV01 56,1 gösteriyor: **DV01
+hane hane tutuyor**, oran 10 bps sapıyor. Bu, §3.1'deki ideal grid–gerçek takvim
+farkının ta kendisidir ve beklenen büyüklüktedir.
+
 24.04.2026 piyasa matrisi (mkt; DV01 = 1 mn TL nominal başına TL/bp):
 
 | Trade | R_mkt | DV01 | | Trade | R_mkt | DV01 |
@@ -218,17 +645,27 @@ $$
 | 1Y×1Y | %34,25 | 56,1 | | 5Y×5Y | %19,20 | 68,7 |
 | 1Y×4Y | %30,39 | 152,5 | | 1Y×9Y | %26,92 | 221,2 |
 
-Okuma: spot 1Y %39,46 iken 1Y×1Y %34,25 — piyasa bir yılda ~520 bps'lik gevşeme sonrası
-ortam fiyatlıyor; 5Y×5Y %19,20 uzun vadeli "normalleşme" çıpası. DV01 sütunu pozisyon
-boyutlandırmanın ilk sorusudur: 1Y×9Y'de 1 mn nominal, bp başına 221 TL oynar.
+Okuma: spot 1Y %39,46 iken 1Y×1Y %34,25 — piyasa bir yıl sonrası (Y+1 penceresi) için
+~520 bps'lik gevşeme sonrası ortam fiyatlıyor; 5Y×5Y %19,20 uzun vadeli "normalleşme"
+çıpası. DV01 sütunu pozisyon boyutlandırmanın ilk sorusudur: 1Y×9Y'de 1 mn nominal,
+bp başına 221 TL oynar.
 
-### 3.3 İki tarih arasındaki zero ve forward oran
+**Matrisin okuma sırası.** İlk sütun (1M×1M, 3M×3M, 6M×6M) **zamanlama** işlemleridir:
+gevşemenin hızını fiyatlar. Orta blok (1Y×1Y, 1Y×2Y, 2Y×1Y) **döngü dağılımını**
+fiyatlar: indirimlerin Y+1'e mi Y+2'ye mi düştüğü. Sağ alt köşe (3Y×5Y, 5Y×5Y)
+artık döngüyü değil **terminal oranı** fiyatlar ve PPK patikasından neredeyse
+bağımsızdır. Bir görüşü doğru satıra oturtmanın kuralı budur: görüşünüz "ne zaman"
+ile ilgiliyse üst blok, "ne kadar" ile ilgiliyse orta blok, "nereye" ile ilgiliyse
+alt bloktur.
+
+### 3.3 İki tarih arasındaki zero ve forward oran: MPC implied nasıl okunur?
 
 Masada en sık yapılan mikro-hesap: eğriden **herhangi iki takvim tarihi** arasındaki
-oranı okumak. Üç adımdır ve tamamı Bölüm 2 ile Bölüm 5'in birleşimidir:
+oranı okumak. Üç adımdır; ikisi Bölüm 2'nin eğrisinden, biri eğri dersindeki
+log-linear interpolasyondan gelir:
 
 1. Her tarihin gün sayısını al: $d_i = \text{tarih}_i - \text{değerleme}$.
-2. Her tarih için DF'yi grid'den log-linear interp ile çek (Bölüm 5).
+2. Her tarih için DF'yi grid'den log-linear interp ile çek.
    Tarihin kendi **zero oranı** basit konvansiyonla buradan çıkar:
    $R_s(d) = \left(\frac{1}{DF}-1\right)\frac{365}{d}$.
 3. İki tarih arasındaki **forward** — TLREF konvansiyonunda bileşik:
@@ -237,8 +674,9 @@ $$
 F[d_1,d_2] = 365\left[\left(\frac{DF(d_1)}{DF(d_2)}\right)^{\frac{1}{d_2-d_1}}-1\right]
 $$
 
-**Pratik — 12.06.2026 → 24.07.2026** (val 24.04.2026; iki PPK effective tarihi,
-49. ve 91. günler). Varsayılan eğriden:
+**Pratik — 12.06.2026 → 24.07.2026** (val 24.04.2026; T1 ve T2 toplantılarının
+effective tarihleri, 49. ve 91. günler). *Çıpa: 24.04.2026 kapanışı — anlık
+görüntüdür, kural değildir.* Aracın **varsayılan pillar setinden**:
 
 | | Gün | DF | Zero % (basit) |
 | --- | --- | --- | --- |
@@ -250,11 +688,55 @@ F = 365\left[\left(\frac{0{,}947969}{0{,}905531}\right)^{1/42}-1\right] = \%39{,
 \qquad (F_{basit} = \%40{,}73)
 $$
 
-Bu, MPC1 implied'ın ta kendisidir: piyasa, ilk toplantı sonrası dönem için ortalama
-~%39,8 TLREF fiyatlıyor — mevcut politika faizinin altında, yani ilk toplantıya indirim
-fiyatlanmış. Aynı hesabı aşağıdaki aracın B bloğunda herhangi iki tarihle yapabilirsiniz.
+Bu, **T1 implied**'ın ta kendisidir: piyasa, ilk toplantı ile ikinci toplantı
+arasındaki dönem için ortalama ~%39,8 TLREF fiyatlıyor — mevcut politika faizinin
+altında, yani **T1'e indirim fiyatlanmış**. Aynı hesabı aşağıdaki aracın B bloğunda
+herhangi iki tarihle yapabilirsiniz.
 
-### 3.4 Eğri spread'leri
+<div class="not">
+  <span class="etiket">Neden kardeş derste bu pencere %40,84 çıkıyor?</span>
+
+  [Faiz Teorisi ve Eğri İnşası](/arastirma/faiz-egrisi-ve-konvansiyonlar/)
+  dersinin Bölüm 8'i **tam bu pencereyi** (T1 effective → T2 effective, 49. gün →
+  91. gün) $MPC_1 = \%40{,}84$ olarak veriyor. Çıpa günü aynı (24.04.2026), pencere
+  aynı, sayı **102 bp** farklı. Bu bir hata değil, **iki farklı eğri**:
+
+  | | Kaynak | $DF(49)/DF(91)$ | 42 günlük bileşik forward |
+  | --- | --- | --- | --- |
+  | Bu ders | sayfadaki aracın varsayılan pillar seti (ideal grid, $\tau = 0{,}25$) | 0,947969 / 0,905531 = 1,046865 | **%39,82** |
+  | Bölüm 8 | TLREF Meetings modelinin pillar seti (1W–2M basit, 3M+ IRS bootstrap, gerçek takvim) | 1,048088 | **%40,84** |
+
+  Aradaki fark tamamen **ön uç interpolasyonundan** gelir: 49 ile 91 gün arası,
+  iki pillar'ın *arasında* kalan bir bölgedir ve grid seçimi burada küçük bir DF
+  farkını büyük bir forward farkına kaldıraçlar. Kaldıracın çarpanı görünür:
+  iki DF oranı arasındaki fark yalnızca $1{,}048088 - 1{,}046865 = 0{,}001223$
+  (yaklaşık **12 DF baz puanı**), ama 42 günlük bir pencere yıllığa çevrilirken
+  $365/42 \approx 8{,}7$ ile çarpılır — $0{,}001223 \times 8{,}7 \approx \%1{,}06$,
+  yani ~100 bp. (Bölüm 2 pratiğindeki "forward'lar iki pillar arasındaki farkın
+  kaldıraçlı hâlidir" kuralı birebir burada çalışıyor.) Masada kural şudur:
+  **MPC okumasında hangi pillar setini kullandığınızı yazın**; iki ekranın
+  T1 implied'ı 100 bp ayrışıyorsa önce grid'i, sonra piyasayı sorgulayın.
+  Yöntem ikisinde de aynıdır — ayrışan yalnız girdi eğrisidir.
+
+</div>
+
+**Bileşik ve basit farkı neden 91 bps?** İki tanım aynı DF'lerden çıkıyor ama farklı
+yıllıklaştırıyor: basit forward $\left(\frac{DF_1}{DF_2}-1\right)\frac{365}{42}$ ile
+doğrusal, bileşik ise 42 günün 365'e **kaçıncı kuvvetten** gittiğini soruyor. %40
+seviyesinde bu fark ihmal edilemez. TLREF günlük bileşiklenerek ödendiği için
+**doğru olan bileşiktir**; basit sayı yalnızca kotasyon geleneğidir. Bu 91 bp'yi
+büyüklük olarak yerine oturtun: kardeş dersin aynı çıpadaki fiyatlanmış toplantı
+adımları −101 ile −122 bp arasında (Bölüm 8.3 sıçrama tablosu). Yani iki tanımı
+karıştırmak, **tek bir toplantı adımının yaklaşık dörtte üçünü** yok saymak
+demektir — bir MPC okumasını bütünüyle yanlış toplantıya yazdıracak kadar büyük.
+
+**Bir adımı okumak.** İki komşu toplantı arası forward'ları birbirinden çıkarırsanız,
+piyasanın o toplantıya yazdığı **adım büyüklüğünü** elde edersiniz: T1 öncesi
+pencerenin forward'ı ile T1–T2 penceresininki arasındaki fark, bp cinsinden
+"beklenen indirim"dir. Bu yüzden MPC tablosu her zaman *pencere* tablosudur,
+*tarih* tablosu değil.
+
+### 3.4 Eğri spread'leri: eğimi tek sayıya indirgemek
 
 Aynı eğriden strateji masasının baktığı makaslar (mkt, bps):
 3M/6M **−89** · 6M/1Y **−164** · 1Y/2Y **−214** · 2Y/5Y **−380** · 2Y/10Y **−706** ·
@@ -262,14 +744,166 @@ Aynı eğriden strateji masasının baktığı makaslar (mkt, bps):
 inversiyonu, TL eğrisinin dikliğini tek sayıda özetler; senaryo sütunu, kendi PPK
 patikanızın bu makasları kaç bps oynatacağını gösterir.
 
+Makasların **nereye baktığını** ayırmak gerekir:
+
+| Makas | Neyi fiyatlar (her zaman) | Bu çıpada |
+| --- | --- | --- |
+| 3M/6M, 6M/1Y | ilk toplantıların hızı (T1–T3 bloğu) | −89 / −164 |
+| 1Y/2Y | döngünün Y+1'e mi Y+2'ye mi yayıldığı | −214 |
+| 2Y/5Y, 2Y/10Y | döngü sonrası terminal seviye beklentisi | −380 / −706 |
+| 5Y/10Y | uzun vade risk primi ve arz/talep | −327 |
+
+Sol iki sütun kuraldır ve her eğride geçerlidir; sağ sütun yalnızca bu fotoğrafa
+aittir. Bir görüşü ifade ederken önce hangi satırda olduğunuza karar verin: "indirimler
+hızlanır" görüşü 3M/6M satırındadır, "terminal daha düşük" görüşü 2Y/10Y satırındadır
+ve ikisi aynı gün ters yönde çalışabilir.
+
+### 3.5 Carry ve roll-down: forward gerçekleşirse ne olur, eğri sabit kalırsa ne olur?
+
+Bir swap pozisyonu **hiçbir şey olmasa bile** para kazandırır veya kaybettirir. İki
+farklı "hiçbir şey olmama" senaryosu vardır ve ikisi birbirine karıştırılır:
+
+- **Forward gerçekleşirse.** Eğrinin bugün fiyatladığı patika aynen yaşanırsa her
+  pozisyonun toplam getirisi **sıfırdır**. Forward oranlar tanımı gereği başabaştır.
+  Bu yüzden 1Y×1Y'nin %34,35 olması bir tahmin değil, bir **eşiktir**.
+- **Eğri sabit kalırsa.** Bir yıl sonra eğri bugünküyle aynı şekle sahipse, pozisyon
+  eğri boyunca *kayar* (roll-down) ve bu arada kupon farkı biriktirir (carry).
+
+İkisini ayıran sayı, tam olarak spot ile forward arasındaki farktır. Örnek: **2Y
+receive** (sabit al, TLREF öde), 100 mn TL nominal, çıpa eğrisinde $R_{2Y} = \%37{,}34$.
+
+Adım 1 — **carry (1 yıl).** Eğri sabit kalırsa ilk yıl gerçekleşen değişken bacak
+1Y oranına, yani %39,46'ya denk gelir. Sabit alan taraf $37{,}34 - 39{,}46 = -212$
+bps taşır → $100\text{ mn}\times0{,}0212 = \mathbf{-2.120.000}$ TL.
+
+Adım 2 — **roll-down (1 yıl).** Bir yıl sonra pozisyon 1Y'lik artık swaptır ve
+piyasa 1Y'yi %39,46'dan kote eder. Siz %37,34 alıyorsunuz → −212 bps'lik dezavantaj,
+1 yıllık annuity ile bugüne çekilir: $-0{,}0212 \times 0{,}791455 \times 100\text{ mn}
+= \mathbf{-1.677.885}$ TL.
+
+Adım 3 — **toplam.** $-2.120.000 - 1.677.885 = \mathbf{-3.797.885}$ TL, yani nominalin
+**−380 bps'i**. Ters çevrildiğinde: **2Y pay** (sabit öde) pozisyonu, hiçbir şey
+olmasa bile bir yılda +380 bps kazandırır.
+
+Adım 4 — **başabaş.** Receive tarafının kâr etmesi için bir yıl sonraki 1Y oranın
+forward'ın, yani **%34,35'in altına** inmesi gerekir: bugünkü 1Y'ye göre 511 bps
+daha düşük. "Faizler düşecek" görüşü bu eşiği geçmiyorsa pozisyon haklı çıksa bile
+para kaybeder.
+
+**Ters (dik/normal) eğride ne değişir.** Yukarıdaki işaretlerin tamamı eğrinin
+**inversiyonundan** gelir. Pozitif eğimli bir eğride receive tarafı carry ve roll'u
+**kazanır**, pay tarafı öder. Kural olarak: *kısa uç uzun uçtan yüksekse, beklemek
+pay tarafına ödenir; düşükse receive tarafına.* Bu yüzden derin ters eğride "erken
+receive" en pahalı görüşlerden biridir — haklı çıkmak yetmez, **zamanında** haklı
+çıkmak gerekir.
+
+**Bu tez ne zaman geçersizleşir.** Üç işaret: (i) ön uç kotasyonları yukarı kayarken
+1Y×1Y aşağı gidiyorsa (Bölüm 2 pratiğindeki mekanizma) carry hesabınızın girdisi
+bozulmuştur; (ii) spot ile forward arasındaki fark, hedefinizin altına inmişse
+pozisyonun ödülü kalmamıştır; (iii) roll hesabı yalnız "eğri sabit" varsayımıyla
+çalışır — beklenen bir rejim değişikliği varsa roll'u P&L olarak saymayın.
+
 ### 3.6 Deneyin: forward, MPC ve iki tarih arası oran
+
+Aracın **A bloğu** kuponlu forward swap'ı ($t_1$, $t_2$ yıl cinsinden vade) annuity, DV01
+ve oranla birlikte verir; **B bloğu** herhangi iki takvim tarihi arasındaki zero ve
+forward oranları (bileşik ve basit) hesaplar. §3.2'yi tekrarlamak için A bloğuna
+$t_1=1$, $t_2=2$ girin; §3.3'ü tekrarlamak için B bloğunda değerleme 24.04.2026,
+tarihler 12.06.2026 ve 24.07.2026 olmalı.
 
 <ForwardMpcHesaplayici />
 
-## 4. Swaption: eğrinin üstüne volatilite katmanı
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 3 · Par, forward ve carry</span>
+
+**1. Doğrudan uygulama — teleskopla 6M×6M.** Varsayılan eğride
+$DF(3M) = 0{,}905285$, $DF(6M) = 0{,}822081$, $DF(1Y) = 0{,}687692$;
+$R_{6M} = \%41{,}20$, $R_{1Y} = \%39{,}46$. 6M×6M forward oranını ve DV01'ini bulun.
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — annuity'ler ($\tau = 0{,}25$):
+$A(6M) = 0{,}25\times(0{,}905285+0{,}822081) = 0{,}431841$; $A(1Y) = 0{,}791455$.
+
+Adım 2 — forward annuity: $A_{fwd} = 0{,}791455 - 0{,}431841 = \mathbf{0{,}359614}$.
+
+Adım 3 — teleskop:
+$R = \dfrac{0{,}3946\times0{,}791455 - 0{,}4120\times0{,}431841}{0{,}359614}
+= \dfrac{0{,}312308-0{,}177919}{0{,}359614} = \mathbf{\%37{,}37}$.
+
+Adım 4 — doğrudan kontrol:
+$\dfrac{0{,}822081-0{,}687692}{0{,}359614} = \%37{,}37$ ✓
+
+Adım 5 — DV01: $0{,}359614\times1\text{ mn}\times10^{-4} = \mathbf{35{,}96}$ TL/bp.
+
+**Cevap:** %37,37 · 35,96 TL/bp. Matris (gerçek takvim) %37,42 ve 35,8 diyor —
+5 bps ve 0,16 TL'lik sapma, ideal grid artığı olarak beklenen büyüklüktedir.
+
+**Araçla doğrula:** forward aracının A bloğunda $t_1 = 0{,}5$, $t_2 = 1$ girin.
+
+</details>
+
+**2. Ters çevirme — hedef riske göre nominal.** 1Y×9Y trade'inde toplam
+**5.000 TL/bp** risk taşımak istiyorsunuz. Nominal ne olmalı? Aynı riski 1M×1M ile
+taşımaya kalksanız nominal ne olurdu ve bu neden pratik değildir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — matristen: 1Y×9Y DV01 = 221,2 TL/bp (1 mn nominal başına).
+
+Adım 2 — nominal: $5.000 / 221{,}2 = \mathbf{22{,}6}$ mn TL.
+
+Adım 3 — 1M×1M için DV01 = 7,1 → $5.000/7{,}1 = \mathbf{704}$ mn TL.
+
+Adım 4 — pratik yorum: aynı bp riskini ön uçta taşımak **31 kat** nominal gerektirir.
+Bilanço, teminat, kredi limiti ve bid-offer maliyeti nominalle ölçeklendiği için ön
+uç işlemleri "ucuz risk" değil, **pahalı bilanço**dur.
+
+**Cevap:** 22,6 mn TL vs 704 mn TL.
+
+</details>
+
+**3. Karar — hangi satır?** Görüşünüz: "İlk iki toplantıda fiyatlanan indirimler
+gelmeyecek, ama döngünün toplam büyüklüğü doğru — gevşeme yalnızca **Y+1'e kayacak**."
+Bu görüş hangi yapıyla ifade edilir, hangi bacaklarla?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — görüşü ayrıştır: (i) yakın vade fazla indirim fiyatlıyor → ön uç **pay**
+(sabit öde) tarafındasınız; (ii) toplam gevşeme doğru → uzun vadede görüş yok, oradan
+risk almak istemiyorsunuz.
+
+Adım 2 — outright olmaz: 6M pay yaparsanız, eğrinin tamamı yukarı kayarsa da
+kazanırsınız — bu sizin görüşünüz değil, yönlü bir bahis olur.
+
+Adım 3 — doğru yapı **spread**: kısa vadede pay, orta vadede receive; DV01 nötr.
+Örneğin 6M pay / 1Y×1Y receive — ilk blok gelmezse kısa bacak kazanır, gevşeme
+Y+1'e kayarsa uzun bacak kazanır.
+
+Adım 4 — boyutlandırma: DV01 eşitlenir. 6M leg için annuity $A(6M) = 0{,}431841$
+→ 43,18 TL/bp/mn; 1Y×1Y için 56,12 TL/bp/mn. Eşitlemek için
+$N_{6M} = N_{1Y\times1Y}\times \dfrac{56{,}12}{43{,}18} = 1{,}30\times N$.
+
+**Cevap:** ön uç pay / 1Y×1Y receive spread'i; 100 mn 1Y×1Y'ye karşı ~130 mn 6M.
+Yönlü risk sıfırlanır, geriye yalnız "zamanlama" görüşü kalır.
+
+**Araçla doğrula:** forward aracında iki bacağın DV01'ini ($t_1=0,\;t_2=0{,}5$ ve
+$t_1=1,\;t_2=2$) okuyup oranı kontrol edin.
+
+</details>
+
+</div>
+
+## 4 — Swaption: eğrinin üstüne volatilite, Black · Bachelier · Greek'ler · smile
+
+Bu bölümde eğriye bir katman ekleniyor: aynı forward oranın **dağılımı** fiyatlanıyor.
 
 Swaption Pricer sayfası eğriyi opsiyon dünyasına bağlar. Örnek trade: **1Y expiry ×
-2Y tenor payer, K = %35, nominal 10 mn TL, Black vol %25.**
+2Y tenor payer, K = %35, nominal 10 mn TL, Black vol %25.** Bütün sayılar Bölüm 2'nin
+çıpasına (24.04.2026) aittir.
 
 ### 4.1 Dayanak: forward swap oranı
 
@@ -280,6 +914,11 @@ $$
 
 Örnekte $A = 0{,}9723$, $DF_{exp}-DF_{mat} = 0{,}3203$ → $F = \%32{,}94$.
 Strike %35'in altında: payer için OTM ($K-F = +206$ bps).
+
+Dikkat: swaption'ın dayanağı spot swap oranı **değil**, opsiyonun vadesinde başlayacak
+forward swap oranıdır. Ters eğride bu ikisi yüzlerce bps ayrışır — burada spot 3Y
+seviyeleri %35'in üstündeyken forward %32,94'tür. "ATM strike" derken hangi oranı
+kastettiğinizi söylemezseniz karşı tarafla farklı iki opsiyon konuşuyor olursunuz.
 
 ### 4.2 Black modeli (TL piyasa konvansiyonu)
 
@@ -295,6 +934,12 @@ $$
 
 **Pratik:** $d_1 = -0{,}118$, $d_2 = -0{,}368$, $N(d_1)=0{,}4530$, $N(d_2)=0{,}3564$ →
 prim $= 0{,}023786$ (decimal) $= \mathbf{237.864\ TL}$.
+
+Adım adım: $\ln(0{,}3294/0{,}35) = -0{,}06066$; $\sigma^2T/2 = 0{,}03125$;
+pay $= -0{,}02941$; payda $\sigma\sqrt{T} = 0{,}25$ → $d_1 = -0{,}1176$;
+$d_2 = -0{,}3676$. Prim decimal'i nominalle çarpılır: $0{,}023786\times10$ mn.
+Buradaki "decimal" birimi **annuity dâhil** bir orandır — yani prim doğrudan
+nominalin yüzdesi olarak okunur, ayrıca annuity ile çarpılmaz.
 
 ### 4.3 Bachelier modeli (normal, karşılaştırma)
 
@@ -321,7 +966,7 @@ Black'tir; Bachelier düşük/negatif faiz piyasalarının aracıdır.
   aynı değerlere döner.
 </div>
 
-### 4.4 Greeks
+### 4.4 Greeks: her birinin okunuşu ve TL karşılığı
 
 | Greek | Formül | Örnek değer | Okunuşu |
 | --- | --- | --- | --- |
@@ -331,6 +976,12 @@ Black'tir; Bachelier düşük/negatif faiz piyasalarının aracıdır.
 | Theta | $-A F\sigma n(d_1)/(2\sqrt{T})/365$ | −434 TL/gün | beklemenin günlük maliyeti |
 | Vanna | $-n(d_1)\,d_2/\sigma \cdot A$ | 0,567 | skew duyarlılığı |
 | Volga | $\text{Vega}\; d_1 d_2/\sigma$ | 0,0220 | vol-of-vol dışbükeyliği |
+
+Üç sayıyı yan yana koyun: delta 440 TL/bp, vega 12.687 TL/vol puanı, theta
+−434 TL/gün. Bunun anlamı şudur: **1 vol puanı ≈ 29 bp'lik forward hareketi ≈ 29
+günlük bekleme.** Opsiyon pozisyonunun günlük hayatı bu üç kurun içinde geçer;
+"vol ucuz" demek, ödediğiniz theta'nın beklediğiniz gamma kazancından küçük olduğunu
+iddia etmektir.
 
 ### 4.5 Implied vol: fiyattan σ'ya
 
@@ -343,7 +994,13 @@ $$
 **Pratik:** $P_{mkt}=0{,}015$, $\sigma_0=0{,}25$ → 0,1817 → 0,1802 → 0,18009:
 üç adımda **%18,01**. Bootstrap'taki çözücüyle aynı iskelet — bir kez öğren, her yerde kullan.
 
-### 4.6 P&L takibi ve Greek atribüsyonu
+İlk adımı elle kontrol edelim: model primi 0,023786, piyasa 0,015, fark 0,008786
+(decimal). Vega decimal cinsinden 1 vol puanı başına $12.687/10^7 = 0{,}0012687$;
+gereken düşüş $0{,}008786/0{,}0012687 \approx 6{,}9$ vol puanı → $25 - 6{,}9 =
+\%18{,}1$. Newton'un ilk adımı %18,17 verdi — vega'nın kendisi de σ ile değiştiği
+için küçük bir artık kalır ve ikinci adımda kapanır.
+
+### 4.6 P&L takibi ve Greek atribüsyonu: birinci derece ne zaman çöker?
 
 Pozisyon MTM'i parçalara ayrılır:
 $\Delta P\&L \approx \text{Delta}\cdot\Delta F + \text{Vega}\cdot\Delta\sigma + \text{Theta}\cdot\Delta t + \text{artık}$.
@@ -351,6 +1008,13 @@ Modeldeki örnek öğreticidir: giriş $F_0=\%35{,}8$, güncel $F=\%32{,}94$ (�
 MTM +87.864 TL; ama delta katkısı **−126.107**, theta **−13.218**, artık **+227.189 TL**.
 Ders: bu büyüklükte harekette birinci derece Greek ayrışması çöker — gamma/vanna
 katkısı artığa düşer. Kural: artık MTM'in %5'ini aşıyorsa tam yeniden değerleme yap.
+
+Neden çöktüğünü tek satırda görmek mümkün: 286 bps'lik hareket, gamma 4,68 ile
+birlikte tek başına $\tfrac12\times\text{Gamma}\times(\Delta F)^2$ mertebesinde bir
+ikinci derece terim üretir ve bu, delta katkısıyla aynı büyüklük sınıfındadır.
+Aynı eşik Bölüm 1'de tahvilin konveksitesi için de geçerliydi: **doğrusallaştırma,
+hareketin karesiyle bozulur.** Fark şu ki opsiyonda "kare terim" sizin lehinize
+(long gamma), tahvilde ise konveksite yalnızca fiyatın eğriliğidir.
 
 ### 4.7 Vol grid ve smile yaklaşımı
 
@@ -374,16 +1038,153 @@ buradaki grid, strike başına fiyat/delta okumak için yeterli bir ilk yaklaş�
 Not: üretim fiyatlamasında annuity **CSA** (teminat para birimi) DF'leriyle iskonto
 edilir; model bunu açıkça "scenario DF kullanıyorum" diye işaretler.
 
-### Deneyin
+### 4.8 Hızlı denetimler: parite, ATM kısayolu ve vol birimleri
+
+Bir swaption ekranına baktığınızda üç saniyede yapılabilecek üç kontrol vardır.
+Üçü de bu dersin sayılarıyla tam tutar.
+
+**(a) Payer–receiver paritesi.** Aynı $K$, aynı vade, aynı tenorda:
+
+$$
+\text{Payer} - \text{Receiver} = A\,(F-K)\times N
+$$
+
+Sağ taraf, forward başlangıçlı swap'ın kendisidir. Örnekte
+$0{,}9723\times(0{,}3294-0{,}35)\times10\text{ mn} = \mathbf{-200.294}$ TL.
+Payer 237.864 olduğuna göre receiver $237.864 + 200.294 = \mathbf{438.158}$ TL
+olmalı. Black formülünden doğrudan hesap 438.295 TL verir; aradaki 137 TL, tabloda
+dört haneye yuvarlanmış $N(d)$ değerlerinden gelir. Parite **modelden bağımsızdır**:
+Bachelier tarafında da geçerlidir — payer 229.110 → receiver
+$229.110+200.294 = \mathbf{429.404}$ TL. Bir ekranda parite tutmuyorsa hata modelde
+değil, girdide (annuity ya da forward) aranır.
+
+**(b) ATM kısayolu.** Normal modelde ATM primi kapalı formdur:
+$C_{ATM} \approx A\,\sigma_N\sqrt{T/2\pi}$. Örnekte
+$0{,}9723\times0{,}0823\times\sqrt{1/6{,}2832} = 0{,}0319$ — §4.7 grid'inin ATM
+satırındaki **0,0319** ile birebir. Bu kısayol, kafadan "bu vol bu vadede kaç eder"
+demenin en hızlı yoludur ve tüm ATM vadeler için $\sqrt{T}$ ile ölçeklenir.
+
+**(c) Vol birimleri.** $\sigma_N = 0{,}0823 = \mathbf{823}$ bp/yıl. Günlüğe çevirmek
+için 252 işlem gününe bölünür: $823/\sqrt{252} = \mathbf{51{,}8}$ bp/gün — yani
+piyasa, forward'ın tipik günlük hareketini ~52 bps olarak fiyatlıyor. Vade boyunca
+beklenen mutlak hareket ise $\sigma_N\sqrt{2T/\pi} = \mathbf{657}$ bps.
+Opsiyon 206 bps OTM olduğuna göre strike, beklenen mutlak hareketin üçte biri kadar
+uzaktadır: prim neden bu kadar yüksek, bunu açıklayan sayı budur.
+
+**Bu fiyat ne zaman yanlıştır.** (i) Annuity yanlış eğriden geliyorsa (CSA/iskonto
+uyumsuzluğu) prim yüzde birkaç kayar ve parite yine tutar — yani parite bu hatayı
+yakalamaz. (ii) Forward, spot swap oranıyla karıştırılmışsa strike'ın moneyness'i
+tamamen yanlıştır. (iii) Tek ATM vol ile OTM fiyatlıyorsanız smile'ı yok saymış
+olursunuz: §4.7 grid'inde %35,94 strike'ta vol %25 değil %22,1'dir ve prim aradaki
+farkla oynar.
+
+### 4.9 Deneyin: swaption fiyatlayıcı
+
+Varsayılan girdiler yukarıdaki trade'dir: expiry 1, tenor 2, strike 35, vol 25,
+nominal 10 mn, payer. Ekranda $F = \%32{,}94$, $A = 0{,}9723$, Black primi
+237.864 TL okumalısınız. "Yön" alanını receiver'a çevirip §4.8'in parite kontrolünü
+yapın; ardından piyasa primi kutusuna 0,015 girip implied vol'ün %18,01'e indiğini
+görün.
 
 <SwaptionHesaplayici />
 
-## 5. Uygulama: tahvil tarafı ve ASW
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 4 · Swaption</span>
 
-> Bu bölümün sayısal örneği 06.05.2026 tarihli `ASW_Calculator` görüntüsünden gelir
-> (24.04 eğrisiyle karıştırmayın — YTM ile eğri aynı güne ait olmalıdır).
+**1. Doğrudan uygulama — parite ile receiver primi.** $A = 0{,}9723$, $F = \%32{,}94$,
+$K = \%35$, nominal 10 mn, payer primi 237.864 TL. Receiver primi nedir? Aynı soruyu
+Bachelier primi (229.110 TL) için de yanıtlayın.
 
-### 5.1 Kupon, işlemiş faiz, kirli fiyat
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — parite: $\text{Receiver} = \text{Payer} - A(F-K)N$.
+
+Adım 2 — $A(F-K)N = 0{,}9723\times(-0{,}0206)\times10^7 = -200.294$ TL.
+
+Adım 3 — Black receiver: $237.864 - (-200.294) = \mathbf{438.158}$ TL.
+
+Adım 4 — Bachelier receiver: $229.110 + 200.294 = \mathbf{429.404}$ TL.
+
+Adım 5 — okuma: iki model arasındaki fark payer'da 8.754 TL, receiver'da yine
+8.754 TL — parite terimi modelden bağımsız olduğu için fark **aynen taşınır**.
+
+**Cevap:** 438.158 TL (Black) · 429.404 TL (Bachelier).
+
+**Araçla doğrula:** yön alanını receiver yapın; Black satırı ~438 bin TL okumalı
+(dört haneli $N(d)$ yuvarlamasından birkaç yüz TL sapma normaldir).
+
+</details>
+
+**2. Ters çevirme — vol birimleri ve başabaş.** Aynı opsiyonda $\sigma_N = 0{,}0823$.
+(i) Günlük tipik hareket kaç bps? (ii) Vade boyunca beklenen mutlak hareket kaç bps?
+(iii) Opsiyon kaç bps OTM ve bu, beklenen hareketin kaçta kaçı?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — yıllık normal vol: $0{,}0823 = 823$ bps.
+
+Adım 2 — günlük: $823/\sqrt{252} = \mathbf{51{,}8}$ bps/gün.
+
+Adım 3 — vade boyu beklenen mutlak hareket:
+$\sigma_N\sqrt{2T/\pi} = 0{,}0823\times0{,}7979 = 0{,}0657 = \mathbf{657}$ bps.
+
+Adım 4 — moneyness: $K - F = 35 - 32{,}94 = 206$ bps → $206/657 = \mathbf{0{,}31}$.
+
+**Cevap:** 51,8 bps/gün · 657 bps · beklenen hareketin %31'i kadar OTM. Bu yüzden
+opsiyon "derin OTM" değildir ve primi nominalin %2,4'ü gibi ciddi bir sayıdır.
+
+</details>
+
+**3. Karar — senaryo P&L'i Greek'lerle tahmin edin ve güvenilirliğini yargılayın.**
+Bir ay içinde forward 30 bps yükseliyor, vol 2 puan düşüyor, 10 takvim günü geçiyor.
+Payer pozisyonunun MTM değişimi yaklaşık nedir? Bu tahmine güvenir misiniz?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — delta katkısı: $440\ \text{TL/bp}\times(+30) = +13.200$ TL.
+
+Adım 2 — vega katkısı: $12.687\times(-2) = -25.374$ TL.
+
+Adım 3 — theta katkısı: $-434\times10 = -4.340$ TL.
+
+Adım 4 — toplam: $13.200-25.374-4.340 = \mathbf{-16.514}$ TL.
+
+Adım 5 — güvenilirlik: hareket 30 bps, yani §4.6'daki 286 bps'lik vakanın onda biri.
+İkinci derece terim hareketin karesiyle büyüdüğü için burada yaklaşık **yüzde bir**
+mertebesinde kalır — birinci derece atribüsyon bu ölçekte güvenilirdir. Kural aynı:
+artık, MTM'in %5'ini aşarsa tam yeniden değerleme.
+
+**Cevap:** ≈ −16,5 bin TL; tahmin bu büyüklükte güvenilir. Dikkat çekici olan,
+forward **lehinize** hareket etmesine rağmen vol kaybının onu ikiye katlayarak
+silmesidir — long opsiyon pozisyonunda asıl risk çoğu zaman yön değil, vol'dür.
+
+**Araçla doğrula:** strike'ı sabit tutup vol'ü 25 → 23 yapın ve primdeki düşüşü
+vega tahminiyle karşılaştırın.
+
+</details>
+
+</div>
+
+## 5 — Asset swap: tahvil eğriye göre ucuz mu, üç metrik tek karar
+
+Bu bölümde tahvil tarafı ile swap tarafı birleşiyor: aynı kâğıt için üç farklı
+"ucuzluk" sayısı üretilip hangisinin hangi soruyu yanıtladığı ayrılıyor.
+
+<div class="not">
+  <span class="etiket">Çıpa — bu bölümdeki sayılar hangi ana ait</span>
+
+  **Çıpa: 06.05.2026 kotasyonu** (`ASW_Calculator` görüntüsü) — anlık görüntüdür,
+  kural değildir. Bölüm 2–4'ün eğrisi 24.04.2026'ya aitti; **ikisini karıştırmayın**:
+  bir ASW spread'i ancak tahvilin YTM'si ile eğri **aynı güne** aitse anlamlıdır.
+  Bölümdeki tüm seviyeler ve spreadler bu ikinci fotoğrafa aittir; yöntem — işlemiş
+  faiz, par interpolasyonu, üç metrik, hedge oranı — her günde aynıdır.
+
+</div>
+
+### 5.1 Kupon, işlemiş faiz, kirli fiyat ve OIS'e göre teorik değer
 
 Örnek: **TRT051033T12** — vade 05.10.2033, kupon %26,20 (6 ayda bir 13,10),
 temiz fiyat 82,700, YTM %32,20, değerleme 06.05.2026 (son kupon 14.04.2026, 22 gün önce).
@@ -396,17 +1197,39 @@ $$
 YTM, kirli fiyatı 15 nakit akışına (14 kupon + vadede kupon+anapara) eşitleyen bileşik
 orandır: $DP = \sum_i C_i/(1+y)^{t_i}$. Aynı akışlar OIS DF'leriyle iskonto edilirse
 tahvilin eğriye göre teorik değeri çıkar: $PV_{OIS} = 83{,}48$ — kirli fiyatın altında.
-Fiyat-getiri-durasyon sezgisi için:
+
+**Kâğıdın risk profili.** Aşağıdaki araca kupon 26,20, getiri 32,20, vade 7,5 yıl,
+6 aylık girin: fiyat **83,3517**, Macaulay durasyon **3,3234 yıl**, modifiye durasyon
+**2,8625** çıkar. Buradan DV01 = $2{,}8625\times83{,}3517\times10^{-4} = 0{,}023859$
+(100 nominal başına) → **100 mn TL nominal için 23.859 TL/bp**. Araç idealize bir
+kâğıt varsayar (kesirli ilk dönem $w$ yok, valör kupon tarihine oturur); bu yüzden
+fiyatı gerçek kirlinin ~0,93 puan altında basar. Risk büyüklüğü için bu yaklaşım
+fazlasıyla yeterlidir, kesin fiyat için §1.2'nin tam tablosu gerekir.
 
 <TahvilHesaplayici />
 
-### 5.2 Asset swap yapısı
+### 5.2 Asset swap yapısı: sentetik FRN nasıl kurulur, riski kime gider?
 
 Tahvili al, kuponlarını swap'ın sabit bacağına devret, karşılığında **TLREF + ASW** al:
 sentetik FRN. Kupon riski swap'a gider; kalan tek şey tahvilin eğriye göre ucuzluğudur.
 ASW > 0 → ucuz, < 0 → pahalı, ≈ 0 → adil.
 
-### 5.3 Bloomberg'in TR metriği ve hesap
+Paketin bacakları tek tabloda:
+
+| Bacak | Ne yaparsınız | Nakit akışı | Taşınan risk |
+| --- | --- | --- | --- |
+| Tahvil | kirli fiyattan alırsınız | sabit kupon + anapara alırsınız | ihraççı kredi riski, likidite |
+| Swap sabit bacağı | sabit ödersiniz | tahvil kuponunu devredersiniz | — (nötrlenir) |
+| Swap değişken bacağı | TLREF + spread alırsınız | değişken alırsınız | yeniden fiyatlama (küçük) |
+| Fonlama | repo/teminatlı borçlanma | fonlama faizi ödersiniz | fonlama tabanı riski |
+
+Nötrleme tam değildir ve tam olmasını da beklemeyin: kalan üç kalıntı risk
+**kredi** (tahvil temerrüde düşerse swap yaşamaya devam eder), **fonlama tabanı**
+(repo ile TLREF arasındaki fark açılırsa carry bozulur) ve **iskonto/CSA uyumsuzluğu**
+(swap teminatlı, tahvil değil) olarak masada durur. ASW spread'i, bu üç riskin
+karşılığı olarak talep ettiğiniz ücrettir — "arbitraj" değildir.
+
+### 5.3 Bloomberg'in TR metriği: interpolasyonla par oran ve ASW hesabı
 
 TR Hazine tahvilleri için terminal, klasik par-ASW yerine yalın metriği gösterir:
 
@@ -414,7 +1237,7 @@ $$
 ASW = y_{tahvil} - R^{OIS}_{par}(T_{tahvil})
 $$
 
-vade gününe **lineer interpolasyonla** bulunan par oran düşülür. 06.05.2026:
+vade gününe **lineer interpolasyonla** bulunan par oran düşülür. Çıpa gününde:
 vadeye 2709 gün; bracket 7Y (2557g, %32,12) – 8Y (2924g, %31,57):
 
 $$
@@ -437,6 +1260,169 @@ fiyatıdır. Klasik par-par ASW $a = \frac{PV_{OIS}-DP}{100\cdot A_{OIS}}$ ise a
 sözleşme yapısının (upfront'lu paket) adil spread'idir — aşağıdaki araç üçünü de
 aynı eğriden hesaplar.
 
-### Deneyin
+### 5.4 Üç metrik neden ayrışır — hangi soruyu hangisi yanıtlar?
+
+Tabloda 30,8 ile 122,0 arasında **91 bps** var; üstelik klasik par-par ASW aynı kâğıt
+için **negatif** çıkar. Aynı tahvil hem ucuz hem pahalı olamayacağına göre, üç sayı
+üç **farklı soruyu** yanıtlıyor demektir.
+
+**(a) Neden par-par ASW ters işaretli?** Numaratör doğrudan hesaplanabilir:
+$PV_{OIS} - DP = 83{,}48 - 84{,}2792 = \mathbf{-0{,}7992}$. Negatif — yani eğriyle
+iskonto edilen akışlar, ödenen paradan **az** ediyor; paket adil olsun diye
+karşı tarafın spread ödemesi değil, sizin ödemeniz gerekir. Mekanizma ters eğridir:
+kâğıdın yakın kuponları ~%41'lik ön uç oranlarıyla, uzak akışları ~%31'le iskonto
+edilir. YTM ise düz bir %32,20'dir. Ön uçtaki sert iskonto, uzak uçtaki hafif
+avantajı fazlasıyla yer ve $PV_{OIS}$'i kirlinin altına iter.
+
+**(b) Neden YTM − zero en yüksek?** Zero oran **tek** bir nakit akışının fiyatıdır ve
+ters eğride uzun vadeli zero, aynı vadeli par oranın altında kalır. Küçük bir sayıyı
+çıkardığınız için fark büyür. Kuponlu bir enstrümanı tek ödemeli bir oranla kıyaslamak
+elmayı armutla ölçmektir.
+
+**(c) Hangisi ne zaman.**
+
+| Metrik | Yanıtladığı soru | Ne zaman kullanılır |
+| --- | --- | --- |
+| YTM − par (BBG TR) | "Bu kâğıt, aynı vadeli bir swap'a göre kaç bps ucuz kote ediliyor?" | TR govvies rölatif değer, ekran karşılaştırması, tarihsel seri |
+| YTM − zero | "Kâğıt, tek ödemeli bir yatırıma göre nerede?" | nadiren; yalnız zero eğri konvansiyonu açıkça belirtildiğinde |
+| Par-par ASW $a$ | "Bu paketi bugün kursam adil spread ne olur?" | gerçek ASW işlemi fiyatlanırken, upfront'lu yapıda |
+
+Kural: **rölatif değer için BBG metriği, işlem fiyatlaması için par-par ASW.**
+İkisini aynı cümlede kullanacaksanız hangisinin hangisi olduğunu söyleyin — biri
+"kâğıt ucuz", diğeri "paket bana borçlu değil" diyor ve bunlar çelişmez.
+
+### 5.5 ASW trade'i: boyutlandırma, carry, çıkış ve geçersizleşme
+
+**Boyutlandırma.** Paketin swap bacağı, tahvilin faiz riskini nötrleyecek şekilde
+ölçülür: $N_{swap} = N_{tahvil}\times \dfrac{DV01_{tahvil}}{DV01_{swap}}$.
+§5.1'den tahvil DV01'i 100 mn nominal için 23.859 TL/bp. Aynı vadedeki (7,5 yıl)
+swap'ın annuity'si varsayılan eğride $A = 2{,}740605$ → 100 mn nominal için
+**27.406 TL/bp**. Oran:
+
+$$
+\frac{23.859}{27.406} = 0{,}8706
+\quad\Rightarrow\quad
+100\text{ mn tahvile karşı } \mathbf{87{,}1}\text{ mn swap}
+$$
+
+(Annuity 24.04 eğrisinden okundu; gerçek işlemde tahvilin kendi gün çıpasındaki eğri
+kullanılır.) Neden 1:1 değil: tahvil iskontolu işlem görüyor (fiyat 83–84) ve
+kuponu düşük, dolayısıyla nominal başına DV01'i swap'ınkinden küçük. **1:1 hedge
+kurmak, 12,9 mn nominal fazla swap — yani gizli bir pay-fixed (kısa durasyon)
+pozisyonu — taşımak demektir.**
+
+**Carry.** Paketin taşıma getirisi üç kalemdir: (i) tahvilin kupon tahakkuku,
+(ii) swap'ın net kupon farkı, (iii) fonlama maliyeti. Ters eğride üçüncüsü acıtır:
+kâğıdı ön uç oranlarıyla fonlarken uzun vadeli bir getiri taşırsınız. Bölüm 3.5'in
+mantığı burada da geçerlidir — "eğri sabit kalırsa" senaryosunda pozisyonun
+kendiliğinden ne kazandığını hesaplamadan ASW'nin 30 bps olmasının bir anlamı yoktur.
+
+**Çıkış ve hedef.** ASW spread'i ortalamaya dönen bir seridir; tez genellikle
+"bu kâğıt kendi tarihsel bandının ucuz tarafında" biçimindedir. Hedef ve stop
+aynı birimde konur: giriş +30,8 bps ise, örneğin hedef +10 bps (20,8 bps kazanç),
+stop +45 bps (14,2 bps zarar) — 1,5:1'e yakın bir oran. Bp cinsinden P&L, swap
+bacağının DV01'iyle TL'ye çevrilir: 87,1 mn nominal üzerinden 1 bps ≈ 23.870 TL,
+yani 20,8 bps'lik hedef ≈ **497 bin TL**.
+
+**Bu tez ne zaman geçersizleşir** (§5.2'deki üç kalıntı riskin üçü de sinyal verir):
+
+1. **Kredi tarafı.** ASW ucuzluğu ihraççı riskinden geliyorsa spread daralmaz, açılır.
+   Aynı eğriye göre komşu vadelerin de birlikte ucuzlaması bunun işaretidir.
+2. **Fonlama tabanı.** Repo–TLREF makası açılırsa carry tezi bozulur; spread yerinde
+   dursa bile pozisyon para kaybeder.
+3. **Metrik kayması.** Kâğıdın vadesi interpolasyon bracket'ini değiştirdiğinde
+   (bir pillar'ı geçtiğinde) BBG metriği zıplar. Bu, tahvilin ucuzlaması değil,
+   ölçüm aletinin değişmesidir — tarihsel seriye bakarken bu sıçramaları işaretleyin.
+4. **Gün karışması.** YTM ile eğri farklı günlerden geliyorsa spread'in tamamı
+   gürültüdür. Bu dersin en sık tekrarlanan uyarısı budur ve masada en sık yapılan
+   hatadır.
+
+### 5.6 Deneyin: ASW hesaplayıcı
+
+Araç A bloğunda tahvilin kimliğinden kirli fiyatı ve OIS'e göre teorik değerini,
+B bloğunda üç metriği birden üretir. Varsayılan girdiler §5.1'in kâğıdıdır: kupon
+26,20, sıklık 2, temiz 82,70, geçen gün 22, YTM 32,20, vadeye 2709 gün. Eğri
+sekmesindeki kotasyonları oynatırsanız par ve zero satırları — dolayısıyla üç metrik
+de — anında değişir.
 
 <AswHesaplayici />
+
+<div class="pratik">
+  <span class="etiket">Pratik — Bölüm 5 · Asset swap</span>
+
+**1. Doğrudan uygulama — işlemiş faiz ve kirli fiyat.** Aynı kâğıt (kupon %26,20,
+6 aylık kupon 13,10, periyot 182,5 gün, temiz 82,700) ama son kupondan **100 gün**
+geçmiş. İşlemiş faiz ve kirli fiyat nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — $AI = 13{,}10\times\dfrac{100}{182{,}5} = \mathbf{7{,}1781}$.
+
+Adım 2 — $DP = 82{,}700 + 7{,}1781 = \mathbf{89{,}8781}$.
+
+Adım 3 — kontrol: 22 günde 1,5792 olan işlemiş faiz, 100 günde kabaca 4,5 katına
+çıkmalı: $1{,}5792\times100/22 = 7{,}178$ ✓ (doğrusaldır).
+
+**Cevap:** $AI = 7{,}1781$ · $DP = 89{,}8781$.
+
+**Araçla doğrula:** ASW aracının A bloğunda "son kupondan geçen gün" alanını 100 yapın.
+
+</details>
+
+**2. Ters çevirme — başka bir vade, başka bir bracket.** Elinizde 2100 gün vadeli
+başka bir kâğıt var, YTM %34,00. Eğri pillar'ları: 5Y (1826 gün, %33,51) ve
+6Y (2191 gün, %32,68). BBG metriğiyle ASW kaç bps?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — bracket: 2100 gün, 1826 ile 2191 arasında. Aralık $2191-1826 = 365$ gün,
+içerideki mesafe $2100-1826 = 274$ gün.
+
+Adım 2 — lineer interpolasyon:
+$R_{par}(2100) = 33{,}51 - (33{,}51-32{,}68)\times\dfrac{274}{365}
+= 33{,}51 - 0{,}83\times0{,}7507 = \mathbf{\%32{,}887}$.
+
+Adım 3 — ASW: $34{,}00 - 32{,}887 = 1{,}113$ puan $= \mathbf{+111{,}3}$ bps.
+
+Adım 4 — okuma: ilk kâğıttan (30,8 bps) çok daha ucuz görünüyor. Karar vermeden önce
+sorulacak soru: bu fark rölatif değer mi, yoksa likidite/kredi farkı mı?
+
+**Cevap:** +111,3 bps.
+
+**Araçla doğrula:** "Tahvil YTM" alanına 34,00, "vadeye kalan gün" alanına 2100 girin.
+
+</details>
+
+**3. Karar ve tuzak — üç metrik çelişirse ne yaparsınız?** Bir kâğıt için ekranda
+üç sayı var: BBG metriği **+30,8 bps** (ucuz), YTM − zero **+122,0 bps** (çok ucuz),
+par-par ASW **negatif** (pahalı). Portföy yöneticisine ne raporlarsınız ve neden?
+
+<details>
+<summary>Çözüm</summary>
+
+Adım 1 — soruyu tanımla: yönetici "bu kâğıdı almalı mıyım" diye soruyorsa **rölatif
+değer** sorusudur → BBG metriği (+30,8 bps).
+
+Adım 2 — zero metriğini ele: kuponlu tahvili tek ödemeli oranla kıyaslıyor; ters
+eğride sistematik olarak şişer. Raporlanacak sayı değildir, ancak konvansiyon
+açıkça belirtiliyorsa dipnot olur.
+
+Adım 3 — par-par ASW'yi ele: negatif çıkması bir çelişki değil, **farklı ürünün**
+fiyatı. $PV_{OIS}-DP = -0{,}7992$; gerçek bir ASW paketi kurulacaksa ödenecek/alınacak
+spread budur ve tez ancak paket seviyesinde anlamlıdır.
+
+Adım 4 — rapor cümlesi: "Kâğıt, eşit vadeli OIS par oranına göre **+31 bps** ucuz;
+ancak paket olarak kurulursa ön uçtaki sert iskonto nedeniyle par-par spread negatiftir
+— yani ucuzluk **outright** alım tezidir, **ASW paketi** tezi değildir."
+
+**Cevap:** BBG metriği raporlanır, diğer ikisi gerekçeleriyle dipnota düşer.
+
+**Araçla doğrula:** ASW aracının alt satırındaki "Klasik par ASW (PV−DP)/A"
+değerinin işaretini üstteki metrikle karşılaştırın; bootstrap'ta ön uç kotasyonlarını
+aşağı çekince iki metriğin nasıl yakınsadığını izleyin.
+
+</details>
+
+</div>

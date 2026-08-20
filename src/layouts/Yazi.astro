@@ -1,5 +1,7 @@
 ---
 import Base from './Base.astro';
+import DersKunyesi from '../components/DersKunyesi.astro';
+import type { DersOlcum } from '../lib/ders';
 
 interface Props {
   title: string;
@@ -11,10 +13,34 @@ interface Props {
   kaynak?: string;
   guncelleme?: string;
   tur: 'proje' | 'arastirma';
+  /** Ders sayfalarında künye şeridi (okuma süresi, grafik, pratik…). */
+  olcum?: DersOlcum;
+  seviye?: 'giris' | 'orta' | 'ileri';
+  /** Yazının bağlı olduğu konu grubu — "nerede ne var" için kicker'da görünür. */
+  grupAdi?: string;
+  grupHref?: string;
+  onkosullar?: { href: string; title: string }[];
 }
 
-const { title, description, pubDate, updatedDate, tags = [], durum, kaynak, guncelleme, tur } =
-  Astro.props;
+const {
+  title,
+  description,
+  pubDate,
+  updatedDate,
+  tags = [],
+  durum,
+  kaynak,
+  guncelleme,
+  tur,
+  olcum,
+  seviye,
+  grupAdi,
+  grupHref,
+  onkosullar = [],
+} = Astro.props;
+
+// 'ders' etiketi bütün derslerde var; ayırt etmediği için künye satırında gösterilmez.
+const gorunenEtiketler = tags.filter((t) => t !== 'ders');
 
 const tarih = (d: Date) =>
   new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
@@ -25,7 +51,13 @@ const tarih = (d: Date) =>
     <header class="makale-baslik yuksel">
       <p class="kicker etiket">
         {tur === 'proje' ? 'Proje' : 'Araştırma'}
-        {tags.length > 0 && ` · ${tags.join(' · ')}`}
+        {grupAdi && (
+          <>
+            {' · '}
+            {grupHref ? <a href={grupHref}>{grupAdi}</a> : grupAdi}
+          </>
+        )}
+        {gorunenEtiketler.length > 0 && ` · ${gorunenEtiketler.join(' · ')}`}
       </p>
       <h1>{title}</h1>
       <p class="ozet">{description}</p>
@@ -36,6 +68,20 @@ const tarih = (d: Date) =>
         {kaynak && <span><b>Kaynak</b> {kaynak}</span>}
         {durum === 'taslak' && <span class="rozet rozet--taslak">Hazırlanıyor</span>}
       </div>
+      {olcum && <DersKunyesi olcum={olcum} seviye={seviye} guncellendi={updatedDate ?? pubDate} />}
+      {
+        onkosullar.length > 0 && (
+          <p class="onkosul-satiri">
+            <span class="etiket">Önce oku</span>
+            {onkosullar.map((o, i) => (
+              <>
+                {i > 0 && <span class="ayrac"> · </span>}
+                <a href={o.href}>{o.title}</a>
+              </>
+            ))}
+          </p>
+        )
+      }
     </header>
     <nav class="icindekiler yuksel" id="icindekiler" hidden aria-label="İçindekiler">
       <span class="etiket ic-baslik">İçindekiler</span>
@@ -58,7 +104,11 @@ const tarih = (d: Date) =>
     // sayacı ikinci bir numara basar ve "3. 3. Kısa uç" çıkar. Bu durumda
     // sayacı kapat — bölüm numarası metnin parçasıdır ve ders içi çapraz
     // referanslar (3.4, §2.3) ona dayanır, kaldırılamaz.
-    const numarali = basliklar.filter((h) => /^\d+(\.\d+)*\.?\s/.test(h.textContent || ''));
+    const numarali = basliklar.filter((h) =>
+      /^(?:(?:Bölüm|Modül|Kısım|Ek)\s+)?(?:[A-ZÇĞİÖŞÜ]\.)?\d+(?:\.\d+)*\.?[\s—–-]/.test(
+        h.textContent || ''
+      )
+    );
     if (numarali.length >= basliklar.length / 2) liste.classList.add('kendi-numarali');
 
     basliklar.forEach((h, i) => {
@@ -75,6 +125,26 @@ const tarih = (d: Date) =>
 </script>
 
 <style>
+  .onkosul-satiri {
+    max-width: var(--olcu);
+    margin: 0.8rem auto 0;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--ink-50);
+  }
+  .onkosul-satiri .etiket {
+    color: var(--claret);
+    margin-right: 0.5rem;
+  }
+  .onkosul-satiri a {
+    color: var(--ink-70);
+  }
+  .onkosul-satiri a:hover {
+    color: var(--claret);
+  }
+  .onkosul-satiri .ayrac {
+    color: var(--ink-30);
+  }
   .icindekiler {
     max-width: var(--olcu);
     margin: 2rem auto 0;
