@@ -1,0 +1,126 @@
+---
+import { SITE_TITLE, SITE_TAGLINE } from '../consts';
+
+const bugun = new Intl.DateTimeFormat('tr-TR', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  weekday: 'long',
+}).format(new Date());
+
+const yol = Astro.url.pathname;
+const linkler = [
+  { no: '01', ad: 'Projeler', href: '/projeler/' },
+  { no: '02', ad: 'Araştırma', href: '/arastirma/' },
+  { no: '03', ad: 'Hakkında', href: '/hakkinda/' },
+  { no: '04', ad: 'Arama', href: '/arama/' },
+];
+---
+
+<header class="masthead">
+  <div class="sarici">
+    <div class="dateline etiket">
+      <span>{bugun}</span>
+      <span class="orta">İstanbul</span>
+      <span>Veri · Makro · Faiz</span>
+    </div>
+    <div class="baslik-satir">
+      <a href="/" class="marka">
+        <span class="marka-ad">{SITE_TITLE}</span>
+        <span class="marka-alt">{SITE_TAGLINE}</span>
+      </a>
+      <nav>
+        {
+          linkler.map((l) => (
+            <a href={l.href} class:list={['nav-link', { aktif: yol.startsWith(l.href) }]}>
+              <span class="nav-no">{l.no}</span>
+              {l.ad}
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+  </div>
+</header>
+
+<style>
+  .masthead {
+    border-bottom: 4px double var(--ink);
+  }
+  .dateline {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--ink-30);
+    color: var(--ink-70);
+  }
+  .dateline .orta {
+    color: var(--claret);
+  }
+  .baslik-satir {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.8rem 2rem;
+    padding: 1.3rem 0 1rem;
+  }
+  .marka {
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .marka:hover {
+    color: inherit;
+  }
+  .marka-ad {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 72;
+    font-weight: 620;
+    font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    line-height: 1;
+    letter-spacing: -0.025em;
+  }
+  .marka-ad::after {
+    content: '.';
+    color: var(--claret);
+  }
+  .marka-alt {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-50);
+  }
+  nav {
+    display: flex;
+    gap: 1.6rem;
+  }
+  .nav-link {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding-bottom: 0.2rem;
+    border-bottom: 2px solid transparent;
+  }
+  .nav-link.aktif {
+    border-bottom-color: var(--claret);
+    color: var(--claret);
+  }
+  .nav-no {
+    color: var(--claret);
+    font-size: 0.6rem;
+    vertical-align: super;
+    margin-right: 0.15rem;
+  }
+  @media (max-width: 640px) {
+    .dateline span:last-child {
+      display: none;
+    }
+  }
+</style>

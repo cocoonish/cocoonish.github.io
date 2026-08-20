@@ -1,0 +1,125 @@
+---
+import Base from './Base.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  tags?: string[];
+  durum?: 'aktif' | 'taslak' | 'arsiv';
+  kaynak?: string;
+  guncelleme?: string;
+  tur: 'proje' | 'arastirma';
+}
+
+const { title, description, pubDate, updatedDate, tags = [], durum, kaynak, guncelleme, tur } =
+  Astro.props;
+
+const tarih = (d: Date) =>
+  new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+---
+
+<Base title={title} description={description}>
+  <article>
+    <header class="makale-baslik yuksel">
+      <p class="kicker etiket">
+        {tur === 'proje' ? 'Proje' : 'Araştırma'}
+        {tags.length > 0 && ` · ${tags.join(' · ')}`}
+      </p>
+      <h1>{title}</h1>
+      <p class="ozet">{description}</p>
+      <div class="makale-meta">
+        <span><b>Yayın</b> {tarih(pubDate)}</span>
+        {updatedDate && <span><b>Güncelleme</b> {tarih(updatedDate)}</span>}
+        {guncelleme && <span><b>Veri</b> {guncelleme}</span>}
+        {kaynak && <span><b>Kaynak</b> {kaynak}</span>}
+        {durum === 'taslak' && <span class="rozet rozet--taslak">Hazırlanıyor</span>}
+      </div>
+    </header>
+    <nav class="icindekiler yuksel" id="icindekiler" hidden aria-label="İçindekiler">
+      <span class="etiket ic-baslik">İçindekiler</span>
+      <ol id="icindekiler-liste"></ol>
+    </nav>
+    <div class="prose yuksel" style="--d: 120ms">
+      <slot />
+    </div>
+  </article>
+</Base>
+
+<script>
+  // h2 başlıklardan içindekiler kur (4+ bölüm varsa)
+  const basliklar = [...document.querySelectorAll('.prose h2')] as HTMLElement[];
+  if (basliklar.length >= 4) {
+    const nav = document.getElementById('icindekiler')!;
+    const liste = document.getElementById('icindekiler-liste')!;
+
+    // Başlıkların KENDİSİ numaralıysa (ör. "3. Kısa uç: …") listenin otomatik
+    // sayacı ikinci bir numara basar ve "3. 3. Kısa uç" çıkar. Bu durumda
+    // sayacı kapat — bölüm numarası metnin parçasıdır ve ders içi çapraz
+    // referanslar (3.4, §2.3) ona dayanır, kaldırılamaz.
+    const numarali = basliklar.filter((h) => /^\d+(\.\d+)*\.?\s/.test(h.textContent || ''));
+    if (numarali.length >= basliklar.length / 2) liste.classList.add('kendi-numarali');
+
+    basliklar.forEach((h, i) => {
+      if (!h.id) h.id = 'bolum-' + (i + 1);
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.textContent = h.textContent;
+      li.appendChild(a);
+      liste.appendChild(li);
+    });
+    nav.hidden = false;
+  }
+</script>
+
+<style>
+  .icindekiler {
+    max-width: var(--olcu);
+    margin: 2rem auto 0;
+    border: 1px solid var(--ink-30);
+    background: var(--paper-2);
+    padding: 1rem 1.3rem 1.1rem;
+  }
+  /* Başlıkları zaten numaralı olan yazılarda listenin sayacı kapatılır
+     (bkz. yukarıdaki 'kendi-numarali' mantığı) — aksi halde çift numara. */
+  #icindekiler-liste.kendi-numarali {
+    list-style: none;
+    padding-left: 0;
+  }
+  .ic-baslik {
+    color: var(--claret);
+    display: block;
+    margin-bottom: 0.6rem;
+  }
+  .icindekiler ol {
+    margin: 0;
+    padding-left: 1.3rem;
+    columns: 2;
+    column-gap: 2.5rem;
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+  .icindekiler li {
+    margin: 0.22rem 0;
+    break-inside: avoid;
+  }
+  .icindekiler li::marker {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--claret);
+  }
+  .icindekiler a {
+    text-decoration: none;
+    color: var(--ink-70);
+  }
+  .icindekiler a:hover {
+    color: var(--claret);
+  }
+  @media (max-width: 640px) {
+    .icindekiler ol {
+      columns: 1;
+    }
+  }
+</style>

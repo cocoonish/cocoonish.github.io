@@ -1,0 +1,575 @@
+/* ─────────────────────────────────────────────────────────────
+   TTO Trading — tasarım sistemi
+   Estetik: finansal araştırma dergisi. Kâğıt zemin, mürekkep,
+   bordo vurgu. Fraunces (başlık) / Newsreader (metin) /
+   IBM Plex Mono (veri & etiket).
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --paper: #f5f0e6;
+  --paper-2: #ede6d6;
+  --paper-3: #e4dbc7;
+  --ink: #211b12;
+  --ink-70: rgba(33, 27, 18, 0.72);
+  --ink-50: rgba(33, 27, 18, 0.52);
+  --ink-30: rgba(33, 27, 18, 0.3);
+  --ink-15: rgba(33, 27, 18, 0.15);
+  --claret: #8e1f2f;
+  --claret-dark: #6d1322;
+  --gold: #9a7327;
+  --teal: #1d5c5c;
+
+  --font-display: 'Fraunces Variable', 'Times New Roman', serif;
+  --font-body: 'Newsreader Variable', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+
+  --olcu: 70ch;
+  --genislik: 1120px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: var(--paper);
+  /* ince kâğıt dokusu */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.13 0 0 0 0 0.1 0 0 0 0 0.07 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--claret);
+  color: var(--paper);
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--ink-30);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s ease, color 0.15s ease;
+}
+a:hover {
+  color: var(--claret);
+  text-decoration-color: var(--claret);
+}
+
+.sarici {
+  max-width: var(--genislik);
+  margin-inline: auto;
+  padding-inline: clamp(1.1rem, 4vw, 2.5rem);
+}
+
+/* ── Giriş animasyonu ──────────────────────────────────────── */
+@keyframes yuksel {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.yuksel {
+  animation: yuksel 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .yuksel {
+    animation: none;
+  }
+}
+
+/* ── Mono etiketler ────────────────────────────────────────── */
+.etiket {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.rozet {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+}
+.rozet--taslak {
+  color: var(--gold);
+}
+.rozet--aktif {
+  color: var(--teal);
+}
+.rozet--arsiv {
+  color: var(--ink-50);
+}
+
+/* ── Bölüm başlığı satırı ──────────────────────────────────── */
+.bolum-baslik {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  border-top: 1px solid var(--ink);
+  padding-top: 0.6rem;
+  margin: 3.5rem 0 1.6rem;
+}
+.bolum-baslik .no {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--claret);
+}
+.bolum-baslik h2 {
+  font-family: var(--font-display);
+  font-variation-settings: 'opsz' 40;
+  font-size: 1.5rem;
+  font-weight: 560;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.bolum-baslik .tumu {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink-70);
+}
+.bolum-baslik .tumu:hover {
+  color: var(--claret);
+}
+
+/* ── Kayıt kartları ────────────────────────────────────────── */
+.kayit-izgara {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0 2.5rem;
+}
+
+.kayit {
+  position: relative;
+  border-top: 1px solid var(--ink-30);
+  padding: 1.1rem 0 1.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.kayit::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--claret);
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.kayit:hover::before {
+  width: 100%;
+}
+.kayit .ust {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.kayit .sira {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--claret);
+  letter-spacing: 0.08em;
+}
+.kayit h3 {
+  font-family: var(--font-display);
+  font-variation-settings: 'opsz' 30;
+  font-size: 1.35rem;
+  font-weight: 580;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.kayit h3 a {
+  text-decoration: none;
+}
+.kayit h3 a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.kayit p {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--ink-70);
+}
+.kayit .alt {
+  margin-top: auto;
+  padding-top: 0.7rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-50);
+}
+
+/* ── Makale ────────────────────────────────────────────────── */
+.makale-baslik {
+  max-width: var(--olcu);
+  margin: 3rem auto 0;
+}
+.makale-baslik .kicker {
+  color: var(--claret);
+  margin-bottom: 0.9rem;
+}
+.makale-baslik h1 {
+  font-family: var(--font-display);
+  font-variation-settings: 'opsz' 72;
+  font-size: clamp(2rem, 5.5vw, 3.2rem);
+  font-weight: 540;
+  line-height: 1.08;
+  letter-spacing: -0.022em;
+  margin: 0 0 1rem;
+}
+.makale-baslik .ozet {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 1.25rem;
+  line-height: 1.55;
+  color: var(--ink-70);
+  margin: 0 0 1.4rem;
+}
+.makale-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.6rem;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink-30);
+  padding: 0.55rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-70);
+}
+.makale-meta b {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ── Makale gövdesi (prose) ────────────────────────────────── */
+.prose {
+  max-width: var(--olcu);
+  margin: 2.2rem auto 4rem;
+  font-size: 1.125rem;
+  line-height: 1.78;
+}
+.prose > p:first-of-type::first-letter {
+  font-family: var(--font-display);
+  font-variation-settings: 'opsz' 72;
+  font-weight: 600;
+  font-size: 3.4em;
+  line-height: 0.82;
+  float: left;
+  padding: 0.08em 0.12em 0 0;
+  color: var(--claret);
+}
+.prose h2 {
+  font-family: var(--font-display);
+  font-variation-settings: 'opsz' 40;
+  font-size: 1.65rem;
+  font-weight: 560;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  margin: 2.6em 0 0.7em;
+  padding-top: 0.7em;
+  border-top: 1px solid var(--ink-30);
+}
+.prose h3 {
+  font-family: var(--font-display);
+  font-variation-settings: 'opsz' 30;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 2em 0 0.5em;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.4rem;
+}
+.prose li {
+  margin: 0.35em 0;
+}
+.prose li::marker {
+  color: var(--claret);
+}
+.prose blockquote {
+  margin: 1.8em 0;
+  padding: 0.2em 0 0.2em 1.4em;
+  border-left: 3px solid var(--claret);
+  font-style: italic;
+  color: var(--ink-70);
+}
+.prose hr {
+  border: none;
+  text-align: center;
+  margin: 2.6em 0;
+}
+.prose hr::after {
+  content: '❦';
+  color: var(--claret);
+  font-size: 1.1rem;
+}
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--paper-2);
+  border: 1px solid var(--ink-15);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+}
+.prose pre {
+  background: var(--paper-2);
+  border: 1px solid var(--ink-15);
+  border-radius: 4px;
+  padding: 1.1rem 1.3rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.prose pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.8em 0;
+  font-size: 0.92rem;
+}
+.prose thead th {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: left;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding: 0.5rem 0.8rem 0.5rem 0;
+}
+.prose tbody td {
+  border-bottom: 1px solid var(--ink-15);
+  padding: 0.5rem 0.8rem 0.5rem 0;
+  font-variant-numeric: tabular-nums;
+}
+.prose td:has(> :is(code)) ,
+.prose .sayi {
+  font-family: var(--font-mono);
+}
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.4rem 0;
+}
+
+/* ── Not kutusu ────────────────────────────────────────────── */
+.not {
+  max-width: var(--olcu);
+  margin: 1.8em auto;
+  border: 1px solid var(--ink-30);
+  border-left: 3px solid var(--gold);
+  background: var(--paper-2);
+  padding: 0.9rem 1.2rem;
+  font-size: 0.98rem;
+}
+.not .etiket {
+  color: var(--gold);
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+/* ── Hesap araçları (ortak iskelet) ────────────────────────── */
+.hesap {
+  margin: 2.2em 0;
+  border: 1px solid var(--ink);
+  background: var(--paper-2);
+}
+.hesap-ust {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  padding: 0.55rem 1rem;
+  background: var(--ink);
+  color: var(--paper);
+}
+.hesap-ust .etiket {
+  color: var(--gold);
+}
+.hesap-ad {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.95rem;
+}
+.hesap-yonerge {
+  margin: 0;
+  padding: 0.7rem 1rem 0.2rem;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--ink-70);
+}
+.hesap label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.hesap label .etiket {
+  color: var(--ink-50);
+  font-size: 0.58rem;
+}
+.hesap input,
+.hesap select {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--ink-30);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  width: 100%;
+  box-sizing: border-box;
+}
+.hesap input:focus,
+.hesap select:focus {
+  outline: 2px solid var(--claret);
+  outline-offset: -1px;
+}
+.hesap-dip {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--ink-15);
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--ink-50);
+}
+.hesap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+.hesap thead th {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: right;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding: 0.4rem 0.6rem 0.4rem 0;
+}
+.hesap thead th:first-child {
+  text-align: left;
+}
+.hesap tbody td {
+  font-family: var(--font-mono);
+  text-align: right;
+  border-bottom: 1px solid var(--ink-15);
+  padding: 0.32rem 0.6rem 0.32rem 0;
+}
+.hesap tbody td:first-child {
+  text-align: left;
+  color: var(--claret);
+  font-weight: 500;
+}
+.hesap .sonuc-buyuk {
+  font-family: var(--font-display);
+  font-variation-settings: 'opsz' 60;
+  font-size: 1.9rem;
+  font-weight: 580;
+  color: var(--claret);
+  font-variant-numeric: tabular-nums;
+}
+.hesap .ara-deger {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.hesapla-btn {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: var(--claret);
+  border: 1px solid var(--claret-dark);
+  border-radius: 2px;
+  padding: 0.5rem 1.2rem;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+.hesapla-btn:hover {
+  background: var(--claret-dark);
+}
+.hesapla-btn:active {
+  transform: translateY(1px);
+}
+.hesapla-btn.tamam {
+  background: var(--teal);
+  border-color: var(--teal);
+}
+.hesapla-satir {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.5rem 1rem 0.9rem;
+}
+.hesapla-satir .canli-not {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--ink-50);
+}
+
+/* KaTeX blokları: çerçeveli, taşmaya dayanıklı */
+.prose .katex-display {
+  background: var(--paper-2);
+  border: 1px solid var(--ink-15);
+  border-left: 3px solid var(--claret);
+  padding: 0.9rem 1.1rem;
+  margin: 1.6em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.prose .katex {
+  font-size: 1.05em;
+}
+
+/* ── Duyarlılık ────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .kayit-izgara {
+    grid-template-columns: 1fr;
+  }
+  .prose {
+    font-size: 1.05rem;
+  }
+}

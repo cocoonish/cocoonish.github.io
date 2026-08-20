@@ -1,0 +1,16 @@
+---
+import { getCollection, render } from 'astro:content';
+import Yazi from '../../layouts/Yazi.astro';
+
+export async function getStaticPaths() {
+  const arastirmalar = await getCollection('arastirma');
+  return arastirmalar.map((a) => ({ params: { slug: a.id }, props: { entry: a } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<Yazi {...entry.data} tur="arastirma">
+  <Content />
+</Yazi>

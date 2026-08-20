@@ -1,0 +1,180 @@
+---
+title: 'TL Reel Efektif Döviz Kuru'
+description: 'TÜFE ve Yi-ÜFE bazlı REDK''nin %70/%30 bileşimi, 10 ve 5 yıllık ortalamadan sapma ve USD/TRY regresyonlarıyla TL değerleme çerçevesi.'
+pubDate: 2026-07-15
+updatedDate: 2026-08-18
+tags: ['redk', 'try', 'enflasyon']
+durum: 'aktif'
+kaynak: 'TCMB REDK (TÜFE & Yi-ÜFE)'
+guncelleme: 'aylık'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+
+TL "ucuz mu, pahalı mı?" sorusuna tek bir REDK serisiyle bakmak yanıltıcıdır: TÜFE bazlı
+seri hizmet enflasyonunu, Yi-ÜFE bazlı seri ticarete konu malları temsil eder ve ikisi
+son yıllarda ciddi ayrışmıştır. Bu proje iki seriyi ağırlıklandırır, uzun dönem
+ortalamadan sapmayı ölçer ve sapmanın USD/TRY üzerindeki öngörü gücünü regresyonla test eder.
+
+<GrafikEmbed
+  src="/projeler/try-reer/reer_analysis.html"
+  baslik="Kompozit REDK, hareketli ortalamalar ve sapma panelleri"
+  no="01"
+  yukseklik={1050}
+/>
+
+## Şekil 01 nasıl hesaplanıyor?
+
+Beş panelin tamamı aynı veri hattından türetilir:
+
+**Veri kaynağı sayfada görünür.** Bu sayfadaki REDK sayıları
+<Deger proje="try-reer" anahtar="kaynak_etiket" ondalik={1}>TCMB EVDS</Deger> kaynağından,
+son gözlem <Deger proje="try-reer" anahtar="son_gozlem" ondalik={1}>2026-07</Deger>
+(bugüne göre <Deger proje="try-reer" anahtar="gecikme_ay" ondalik={0}>1</Deger> ay gecikme,
+durum: <Deger proje="try-reer" anahtar="tazelik" ondalik={1}>güncel</Deger>). Bu üç alan
+`ozet.json`'dan canlı okunur: hat yerel yedeğe düşerse ya da seri bayatlarsa burada
+görünür — daha önce böyle bir düşüş sessizdi ve sayfa aylarca eski veriyi taze gibi
+gösterebilirdi.
+
+**Veri.** TCMB'nin iki resmi REDK serisi doğrudan EVDS API'sinden çekilir:
+`TP.RK.T1.Y` (TÜFE Bazlı REDK) ve `TP.RK.U01.Y` (Yi-ÜFE Bazlı REDK). API erişimi
+yoksa hat, aynı iki serinin yerel yedek kopyalarına düşer — böylece anahtarsız bir
+makinede de koşar. Her iki yolda da tarih
+sütunu ayıklanır, iki seri ay bazında iç birleştirmeyle hizalanır (yalnız ikisinin
+de bulunduğu aylar kalır).
+
+**Panel 1 — Kompozit REDK ve ortalamalar.**
+
+$$
+REDK_t = 0{,}70\cdot REDK^{\text{TÜFE}}_t + 0{,}30\cdot REDK^{\text{Yi-ÜFE}}_t
+$$
+
+Ağırlıklar parametriktir (kaynakta `CPI_WEIGHT`, `PPI_WEIGHT`). Üzerine iki hareketli
+ortalama çizilir: 120 ay (10Y, kesikli) ve 60 ay (5Y, noktalı); `min_periods` pencere
+uzunluğuna eşittir — serinin ilk 10 yılı bilinçli olarak boş bırakılır, kısmi pencere
+ortalaması gösterilmez.
+
+**Panel 2-3 — Kompozit sapmalar.**
+
+$$
+\text{Sapma}^{10Y}_t = \frac{REDK_t - MA^{120}_t}{MA^{120}_t}\times100,
+\qquad
+\text{Sapma}^{5Y}_t = \frac{REDK_t - MA^{60}_t}{MA^{60}_t}\times100
+$$
+
+Sıfır çizgisi "tarihsel normal"dir; negatif bölge TL'nin kendi geçmişine göre ucuz
+kaldığı dönemleri işaretler.
+
+**Panel 4-5 — Saf PPI ve saf CPI sapmaları.** Aynı 10Y sapma hesabı, %100 Yi-ÜFE ve
+%100 TÜFE serilerine ayrı ayrı uygulanır. İki panelin ayrıştığı dönemler (ör. iç
+enflasyonun kur artışını aştığı 2022-24), "hangi REDK'ye göre ucuz?" sorusunun neden
+önemli olduğunu gösterir.
+
+## Regresyon modülü: sapma USD/TRY'yi öngörüyor mu?
+
+İkinci script (`usdtry_reer_analysis`) sapma serisini USD/TRY ile birleştirir
+(2005-01'den bu yana 259 aylık gözlem; kur, aylık ortalama kapanış) ve ilişkiyi iki
+açıdan test eder:
+
+<GrafikEmbed
+  src="/projeler/try-reer/redk_usdtry_analiz_10y.html"
+  baslik="10Y sapma – USD/TRY ilişki panosu: ileri dönük getiriler, saçılımlar, bant istatistiği"
+  no="02"
+  yukseklik={2300}
+/>
+
+### Şekil 02 nasıl hesaplanıyor?
+
+Pano dört katmandır: (i) USDTRY ile 10Y sapma çift eksende; (ii) 1/3/6/12 ay **ileri
+dönük** kur değişimleri $USDTRY_{t+k}/USDTRY_t - 1$; (iii) sapma-vs-sonraki-dönem
+saçılımları OLS doğrularıyla; (iv) sapma bandına göre 12 ay sonraki ortalama kur
+değişimi. Ana sonuçlar ($n=235$, tümü $p<0{,}01$):
+
+| Ufuk | 1M | 3M | 6M | 12M |
+| --- | --- | --- | --- | --- |
+| Korelasyon $r$ | −0,19 | −0,22 | −0,35 | **−0,50** |
+
+İlişki ufuk uzadıkça güçlenir — değerleme sinyalinin doğası. Bant istatistiği aynı
+şeyi doğrusal olmayan haliyle söyler: sapma **< −20%** iken (TL aşırı ucuz) sonraki
+12 ayda kur ortalama **+%40,2** yükselmiş ($n=56$ ay); sapma +10/+20% bandındayken
+yalnız +%3,1. Uç pozitif bantta (+20% üzeri, $n=18$) ortalamanın tekrar +%15,7'ye
+sıçraması, aşırı değerlenmenin düzeltme riskini taşıdığının işaretidir.
+
+<GrafikEmbed
+  src="/projeler/try-reer/redk_degisim_regresyon.html"
+  baslik="Eşzamanlı değişim regresyonu: Δsapma vs USD/TRY değişimi (1M/3M/6M)"
+  no="03"
+  yukseklik={1250}
+/>
+
+### Şekil 03 nasıl hesaplanıyor?
+
+Bu kez ileri dönük değil **eşzamanlı** ilişki: aynı penceredeki sapma değişimi
+(puan, `diff(k)`) ile kur yüzde değişimi (`pct_change(k)`) arasında OLS; üç pencere
+alt alta, kutularda $R^2$/$r$/eğim/artık hatası, son ay kırmızı yıldızla işaretli.
+1 aylık pencerede $R^2 = 0{,}59$, eğim **−1,17**: sapma 1 puan artarsa kur aynı ay
+~%1,2 düşer — bu öngörü değil, reel kurun tanımından gelen mekanik ilişkidir
+(enflasyon farkı bir ayda az değişir, sapmayı nominal kur oynatır). Şekil 02'nin
+ileri dönük zayıf-ama-anlamlı korelasyonlarıyla bu mekanik $R^2$'yi karıştırmamak,
+REDK analizinin en sık yapılan hatasından kaçınmaktır.
+
+## Ufuk karşılaştırması: 5Y sapma ve 3M odak
+
+<GrafikEmbed
+  src="/projeler/try-reer/redk_usdtry_analiz_5y.html"
+  baslik="5Y sapma – USD/TRY ilişki panosu (10Y panonun kardeşi)"
+  no="04"
+  yukseklik={2300}
+/>
+
+<GrafikEmbed
+  src="/projeler/try-reer/redk_degisim_regresyon_5y.html"
+  baslik="Eşzamanlı değişim regresyonu — 5Y sapma (1M/3M/6M)"
+  no="05"
+  yukseklik={1250}
+/>
+
+<GrafikEmbed
+  src="/projeler/try-reer/redk_degisim_regresyon_3m.html"
+  baslik="3M odak: Δsapma(3A) vs USD/TRY değişimi — tek panel"
+  no="06"
+  yukseklik={1250}
+/>
+
+### Şekil 04-06 nasıl okunur? (ufuk seçiminin dersi)
+
+Aynı analiz 5 yıllık ortalama sapmasıyla tekrarlanınca tablo değişir — ve bu değişim
+başlı başına metodolojik derstir:
+
+| İleri dönük $r$ | 1M | 3M | 6M | 12M |
+| --- | --- | --- | --- | --- |
+| **10Y sapma** | −0,19 | −0,22 | −0,35 | **−0,50** |
+| **5Y sapma** | −0,10† | −0,08† | −0,18 | −0,30 |
+
+† istatistiksel olarak anlamsız. **Öngörü gücü uzun çıpada yaşar**: 5Y ortalama,
+son yılların rejimini içine aldığından "normal"i sapmanın peşinden sürükler ve
+sinyali zayıflatır; 10Y çıpa daha yavaş, bu yüzden daha bilgilendiricidir. Buna
+karşılık *eşzamanlı* mekanik ilişki ufuğa neredeyse duyarsızdır (1M R²: 0,59 vs
+0,60; eğim −1,17 vs −1,15) — çünkü o ilişki tanımdan gelir, çıpadan değil.
+3M odak paneli (Şekil 06) bu mekaniğin çeyreklik versiyonunu tek panelde verir:
+$R^2=0{,}46$, eğim −1,20, $\sigma=\pm6{,}9\%$ — "REDK sapması çeyrekte 5 puan
+düzeldi" haberinin kur diline çevirisi ortalama −%6 demektir, ±%7 bantla.
+
+5Y bant istatistiği de aynı hikâyeyi anlatır: en ucuz bant (< −20%) 5Y'de yalnız
+12 gözlem içerir (10Y'de 56) ve getirisi daha düşüktür (+25,5% vs +40,2%) —
+kısa çıpa uç bölgeleri erken "normalleştirir".
+
+## Güncel okuma (<Deger proje="try-reer" anahtar="donem" ondalik={1}>Temmuz 2026</Deger> verisiyle)
+
+Kompozit REDK **<Deger proje="try-reer" anahtar="redk" ondalik={1}>104,6</Deger>** · 10Y sapma **+<Deger proje="try-reer" anahtar="sapma10" ondalik={1}>7,3</Deger>%** (nötr bölge) · 5Y sapma +<Deger proje="try-reer" anahtar="sapma5" ondalik={1}>14,0</Deger>% ·
+%100 Yi-ÜFE sapması +<Deger proje="try-reer" anahtar="ppi10" ondalik={1}>11,9</Deger>% vs %100 TÜFE +<Deger proje="try-reer" anahtar="cpi10" ondalik={1}>5,5</Deger>% — iki endeksin ayrışması sürüyor:
+ticarete konu mallar tarafında TL belirgin pahalı, TÜFE bazında henüz nötr.
+
+## Yorum notları
+
+- REDK endeksi 100'ün "adil değer" olduğu anlamına gelmez; sapma metriği bu yüzden
+  seviye yerine **kendi tarihsel ortalamasına göre** tanımlanır.
+- %70/%30 bileşimi bir modelleme tercihi: hizmet ağırlıklı sepetin uzun dönem
+  taşınabilirliği ile ticarete konu rekabetçilik arasında orta yol. Ağırlığı değiştirip
+  sonucun ne kadar oynadığına bakmak, analizin sağlamlık testidir.

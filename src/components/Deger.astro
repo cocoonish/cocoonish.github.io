@@ -1,0 +1,81 @@
+---
+/**
+ * Canlı metin değeri: proje pipeline'ının yazdığı ozet.json'dan okunur.
+ * Kullanım: <Deger proje="hazine-ihrac" anahtar="gerceklesme_ort" ondalik={1}>85,7</Deger>
+ * Slot içeriği statik yedektir (JSON yüklenemezse veya derleme anında görünür);
+ * sayfa açılınca /projeler/<proje>/ozet.json çekilir ve tüm değerler güncellenir.
+ * Böylece sayfa metnindeki sayılar, veri güncellendikçe MDX'e dokunmadan tazelenir.
+ *
+ * BİÇİM UYARISI — aşağıdaki script ve style blokları bilerek span'ın kapanış
+ * etiketine YAPIŞIK yazıldı; araya boş satır KOYMAYIN. Astro bu blokları şablondan
+ * söküp hoist eder, ama aralarındaki satır sonları çıktıda boşluk metni olarak kalır
+ * ve span'ın hemen ardına iki boşluk basılırdı. Değerin peşine yapışması gereken
+ * noktalama bu yüzden ayrık görünüyordu: "%7,3" yerine "7,3 %", "1,80x" yerine
+ * "1,80 x", "307'ye" yerine "307 'ye", "(21.07.2026)." yerine "(21.07.2026 ).".
+ *
+ * (Bu açıklamada script/style sözcükleri bilerek açılı ayraçsız yazıldı: frontmatter
+ * yorumunda geçen gerçek bir etiket, Astro'nun tarayıcısını yanıltıp `astro dev`i
+ * "Unterminated regular expression" ile düşürüyor — derleme geçse bile.)
+ */
+interface Props {
+  proje: string;
+  anahtar: string;
+  ondalik?: number;
+  /** true ise pozitif sayının önüne "+" konur (günlük değişim gibi işaretli büyüklükler) */
+  isaret?: boolean;
+}
+const { proje, anahtar, ondalik = 1, isaret = false } = Astro.props;
+---
+
+<span
+  class="canli-deger"
+  data-proje={proje}
+  data-anahtar={anahtar}
+  data-ondalik={ondalik}
+  data-isaret={isaret ? '1' : undefined}><slot>…</slot></span><script>
+  // Sayfa başına tek sefer: span'ları projeye göre grupla, ozet.json'ları çek, doldur.
+  const alanlar = [...document.querySelectorAll('span.canli-deger')] as HTMLElement[];
+  const projeler = [...new Set(alanlar.map((a) => a.dataset.proje!))];
+
+  const bicimle = (v: unknown, ondalik: number, isaret: boolean) => {
+    if (typeof v === 'number') {
+      // Intl tr-TR ASCII tire üretir; sayfa tipografisi eksi işareti (U+2212) kullanır.
+      const m = v
+        .toLocaleString('tr-TR', {
+          minimumFractionDigits: ondalik,
+          maximumFractionDigits: ondalik,
+        })
+        .replace('-', '−');
+      return isaret && v > 0 ? '+' + m : m;
+    }
+    return String(v);
+  };
+
+  projeler.forEach(async (proje) => {
+    try {
+      const r = await fetch(`/projeler/${proje}/ozet.json`, { cache: 'no-cache' });
+      if (!r.ok) return;
+      const ozet = await r.json();
+      alanlar
+        .filter((a) => a.dataset.proje === proje)
+        .forEach((a) => {
+          const v = ozet[a.dataset.anahtar!];
+          if (v === undefined || v === null) return;
+          a.textContent = bicimle(v, parseInt(a.dataset.ondalik || '1'), a.dataset.isaret === '1');
+          if (ozet._tarih) a.title = `canlı değer · veri: ${ozet._tarih}`;
+          a.classList.add('yuklendi');
+        });
+    } catch {
+      /* statik yedek metin kalır */
+    }
+  });
+</script><style>
+  .canli-deger {
+    font-variant-numeric: tabular-nums;
+    border-bottom: 1px dotted var(--ink-30);
+    cursor: help;
+  }
+  .canli-deger.yuklendi {
+    border-bottom-color: color-mix(in srgb, var(--teal) 55%, transparent);
+  }
+</style>

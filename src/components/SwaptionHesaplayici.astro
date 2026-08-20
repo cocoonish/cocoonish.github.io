@@ -1,0 +1,248 @@
+---
+/**
+ * Swaption fiyatlayıcı — SONEXCEL "Swaption Pricer" sayfasının portu.
+ * Forward swap oranı ve annuity, bootstrap aracının yayınladığı eğriden
+ * türetilir. Black (log-normal, TL konvansiyonu) ve Bachelier (normal)
+ * paralel fiyatlanır; Greeks ve implied vol (Newton-Raphson) dahil.
+ */
+---
+
+<div class="hesap" id="swpt-hesap">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı · 03</span>
+    <span class="hesap-ad">Swaption — Black & Bachelier, Greeks, Implied Vol</span>
+  </div>
+
+  <div class="girdiler">
+    <label><span class="etiket">Expiry (yıl)</span>
+      <input type="number" id="sw-exp" value="1" step="0.25" min="0.25" max="9" /></label>
+    <label><span class="etiket">Alt swap tenoru (yıl)</span>
+      <input type="number" id="sw-ten" value="2" step="0.25" min="0.25" max="9" /></label>
+    <label><span class="etiket">Strike K (%)</span>
+      <input type="number" id="sw-k" value="35" step="0.25" /></label>
+    <label><span class="etiket">Black vol σ (%)</span>
+      <input type="number" id="sw-vol" value="25" step="0.5" min="1" /></label>
+    <label><span class="etiket">Nominal (TL)</span>
+      <input type="number" id="sw-nom" value="10000000" step="1000000" /></label>
+    <label><span class="etiket">Yön</span>
+      <select id="sw-yon"><option value="payer" selected>Payer</option><option value="receiver">Receiver</option></select></label>
+  </div>
+
+  <div class="orta">
+    <div><span class="etiket">Forward swap F (eğriden)</span><output class="ara-deger" id="sw-f">—</output></div>
+    <div><span class="etiket">Annuity A = Στ·DF</span><output class="ara-deger" id="sw-a">—</output></div>
+    <div><span class="etiket">d₁ / d₂</span><output class="ara-deger" id="sw-d">—</output></div>
+  </div>
+
+  <div class="fiyatlar">
+    <div class="fiyat">
+      <span class="etiket">Black fiyat (TL)</span>
+      <output class="sonuc-buyuk" id="sw-black">—</output>
+    </div>
+    <div class="fiyat">
+      <span class="etiket">Bachelier fiyat (TL)</span>
+      <output class="sonuc-buyuk sonuc-teal" id="sw-bach">—</output>
+    </div>
+  </div>
+
+  <div class="tablo-kab">
+    <table>
+      <thead><tr><th>Greek</th><th>Değer</th><th>TL karşılığı</th><th>Okunuşu</th></tr></thead>
+      <tbody id="sw-greeks"></tbody>
+    </table>
+  </div>
+
+  <div class="impl">
+    <span class="etiket">Implied vol — piyasa primi gir (decimal):</span>
+    <input type="number" id="sw-mkt" value="0.015" step="0.001" min="0.0001" />
+    <output class="ara-deger" id="sw-iv">—</output>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="sw-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Girdiler ve eğri değişince canlı güncellenir.</span>
+  </div>
+
+  <p class="hesap-dip">
+    Black: d₁ = [ln(F/K)+σ²T/2]/(σ√T); Payer = A·[F·N(d₁) − K·N(d₂)].
+    Bachelier: σ_N ≈ σ_Black × F; Payer = A·[(F−K)·N(d) + σ_N√T·n(d)].
+    TL piyasa konvansiyonu Black'tir; Bachelier düşük faiz ortamları için referanstır.
+    Annuity burada senaryo yerine bootstrap eğrisinin DF'leriyle hesaplanır (CSA
+    iskontolaması üretim ortamında ayrıca uygulanır).
+  </p>
+</div>
+
+<script>
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const yaz = (id: string, m: string) =>
+    ((document.getElementById(id) as HTMLElement).textContent = m);
+  const trS = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b });
+
+  // Standart normal CDF — Abramowitz-Stegun 7.1.26 (|hata| < 1.5e-7)
+  function N(x: number): number {
+    const t = 1 / (1 + 0.2316419 * Math.abs(x));
+    const d = Math.exp((-x * x) / 2) / Math.sqrt(2 * Math.PI);
+    const p =
+      d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    return x >= 0 ? 1 - p : p;
+  }
+  const n = (x: number) => Math.exp((-x * x) / 2) / Math.sqrt(2 * Math.PI);
+
+  function blackFiyat(F: number, K: number, s: number, T: number, A: number, payer: boolean) {
+    const sT = s * Math.sqrt(T);
+    const d1 = (Math.log(F / K) + (s * s * T) / 2) / sT;
+    const d2 = d1 - sT;
+    const p = payer ? A * (F * N(d1) - K * N(d2)) : A * (K * N(-d2) - F * N(-d1));
+    return { p, d1, d2 };
+  }
+
+  function hesapla() {
+    const egri = (window as any).tloisEgri;
+    if (!egri) return;
+    const { tau, df } = egri;
+
+    const Texp = oku('sw-exp'), ten = oku('sw-ten');
+    const K = oku('sw-k') / 100, vol = oku('sw-vol') / 100, nom = oku('sw-nom');
+    const payer = (document.getElementById('sw-yon') as HTMLSelectElement).value === 'payer';
+    const Tmat = Texp + ten;
+    if (Tmat > 10 + 1e-9) { yaz('sw-f', 'expiry+tenor ≤ 10Y olmalı'); return; }
+
+    let A = 0;
+    for (let t = Texp + tau; t <= Tmat + 1e-9; t += tau) A += tau * df(t);
+    const F = (df(Texp) - df(Tmat)) / A;
+    yaz('sw-f', '%' + trS(F * 100));
+    yaz('sw-a', A.toFixed(4));
+
+    const { p: pB, d1, d2 } = blackFiyat(F, K, vol, Texp, A, payer);
+    yaz('sw-d', d1.toFixed(3) + ' / ' + d2.toFixed(3));
+    yaz('sw-black', trS(pB * nom, 0));
+
+    // Bachelier: σ_N ≈ σ_Black × F
+    const sN = vol * F;
+    const dN = (F - K) / (sN * Math.sqrt(Texp));
+    const pN = payer
+      ? A * ((F - K) * N(dN) + sN * Math.sqrt(Texp) * n(dN))
+      : A * ((K - F) * N(-dN) + sN * Math.sqrt(Texp) * n(dN));
+    yaz('sw-bach', trS(pN * nom, 0));
+
+    // Greeks (Black)
+    const delta = payer ? A * N(d1) : A * (N(d1) - 1);
+    const gamma = (A * n(d1)) / (F * vol * Math.sqrt(Texp));
+    const vega = A * F * Math.sqrt(Texp) * n(d1) * 0.01;
+    const theta = (-A * F * vol * n(d1)) / (2 * Math.sqrt(Texp)) / 365;
+    const satir = (ad: string, dec: number, tl: number, yorum: string, b = 4) =>
+      `<tr><td>${ad}</td><td>${trS(dec, b)}</td><td>${trS(tl, 0)}</td><td class="yorum">${yorum}</td></tr>`;
+    (document.getElementById('sw-greeks') as HTMLElement).innerHTML =
+      satir('Delta', delta, delta * 1e-4 * nom, 'Forward 1bp → TL P&L') +
+      satir('Gamma', gamma, gamma * nom, "Delta'nın F'e duyarlılığı") +
+      satir('Vega (1% σ)', vega, vega * nom, 'Vol +1 puan → prim değişimi') +
+      satir('Theta (günlük)', theta, theta * nom, 'Bir gün geçince prim kaybı', 6);
+
+    // Implied vol — Newton-Raphson
+    const pMkt = oku('sw-mkt');
+    let s = 0.25;
+    for (let i = 0; i < 20; i++) {
+      const { p, d1: dd1 } = blackFiyat(F, K, s, Texp, A, payer);
+      const v = A * F * Math.sqrt(Texp) * n(dd1);
+      if (v < 1e-12) break;
+      const adim = (p - pMkt) / v;
+      s -= adim;
+      if (s <= 0.001) s = 0.001;
+      if (Math.abs(adim) < 1e-12) break;
+    }
+    yaz('sw-iv', '%' + trS(s * 100));
+  }
+
+  document.querySelectorAll('#swpt-hesap input, #swpt-hesap select').forEach((el) =>
+    el.addEventListener('input', hesapla)
+  );
+  document.addEventListener('egri-guncellendi', hesapla);
+  const swBtn = document.getElementById('sw-hesapla')!;
+  swBtn.addEventListener('click', () => {
+    hesapla();
+    swBtn.classList.add('tamam');
+    swBtn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => {
+      swBtn.classList.remove('tamam');
+      swBtn.textContent = 'Hesapla ↻';
+    }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.6rem;
+    padding: 0.9rem 1rem 0.4rem;
+  }
+  .orta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    padding: 0.5rem 1rem;
+  }
+  .orta .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .fiyatlar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--ink-15);
+    border-bottom: 1px solid var(--ink-15);
+    margin-top: 0.4rem;
+  }
+  .fiyat {
+    padding: 0.7rem 1rem;
+  }
+  .fiyat + .fiyat {
+    border-left: 1px solid var(--ink-15);
+  }
+  .fiyat .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .sonuc-teal {
+    color: var(--teal);
+  }
+  .tablo-kab {
+    padding: 0.6rem 1rem;
+    overflow-x: auto;
+  }
+  .tablo-kab :global(.yorum) {
+    font-family: var(--font-body);
+    font-style: italic;
+    color: var(--ink-50);
+    text-align: left;
+    padding-left: 0.8rem;
+  }
+  .impl {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.4rem 1rem 0.8rem;
+  }
+  .impl input {
+    width: 8rem;
+  }
+  .impl .etiket {
+    color: var(--ink-50);
+  }
+  @media (max-width: 640px) {
+    .girdiler {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .fiyatlar {
+      grid-template-columns: 1fr;
+    }
+    .fiyat + .fiyat {
+      border-left: none;
+      border-top: 1px solid var(--ink-15);
+    }
+  }
+</style>

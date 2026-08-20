@@ -1,0 +1,203 @@
+---
+/**
+ * DİBS YTM hesaplayıcısı — YTM_hesaplayici.xlsx portu (dönem dönem iskonto).
+ * Takvim vadeden geriye 6'şar ay kurulur; kesirli ilk dönem üssü w ile
+ * Excel'in "Üs = (Sıra−1)+w" yaklaşımı birebir uygulanır. Kote getiri
+ * Newton-Raphson ile çözülür (Excel'deki Hedef Ara'nın karşılığı).
+ * Doğrulama: iki örnek sayfa da 1e-6 hassasiyetle yeniden üretildi.
+ */
+---
+
+<div class="hesap" id="ytm-hesap">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı</span>
+    <span class="hesap-ad">DİBS YTM — Temiz Fiyattan Kote Getiri</span>
+  </div>
+
+  <div class="girdiler">
+    <label><span class="etiket">Vade (itfa)</span>
+      <input type="date" id="ytm-vade" value="2030-10-02" /></label>
+    <label><span class="etiket">Valör</span>
+      <input type="date" id="ytm-valor" value="2026-07-10" /></label>
+    <label><span class="etiket">Yıllık kupon (%)</span>
+      <input type="number" id="ytm-kupon" value="33.90" step="0.05" /></label>
+    <label><span class="etiket">Temiz fiyat</span>
+      <input type="number" id="ytm-temiz" value="96.80" step="0.05" /></label>
+  </div>
+
+  <div class="orta">
+    <div><span class="etiket">Önceki kupon / referans</span><output class="ara-deger" id="ytm-onceki">—</output></div>
+    <div><span class="etiket">Kalan kupon sayısı</span><output class="ara-deger" id="ytm-adet">—</output></div>
+    <div><span class="etiket">Dönem / geçen gün</span><output class="ara-deger" id="ytm-gunler">—</output></div>
+    <div><span class="etiket">w (kesirli ilk dönem)</span><output class="ara-deger" id="ytm-w">—</output></div>
+    <div><span class="etiket">İşlemiş faiz</span><output class="ara-deger" id="ytm-ai">—</output></div>
+    <div><span class="etiket">Kirli fiyat</span><output class="ara-deger" id="ytm-kirli">—</output></div>
+  </div>
+
+  <div class="sonuclar">
+    <div class="sonuc-ana">
+      <span class="etiket">Kote YTM (6A bileşik × 2)</span>
+      <output class="sonuc-buyuk" id="ytm-kote">—</output>
+    </div>
+    <div class="cevrimler etiket">
+      <span>Dönemsel (6A): <b id="ytm-donemsel">—</b></span>
+      <span>Yıllık bileşik (1+r)²−1: <b id="ytm-yillik">—</b></span>
+      <span>ACT/365 yıllık (XIRR eş): <b id="ytm-xirr">—</b></span>
+      <span>XIRR'in kote karşılığı: <b id="ytm-kote2">—</b></span>
+    </div>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="ytm-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Girdiler değişince canlı güncellenir.</span>
+  </div>
+
+  <p class="hesap-dip">
+    Konvansiyon: 6 aylık kupon (yıllık/2), dönem dönem iskonto, üs = (sıra−1)+w,
+    w = ilk kupona kalan gün / dönem günü. İlk kuponu henüz ödenmemiş kâğıtta referans
+    kendiliğinden ihraç tarihi olur (takvim vadeden geriye kurulur). Kısa/uzun düzensiz
+    ilk kuponlu kâğıtlar için dersteki gün/365 genel yaklaşımına bakın.
+  </p>
+</div>
+
+<script>
+  const yaz = (id: string, m: string) =>
+    ((document.getElementById(id) as HTMLElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b });
+  const gun = (a: Date, b: Date) => Math.round((b.getTime() - a.getTime()) / 86400000);
+  const tarih = (id: string) =>
+    new Date((document.getElementById(id) as HTMLInputElement).value + 'T00:00:00Z');
+  const gd = (d: Date) => d.toLocaleDateString('tr-TR', { timeZone: 'UTC' });
+
+  function hesapla() {
+    const vade = tarih('ytm-vade'), valor = tarih('ytm-valor');
+    const kuponYillik = parseFloat((document.getElementById('ytm-kupon') as HTMLInputElement).value) / 100;
+    const temiz = parseFloat((document.getElementById('ytm-temiz') as HTMLInputElement).value);
+    if (!(vade > valor) || !(kuponYillik > 0) || !(temiz > 0)) return;
+
+    // takvim: vadeden geriye 6'şar ay — valörden sonraki kuponlar + önceki referans
+    const kuponlar: Date[] = [];
+    let t = new Date(vade);
+    let emniyet = 0;
+    while (t > valor && emniyet++ < 200) {
+      kuponlar.unshift(new Date(t));
+      t = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() - 6, t.getUTCDate()));
+    }
+    const onceki = t;
+    const kupon6A = (kuponYillik / 2) * 100;
+    const donem = gun(onceki, kuponlar[0]);
+    const gecen = gun(onceki, valor);
+    const w = gun(valor, kuponlar[0]) / donem;
+    const ai = (kupon6A * gecen) / donem;
+    const kirli = temiz + ai;
+
+    yaz('ytm-onceki', gd(onceki));
+    yaz('ytm-adet', String(kuponlar.length));
+    yaz('ytm-gunler', donem + ' / ' + gecen);
+    yaz('ytm-w', w.toFixed(6));
+    yaz('ytm-ai', tr(ai, 4));
+    yaz('ytm-kirli', tr(kirli, 4));
+
+    const modelKirli = (kote: number) => {
+      const r = kote / 2;
+      let bd = 0;
+      kuponlar.forEach((k, i) => {
+        const cf = kupon6A + (i === kuponlar.length - 1 ? 100 : 0);
+        bd += cf / Math.pow(1 + r, i + w);
+      });
+      return bd;
+    };
+    // Newton — Excel Hedef Ara karşılığı
+    let kote = kuponYillik;
+    for (let i = 0; i < 60; i++) {
+      const f = modelKirli(kote) - kirli;
+      const df = (modelKirli(kote + 1e-7) - modelKirli(kote)) / 1e-7;
+      const adim = f / df;
+      kote -= adim;
+      if (!isFinite(kote) || kote <= -0.5) { kote = NaN; break; }
+      if (Math.abs(adim) < 1e-12) break;
+    }
+    if (!isFinite(kote)) { yaz('ytm-kote', 'çözülemedi'); return; }
+
+    yaz('ytm-kote', '%' + tr(kote * 100, 4));
+    yaz('ytm-donemsel', '%' + tr(kote * 50, 4));
+    yaz('ytm-yillik', '%' + tr((Math.pow(1 + kote / 2, 2) - 1) * 100, 4));
+
+    // ACT/365 yıllık bileşik (XIRR eşdeğeri)
+    const xirrKirli = (y: number) => {
+      let bd = 0;
+      kuponlar.forEach((k, i) => {
+        const cf = kupon6A + (i === kuponlar.length - 1 ? 100 : 0);
+        bd += cf / Math.pow(1 + y, gun(valor, k) / 365);
+      });
+      return bd;
+    };
+    let y = kote;
+    for (let i = 0; i < 60; i++) {
+      const f = xirrKirli(y) - kirli;
+      const df = (xirrKirli(y + 1e-7) - xirrKirli(y)) / 1e-7;
+      const adim = f / df;
+      y -= adim;
+      if (Math.abs(adim) < 1e-12) break;
+    }
+    yaz('ytm-xirr', '%' + tr(y * 100, 4));
+    yaz('ytm-kote2', '%' + tr(2 * (Math.sqrt(1 + y) - 1) * 100, 4));
+  }
+
+  document.querySelectorAll('#ytm-hesap input').forEach((el) =>
+    el.addEventListener('input', hesapla)
+  );
+  const ytmBtn = document.getElementById('ytm-hesapla')!;
+  ytmBtn.addEventListener('click', () => {
+    hesapla();
+    ytmBtn.classList.add('tamam');
+    ytmBtn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => { ytmBtn.classList.remove('tamam'); ytmBtn.textContent = 'Hesapla ↻'; }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.7rem;
+    padding: 0.9rem 1rem 0.4rem;
+  }
+  .orta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.8rem;
+    padding: 0.5rem 1rem;
+  }
+  .orta .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .sonuclar {
+    border-top: 1px solid var(--ink-15);
+    padding: 0.7rem 1rem 0.4rem;
+  }
+  .sonuc-ana .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .cevrimler {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1.6rem;
+    margin-top: 0.5rem;
+    color: var(--ink-50);
+  }
+  .cevrimler b {
+    color: var(--teal);
+  }
+  @media (max-width: 640px) {
+    .girdiler {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

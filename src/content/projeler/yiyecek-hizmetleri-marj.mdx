@@ -1,0 +1,448 @@
+---
+title: 'Yiyecek Hizmetleri: Fiyat/Maliyet Marjı'
+description: 'TCMB Ekonomi Notu 24/17''nin kamuya açık veriyle replikasyonu ve güncel aya uzatılması: 13 tarif, beş maliyet kalemi, dört konsept — 17 grafik, 18 senaryoluk duyarlılık ve proxy dökümüyle.'
+pubDate: 2026-08-07
+updatedDate: 2026-08-18
+tags: ['enflasyon', 'tüfe', 'marj', 'replikasyon']
+durum: 'aktif'
+kaynak: 'TCMB EVDS3 + TÜİK MEDAS + TÜİK Veri Portalı + Resmî Gazete'
+guncelleme: 'aylık — TÜFE yayınıyla birlikte'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+
+"Restoran fiyatları maliyetlerden hızlı mı arttı?" sorusu 2023'ten beri sorulur ama
+kamuya açık veriyle nadiren ölçülür. TCMB'nin Ekonomi Notu 24/17'si (Atabek Demirhan &
+Bahça, 2024) bunu TCMB'nin kendi mikro fiyat tabanıyla yapmıştı. Bu proje, **aynı kurguyu
+yalnızca kamuya açık veriyle** yeniden kurar, notun sonuçlarına karşı doğrular ve
+**<Deger proje="yiyecek-hizmetleri-marj" anahtar="donem" ondalik={1}>Temmuz 2026</Deger>**'ya
+uzatır.
+
+Bulgu tek cümleyle: 2023'te açılan fiyat/maliyet makası **kapanmadı, yüksek bir platoya
+oturdu** — ve fast-food'da açılmaya devam ediyor.
+
+<div class="not">
+  <span class="etiket">Bu sayfadaki oranlar kâr marjı düzeyi DEĞİLDİR</span>
+  Fiyat/maliyet oranı, 2013 Ocak = 1 çıpasına göre <em>göreli</em> seviyedir. "Oran 1,27"
+  demek "kâr marjı %27" demek değil; "2013 Ocak'a kıyasla fiyat, maliyetin 1,27 katı hızla
+  arttı" demektir. Marj <em>seviyesi</em> ancak bir çıpa varsayımıyla türetilebilir —
+  aşağıda ayrı bir bölümde, bandıyla birlikte veriliyor.
+</div>
+
+## Güncel okuma
+
+| Konsept | Fiyat/maliyet oranı | Uzun dönem ort. (2013–2022) | 18 senaryoluk aralık |
+| --- | --- | --- | --- |
+| Ev yemekleri | **<Deger proje="yiyecek-hizmetleri-marj" anahtar="oran_ev_yemekleri" ondalik={2}>1,27</Deger>** | <Deger proje="yiyecek-hizmetleri-marj" anahtar="uzun_ev_yemekleri" ondalik={2}>0,97</Deger> | <Deger proje="yiyecek-hizmetleri-marj" anahtar="duy_min_ev_yemekleri" ondalik={2}>1,19</Deger> – <Deger proje="yiyecek-hizmetleri-marj" anahtar="duy_max_ev_yemekleri" ondalik={2}>1,34</Deger> |
+| Kırmızı et | **<Deger proje="yiyecek-hizmetleri-marj" anahtar="oran_kirmizi_et" ondalik={2}>1,26</Deger>** | <Deger proje="yiyecek-hizmetleri-marj" anahtar="uzun_kirmizi_et" ondalik={2}>1,08</Deger> | <Deger proje="yiyecek-hizmetleri-marj" anahtar="duy_min_kirmizi_et" ondalik={2}>1,19</Deger> – <Deger proje="yiyecek-hizmetleri-marj" anahtar="duy_max_kirmizi_et" ondalik={2}>1,43</Deger> |
+| Tavuk | **<Deger proje="yiyecek-hizmetleri-marj" anahtar="oran_tavuk" ondalik={2}>1,51</Deger>** | <Deger proje="yiyecek-hizmetleri-marj" anahtar="uzun_tavuk" ondalik={2}>1,10</Deger> | <Deger proje="yiyecek-hizmetleri-marj" anahtar="duy_min_tavuk" ondalik={2}>1,11</Deger> – <Deger proje="yiyecek-hizmetleri-marj" anahtar="duy_max_tavuk" ondalik={2}>1,59</Deger> |
+| Fast-food | **<Deger proje="yiyecek-hizmetleri-marj" anahtar="oran_fast_food" ondalik={2}>1,68</Deger>** | <Deger proje="yiyecek-hizmetleri-marj" anahtar="uzun_fast_food" ondalik={2}>1,17</Deger> | <Deger proje="yiyecek-hizmetleri-marj" anahtar="duy_min_fast_food" ondalik={2}>1,57</Deger> – <Deger proje="yiyecek-hizmetleri-marj" anahtar="duy_max_fast_food" ondalik={2}>1,80</Deger> |
+
+Dört konseptin dördü de uzun dönem ortalamasının **üzerinde**. Maliyet tarafı iki yılda
+%<Deger proje="yiyecek-hizmetleri-marj" anahtar="maliyet_artisi_min" ondalik={1}>68,5</Deger>–%<Deger proje="yiyecek-hizmetleri-marj" anahtar="maliyet_artisi_max" ondalik={1}>76,0</Deger>
+arttı; en büyük katkı **<Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_lider_kalem" ondalik={1}>gida</Deger>**
+kaleminden (<Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_lider_puan" ondalik={1}>29,8</Deger> puan).
+
+## Şekil 01-03 — Makro bağlam: yemek hizmetleri enflasyonu nereye oturuyor
+
+Replikasyona girmeden önce manzara: yemek hizmetleri enflasyonu, gıdadan ve gıda-dışı
+manşetten nasıl ayrışıyor?
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/tufe_endeks.html"
+  baslik="TÜFE fiyat endeksleri (2019 Aralık = 100)"
+  no="01"
+  yukseklik={520}
+/>
+
+**Şekil 01 nasıl hesaplanıyor.** Üç seri, 2019 Aralık = 100'e yeniden bazlanır. "Gıda ve
+yemek hariç TÜFE" hazır bir seri değildir; manşet TÜFE'den gıda (01) ve yemek hizmetleri
+(111) alt kalemleri **yıllık resmî ağırlıklarla zincirlenerek** düşülür:
+
+$$
+I^{\text{hariç}}_t = I^{\text{hariç}}_{t-1}\cdot
+\frac{\pi^{\text{manşet}}_t - w^{\text{gıda}}\pi^{\text{gıda}}_t - w^{\text{yemek}}\pi^{\text{yemek}}_t}
+{1 - w^{\text{gıda}} - w^{\text{yemek}}}
+$$
+
+Yemek hizmetlerinin ağırlığı, grup 11 ağırlığının 111/11 payıyla çarpımından gelir
+(2025 temel başlık ağırlık dosyası).
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/tufe_aylik.html"
+  baslik="TÜFE fiyat endeksleri — aylık % değişim"
+  no="02"
+  yukseklik={480}
+/>
+
+**Şekil 02 nasıl hesaplanıyor.** Aynı üç serinin aylık yüzde değişimi. Aylık seri, akım
+fiyatlamadaki dönüşü yıllıktan **önce** gösterir — yıllık seri 12 ay boyunca eski baz
+etkisini taşır.
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/tufe_yillik.html"
+  baslik="TÜFE fiyat endeksleri — yıllık % değişim"
+  no="03"
+  yukseklik={480}
+/>
+
+**Şekil 03 nasıl hesaplanıyor.** Aynı serilerin 12 aylık değişimi. Sayfanın sonundaki
+"lokanta-oteller manşetle eşitlendi" bulgusu buradan okunur: yemek hizmetleri ile
+manşet arasındaki fark iki yıl önce (<Deger proje="yiyecek-hizmetleri-marj" anahtar="once_donem">Temmuz 2024</Deger>) <Deger proje="yiyecek-hizmetleri-marj" anahtar="yh_manset_fark_2y" ondalik={1}>18,6</Deger> puanken
+<Deger proje="yiyecek-hizmetleri-marj" anahtar="donem">Temmuz 2026</Deger>'da <Deger proje="yiyecek-hizmetleri-marj" anahtar="yh_manset_fark" ondalik={1}>0,3</Deger> puana indi (yemek hizmetleri %<Deger proje="yiyecek-hizmetleri-marj" anahtar="yh_yillik" ondalik={1}>32,1</Deger> · manşet %<Deger proje="yiyecek-hizmetleri-marj" anahtar="manset_yillik" ondalik={1}>31,8</Deger>). **Ama bu
+akım fiyatlamadır** — birikmiş seviye açıklığı Şekil 04'te durur.
+
+## Kurgu: dört aşama
+
+Not dört aşamalı bir zincir kurar; replikasyon aynısını izler.
+
+**1 — Maliyet ağırlıkları.** Notun Tablo 4'ü: **%21 işgücü, %49 gıda, %5 enerji, %10 kira,
+%15 diğer**. Bu ağırlıklar sabittir ve duyarlılık analizinde üç alternatif setle sınanır.
+
+**2 — Tarif düzeyi gıda maliyeti.** 13 tarif, notun ekindeki gramaj paylarıyla birebir
+kuruldu; her tarif bileşeni TÜİK madde sepetine eşlendi (`src/endeks.py`). Konsept gıda
+maliyeti, tariflerin ağırlıklı ortalamasıdır.
+
+**3 — Diğer kalemler.** İşgücü brüt asgari ücretten (2024'te ara zam yok; 2025: 26.005,50;
+2026: 33.030), kira TÜFE-kiradan, enerji ve diğer TÜFE alt kalemlerinden gelir.
+
+**4 — Fiyat tarafı.** Yemek hizmeti maddelerinin fiyat endeksi. Fiyat/maliyet oranı, iki
+endeksin 2013 Ocak = 100 tabanındaki oranıdır.
+
+## Şekil 04-09 — Fiyat/maliyet oranı: birleşik, normalize ve konsept konsept
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/oran_konseptler.html"
+  baslik="Fiyat / maliyet oranı — dört konsept (2013 Ocak = 1)"
+  no="04"
+  yukseklik={560}
+/>
+
+**Şekil 04 nasıl hesaplanıyor.** Her konsept için önce fiyat endeksi $P_t$ ve maliyet
+endeksi $C_t$ ayrı ayrı kurulur (ikisi de 2013 Ocak = 100), sonra:
+
+$$
+R_t = \frac{P_t / P_0}{C_t / C_0}, \qquad t_0 = \text{2013 Ocak}
+$$
+
+$R_t > 1$, fiyatın maliyetten hızlı arttığı anlamına gelir. Kesikli 1,0 çizgisi çıpadır.
+Uzun dönem ortalaması **2013–2022** penceresinden alınır — notun "normal" saydığı dönem;
+2023 sonrası bilinçli olarak dışarıda bırakılır, çünkü ölçülmek istenen sapmanın kendisidir.
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/oran_normalize.html"
+  baslik="Fiyat/maliyet oranları — ev yemekleri = 1"
+  no="05"
+  yukseklik={480}
+/>
+
+**Şekil 05 nasıl hesaplanıyor.** Aynı oranların ev yemeklerine bölünmüş hâli:
+$R^{konsept}_t / R^{ev}_t$. Konseptler arası **ayrışmayı** izole eder — genel makas
+hareketini böler, geriye yalnız göreli fark kalır. Üç dönem yan yana: 2013–2022
+ortalaması, <Deger proje="yiyecek-hizmetleri-marj" anahtar="once_donem">Temmuz 2024</Deger> ve <Deger proje="yiyecek-hizmetleri-marj" anahtar="donem">Temmuz 2026</Deger>.
+
+Okuma: fast-food/ev oranı uzun dönemde <Deger proje="yiyecek-hizmetleri-marj" anahtar="rel_uzun_fast_food" ondalik={2}>1,20</Deger> iken <Deger proje="yiyecek-hizmetleri-marj" anahtar="once_donem_kisa">Tem-2024</Deger>'te <Deger proje="yiyecek-hizmetleri-marj" anahtar="rel2y_fast_food" ondalik={2}>1,25</Deger>, <Deger proje="yiyecek-hizmetleri-marj" anahtar="donem_kisa">Tem-2026</Deger>'da **<Deger proje="yiyecek-hizmetleri-marj" anahtar="rel_fast_food" ondalik={2}>1,31</Deger>** —
+ayrışma daralmadı, genişledi. Kırmızı et/ev ise <Deger proje="yiyecek-hizmetleri-marj" anahtar="rel2y_kirmizi_et" ondalik={2}>0,95</Deger>→<Deger proje="yiyecek-hizmetleri-marj" anahtar="rel_kirmizi_et" ondalik={2}>0,99</Deger> ile ev yemeklerine yakınsadı;
+kırmızı et enflasyonunun (girdi maliyeti) yüksek seyri bu konseptte makası dar tutuyor.
+
+### Konsept konsept: her birinin kendi hikâyesi
+
+Birleşik grafik dört seriyi yan yana koyar; aşağıdaki dört panel her konsepti **kendi
+uzun dönem ortalamasına karşı** gösterir. Üç ek katman taşırlar: konsepte özgü 2013–2022
+ortalama çizgisi (değeri etiketli), **Nisan 2022 splice işareti** — fiyat tarafının
+proxy'ye geçtiği an — ve <Deger proje="yiyecek-hizmetleri-marj" anahtar="once_donem">Temmuz 2024</Deger> ile <Deger proje="yiyecek-hizmetleri-marj" anahtar="donem">Temmuz 2026</Deger> noktalarının işaretlenmesi. Makasın
+ne zaman açıldığını ve kapanıp kapanmadığını konsept bazında burada okursunuz.
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/oran_ev_yemekleri.html"
+  baslik="Fiyat/maliyet oranı — ev yemekleri"
+  no="06"
+  yukseklik={460}
+/>
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/oran_kirmizi_et.html"
+  baslik="Fiyat/maliyet oranı — kırmızı et ağırlıklı"
+  no="07"
+  yukseklik={460}
+/>
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/oran_tavuk.html"
+  baslik="Fiyat/maliyet oranı — tavuk eti ağırlıklı"
+  no="08"
+  yukseklik={460}
+/>
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/oran_fast_food.html"
+  baslik="Fiyat/maliyet oranı — fast-food"
+  no="09"
+  yukseklik={460}
+/>
+
+**Dört panel nasıl hesaplanıyor.** Seri Şekil 04'ün aynısıdır ($R_t = (P_t/P_0)/(C_t/C_0)$);
+farkı sunumdadır. Kesikli yatay çizgi o konseptin **2013–2022 ortalamasıdır** — makasın
+"normal" seviyesi. Noktalı dikey çizgi **Nisan 2022**'dir: TÜİK madde fiyatı yayınının
+durduğu, fiyat tarafının 5'li grup endeksleriyle uzatılmaya başlandığı tarih (PROXY 2).
+Bu çizginin **sağındaki** hareket, solundakinden daha zayıf kanıttır — ürün-özel fiyat
+sıçramaları agregatta törpülenir.
+
+Panellerin birlikte söylediği: ev yemeklerinde makas 2023'te açıldı ve **tam plato**
+(1,27 → 1,27); kırmızı ette maliyet baskısı makası dar tuttu; tavukta ve fast-food'da
+açılma sürüyor — fast-food ortalamasının 1,4 katı üzerinde.
+
+## Şekil 10-12 — Endeksler ve bileşenler
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/maliyet_endeksleri.html"
+  baslik="Konsept maliyet endeksleri (2013 Ocak = 100, log ölçek)"
+  no="10"
+  yukseklik={520}
+/>
+
+**Şekil 10 nasıl hesaplanıyor.** Konsept maliyeti beş kalemin ağırlıklı geometrik
+bileşimidir:
+
+$$
+C_t = \sum_{j} w_j \cdot \frac{X_{j,t}}{X_{j,0}} \times 100,
+\qquad w = (0{,}21;\ 0{,}49;\ 0{,}05;\ 0{,}10;\ 0{,}15)
+$$
+
+Gıda kalemi ($j=$ gıda) tarif düzeyinden gelir: 13 tarifin gramaj paylarıyla ağırlıklı
+madde fiyatları. Log ölçek kullanıldı — yedi katı aşan artışlarda doğrusal eksen erken
+dönemi okunamaz hale getirir.
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/fiyat_endeksleri.html"
+  baslik="Konsept fiyat endeksleri (2013 Ocak = 100, log ölçek)"
+  no="11"
+  yukseklik={520}
+/>
+
+**Şekil 11 nasıl hesaplanıyor.** Yemek hizmeti maddelerinin fiyat endeksi. Nisan 2022'ye
+kadar MEDAS ortalama madde fiyatlarının rölatifi; sonrası COICOP-2018 5'li grup
+endeksleriyle eklemlenir (aşağıdaki PROXY 2).
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/maliyet_bilesenleri.html"
+  baslik="Maliyet bileşenleri: işgücü, gıda, enerji, kira, diğer"
+  no="12"
+  yukseklik={520}
+/>
+
+**Şekil 12 nasıl hesaplanıyor.** Beş kalemin ham endeksleri, ağırlıklandırılmadan.
+Kalemler arası hız farkı burada görünür: **kira**, %10'luk küçük ağırlığına rağmen iki
+yılda +%160 ile en hızlı artan kalemdir.
+
+## Şekil 13 — Maliyet artışının kalem katkıları
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/katki_ayristirma.html"
+  baslik="Maliyet artışının kalem katkıları, iki yıl önce → güncel ay (tarihler grafik başlığında)"
+  no="13"
+  yukseklik={520}
+/>
+
+**Şekil 13 nasıl hesaplanıyor.** Kalem $j$'nin iki yıllık katkısı, ağırlığı çarpı kendi
+artışıdır:
+
+$$
+\text{katkı}_j = w_j \cdot \left(\frac{X_{j,T}}{X_{j,0}} - 1\right) \times 100
+\quad\text{(puan)},
+\qquad \sum_j \text{katkı}_j = \text{toplam maliyet artışı}
+$$
+
+Sütun yüksekliği toplam artıştır. Okuma (konseptler arası aralık): gıda <Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_gida_min" ondalik={1}>24,2</Deger>–<Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_gida_max" ondalik={1}>33,1</Deger> puan, **işgücü <Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_iscilik_min" ondalik={1}>17,0</Deger>–<Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_iscilik_max" ondalik={1}>20,0</Deger>**, **kira
+<Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_kira_min" ondalik={1}>10,1</Deger>–<Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_kira_max" ondalik={1}>12,0</Deger>**, diğer <Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_diger_min" ondalik={1}>8,4</Deger>–<Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_diger_max" ondalik={1}>9,9</Deger>, enerji <Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_enerji_min" ondalik={1}>2,4</Deger>–<Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_enerji_max" ondalik={1}>2,8</Deger>.
+
+**Asgari ücret kanalı belirgin rahatlama sağladı.** 2025 zammı (%30), 2024 sonu
+enflasyonunun (%44,4) 14 puan altında kaldı; 2026 zammı (%27) 2025 sonu enflasyona (%30,9)
+yakın. Ücretler enflasyona endekslenseydi işgücü katkısı iki yılda ~8–10 puan daha yüksek
+olurdu — fiyat/maliyet platosunun bir bölümü bu **reel ücret erozyonunun** marj üzerindeki
+rahatlatıcı etkisiyle uyumlu.
+
+## Şekil 14 — Food-cost oranı: çıpasız doğrulama
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/food_cost.html"
+  baslik="Food-cost oranı — porsiyon gramajıyla, çıpa varsayımı olmadan"
+  no="14"
+  yukseklik={540}
+/>
+
+**Şekil 14 nasıl hesaplanıyor.** Bu, oranların **çıpasız** karşılığıdır: tarifin porsiyon
+gramajından gıda maliyeti TL olarak hesaplanır ve satış fiyatına bölünür:
+
+$$
+\text{food-cost}_t = \frac{\sum_i g_i \cdot p_{i,t}}{P_t^{\text{satış}}} \times 100
+$$
+
+$g_i$ tarifteki madde gramajı, $p_{i,t}$ birim fiyattır. 2013 çıpasına ihtiyaç duymaz —
+bu yüzden bağımsız bir doğrulamadır. Aynı yönü gösteriyor: tüm yemeklerde oran 2013–2022
+ortalamasının altında (çorba %19→%14, fasulye %17→%10, pizza %31→%22). **En küçük düşüş
+Adana kebapta (%38→%37)** — kırmızı et maliyet baskısının makası dar tuttuğunun maliyet
+tarafı kanıtı.
+
+## Şekil 15 — İma edilen kârlılık: senaryolu türetim
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/ima_marj.html"
+  baslik="İma edilen satış kârlılığı — merkez senaryo (m₀ = %22,5)"
+  no="15"
+  yukseklik={520}
+/>
+
+**Şekil 15 nasıl hesaplanıyor.** Oranlar tek başına marj *seviyesi* vermez; seviye ancak
+bir çıpa varsayımıyla türetilebilir. Notun kendi dipnotundaki sektör derneği (TURYİD)
+bandı — işletmeler tipik olarak %70–85 maliyet, **%15–30 kârlılıkla** çalışır — 2013–2022
+"normal" dönem ortalamasına çıpalanır:
+
+$$
+m_t = 1 - (1 - m_0)\cdot\frac{\bar{R}}{R_t}
+$$
+
+$m_0$ çıpa marjı (merkez: %22,5), $\bar{R}$ normal dönem ortalama oranı, $R_t$ güncel
+orandır. <Deger proje="yiyecek-hizmetleri-marj" anahtar="donem">Temmuz 2026</Deger> merkez senaryo:
+
+| Konsept | İma edilen kârlılık | Bant (m₀ = %15–30) |
+| --- | --- | --- |
+| Ev yemekleri | ~%<Deger proje="yiyecek-hizmetleri-marj" anahtar="marj_ev_yemekleri" ondalik={1}>40,7</Deger> | %35–46 |
+| Kırmızı et | ~%<Deger proje="yiyecek-hizmetleri-marj" anahtar="marj_kirmizi_et" ondalik={1}>33,6</Deger> | %27–40 |
+| Tavuk | ~%<Deger proje="yiyecek-hizmetleri-marj" anahtar="marj_tavuk" ondalik={1}>43,7</Deger> | %38–49 |
+| Fast-food | ~%<Deger proje="yiyecek-hizmetleri-marj" anahtar="marj_fast_food" ondalik={1}>45,9</Deger> | %41–51 |
+
+Bu **mekanik bir türetimdir**: kalite, ürün kompozisyonu ve verimlilik değişimlerini de
+"marj" sayar ve fiyat tarafındaki proxy kısıtlarını taşır. Düzey okuması için **bant**,
+yön okuması için **merkez senaryo** esas alınmalıdır. Gerçekleşen marjlarla doğrulama
+için KAP'taki halka açık yeme-içme şirketlerinin brüt marjları ve TÜİK Yıllık
+Sanayi-Hizmet İstatistikleri'ndeki (NACE I-56) brüt işletme artığı/ciro oranı izlenebilir.
+
+## Şekil 16 — Duyarlılık: bulgu varsayımlara dayanıklı mı?
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/duyarlilik.html"
+  baslik="18 senaryoda güncel ay fiyat/maliyet oranı (ay grafik başlığında)"
+  no="16"
+  yukseklik={520}
+/>
+
+**Şekil 16 nasıl hesaplanıyor.**
+<Deger proje="yiyecek-hizmetleri-marj" anahtar="senaryo_adet" ondalik={0}>18</Deger>
+koşu = **3 ağırlık seti × 3 kira göstergesi × tür kaması açık/kapalı**. Kutu genişliği
+bulgunun varsayımlara duyarlılığını gösterir: dar kutu = sonuç sağlam.
+
+Üç ana bulgu (plato, fast-food açıklığı, konseptler arası sıralama) **18 senaryonun
+hepsinde** korunuyor. Kira için TÜFE-kira yerine **Yeni Kiracı Kira Endeksi** kullanılırsa
+maliyetler yükselir, oranlar ~0,1 aşağı iner; işyeri kirasını TÜFE-kirasından hızlı artmış
+sayan bu senaryo, notun Perakende Ödeme Sistemi verisine muhtemelen daha yakındır.
+
+## Veri kaynakları
+
+| Kaynak | İçerik | Dönem |
+| --- | --- | --- |
+| TCMB EVDS3 API | TÜFE (2025=100, COICOP-2018, 2005'e geri taşınmış, 5'li düzey); TÜFE (2003=100, arşiv); Yİ-ÜFE; Yeni Kiracı Kira Endeksi | 2005/01–2026/07 |
+| TÜİK MEDAS | Tüketici Madde Fiyatları (2003=100) — 40 madde (8 yemek hizmeti + 32 gıda girdisi) | 2005/01–**2022/04** (yayın durdu) |
+| TÜİK MEDAS | Tarım-ÜFE (2020=100) tür detayı: sığır-besi (01.42), kümes (01.47), koyun-keçi (01.45) | 2020/01–2026/06 |
+| TÜİK Veri Portalı | Hizmet ciro endeksi (2015=100, arşiv); TÜFE ağırlık tabloları | — |
+| Resmî Gazete / AÜTK | Brüt asgari ücret (2024'te ara zam yok; 2025: 26.005,50; 2026: 33.030) | 2013–2026 |
+
+## Proxy'ler: neyi ölçemiyoruz
+
+Not, TCMB'nin **mikro fiyat tabanını** kullanmıştı; o taban kamuya kapalı. Replikasyonun
+üç yerinde proxy kullanmak zorunda kaldık ve bunlar sonuçların yorumunu doğrudan etkiler.
+
+**PROXY 1 — Madde endeksi yerine madde ortalama fiyatı.** TÜİK madde *endeksi* kamuya açık
+değil; madde *ortalama fiyatının* rölatifi kullanıldı.
+
+**PROXY 2 — Nisan 2022 kırılması.** Madde fiyatı yayını durdu; sonrası COICOP-2018 5'li
+grup endeksleriyle eklemlendi. Dana/tavuk ayrımı Tarım-ÜFE tür kaması ile korundu
+(`tur_duzeltme=False` ile kapatılabilir — duyarlılık analizinde iki yönü de var).
+
+**PROXY 3 — Fiyat tarafında tür ayrımı yok.** TÜİK yapısında kebap/pide/döner maddeleri
+kırmızı et / tavuk ayrımı içermez; fark yalnızca **maliyet** tarafından gelir. Bu, aşağıdaki
+replikasyon sapmalarının ana kaynağıdır.
+
+## Replikasyon doğrulaması
+
+Notun kendi sayılarına karşı (sabit; veri tazelendikçe değişmez):
+
+- **Ev yemekleri Temmuz 2024 hedefini tutturdu:** 1,27 ≈ 1,30.
+- **Uzun dönem ortalamaları dört konseptte de ±0,03 bandında** — fast-food'da birebir
+  (1,17 = 1,17).
+- **Maliyet katları (Ara-2019 → Tem-2024):** kırmızı et 7,9 (not: 8,1; YKKE kira
+  senaryosunda 8,4), ev yemekleri 6,3 (not: 6,6).
+- **Açık kalan yerler:** kırmızı et (1,20 vs 1,54), tavuk (1,41 vs 1,79), fast-food
+  (1,58 vs 2,08). Kaynağı PROXY 3: 2022 sonrası fiyatlar agregatla (11111/11112)
+  uzatılınca ürün-özel fiyat sıçramaları törpüleniyor.
+- Buna rağmen notun **nitel sıralaması** (fast-food > tavuk > ev; kırmızı ette maliyet
+  baskısı nedeniyle dar makas) her duyarlılık senaryosunda korunuyor.
+
+**2026 baz değişimi sorun yaratmadı:** geri taşınmış 2025=100 serisi, eski serinin birebir
+yeniden ölçeklemesi (aylık fark ≤0,007 puan); Ocak 2026 zinciri tutarlı.
+
+## 2024 sonrası: makas kapanmadı
+
+1. **Kırılma tersine dönmedi.** <Deger proje="yiyecek-hizmetleri-marj" anahtar="once_donem">Temmuz 2024</Deger> → <Deger proje="yiyecek-hizmetleri-marj" anahtar="donem">Temmuz 2026</Deger>: ev yemekleri <Deger proje="yiyecek-hizmetleri-marj" anahtar="oran2y_ev_yemekleri" ondalik={2}>1,27</Deger>→<Deger proje="yiyecek-hizmetleri-marj" anahtar="oran_ev_yemekleri" ondalik={2}>1,27</Deger>,
+   kırmızı et <Deger proje="yiyecek-hizmetleri-marj" anahtar="oran2y_kirmizi_et" ondalik={2}>1,20</Deger>→<Deger proje="yiyecek-hizmetleri-marj" anahtar="oran_kirmizi_et" ondalik={2}>1,26</Deger>, tavuk <Deger proje="yiyecek-hizmetleri-marj" anahtar="oran2y_tavuk" ondalik={2}>1,41</Deger>→<Deger proje="yiyecek-hizmetleri-marj" anahtar="oran_tavuk" ondalik={2}>1,51</Deger>, fast-food <Deger proje="yiyecek-hizmetleri-marj" anahtar="oran2y_fast_food" ondalik={2}>1,58</Deger>→<Deger proje="yiyecek-hizmetleri-marj" anahtar="oran_fast_food" ondalik={2}>1,68</Deger>. Oranlar uzun dönem
+   ortalamalarının hâlâ <Deger proje="yiyecek-hizmetleri-marj" anahtar="kat_min" ondalik={1}>1,2</Deger>–<Deger proje="yiyecek-hizmetleri-marj" anahtar="kat_max" ondalik={1}>1,4</Deger> katı üzerinde. Bu satırdaki sayılar her veri koşusunda yeniden
+   yazılır; "tersine döndü" hükmü, ilk sütunun ikinciyi belirgin biçimde aşmasıyla düşer.
+2. **Kira kalemi küçük ağırlığına rağmen en hızlı kalem:** iki yılda +%<Deger proje="yiyecek-hizmetleri-marj" anahtar="kira_2y_artis" ondalik={0}>160</Deger> (katkı
+   <Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_kira_min" ondalik={1}>10,1</Deger>–<Deger proje="yiyecek-hizmetleri-marj" anahtar="katki_kira_max" ondalik={1}>12,0</Deger> puan). Kira enflasyonu iki yıllık pencerede %<Deger proje="yiyecek-hizmetleri-marj" anahtar="kira_yillik_zirve" ondalik={1}>122,3</Deger> zirvesinden (<Deger proje="yiyecek-hizmetleri-marj" anahtar="kira_yillik_zirve_ay">Temmuz 2024</Deger>)
+   %<Deger proje="yiyecek-hizmetleri-marj" anahtar="kira_yillik" ondalik={1}>45,3</Deger>'e geriledi; son üç ayın yıllıklandırılmış temposu ~%<Deger proje="yiyecek-hizmetleri-marj" anahtar="kira_3ay_yillik" ondalik={1}>35,3</Deger>. Tempo yıllık
+   orana yakınsadıkça kira katkısı da o oranda küçülür (~%35 tempoyla 12 ay sonrası için
+   ~3,5–4,5 puan bandı) — maliyet enflasyonundaki dezenflasyonun ana kaynaklarından biri.
+3. **Konseptler arası ayrışma daralmadı:** fast-food/ev oranı uzun dönemde <Deger proje="yiyecek-hizmetleri-marj" anahtar="rel_uzun_fast_food" ondalik={2}>1,20</Deger> iken
+   <Deger proje="yiyecek-hizmetleri-marj" anahtar="once_donem_kisa">Tem-2024</Deger>'te <Deger proje="yiyecek-hizmetleri-marj" anahtar="rel2y_fast_food" ondalik={2}>1,25</Deger>, <Deger proje="yiyecek-hizmetleri-marj" anahtar="donem_kisa">Tem-2026</Deger>'da <Deger proje="yiyecek-hizmetleri-marj" anahtar="rel_fast_food" ondalik={2}>1,31</Deger>. Kırmızı et/ev <Deger proje="yiyecek-hizmetleri-marj" anahtar="rel2y_kirmizi_et" ondalik={2}>0,95</Deger>→<Deger proje="yiyecek-hizmetleri-marj" anahtar="rel_kirmizi_et" ondalik={2}>0,99</Deger> ile ev yemeklerine
+   yakınsadı.
+4. **Lokanta-oteller enflasyonunun manşetle eşitlenmesi kısmen kompozisyon etkisi:**
+   lokanta-oteller %<Deger proje="yiyecek-hizmetleri-marj" anahtar="lokanta_yillik" ondalik={1}>31,7</Deger> ≈ manşet %<Deger proje="yiyecek-hizmetleri-marj" anahtar="manset_yillik" ondalik={1}>31,8</Deger> görünüyor ama yemek hizmetleri %<Deger proje="yiyecek-hizmetleri-marj" anahtar="yh_yillik" ondalik={1}>32,1</Deger> ile manşetin
+   <Deger proje="yiyecek-hizmetleri-marj" anahtar="yh_manset_fark" ondalik={1}>0,3</Deger> puan üzerinde; konaklama %<Deger proje="yiyecek-hizmetleri-marj" anahtar="konaklama_yillik" ondalik={1}>27,2</Deger> ile altında ve grubu aşağı çekiyor. Yine de farkın
+   iki yıl önceki <Deger proje="yiyecek-hizmetleri-marj" anahtar="yh_manset_fark_2y" ondalik={1}>18,6</Deger> puandan <Deger proje="yiyecek-hizmetleri-marj" anahtar="yh_manset_fark" ondalik={1}>0,3</Deger> puana inmesi **akım** fiyatlamada güçlü bir normalleşme
+   sinyali — ancak fiyat/maliyet **seviyesindeki** birikmiş açıklık yerinde duruyor.
+
+## Yapısal seviye kayması mı, kademeli düzeltme mi?
+
+İki yıllık platonun ardından ayrımı üç gösterge yapacak:
+
+1. *Yemek hizmetleri enflasyonu − konsept maliyet enflasyonu* farkının **işareti**; kalıcı
+   negatife dönmeden oran gerilemez (güncel ay, konseptler arası: <Deger proje="yiyecek-hizmetleri-marj" anahtar="yh_maliyet_fark_min" ondalik={1}>−7,6</Deger> … <Deger proje="yiyecek-hizmetleri-marj" anahtar="yh_maliyet_fark_max" ondalik={1}>+12,7</Deger> puan;
+   yemek hizmetleri enflasyonu %<Deger proje="yiyecek-hizmetleri-marj" anahtar="yh_yillik" ondalik={1}>32,1</Deger> ile konsept maliyet enflasyonlarının ortasında).
+2. Kira ve ücret dezenflasyonunun 2027'de maliyet enflasyonunu ~%20'nin altına çekmesine
+   **fiyatlamanın eşlik edip etmediği**.
+3. Talep göstergeleri (kartla yeme-içme harcaması, hizmet ciro) ile fiyat duyarlılığının
+   canlanması.
+
+Üçüncü kriterin veri tarafı:
+
+<GrafikEmbed
+  src="/projeler/yiyecek-hizmetleri-marj/hizmet_ciro.html"
+  baslik="Hizmet ciro endeksleri — yıllık % değişim"
+  no="17"
+  yukseklik={470}
+/>
+
+**Şekil 17 nasıl hesaplanıyor.** TÜİK Ticaret ve Hizmet Ciro Endeksleri (2015=100), NACE
+bölümleri bazında. Aylık arındırılmamış endekslerin **yıllık ortalaması** alınır, sonra
+yıldan yıla yüzde değişim hesaplanır. Cari fiyatlarla olduğu için reel talebi değil
+**nominal ciroyu** ölçer: fiyat artışı ile hacim artışını ayırmaz. Bu yüzden tek başına
+talep göstergesi değildir — enflasyonla birlikte okunmalıdır. Konaklama-yiyecek (I)
+bölümünün manşet hizmet cirosundan ayrışması, sektöre özgü talep hareketinin izidir.
+
+Mevcut veri, "genele yaygın enflasyon döneminde yükselen marjların, dezenflasyon
+başladıktan sonra da **nominal katılık** göstererek yeni bir yapısal seviyede kaldığı"
+yorumunu destekliyor. Kademeli düzeltmeye dair ilk zayıf işaret yalnızca **kırmızı et**
+konseptinde (maliyet baskısı kaynaklı) görülüyor.
+
+## Sınırlar ve yorum notları
+
+- **Oranlar kâr marjı seviyesi değildir** (sayfanın başındaki uyarı). Seviye okuması için
+  Şekil 15'in bandı kullanılır.
+- **Nisan 2022 sonrası madde düzeyi ve tür ayrımı proxy'dir.** Duyarlılık tablosunda üç
+  ağırlık seti × üç kira göstergesi × kama açık/kapalı 18 senaryoda ana bulgular
+  dayanıklıdır.
+- **Kira göstergesi seçimi sonucu kaydırır:** TÜFE-kira yerine Yeni Kiracı Kira Endeksi
+  maliyetleri yükseltir, oranları ~0,1 aşağı çeker.
+- Replikasyon TCMB'nin mikro fiyat tabanını **kullanamaz**; bu yüzden düzey farkları
+  (kırmızı et, tavuk, fast-food) beklenen bir kısıttır, hata değil.

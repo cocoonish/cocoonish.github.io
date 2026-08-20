@@ -1,0 +1,215 @@
+---
+/**
+ * DV01 konvansiyon hesaplayıcısı — TRY DV01 rehberinin kalbi.
+ * Tek bulletli bir bacak için aynı DF'ten üç farklı DV01 çıkar; fark
+ * bump konvansiyonundan gelir:
+ *   sürekli : DV01 = N·t·DF·1e-4
+ *   simple  : DV01 = N·t·DF²·1e-4
+ *   yıllık  : DV01 = N·[t/(1+z_ann)]·DF·1e-4
+ * Oran (sürekli/simple) = 1/DF = 1 + z·t → yüksek faizde patlar.
+ * Ayrıca braket kontrolü ve nominal geri-çözme (sağlama refleksleri).
+ * Vaka doğrulaması: N=1,407 mlr · t=1,2822 · z=%45 → 72.542 / 80.192 / 114.399.
+ */
+---
+
+<div class="hesap" id="dv01-konv">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı</span>
+    <span class="hesap-ad">DV01 — Aynı DF, Üç Konvansiyon</span>
+  </div>
+
+  <p class="hesap-yonerge">
+    Tek bulletli bir bacak (FX forward'ın TRY ayağı, zero-coupon bond) için
+    nominal, vade ve <b>simple</b> kotasyonlu zero girin. Üç bump konvansiyonunun
+    DV01'i, aralarındaki oran ve sistem çıktısını sınamak için braket/geri-çözme
+    kontrolleri hesaplanır.
+  </p>
+
+  <div class="girdiler">
+    <label><span class="etiket">Bacak nominali (TRY)</span>
+      <input type="number" id="dk-n" value="1407000000" step="10000000" /></label>
+    <label><span class="etiket">Vade t (yıl)</span>
+      <input type="number" id="dk-t" value="1.2822" step="0.05" min="0.01" /></label>
+    <label><span class="etiket">Zero z (simple, %)</span>
+      <input type="number" id="dk-z" value="45" step="0.5" min="0.01" /></label>
+    <label><span class="etiket">Sistem DV01'i (TL/bp, ops.)</span>
+      <input type="number" id="dk-sis" value="110000" step="1000" /></label>
+  </div>
+
+  <div class="orta">
+    <div><span class="etiket">DF</span><output class="ara-deger" id="dk-df">—</output></div>
+    <div><span class="etiket">Sürekli eşdeğer zero</span><output class="ara-deger" id="dk-zc">—</output></div>
+    <div><span class="etiket">Yıllık bileşik eşdeğer</span><output class="ara-deger" id="dk-za">—</output></div>
+    <div><span class="etiket">Oran (sürekli / simple) = 1/DF</span><output class="ara-deger" id="dk-oran">—</output></div>
+  </div>
+
+  <div class="tablo-kab">
+    <table>
+      <thead><tr><th>Bump konvansiyonu</th><th>Formül</th><th>DV01 (TL/bp)</th><th>Simple'a oran</th></tr></thead>
+      <tbody id="dk-tablo"></tbody>
+    </table>
+  </div>
+
+  <div class="saglama">
+    <p class="blok-baslik etiket">Sağlama refleksleri</p>
+    <div class="sag-satir">
+      <div><span class="etiket">Braket [simple, sürekli]</span><output class="ara-deger" id="dk-braket">—</output></div>
+      <div><span class="etiket">Sistem değeri bu aralıkta mı?</span><output class="ara-deger" id="dk-brakettest">—</output></div>
+    </div>
+    <div class="sag-satir">
+      <div><span class="etiket">Nominal geri-çözme: DV01/(t·DF·1e−4)</span><output class="ara-deger" id="dk-geri">—</output></div>
+      <div><span class="etiket">Girilen nominale oranı</span><output class="ara-deger" id="dk-gerioran">—</output></div>
+    </div>
+    <p class="mini-not" id="dk-yorum">—</p>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="dk-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Girdiler değişince canlı güncellenir.</span>
+  </div>
+
+  <p class="hesap-dip">
+    Üç sayı da doğrudur; farklı soruların cevabıdır. "Simple par kotasyonu 1bp
+    oynarsa" simple sütununu, "sürekli zero eğriyi 1bp bump'larsam" sürekli
+    sütununu verir. Oran <b>1/DF = 1 + z·t</b> olduğundan fark faiz seviyesi ve
+    vadeyle büyür: G10'da ihmal edilebilir, TRY'de 1,5 katı bulur.
+  </p>
+</div>
+
+<script>
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const yaz = (id: string, m: string) =>
+    ((document.getElementById(id) as HTMLElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b });
+  const tl0 = (x: number) => x.toLocaleString('tr-TR', { maximumFractionDigits: 0 });
+
+  function hesapla() {
+    const N = oku('dk-n'), t = oku('dk-t'), z = oku('dk-z') / 100;
+    const sistem = oku('dk-sis');
+    if (!(N > 0 && t > 0 && z > 0)) return;
+
+    const df = 1 / (1 + z * t);
+    const zCont = -Math.log(df) / t;
+    const zAnn = Math.pow(df, -1 / t) - 1;
+
+    const dvSimple = N * t * df * df * 1e-4;
+    const dvCont = N * t * df * 1e-4;
+    const dvAnn = N * (t / (1 + zAnn)) * df * 1e-4;
+
+    yaz('dk-df', df.toFixed(5));
+    yaz('dk-zc', '%' + tr(zCont * 100));
+    yaz('dk-za', '%' + tr(zAnn * 100));
+    yaz('dk-oran', tr(dvCont / dvSimple, 3) + '×');
+
+    const satir = (ad: string, form: string, v: number) =>
+      `<tr><td>${ad}</td><td class="form">${form}</td><td>${tl0(v)}</td><td>${tr(v / dvSimple, 2)}×</td></tr>`;
+    (document.getElementById('dk-tablo') as HTMLElement).innerHTML =
+      satir('Simple (par quote)', 'N·t·DF²·10⁻⁴', dvSimple) +
+      satir('Yıllık bileşik', 'N·[t/(1+z)]·DF·10⁻⁴', dvAnn) +
+      satir('Sürekli (zero bump)', 'N·t·DF·10⁻⁴', dvCont);
+
+    yaz('dk-braket', tl0(dvSimple) + ' – ' + tl0(dvCont));
+    if (sistem > 0) {
+      const icinde = sistem >= dvSimple * 0.97 && sistem <= dvCont * 1.03;
+      const el = document.getElementById('dk-brakettest') as HTMLElement;
+      el.textContent = icinde ? 'evet ✓' : 'HAYIR — bacak/eğri yanlış olabilir';
+      el.style.color = icinde ? 'var(--teal)' : 'var(--claret)';
+
+      const imaN = sistem / (t * df * 1e-4);
+      yaz('dk-geri', tl0(imaN));
+      const oran = imaN / N;
+      yaz('dk-gerioran', tr(oran, 3) + '×');
+
+      // yoruma karar ver: sistem hangi konvansiyona yakın?
+      const farkS = Math.abs(sistem - dvSimple), farkA = Math.abs(sistem - dvAnn),
+            farkC = Math.abs(sistem - dvCont);
+      const min = Math.min(farkS, farkA, farkC);
+      let hangi = min === farkC ? 'sürekli (zero) bump' : min === farkA ? 'yıllık bileşik bump' : 'simple (par quote) bump';
+      const sapma = (min / (min === farkC ? dvCont : min === farkA ? dvAnn : dvSimple)) * 100;
+      let yorum = `Sistem değeri en çok <b>${hangi}</b> sonucuna yakın (sapma %${tr(sapma, 1)}). `;
+      yorum += sapma < 5
+        ? 'Kalan fark tipik olarak eğrinin düz olmaması (pillar yapısı, eğim), interpolasyon ve gün sayımı incelikleridir.'
+        : 'Sapma büyük — sensitivity tanımını (zero bump mı, market-quote bump mı) ve hangi eğri/bacak satırını okuduğunuzu kontrol edin.';
+      if (oran > 0.7 && oran < 1.4)
+        yorum += ` Geri-çözülen nominal girilen bacak nominaline yakın (${tr(oran, 2)}×) → doğru bacağı okuyorsunuz.`;
+      else
+        yorum += ` <b>Uyarı:</b> geri-çözülen nominal girilenden çok farklı (${tr(oran, 2)}×) → muhtemelen başka bir bacağı/eğriyi okuyorsunuz.`;
+      (document.getElementById('dk-yorum') as HTMLElement).innerHTML = yorum;
+    } else {
+      yaz('dk-brakettest', '—'); yaz('dk-geri', '—'); yaz('dk-gerioran', '—');
+      (document.getElementById('dk-yorum') as HTMLElement).textContent =
+        'Sistem DV01 alanına raporunuzdaki sayıyı girin; hangi konvansiyona oturduğunu ve doğru bacağı okuyup okumadığınızı sınayalım.';
+    }
+  }
+
+  document.querySelectorAll('#dv01-konv input').forEach((el) =>
+    el.addEventListener('input', hesapla)
+  );
+  const btn = document.getElementById('dk-hesapla')!;
+  btn.addEventListener('click', () => {
+    hesapla();
+    btn.classList.add('tamam');
+    btn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => { btn.classList.remove('tamam'); btn.textContent = 'Hesapla ↻'; }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.7rem;
+    padding: 0.9rem 1rem 0.4rem;
+  }
+  .orta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.8rem;
+    padding: 0.5rem 1rem;
+  }
+  .orta .etiket,
+  .sag-satir .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .tablo-kab {
+    padding: 0.6rem 1rem;
+    overflow-x: auto;
+  }
+  .tablo-kab :global(.form) {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-50);
+    text-align: left;
+    padding-left: 0.8rem;
+  }
+  .saglama {
+    border-top: 1px solid var(--ink-15);
+    padding: 0.8rem 1rem 0.4rem;
+  }
+  .blok-baslik {
+    color: var(--claret);
+    margin: 0 0 0.6rem;
+  }
+  .sag-satir {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin-bottom: 0.6rem;
+  }
+  .mini-not {
+    margin: 0.4rem 0 0;
+    font-size: 0.84rem;
+    font-style: italic;
+    color: var(--ink-70);
+    line-height: 1.5;
+  }
+  @media (max-width: 640px) {
+    .girdiler {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

@@ -1,0 +1,181 @@
+---
+/**
+ * USDTRY Forward DV01 hesaplayıcısı — USDTRY_Forward_DV01_Hesaplayici.xlsx portu.
+ * Dual-curve (TLREF OIS + SOFR OIS): DV01 = N × τ × DF² × 1bp.
+ * Bump & reprice doğrulaması ve yaygın tek-DF hatası karşılaştırması dahil.
+ */
+---
+
+<div class="hesap" id="fdv-hesap">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı</span>
+    <span class="hesap-ad">USDTRY Forward DV01 — Dual Curve (DF²)</span>
+  </div>
+
+  <div class="girdiler">
+    <label><span class="etiket">Spot (USDTRY)</span>
+      <input type="number" id="fdv-spot" value="46.695" step="0.005" /></label>
+    <label><span class="etiket">Vadeye gün</span>
+      <input type="number" id="fdv-gun" value="28" step="1" min="1" /></label>
+    <label><span class="etiket">Yön</span>
+      <select id="fdv-yon"><option value="1" selected>B — USD al</option><option value="-1">S — USD sat</option></select></label>
+    <label><span class="etiket">Notional (USD)</span>
+      <input type="number" id="fdv-nom" value="1000000" step="100000" /></label>
+    <label><span class="etiket">İşlem kuru K (0 = fair)</span>
+      <input type="number" id="fdv-k" value="0" step="0.0001" min="0" /></label>
+    <label><span class="etiket">TLREF zero (%)</span>
+      <input type="number" id="fdv-try" value="39.69" step="0.05" /></label>
+    <label><span class="etiket">USD pillar 1 (gün / %)</span>
+      <input type="text" id="fdv-p1" value="15 / 3.63" /></label>
+    <label><span class="etiket">USD pillar 2 (gün / %)</span>
+      <input type="text" id="fdv-p2" value="32 / 3.65" /></label>
+  </div>
+
+  <div class="orta">
+    <div><span class="etiket">DF_TRY (ACT/365)</span><output class="ara-deger" id="fdv-dftry">—</output></div>
+    <div><span class="etiket">DF_USD (ACT/360)</span><output class="ara-deger" id="fdv-dfusd">—</output></div>
+    <div><span class="etiket">Fair forward F = S·DF_USD/DF_TRY</span><output class="ara-deger" id="fdv-f">—</output></div>
+    <div><span class="etiket">MTM (TRY)</span><output class="ara-deger" id="fdv-mtm">—</output></div>
+  </div>
+
+  <div class="tablo-kab">
+    <table>
+      <thead><tr><th>Kalem</th><th>Analitik</th><th>Bump &amp; reprice</th><th>Not</th></tr></thead>
+      <tbody id="fdv-tablo"></tbody>
+    </table>
+  </div>
+
+  <div class="alt-satir">
+    <div><span class="etiket">Toplam carry (spot sabit, TRY)</span><output class="ara-deger" id="fdv-carry">—</output></div>
+    <div><span class="etiket">Günlük ort. carry (TRY/gün)</span><output class="ara-deger" id="fdv-gcarry">—</output></div>
+    <div><span class="etiket">TLREF OIS hedge notional (TRY)</span><output class="ara-deger" id="fdv-hedge">—</output></div>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="fdv-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Girdiler değişince canlı güncellenir.</span>
+  </div>
+
+  <p class="hesap-dip">
+    DV01_TRY = +işaret·N_TRY·τ_TRY·DF_TRY²·1bp — DF'nin KARESİ: birinci DF nakit akışını
+    bugüne indirger, ikincisi faiz duyarlılığının kendisinden gelir (∂DF/∂r = −τ·DF²).
+    Tek DF kullanan yaygın hata DV01'i 1/DF kadar şişirir; tablodaki "yanlış" satırı
+    farkı gösterir. İki bacak ayrı eğrilerdir — net toplanmaz, ayrı satır yönetilir.
+  </p>
+</div>
+
+<script>
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const yaz = (id: string, m: string) =>
+    ((document.getElementById(id) as HTMLElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b });
+
+  function pillar(id: string): [number, number] {
+    const p = (document.getElementById(id) as HTMLInputElement).value.split('/');
+    return [parseFloat(p[0]), parseFloat(p[1]) / 100];
+  }
+
+  function hesapla() {
+    const S = oku('fdv-spot'), N = oku('fdv-gun'), nom = oku('fdv-nom');
+    const kGirdi = oku('fdv-k');
+    const rTry = oku('fdv-try') / 100;
+    const [g1, r1] = pillar('fdv-p1'), [g2, r2] = pillar('fdv-p2');
+    const isaret = parseInt((document.getElementById('fdv-yon') as HTMLSelectElement).value);
+    if (!(S > 0 && N > 0 && nom > 0)) return;
+
+    const tTry = N / 365, tUsd = N / 360;
+    const rUsd = g2 !== g1 ? r1 + ((N - g1) / (g2 - g1)) * (r2 - r1) : r1;
+    const dfTry = 1 / (1 + rTry * tTry);
+    const dfUsd = 1 / (1 + rUsd * tUsd);
+    const F = (S * dfUsd) / dfTry;
+    const K = kGirdi > 0 ? kGirdi : F;
+    const nTry = nom * K;
+    const mtm = isaret * (nom * S * dfUsd - nTry * dfTry);
+
+    yaz('fdv-dftry', dfTry.toFixed(6));
+    yaz('fdv-dfusd', dfUsd.toFixed(6));
+    yaz('fdv-f', tr(F, 4));
+    yaz('fdv-mtm', tr(mtm, 0));
+
+    // analitik DV01 (DF²)
+    const dv01Usd = -isaret * nom * S * tUsd * dfUsd * dfUsd * 1e-4;
+    const dv01Try = isaret * nTry * tTry * dfTry * dfTry * 1e-4;
+    // bump & reprice
+    const bumpUsd =
+      isaret * ((nom * S) / (1 + (rUsd + 1e-4) * tUsd) - nTry * dfTry) - mtm;
+    const bumpTry =
+      isaret * (nom * S * dfUsd - nTry / (1 + (rTry + 1e-4) * tTry)) - mtm;
+    // yaygın hata: tek DF
+    const yanlisTry = isaret * nTry * tTry * dfTry * 1e-4;
+
+    const satir = (ad: string, a: number, b: string, not: string) =>
+      `<tr><td>${ad}</td><td>${tr(a, 2)}</td><td>${b}</td><td class="yorum">${not}</td></tr>`;
+    (document.getElementById('fdv-tablo') as HTMLElement).innerHTML =
+      satir('DV01 TRY bacağı (TRY/bp)', dv01Try, tr(bumpTry, 2), 'DF² ile — doğru') +
+      satir('DV01 USD bacağı (TRY/bp)', dv01Usd, tr(bumpUsd, 2), 'DF² ile — doğru') +
+      satir('DV01 USD bacağı (USD/bp)', dv01Usd / S, '—', 'TRY değeri / spot') +
+      satir('YANLIŞ: TRY tek DF', yanlisTry, '—',
+        `hata +${tr(yanlisTry - dv01Try, 2)} TRY/bp (~%${tr(((yanlisTry - dv01Try) / dv01Try) * 100, 1)})`);
+
+    const carry = isaret * (S - K) * nom;
+    yaz('fdv-carry', tr(carry, 0));
+    yaz('fdv-gcarry', tr(carry / N, 0));
+    yaz('fdv-hedge', tr(Math.abs(dv01Try) / (tTry * dfTry * 1e-4), 0));
+  }
+
+  document.querySelectorAll('#fdv-hesap input, #fdv-hesap select').forEach((el) =>
+    el.addEventListener('input', hesapla)
+  );
+  const fdvBtn = document.getElementById('fdv-hesapla')!;
+  fdvBtn.addEventListener('click', () => {
+    hesapla();
+    fdvBtn.classList.add('tamam');
+    fdvBtn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => { fdvBtn.classList.remove('tamam'); fdvBtn.textContent = 'Hesapla ↻'; }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.7rem;
+    padding: 0.9rem 1rem 0.4rem;
+  }
+  .orta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    padding: 0.5rem 1rem;
+  }
+  .orta .etiket, .alt-satir .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .tablo-kab {
+    padding: 0.6rem 1rem;
+    overflow-x: auto;
+  }
+  .tablo-kab :global(.yorum) {
+    font-family: var(--font-body);
+    font-style: italic;
+    color: var(--ink-50);
+    text-align: left;
+    padding-left: 0.8rem;
+  }
+  .alt-satir {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    padding: 0.3rem 1rem 0.6rem;
+    border-top: 1px solid var(--ink-15);
+  }
+  @media (max-width: 640px) {
+    .girdiler {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

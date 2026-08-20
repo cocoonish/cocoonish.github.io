@@ -1,0 +1,92 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import KayitKarti from '../components/KayitKarti.astro';
+
+const sirala = <T extends { data: { pubDate: Date; durum: string } }>(liste: T[]) =>
+  liste
+    .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+    .sort((a, b) => (a.data.durum === 'arsiv' ? 1 : 0) - (b.data.durum === 'arsiv' ? 1 : 0));
+
+const projeler = sirala(await getCollection('projeler'));
+const arastirmalar = sirala(await getCollection('arastirma'));
+---
+
+<Base>
+  <section class="giris yuksel">
+    <h1>
+      Türkiye makrosunu <em>koddan</em> geçirilmiş verilerle okumak.
+    </h1>
+    <p class="giris-alt">
+      TCMB rezervlerinden Hazine ihalelerine, reel kurdan faiz eğrisine — her başlık
+      düzenli aralıklarla yeniden hesaplanan canlı grafikler ve tarayıcıda çalışan
+      hesap araçlarıyla sunulur.
+    </p>
+  </section>
+
+  <section>
+    <div class="bolum-baslik yuksel" style="--d: 80ms">
+      <span class="no">01</span>
+      <h2>Projeler</h2>
+      <a class="tumu" href="/projeler/">Tümü →</a>
+    </div>
+    <div class="kayit-izgara">
+      {
+        projeler.map((p, i) => (
+          <KayitKarti
+            href={`/projeler/${p.id}/`}
+            sira={i + 1}
+            gecikme={120 + i * 60}
+            {...p.data}
+          />
+        ))
+      }
+    </div>
+  </section>
+
+  <section>
+    <div class="bolum-baslik yuksel" style="--d: 160ms">
+      <span class="no">02</span>
+      <h2>Araştırma</h2>
+      <a class="tumu" href="/arastirma/">Tümü →</a>
+    </div>
+    <div class="kayit-izgara">
+      {
+        arastirmalar.map((a, i) => (
+          <KayitKarti
+            href={`/arastirma/${a.id}/`}
+            sira={i + 1}
+            gecikme={200 + i * 60}
+            {...a.data}
+          />
+        ))
+      }
+    </div>
+  </section>
+</Base>
+
+<style>
+  .giris {
+    padding: 3.2rem 0 1rem;
+    max-width: 46ch;
+  }
+  .giris h1 {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 72;
+    font-size: clamp(2rem, 5.5vw, 3.1rem);
+    font-weight: 480;
+    line-height: 1.12;
+    letter-spacing: -0.022em;
+    margin: 0 0 1rem;
+  }
+  .giris h1 em {
+    font-style: italic;
+    color: var(--claret);
+  }
+  .giris-alt {
+    font-size: 1.12rem;
+    line-height: 1.6;
+    color: var(--ink-70);
+    margin: 0;
+  }
+</style>

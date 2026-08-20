@@ -1,0 +1,223 @@
+---
+/**
+ * Forward başlangıçlı swap + MPC implied forward hesaplayıcısı.
+ * Bootstrap aracının yayınladığı eğriyi (window.tloisEgri) kullanır.
+ * A bloğu: kuponlu forward swap — R_fwd = (DF(T1)−DF(T2)) / A_fwd, DV01 dahil.
+ * B bloğu: gün bazlı MPC tarzı forward — compound & simple konvansiyon yan yana.
+ */
+---
+
+<div class="hesap" id="fwd-hesap">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı · 02</span>
+    <span class="hesap-ad">Forward Swap & MPC Implied — Eğriden Türetim</span>
+  </div>
+
+  <div class="govde">
+    <div class="blok">
+      <p class="blok-baslik etiket">A · Kuponlu forward swap (çeyreklik)</p>
+      <div class="girdiler">
+        <label><span class="etiket">Başlangıç T₁ (yıl)</span>
+          <input type="number" id="fw-t1" value="1" step="0.25" min="0" max="9.75" /></label>
+        <label><span class="etiket">Bitiş T₂ (yıl)</span>
+          <input type="number" id="fw-t2" value="2" step="0.25" min="0.25" max="10" /></label>
+        <label><span class="etiket">Nominal (TL)</span>
+          <input type="number" id="fw-nom" value="10000000" step="1000000" /></label>
+      </div>
+      <div class="ciktilar">
+        <div><span class="etiket">DF(T₁)</span><output class="ara-deger" id="fw-df1">—</output></div>
+        <div><span class="etiket">DF(T₂)</span><output class="ara-deger" id="fw-df2">—</output></div>
+        <div><span class="etiket">A_fwd = Στ·DF</span><output class="ara-deger" id="fw-ann">—</output></div>
+        <div><span class="etiket">DV01 (TL/bp)</span><output class="ara-deger" id="fw-dv01">—</output></div>
+      </div>
+      <div class="sonuc">
+        <span class="etiket">Forward par oran</span>
+        <output class="sonuc-buyuk" id="fw-oran">—</output>
+      </div>
+    </div>
+
+    <div class="blok">
+      <p class="blok-baslik etiket">B · İki tarih arası: zero &amp; forward (MPC tarzı)</p>
+      <div class="girdiler girdiler-tarih">
+        <label><span class="etiket">Değerleme tarihi</span>
+          <input type="date" id="fw-val" value="2026-04-24" /></label>
+        <label><span class="etiket">Tarih 1 (T₁)</span>
+          <input type="date" id="fw-d1" value="2026-06-12" /></label>
+        <label><span class="etiket">Tarih 2 (T₂)</span>
+          <input type="date" id="fw-d2" value="2026-07-24" /></label>
+      </div>
+      <div class="tarih-tablo">
+        <table>
+          <thead>
+            <tr><th></th><th>Gün</th><th>DF</th><th>Zero % (basit)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>T₁</td><td id="fw-gun1">—</td><td id="fw-tdf1">—</td><td id="fw-z1">—</td></tr>
+            <tr><td>T₂</td><td id="fw-gun2">—</td><td id="fw-tdf2">—</td><td id="fw-z2">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="ciktilar">
+        <div><span class="etiket">Forward — compound (TLREF konv.)</span><output class="ara-deger" id="fw-cmp">—</output></div>
+        <div><span class="etiket">Forward — simple</span><output class="ara-deger" id="fw-smp">—</output></div>
+        <div><span class="etiket">Fark</span><output class="ara-deger" id="fw-fark">—</output></div>
+      </div>
+      <p class="mini-not">
+        İki PPK toplantısının effective tarihlerini girerseniz sonuç, o dönem için
+        piyasada fiyatlanan TLREF seviyesidir (MPC implied). Varsayılan: 12.06.2026 →
+        24.07.2026 dönemi. Değerleme tarihi, eğri anlık görüntüsünün günüdür.
+      </p>
+    </div>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="fw-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Girdiler ve eğri değişince canlı güncellenir.</span>
+  </div>
+
+  <p class="hesap-dip">
+    Eğri kaynağı: yukarıdaki bootstrap aracı — kotasyonları orada değiştirin, burası anında
+    güncellenir. DV01 = A_fwd × 1bp × nominal. İdeal çeyreklik grid kullanıldığından
+    Gerçek takvimli sonuçlardan ~5-10 bps sapma görülebilir.
+  </p>
+</div>
+
+<script>
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const yaz = (id: string, m: string) =>
+    ((document.getElementById(id) as HTMLOutputElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b });
+
+  function hesapla() {
+    const egri = (window as any).tloisEgri;
+    if (!egri) return;
+    const { tau, df } = egri;
+
+    // A — kuponlu forward swap
+    const t1 = oku('fw-t1'), t2 = oku('fw-t2'), nom = oku('fw-nom');
+    if (t2 > t1) {
+      let A = 0;
+      for (let t = t1 + tau; t <= t2 + 1e-9; t += tau) A += tau * df(t);
+      const d1 = df(t1), d2 = df(t2);
+      const rf = (d1 - d2) / A;
+      yaz('fw-df1', d1.toFixed(6));
+      yaz('fw-df2', d2.toFixed(6));
+      yaz('fw-ann', A.toFixed(4));
+      yaz('fw-dv01', tr(A * 1e-4 * nom, 0));
+      yaz('fw-oran', '%' + tr(rf * 100));
+    } else {
+      yaz('fw-oran', 'T₂ > T₁ olmalı');
+    }
+
+    // B — iki tarih arası zero & forward (compound & simple)
+    const tarih = (id: string) =>
+      new Date((document.getElementById(id) as HTMLInputElement).value + 'T00:00:00');
+    const val = tarih('fw-val'), ta1 = tarih('fw-d1'), ta2 = tarih('fw-d2');
+    const gunFark = (a: Date, b: Date) => Math.round((b.getTime() - a.getTime()) / 86400000);
+    const g1 = gunFark(val, ta1), g2 = gunFark(val, ta2);
+    if (g1 > 0 && g2 > g1) {
+      const d1 = df(g1 / 365), d2 = df(g2 / 365);
+      yaz('fw-gun1', String(g1));
+      yaz('fw-gun2', String(g2));
+      yaz('fw-tdf1', d1.toFixed(6));
+      yaz('fw-tdf2', d2.toFixed(6));
+      // zero (basit, ACT/365): tarihin kendisine kadar geçerli oran
+      yaz('fw-z1', tr(((1 / d1 - 1) * 365 / g1) * 100));
+      yaz('fw-z2', tr(((1 / d2 - 1) * 365 / g2) * 100));
+      const gun = g2 - g1;
+      const cmp = 365 * (Math.pow(d1 / d2, 1 / gun) - 1);
+      const smp = ((d1 / d2 - 1) * 365) / gun;
+      yaz('fw-cmp', '%' + tr(cmp * 100));
+      yaz('fw-smp', '%' + tr(smp * 100));
+      yaz('fw-fark', tr((smp - cmp) * 10000, 1) + ' bps');
+    } else {
+      yaz('fw-cmp', 'T₂ > T₁ > değerleme olmalı');
+      yaz('fw-smp', '—');
+      yaz('fw-fark', '—');
+    }
+  }
+
+  document.querySelectorAll('#fwd-hesap input').forEach((el) =>
+    el.addEventListener('input', hesapla)
+  );
+  document.addEventListener('egri-guncellendi', hesapla);
+  const fwBtn = document.getElementById('fw-hesapla')!;
+  fwBtn.addEventListener('click', () => {
+    hesapla();
+    fwBtn.classList.add('tamam');
+    fwBtn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => {
+      fwBtn.classList.remove('tamam');
+      fwBtn.textContent = 'Hesapla ↻';
+    }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .govde {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .blok {
+    padding: 1rem;
+  }
+  .blok + .blok {
+    border-left: 1px solid var(--ink-30);
+  }
+  .blok-baslik {
+    color: var(--claret);
+    margin: 0 0 0.7rem;
+  }
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.7rem;
+  }
+  .girdiler-tarih {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .tarih-tablo {
+    margin-top: 0.8rem;
+  }
+  .tarih-tablo table {
+    font-size: 0.8rem;
+  }
+  .ciktilar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.4rem;
+    margin-top: 0.8rem;
+  }
+  .ciktilar .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .sonuc {
+    margin-top: 0.9rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--ink-30);
+  }
+  .sonuc .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .mini-not {
+    margin: 0.8rem 0 0;
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--ink-50);
+  }
+  @media (max-width: 640px) {
+    .govde {
+      grid-template-columns: 1fr;
+    }
+    .blok + .blok {
+      border-left: none;
+      border-top: 1px solid var(--ink-30);
+    }
+  }
+</style>

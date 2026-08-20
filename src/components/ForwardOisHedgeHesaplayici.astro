@@ -1,0 +1,269 @@
+---
+/**
+ * FX Forward → OIS hedge hesaplayıcısı — TRY DV01 rehberinin uygulamalı vakası.
+ * CIP forward, MtM = N·(F−K)·DF_TRY, iki bacağın ayrı DV01'i (cross-curve),
+ * çeyreklik OIS annuity → PV01 → hedge nominali ve yönü, konveksite artığı.
+ * Vaka doğrulaması: 20mn USD @ K=70,35, t=1,2822, %45/%3,50 →
+ * F 71,69 · MtM +17,0mn · TRY DV01 114.399 (sürekli) · USD 2.454 USD/bp
+ * ≈116,6k TL · annuity 0,984 · N_OIS ≈1,16 mlr receiver · konveksite 14,7 TL/bp².
+ */
+---
+
+<div class="hesap" id="fwd-ois">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı</span>
+    <span class="hesap-ad">FX Forward → OIS Hedge — Vaka Motoru</span>
+  </div>
+
+  <div class="girdiler">
+    <label><span class="etiket">Nominal (USD)</span>
+      <input type="number" id="fo-n" value="20000000" step="1000000" /></label>
+    <label><span class="etiket">Kontrat kuru K</span>
+      <input type="number" id="fo-k" value="70.35" step="0.05" /></label>
+    <label><span class="etiket">Spot S</span>
+      <input type="number" id="fo-s" value="47.50" step="0.05" /></label>
+    <label><span class="etiket">Vade t (yıl)</span>
+      <input type="number" id="fo-t" value="1.2822" step="0.05" min="0.05" /></label>
+    <label><span class="etiket">TRY zero (simple, %)</span>
+      <input type="number" id="fo-ztry" value="45" step="0.5" /></label>
+    <label><span class="etiket">USD zero (simple, %)</span>
+      <input type="number" id="fo-zusd" value="3.5" step="0.25" /></label>
+    <label><span class="etiket">DV01 konvansiyonu</span>
+      <select id="fo-konv">
+        <option value="cont" selected>Sürekli (zero bump)</option>
+        <option value="simple">Simple (par quote)</option>
+      </select></label>
+    <label><span class="etiket">OIS kupon sıklığı</span>
+      <select id="fo-frek">
+        <option value="4" selected>3 aylık</option>
+        <option value="2">6 aylık</option>
+      </select></label>
+  </div>
+
+  <div class="blok">
+    <p class="blok-baslik etiket">A · Fiyatlama (CIP)</p>
+    <div class="ciktilar">
+      <div><span class="etiket">TRY bacak nominali = N·K</span><output class="ara-deger" id="fo-ntry">—</output></div>
+      <div><span class="etiket">DF_TRY</span><output class="ara-deger" id="fo-dftry">—</output></div>
+      <div><span class="etiket">DF_USD</span><output class="ara-deger" id="fo-dfusd">—</output></div>
+      <div><span class="etiket">Forward F = S·DF_USD/DF_TRY</span><output class="ara-deger" id="fo-f">—</output></div>
+      <div><span class="etiket">Swap puanı (F−S)</span><output class="ara-deger" id="fo-swap">—</output></div>
+      <div><span class="etiket">MtM = N·(F−K)·DF_TRY</span><output class="ara-deger" id="fo-mtm">—</output></div>
+    </div>
+  </div>
+
+  <div class="blok">
+    <p class="blok-baslik etiket">B · Cross-curve DV01 — iki ayrı risk</p>
+    <div class="tablo-kab">
+      <table>
+        <thead><tr><th>Bacak</th><th>Eğri</th><th>Taban</th><th>DV01</th><th>TL karşılığı</th></tr></thead>
+        <tbody id="fo-dv01"></tbody>
+      </table>
+    </div>
+    <p class="mini-not">
+      İki sayı <em>iki ayrı riski</em> temsil eder; toplanmaz, ayrı bucket'larda
+      tutulur ve ayrı enstrümanlarla hedge edilir. Yakın çıkmaları tesadüftür —
+      sistem raporunda sayıya değil, <b>kolon etiketine</b> bakın.
+    </p>
+  </div>
+
+  <div class="blok">
+    <p class="blok-baslik etiket">C · OIS hedge boyutlandırma</p>
+    <div class="tablo-kab">
+      <table>
+        <thead><tr><th>Periyot sonu (t)</th><th>τ</th><th>DF</th><th>τ·DF</th></tr></thead>
+        <tbody id="fo-annuity"></tbody>
+      </table>
+    </div>
+    <div class="ciktilar">
+      <div><span class="etiket">Annuity A = Στ·DF</span><output class="ara-deger" id="fo-a">—</output></div>
+      <div><span class="etiket">PV01 (TL/bp / 1 mn nominal)</span><output class="ara-deger" id="fo-pv01">—</output></div>
+      <div><span class="etiket">Hedge yönü</span><output class="ara-deger" id="fo-yon">—</output></div>
+    </div>
+    <div class="sonuc">
+      <span class="etiket">Gerekli OIS nominali = DV01_forward / PV01_birim</span>
+      <output class="sonuc-buyuk" id="fo-nois">—</output>
+    </div>
+    <p class="mini-not" id="fo-nois-not">—</p>
+  </div>
+
+  <div class="blok">
+    <p class="blok-baslik etiket">D · Artık risk: konveksite</p>
+    <div class="ciktilar">
+      <div><span class="etiket">Konveksite ≈ N·t²·DF·10⁻⁸</span><output class="ara-deger" id="fo-cvx">—</output></div>
+      <div><span class="etiket">±50bp'de 2. derece etki</span><output class="ara-deger" id="fo-cvx50">—</output></div>
+      <div><span class="etiket">±50bp'de 1. derece (hedge'li ≈0)</span><output class="ara-deger" id="fo-pl50">—</output></div>
+    </div>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="fo-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Girdiler değişince canlı güncellenir.</span>
+  </div>
+
+  <p class="hesap-dip">
+    Kritik kural: forward DV01'ini hangi konvansiyonda alıyorsanız OIS PV01'ini de
+    aynı konvansiyonda alın — karıştırırsanız hedge oranı ~1,5 kat şaşar. DV01'in
+    tabanı güncel forward değil <b>kontrat kuru K</b>'dır ($N\cdot K$); aged
+    pozisyonda bu fark belirleyicidir. Hedge sonrası kalan riskler: basis,
+    nakit akışı uyuşmazlığı/konveksite, USD bacağı ve FX delta.
+  </p>
+</div>
+
+<script>
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const sec = (id: string) => (document.getElementById(id) as HTMLSelectElement).value;
+  const yaz = (id: string, m: string) =>
+    ((document.getElementById(id) as HTMLElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b });
+  const tl0 = (x: number) => x.toLocaleString('tr-TR', { maximumFractionDigits: 0 });
+
+  function hesapla() {
+    const N = oku('fo-n'), K = oku('fo-k'), S = oku('fo-s'), t = oku('fo-t');
+    const zT = oku('fo-ztry') / 100, zU = oku('fo-zusd') / 100;
+    const konv = sec('fo-konv');
+    const frek = parseInt(sec('fo-frek'));
+    if (!(N > 0 && K > 0 && S > 0 && t > 0)) return;
+
+    // A — CIP
+    const nTRY = N * K;
+    const dfT = 1 / (1 + zT * t), dfU = 1 / (1 + zU * t);
+    const zCont = -Math.log(dfT) / t;
+    const F = (S * dfU) / dfT;
+    const mtm = N * (F - K) * dfT;
+
+    yaz('fo-ntry', tl0(nTRY) + ' TL');
+    yaz('fo-dftry', dfT.toFixed(5));
+    yaz('fo-dfusd', dfU.toFixed(5));
+    yaz('fo-f', tr(F, 2));
+    yaz('fo-swap', tr(F - S, 2));
+    const mtmEl = document.getElementById('fo-mtm') as HTMLElement;
+    mtmEl.textContent = tl0(mtm) + ' TL';
+    mtmEl.style.color = mtm >= 0 ? 'var(--teal)' : 'var(--claret)';
+
+    // B — cross-curve DV01 (seçilen konvansiyon)
+    const carpan = (df: number) => (konv === 'cont' ? df : df * df);
+    const dvTRY = nTRY * t * carpan(dfT) * 1e-4;
+    const dvUSD = N * t * carpan(dfU) * 1e-4; // USD/bp
+    const satir = (bacak: string, egri: string, taban: string, dv: string, tl: string) =>
+      `<tr><td>${bacak}</td><td>${egri}</td><td>${taban}</td><td>${dv}</td><td>${tl}</td></tr>`;
+    (document.getElementById('fo-dv01') as HTMLElement).innerHTML =
+      satir('TRY (yükümlülük)', 'TRY DISC', tl0(nTRY) + ' TL',
+            tl0(dvTRY) + ' TL/bp', tl0(dvTRY) + ' TL/bp') +
+      satir('USD (varlık)', 'USD / SOFR', tl0(N) + ' USD',
+            tl0(dvUSD) + ' USD/bp', tl0(dvUSD * S) + ' TL/bp');
+
+    // C — OIS annuity (sürekli zero ile, çeyreklik/6 aylık)
+    // Kupon takvimi ileri üretilir; vadeye kalan artık yarım periyottan kısaysa
+    // son periyoda eklenir (uzun son stub — masa konvansiyonu). Böylece
+    // vadede birkaç günlük anlamsız bir stub periyot oluşmaz.
+    const adim = 1 / frek;
+    const tenor: number[] = [];
+    for (let x = adim; x < t - adim / 2; x += adim) tenor.push(Number(x.toFixed(6)));
+    tenor.push(t);
+    let A = 0, satirlar = '', onceki = 0;
+    tenor.forEach((T) => {
+      const tau = T - onceki;
+      const df = Math.exp(-zCont * T);
+      A += tau * df;
+      satirlar += `<tr><td>${tr(T, 2)}</td><td>${tr(tau, 4)}</td><td>${df.toFixed(4)}</td><td>${(tau * df).toFixed(4)}</td></tr>`;
+      onceki = T;
+    });
+    (document.getElementById('fo-annuity') as HTMLElement).innerHTML = satirlar;
+    yaz('fo-a', tr(A, 4));
+    const pv01Birim = A * 1e6 * 1e-4; // 1 mn nominal başına TL/bp
+    yaz('fo-pv01', tl0(pv01Birim) + ' TL/bp');
+
+    // long USD/TRY forward → TRY DV01 pozitif → receiver OIS
+    yaz('fo-yon', 'Receiver OIS (sabit al / TLREF öde)');
+    const nOIS = dvTRY / (A * 1e-4);
+    yaz('fo-nois', tl0(nOIS) + ' TL');
+    const oran = nOIS / nTRY;
+
+    // Konvansiyon uyumsuzluğunun bedeli: aynı OIS annuity'siyle iki farklı
+    // forward DV01'i kullanmak hedge nominalini 1/DF kadar şaşırtır.
+    const nContOIS = (nTRY * t * dfT * 1e-4) / (A * 1e-4);
+    const nSimpleOIS = (nTRY * t * dfT * dfT * 1e-4) / (A * 1e-4);
+    (document.getElementById('fo-nois-not') as HTMLElement).innerHTML =
+      `OIS nominali forward'ın TRY bacağının <b>${tr(oran, 2)}×</b>'i. ` +
+      (oran < 1
+        ? `Küçük olmasının nedeni: OIS duyarlılığını birden çok kupona yayar — birim nominal hassasiyeti (A = ${tr(A, 3)}) forward'ın tek-bulletli hassasiyetinden (t·DF = ${tr(t * dfT, 3)}) yüksektir, aynı DV01'i daha az nominalle yakalarsınız.`
+        : `Forward'ın tek-bulletli hassasiyeti (t·DF = ${tr(t * dfT, 3)}) OIS annuity'sinden (${tr(A, 3)}) yüksek olduğunda oran 1'i aşar.`) +
+      `<br /><b>Konvansiyon uyumsuzluğunun bedeli:</b> aynı OIS annuity'siyle forward DV01'ini
+       sürekli alırsanız <b>${tl0(nContOIS)}</b>, simple alırsanız <b>${tl0(nSimpleOIS)}</b> TL
+       nominal çıkar — <b>${tr(nContOIS / nSimpleOIS, 2)}×</b> fark (= 1/DF). Yanlış eşleme,
+       delta-nötr sandığınız kitabı bu oranda açık bırakır.`;
+
+    // D — konveksite
+    const cvx = nTRY * t * t * dfT * 1e-8;
+    yaz('fo-cvx', tr(cvx, 1) + ' TL/bp²');
+    yaz('fo-cvx50', tl0(0.5 * cvx * 2500) + ' TL');
+    yaz('fo-pl50', tl0(dvTRY * 50) + ' TL');
+  }
+
+  document.querySelectorAll('#fwd-ois input, #fwd-ois select').forEach((el) =>
+    el.addEventListener('input', hesapla)
+  );
+  const btn = document.getElementById('fo-hesapla')!;
+  btn.addEventListener('click', () => {
+    hesapla();
+    btn.classList.add('tamam');
+    btn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => { btn.classList.remove('tamam'); btn.textContent = 'Hesapla ↻'; }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.7rem;
+    padding: 0.9rem 1rem 0.5rem;
+  }
+  .blok {
+    padding: 0.8rem 1rem;
+    border-top: 1px solid var(--ink-15);
+  }
+  .blok-baslik {
+    color: var(--claret);
+    margin: 0 0 0.6rem;
+  }
+  .ciktilar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.8rem;
+  }
+  .ciktilar .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .tablo-kab {
+    overflow-x: auto;
+    margin-bottom: 0.7rem;
+  }
+  .sonuc {
+    margin-top: 0.8rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--ink-30);
+  }
+  .sonuc .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .mini-not {
+    margin: 0.6rem 0 0;
+    font-size: 0.82rem;
+    font-style: italic;
+    color: var(--ink-70);
+    line-height: 1.5;
+  }
+  @media (max-width: 640px) {
+    .girdiler {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

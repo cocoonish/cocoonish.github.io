@@ -1,0 +1,265 @@
+---
+/**
+ * İnteraktif TL OIS eğri bootstrap aracı — "IRS Bootstrapping_SONEXCEL"
+ * çalışma kitabının birebir portu: çeyreklik grid, log-linear DF
+ * interpolasyonu, Newton-Raphson (u = DF^(1/K) polinomu) çözüm.
+ * Varsayılan girdilerle Excel'in DF'lerini 1e-15 hassasiyetle üretir
+ * (doğrulama: DF(18M)=0.581232, DF(2Y)=0.494925, DF(10Y)=0.090716).
+ *
+ * Kurduğu eğriyi sayfadaki diğer araçlara yayınlar:
+ *   window.tloisEgri = { tau, pillars, df(t) }  +  'egri-guncellendi' olayı.
+ */
+---
+
+<div class="hesap" id="egri-boot">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı · 01</span>
+    <span class="hesap-ad">TL OIS Eğrisi — Newton-Raphson Bootstrap</span>
+  </div>
+
+  <p class="hesap-yonerge">
+    Par swap kotasyonlarını değiştirin; eğri anında yeniden bootstrap edilir ve sayfadaki
+    <em>tüm diğer araçlar</em> (forward/MPC, swaption, ASW) bu eğriyi kullanır.
+    Varsayılanlar 24.04.2026 Bloomberg (TYSO, mid) anlık görüntüsüdür.
+  </p>
+
+  <div class="girdi-izgara" id="eb-girdiler"></div>
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="eb-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Kotasyon yazarken de canlı güncellenir; buton tam yeniden hesap yapar.</span>
+  </div>
+
+  <svg id="eb-grafik" viewBox="0 0 660 300" role="img" aria-label="Par ve sıfır kuponlu eğri"></svg>
+  <div class="gosterge etiket">
+    <span class="g-par">● Par swap (girdi)</span>
+    <span class="g-zero">— Sıfır kupon (sürekli, bootstrap)</span>
+  </div>
+
+  <div class="tablo-kab">
+    <table id="eb-tablo">
+      <thead>
+        <tr>
+          <th>Tenor</th><th>Par %</th><th>DF</th><th>Zero % (basit)</th><th>Zero % (sürekli)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <p class="hesap-dip">
+    Zero oranlar TL kotasyon konvansiyonuyla <b>basit</b> ((1/DF − 1)/T) ve model içi
+    temsil olan <b>sürekli</b> (−ln DF / T) olarak verilir. 3M tek ödemeli olduğundan
+    basit zero, par kotasyonun kendisidir; vade uzadıkça basit zero hızla büyür — uzun
+    vadelerin neden par swap olarak kote edildiğinin sayısal kanıtı. Grid ideal
+    çeyreklerle (τ=0.25, ACT/365) çalışır; gerçek takvimli hesaplardan
+    birkaç bps sapma normaldir.
+  </p>
+</div>
+
+<script>
+  const TAU = 0.25;
+  // SONEXCEL, val date 24.04.2026 — TLREF Meetings F13:F26 (BDP mid)
+  const VARSAYILAN: Array<[string, number, number]> = [
+    ['3M', 0.25, 41.85], ['6M', 0.5, 41.2], ['9M', 0.75, 40.23], ['1Y', 1, 39.46],
+    ['18M', 1.5, 38.25], ['2Y', 2, 37.34], ['3Y', 3, 35.92], ['4Y', 4, 34.64],
+    ['5Y', 5, 33.51], ['6Y', 6, 32.68], ['7Y', 7, 31.915], ['8Y', 8, 31.33],
+    ['9Y', 9, 30.8], ['10Y', 10, 30.23],
+  ];
+  const key = (t: number) => Math.round(t * 4);
+
+  function bootstrap(pillars: Array<[number, number]>) {
+    const grid = new Map<number, number>();
+    let prev: number | null = null;
+    for (const [T, R] of pillars) {
+      const n = Math.round(T / TAU);
+      const kuponlar: number[] = [];
+      for (let i = 1; i <= n; i++) kuponlar.push(i * TAU);
+      const p1 = prev;
+      const toplam = (dfT: number) => {
+        let s = 0;
+        for (const t of kuponlar) {
+          if (grid.has(key(t))) s += grid.get(key(t))!;
+          else if (Math.abs(t - T) < 1e-9) s += dfT;
+          else {
+            const w = (t - p1!) / (T - p1!);
+            s += Math.pow(grid.get(key(p1!))!, 1 - w) * Math.pow(dfT, w);
+          }
+        }
+        return s;
+      };
+      const f = (dfT: number) => R * TAU * toplam(dfT) - (1 - dfT);
+      let df = p1 !== null ? grid.get(key(p1))! * 0.9 : 1 / (1 + R * TAU);
+      for (let i = 0; i < 100; i++) {
+        const eps = 1e-8;
+        const adim = f(df) / ((f(df + eps) - f(df)) / eps);
+        df -= adim;
+        if (Math.abs(adim) < 1e-14) break;
+      }
+      for (const t of kuponlar) {
+        if (!grid.has(key(t))) {
+          if (Math.abs(t - T) < 1e-9) grid.set(key(t), df);
+          else {
+            const w = (t - p1!) / (T - p1!);
+            grid.set(key(t), Math.pow(grid.get(key(p1!))!, 1 - w) * Math.pow(df, w));
+          }
+        }
+      }
+      prev = T;
+    }
+    return grid;
+  }
+
+  const kok = document.getElementById('egri-boot')!;
+  const girdiKap = kok.querySelector('#eb-girdiler')!;
+  const tabloGovde = kok.querySelector('#eb-tablo tbody')!;
+  const svg = kok.querySelector('#eb-grafik')!;
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b });
+
+  girdiKap.innerHTML = VARSAYILAN.map(
+    ([ad, , r], i) => `
+    <label><span class="etiket">${ad}</span>
+      <input type="number" step="0.05" data-i="${i}" value="${r}" /></label>`
+  ).join('');
+
+  function ciz() {
+    const oranlar = [...girdiKap.querySelectorAll('input')].map((el) =>
+      parseFloat((el as HTMLInputElement).value)
+    );
+    if (oranlar.some((r) => !isFinite(r) || r <= 0)) return;
+
+    const pillars = VARSAYILAN.map(([, T], i) => [T, oranlar[i] / 100] as [number, number]);
+    const grid = bootstrap(pillars);
+
+    // ── eğriyi sayfaya yayınla ─────────────────────────────
+    const dfFn = (t: number): number => {
+      if (t <= 0) return 1;
+      const tMax = pillars[pillars.length - 1][0];
+      if (t >= tMax) return grid.get(key(tMax))!;
+      if (t <= TAU) return Math.pow(grid.get(key(TAU))!, t / TAU);
+      const k = Math.floor(t / TAU);
+      const t1 = k * TAU, t2 = (k + 1) * TAU;
+      const w = (t - t1) / (t2 - t1);
+      return Math.pow(grid.get(key(t1))!, 1 - w) * Math.pow(grid.get(key(t2))!, w);
+    };
+    (window as any).tloisEgri = { tau: TAU, pillars, df: dfFn };
+    document.dispatchEvent(new CustomEvent('egri-guncellendi'));
+
+    // ── tablo ──────────────────────────────────────────────
+    let satirlar = '';
+    pillars.forEach(([T, R], i) => {
+      const df = grid.get(key(T))!;
+      const zeroBasit = ((1 / df - 1) / T) * 100;
+      const zeroSurekli = (-Math.log(df) / T) * 100;
+      satirlar += `<tr>
+        <td>${VARSAYILAN[i][0]}</td><td>${tr(R * 100)}</td><td>${df.toFixed(6)}</td>
+        <td>${tr(zeroBasit)}</td><td>${tr(zeroSurekli)}</td></tr>`;
+    });
+    tabloGovde.innerHTML = satirlar;
+
+    // ── grafik ─────────────────────────────────────────────
+    const W = 660, H = 300, mL = 46, mR = 12, mT = 12, mB = 30;
+    const zeros = pillars.map(([T]) => (-Math.log(grid.get(key(T))!) / T) * 100);
+    const hepsi = [...oranlar, ...zeros];
+    const yMin = Math.floor(Math.min(...hepsi) / 5) * 5 - 2;
+    const yMax = Math.ceil(Math.max(...hepsi) / 5) * 5 + 2;
+    const x = (t: number) => mL + (t / 10) * (W - mL - mR);
+    const y = (r: number) => mT + (1 - (r - yMin) / (yMax - yMin)) * (H - mT - mB);
+
+    let eksen = '';
+    for (let g2 = yMin + 2; g2 <= yMax; g2 += 5) {
+      eksen += `<line x1="${mL}" y1="${y(g2)}" x2="${W - mR}" y2="${y(g2)}" class="izgara"/>
+        <text x="${mL - 6}" y="${y(g2) + 3}" class="ek-y">${g2}</text>`;
+    }
+    for (const t of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+      eksen += `<text x="${x(t)}" y="${H - 10}" class="ek-x">${t}Y</text>`;
+
+    let yol = '';
+    for (let t = TAU; t <= 10 + 1e-9; t += TAU) {
+      const z = (-Math.log(grid.get(key(t))!) / t) * 100;
+      yol += (yol ? 'L' : 'M') + x(t).toFixed(1) + ',' + y(z).toFixed(1);
+    }
+    const noktalar = pillars
+      .map(([T], i) => `<circle cx="${x(T)}" cy="${y(oranlar[i])}" r="3.5" class="par-nokta"/>`)
+      .join('');
+    svg.innerHTML = `${eksen}<path d="${yol}" class="zero-yol"/>${noktalar}`;
+  }
+
+  girdiKap.addEventListener('input', ciz);
+  const btn = document.getElementById('eb-hesapla')!;
+  btn.addEventListener('click', () => {
+    ciz();
+    btn.classList.add('tamam');
+    btn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => {
+      btn.classList.remove('tamam');
+      btn.textContent = 'Hesapla ↻';
+    }, 900);
+  });
+  ciz();
+</script>
+
+<style>
+  .girdi-izgara {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    padding: 0.8rem 1rem;
+  }
+  .girdi-izgara :global(input) {
+    font-size: 0.82rem;
+    padding: 0.3rem 0.35rem;
+  }
+  svg {
+    display: block;
+    width: calc(100% - 2rem);
+    margin: 0.4rem 1rem;
+    background: var(--paper);
+    border: 1px solid var(--ink-15);
+  }
+  svg :global(.izgara) {
+    stroke: var(--ink-15);
+    stroke-width: 1;
+  }
+  svg :global(.ek-y),
+  svg :global(.ek-x) {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    fill: var(--ink-50);
+  }
+  svg :global(.ek-y) {
+    text-anchor: end;
+  }
+  svg :global(.ek-x) {
+    text-anchor: middle;
+  }
+  svg :global(.zero-yol) {
+    fill: none;
+    stroke: var(--teal);
+    stroke-width: 2;
+  }
+  svg :global(.par-nokta) {
+    fill: var(--claret);
+  }
+  .gosterge {
+    display: flex;
+    gap: 1.4rem;
+    padding: 0 1rem 0.5rem;
+    color: var(--ink-50);
+  }
+  .g-par {
+    color: var(--claret);
+  }
+  .g-zero {
+    color: var(--teal);
+  }
+  .tablo-kab {
+    overflow-x: auto;
+    padding: 0 1rem;
+  }
+  @media (max-width: 640px) {
+    .girdi-izgara {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>

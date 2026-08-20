@@ -1,0 +1,146 @@
+---
+title: 'USD/TRY Devalüasyon Hızı'
+description: 'TL değer kaybının ACT/365 yıllıklandırılmış hızı: 1 hafta / 1 ay / 3 ay pencereli bileşik deval oranları, faiz katmanı ve haftalık-aylık regresyon kanalları.'
+pubDate: 2026-07-15
+updatedDate: 2026-08-18
+tags: ['usdtry', 'fx', 'trend']
+durum: 'aktif'
+kaynak: 'TCMB EVDS (kur + faiz serileri)'
+guncelleme: 'haftalık'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+
+"Kur koptu mu, olağan seyrinde mi?" Bu sorunun doğru birimi seviye değil **hızdır**:
+TL'nin yıllıklandırılmış değer kaybı, carry pozisyonunun kâr-zarar denklemindeki karşı
+bacaktır. Deval hızı faizin altındaysa carry kazandırır; üstüne çıktığı anlar rejim
+değişikliği sinyalidir. Seri EVDS'ten günlük beslenir; son okuma (<Deger proje="usdtry-deval" anahtar="_tarih" ondalik={1}>19.08.2026</Deger>, kur
+<Deger proje="usdtry-deval" anahtar="kur" ondalik={2}>47,83</Deger>): 1 hafta **+%<Deger proje="usdtry-deval" anahtar="d1h" ondalik={1}>21,6</Deger>** · 1 ay **+%<Deger proje="usdtry-deval" anahtar="d1a" ondalik={1}>21,5</Deger>** · 3 ay **+%<Deger proje="usdtry-deval" anahtar="d3a" ondalik={1}>22,4</Deger>** — üçü de politika
+faizinin belirgin altında, carry hâlâ pozitif bölgede; üç pencerenin yakınsaması
+rejimin oturduğunu gösterir.
+
+<GrafikEmbed
+  src="/projeler/usdtry-deval/usdtry_deval.html"
+  baslik="Yıllıklandırılmış devalüasyon hızı (ACT/365) ve faiz katmanı — son 1 yıl"
+  no="01"
+  yukseklik={600}
+/>
+
+## Şekil 01 nasıl hesaplanıyor?
+
+**Deval oranları (sol eksen).** EVDS günlük USD/TRY alış kuru (TP.DK.USD.A.YTL)
+üzerinden üç pencereyle bileşik yıllıklandırma. Faizle aynı gün-sayım tabanını
+kullanırız — **ACT/365, gerçek takvim günü farkıyla**:
+
+$$
+\text{Deval}^{(n)}_t = \left[\left(\frac{P_t}{P_{t-n}}\right)^{365/\Delta d} - 1\right]\times100
+$$
+
+$n$ pencere kaydırması (5 / 21 / 63 iş günü ≈ 1 hafta / 1 ay / 3 ay), $\Delta d$ ise
+iki gözlem tarihinin **gerçek takvim günü farkı** (ör. 5 iş günü ≈ 7 takvim günü,
+21 iş günü ≈ 29-31 gün — sabit üs kullanılmaz, her gözlem çifti kendi $\Delta d$'siyle
+yıllıklanır). Böylece sonuç, ACT/365 kote edilen TL faizleriyle **doğrudan
+karşılaştırılabilir**: aynı ölçekte iki eğri, carry'nin işaretini verir.
+1 haftalık seri gürültülü ama erken uyarıcıdır; 3 aylık seri rejimin kendisini gösterir.
+Aşırı uçlar yalnız eksende [−50, +150] bandına kırpılır; hesap kırpılmaz.
+
+**Faiz katmanı (sağ eksen).** EVDS'ten TLREF, kredi ve mevduat faizi serileri aynı
+grafiğe çizilir. Okuma kuralı: deval eğrisi faiz çizgisinin altında kaldıkça TL carry
+pozitif; kesişimler pozisyon çevirme noktalarıdır.
+
+## Pencere varyantları: 3 ay ve 6 ay
+
+<GrafikEmbed
+  src="/projeler/usdtry-deval/usdtry_deval_3m.html"
+  baslik="Son 3 ay — aynı katmanlar, yakın plan"
+  no="02"
+  yukseklik={560}
+/>
+
+<GrafikEmbed
+  src="/projeler/usdtry-deval/usdtry_deval_6m.html"
+  baslik="Son 6 ay — aynı katmanlar, orta plan"
+  no="03"
+  yukseklik={560}
+/>
+
+Aynı hesap, farklı zoom: 3 aylık pencere (eksen kırpması %60) gün gün akışı, 6 aylık
+pencere (%80) çeyreklik eğilimi gösterir. Uzun grafikte kaybolan kısa yaşamlı
+sıçramalar — tek haftalık müdahale epizotları — 3 aylık pencerede çıplak görünür.
+
+## Olay-bölmeli trend kanalları
+
+<GrafikEmbed
+  src="/projeler/usdtry-deval/usdtry_deval_seg.html"
+  baslik="Segment kanalları: Pre-İmamoğlu / İmamoğlu→Savaş / Savaş sonrası"
+  no="04"
+  yukseklik={600}
+/>
+
+## Şekil 04 nasıl hesaplanıyor?
+
+Deval serisi iki büyük olayla üç rejime bölünür ve her dönemde **ayrı** doğrusal
+regresyon kanalı kurulur; lejant eğimleri %/ay cinsinden verir (1A serisi):
+
+| Dönem | Aralık | Eğim (1A, %/ay) | Okuma |
+| --- | --- | --- | --- |
+| Pre-İmamoğlu | 06.2024 – 19.03.2025 | <Deger proje="usdtry-deval" anahtar="seg_pre_egim" ondalik={1} isaret={true}>+0,6</Deger> | yatay/kontrollü seyir |
+| İmamoğlu → Savaş | 19.03.2025 – 28.02.2026 | <Deger proje="usdtry-deval" anahtar="seg_orta_egim" ondalik={1} isaret={true}>−2,6</Deger> | şok sonrası soğuma trendi |
+| Savaş sonrası | 28.02.2026 – <Deger proje="usdtry-deval" anahtar="seg_son_son" ondalik={1}>19.08.2026</Deger> | **<Deger proje="usdtry-deval" anahtar="seg_son_egim" ondalik={1} isaret={true}>+1,7</Deger>** | açık uçlu: eğim her koşuda yeniden hesaplanır |
+
+Tek regresyonun "ortalama" eğimi bu üç rejimi ezip yok eder — kanal analizi ancak
+kırılma tarihleri açıkça modele verilirse anlamlıdır. Üçüncü satır açık uçludur: son
+gözlem eklendikçe eğim değişir (sayfadaki değer her veri koşusunda yeniden yazılır),
+bu yüzden onu bir "rejim sabiti" değil, savaş sonrası dönemin *o güne kadarki*
+ortalama eğimi olarak okuyun. Kıyas çıpası: aylık ortalamaların dibi
+<Deger proje="usdtry-deval" anahtar="ay_dip_ad" ondalik={1}>Aralık 2025</Deger> (%<Deger proje="usdtry-deval" anahtar="ay_dip_ort" ondalik={1}>12,5</Deger>), zirvesi
+<Deger proje="usdtry-deval" anahtar="ay_zirve_ad" ondalik={1}>Nisan 2025</Deger> (%<Deger proje="usdtry-deval" anahtar="ay_zirve_ort" ondalik={1}>40,8</Deger>); pozitif eğim, deval hızının
+dipten kademeli yükselişinin sürdüğü; negatif eğim, o yükselişin soğuduğu anlamına gelir.
+
+<GrafikEmbed
+  src="/projeler/usdtry-deval/usdtry_weekly.html"
+  baslik="Haftalık regresyon trendleri — yılbaşından bugüne, hafta hafta"
+  no="05"
+  yukseklik={560}
+/>
+
+## Şekil 05 nasıl hesaplanıyor?
+
+Her takvim haftasının içindeki günlük kapanışlara ayrı bir **doğrusal regresyon**
+uygulanır: `polyfit(gün, kur, 1)` — haftanın trend doğrusu ve haftalık ortalama
+etiketiyle çizilir (<Deger proje="usdtry-deval" anahtar="hafta_yil" ondalik={0}>2026</Deger>'da <Deger proje="usdtry-deval" anahtar="hafta_segment" ondalik={0}>34</Deger> hafta segmenti; son tam hafta — <Deger proje="usdtry-deval" anahtar="hafta_son_bas" ondalik={1}>10.08.2026</Deger> ile başlayan — ort. %<Deger proje="usdtry-deval" anahtar="hafta_son_ort" ondalik={2}>21,7</Deger>, eğim <Deger proje="usdtry-deval" anahtar="hafta_son_egim" ondalik={1} isaret={true}>+0,7</Deger> %/hafta; en yüksek ortalamalı hafta <Deger proje="usdtry-deval" anahtar="hafta_zirve_bas" ondalik={1}>08.06.2026</Deger>: ort. %<Deger proje="usdtry-deval" anahtar="hafta_zirve_ort" ondalik={1}>26,2</Deger>). Tek gözlemli ya da varyanssız pencereler (tatil haftaları)
+regresyondan düşülür; aksi hâlde eğim tanımsızdır. Haftadan haftaya eğim değişimi,
+müdahale/akış dönemlerini gün hassasiyetinde yakalar: kontrollü seyirde eğimler
+neredeyse paraleldir, kopuş haftaları açıyla kendini belli eder.
+
+<GrafikEmbed
+  src="/projeler/usdtry-deval/usdtry_monthly.html"
+  baslik="Aylık regresyon trendleri — ay içi eğim ve ay ortalamaları"
+  no="06"
+  yukseklik={560}
+/>
+
+## Şekil 06 nasıl hesaplanıyor?
+
+Aynı yöntem ay pencereleriyle: her ayın günlük kapanışlarına doğrusal regresyon,
+etikette ayın ortalama yıllıklandırılmış deval hızı (son iki tam ay: <Deger proje="usdtry-deval" anahtar="ay_onceki_ad" ondalik={1}>Haziran 2026</Deger> %<Deger proje="usdtry-deval" anahtar="ay_onceki_ort" ondalik={1}>23,4</Deger> · <Deger proje="usdtry-deval" anahtar="ay_son_ad" ondalik={1}>Temmuz 2026</Deger> %<Deger proje="usdtry-deval" anahtar="ay_son_ort" ondalik={1}>22,3</Deger>;
+zirve <Deger proje="usdtry-deval" anahtar="ay_zirve_ad" ondalik={1}>Nisan 2025</Deger> %<Deger proje="usdtry-deval" anahtar="ay_zirve_ort" ondalik={1}>40,8</Deger>, dip <Deger proje="usdtry-deval" anahtar="ay_dip_ad" ondalik={1}>Aralık 2025</Deger> %<Deger proje="usdtry-deval" anahtar="ay_dip_ort" ondalik={1}>12,5</Deger>; içinde bulunulan ay eksik olduğu için sayılmaz). Ay içi eğim ile aylar arası sıçramalar (ay sonu fixing etkileri)
+burada ayrışır — haftalık grafiğin gürültüsü ile 3 aylık serinin ataleti arasında
+orta vadeli bir okuma katmanı sağlar.
+
+## Yorum notları
+
+- **Değer tarihi:** TCMB, ertesi iş gününün gösterge kurunu bugün öğleden sonra
+  yayımlar. Hat bu erken yayımlanan kuru bilinçli olarak alır (EVDS sorgusu birkaç gün
+  ileri biter), bu yüzden "son okuma" tarihi içinde bulunduğunuz günden bir iş günü
+  ileride olabilir — bu bir hata değil, kurun **değer tarihidir**. Grafikler ve
+  `ozet.json` aynı pencereyi kullanır; sayfa metnindeki sayı ile grafiğin son noktası
+  tanımı gereği aynı gözlemdir.
+- **Konvansiyon:** Yıllıklandırma ACT/365 ve takvim günü tabanlıdır — TL faizleriyle
+  (ACT/365) aynı ölçek. İş günü (252) tabanlı yıllıklandırma aynı seriyi ~%3-4 farklı
+  gösterir ve faizle karşılaştırmayı bozar; bu projede kullanılmaz.
+- Deval hızı seviyeden türetildiği için fixing saatine duyarlıdır; seri gün sonu
+  kapanışla kuruludur, gün içi uçlar görünmez.
+- EVDS faiz serilerinden biri yayında gecikirse grafik o katmanı uyarıyla atlar;
+  deval üretimi durmaz (hattın dayanıklılık tasarımı).

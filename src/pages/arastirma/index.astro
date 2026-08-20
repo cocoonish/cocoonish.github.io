@@ -1,0 +1,52 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import KayitKarti from '../../components/KayitKarti.astro';
+
+const arastirmalar = (await getCollection('arastirma'))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .sort((a, b) => (a.data.durum === 'arsiv' ? 1 : 0) - (b.data.durum === 'arsiv' ? 1 : 0));
+---
+
+<Base title="Araştırma" description="Faiz, kur ve makro üzerine derinlemesine araştırma notları.">
+  <header class="liste-baslik yuksel">
+    <p class="etiket kicker">02 — Bölüm</p>
+    <h1>Araştırma</h1>
+    <p class="alt">
+      Piyasa mekaniği üzerine daha uzun soluklu notlar: metodoloji, formüller ve
+      okurken denenebilen hesap araçları bir arada.
+    </p>
+  </header>
+  <div class="kayit-izgara">
+    {
+      arastirmalar.map((a, i) => (
+        <KayitKarti href={`/arastirma/${a.id}/`} sira={i + 1} gecikme={i * 60} {...a.data} />
+      ))
+    }
+  </div>
+</Base>
+
+<style>
+  .liste-baslik {
+    padding: 3rem 0 2.2rem;
+    max-width: 52ch;
+  }
+  .kicker {
+    color: var(--claret);
+    margin: 0 0 0.8rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 72;
+    font-size: clamp(2.2rem, 5vw, 3rem);
+    font-weight: 540;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin: 0 0 0.9rem;
+  }
+  .alt {
+    font-size: 1.08rem;
+    color: var(--ink-70);
+    margin: 0;
+  }
+</style>

@@ -1,0 +1,107 @@
+---
+/**
+ * Python projelerinin ürettiği interaktif (Plotly vb.) HTML çıktısını
+ * makale içine gömer. Dosyalar site/public/ altında durur;
+ * güncelleme akışı yeni HTML'i aynı yola kopyalayınca grafik de yenilenir.
+ * Kopyalama sonrası ev stili: python3 site/tools/plotly_stil.py --hepsi
+ */
+interface Props {
+  src: string; // ör. /projeler/tcmb-net-rezerv/grafik.html
+  baslik: string;
+  no?: string; // ör. "01"
+  yukseklik?: number;
+}
+
+const { src, baslik, no, yukseklik = 540 } = Astro.props;
+---
+
+<figure class="grafik">
+  <figcaption>
+    <span class="etiket grafik-no">{no ? `Şekil ${no}` : 'Şekil'}</span>
+    <span class="grafik-baslik">{baslik}</span>
+    <a class="etiket tam-ekran" href={src} target="_blank" rel="noopener">Tam ekran ↗</a>
+  </figcaption>
+  <div class="cerceve" style={`height:${yukseklik}px`}>
+    <div class="yukleniyor etiket">Grafik yükleniyor…</div>
+    <iframe
+      src={src}
+      title={baslik}
+      loading="lazy"
+      onload="this.parentElement.classList.add('hazir')"></iframe>
+  </div>
+</figure>
+
+<style>
+  .grafik {
+    margin: 2.2em 0;
+    border: 1px solid var(--ink-30);
+    background: #fff;
+    box-shadow: 0 1px 0 var(--ink-15);
+  }
+  figcaption {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    padding: 0.55rem 0.9rem;
+    border-bottom: 1px solid var(--ink-15);
+    background: var(--paper-2);
+  }
+  .grafik-no {
+    color: var(--claret);
+    white-space: nowrap;
+  }
+  .grafik-baslik {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink-70);
+  }
+  .tam-ekran {
+    margin-left: auto;
+    white-space: nowrap;
+    text-decoration: none;
+    color: var(--ink-50);
+  }
+  .tam-ekran:hover {
+    color: var(--claret);
+  }
+  .cerceve {
+    position: relative;
+    background:
+      linear-gradient(100deg, transparent 30%, rgba(33, 27, 18, 0.05) 50%, transparent 70%)
+        no-repeat 0 0 / 300% 100%,
+      #fff;
+    animation: parilti 1.6s linear infinite;
+  }
+  @keyframes parilti {
+    to {
+      background-position: -300% 0, 0 0;
+    }
+  }
+  .yukleniyor {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--ink-30);
+  }
+  iframe {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .cerceve.hazir {
+    animation: none;
+    background: #fff;
+  }
+  .cerceve.hazir iframe {
+    opacity: 1;
+  }
+  .cerceve.hazir .yukleniyor {
+    display: none;
+  }
+</style>

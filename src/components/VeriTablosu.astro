@@ -1,0 +1,170 @@
+---
+/**
+ * VeriTablosu — /projeler/<proje>/tablolar.json içindeki bir tabloyu istemcide
+ * sıralanabilir, filtrelenebilir, sayfalı ve CSV olarak indirilebilir gösterir.
+ *
+ * Kullanım:
+ *   <VeriTablosu proje="hazine-ihrac" tablo="ihaleler" baslik="…"
+ *      varsayilan={['ISIN','Senet Tanımı','İhale Tarihi','Toplam(Gerçekleşme)']}
+ *      gruplar={{ 'ROT': ['ROT Toplam(Teklif)', …], 'Faiz': [...] }} />
+ *
+ * Kurallar: veri kaynağı tablo_uret.py'nin ürettiği JSON — Excel'in HER sütunu orada.
+ * Sayfa yalnız `varsayilan` sütunları açık başlatır; `gruplar` seçicisiyle gerisi açılır.
+ * Böylece 32 sütunlu 441 satır okunabilir kalır ama hiçbir şey saklanmaz.
+ */
+interface Props {
+  proje: string;
+  tablo: string;
+  baslik: string;
+  varsayilan?: string[];
+  gruplar?: Record<string, string[]>;
+  sayfa?: number;
+}
+const { proje, tablo, baslik, varsayilan = [], gruplar = {}, sayfa = 25 } = Astro.props;
+const kimlik = `vt-${proje}-${tablo}`.replace(/[^a-z0-9-]/gi, '');
+---
+
+<div class="hesap veri-tablosu" id={kimlik}
+     data-proje={proje} data-tablo={tablo} data-sayfa={sayfa}
+     data-varsayilan={JSON.stringify(varsayilan)} data-gruplar={JSON.stringify(gruplar)}>
+  <div class="hesap-ust">
+    <span class="etiket">Veri Tablosu</span>
+    <span class="hesap-ad">{baslik}</span>
+  </div>
+  <div class="vt-arac">
+    <input type="search" class="vt-ara" placeholder="Ara (tüm sütunlarda)…" />
+    <div class="vt-gruplar"></div>
+    <button type="button" class="vt-csv">CSV indir ↓</button>
+  </div>
+  <div class="vt-kap"><table class="vt-tablo"><thead></thead><tbody></tbody></table></div>
+  <div class="vt-alt">
+    <span class="vt-bilgi">yükleniyor…</span>
+    <span class="vt-sayfa"></span>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.veri-tablosu').forEach(async (kap) => {
+    const proje = kap.dataset.proje!, tabloAd = kap.dataset.tablo!;
+    const sayfaBoy = parseInt(kap.dataset.sayfa || '25');
+    const varsayilan: string[] = JSON.parse(kap.dataset.varsayilan || '[]');
+    const gruplar: Record<string, string[]> = JSON.parse(kap.dataset.gruplar || '{}');
+    const bilgi = kap.querySelector('.vt-bilgi') as HTMLElement;
+
+    let veri: { sutunlar: string[]; satirlar: any[][]; tarih_sutunlari: string[]; aciklama: string };
+    let uretim = '';
+    try {
+      const r = await fetch(`/projeler/${proje}/tablolar.json`, { cache: 'no-cache' });
+      const j = await r.json();
+      veri = j.tablolar[tabloAd]; uretim = j.uretim;
+      if (!veri) throw new Error('tablo yok: ' + tabloAd);
+    } catch (e) {
+      bilgi.textContent = 'Tablo yüklenemedi: ' + e; return;
+    }
+
+    const S = veri.sutunlar;
+    const tarihS = new Set(veri.tarih_sutunlari || []);
+    let acik = new Set<string>(varsayilan.length ? varsayilan.filter((s) => S.includes(s)) : S);
+    let siraKol = -1, siraYon = 1, ara = '', sayfaNo = 0;
+
+    // --- yardımcılar ---
+    const trSayi = (v: any) =>
+      typeof v === 'number'
+        ? v.toLocaleString('tr-TR', { maximumFractionDigits: Number.isInteger(v) ? 0 : 3 })
+        : (v ?? '');
+    const isoTarih = (s: string) => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(s || ''); return m ? `${m[3]}-${m[2]}-${m[1]}` : ''; };
+    const anahtar = (v: any, kol: string) => (tarihS.has(kol) ? isoTarih(v) : v);
+
+    // --- grup seçici ---
+    const gKap = kap.querySelector('.vt-gruplar') as HTMLElement;
+    const grupAdlari = Object.keys(gruplar);
+    if (grupAdlari.length) {
+      gKap.innerHTML = '<span class="etiket">Sütun grupları:</span> ' + grupAdlari
+        .map((g) => `<label class="vt-grup"><input type="checkbox" data-g="${g}" ${gruplar[g].some((s) => acik.has(s)) ? 'checked' : ''}/> ${g}</label>`)
+        .join(' ') + ` <label class="vt-grup"><input type="checkbox" data-g="__hepsi"/> hepsi</label>`;
+      gKap.addEventListener('change', (e) => {
+        const cb = e.target as HTMLInputElement, g = cb.dataset.g!;
+        if (g === '__hepsi') { acik = cb.checked ? new Set(S) : new Set(varsayilan.filter((s) => S.includes(s))); gKap.querySelectorAll<HTMLInputElement>('input[data-g]').forEach((i) => { if (i.dataset.g !== '__hepsi') i.checked = cb.checked; }); }
+        else gruplar[g].forEach((s) => (cb.checked ? acik.add(s) : acik.delete(s)));
+        ciz();
+      });
+    }
+
+    // --- süzme + sıralama ---
+    function goster() {
+      const q = ara.toLocaleLowerCase('tr');
+      let sat = veri.satirlar;
+      if (q) sat = sat.filter((r) => r.some((v) => String(v ?? '').toLocaleLowerCase('tr').includes(q)));
+      if (siraKol >= 0) {
+        const kol = S[siraKol];
+        sat = [...sat].sort((a, b) => {
+          const x = anahtar(a[siraKol], kol), y = anahtar(b[siraKol], kol);
+          if (x == null || x === '') return 1; if (y == null || y === '') return -1;
+          return (x < y ? -1 : x > y ? 1 : 0) * siraYon;
+        });
+      }
+      return sat;
+    }
+
+    function ciz() {
+      const sat = goster();
+      const idx = S.map((s, i) => (acik.has(s) ? i : -1)).filter((i) => i >= 0);
+      const th = kap.querySelector('thead')!, tb = kap.querySelector('tbody')!;
+      th.innerHTML = '<tr>' + idx.map((i) =>
+        `<th data-i="${i}" class="${siraKol === i ? (siraYon > 0 ? 'artan' : 'azalan') : ''}">${S[i]}</th>`).join('') + '</tr>';
+      const bas = sayfaNo * sayfaBoy, dilim = sat.slice(bas, bas + sayfaBoy);
+      tb.innerHTML = dilim.map((r) => '<tr>' + idx.map((i) =>
+        `<td class="${typeof r[i] === 'number' ? 'sayi' : ''}">${trSayi(r[i])}</td>`).join('') + '</tr>').join('');
+      const toplam = sat.length, sayfaSay = Math.max(1, Math.ceil(toplam / sayfaBoy));
+      bilgi.textContent = `${toplam.toLocaleString('tr-TR')} satır · ${idx.length}/${S.length} sütun · veri: ${uretim}`;
+      (kap.querySelector('.vt-sayfa') as HTMLElement).innerHTML =
+        `<button type="button" data-s="-1" ${sayfaNo === 0 ? 'disabled' : ''}>‹</button> ` +
+        `${sayfaNo + 1} / ${sayfaSay} ` +
+        `<button type="button" data-s="1" ${sayfaNo >= sayfaSay - 1 ? 'disabled' : ''}>›</button>`;
+    }
+
+    kap.querySelector('thead')!.addEventListener('click', (e) => {
+      const th = (e.target as HTMLElement).closest('th'); if (!th) return;
+      const i = parseInt(th.dataset.i!);
+      if (siraKol === i) siraYon = -siraYon; else { siraKol = i; siraYon = 1; }
+      sayfaNo = 0; ciz();
+    });
+    kap.querySelector('.vt-sayfa')!.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest('button'); if (!b) return;
+      sayfaNo += parseInt(b.dataset.s!); ciz();
+    });
+    (kap.querySelector('.vt-ara') as HTMLInputElement).addEventListener('input', (e) => {
+      ara = (e.target as HTMLInputElement).value; sayfaNo = 0; ciz();
+    });
+    kap.querySelector('.vt-csv')!.addEventListener('click', () => {
+      // süzülmüş + sıralı, AÇIK sütunlar; Excel'in Türkçe ayarına uygun ; ayraç ve BOM
+      const idx = S.map((s, i) => (acik.has(s) ? i : -1)).filter((i) => i >= 0);
+      const kac = (v: any) => { const s = String(v ?? ''); return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+      const satirlar = [idx.map((i) => kac(S[i])).join(';'), ...goster().map((r) => idx.map((i) => kac(r[i])).join(';'))];
+      const blob = new Blob(['﻿' + satirlar.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `${proje}-${tabloAd}.csv`; a.click(); URL.revokeObjectURL(a.href);
+    });
+    ciz();
+  });
+</script>
+
+<style>
+  .vt-arac { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; padding: 0.7rem 1rem 0.4rem; }
+  .vt-ara { flex: 1 1 220px; min-width: 180px; }
+  .vt-gruplar { display: flex; flex-wrap: wrap; gap: 0.3rem 0.8rem; align-items: center; font-size: 0.82rem; }
+  .vt-grup { display: inline-flex; gap: 0.3rem; align-items: center; cursor: pointer; }
+  .vt-csv { font-size: 0.78rem; padding: 0.3rem 0.7rem; }
+  .vt-kap { overflow-x: auto; padding: 0 1rem; }
+  .vt-tablo { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .vt-tablo th { position: sticky; top: 0; background: var(--paper); cursor: pointer; white-space: nowrap;
+                 text-align: left; padding: 0.4rem 0.6rem; border-bottom: 2px solid var(--ink-30); user-select: none; }
+  .vt-tablo th.artan::after { content: ' ▲'; color: var(--claret); }
+  .vt-tablo th.azalan::after { content: ' ▼'; color: var(--claret); }
+  .vt-tablo td { padding: 0.3rem 0.6rem; border-bottom: 1px solid var(--ink-15); white-space: nowrap; }
+  .vt-tablo td.sayi { text-align: right; font-variant-numeric: tabular-nums; }
+  .vt-tablo tbody tr:hover { background: color-mix(in srgb, var(--teal) 8%, transparent); }
+  .vt-alt { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem 0.7rem;
+            font-size: 0.78rem; color: var(--ink-50); }
+  .vt-sayfa button { padding: 0.1rem 0.5rem; margin: 0 0.2rem; }
+</style>

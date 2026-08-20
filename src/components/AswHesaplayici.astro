@@ -1,0 +1,205 @@
+---
+/**
+ * ASW spread hesaplayıcısı — ASW_Calculator.xlsx metodolojisinin portu.
+ * OIS eğrisi olarak bootstrap aracına girilen kotasyonları kullanır
+ * (window.tloisEgri): kotasyonu orada değiştir, ASW burada güncellenir.
+ * Bloomberg (TR) metriği + alternatif zero metrikleri + klasik par ASW.
+ */
+---
+
+<div class="hesap" id="asw-hesap">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı · 04</span>
+    <span class="hesap-ad">Asset Swap Spread — Eğriye Bağlı</span>
+  </div>
+
+  <div class="hesap-govde">
+    <div class="blok">
+      <p class="blok-baslik etiket">A · Tahvil kimliği → kirli fiyat</p>
+      <div class="girdiler">
+        <label><span class="etiket">Kupon (yıllık %)</span>
+          <input type="number" id="aw-kupon" value="26.20" step="0.05" /></label>
+        <label><span class="etiket">Kupon sıklığı (yılda)</span>
+          <input type="number" id="aw-frekans" value="2" step="1" min="1" max="4" /></label>
+        <label><span class="etiket">Temiz fiyat</span>
+          <input type="number" id="aw-temiz" value="82.70" step="0.05" /></label>
+        <label><span class="etiket">Son kupondan geçen gün</span>
+          <input type="number" id="aw-gun" value="22" step="1" min="0" /></label>
+      </div>
+      <div class="ara-cikti">
+        <div><span class="etiket">İşlemiş faiz</span><output class="ara-deger" id="aw-ai">—</output></div>
+        <div><span class="etiket">Kirli fiyat</span><output class="ara-deger" id="aw-dp">—</output></div>
+        <div><span class="etiket">PV (OIS iskonto)</span><output class="ara-deger" id="aw-pv">—</output></div>
+      </div>
+    </div>
+
+    <div class="blok">
+      <p class="blok-baslik etiket">B · Spread metrikleri</p>
+      <div class="girdiler">
+        <label><span class="etiket">Tahvil YTM (%)</span>
+          <input type="number" id="aw-ytm" value="32.20" step="0.05" /></label>
+        <label><span class="etiket">Vadeye kalan gün</span>
+          <input type="number" id="aw-vade" value="2709" step="1" min="92" max="3650" /></label>
+      </div>
+      <div class="ara-cikti">
+        <div><span class="etiket">OIS par @ vade (lineer interp)</span><output class="ara-deger" id="aw-par">—</output></div>
+        <div><span class="etiket">OIS zero @ vade (yıllık)</span><output class="ara-deger" id="aw-zero">—</output></div>
+      </div>
+      <div class="sonuc">
+        <span class="etiket">ASW — Bloomberg TR metriği (YTM − par)</span>
+        <output class="sonuc-buyuk" id="aw-asw">—</output>
+      </div>
+      <div class="alt-metrik etiket">
+        <span>YTM − zero (yıllık): <b id="aw-m2">—</b></span>
+        <span>Klasik par ASW (PV−DP)/A: <b id="aw-m3">—</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="aw-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Girdiler ve eğri değişince canlı güncellenir.</span>
+  </div>
+
+  <p class="hesap-dip">
+    Eğri = bootstrap aracındaki kotasyonlar; orada senaryo değiştirin, ASW anında tepki verir.
+    Dik eğride par ve zero metrikleri yüzlerce bps ayrışabilir — Bloomberg TR Hazine
+    tahvilleri için PAR karşılaştırması kullanır (kuponlu enstrümanla kuponlu enstrüman).
+    Farklı gün kotasyonlarını karıştırmamaya dikkat: YTM ile eğri aynı güne ait olmalı.
+  </p>
+</div>
+
+<script>
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const yaz = (id: string, m: string) =>
+    ((document.getElementById(id) as HTMLElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b });
+
+  function hesapla() {
+    const egri = (window as any).tloisEgri;
+    if (!egri) return;
+    const { tau, df, pillars } = egri as {
+      tau: number; df: (t: number) => number; pillars: Array<[number, number]>;
+    };
+
+    // A — işlemiş faiz & kirli fiyat & OIS PV
+    const kupon = oku('aw-kupon'), frekans = oku('aw-frekans');
+    const temiz = oku('aw-temiz'), gun = oku('aw-gun');
+    const periyot = 365 / frekans;
+    const ai = (kupon / frekans) * (gun / periyot);
+    const dp = temiz + ai;
+    yaz('aw-ai', tr(ai, 4));
+    yaz('aw-dp', tr(dp, 4));
+
+    const T = oku('aw-vade') / 365;
+    // kupon akışları: vadeden geriye periyot adımlarıyla
+    let pv = 0;
+    const c = kupon / frekans;
+    for (let t = T; t > 1e-9; t -= 1 / frekans) {
+      pv += (c + (Math.abs(t - T) < 1e-9 ? 100 : 0)) * df(t);
+    }
+    yaz('aw-pv', tr(pv, 2));
+
+    // B — metrikler
+    const ytm = oku('aw-ytm') / 100;
+    // par interp: pillar (T yıl, R) üzerinde lineer
+    let par = pillars[pillars.length - 1][1];
+    for (let i = 0; i < pillars.length - 1; i++) {
+      const [t1, r1] = pillars[i], [t2, r2] = pillars[i + 1];
+      if (T >= t1 && T <= t2) { par = r1 + ((r2 - r1) * (T - t1)) / (t2 - t1); break; }
+    }
+    if (T < pillars[0][0]) par = pillars[0][1];
+    const zeroY = Math.pow(1 / df(T), 1 / T) - 1;
+    yaz('aw-par', '%' + tr(par * 100, 3));
+    yaz('aw-zero', '%' + tr(zeroY * 100, 3));
+
+    const asw = (ytm - par) * 1e4;
+    yaz('aw-asw', (asw >= 0 ? '+' : '') + tr(asw, 1) + ' bps');
+    yaz('aw-m2', (ytm - zeroY >= 0 ? '+' : '') + tr((ytm - zeroY) * 1e4, 1) + ' bps');
+
+    // klasik par-par ASW: a = (PV_ois − DP) / (100 × A_quarterly)
+    let A = 0;
+    for (let t = tau; t <= T + 1e-9; t += tau) A += tau * df(t);
+    const klasik = ((pv - dp) / (100 * A)) * 1e4;
+    yaz('aw-m3', (klasik >= 0 ? '+' : '') + tr(klasik, 1) + ' bps');
+  }
+
+  document.querySelectorAll('#asw-hesap input').forEach((el) =>
+    el.addEventListener('input', hesapla)
+  );
+  document.addEventListener('egri-guncellendi', hesapla);
+  const awBtn = document.getElementById('aw-hesapla')!;
+  awBtn.addEventListener('click', () => {
+    hesapla();
+    awBtn.classList.add('tamam');
+    awBtn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => {
+      awBtn.classList.remove('tamam');
+      awBtn.textContent = 'Hesapla ↻';
+    }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .hesap-govde {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .blok {
+    padding: 1rem;
+  }
+  .blok + .blok {
+    border-left: 1px solid var(--ink-30);
+  }
+  .blok-baslik {
+    color: var(--claret);
+    margin: 0 0 0.7rem;
+  }
+  .girdiler {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+  }
+  .ara-cikti {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.6rem;
+    margin-top: 0.8rem;
+  }
+  .ara-cikti .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .sonuc {
+    margin-top: 0.9rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--ink-30);
+  }
+  .sonuc .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .alt-metrik {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1.5rem;
+    margin-top: 0.6rem;
+    color: var(--ink-50);
+  }
+  .alt-metrik b {
+    color: var(--teal);
+  }
+  @media (max-width: 640px) {
+    .hesap-govde {
+      grid-template-columns: 1fr;
+    }
+    .blok + .blok {
+      border-left: none;
+      border-top: 1px solid var(--ink-30);
+    }
+  }
+</style>

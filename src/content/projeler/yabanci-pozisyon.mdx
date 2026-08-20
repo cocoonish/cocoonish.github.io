@@ -1,0 +1,348 @@
+---
+title: 'Yabancı Pozisyonu: DİBS ve Hisse Akımları'
+description: 'Yurt dışı yerleşiklerin DİBS ve hisse senedi haftalık net işlemleri — TCMB menkul kıymet istatistiklerinden kümülatif ve YTD karşılaştırmalı akım takibi.'
+pubDate: 2026-08-05
+tags: ['akım', 'dibs', 'hisse', 'tcmb']
+durum: 'aktif'
+kaynak: 'TCMB EVDS — Haftalık Menkul Kıymet İstatistikleri'
+guncelleme: 'haftalık (Perşembe 14:30)'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+
+TL pozisyonu taşıyan herkesin haftada bir bakması gereken tek sayı varsa, yabancının
+o hafta TRY varlıklara **net ne kadar para koyduğu**dur. Carry işleminin yakıtı budur:
+DİBS'e giren yabancı parası kur baskısını emer, çıkışı kuru ve tahvil getirisini aynı
+anda vurur. Bu proje TCMB'nin haftalık menkul kıymet istatistiklerinden iki net işlem
+serisini çeker — yurt dışı yerleşiklerin **DİBS kesin alım** ve **hisse senedi**
+akımları — ve bunları iki farklı zaman perspektifinde okur: serinin başından bu yana
+**kümülatif** birikim ve her yılın **yılbaşından bugüne (YTD)** karşılaştırması.
+
+Seri <Deger proje="yabanci-pozisyon" anahtar="baslangic" ondalik={0}>11.09.2020</Deger>
+tarihinde başlıyor; şu an <Deger proje="yabanci-pozisyon" anahtar="hafta_sayisi" ondalik={0}>309</Deger>
+haftalık gözlem var ve son gözlem
+<Deger proje="yabanci-pozisyon" anahtar="son_hafta" ondalik={0}>07.08.2026</Deger>
+(bugüne göre <Deger proje="yabanci-pozisyon" anahtar="gecikme_gun" ondalik={0}>11</Deger>
+gün gecikme, durum: <Deger proje="yabanci-pozisyon" anahtar="tazelik" ondalik={0}>güncel</Deger>).
+
+## Veri: TCMB Haftalık Menkul Kıymet İstatistikleri
+
+Kaynak, TCMB'nin her **Perşembe saat 14:30**'da yayımladığı Menkul Kıymet
+İstatistikleri tablosudur; referans dönem bir önceki haftadır ve üretim süresi 4 iş
+günüdür. Veri EVDS'te `bie_mknethar` veri grubunda zaman serisi olarak durur.
+Kullanılan iki seri:
+
+| Kalem | EVDS kodu | Tablo konumu |
+| --- | --- | --- |
+| Hisse senedi, net işlem | `TP.MKNETHAR.M7` | 2.1.1. |
+| DİBS (Kesin Alım), net işlem | `TP.MKNETHAR.M8` | 2.1.2. |
+
+Numaralandırma tesadüfi değil, **tablonun hiyerarşisidir** ve serinin ne olduğunu
+tanımlar: her iki kod da "**2. Net Değişim Genel Toplam**" başlığı altında,
+"2.1. Yurt İçi Piyasa Toplam" alt kırılımındadır. Yani bunlar *stok* değil **akım**
+serileridir. Aynı veri grubundaki stok karşılıkları `TP.MKNETHAR.M1` (hisse stoku) ve
+`TP.MKNETHAR.M2`'dir (DİBS stoku) — bu projede bilinçli olarak kullanılmazlar.
+
+Ayrımın EVDS meta verisinde makine tarafından okunabilir bir karşılığı da var ve
+kümülatif toplama işleminin meşruiyeti buradan gelir:
+
+| Seri | `DEFAULT_AGG_METHOD` | `SUMABLE` |
+| --- | --- | --- |
+| M7 / M8 (net işlem) | `sum` — KÜMÜLATİF | **1** |
+| M1 / M2 (stok) | `last` — BİTİŞ | **0** |
+
+TCMB akım serilerini "toplanabilir", stok serilerini "toplanamaz" olarak işaretler.
+Bu sayfadaki bütün kümülatif hesaplar bu izne dayanır; stok serisiyle aynı işlemi
+yapmak (haftalık stokları toplamak) anlamsız bir sayı üretirdi.
+
+### "Net işlem" tam olarak ne ölçüyor?
+
+Kritik nokta: net işlem, iki hafta arasındaki stok farkı **değildir**. Stok farkı
+fiyat ve kur hareketlerini de içerir; TCMB bunları arındırır. Resmî tanım, stok
+farkının fiyat ve kur etkilerinden arındırılmasıyla hesaplandığını söyler. Pratik
+karşılığı şudur: BIST %10 düşerse yabancının hisse **stoku** dolar bazında erir ama
+tek bir hisse satmamışsa **net işlem sıfırdır**. Piyasaya para girip girmediğini
+ölçmek istiyorsanız bakmanız gereken seri budur.
+
+Arındırma iki enstrüman için **farklı formüllerle** yapılır — ve bu, sayfanın
+sonundaki varsayım notlarından birinin kaynağıdır.
+
+**Hisse senedi** — hafta içindeki *günlük* net değişimlerin USD karşılıkları toplanır:
+
+$$
+\text{Net İşlem}^{USD}_t=\sum_i\sum_{p=0}^{n-1}\left\lbrace\left(N^i_{t-p}-N^i_{t-p-1}\right)\times P^i_{t-p-2}\div E_{t-p-2}\right\rbrace
+$$
+
+**Borçlanma senedi (DİBS)** — *haftalık* stok değişimi üzerinden, iki haftanın fiyat
+ortalamasıyla değerlenip haftanın **ortalama** kuruna bölünür:
+
+$$
+\text{Net İşlem}^{USD}_t=\sum_i\left\lbrace\left(N^i_t-N^i_{t-1}\right)\times\frac{P^i_t+P^i_{t-1}}{2}\div\left(\frac{1}{n}\sum_{p=0}^{n-1}E_{t-p}\right)\right\rbrace
+$$
+
+Notasyon: $i$ menkul kıymeti, $N$ nominal (yüz) değeri, $P$ piyasa fiyatını, $E$
+TCMB'nin gösterge USD alış kurunu, $n$ haftadaki iş günü sayısını, $t$ haftanın son
+iş gününü gösterir. Fiyat kaynağı hisse için günlük ağırlıklı ortalama fiyat, DİBS
+için TCMB'nin "DİBS ve Kira Sertifikaları Günlük Gösterge Niteliğindeki Değerleri"dir.
+
+**Birim milyon USD'dir** — formüllerdeki $\div E$ bölmesi bunu doğrudan gösterir.
+Sayfadaki bütün rakamlar milyon USD'dir; aksi belirtilmedikçe "net" kelimesi
+alım eksi satım anlamındadır.
+
+### Kapsam sınırları: neyin içeride, neyin dışarıda olduğu
+
+Üç tanım, serinin ne *olmadığını* belirler ve yanlış okumaların çoğu bu üçünden çıkar:
+
+**1 — "Kesin Alım" repo'yu dışlar.** TCMB istatistikleri **ekonomik mülkiyet**
+esasına göre derlenir. Repo, teminat ve ödünç işlemlerinde menkul kıymetin *hukuki*
+sahibi değişir ama riski ve getirisi orijinal sahipte kaldığı için *ekonomik* sahibi
+değişmez. Kesin alım, "belirli bir fiyattan piyasadan satın alma; alıcının geri satma
+yükümlülüğü yok" demektir. Ters repo, teminat ve ödünç yoluyla edinilen DİBS ayrı
+kalemlerde raporlanır ve **bu seriye girmez**. Dolayısıyla yabancının repo kanalıyla
+aldığı geçici pozisyon burada görünmez — ki bu bir kusur değil, tam olarak istenen
+şeydir: kalıcı para ile geçici teminat hareketini karıştırmaz.
+
+**2 — Yalnızca yurt içi piyasa.** Her iki seri de "2.1. Yurt İçi Piyasa" altındadır.
+Hazine'nin yurt dışında ihraç ettiği eurobond'lara giren yabancı parası
+**bu sayfada yoktur** (o kalem tablonun 2.2 kolunda durur). "Yabancı Türkiye'ye para
+soktu" cümlesi eurobond talebiyle karşılanıyorsa bu grafikler onu göstermez.
+
+**3 — "Yurt dışı yerleşik" IMF Ödemeler Dengesi El Kitabı 6. baskısına göre
+tanımlanır**: bir ekonomide bir yıldan uzun süre yerleşik olup ekonomik faaliyet
+yürütenler yerleşiktir. İki sonucu sezgiye aykırıdır ve akım okurken önemlidir:
+
+- Yabancı bankaların **Türkiye'deki şubeleri yerleşiktir** — alımları bu seride
+  görünmez. Yabancı sermayeli ama Türk hukukuna göre kurulmuş şirketler de yerleşiktir.
+- Türk bankalarının **yurt dışı şubeleri yerleşik değildir** — alımları bu seriye
+  *girer*. Yani "yabancı akımı"nın bir kısmı aslında Türk bankalarının offshore
+  kollarıdır. TCMB bu kalemi `TP.MKNETHAR.M80`/`M82` memo satırlarında ayrıca verir;
+  büyük ve açıklanamayan bir haftalık hareket gördüğünüzde ilk bakılacak yer orasıdır.
+
+## Şekil 01 — Kümülatif akım
+
+<GrafikEmbed
+  src="/projeler/yabanci-pozisyon/kumulatif.html"
+  baslik="Serinin başından bugüne kümülatif net akım — DİBS ve hisse (sol), toplam (sağ eksen)"
+  no="01"
+  yukseklik={640}
+/>
+
+### Şekil 01 nasıl hesaplanıyor?
+
+**Veri.** `TP.MKNETHAR.M7` ve `TP.MKNETHAR.M8`, EVDS'ten tek istekle,
+<Deger proje="yabanci-pozisyon" anahtar="baslangic" ondalik={0}>11.09.2020</Deger>'den
+bugüne çekilir. Sorgu bitişi bilerek 10 gün ileri alınır: EVDS gelecek tarihli bitiş
+için yalnız yayımlanmış satırları döner, böylece Perşembe yayımının düştüğü gün
+sınırda kaçırılmaz.
+
+**Dönüşüm.** Haftalık akımlar başlangıçtan itibaren toplanır:
+
+$$
+K^{\text{DİBS}}_T=\sum_{t=t_0}^{T} F^{\text{DİBS}}_t,\qquad
+K^{\text{Hisse}}_T=\sum_{t=t_0}^{T} F^{\text{Hisse}}_t,\qquad
+K^{\text{Toplam}}_T=K^{\text{DİBS}}_T+K^{\text{Hisse}}_T
+$$
+
+$F_t$ o haftanın net işlemi, $t_0=$ 11.09.2020. Seviyenin yorumu nettir:
+**$K_T$, 11.09.2020'den beri o enstrümana giren net taze paradır.** Stok değildir —
+2020 Eylül'ünden önceki birikmiş pozisyonu içermez ve fiyat/kur değerlemesi taşımaz.
+
+**Sayısal örnek (17→24.07.2026 haftası; sabit, tarihsel).** DİBS kümülatifi 17.07.2026'da 22.116,48 idi; o haftanın
+net işlemi +805,51:
+
+$$
+K^{\text{DİBS}}_{24.07}=22{.}116{,}48+805{,}51=22{.}921{,}99
+$$
+
+Hisse tarafında $-1{.}680{,}28+38{,}85=-1{.}641{,}43$; toplam ise
+$-1{.}641{,}43+22{.}921{,}99=21{.}280{,}56$ milyon USD — 24.07.2026 itibarıyla grafiğin
+sağ ucundaki üç değer buydu. Güncel uç (<Deger proje="yabanci-pozisyon" anahtar="son_hafta">07.08.2026</Deger>):
+DİBS <Deger proje="yabanci-pozisyon" anahtar="dibs_kum" ondalik={0}>23.632</Deger> · hisse <Deger proje="yabanci-pozisyon" anahtar="hisse_kum" ondalik={0}>−1.826</Deger> · toplam <Deger proje="yabanci-pozisyon" anahtar="toplam_kum" ondalik={0}>21.806</Deger> milyon USD;
+aynı toplama işlemi her hafta bir adım daha uzar.
+
+**Eksen tasarımı.** DİBS ve hisse **sol eksende** ortak ölçekte durur; ikisi
+karşılaştırılabilir olsun diye. Toplam **sağ eksende** ayrı ölçektedir: toplamın
+seviyesi bileşenlerin toplamı olduğundan aynı eksende çizilseydi ölçeği ezerdi.
+Sağ eksen ayrı olduğu için **toplam çizgisinin bileşenlere göre yüksekliği görsel
+olarak anlamlı değildir** — yalnız kendi eğimi ve dönüşleri okunmalıdır. Her iki
+eksende de ızgara 20 aralığa bölünür, ikincil eksenin ızgarası kapatılır (iki farklı
+ızgaranın üst üste binmesi grafiği okunmaz yapıyordu).
+
+**Ne anlatıyor.** Üç dönem ayırt ediliyor: 2021-22 boyunca her iki seride de çıkış
+(kümülatif toplam 2023 Haziran'ında **−5,9 milyar USD** dibine iner); 2023 ortasından
+itibaren politika dönüşüyle DİBS'te sert giriş; ve 2026 Şubat'ından bu yana
+düzeltme — kümülatif toplam
+<Deger proje="yabanci-pozisyon" anahtar="kum_zirve_tarih" ondalik={0}>13.02.2026</Deger>'de
+<Deger proje="yabanci-pozisyon" anahtar="kum_zirve" ondalik={0}>25.403</Deger>
+milyon USD zirvesini gördükten sonra
+<Deger proje="yabanci-pozisyon" anahtar="kum_zirveden" ondalik={0}>−3.597</Deger>
+milyon USD geri verdi.
+
+İki serinin ayrışması grafiğin en önemli mesajıdır. Kümülatif hisse akımı
+<Deger proje="yabanci-pozisyon" anahtar="hisse_kum" ondalik={0}>−1.826</Deger>
+milyon USD ile **negatif** — yani BIST'ten 2020 Eylül'ünden bu yana net para çıkmış;
+DİBS ise <Deger proje="yabanci-pozisyon" anahtar="dibs_kum" ondalik={0}>23.632</Deger>
+milyon USD ile güçlü pozitif. "Yabancı Türkiye'ye dönüyor" cümlesi tek bir seri için
+doğru, diğeri için yanlıştır ve iki seriyi toplayan bir manşet bunu gizler.
+
+## Şekil 02-04 — Yılbaşından bugüne (YTD) karşılaştırma
+
+Kümülatif grafik seviyeyi verir ama **mevsimselliği ve yıllar arası hızı** göstermez.
+YTD panelleri bunu yapar: her yıl kendi 1 Ocak'ından başlatılır ve aynı hafta
+numarasında yan yana okunur.
+
+<GrafikEmbed
+  src="/projeler/yabanci-pozisyon/ytd_dibs.html"
+  baslik="DİBS — yıl bazında YTD kümülatif net akım, hafta hafta"
+  no="02"
+  yukseklik={620}
+/>
+
+<GrafikEmbed
+  src="/projeler/yabanci-pozisyon/ytd_hisse.html"
+  baslik="Hisse senedi — yıl bazında YTD kümülatif net akım, hafta hafta"
+  no="03"
+  yukseklik={620}
+/>
+
+<GrafikEmbed
+  src="/projeler/yabanci-pozisyon/ytd_toplam.html"
+  baslik="Toplam (DİBS + hisse) — yıl bazında YTD kümülatif net akım, hafta hafta"
+  no="04"
+  yukseklik={620}
+/>
+
+### Şekil 02-04 nasıl hesaplanıyor?
+
+**Dönüşüm.** Kümülatif toplam her yılbaşında **sıfırlanır**:
+
+$$
+Y^{c}_{y,w}=\sum_{k=1}^{w} F^{c}_{y,k}
+$$
+
+$y$ takvim yılı, $w$ hafta numarası, $c$ enstrüman. Şekil 04'ün serisi bileşenlerin
+toplamıdır: $Y^{\text{Toplam}}_{y,w}=Y^{\text{DİBS}}_{y,w}+Y^{\text{Hisse}}_{y,w}$.
+
+**Sayısal örnek (2026'nın ilk dört haftası).** Haftalık toplam akımlar sırasıyla
+390,44 · 1.101,01 · 1.294,28 · 1.746,66 idi:
+
+$$
+Y^{\text{Toplam}}_{2026,4}=390{,}44+1{.}101{,}01+1{.}294{,}28+1{.}746{,}66=4{.}532{,}39
+$$
+
+Şekil 04'te 2026 çizgisinin 4. haftadaki değeri budur.
+
+**Hafta numarası nasıl tanımlanıyor — ve neden ISO değil.** Bu, YTD grafiklerinin
+tek gerçek metodolojik kararıdır. Seri "HAFTALIK(CUMA)" frekansındadır; her gözlem bir
+Cuma'ya düşer. Hafta numarası, gözlemin **takvim yılı içindeki kaçıncı Cuma** olduğudur:
+
+$$
+w=\left\lfloor\frac{d-c_y}{7}\right\rfloor+1
+$$
+
+$d$ gözlem tarihi, $c_y$ o takvim yılının ilk Cuma'sı. Örnek: 2026'nın ilk Cuma'sı
+2 Ocak; 24.07.2026 ile arasında 203 gün var, $\lfloor 203/7\rfloor+1=30$ — son gözlem
+yılın 30. haftasıdır.
+
+ISO 8601 hafta numarası burada **kullanılamaz**, çünkü ISO haftaları yıl sınırında
+komşu yıla taşar. 1 Ocak bir Cuma'ya denk geldiğinde (2010, 2016, **2021**) o gözlemin
+ISO numarası bir önceki yıla ait **53** olur. ISO ile çizildiğinde 2021'in *ilk*
+gözlemi grafiğin en **sağ** ucuna düşüyor, yılın geri kalanı bir hafta sola kayıyor ve
+çizgi yıl sonundan başa doğru geri sıçrıyordu. Yukarıdaki tanım hem monotondur hem de
+her yıl 1'den başlar; karşılaştırma bu yüzden doğrudur.
+
+**Ay çizgileri.** Dikey noktalı çizgiler ve üstlerindeki ay etiketleri, o ayın ilk
+gözleminin hafta numarasının **tüm yıllar boyunca ortalamasıdır**. Takvim yıldan yıla
+bir hafta kaydığı için bu çizgiler yaklaşıktır — bir çizginin ±1 hafta oynadığını
+varsayın, kesin ay sınırı olarak okumayın.
+
+**Kısmi yıllar.** 2020 çizgisi 37. haftada başlar; seri o hafta başladığı için
+öncesinde veri yoktur. Çizginin Ocak-Eylül arasında **hiç olmaması**, "akım sıfırdı"
+değil "veri yok" demektir. Aynı şekilde 2026 çizgisi
+<Deger proje="yabanci-pozisyon" anahtar="hafta_no" ondalik={0}>32</Deger>. haftada,
+yani son gözlemde biter.
+
+**Ne anlatıyor.** Şekil 02'de 2024 çizgisi diğer bütün yılların üstünde ayrı bir
+kulvarda durur: o yıl DİBS'e **+16.088** milyon USD net giriş oldu ve bunun **%97'si
+yalnız 10 haftada** gerçekleşti (yılın 52 haftasının 33'ü pozitifti) — yani carry
+akımı sürekli bir sızıntı değil, birkaç haftaya sıkışan bloklar hâlinde gelir.
+Tek haftalık rekor giriş 10.05.2024'te **+2.833** milyon USD, rekor çıkış ise
+13.03.2026'da **−2.878** milyon USD'dir. Şekil 03'te hiçbir yıl 2024'ün DİBS'teki
+ölçeğine yaklaşmaz: hisse akımı ±2-4 milyar USD bandında dolaşan, çok daha dar
+bir seridir.
+
+## Denetim notu
+
+<div class="not">
+  <span class="etiket">Model denetim notu — hat siteye aktarılırken (05.08.2026)</span>
+  Hattın önceki hâlinde iki hata vardı, ikisi de düzeltildi.
+  <strong>(1) Veri yok ≠ sıfır.</strong> EVDS, <code>bie_mknethar</code> grubunun daha
+  eski serileri yüzünden 2007'ye kadar haftalık satır iskeleti döndürür; M7/M8 ise
+  11.09.2020'de başlar, öncesi boştur. Eski kod bu 693 boş haftayı
+  <code>fillna(0)</code> ile sıfıra çeviriyordu — YTD grafiklerine 13 yıllık sahte
+  düz-sıfır çizgiler basılıyor ve haftalık istatistikler (ortalama, standart sapma,
+  pozitif hafta oranı) bu sahte sıfırlarla seyreliyordu. Boş satırlar artık çekim
+  aşamasında atılıyor; gözlem sayısı 1.000'den gerçek değeri olan
+  <Deger proje="yabanci-pozisyon" anahtar="hafta_sayisi" ondalik={0}>309</Deger>'ye indi.
+  <strong>(2) ISO hafta numarası.</strong> YTD ekseni ISO 8601 hafta numarasını
+  kullanıyordu; 01.01.2021 Cuma'sının ISO numarası 2020'ye ait 53 olduğu için 2021
+  çizgisi grafiğin sağ ucundan başlıyor, yılın tamamı bir hafta kayıyordu. Eksen
+  "yılın kaçıncı Cuma'sı" tanımına geçirildi (yukarıdaki formül). Görselde eski
+  koddaki <em>"hafta 53 ise 1 yap"</em> yaması da gereksizleştiği için kaldırıldı.
+</div>
+
+## Güncel okuma (<Deger proje="yabanci-pozisyon" anahtar="son_hafta" ondalik={0}>07.08.2026</Deger> haftası)
+
+**Son hafta:** DİBS **+<Deger proje="yabanci-pozisyon" anahtar="dibs_hafta" ondalik={0}>546</Deger>** ·
+hisse **+<Deger proje="yabanci-pozisyon" anahtar="hisse_hafta" ondalik={0}>2</Deger>** ·
+toplam **+<Deger proje="yabanci-pozisyon" anahtar="toplam_hafta" ondalik={0}>548</Deger>** milyon USD.
+
+**Son 4 hafta:** DİBS +<Deger proje="yabanci-pozisyon" anahtar="dibs_4h" ondalik={0}>1.712</Deger> ·
+hisse +<Deger proje="yabanci-pozisyon" anahtar="hisse_4h" ondalik={0}>−108</Deger> ·
+toplam **+<Deger proje="yabanci-pozisyon" anahtar="toplam_4h" ondalik={0}>1.604</Deger>**.
+**Son 13 hafta:** DİBS +<Deger proje="yabanci-pozisyon" anahtar="dibs_13h" ondalik={0}>3.980</Deger> ·
+hisse <Deger proje="yabanci-pozisyon" anahtar="hisse_13h" ondalik={0}>−1.038</Deger> ·
+toplam +<Deger proje="yabanci-pozisyon" anahtar="toplam_13h" ondalik={0}>2.942</Deger> — çeyreklik
+pencerede hisseden çıkış sürerken DİBS girişi onu fazlasıyla telafi ediyor.
+
+**Yılbaşından bugüne (<Deger proje="yabanci-pozisyon" anahtar="hafta_no" ondalik={0}>32</Deger>. hafta):**
+DİBS +<Deger proje="yabanci-pozisyon" anahtar="dibs_ytd" ondalik={0}>2.736</Deger> ·
+hisse +<Deger proje="yabanci-pozisyon" anahtar="hisse_ytd" ondalik={0}>1.402</Deger> ·
+toplam **+<Deger proje="yabanci-pozisyon" anahtar="toplam_ytd" ondalik={0}>4.138</Deger>** milyon USD.
+Geçen yılın aynı haftasına kadarki YTD ise DİBS
+<Deger proje="yabanci-pozisyon" anahtar="dibs_ytd_gecen" ondalik={0}>−1.480</Deger> ·
+hisse +<Deger proje="yabanci-pozisyon" anahtar="hisse_ytd_gecen" ondalik={0}>1.804</Deger> ·
+toplam +<Deger proje="yabanci-pozisyon" anahtar="toplam_ytd_gecen" ondalik={0}>324</Deger> idi —
+yani yılın bu noktasında toplam akım geçen yılın yaklaşık yedi katı, ve fark
+tamamen DİBS tarafından geliyor (hisse akımı iki yılda neredeyse aynı).
+
+## Sınırlar ve yorum notları
+
+- **İki seri farklı formüllerle üretilir.** Hisse net işlemi günlük değişimlerin
+  zincirlenmesiyle ve $t-p-2$ gecikmeli fiyat/kurla, DİBS net işlemi haftalık stok
+  değişimi üzerinden iki haftanın fiyat ortalaması ve haftanın **ortalama** kuruyla
+  hesaplanır. Toplamları (Şekil 01'in kırmızı çizgisi ve Şekil 04) bu yüzden tam
+  homojen bir büyüklük değildir. Kur haftası içinde sert oynadığında iki serinin
+  USD'ye çevrim tabanı ayrışır; normal haftalarda fark ihmal edilebilir, kriz
+  haftalarında toplamı bileşenleri kadar ciddiye almayın.
+- **Akım stok değildir.** Kümülatif seri 11.09.2020'den beri *giren net para*yı
+  ölçer; yabancının toplam pozisyonunu değil. Toplam pozisyon için stok serilerine
+  (`TP.MKNETHAR.M1`/`M2`) bakılmalı — ve onlar toplanamaz, çünkü fiyat/kur değerlemesi
+  taşırlar.
+- **Repo ve eurobond dışarıda.** Kesin alım dışı kanallarla (ters repo, teminat,
+  ödünç) tutulan DİBS ve yurt dışı ihraçlar bu serilerde yok. "Yabancı ilgisi"
+  bu kanallara kaydığında grafikler yanıltıcı biçimde sakin görünebilir.
+- **Türk bankalarının yurt dışı şubeleri "yabancı" sayılır.** Açıklanamayan tek
+  haftalık sıçramalarda `TP.MKNETHAR.M80`/`M82` memo satırlarına bakın; hareketin
+  gerçek bir yabancı talebi mi yoksa grup içi bir pozisyon aktarımı mı olduğunu
+  çoğu zaman orası söyler.
+- **Veri revize olabilir.** TCMB verinin geçici olduğunu ve kaynaklarda revizyon
+  olması hâlinde güncellendiğini belirtir; düzenli revizyona tabi değildir. Son
+  bir-iki haftanın rakamı üzerine tek başına ağır pozisyon kurmak yerine 4 ve 13
+  haftalık pencerelere bakmak daha sağlamdır.
+- **Haftalık gürültü yüksektir.** Tüm seride haftalık standart sapma DİBS'te ±604,
+  hissede ±234 milyon USD; DİBS haftalarının yalnız %56'sı, hisse haftalarının %49'u
+  pozitiftir. İki serinin haftalık korelasyonu yalnızca **0,29** — aynı yöne
+  hareket etmeleri kural değil, istisnadır. Tek bir haftalık rakamdan trend
+  çıkarmayın.

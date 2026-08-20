@@ -1,0 +1,383 @@
+---
+/**
+ * TRY OIS carry & roll hesaplayıcısı — TRY OIS dersinin merkezî mekaniği.
+ * Ters eğride bir OIS pozisyonunun "eğri sabit" senaryodaki taşımasını
+ * iki bileşene ayırır:
+ *   fixing carry ≈ (K − TLREF) · h/365 · N        (yön: receiver; payer ters)
+ *   rolldown     ≈ (S_T − S_{T−h}) · A_{T−h} · N
+ *   DV01         ≈ A_T · N · 1e−4
+ * Başabaş: h ufkunda kısalan vadenin kotasyonu nereye inerse toplam sıfırlanır.
+ *
+ * Vaka doğrulaması (rehber §2.3): 500 mn 1y receive @35,25 · ufuk 92g · TLREF 39,95
+ *   → A(1y)=0,8198 · A(9m)=0,6334 · DV01 40.990 · carry −5,9 · rolldown −3,0
+ *   → toplam −9,0 mn · günlük −64 bin TL · başabaş 9m ≈ %33,4
+ * Rehber değerleri: −5,9 / −3,0 / −9,0 / ~64 bin / ~33,50 — birebir eşleşiyor.
+ * Payer tarafı tam ayna (+5,9 / +3,0 / +9,0), rehberdeki "payer +9,0 toplar" ile uyumlu.
+ *
+ * Eğriyi yayınlar: window.tryOisEgri + 'tryois-egri-guncellendi' olayı —
+ * aynı sayfadaki fly ağırlık aracı bunu tüketir.
+ */
+---
+
+<div class="hesap" id="ois-carry">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı</span>
+    <span class="hesap-ad">TRY OIS — Carry &amp; Roll, Eğri Sabit Senaryosu</span>
+  </div>
+
+  <p class="hesap-yonerge">
+    Ters eğride "taşımayı kim ödüyor?" sorusunun sayısal cevabı. Eğri noktalarını
+    değiştirebilirsiniz; annuity seçili kupon sıklığıyla, ACT/365 basit iskontoyla kurulur
+    (masa standardı <b>3 aylık</b>).
+    Varsayılanlar dersteki temsili eğri ve §2.3 vakasıdır.
+  </p>
+
+  <div class="egri-kap">
+    <span class="etiket blok-baslik">Temsili eğri — kotasyon %</span>
+    <div class="egri-girdiler" id="oc-egri"></div>
+  </div>
+
+  <div class="girdiler">
+    <label><span class="etiket">Nominal (mn TL)</span>
+      <input type="number" id="oc-n" value="500" step="50" min="1" /></label>
+    <label><span class="etiket">Vade T (yıl)</span>
+      <input type="number" id="oc-t" value="1" step="0.25" min="0.25" /></label>
+    <label><span class="etiket">Taraf</span>
+      <select id="oc-yon">
+        <option value="rec" selected>Receive (sabit al)</option>
+        <option value="pay">Pay (sabit öde)</option>
+      </select></label>
+    <label><span class="etiket">Kontrat oranı K (%)</span>
+      <input type="number" id="oc-k" value="35.25" step="0.05" /></label>
+    <label><span class="etiket">Ufuk h (gün)</span>
+      <input type="number" id="oc-h" value="92" step="1" min="1" /></label>
+    <label><span class="etiket">Beklenen ort. TLREF (%)</span>
+      <input type="number" id="oc-tlref" value="39.95" step="0.05" /></label>
+    <label><span class="etiket">Kupon sıklığı</span>
+      <select id="oc-frek">
+        <option value="4" selected>3 aylık (çeyreklik) — masa standardı</option>
+        <option value="2">6 aylık</option>
+        <option value="1">Yıllık (bazı offshore kotasyonları)</option>
+      </select></label>
+  </div>
+
+  <div class="orta">
+    <div><span class="etiket">A(T) — annuity</span><output class="ara-deger" id="oc-at">—</output></div>
+    <div><span class="etiket">A(T−h)</span><output class="ara-deger" id="oc-ath">—</output></div>
+    <div><span class="etiket">DV01</span><output class="ara-deger" id="oc-dv01">—</output></div>
+    <div><span class="etiket">T−h kotasyonu (eğriden)</span><output class="ara-deger" id="oc-sth">—</output></div>
+  </div>
+
+  <div class="takvim">
+    <span class="etiket blok-baslik">Kupon takvimi — her iki bacak da bu tarihlerde öder</span>
+    <p class="takvim-satir" id="oc-takvim">—</p>
+    <p class="mini-not" id="oc-frek-not">—</p>
+  </div>
+
+  <div class="tablo-kab">
+    <table>
+      <thead><tr><th>Bileşen</th><th>Formül</th><th>mn TL</th><th>Okuma</th></tr></thead>
+      <tbody id="oc-tablo"></tbody>
+    </table>
+  </div>
+
+  <div class="saglama">
+    <p class="blok-baslik etiket">Başabaş ve günlük taşıma</p>
+    <div class="sag-satir">
+      <div><span class="etiket">Günlük taşıma</span><output class="ara-deger" id="oc-gunluk">—</output></div>
+      <div><span class="etiket">Başabaş: T−h kotasyonu</span><output class="ara-deger" id="oc-basabas">—</output></div>
+      <div><span class="etiket">Gerekli hareket</span><output class="ara-deger" id="oc-hareket">—</output></div>
+    </div>
+    <p class="mini-not" id="oc-yorum">—</p>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="oc-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Girdiler değişince canlı güncellenir.</span>
+  </div>
+
+  <p class="hesap-dip">
+    "Forwardlar gerçekleşirse" senaryosu tanım gereği ≈ 0 verir; burada hesaplanan
+    <b>eğri sabit</b> senaryosudur — pozisyonun beklerken ne kazandığı/kaybettiği.
+    Ters eğride receiver her iki bileşende de öder, payer ikisini de toplar; normal
+    eğride işaretler aynalanır (Ek A işaret tablosu).
+  </p>
+</div>
+
+<script>
+  // Temsili eğri — ders §1.6. Kullanıcı düzenleyebilir.
+  const PILLAR: [number, string, number][] = [
+    [0.0833, '1m', 39.9], [0.1667, '2m', 39.45], [0.25, '3m', 38.95],
+    [0.5, '6m', 37.5], [0.75, '9m', 36.2], [1, '1y', 35.25],
+    [1.5, '18m', 32.6], [2, '2y', 30.4], [3, '3y', 27.1],
+    [4, '4y', 25.3], [5, '5y', 24.1], [7, '7y', 22.9], [10, '10y', 22.1],
+  ];
+
+  const kap = document.getElementById('oc-egri')!;
+  kap.innerHTML = PILLAR.map(
+    ([t, ad, v]) =>
+      `<label><span class="etiket">${ad}</span>` +
+      `<input type="number" data-t="${t}" value="${v}" step="0.05" /></label>`
+  ).join('');
+
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const yaz = (id: string, m: string) => ((document.getElementById(id) as HTMLElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b }).replace('-', '−');
+
+  function egriOku(): [number, number][] {
+    return [...kap.querySelectorAll('input')].map((el) => [
+      parseFloat((el as HTMLInputElement).dataset.t!),
+      parseFloat((el as HTMLInputElement).value),
+    ]);
+  }
+
+  // Lineer interpolasyon; uçlarda düz uzatma.
+  function oranFn(noktalar: [number, number][]) {
+    const s = [...noktalar].sort((a, b) => a[0] - b[0]);
+    return (t: number) => {
+      if (t <= s[0][0]) return s[0][1];
+      if (t >= s[s.length - 1][0]) return s[s.length - 1][1];
+      for (let i = 0; i < s.length - 1; i++) {
+        if (t >= s[i][0] && t <= s[i + 1][0]) {
+          const w = (t - s[i][0]) / (s[i + 1][0] - s[i][0]);
+          return s[i][1] * (1 - w) + s[i + 1][1] * w;
+        }
+      }
+      return s[s.length - 1][1];
+    };
+  }
+
+  // Çeyreklik ödemeli annuity, ACT/365 basit iskonto: A = Σ df(t_i)·τ_i
+  //
+  // Kupon takvimi ileri üretilir; kalan vade artık yarım periyottan kısaysa son
+  // periyoda eklenir (UZUN SON STUB — masa konvansiyonu). Sabit 0,25 ızgarayla
+  // "t <= T" döngüsü kurulursa T=0,7479 (1y'nin 92 gün rolldown'u) gibi kesirli
+  // vadelerde SON KUPON SESSİZCE DÜŞER: annuity 0,63 yerine 0,44 çıkar ve
+  // rolldown üçte bir eksik hesaplanır.
+  function takvim(T: number, frek: number) {
+    if (T <= 0) return [];
+    const adim = 1 / frek;
+    const odeme: number[] = [];
+    for (let x = adim; x < T - adim / 2; x += adim) odeme.push(Number(x.toFixed(6)));
+    odeme.push(T);
+    return odeme;
+  }
+
+  function annuite(T: number, oran: (t: number) => number, frek = 4) {
+    let A = 0, onc = 0;
+    for (const t of takvim(T, frek)) {
+      const z = oran(t) / 100;
+      A += (1 / (1 + z * t)) * (t - onc);
+      onc = t;
+    }
+    return A;
+  }
+
+  function hesapla() {
+    const noktalar = egriOku();
+    if (noktalar.some(([, v]) => !isFinite(v))) return;
+    const oran = oranFn(noktalar);
+
+    const N = oku('oc-n') * 1e6;
+    const T = oku('oc-t');
+    const K = oku('oc-k');
+    const h = oku('oc-h');
+    const tlref = oku('oc-tlref');
+    const rec = (document.getElementById('oc-yon') as HTMLSelectElement).value === 'rec';
+    if (!(N > 0 && T > 0 && h > 0)) return;
+
+    const frek = parseInt((document.getElementById('oc-frek') as HTMLSelectElement).value);
+    // Kalan vade ufka göre kısalır; TABAN kupon sıklığına BAĞLI DEĞİLDİR.
+    // (1/frek tabanı konulursa yıllık ödemede T=1y, h=92g için Th 0,75 yerine
+    //  1,0'a kırpılır ve rolldown sahte biçimde sıfırlanırdı.)
+    const Th = Math.max(T - h / 365, 1 / 365);
+    const A_T = annuite(T, oran, frek);
+    const A_Th = annuite(Th, oran, frek);
+    const S_Th = oran(Th);
+    const dv01 = A_T * N * 1e-4;
+
+    // Receiver tabanı; payer için işaret ters.
+    const yon = rec ? 1 : -1;
+    const carry = ((K - tlref) / 100) * (h / 365) * N * yon;
+    const roll = ((K - S_Th) / 100) * A_Th * N * yon;
+    const toplam = carry + roll;
+
+    // Başabaş: toplam = 0 olması için T−h kotasyonu nerede olmalı?
+    // carry + (K − S*)/100 · A_Th · N · yon = 0
+    const basabas = K - (-carry * yon) / ((A_Th * N) / 100);
+
+    yaz('oc-at', tr(A_T, 4));
+    yaz('oc-ath', tr(A_Th, 4));
+    yaz('oc-dv01', tr(dv01, 0) + ' TL/bp');
+    yaz('oc-sth', '%' + tr(S_Th));
+
+    // --- Kupon takvimi: konvansiyonu görünür kıl ---
+    const od = takvim(T, frek);
+    const ay = (t: number) => Math.round(t * 12);
+    const gosterilecek = od.length <= 10 ? od : [...od.slice(0, 4), NaN, ...od.slice(-2)];
+    yaz('oc-takvim',
+      `${od.length} kupon · ` +
+      gosterilecek.map((t) => (isNaN(t) ? '…' : `${ay(t)}a`)).join(' · ') +
+      `  (son periyot ${tr((od[od.length - 1] - (od[od.length - 2] ?? 0)) * 12, 1)} ay)`);
+
+    // Aynı eğride diğer sıklıkların par oranı — §1.2'deki uyarının sayısı
+    const dfT = 1 / (1 + (oran(T) / 100) * T);
+    const parOran = (f: number) => ((1 - dfT) / annuite(T, oran, f)) * 100;
+    const p4 = parOran(4), pf = parOran(frek), p1 = parOran(1);
+    const frekAd: Record<number, string> = { 4: 'çeyreklik', 2: '6 aylık', 1: 'yıllık' };
+    (document.getElementById('oc-frek-not') as HTMLElement).innerHTML =
+      `Aynı iskonto eğrisinde ${tr(T, 2)}y par oranı: <b>çeyreklik %${tr(p4)}</b> · ` +
+      `6 aylık %${tr(parOran(2))} · <b>yıllık %${tr(p1)}</b> — ` +
+      `çeyreklik ile yıllık arasında <b>${tr((p1 - p4) * 100, 0)} bp</b>. ` +
+      (frek === 4
+        ? 'Masa standardı çeyrekliktir; karşı taraf yıllık kote ediyorsa aynı ekonomiyi farklı sayıyla söylüyordur — teyitleşmeden fiyat kıyaslama (§1.2).'
+        : `Seçili konvansiyon <b>${frekAd[frek]}</b>: bu kotasyon çeyrekliğe göre ` +
+          `${tr((pf - p4) * 100, 0)} bp yüksektir, ekonomisi aynıdır.`);
+
+    const mn = (x: number) => tr(x / 1e6, 1);
+    const satir = (ad: string, f: string, v: number, not: string) =>
+      `<tr><td>${ad}</td><td class="form">${f}</td>` +
+      `<td class="${v < 0 ? 'eksi' : 'arti'}">${mn(v)}</td><td class="not-h">${not}</td></tr>`;
+
+    (document.getElementById('oc-tablo') as HTMLElement).innerHTML =
+      satir('Fixing carry', '(K − TLREF)·h/365·N', carry,
+            carry < 0 ? 'sabit bacak fixingin altında — ödersin' : 'sabit bacak fixingin üstünde — toplarsın') +
+      satir('Rolldown', '(S_T − S_{T−h})·A_{T−h}·N', roll,
+            roll < 0 ? 'vade kısaldıkça daha yüksek noktaya karşı marklanırsın' : 'vade kısaldıkça lehine marklanırsın') +
+      `<tr class="toplam"><td><b>Eğri-sabit toplam</b></td><td class="form">carry + rolldown</td>` +
+      `<td class="${toplam < 0 ? 'eksi' : 'arti'}"><b>${mn(toplam)}</b></td>` +
+      `<td class="not-h">karşı taraf aynı senaryoda <b>${mn(-toplam)}</b> toplar</td></tr>`;
+
+    yaz('oc-gunluk', tr(carry / h / 1000, 0) + ' bin TL/gün');
+    yaz('oc-basabas', '%' + tr(basabas));
+    const fark = (basabas - S_Th) * 100;
+    yaz('oc-hareket', tr(fark, 0) + ' bp');
+
+    const el = document.getElementById('oc-yorum') as HTMLElement;
+    const taraf = rec ? 'Receiver' : 'Payer';
+    if (toplam < 0) {
+      el.innerHTML =
+        `<b>${taraf} negatif taşıyor.</b> Pozisyon başabaşa gelmesi için ${tr(Math.abs(T - Th), 2)} yıl ` +
+        `sonunda ${tr(Th, 2)}y kotasyonunun <b>%${tr(basabas)}</b>'e gitmesi gerekiyor — ` +
+        `bugünkü ${tr(Th, 2)}y seviyesinden <b>${tr(Math.abs(fark), 0)} bp</b> ` +
+        `${fark < 0 ? 'aşağı' : 'yukarı'}. Yani bu bir "fiyatlanandan daha ${fark < 0 ? 'derin/hızlı' : 'sığ/yavaş'} ` +
+        `hareket" bahsidir; yön görüşü tek başına yetmez.`;
+    } else {
+      el.innerHTML =
+        `<b>${taraf} pozitif taşıyor</b> — beklerken kazanıyor. Kaybetmesi için ${tr(Th, 2)}y kotasyonunun ` +
+        `<b>%${tr(basabas)}</b>'i geçmesi gerek (${tr(Math.abs(fark), 0)} bp ` +
+        `${fark < 0 ? 'aşağı' : 'yukarı'}). Bu, görüş gerçekleşmesini beklerken maaş alan ` +
+        `pozisyondur; riski, taşımayı "bedava" sanıp boyutu şişirmektir.`;
+    }
+
+    (window as any).tryOisEgri = { noktalar, oran, frek, annuite: (T2: number) => annuite(T2, oran, frek) };
+    document.dispatchEvent(new CustomEvent('tryois-egri-guncellendi'));
+  }
+
+  document.querySelectorAll('#ois-carry input, #ois-carry select').forEach((el) =>
+    el.addEventListener('input', hesapla)
+  );
+  const btn = document.getElementById('oc-hesapla')!;
+  btn.addEventListener('click', () => {
+    hesapla();
+    btn.classList.add('tamam');
+    btn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => { btn.classList.remove('tamam'); btn.textContent = 'Hesapla ↻'; }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .takvim {
+    padding: 0.2rem 1rem 0.7rem;
+  }
+  .takvim-satir {
+    margin: 0 0 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink-70);
+  }
+  .egri-kap {
+    padding: 0.9rem 1rem 0.2rem;
+    border-bottom: 1px solid var(--ink-15);
+  }
+  .blok-baslik {
+    color: var(--claret);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .egri-girdiler {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
+    gap: 0.4rem;
+  }
+  .egri-girdiler :global(input) {
+    width: 100%;
+  }
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.7rem;
+    padding: 0.9rem 1rem 0.4rem;
+  }
+  .orta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.8rem;
+    padding: 0.5rem 1rem;
+  }
+  .orta .etiket,
+  .sag-satir .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .tablo-kab {
+    padding: 0.6rem 1rem;
+    overflow-x: auto;
+  }
+  .tablo-kab :global(.form) {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-50);
+    white-space: nowrap;
+  }
+  .tablo-kab :global(.not-h) {
+    font-size: 0.78rem;
+    color: var(--ink-70);
+  }
+  .tablo-kab :global(.eksi) {
+    color: var(--claret);
+    font-variant-numeric: tabular-nums;
+  }
+  .tablo-kab :global(.arti) {
+    color: var(--teal);
+    font-variant-numeric: tabular-nums;
+  }
+  .tablo-kab :global(tr.toplam) {
+    border-top: 2px solid var(--ink-30);
+  }
+  .saglama {
+    border-top: 1px solid var(--ink-15);
+    padding: 0.8rem 1rem 0.4rem;
+  }
+  .sag-satir {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin-bottom: 0.6rem;
+  }
+  .mini-not {
+    margin: 0.4rem 0 0;
+    font-size: 0.84rem;
+    font-style: italic;
+    color: var(--ink-70);
+    line-height: 1.55;
+  }
+  @media (max-width: 640px) {
+    .girdiler {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

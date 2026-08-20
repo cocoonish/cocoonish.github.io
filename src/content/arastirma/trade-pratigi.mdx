@@ -1,0 +1,1596 @@
+---
+title: 'Trade Pratiği: Asset Swap ve TRY OIS Pozisyonları'
+description: 'Fiyatlaması kurulmuş iki yapının işlem tarafı: asset swap paketinin nakit akışı, MTM, muhasebe ve P&L döngüsü; TLREF swaplarında pay/receive kararı — carry & roll, PPK strip, spread ve fly katalogları, masa pratiği ve vakalar.'
+pubDate: 2026-08-08
+updatedDate: 2026-08-08
+tags: ['asw', 'tlref', 'ois', 'trade', 'rv', 'ders']
+durum: 'aktif'
+kaynak: 'ASW işlem notu + TRY OIS masa rehberi (5 Ağustos 2026 çıpalarıyla)'
+---
+
+import AswTradeHesaplayici from '../../components/AswTradeHesaplayici.astro';
+import OisCarryHesaplayici from '../../components/OisCarryHesaplayici.astro';
+import FlyAgirlikHesaplayici from '../../components/FlyAgirlikHesaplayici.astro';
+
+Fiyatlama bir sayı verir; **işlem** ondan sonra başlar. Bu ders iki yapının hayat
+döngüsünü anlatır: **asset swap** paketinin kurulmasından kapanmasına, ve **TRY OIS**'te
+pay/receive kararının anatomisinden spread/fly kataloglarına.
+
+<div class="not">
+  <span class="etiket">Ön koşul</span>
+  Her iki yapının da <em>fiyatlaması</em> başka derslerde türetilir:
+  <a href="/arastirma/faiz-egrisi-ve-konvansiyonlar/">Faiz Teorisi ve Eğri İnşası</a>
+  (eğri, TLREF mekaniği) ve
+  <a href="/arastirma/enstruman-fiyatlama/">Enstrüman Fiyatlama</a>
+  (par swap, ASW metrikleri, tahvil YTM). Burada onlar veri kabul edilir; konu
+  <em>pozisyonun kendisidir</em>.
+</div>
+
+### Bölüm A — Asset swap trade
+
+Bu bölüm, **ASW'nin nasıl fiyatlandığını** anlatan [Enstrüman Fiyatlama](/arastirma/enstruman-fiyatlama/) dersinin devamıdır. Orada asset swap spread'in **nereden geldiği** (par swap oranı, spread'in NPV'si) türetilir; eğrinin kendisi ise [Faiz Teorisi ve Eğri İnşası](/arastirma/faiz-egrisi-ve-konvansiyonlar/) dersinde kurulur. Burada ise aynı işlemin **nasıl taşındığını** ele alıyoruz: nakit akışları, süreç-içi gerçeğe uygun değerleme (MTM), muhasebe kayıtları, P&L'in nasıl yazıldığı, giriş/çıkış zamanlaması ve riskler. Fiyatlama detaylarını (DF'lerin interpolasyonu, spread'in bootstrap'tan çözülmesi) tekrar etmiyoruz; gerektiğinde diğer derse atıf yapıyoruz.
+
+Boydan boya tek bir örnek işlemi izleyeceğiz:
+
+<div class="not"><span class="etiket">Örnek işlem</span> **TRT160431T35** (DİBS — Devlet İç Borçlanma Senedi), %16,63 yarı yıllık kupon, vade 16.04.2031. Nominal **100.000.000 TL**, valör 20.07.2026. Kirli fiyat **102,5823** (yani 102.582.300 TL), tahvilin iç verimi (YTM) **%35,72**. Hedge bacağı: **3 aylık TLREF OIS/IRS**, par swap oranı **%33,363**. Asset swap spread **+91,4 bp**. Bu sayılar dersin sonuna kadar sabittir.</div>
+
+## A.1 İşlemin Yapısı
+
+İşlem, swap eğrisine göre ucuz duran bir DİBS'i alıp faiz riskini 3 aylık TLREF IRS ile hedge ederek, tahvilin swap'a göre yaklaşık **91,4 bp**'lik ucuzluğunu (asset swap spread) sentetik bir floater — yani değişken faizli bir kağıt — olarak taşımaktır. Sezgi şu: sabit kuponlu tahvili tek başına aldığınızda faiz yönüne (duration'a) açık kalırsınız; TCMB faizi artırırsa tahvil değer kaybeder. IRS ile sabit kuponu değişkene çevirerek bu yön riskini söker, geriye yalnızca tahvilin *göreli* ucuzluğunu (spread) bırakırsınız. İki bileşen:
+
+- **Varlık:** TRT160431T35, %16,63 yarı yıllık kupon, vade 16.04.2031. Kirli 102,5823'ten 100mn nominal alınır (102.582.300 TL). Tahvilin iç verimi %35,72.
+- **Hedge/dönüşüm bacağı:** 3 aylık TLREF OIS/IRS — sabit öde / 3M TLREF al. DV01 eşlemesi için swap nominali yaklaşık 93,1mn (hedge oranı 0,931). DV01 (dollar value of 1 basis point) bir enstrümanın değerinin 1 baz puanlık faiz hareketine karşı ne kadar değiştiğidir; iki bacağın DV01'ini eşitlemek "faiz yönünü nötrle" demenin sayısal karşılığıdır.
+
+#### 1.1 3 Aylık IRS oranının DF'lerden bulunması
+
+Yarı yıllık iskonto faktörleri (DF — discount factor, gelecekteki 1 TL'nin bugünkü değeri) log-lineer interpolasyonla çeyreklik düğümlere taşınır; çeyreklik par swap oranı standart kimlikle çözülür:
+
+$$
+S = \frac{1 - DF_N}{\sum_i \tau_i \cdot DF_i} = \frac{1 - 0{,}237}{2{,}2870} = \%33{,}363
+$$
+Pay olan $1 - DF_N$ swap'ın değişken bacağının PV'sinin (par floater'ın) 1 birim nominal başına değeridir; payda $\sum_i \tau_i \cdot DF_i$ ise sabit bacağın çeyreklik annüitesidir (burada 2,2870). Par swap oranı, ikisini eşitleyen orandır — yani başlangıç değeri sıfır olan swap'ın sabit oranı.
+
+Bu oran (**%33,363**) tahvilin kupon oranına (%33,26) çok yakın, iç veriminin (%35,72) belirgin altındadır — tahvilin swap eğrisine göre iskontolu (ucuz) durduğunu doğrudan gösterir. Sezgi: eğer tahvili sabit oranlı swap oranıyla iskontolasaydık fiyat ~par civarında çıkardı; oysa piyasa tahvili daha yüksek bir iç verimle (%35,72) iskontoluyor, demek ki swap eğrisinin *üzerinde* bir getiri talep ediyor. Bu fazlalık asset swap spread'dir.
+
+<div class="not"><span class="etiket">Fiyatlama ayrı derste</span> DF'lerin interpolasyonu <a href="/arastirma/faiz-egrisi-ve-konvansiyonlar/">Faiz Teorisi ve Eğri İnşası</a>, spread'in par swap oranından çözümü ise <a href="/arastirma/enstruman-fiyatlama/">Enstrüman Fiyatlama</a> dersinde adım adım türetildi. Burada oranı veri kabul edip işlemin taşınmasına odaklanıyoruz. DF'ler değişirse oran otomatik güncellenir; canlı hesap sistemdeki 'Swap Oranı' bölümündedir.</div>
+
+#### 1.2 Risk ve DV01 hedge
+
+| Kalem | Değer |
+|---|---|
+| Tahvil DV01 (+1bp) | 21.286 TL |
+| Swap DV01 (eşli nominal, +1bp) | 21.286 TL |
+| Net faiz DV01 (hedge sonrası) | ≈ 0 |
+| Spread DV01 (≈ tahvil DV01) | 21.286 TL |
+| ASW değeri (spread'in PV'si) | 2.089.170 TL |
+| Yıllık net carry (~ASW) | 913.503 TL |
+
+Swap nominali tahvilin DV01'ini nötrleyecek şekilde ölçeklenince paralel faiz hareketi P&L'e girmez; geriye yalnızca **spread DV01** kalır — yani tahvilin swap'a göre zenginleşip ucuzlamasına duyarlılık. Trade'in asıl motoru budur.
+
+<div class="not"><span class="etiket">Neden paralel faiz P&L'e girmez</span> Tahvil ve swap DV01'i +1bp için ikisi de 21.286 TL. Eğri **paralel** 1bp yukarı kayarsa tahvil 21.286 TL kaybeder, ama sabit öde/değişken al swap tam bu kadar kazanır (sabit ödeyen için faiz artışı lehtedir). İki etki birbirini götürür; net faiz DV01 ≈ 0. Geriye kalan tek duyarlılık, tahvil getirisi ile swap oranının *arasındaki farkın* (spread'in) değişmesidir. Bu yüzden hedge sonrası pozisyon bir "faiz view'ı" değil, bir "göreli değer (spread) view'ı"dır.</div>
+
+Aşağıdaki araç bu işlemin canlı modelidir: eğri DF'lerini, tahvil girdilerini ve
+MTM senaryosunu değiştirin — par oran, ASW spread'i, DV01 eşli hedge, carry ve
+süreç-içi P&L anında yeniden hesaplanır. Dersteki tüm sayılar bu araçla üretilebilir.
+
+<AswTradeHesaplayici />
+
+## A.2 Nakit Akışları
+
+Asset swap'ın mantığı, tahvilin sabit kuponunu swap'ın sabit bacağıyla götürüp geriye değişken bırakmaktır:
+
+- **Tahvil kuponu (alınan):** yarı yıllık +16.630.000 TL.
+- **Swap sabit bacak (ödenen):** yarı yıllık −16.630.000 TL — tahvil kuponunu birebir götürür, net sabit = 0.
+- **Swap değişken bacak (alınan):** çeyreklik 3M TLREF + 91,4 bp. Tahvil artık sentetik floater.
+- **Fonlama (repo, ödenen):** yaklaşık TLREF. Repo, tahvili teminat verip nakit borçlanma; maliyeti kabaca gecelik/kısa vadeli TLREF'e yakın seyreder. Net taşıma = değişken tahsilat − repo ≈ **+91,4 bp/yıl**.
+
+Sezgi: paketi net akış olarak okursanız, tahvilin sabit kuponu ile swap'ın sabit ödemesi tam eşleştiği için sabit taraf kaybolur. Elinizde "değişken al (TLREF+91,4bp) − repo öde (~TLREF)" kalır; bu farkın kalıcı adı asset swap spread'idir ve pozisyon açık durdukça birikir.
+
+<div class="not"><span class="etiket">Değişken bacağın PV ayrıştırması — çerçevenin iç tutarlılığı</span> Çeyreklik değişken bacağın PV'si <strong>78,39mn TL</strong> iki parçaya ayrışır: <strong>76,30mn</strong> (saf TLREF = par floater = $N \times (1 - DF_N)$) + <strong>2,09mn</strong> (ASW parçası). ASW parçasının PV'si (2.089.170 TL) tam olarak modeldeki NPV pickup'a eşittir — yani 'spread'in bugünkü değeri' ile 'değişken bacaktaki fazla marjın PV'si' aynı şeydir. Neden telescope? Saf TLREF alan bir floater her fixing'de eğrinin ima ettiği forward'ı ödediği için PV'si $N \times (1 - DF_N)$ formülüne çöker (ara terimler birbirini götürür — "teleskop toplamı"). Üstüne binen sabit +91,4 bp marj ise ayrı bir annüitedir ve PV'si tam olarak ASW değerini verir. İlk çeyrek forward TLREF %40,7 (eğri tersine, yani kısa vade uzun vadeden yüksek — TCMB indirimi fiyatlı); ilk çeyrek değişken kupon ≈ 10,49mn TL.</div>
+
+Tüm akış üç bacak (tahvil / swap sabit / swap değişken) ve net paket olarak izlenir.
+
+## A.3 Süreç İçinde MTM
+
+Pozisyon her değerleme gününde **iki ayrı enstrüman** olarak gerçeğe uygun değerle işaretlenir (MTM — mark-to-market): tahvil piyasa fiyatından, swap ise cari eğriden. P&L iki bileşene ayrışır:
+
+- **Taşıma (carry):** günlük yaklaşık 2.503 TL (yıllık ~913bin), ASW marjının tahakkuku. Pozisyon açık durdukça birikir. Bu, zamanın kendisinden gelen "beklerken kazanılan" parçadır.
+- **Spread MTM:** ASW daralır/genişlerse $-\text{TahvilDV01} \times \Delta\text{spread}$. ASW 1bp daralınca yaklaşık +21.286 TL. Paralel faiz hareketi hedge'lidir, P&L'e girmez.
+
+Sezgi: carry parçası neredeyse deterministiktir (spread sabit kalsa bile birikir); spread MTM parçası ise piyasanın tahvili swap'a göre yeniden fiyatlamasıyla dalgalanır. Uzun ASW pozisyonunda spread'in **daralması** (tahvilin swap'a yakınsaması) lehinizedir.
+
+#### 3.1 Örnek MTM patikası (DV01-lineer)
+
+Senaryo: TCMB gevşemesiyle faizler paralel düşer ve tahvil swap'a göre zenginleşir (ASW 91,4 → 76 bp). Canlı patika:
+
+| Mark | Δfaiz (bp) | ASW (bp) | Spread P&L | Kümül. carry | TOPLAM P&L |
+|---|---|---|---|---|---|
+| t0 (giriş) | 0 | 91,4 | 0 | 0 | 0 |
+| +3 ay | −80 | 86,0 | +114.943 | +230.253 | +345.196 |
+| +6 ay | −150 | 82,0 | +200.086 | +460.506 | +660.592 |
+| +9 ay | −180 | 79,0 | +263.943 | +690.759 | +954.702 |
+| +12 ay | −220 | 76,0 | +327.800 | +913.503 | +1.241.303 |
+
+Faizler 220 bp düşmesine rağmen outright yön P&L'e girmiyor (tahvil kazancı swap zararıyla götürülüyor); toplam kâr yalnızca daralan spread'in MTM'i (+328bin) ile biriken carry'den (+914bin) geliyor. **Gün-1 P&L ≈ 0** — tahvil piyasadan, swap par'dan girildi.
+
+<div class="not"><span class="etiket">Neden gün-1 P&L ≈ 0</span> Tahvili piyasa fiyatından (adil değerinden) aldınız, dolayısıyla giriş anında ne kâr ne zarar var. Swap'ı da <strong>par oranından</strong> kurdunuz; par swap'ın tanımı gereği başlangıç değeri sıfırdır. İki enstrümanın da gün-1 değeri sıfır olduğu için paketin de gün-1 P&L'i sıfırdır. ASW'nin 2,09mn TL'lik değeri anında realize olan bir kâr değil, açığa çıkması zamana yayılmış (carry olarak tahakkuk edecek veya spread daralırsa öne çekilecek) bir değerdir.</div>
+
+<div class="not"><span class="etiket">Gerçek MTM ile lineer yaklaşım farkı</span> Yukarıdaki değerler DV01-lineerdir (masa-içi hızlı tahmin). Gerçek MTM eğriyi yeniden fiyatlar ve konveksiteyi içerir; 200 bp gibi büyük hareketlerde tahvilin pozitif konveksitesi lehinize küçük bir ek katkı verir. Neden lehinize? Tahvilin fiyat-getiri eğrisi dışbükeydir: getiri düşerken fiyat DV01'in öngördüğünden biraz <em>daha fazla</em> kazanır, yükselirken biraz <em>daha az</em> kaybeder; swap bacağının konveksitesi bunu tam örtmediği için net artık pozitiftir. Resmi P&L için sistemin tam yeniden değerlemesini esas alın; bu tablo yön ve mertebe içindir.</div>
+
+## A.4 Muhasebe Kayıtları
+
+Ticari portföyde tahvil **FVTPL** (fair value through profit or loss — gerçeğe uygun değer farkı kâr/zarara yansıtılan), swap ise türev varlık/yükümlülük olarak izlenir; her ikisinin MTM'i doğrudan P&L'e yansır. Aşağıdaki kayıtlar modeldeki tam rakamlarla birebirdir.
+
+#### 4.1 İşlem günü (t0)
+
+| Hesap | Borç | Alacak | Açıklama |
+|---|---|---|---|
+| Menkul kıymet – DİBS (temiz) | 94.450.000 | | Temiz fiyat (kirli − işlemiş faiz) |
+| İşlemiş faiz alacağı | 8.132.300 | | Kupon tahakkuku |
+| Nakit / Takas | | 102.582.300 | Kirli bedel ödenir |
+| Nakit / Takas (repo girişi) | 102.582.300 | | Repo ile nakit girer |
+| Repo yükümlülüğü | | 102.582.300 | Tahvil teminat, nakit borç |
+| Türev (IRS) — par swap | memo | GUD = 0 | Başlangıç gerçeğe uygun değeri sıfır |
+
+Swap par oranından kurulduğu için başlangıç gerçeğe uygun değeri (GUD) sıfırdır; nominal bilanço-dışı memo olarak izlenir. Tahvil repo ile fonlanır — yani alım bedeli öz kaynaktan değil, tahvili teminat gösterip alınan repo nakdinden karşılanır (self-funded).
+
+#### 4.2 Kupon / periyot
+
+| Hesap | Borç | Alacak | Açıklama |
+|---|---|---|---|
+| Nakit (tahvil kuponu) | 16.630.000 | | Yarı yıllık kupon tahsilatı |
+| Faiz geliri – DİBS | | 16.630.000 | Tahvil kupon geliri |
+| Faiz gideri – swap sabit bacak | 16.630.000 | | Swap sabit ödeme |
+| Nakit (sabit ödeme) | | 16.630.000 | Sabit bacak nakit çıkışı |
+| Nakit (swap değişken tahsilat) | TLREF+ASW | | Değişken bacak tahsilatı |
+| Faiz geliri – swap değişken | | TLREF+ASW | Değişken bacak geliri |
+| Faiz gideri – repo | ~TLREF | | Repo fonlama maliyeti |
+| Nakit (repo faizi) | | ~TLREF | Repo faiz ödemesi |
+
+Tahvil kuponu ile swap sabit bacağı nakit olarak birbirini götürür (net sabit ≈ 0). Geriye net faiz geliri olarak değişken tahsilat eksi repo maliyeti = **ASW marjı** kalır. Yani muhasebe, ekonomik hikayeyi birebir yansıtır: paketin kalıcı geliri spread'dir.
+
+#### 4.3 Değerleme günü (dönem sonu MTM)
+
+| Hesap | Borç | Alacak | Açıklama |
+|---|---|---|---|
+| Menkul kıymet – DİBS (değerleme farkı) | 2.426.574 | | Tahvil değer artışı |
+| Gerçeğe uygun değer geliri (P&L) | | 2.426.574 | Tahvilden GUD geliri |
+| Gerçeğe uygun değer gideri (P&L) | 2.128.574 | | Swap MTM zararı |
+| Türev yükümlülüğü (IRS) | | 2.128.574 | Swap yükümlülüğe döner |
+
+Net değerleme etkisi = 2.426.574 − 2.128.574 = **+298.000 TL** → saf spread P&L; faiz bacağı hedge tarafından nötrlenmiştir. Tahvil değerlemede kazanmış, swap ise (sabit öde bacağı) zarar yazmış görünür; ikisi büyük ölçüde birbirini götürür, net kalan yalnızca spread hareketidir.
+
+<div class="not"><span class="etiket">Sınıflama neden önemli</span> FVTPL yerine <strong>makul değer riskinden korunma muhasebesi</strong> (fair value hedge) uygulanırsa, tahvilin hedge'lenen riske isabet eden değer değişimi ile swap'ın MTM'i aynı dönemde P&L'e alınıp büyük ölçüde birbirini götürür; etki yine net spread + carry'dir, ama oynaklık daha düşük raporlanır. <strong>AFS/FVOCI</strong> sınıflamasında (satılmaya hazır / gerçeğe uygun değer farkı diğer kapsamlı gelire yansıtılan) tahvil değer farkı özkaynağa (diğer kapsamlı gelir) giderken swap MTM P&L'de kalır ve <strong>muhasebe uyumsuzluğu</strong> (accounting mismatch) doğar — bir bacak özkaynakta, diğeri P&L'de dalgalanır. Bu yüzden asset swap paketleri tipik olarak ticari portföyde/FVTPL veya hedge muhasebesiyle taşınır.</div>
+
+#### 4.4 Unwind / vade
+
+Kapanışta tahvil satış bedeliyle menkul kıymet ve birikmiş değerleme farkları ters kayıtla kapanır, swap sonlandırma değeri nakit takas edilir, repo geri ödenir. Kümülatif realize P&L = biriken carry + spread MTM (patikaya göre; +12 ay senaryosunda ≈ **+1.241.303 TL**).
+
+## A.5 P&L Nasıl Yazılır — Özet
+
+- **Gün-1:** ≈ 0. Tahvil piyasadan, swap par'dan girildiği için upfront kâr yoktur. ASW'nin 2,09mn TL'lik değeri bir peşin kâr değil, **gelecekteki carry'nin bugünkü değeridir**. Bu ayrım kritik: değeri gün-1'de kasaya yazamazsınız; ya zamanla carry olarak tahakkuk eder ya da spread erken daralırsa MTM olarak öne çekilir.
+- **Süreç boyunca:** her gün yaklaşık 2.503 TL carry tahakkuku + ASW hareketinden spread MTM (±21.286 TL/bp). Faiz yönü hedge'li.
+- **Kapanışta:** biriken carry + o ana kadarki spread MTM realize olur. Vadeye tutulursa spread MTM sıfıra yakınsar (pull-to-par — tahvil vade yaklaştıkça par'a çekilir, spread kaybolur) ve toplam ≈ biriken ASW carry'si olur.
+
+## A.6 ASW Trade'i Ne Zaman Yapılmalı
+
+#### 6.1 Giriş (uzun ASW: tahvil al + sabit öde swap)
+
+- **ASW tarihsel bandının üstünde** / komşu kağıtlara göre geniş — tahvil ucuz. Daralma beklentisi + pozitif carry birlikte gelir.
+- **Tetikleyici katalizör:** TCMB gevşeme patikası, yabancı girişi/endeks dahiliyeti, ihale arzının azalması, likidite rahatlaması. Bunlar tahvili swap'a yakınsatır (ASW daralır).
+- **Carry avantajı:** uzun ASW yaklaşık 91 bp pozitif taşır; daralma gecikse de beklemek maliyetsizdir. Zamanlama toleransı yüksektir — carry siz beklerken sizi öder.
+
+#### 6.2 Çıkış / ters (kısa ASW)
+
+- **ASW hedefe daraldığında** kâr realize edilir; carry artık yeterince ödemiyorsa pozisyon kapatılır.
+- **Genişleme beklentisi** (arz şoku, likidite sıkışması, dışsal risk-off, BDDK/fonlama maliyeti artışı) varsa kısa ASW'ye geçilir — ama bu **negatif carry** öder; genişlemenin hızlı ve büyük gelmesi şarttır. Türkiye'de govie-swap spread'i (devlet tahvili ile swap arasındaki fark) yapısal olarak pozitif ve dalgalı olduğundan kısa ASW zamanlaması pahalı bir bahistir.
+
+<div class="not"><span class="etiket">Pratik karar kuralı</span> Uzun ASW'yi 'geniş + pozitif carry + daralma katalizörü' üçlüsü hizalandığında kur; carry seni beklerken koruduğu için sabırlı olabilirsin. Kısa ASW'yi ancak net ve yakın bir genişleme tetikleyicisi varken, negatif carry'yi aşacağından emin olduğunda kur.</div>
+
+## A.7 Riskler
+
+- **Repo/fonlama bazı:** net carry TLREF fonlaması varsayar; repo TLREF+baz ise carry = 91 bp − baz. En büyük gerçek aşındırıcı — spread'i taşırken en çok gözlenecek kalem.
+- **Bacak/fixing uyumsuzluğu:** swap değişkeni 3M TLREF, tahvil kuponu yarı yıllık; frekans ve fixing farkları küçük artık risk bırakır.
+- **Konveksite:** DV01 eşlense de tahvil-swap konveksitesi tam örtüşmez; büyük hareketlerde artık P&L. Bucket-DV01 hedge (eğrinin farklı vade dilimlerinde ayrı ayrı DV01 eşleme) tek-nokta hedge'ten güvenlidir.
+- **Onshore/offshore:** hedge offshore kurulursa TRY basis sızar. Onshore TLREF IRS + onshore repo tutarlı kalır.
+- **Likidite:** az işlem gören DİBS'te giriş-çıkış maliyeti spread'i yiyebilir. Swap OTC (tezgah üstü); VİOP sınırlı hedge.
+- **Muhasebe uyumsuzluğu:** yanlış sınıflama (AFS tahvil + P&L swap) oynaklık yaratır; FVTPL veya fair-value hedge tercih edilir.
+
+## A.8 Ek — Kilit Rakamlar
+
+| Kalem | Değer |
+|---|---|
+| Nominal | 100.000.000 TL |
+| Tahvil kirli fiyat / değer | 102,5823 / 102.582.300 TL |
+| Tahvil YTM | %35,72 |
+| 3 Aylık IRS par oranı (DF'lerden) | %33,363 |
+| Quarterly annüite (Στ·DF) | 2,2870 |
+| ASW spread | +91,4 bp |
+| ASW değeri (spread PV) | 2.089.170 TL |
+| Tahvil = Swap DV01 (eşli) | 21.286 TL/bp |
+| Swap nominal (DV01 eşli) | 93.073.280 TL |
+| Yıllık net carry | 913.503 TL |
+| Günlük carry | 2.503 TL |
+
+Rakamlar modelin DF'leri ve TRT160431T35 örneğiyle türetilmiştir; illüstratiftir. Canlı fiyatlama için güncel TLREF/OIS eğrisini kullanın. Hesap detayları eşlik eden modeldedir (Özet · Swap Oranı · Nakit Akışları · MTM & P&L · Muhasebe).
+
+### Bölüm B — TRY OIS: TLREF swaplarında pay/receive kararı
+
+<div class="not">
+  <span class="etiket">Tarih çıpası — bu bölümdeki her "Eylül", "Ekim", "Aralık" neyi kastediyor</span>
+  Bölüm <b>5 Ağustos 2026</b>'da yazıldı. Metinde geçen ay adları o günkü <b>PPK
+  takviminin kalan toplantılarıdır</b>; başka bir yılın aynı ayı değil:
+
+  <table><thead><tr><th>Metindeki ad</th><th>Toplantı</th><th>Tarih</th></tr></thead><tbody><tr><td>"Eylül"</td><td>kalan 1. toplantı</td><td><b>10 Eylül 2026</b></td></tr><tr><td>"Ekim"</td><td>kalan 2. toplantı</td><td><b>22 Ekim 2026</b></td></tr><tr><td>"Aralık"</td><td>kalan 3. toplantı</td><td><b>10 Aralık 2026</b></td></tr><tr><td>"Ocak", "Mart"</td><td>2027'nin ilk ikisi</td><td><b>21 Ocak · 18 Mart 2027</b></td></tr></tbody></table>
+
+  Eğri seviyeleri, "−125 bp Eylül adımı" gibi fiyatlamalar ve tüm vakalar bu fotoğrafa
+  aittir. Bölüm daha sonra okunuyorsa: rakamlar tarih belgesidir, <em>gramer</em>
+  (2.1, 5.0, 6.0) rejimden bağımsızdır ve geçerliliğini korur.
+</div>
+
+taşımanın bir tarafa sistematik olarak maaş ödemesi — bu üçü birleşince, doğru görüşün
+yanlış enstrümanla ifade edilmesi para kaybettirir. Bu ders o kararı baştan sona kurar:
+zemin (TLREF nasıl oluşur), anatomi (P&L'in üç motoru), vade vade gerekçeler, spread ve fly
+katalogları, ve masa pratiği — beş ekle birlikte.
+
+<div class="not">
+  <span class="etiket">Kapsam ve okuma notu</span>
+  Makro çıpalar (politika faizi, koridor, TLREF fixingi, PPK takvimi) <b>5 Ağustos 2026</b>
+  itibarıyladır. Eğri seviyeleri, forwardlar ve DV01 tabloları ise bu koşullarla tutarlı
+  <b>temsili</b> kurgulardır — işlem anında canlı marklar esastır. Genel gramer bölümleri
+  (2.1, 5.0, 6.0) rejimden bağımsızdır: eğri şekli değişse de geçerliliğini korur.
+  Bu metin eğitim amaçlıdır, yatırım tavsiyesi değildir.
+</div>
+
+## B.1 Zemin: TLREF ve TRY OIS piyasası
+
+Pay/receive kararı, enstrümanın neyi ödediğini ve fixinglerin hangi mekanizmayla
+oluştuğunu bilmeden verilemez. TRY OIS'te değişken bacak TLREF'e bileşiklenir; TLREF ise
+TCMB'nin likidite duruşunun doğrudan bir fonksiyonudur. Bu yüzden bu derste her pozisyon
+iki katmanda okunacak: **politika faizi patikası** (PPK ne yapacak) ve **fonlama
+kompozisyonu** (TCMB koridorun neresinden fonluyor). İkisi ayrışabilir — ve TRY'yi G10
+OIS'ten ayıran ana özellik tam olarak budur.
+
+#### 1.1 TLREF: tanım, oluşum ve TCMB ile ilişki
+
+TLREF (Türk Lirası Gecelik Referans Faiz Oranı), Borsa İstanbul Repo-Ters Repo
+Pazarı'ndaki DİBS teminatlı gecelik repo işlemlerinden hesaplanır: işlemler faiz sırasına
+dizilir, hacmin alt ve üst uçları ayıklanır, kalan merkezî dilimin hacim ağırlıklı
+ortalaması alınır. 17 Haziran 2019'dan beri BIST tarafından her iş günü yayımlanır;
+metodoloji Hazine ve Maliye Bakanlığı, TCMB, BDDK, TBB, TSPB, Takasbank ve BIST
+temsilcilerinden oluşan komitece belirlenir. Gerçek işleme dayalı olması onu TRLIBOR'un
+yerine geçen risksiz referans yapar; kredi ve tahvil piyasasındaki TLREF'e endeksli
+ürünlerin tamamı aynı fixinge bağlıdır.
+
+İki tamamlayıcı not: (i) yetersiz hacim günlerinde metodolojinin yedek prosedürü devreye
+girer (önceki fixing/AOFM bazlı türetme); stres günlerinde fixingin "işlem mi, yedek mi"
+olduğunu bilmek compounding bacağı okumak için önemlidir. (ii) VİOP'taki TLREF vadeli
+işlem sözleşmeleri, kısa uç görüşleri için merkezi takaslı bir alternatif sunar; ISDA
+hattı olmayan karşı taraflarla veya teminat verimliliği gerektiğinde OIS'in ikamesi
+olarak akılda tutulmalı, OIS-futures bazı da ayrıca izlenmelidir.
+
+TLREF pratikte TCMB efektif fonlama maliyetini (AOFM) izler. TCMB tüm fonlamayı bir hafta
+vadeli repo ile verdiğinde AOFM politika faizine, TLREF de politika civarına oturur. TCMB
+miktar kısıtlaması yapıp bankaları gecelik borç verme penceresine ittiğinde AOFM ve TLREF
+koridor tavanına yapışır; likidite fazlasında ise tabana sarkar. Yani TLREF'i tahmin etmek
+= (i) politika faizini **ve** (ii) fonlama kompozisyonunu tahmin etmektir.
+
+<div class="not">
+  <span class="etiket">5 Ağustos 2026 fotoğrafı</span>
+  Bugünkü durum bunun canlı örneği: politika faizi %37,00 (Ocak 2026'da 38'den
+  indirildi, o tarihten beri dört toplantıdır sabit), koridor 35,50−40,00; TLREF
+  fixingi ise ~%39,95 ile tavana yapışık. TCMB, enflasyon katılığı ve enerji kaynaklı
+  risklere karşı fonlamayı sıkı tutuyor. OIS eğrisinin tamamı bu ~295 bp'lik
+  TLREF−politika spreadinin ne zaman ve nasıl kapanacağına dair bir bahis içeriyor.
+</div>
+
+TLREF−politika spreadi kendi başına bir fiyatlama nesnesidir ve rejim hafızası pozisyon
+almadan önce bilinmelidir:
+
+| Dönem | Fonlama rejimi | TLREF davranışı |
+| --- | --- | --- |
+| 2019 – 2021 ortası | Bol/karışık likidite | Politika civarı, zaman zaman altında |
+| Eyl 2021 – 2023 ortası | Erken gevşeme deneyi | Politika civarı; kur şoklarında kısa sıçramalar |
+| Haz 2023 – 2024 başı | Agresif normalizasyon | Politika hızla yükselirken üst banda yakın seyir |
+| Mar 2024 | Seçim öncesi sıkılaştırma | Tavan bölgesi; swap kanalıyla ek sıkılık |
+| Nis 2025 şoku | Koridor + miktar sıkısı | Tavanın da üstü, geç likidite bölgesi (~%48−49) |
+| 2025 H2 – bugün | Kontrollü gevşeme, sıkı fonlama | Tavana yapışık (~%39,95); spread ~+295 bp |
+
+#### 1.2 Kontrat konvansiyonları
+
+| Parametre | Masa konvansiyonu |
+| --- | --- |
+| Değişken bacak | Günlük bileşik TLREF (*compounded in arrears*), ACT/365 |
+| Sabit bacak | ACT/365; her iki bacak 3 aylık (çeyreklik) ödemeli |
+| Başlangıç / takvim | Spot T+1; Modified Following; İstanbul takvimi |
+| Fixing gecikmesi | TLREF gün sonunda ilan edilir; son fixing dönem sonuna kilitlenir |
+| Dokümantasyon | ISDA + CSA (TL nakit teminat) veya karşı tarafa göre GMRA/çerçeve |
+| Kotasyon | Sabit bacak %'si; broker'da outright, spread ve fly ayrı kote edilir |
+
+İki uyarı: (i) bazı karşı taraflar, özellikle offshore, **yıllık ödemeli** kotasyon
+kullanabilir; çeyreklik ACT/365 ile yıllık kotasyon arasında bileşiklenme farkı yüksek
+faizde ihmal edilemez (yıllık ~%35 seviyesinde çeyreklik karşılığı ~130−140 bp daha
+düşüktür). Teyitleşmeden fiyat karşılaştırma. (ii) Compounding ACT/365 olduğu için artık
+yıl ve uzun hafta sonu etkileri fixing bacağında birikir; kısa vadeli işlemlerde gün
+sayımını risk sisteminin ürettiğiyle bire bir kontrol et.
+
+**Bu farkın hesabı.** İki bacak da 3 ayda bir ödediği için annuity dört kupondan kurulur;
+kupon sıklığı değişince *aynı iskonto eğrisinde* par oran değişir — ekonomi aynı, sayı
+farklı:
+
+$$
+S_N^{(f)} = \frac{1 - df_N}{A_N^{(f)}},
+\qquad
+A_N^{(f)} = \sum_{i} df(t_i)\,\tau_i,
+\qquad t_i = \frac{i}{f}
+$$
+
+Pay ($1 - df_N$) sıklıktan bağımsızdır; değişen yalnızca paydadır. Sıklık arttıkça
+annuity büyür, dolayısıyla par oran **düşer**. Temsili eğride:
+
+| Vade | Çeyreklik (masa std.) | 6 aylık | Yıllık | Çeyreklik − Yıllık |
+| --- | --- | --- | --- | --- |
+| 1y | %31,79 | %32,96 | %35,25 | **−346 bp** |
+| 2y | %25,55 | %26,45 | %27,78 | −223 bp |
+| 3y | %21,82 | %22,54 | %23,44 | −162 bp |
+| 5y | %17,98 | %18,50 | %19,09 | −111 bp |
+| 10y | %14,08 | %14,42 | %14,77 | −69 bp |
+
+<div class="not">
+  <span class="etiket">Denetim notu — farkın büyüklüğü vadeye bağlı</span>
+  Kaynak metin farkı "~130−140 bp" olarak veriyor; temsili eğri üzerinde yeniden
+  hesaplandığında bu büyüklük <b>3−4 yıl civarında</b> geçerli. Kısa uçta fark çok daha
+  büyük (1y'de ~346 bp), uzun uçta daha küçük (10y'de ~69 bp) — çünkü fark, iskonto
+  faktörünün dönem içindeki eğriliğinden doğar ve seviye yükseldikçe, vade kısaldıkça
+  büyür. Pratik sonuç değişmiyor, aksine kuvvetleniyor: <b>kısa uçta yıllık kotasyonla
+  çeyreklik kotasyonu karşılaştırmak, 3 yüzde puanı yanılmak demektir.</b> Aşağıdaki
+  araçta kupon sıklığını değiştirerek kendi eğrinizde ölçebilirsiniz.
+</div>
+
+#### 1.3 Piyasa mikroyapısı ve likidite haritası
+
+Onshore likidite bankalar arası broker ekranlarında döner; ağırlık kısa uçtadır. Offshore
+talep, hem makro fonların Türkiye normalizasyon teması hem de TLREF'e endeksli varlıkların
+hedge ihtiyacıyla 2024'ten bu yana belirgin şekilde arttı. Temsili likidite haritası:
+
+| Segment | Tipik klip | Not |
+| --- | --- | --- |
+| 1m–1y | 250 mn – 1 mlr+ TL | En derin segment; PPK etrafında spreadler daralır, karar günleri geniş |
+| 18m–3y | 100–500 mn TL | Makro tema segmenti; offshore akışının yoğunlaştığı yer |
+| 4y–5y | 50–250 mn TL | İşler ama iz bırakır; ASW ve yapılandırılmış akış belirleyici |
+| 6y–10y | Talep üzerine | Çoğu gün mark interpolasyonla; tek yönlü akış fiyatı taşır |
+
+Karşı taraf haritası da pay/receive akışını açıklar: bankalar sabit faizli TL kredi/DİBS
+defterlerini korumak için **yapısal payer**; kurumsallar TLREF'e endeksli kredi maliyetini
+kilitlemek için **payer**; offshore gerçek para ve makro fonlar dezenflasyon temasında
+**receiver**; yapılandırılmış ürün masaları ihraç yönüne göre iki taraflı. Kimin hangi
+tarafta yoğunlaştığını bilmek, bir kotasyonun arkasındaki akışı okumayı sağlar.
+
+Regülasyon katmanı: BDDK'nın yurt dışı yerleşiklerle TL bacaklı türev işlemlerine
+getirdiği özkaynak bazlı, vade kademeli limitler onshore-offshore segmentasyonun ana
+kaynağıdır. Normalizasyonla birlikte kademeli gevşetilmiş olsa da limit mimarisi
+yürürlüktedir ve tek para birimli TLREF IRS'in hangi kalemde sayıldığı karşı taraf tipine
+göre değişebilir; yeni karşı tarafla ilk işlem öncesi uyum/hukuk teyidi rutinin parçası
+olmalı. Teminatta TL nakit CSA standarttır; teminat faizi TLREF'e bağlandığı için iskonto
+eğrisi de TLREF'tir — bu, OIS iskontosunun kendi içinde tutarlı olduğu anlamına gelir.
+
+#### 1.4 Kotasyon pratiği
+
+Broker ekranında üç ayrı kotasyon evreni yaşar: **outright** (1m–10y, sürekli), **spread
+paketleri** (iki bacak tek fiyat) ve **fly paketleri**. Paket kotasyonun değeri bacak
+toplamından her zaman iyidir çünkü broker netleştirir; RV yapılarında bacak bacak toplamak
+kuruluş maliyetini kabaca ikiye katlar. Görgü kuralları P&L'dir: iki yönlü fiyat iste (yön
+sızdırma), verilen fiyata makul sürede dön (dönmeyen isim bir sonraki kotasyonu geniş
+alır), klip görgüsünü segmentine göre ayarla (1.3'teki harita). Karar günleri ilk yarım
+saatte spreadler 3−4 kat açılır; o pencerede sadece önceden yazılmış planın işlemini yap,
+fiyat keşfine çıkma.
+
+#### 1.5 Onshore OIS ile offshore forward-implied faiz
+
+Offshore oyuncunun TL faize erişiminin iki kanalı var: TLREF OIS ve USDTRY forward/swap
+üzerinden **implied TRY getirisi** (ACT/360 basit). Swap limitleri offshore TL arzını
+kısıtladığında implied getiri onshore OIS'ten yukarı kopar; bol TL dönemlerinde makas
+kapanır. Temsili örnek: 3m forward puanlarından türetilen implied getiri (365 bazına
+çevrilmiş) %41,5 iken 3m OIS %38,95 ise **baz +255 bp** = offshore TL fonlaması sıkışık
+demektir. Bu baz iki yönde bilgi taşır: (i) makas açılıyorsa kısa uç OIS'e yukarı baskı
+gelebilir — offshore, TL'yi swap yerine OIS receive ile sentezlemeye yönelir; (ii) makas
+genişken aynı faiz görüşünü implied tarafında (forward satarak) ifade etmek zaman zaman
+daha iyi taşır. KKM mirasının tasfiyesi ve limit gevşetmeleriyle bazın oynaklığı azaldı
+ama mimari kaldıkça sıfırlanmadı; kendi bootstrap aracında iki eğriyi yan yana tutmak
+hangi enstrümanla ifade edeceğine karar verirken ilk bakılacak ekrandır.
+
+<div class="not">
+  <span class="etiket">Bağlantılı ders</span>
+  Bu bazın mekaniği — CIP'ten forward türetme, TRY ve USD bacaklarının ayrı DV01'i,
+  forward'ın OIS ile hedge'i — <a href="/arastirma/risk-ve-hedge/">TRY Faiz
+  Konvansiyonları, DV01 ve Forward'ın OIS ile Hedge'i</a> dersinde adım adım
+  hesaplanıyor. Bu ders <em>fiyatlama</em> tarafını, elinizdeki sayfa ise
+  <em>pozisyon alma</em> tarafını anlatır.
+</div>
+
+#### 1.6 Temsili eğri — 5 Ağustos 2026
+
+Ders boyunca aşağıdaki temsili eğri kullanılacak. Şekil, mevcut fotoğrafla tutarlı: spot
+fixing koridor tavanında, ön uç hızlı gevşeme fiyatlıyor, eğri **tüm vadelerde ters**,
+uzun uç ~%20 civarı bir denge bölgesine yakınsıyor.
+
+| Vade | Kotasyon % | Vade | Kotasyon % | Vade | Kotasyon % |
+| --- | --- | --- | --- | --- | --- |
+| 1m | 39,90 | 9m | 36,20 | 4y | 25,30 |
+| 2m | 39,45 | 1y | 35,25 | 5y | 24,10 |
+| 3m | 38,95 | 18m | 32,60 | 6y | 23,40 |
+| 6m | 37,50 | 2y | 30,40 | 7y | 22,90 |
+|  |  | 3y | 27,10 | 10y | 22,10 |
+
+Okuma: 1y OIS %35,25 = önümüzdeki 12 ayın beklenen ortalama TLREF'i + küçük bir risk
+primi. Spot fixing %39,95 iken 1y'nin **470 bp aşağıda** olması, piyasanın hem politika
+indirimi hem fonlama normalizasyonu fiyatladığını söyler. Eğrinin her noktası bu iki
+bileşenin farklı vadeye yayılmış hâlidir; sonraki bölüm bu ayrıştırmayı sayısallaştırıyor.
+
+
+## B.2 Pay/receive kararının anatomisi
+
+Terminoloji sabit: **pay** = sabit faizi ödemek (faizler kontratın üzerine çıkarsa
+kazanır), **receive** = sabit faizi almak (faizler düşerse kazanır). Bir OIS pozisyonu
+asla tek cümlelik bir "faiz düşecek/çıkacak" bahsi değildir; **üç ayrı motordan** P&L
+üretir ve TRY'nin ters eğrisinde bu motorlar çoğu zaman zıt yönde çalışır. Bu bölüm o
+motorları ayrıştırır; 3–6. bölümlerdeki her vade ve yapı bu çerçeveye geri döner.
+
+#### 2.1 P&L'in üç bileşeni
+
+**Fixing carry:** dönem içinde sabit bacağın tahakkuku ile gerçekleşen bileşik TLREF'in
+farkı. Pozisyonu tuttuğun her gün işler; MTM'den bağımsızdır.
+
+**Rolldown:** eğri hiç değişmese bile vadenin kısalmasıyla kontratın, eğrinin daha kısa
+noktasına karşı yeniden fiyatlanması.
+
+**MTM (eğri hareketi):** ilgili vadedeki kotasyonun değişimi × DV01. Görüşün asıl test
+edildiği bileşen.
+
+Temel formüller (basit yaklaşıklıklar; tam hâlleri Ek A'da). Bileşik değişken bacak,
+dönem $D$ gün, fixingler $r_i$ ve gün sayıları $d_i$ için:
+
+$$
+F = \left[\prod_i \left(1 + r_i\cdot\frac{d_i}{365}\right) - 1\right]\cdot\frac{365}{D}
+$$
+
+Receiver MTM'i, kontrat oranı $K$, piyasa oranı $S_{\text{piyasa}}$, annuity $A$ ve
+nominal $N$ ile (payer için işaret ters):
+
+$$
+\text{MTM}_{\text{receiver}} \approx (K - S_{\text{piyasa}})\cdot A\cdot N
+$$
+
+$h$ günlük ufukta taşımanın iki bileşeni ve DV01:
+
+$$
+\text{fixing carry} \approx (K - \overline{\text{TLREF}})\cdot\frac{h}{365}\cdot N
+\qquad
+\text{rolldown} \approx (S_T - S_{T-h})\cdot A_{T-h}\cdot N
+$$
+
+$$
+\text{eğri-sabit taşıma} = \text{fixing carry} + \text{rolldown},
+\qquad
+\text{DV01} \approx A\cdot N\cdot 10^{-4}
+$$
+
+burada $A$ **kalan vadenin** annuity'sidir.
+
+Kritik ayrım: **"forwardlar gerçekleşirse"** senaryosunda toplam P&L tanım gereği ≈ 0'dır
+— fiyatın içindeki patika aynen gelirse ne payer ne receiver kazanır. **"Eğri sabit
+kalırsa"** senaryosu ise bambaşkadır: TRY'de eğri ters olduğu için receiver hem fixing
+carry'de hem rolldown'da kaybeder, payer ikisini de toplar. Bir pozisyonun "taşıması"
+denince kastedilen ikinci senaryodur ve masada her işlem öncesi **iki senaryo da**
+yazılmalıdır.
+
+#### Genel kazanç-kayıp haritası (rejimden bağımsız)
+
+Bu dersin sayısal örnekleri bugünün ters eğrisiyle çalışılmıştır; kuralların kendisi ise
+rejimden bağımsızdır — normal (yukarı eğimli) eğriye geçişte yalnızca taşıma işaretleri
+aynalanır (Ek A'daki işaret tablosu bu çeviriyi yapar). Outright için evrensel koşullar:
+
+| Taraf | Ne zaman kazanır | Ne zaman kaybeder | Tipik "haklıyken kaybetme" |
+| --- | --- | --- | --- |
+| Receive | Gerçekleşen patika forward'ın altında kalırsa; sürpriz gevşeme / dezenflasyon; terim priminin daralması | Patika forward'ın üstünde kalırsa; prim/arz şoku; ters eğride negatif taşımanın birikmesi | Görüş doğru, zamanlama geç: taşıma hedefi yer ("haklı ama geç") |
+| Pay | Patika forward'ın üstünde gerçekleşirse; sıkılaşma / prim şoku; ters eğride beklerken taşıma toplar | Forward'dan hızlı/derin gevşeme; normal eğride taşıma aleyhine döner | Stres zirvesinde girip normalleşme rallisinde stop olmak |
+
+Tek cümlelik özü: **her outright pozisyon forward'a karşı bir bahistir, spot'a karşı
+değil.** "Faiz düşecek" cümlesi receive için yeterli gerekçe değildir; düşüş forward'da
+zaten satılmış olabilir — kazanmak için gerçekleşmenin forward'dan sapması gerekir. Bu
+yüzden her işlem dosyası "benim patikam vs forward patikası" karşılaştırmasıyla açılır.
+
+#### Eğri hareketinin üç türü ve enstrüman haritası
+
+Her eğri hareketi üç bileşene ayrışır; her yapı bir üst bileşeni nötralize eder ve
+karşılığında bacak sayısı, işlem maliyeti ve likidite riski ekler:
+
+| Beklenti / hareket | Doğru enstrüman | Neye ~nötr | Not |
+| --- | --- | --- | --- |
+| Paralel kayma (seviye) | Outright pay/receive | — | Vade = görüş ufku + likidite; DV01 en verimli burada |
+| Eğim değişimi | Spread (steepener / flattener) | Seviyeye (~beta şerhiyle) | Bölüm 5; taşıma yasası 5.0'da |
+| Büküm değişimi | Fly | Seviye ve eğime | Bölüm 6; maliyet/edge testi şart |
+
+Karma görüşler ("faiz düşer **ve** eğri dikleşir") tek yapıya sıkıştırılmaz: iki ayrı
+pozisyon olarak kurulur ve ayrı yönetilir. 50:50 dışı ağırlıklı spread'ler bu iki görüşü
+tek pakete gömer; kurulabilir, ama raporlamada yine seviye ve eğim bacağı olarak ikiye
+ayrılmalıdır — aksi hâlde hangi görüşün çalıştığı hiç öğrenilemez.
+
+#### 2.2 Ön uç strip'inden PPK patikası çıkarmak
+
+Kısa uç kotasyonları, toplantı tarihleri arasında TLREF'in sabit kaldığı bir **merdiven**
+varsayımıyla toplantı başına adımlara çözülür. Bugünden (5 Ağustos 2026) bakınca kalan 2026
+toplantıları 10 Eylül, 22 Ekim ve 10 Aralık 2026; 2027 ilanlı takvimde 21 Ocak ve 18 Mart var.
+Karar günü ilan edilen oranın ertesi iş günü fonlamaya yansıdığını varsayalım.
+
+**2m kotasyonu** (61 gün; yalnız 10 Eylül 2026'yı kapsar):
+
+$$
+39{,}95\cdot\frac{36}{61} + (39{,}95+\Delta_1)\cdot\frac{25}{61} = 39{,}45
+\quad\Rightarrow\quad \Delta_1 \approx -122\ \text{bp}\ (\sim-125)
+$$
+
+**3m kotasyonu** (92 gün; 10 Eylül + 22 Ekim 2026):
+
+$$
+39{,}95 + \frac{56}{92}\Delta_1 + \frac{14}{92}\Delta_2 = 38{,}95,
+\qquad \Delta_1 = -125 \;\Rightarrow\; \Delta_2 \approx -155\ \text{bp}\ (\sim-150)
+$$
+
+**6m kotasyonu** aynı yöntemle Aralık 2026 adımını verir: $\Delta_3 \approx -150$ bp.
+
+Bu merdivenin en önemli kelimesi **"efektif"**tir. $\Delta_1 = -125$, tek başına "Eylül 2026'da
+125 bp politika indirimi" demek değildir; politika adımı ile fonlama normalizasyonunun
+(tavandan politika faizine iniş, ~295 bp'lik ayrı bir rezervuar) olasılık ağırlıklı
+toplamıdır. Aynı −125, "kesin −100 indirim + kısmi normalizasyon" da olabilir, "%50
+ihtimalle −250'lik güvercin dönüş" de. Bu ayrıştırılamazlık, TRY kısa ucunun ana riski ve
+ana fırsatıdır: PPK metni **faize dokunmadan** sadece likidite duruşunu değiştirerek
+strip'i taşıyabilir. G10'daki "meeting-dated OIS" disiplinini TRY'de uygularken her adımı
+iki bileşenli düşün.
+
+İkinci katman **olasılık okumasıdır**: strip'teki −125, "kesin −125" ile "%50 ihtimalle
+−250, %50 ihtimalle 0" arasında ayrım yapamaz; ikisi aynı ortalamayı verir ama karar günü
+P&L dağılımları bambaşkadır. Piyasa iki kampa bölündüğünde (bugünkü Eylül 2026 fiyatlaması buna
+yakındır) switch pozisyonları yazı-tura karakterine bürünür: beklenen değer küçük,
+gerçekleşme büyük. Bu yüzden toplantı işlemlerinde boyut, ortalama görüşe değil
+**dağılımın şekline** göre seçilir; kamplaşma keskinse pozisyonu karar öncesi yarıla,
+kalanını metin okunduktan sonra tamamla.
+
+<div class="not">
+  <span class="etiket">Bağlantılı araç</span>
+  Aynı merdiven çözümünü canlı bir bootstrap eğrisi üzerinde yapan araç
+  <a href="/arastirma/enstruman-fiyatlama/">Enstrüman Fiyatlama</a> dersindeki
+  <em>Forward &amp; MPC Hesaplayıcısı</em>'dır: eğriyi bootstrap'ler, toplantı
+  tarihlerine göre ima edilen adımları çıkarır. Buradaki aritmetik onun elle yapılmış
+  hâlidir.
+</div>
+
+#### 2.3 Ters eğride carry &amp; roll: sayısal örnek
+
+**İşlem:** 500 mn TL, 1y **receive** @ %35,25. DV01 ≈ 41.500 TL/bp (Ek B'deki temsili
+tablodan). Ufuk 3 ay. TLREF fixingi %39,95.
+
+| Senaryo (3 aylık ufuk) | P&L (mn TL) | Okuma |
+| --- | --- | --- |
+| **A** — Forwardlar gerçekleşir (Eyl −125, Eki −150) | ≈ 0 | Fiyatlanan patika gelirse kimse kazanmaz; işlem maliyeti kadar eksi |
+| **B** — Eğri sabit: fixing carry $(35{,}25-39{,}95)\cdot 92/365$ | −5,9 | Her gün ~64 bin TL negatif taşıma |
+| **B** — Eğri sabit: rolldown 1y→9m $(35{,}25-36{,}20)\cdot A(9m)$ | −3,0 | Ters eğride vade kısaldıkça daha yüksek noktaya karşı marklanırsın |
+| **B** — Eğri sabit **toplam** | **−9,0** | Payer aynı senaryoda **+9,0** toplar |
+| **C** — Başabaş | 0 | 3 ay sonunda 9m kotasyonu ≈ %33,50'ye inmeli (forward ~%34,0'ın da altı) |
+
+Çıkarım: bu eğride receive, **"fiyatlanandan daha hızlı/derin gevşeme"** bahsidir; sadece
+"faiz düşecek" görüşü yetmez, çünkü düşüş zaten −425 bp'lik ön uç merdiveninde satılmış
+durumda. Pay ise **pozitif taşıyan bekleme pozisyonudur**: TCMB oyaladıkça kazanır,
+kaybetmesi için forward'dan daha güvercin bir gerçekleşme gerekir. Bu asimetri dersteki
+neredeyse her yapının altında yatar — kanat mı gövde mi, hangi bacak hangi yön, hepsinde
+önce "taşımayı kim ödüyor?" sorusu sorulur.
+
+<div class="not">
+  <span class="etiket">Uygulama notu</span>
+  Taşıma tablosunu risk sisteminden değil kendi bootstrap aracından üret: sistemin
+  theta'sı iskonto ve fixing tahakkukunu birlikte gösterir, rolldown'u ayrıştırmaz.
+  Eğri-sabit senaryoyu ayrı hesaplamadan pozisyon komitesine taşıma rakamı verme.
+</div>
+
+Aşağıdaki araç tam olarak bunu yapar: iki bileşeni ayrıştırır, günlük taşımayı ve
+**başabaş seviyesini** verir. Varsayılanlar yukarıdaki vakadır — nominali, vadeyi, tarafı
+ve ufku değiştirerek kendi pozisyonunuzu geçirin. Eğri noktalarını düzenlediğinizde
+annuity, DV01 ve rolldown birlikte yeniden hesaplanır.
+
+<OisCarryHesaplayici />
+
+Vakayı doğrulamak için: 500 mn · 1y · receive · K %35,25 · ufuk 92 gün · TLREF %39,95 →
+carry −5,9 · rolldown −3,0 · **toplam −9,0 mn TL** · günlük −64 bin TL · başabaş 9m ≈
+%33,4 — dört rakam da §2.3 tablosuyla birebir. Tarafı **pay**'e çevirin: aynı büyüklükler işaret değiştirir — ters eğride
+"beklerken maaş alan" tarafın hangisi olduğu buradan görünür.
+
+#### 2.4 Motivasyon matrisi
+
+Aynı işlemin dört farklı sahibi olabilir ve doğru/yanlış ölçütü sahibine göre değişir:
+
+| Motivasyon | Tipik yapı | Başarı ölçütü | Ana risk |
+| --- | --- | --- | --- |
+| Spekülatif patika görüşü | Outright kısa uç; PPK switch; ön uç fly | Forward'a karşı gerçekleşme | Fonlama kompozisyonu sürprizi |
+| ALM / bilanço hedge | 1y–5y pay (sabit kredi/DİBS defterine karşı) | Bilanço NII/EVE oynaklığının düşmesi | Hedge accounting kopması; baz |
+| Müşteri işlemi arkası | Kurumsal payer akışının yansıtılması | Marjın kilitlenmesi | Tek yönlü stok birikimi |
+| RV / eğri | DV01-nötr spread ve fly | Yapının normalize olması | Likit olmayan bacakta unwind |
+
+Bir kotasyon geldiğinde karşı tarafın hangi satırda olduğunu tahmin etmek, fiyatın "bilgi
+mi akış mı" olduğunu ayırt ettirir. Kurumsal payer akışı arkasındaki 2y kotasyonu makro
+sinyal değildir; offshore'un 18m–3y receive dalgası ise çoğu zaman temanın kendisidir.
+
+#### 2.5 Pozisyonun ömrü: reset merdiveni ve nakit akışı
+
+MTM ekranı pozisyonun tek gerçeği değildir; **kuponlar nakit öder**. 500 mn 1y receiver'ın
+($K = \%35{,}25$) dört kupon dönemi, forwardlar aynen gerçekleşse bile asimetrik bir nakit
+profili çizer:
+
+| Kupon dönemi | Sabit tahakkuk | Beklenen bileşik TLREF | Beklenen net (mn TL) |
+| --- | --- | --- | --- |
+| Ağu–Kas 2026 | %8,89 | %9,82 | −4,7 |
+| Kas 2026 – Şub 2027 | %8,89 | %9,09 | −1,0 |
+| Şub–May 2027 | %8,89 | %8,45 | +2,2 |
+| May–Ağu 2027 | %8,89 | %7,91 | +4,9 |
+
+Toplam, iskonto ve yaklaşıklıklar içinde ≈ 0 — ama **sıralama** öyle değil: receiver önce
+öder, sonra tahsil eder. Bu, (i) fonlama/likidite planına girer (ilk çeyreklerin nakit
+çıkışı bütçelenir), (ii) erken unwind kararını çarpıtır — ilk kuponu ödemişken kapanan
+pozisyon, "forwardlar gerçekleşti" senaryosunda bile nakit bazda eksidedir, kalan artılar
+realize edilmemiştir. Payer için ayna görüntüsü geçerli: erken dönemde nakit toplar, geç
+dönemde iade eder; "kârı realize edip çıkalım" refleksi payer'da erken kapamaya,
+receiver'da geç kapamaya **yapısal olarak** meyillidir. Komite sunumlarında MTM'nin yanına
+bu merdiveni koy.
+
+#### 2.6 Boyutlandırma: DV01 bütçesi, stop mesafesi, çıkış klipi
+
+Boyut, kanaatin gücünün değil **üç kısıtın en küçüğünün** fonksiyonudur:
+
+$$
+\text{Nosyonel} \le \min\left\{
+\frac{\text{Risk bütçesi}}{\text{stop mesafesi}\cdot \text{DV01}_{\text{birim}}},\;
+\text{Çıkış klipi},\;
+\text{Limit alanı}
+\right\}
+$$
+
+İkinci terim tek seferde dönebildiğin boyut, üçüncüsü bucket DV01 / karşı taraf limitidir.
+
+**Örnek:** işlem başına zarar bütçesi 5 mn TL, stop 60 bp, 1y vade:
+
+$$
+\frac{5.000.000}{60 \cdot 83\ \text{TL/bp per mn}} \approx 1.000\ \text{mn}
+\;\Rightarrow\; 1\ \text{mlr TL tavan}
+$$
+
+ama 1y çıkış klipi ~500 mn ise boyut **500 mn**'dir — bütçe değil **kapı** belirler.
+
+İki düzeltme katmanı: (i) **taşıma ayarı** — negatif taşıyan pozisyonda stop'a kadar
+beklemek stop zararına taşımayı ekler; bütçeye "stop + planlanan ufkun taşıması" birlikte
+yazılır. (ii) **Kalabalıklık ayarı** — pozisyonlanmanın tek yöne yığıldığı temalarda
+(bugün 18m–3y receive gibi) çıkış klipi normal günün yarısı varsayılır. Çok bacaklı
+yapılarda kural basittir: **boyutu en ince bacak belirler** (6. bölümde tekrar edilecek).
+
+
+## B.3 Kısa uç: 3m, 6m, 1y
+
+Kısa uç, PPK patikası ile fonlama kompozisyonunun **çarpıştığı** yerdir. Vade uzadıkça
+toplantı sayısı artar ve tek toplantı sürprizinin ağırlığı düşer; buna karşılık taşıma
+büyür. Üç vadenin işlevi farklıdır ve "faiz görüşüm var" cümlesi hangi vadeyle ifade
+edileceğine karar vermeden eksiktir.
+
+Kısa ucun grameri döngünün fazına göre değişmez; değişen, işaretler ve hangi tarafın
+"beklerken maaş aldığı"dır:
+
+| Faz | Eğri önü (tipik) | Genel durum | Klasik hata |
+| --- | --- | --- | --- |
+| Sıkılaşma | Düzleşir / terse döner | Payer MTM toplar; taşıma giderek payer'a geçer | Erken "zirve avcılığı" receive'i — fixing ezer |
+| Plato / bekleyiş | Ters; taşıma payer'da (bugünkü faz) | Payer beklerken taşır, receiver zamanlama arar; switch'ler ana enstrümandır | Taşımayı "bedava" sanıp boyutu şişirmek |
+| Gevşeme | Ters → normalleşir | Receiver MTM toplar, taşıma yükü hafifler; steepener'lar çalışır | Erken "normalleşme bitti" payer'ı |
+| Şok / stres | Ön uç patlar (bear flattener) | Likidite kuralları devralır; klipler küçülür, spreadler açılır | Normal gün likiditesi varsaymak |
+
+#### 3.1 Vade vade: ne fiyatlar, ne zaman pay, ne zaman receive
+
+| Vade | Ne fiyatlar (bugün) | Pay gerekçeleri | Receive gerekçeleri |
+| --- | --- | --- | --- |
+| **3m** | 10 Eylül + 22 Ekim 2026; ~−200 bp efektif gevşeme. Fixing bacağının yarısından fazlası bugünkü %39,95'ten kilitli | Eylül 2026'da pas / şahin metin; enerji-kur kaynaklı enflasyon sürprizi; fonlama sıkısının uzaması; TLREF'e endeksli kısa borçlanma maliyetinin kilitlenmesi | Eylül 2026'da −250'ye varan güvercin dönüş + fonlama normalizasyonunun hemen başlaması; TL'de hızlı değerlenme/dezenflasyon sürprizi |
+| **6m** | Aralık 2026 dahil üç toplantı + normalizasyonun ilk yarısı; ~−425 bp | "İndirimler gelir ama fiyatlanandan yavaş" — pozitif taşımanın en verimli olduğu nokta; yıl sonu likidite sıkışığına karşı koruma | Döngünün Ekim-Aralık 2026'da hızlanacağı görüşü; koridor üst bandının indirilmesi/fonlamanın politikaya çekilmesi beklentisi |
+| **1y** | Beş toplantı + normalizasyonun büyük kısmı; 12 ay ort. TLREF ~%35,25 | ALM: sabit faizli kredi/DİBS defterinin ilk yıl faiz riskine karşı çekirdek hedge'i; "kalıcı katılık" makro görüşü | Dezenflasyon temasının en likit outright ifadesi; DİBS almadan duration; offshore'un standart giriş noktası |
+
+#### 3m — fixing enstrümanı
+
+92 günün 36'sı bugünkü fixingten kilitlidir, MTM oynaklığı düşüktür, P&L'in ana kaynağı
+**gerçekleşen TLREF**'tir. Bu yüzden 3m'de pozisyon almak aslında **fonlama kompozisyonu
+üzerine** işlem yapmaktır: politika görüşü için fazla kısa, fixing görüşü için idealdir.
+Doğal kullanıcıları fonlama masası (kısa TL borçlanma maliyetini kilitleyen), switch bacağı
+arayan RV masası ve kısa vadeli TLREF'li kredisini sabitleyen kurumsaldır. **Tipik hata:**
+3m ile döngü görüşü ifade etmeye çalışmak — pozisyonun ilk üçte biri zaten kilitli, kalanı
+iki toplantıya sıkışmış durumda; görüş doğru çıksa bile kazanç küçük DV01'de boğulur ve
+aynı görüşün doğru adresi 6m veya switch olurdu.
+
+#### 6m — taşımanın tatlı noktası
+
+Payer, eğri-sabit senaryoda fixing tarafında yılda ~245 bp taşır, üstüne ters eğrinin
+rolldown'unu ekler ve üç toplantıyı birden kapsadığı için tek toplantı sürprizine karşı
+yastıklıdır. Doğal kullanıcıları taşıma toplayan payer'lar, ALM'in kısa kanadı ve
+"bekle-gör" modundaki makro hesaplardır. **Tipik hata:** front-load görüşünü 6m outright
+receive ile oynamak — o görüşün doğru enstrümanı switch veya 3m6m1y fly'ıdır; outright
+receive, zamanlama görüşüne gerek olmayan taşıma yükünü tam üstlenir ve TCMB iki hafta
+oyalandığında görüş bozulmadan pozisyon eksiye döner.
+
+#### 1y — temanın vadesi
+
+Beş toplantı + fonlama normalizasyonunun büyük kısmı: tek sürpriz ~1/5 ağırlıkla girer,
+pozisyon PPK gürültüsünden çok döngünün bütününe duyarlıdır. Offshore makro ve gerçek
+paranın giriş noktası, broker likiditesinin en derin olduğu outright vade budur; ALM'in
+çekirdek hedge'i de burada başlar. **Tipik hatalar:** (i) 1y pozisyonuna switch
+disipliniyle stop koymak — buranın gürültü toleransı farklıdır, stop saatlik harekete
+değil **patika revizyonuna** (iki toplantılık fiyat kayması, ~±50−75 bp) bağlanır; (ii)
+tema işlemini karar günü açmak — spreadin 3−4 kat genişlediği pencerede giriş maliyeti,
+haftalarca taşınacak pozisyonun edge'inden yenir. Tema işlemi karar haftası dışında,
+sakin ekranda kurulur.
+
+#### 3.2 Dönemsellikler ve fixing riski
+
+**Vergi takvimi:** kurumlar geçici vergi ve büyük muhtasar/KDV ödeme haftalarında sistemden
+TL çekilir; TLREF birkaç gün koridorun üstüne doğru sıkışabilir. Kısa vadeli compounding
+bacağında bu günler kalıcı iz bırakır.
+
+**Yıl sonu / çeyrek sonu:** bilanço küçültme ve rasyo yönetimi repo hacmini inceltir;
+fixing oynaklığı artar, 31 Aralık'ı kapsayan kısa swaplarda **turn etkisi** ayrıca
+fiyatlanmalıdır.
+
+**ZK tesis dönemleri:** tesis kapanış günlerinde bankaların TL talebi fixingi yukarı
+itebilir; özellikle sıkı fonlama rejiminde belirginleşir.
+
+**PPK günleri:** karar öncesi son fixing ile karar sonrası ilk fixing arasındaki adım, kısa
+swapların değerini toplantı sonucundan bağımsız biçimde taşır; başlangıç tarihini karar
+gününe göre seçmek (karar öncesi/sonrası spot) başlı başına bir karardır.
+
+<div class="not">
+  <span class="etiket">Vaka hafızası</span>
+  Nisan 2025 epizodu ezber bozandır: siyasi şok sonrası TCMB politika faizine
+  <em>dokunmadan önce</em> fonlamayı sıkılaştırdı, koridor yükseltildi ve TLREF haftalar
+  içinde geç likidite bölgesine, ~%48−49'a kadar sarktı (mevcut 52 haftalık zirve %48,4
+  bunun izidir). O dönemde "faizler zirve yaptı" diyerek erken receive edenler MTM'de
+  haklı çıkmadan önce aylarca fixing carry ödedi; payer'lar ise görüşleri yanlışken bile
+  taşımayla korundu. Ders: <strong>kısa uçta fixing patikası, görüşünden önce gelir.</strong>
+</div>
+
+#### 3.3 Karar günü mikro-yapısı
+
+PPK kararları Perşembe 14:00'te açıklanır ve kısa ucun bütün mekaniği o yarım saate
+sıkışır. Okuma sırası önemlidir: **faiz kararı → koridor ayarı → likidite/fonlama cümlesi
+→ enflasyon dili.** TRY'de ikinci ve üçüncü kalem, birinciden sık sık daha fazla fiyat
+taşır — faiz sabit kalıp fonlama cümlesi değişince strip'in tamamı yürür (Nisan 2025 bunun
+uç örneğiydi). Pratik disiplin:
+
+- Karar öncesi **senaryo-aksiyon matrisi** yazılı olmalı: her sonuç kombinasyonu için
+  pozisyonun ne yapacağı önceden karara bağlanır; 14:00−14:30 arası plan uygulama saatidir,
+  fiyat keşfi saati değil.
+- İlk kotasyonlar 10−15 dakika gösterge niteliğindedir; spreadler 3−4 kat açıktır. Zorunlu
+  değilsen ilk yarım saatte yalnızca planın işlemini yap.
+- **Başlangıç tarihi ayrımı:** karar günü spot başlangıçlı işlem yeni fonlama oranını
+  ertesi günden yakalar; "karar öncesi spot" ile "karar sonrası spot" arasındaki fark kısa
+  vadelerde birkaç bp eder — broker'la valörü açıkça teyit et.
+- Karar sonrası ilk fixing (ertesi akşam) strip'in yeni çıpasıdır; Cuma sabahı bütün
+  taşıma tabloları bu fixingle yenilenir.
+
+#### 3.4 3m6m1y fly'ı
+
+**Konvansiyon** (ders boyunca geçerli): fly = 2 × gövde − kanatlar; "fly almak" (long) =
+gövdeyi **pay**, kanatları **receive** etmek, fly seviyesi yükselirse kazandırır. Bugünkü
+seviye:
+
+$$
+2\times 37{,}50 - 38{,}95 - 35{,}25 = +80\ \text{bp}
+$$
+
+Yapı, outright duration'ı ve taşımanın büyük kısmını nötralize edip yalnızca **gevşemenin
+zamanlamasını** izole eder.
+
+| Senaryo (toplam 12 aylık gevşeme ~sabit) | Kotasyonlar nereye | Fly |
+| --- | --- | --- |
+| **Front-load:** Eylül 2026'da −300, sonrası yavaş | 3m −105, 6m −121, 1y −58 | +80 → ~0: **short fly** kazanır |
+| **Erteleme:** Eylül-Ekim 2026 pas, Aralık 2026'dan itibaren −250'ler | 3m +100, 6m +149, 1y +95 | +80 → ~+183: **long fly** kazanır |
+| Fiyatlanan patika aynen gelir | Strip forward'a oturur | Değişim ~0; iki taraf da işlem maliyetini öder |
+
+Yani **long 3m6m1y**, "TCMB oyalayacak ama döngü derinliği kaybolmayacak" cümlesinin;
+**short 3m6m1y**, "kapı açıldığında hızlı inecekler" cümlesinin en temiz karşılığıdır. Aynı
+görüşleri outright ile ifade etmeye kalksan ya büyük taşıma yüklenir ya da toplam derinlik
+görüşünü de üstlenmiş olursun; fly ikisini de dışarıda bırakır.
+
+Gramer rejimden bağımsızdır: sıkılaşma döngüsünde aynı fly "front-load hike vs geç kalmış
+merkez bankası" işlemine dönüşür — işaretler ayna, mantık aynı. Fly'ın her rejimdeki işi,
+toplam hareketi değil **dağılımını** fiyatlamaktır; toplam hakkında görüşün varsa yanlış
+sayfadasın (outright, 3.1).
+
+#### Ağırlıklar ve pratik kurulum
+
+| Bacak | Nosyonel (temsili) | DV01 (TL/bp) | Not |
+| --- | --- | --- | --- |
+| 3m receive (kanat) | 400 mn | 9.200 | Nosyonel büyük — fixing bacağı şişer, PPK günü resetine dikkat |
+| 6m pay (gövde) | 400 mn | 18.400 | 50:50 DV01: gövde riski iki kanada eşit bölünür |
+| 1y receive (kanat) | 111 mn | 9.200 | En likit bacak; unwind önce burada test edilir |
+
+- Broker'dan **paket** fly kotasyonu iste; bacak bacak toplarken orta seviyeler kayar ve
+  teorik +80'in 10−15 bp'i kuruluşta gider.
+- PPK karar gününe pozisyonla girilecekse kanat resetlerinin (özellikle 3m'in ilk fixing
+  bloğu) hangi orana kilitlendiğini işlem öncesi yaz; fly'ın "duration'sız" olması
+  **fixing'siz** olduğu anlamına gelmez.
+- **Çıkış planı:** görüş gerçekleşince fly'ın normalize seviyesi genelde hızlı oluşur;
+  hedefe ulaşınca paketten çık, bacakları taşıyıp "outright'a dönüşen fly" bırakma. Yapı
+  bozulacaksa önce 3m bacağını kapat — en ucuz orası döner.
+
+
+## B.4 Orta-uzun uç: 5y, 6y, 7y
+
+İki yılın ötesinde OIS artık PPK takvimi okumaz; fiyat dört bileşenin toplamıdır: beklenen
+ortalama politika faizi, **terim primi**, **likidite primi** ve **kredibilite primi**
+(dezenflasyon patikasının tutacağına dair güven). Temsili eğriden basit bir ayrıştırma bunu
+görünür kılar:
+
+$$
+5y = 24{,}10,\; 1y = 35{,}25 \;\Rightarrow\;
+\text{2.–5. yıl ort.} \approx \frac{5\cdot 24{,}10 - 35{,}25}{4} = 21{,}3
+$$
+
+$$
+5y = 24{,}10,\; 2y = 30{,}40 \;\Rightarrow\;
+\text{3.–5. yıl ort.} \approx \frac{5\cdot 24{,}10 - 2\cdot 30{,}40}{3} = 19{,}9
+$$
+
+Okuma: piyasa 2028−2031 için **~%20 nominal faiz** taşıyor — örtük olarak tek haneye
+inmeyen ama %12−14 bandına oturan enflasyon + reel faiz + prim.
+
+Bu segmentte pay/receive kararı bir toplantı bahsinden çok **rejim bahsidir**: dezenflasyon
+programının 2027 seçim döngüsü, mali gevşeme ve jeopolitik enerji şokları karşısında ayakta
+kalıp kalmayacağı. DV01 büyüktür (5y'de 1y'nin ~3,7 katı), likidite incedir; pozisyon
+boyutu MTM iştahına göre değil **çıkış kapısının genişliğine** göre seçilir.
+
+Genel çerçevede uzun ucun iki rejimi vardır ve her pozisyon aslında rejim değişimine
+oynar: **prim daralması** (dezenflasyon kredibilitesi kazanılır, arz sindirilir — receiver
+dünyası) ve **prim genişlemesi** (mali gevşeme, arz şoku, kredibilite kaybı — payer
+dünyası). Evrensel koşul basittir: uzun uç receiver'ı ancak *gerçekleşen ortalama kısa faiz
++ gerçekleşen prim < kontrat faizi* ise kazanır. Bunun pratik anlamı: uzun uçta **"haklı
+ama erken"** olmak ana ölüm şeklidir — DV01 büyüktür, prim şokları hızlıdır ve taşıma
+beklerken tarafını seçer (ters eğride payer'a, normal eğride receiver'a öder). Bu yüzden
+uzun uç outright'ında **zaman stop'u fiyat stop'u kadar önemlidir**: tez tanımlı sürede
+çalışmadıysa prim rejimi aleyhine dönmüş olabilir; pozisyonu "nasılsa doğru" diye taşımak,
+rejim işlemini farkında olmadan taşıma işlemine çevirir.
+
+#### 4.1 Pay senaryoları
+
+**Bilanço hedge'i:** sabit faizli TL kredi ve DİBS defterinin duration'ı, mevduatın 1−3
+aylık yapısına karşı açıktır; 2y−5y payer şeridi bu açığın standart kapağıdır. Hedge
+accounting kurulacaksa belge setini işlemle **aynı gün** kapat.
+
+**Yapılandırılmış ürün arka hedge'i:** uzun vadeli sabit TL taahhüt üreten her ihraç (uzun
+mevduat, sabit kuponlu borçlanma, TL ödeme bacağı sabit CCS) masayı doğal payer yapar; akış
+geldiğinde 5−7y kotasyonlarını taşıyan genelde budur.
+
+**Risk primi genişlemesi görüşü:** seçim ortamına doğru mali disiplin/kredibilite
+fiyatlamasının bozulacağı, jeopolitik enerji şoklarının enflasyon hedefini öteleyeceği
+görüşü — uzun uçta pay, kısa uçtaki karşılığından farklı olarak "TCMB ne yaparsa yapsın"
+çalışır.
+
+**Taşıma toplayıcı olarak pay:** ters eğride uzun uç payer'ı rolldown **öder** (5y→4y:
+24,10→25,30 aleyhte 120 bp); bu yüzden uzun uçta pay taşıma için değil, yalnız görüş/hedge
+için yapılır. Kısa uçtaki "pozitif taşıyan pay" içgüdüsünü buraya taşıma.
+
+#### 4.2 Receive senaryoları
+
+**Yapısal normalizasyon:** "2028'e kalmadan tek haneli enflasyon patikası oturur, %20'lik
+plato aşağı kırılır" görüşünün en dolaysız ifadesi. Forwardlar zaten ~%20'ye indiği için
+kazanç, normalizasyonun *fiyatlanandan öteye* geçmesini gerektirir.
+
+**DİBS'siz duration:** repo/bilanço kullanmadan, ihraç takvimi ve haircut riski taşımadan
+uzun TL faiz duyarlılığı. Limitleri bono defterinden bağımsız yönetilebilir.
+
+**ASW bağlantısı:** sabit kuponlu DİBS al + aynı vadede OIS pay = TLREF + spread sentetik
+FRN. Spread cazipse duration görüşü bono + pay ile, değilse çıplak receive ile kurulur;
+karar swap spreadinin (DİBS − OIS) seviyesine bakılarak verilir.
+
+| Kriter | 5y receive (OIS) | 5y DİBS al |
+| --- | --- | --- |
+| Bilanço / fonlama | Yok; CSA teminatı kadar | Repo veya nakit; bilanço kalemi |
+| Arz duyarlılığı | Dolaylı (ASW kanalıyla) | Doğrudan; ihraç takvimi fiyatı taşır |
+| Likidite / çıkış | Kotasyon ince ama iki yönlü | Benchmark dışında incelir |
+| Taşıma | Eğri-sabit: fixing + roll (negatif) | Kupon − repo maliyeti (rejime bağlı) |
+| Ek getiri kaynağı | — | Swap spreadinin daralması |
+| Operasyonel | ISDA/CSA, reset takibi | Takas, HTM/AFS sınıflaması |
+
+<div class="not">
+  <span class="etiket">Masa notu</span>
+  Swap spreadi bu segmentin ikinci eksenidir: banka bono talebinin (eski menkul tesis
+  mirası + HTM defterleri) güçlü olduğu dönemlerde DİBS, OIS'in altında getiriyle işlem
+  görebilir; talebin çekildiği veya arzın yoğunlaştığı dönemlerde tersine döner. 5y'de
+  receive/pay kararını <strong>her zaman aynı vadedeki DİBS'e karşı</strong> fiyatla —
+  bazen doğru işlem swap değil ASW'dir. Kurulum ve P&amp;L mekaniği bu dersin
+  <a href="#a1-i̇şlemin-yapısı">Bölüm A</a>'sındadır.
+</div>
+
+#### 4.3 6y ve 7y: kimin vadesi?
+
+5y'nin markı sağlamdır çünkü hem OIS'te hem DİBS'te benchmark yoğunluğu oradadır; 6y ve 7y
+ise **akış takvimi vadeleridir** — kotasyonları, belirli oyuncuların belirli ihtiyaçları
+ekrana düştüğünde canlanır:
+
+**6y:** sigorta/BES tarafının ve uzun vadeli mevduat-tahvil ihraçlarının hedge vadesi.
+Bilinçli bir 5y'den kaçış da içerir: 5y ASW kalabalıklaştığında reel para bir yıl uzağa
+kayar. Akış receiver ağırlıklı geldiğinde 6y kotasyonu kanatlara göre düşer (gövde
+zenginleşir) — 4.4'teki fly'ın tetiklerinden biri.
+
+**7y:** proje finansmanı ve altyapı kredilerinin standart yeniden fiyatlama vadesi;
+kurumsal payer akışının ve uzun vadeli sabit TL taahhüt üreten yapılandırılmış ihraçların
+arka hedge'inin adresi. Akış payer ağırlıklıdır; geldiğinde 7y kanadı ucuzlar (oran
+yükselir).
+
+**İzleme:** DCM ve kredi pipeline'ı, büyük proje/ihale takvimi, sigorta tarafının ürün
+lansmanları. Pratik gösterge: 6−7y'de broker kotasyonu "talep üzerine"den sürekliye
+dönüyorsa akış yaklaşıyor demektir; fly'ı akıştan *önce* kurmak ile akışa *karşılık*
+kurmak arasındaki fark, bu izlemenin kalitesidir.
+
+Bu ikisinin 5y'den ayrışması neredeyse hiçbir zaman makro haber değildir; **akıştır**. Bu
+yüzden 6y/7y'de outright görüş taşımak (payer hedge'i dışında) nadiren doğrudur —
+segmentin doğal işlemi, ayrışmayı fiyatlayan fly ve spreadlerdir.
+
+#### 4.4 5y6y7y fly'ı: sinyal mi, mark gürültüsü mü?
+
+Dürüst başlangıç: 6y ve 7y çoğu gün işlemle değil **interpolasyonla** marklanır. Bugünkü
+seviye $2\times 23{,}40 - 24{,}10 - 22{,}90 = -20$ bp civarında, esasen eğri kurma
+yönteminin bir çıktısıdır. Bu fly'ın bilgi taşıdığı anlar bellidir ve hepsi **akış
+kaynaklıdır**:
+
+- Belirli bir DİBS itfa/ihraç noktası etrafında ASW akışı (ör. eski 10 yıllıkların 6−7y
+  bandına rolldown'u) tek noktayı taşıdığında;
+- Proje finansmanı / kurumsal tarafın 6−7y'de tek yönlü payer talebi geldiğinde;
+- Sigorta/uzun mevduat kaynaklı receiver akışı belirli vadeye yığıldığında;
+- Büyük bir yapılandırılmış pozisyonun unwind'ı interpolasyon bandını kırdığında.
+
+#### Sayısal fade örneği
+
+Kurumsal bir müşterinin 6y payer akışı 6y kotasyonunu 23,40'tan 23,75'e taşısın; kanatlar
+yerinde. Fly −20'den +50'ye açılır. Görüş: akış geçici, nokta interpolasyon bandına döner →
+**fly sat** (short: 6y receive, 5y+7y pay), DV01-nötr 50:50:
+
+| Bacak | Nosyonel | DV01 (TL/bp) | Not |
+| --- | --- | --- | --- |
+| 5y pay (kanat) | 57 mn | 17.400 | En likit bacak; önce bu kote ettirilir |
+| 6y receive (gövde) | 100 mn | 34.800 | Akışın kendisiyle eşleşmeye çalış — müşteri kotasyonuna fiyat ver |
+| 7y pay (kanat) | 45 mn | 17.400 | Dönmüyorsa 5y'ye kaydır (aşağıdaki not) |
+
+Hedef fly'ın 0/−20 bandına dönmesi: ~55−70 bp × ~35 bin TL/bp gövde DV01'i üzerinden
+**~2,0−2,4 mn TL**. Ama bu segmentte kâr hedefi kadar önemlisi **gerçekleşebilirlik
+testidir**: pozisyona interpolasyonla girip interpolasyonla çıkmak kâğıt kârıdır. Komite
+notuna "gövde bacağı gerçek akışla eşleşti mi, çıkış hangi karşı tarafla planlanıyor"
+yazılmadan bu fly defterde taşınmamalı.
+
+- 7y bacağı dönmüyorsa yapıyı 5y ağırlığını artırarak kur (ör. 5y 80 mn / 7y 22 mn);
+  curvature saflığından biraz feragat edilir, çıkış kapısı genişler.
+- Eğri kurma yöntemi değişirse (yeni bir 6−7y kotasyonunun spline'a girmesi) fly "hareket
+  etmiş" görünür — P&L'i marktan değil **işlem gören seviyelerden** doğrula.
+- Görüş "tek nokta bozuk" değil de "uzun uç terim primi" ise doğru yapı bu fly değil, 5.
+  bölümdeki **5y10y spreadidir**.
+
+
+## B.5 Spread katalogu: eğri üzerinde görüş
+
+**Spread** = uzun vade − kısa vade ve TRY'de bugün her yerde negatif. Terminoloji
+karışmasın: **steepener** spreadin yükselmesine (daha az negatif / pozitife dönmesine),
+**flattener** düşmesine oynar; steepener = kısa bacağı receive + uzun bacağı pay, flattener
+tersi. Kurulum her zaman **DV01-nötr** yapılır (nosyoneller Ek B tablosuyla oranlanır);
+nosyonel-nötr spread, gizli bir outright pozisyondur.
+
+<div class="not">
+  <span class="etiket">Spread carry</span>
+  Spread, outright taşımayı yok etmez; <em>küçültür ve yön değiştirir</em>. Temsili
+  eğride 2s5s flattener (2y pay / 5y receive) çeyrekte 2y bacağı nosyonelinin ~%1,5'i
+  kadar taşır; steepener aynı miktarı öder. Ters eğride "taşımayı kim ödüyor" sorusu
+  spreadlerde de ilk sorudur — bacak bacak yazmadan girme.
+</div>
+
+#### 5.0 Genel gramer: spread hangi beklentiyle yapılır, ne zaman kazandırır?
+
+Bir spread'in seviyesi iki şeyin toplamıdır: **uzak dönemin yakın döneme göre beklenen
+patikası** (merkez bankası nereden nereye gidiyor) ve **terim primi farkı** (uzak vadenin
+taşıdığı ek belirsizlik/arz primi). Dolayısıyla spread işlemi yalnızca iki beklentiden
+biriyle yapılır: patikanın şekli değişecek, ya da prim yeniden fiyatlanacak. Kazanç-kayıp
+koşulları rejimden bağımsızdır; eğrinin bugünkü şekli sadece işaretleri ve taşımanın yönünü
+belirler:
+
+| Durum | Koşullar (rejimden bağımsız) |
+| --- | --- |
+| **Steepener kazanır** | (i) Yakın dönem beklenenden güvercin — ön uç ralli eder (bull steepener); (ii) uzak dönemde enflasyon/arz/mali prim artışı (bear steepener); (iii) döngü dönüşü: gevşemenin başlaması tarihsel olarak dikleştiricidir — eğri, döngünün yönünü eğimle anlatır |
+| **Steepener kaybettirir** | (i) Sıkılaşma/likidite şoku — ön uç önde satılır (bear flattener); (ii) "beklenenden uzun plato": yakın dönem fiyatlaması yukarı yapışır; (iii) başarılı dezenflasyonla uzak primin çökmesi (bull flattener) |
+| **Flattener kazanır** | Yukarıdakilerin aynası. Genel karakteri: **iki zıt dünyada birden** çalışabilir — hem "çok kötü" (stres, ön uç patlar) hem "çok iyi" (kredibilite, uzak prim çöker) senaryoda öder; kaybettiği dünya sakin-güvercin ortadır |
+| **Flattener kaybettirir** | Gevşemenin öne çekilmesi/derinleşmesi (ön uç ralli); uzun uçta prim/arz şoku; döngü dönüş anını kaçırıp dikleşmeye yakalanmak |
+
+**Taşıma yasası.** Spread taşımasının genel yasası:
+
+$$
+\text{eğri-sabit taşıma}(h) = \text{spot spread} - \text{forward spread}(h)
+$$
+
+Spread kendi forward'ına doğru "akar"; **forward'ın ima ettiği şekil değişiminin tersine
+oynayan pozisyon taşımayı toplar.** Pratik sonuç: tipik konkav dik eğride steepener, tipik
+konveks ters eğride flattener pozitif taşır (bugünkü 2s5s örneği bölüm girişindeki
+kutuda). Kural ezberlenmez, **forward spread'e bakılarak her seferinde hesaplanır** — şekil
+bozuk eğrilerde ezber yanıltır.
+
+Spread'in "haklıyken kaybettirme" biçimleri de geneldir: (i) **beta** — DV01-nötrlük küçük
+hareketlerin yerel yaklaşıklığıdır; büyük sürprizde iki bacak aynı yöne farklı hızda gider
+ve spread outright gibi davranır (bu yüzden PPK sürprizi spreadleri de vurur); (ii)
+**zamanlama** — şekil görüşü doğru ama geç kalırsa taşıma birikip hedefi yer; (iii) **bacak
+likiditesi** — stres gününde bir bacak dönmez, yapı istemeden outright'a bozunur (6.6). Bu
+üçü, "spread'dir, güvenlidir" diye boyutu outright'tan otomatik büyük tutmamanın nedenidir.
+
+#### Seçim ağacı: hangi cümleye hangi yapı?
+
+| Görüş cümlesi | Doğru yapı |
+| --- | --- |
+| "Eylül 2026'da pas geçerler" | 1m−2m switch'i (pay 2m / rec 1m) |
+| "Başlarlarsa arka arkaya gelir" | 3m6m flattener (pay 3m / rec 6m) |
+| "İlk adımlar gelir, devamı fiyatlandığı kadar gelmez" | 6m1y steepener (rec 6m / pay 1y) |
+| "Döngü kesintisiz sonuna kadar gider" | 1y2y flattener (pay 1y / rec 2y) |
+| "Plato %20'nin altına taşar" | 2y3y flattener veya 2y1y receive |
+| "Hem stresten korunayım hem kredibiliteye oynayayım" | 2s5s flattener (pay 2y / rec 5y) |
+| "Seçim/mali gevşeme uzun ucu bozar" | 5y10y steepener (rec 5y / pay 10y) |
+| "2027 yavaşlar, gevşeme 2028'e taşar" | 1y1y−2y1y genişleme (pay 1y1y / rec 2y1y) |
+
+#### 5.1 PPK switch'leri (1m/2m/3m strip)
+
+Tek toplantıyı izole etmenin en temiz yolu ardışık kısa vadelerin DV01-nötr farkıdır:
+**1m−2m switch'i yalnız 10 Eylül 2026'yı**, **2m−3m yalnız 22 Ekim 2026'yı** taşır. Bölüm 2'deki
+çözümle bugün Eylül 2026'da ~−125, Ekim 2026'da ~−150 bp efektif adım fiyatlı. "Eylül'de pas" görüşü
+= pay 2m / receive 1m; güvercin sürpriz görüşü tersi. Tuzaklar: (i) adım, **politika +
+kompozisyon** karışımıdır — PPK pas geçip fonlamayı gevşetirse "haklıyken" kaybedersin;
+(ii) 1m bacağı saf fixing enstrümanıdır, vergi haftası/ZK sıçramaları switch'e gürültü
+olarak biner; (iii) kotasyon spreadi dardır ama **nosyoneller büyür** — limit tüketimine
+dikkat.
+
+#### 5.2 Ön uç spreadleri
+
+| Yapı (temsili) | Ne fiyatlar | Yön → görüş | Tuzak |
+| --- | --- | --- | --- |
+| **3m6m: −145** | Ekim-Aralık 2026 toplantılarının Eylül'e göre hızı | Flattener (3m pay/6m rec): "başlarlarsa arka arkaya gelir". Steepener: "ilk adım var, devamı belirsiz" | 3m bacağının yarısı bugünkü fixingten kilitli; spread aslında 6m görüşü |
+| **6m9m: −130** | 2027 başındaki (Ocak) adımların yoğunluğu | Flattener: döngü 2027'ye sarkar ama derinleşir. Steepener: yıl sonunda iş biter | 9m kotasyonu 6m ve 1y'den interpole gelebilir; broker'da gerçek 9m iste |
+| **6m1y: −225** | İkinci altı ayın ilk altı aya göre patikası — ön ucun ana eğim işlemi | Flattener: "normalizasyon tamamlanır, plato aşağıda". Steepener: "ilk indirimler gelir, sonrası fiyatlandığı kadar gelmez" | En kalabalık RV işlemi; pozisyonlanma tek yöne yığıldığında PPK günü air-pocket yapar |
+| **9m1y: −95** | Döngünün son çeyreğinin fiyatı | Mikro yapı; genelde 6m1y'nin bacak ayarı için kullanılır | Dar aralık, geniş kotasyon — tek başına nadiren değer |
+
+#### 5.3 Geçiş bölgesi: döngü sonunu fiyatlamak
+
+| Yapı (temsili) | Ne fiyatlar | Yön → görüş | Tuzak |
+| --- | --- | --- | --- |
+| **1y18m: −265** | 2027 ikinci yarısının adımları — döngünün "son mil"i | Flattener: terminal fiyatlanandan aşağıda. Steepener: %30 altı zorlaşır, TCMB durur | 18m likiditesi 1y ve 2y'nin gölgesinde; paket kote ettir |
+| **1y2y: −485** | İlk yılın sonundan ikinci yılın sonuna ortalama patika | Flattener: kesintisiz döngü. Steepener: duraklamalı, kesikli döngü (her platoda spread açılır) | İki bacak da likit; ama spread PPK sürprizinde outright gibi davranır — beta'sı yüksek |
+| **2y3y: −330** | Döngü sonrası ilk "normal" yılın fiyatı | Flattener: plato %20'nin altına taşar. Steepener: 2028'de yeniden yükseliş / prim iadesi | 3y'den itibaren makro fon akışı belirleyici; akışla kavga etme |
+
+#### 5.4 Belly: 2s5s ve 3y5y — dört senaryo
+
+**2s5s** (bugün ~−630) TRY eğrisinin ana gövde işlemidir ve TCMB duruşunun aynasıdır. Dört
+kadran, tarihsel karşılıklarıyla:
+
+| Kadran | Mekanik (2s5s) | TRY epizod hafızası |
+| --- | --- | --- |
+| **Bull steepener** (2y ralli önde) | İndirimler öne çekilir/derinleşir; steepener kazanır: rec 2y / pay 5y | 2025 ikinci yarı – 2026 başı gevşeme dalgaları; her güvercin PPK sonrası |
+| **Bull flattener** (5y ralli önde) | Kredibilite kazanımı, terminal aşağı; flattener kazanır: pay 2y / rec 5y | Dezenflasyonun sürpriz aşağı geldiği aylar; programa güven dalgaları (2024 sonu) |
+| **Bear steepener** (5y satış önde) | Mali gevşeme/arz/prim şoku; steepener (pay 5y ağırlığıyla) kazanır | Eyl-Ara 2021 erken gevşeme deneyi; seçim öncesi mali genişleme fiyatlamaları |
+| **Bear flattener** (2y satış önde) | Sıkılaşma/likidite şoku, ön uç patlar; flattener kazanır: pay 2y / rec 5y | Ağu 2018; Haz 2023 sonrası normalizasyon; Mar 2024; Nis 2025 koridor sıkısı |
+
+TRY'nin ampirik imzası: **stres = bear flattener** (ön uç önde satılır, ters eğri
+derinleşir), **rahatlama = bull steepener**. Bu yüzden 2s5s steepener çoğu zaman "TCMB
+güvercinleşecek" işleminin, flattener ise ya "kredibilite" ya "stres hedge'i" işleminin
+kodudur — flattener'ın güzelliği, iki zıt dünyada (çok iyi ve çok kötü) birden
+çalışmasıdır; kaybettiği dünya "sakin ve güvercin" ortasıdır. **3y5y** (−300) aynı mantığın
+makro fon segmentine sıkıştırılmış hâli: 2y'nin PPK gürültüsünü dışarıda bırakır, saf
+"plato nerede" işlemidir.
+
+#### 2s5s: kurulum ve yönetim şablonu
+
+- **Kurulum:** DV01-nötr, 100 mn 2y ↔ 48 mn 5y (Ek B). Paket kotasyon; bacak bacak
+  kurulacaksa önce likit olmayan taraf (5y) kote ettirilir.
+- **Seviye disiplini:** giriş −630; steepener için hedef, iki güvercin toplantının ön uca
+  taşınması senaryosunda ~−500/−520; stop, stres derinleşmesinde (bear flattener)
+  ~−700/−720. Seviyeler temsilidir — önemli olan hedef/stop'un *senaryoya* bağlanması,
+  yuvarlak sayıya değil.
+- **Taşıma hatırlatması:** steepener ~−1,5 mn/çeyrek (100 mn 2y bacağı başına) öder;
+  pozisyon üç aydan uzun taşınacaksa hedefin bu maliyeti de amorti etmesi gerekir.
+- **Dilimleme:** toplantı öncesi yarım boy, karar sonrası tamamlama (2.2'deki dağılım
+  okuması); PPK sürprizinde spread'in outright gibi davrandığı unutulmaz — beta'yı sıfır
+  sanma.
+- **3y5y varyantı:** aynı şablon −300'den kurulur; 2y'nin toplantı gürültüsünü dışarıda
+  bırakır, karşılığında taşıma ve likidite biraz incelir. Makro fon akışıyla aynı yönde
+  olmaya özen göster.
+
+#### 5.5 Uzun uç: 5y10y
+
+**5y10y** (bugün ~−200) plato sonrası dünyanın terim primini fiyatlar. *Pay 10y bacaklı
+steepener:* Hazine'nin vade uzatma/arz programı, seçim sonrası mali gevşeme, KKM-sonrası
+bilanço normalizasyonunun uzun DİBS talebini azaltması görüşleri. *Receive 10y bacaklı
+flattener:* tam konverjans — "Türkiye 2030'a tek haneyle girer" işlemi. **Tuzak:** 10y OIS
+kotasyonu talep üzerine oluşur; işlem çoğu zaman 10y DİBS ASW ile karşılaştırılarak ve
+küçük klipte yapılır. Buradaki spread P&L'inin mark kalitesi, 4. bölümdeki 6−7y uyarısıyla
+aynı disiplinle sorgulanmalı.
+
+#### 5.6 Forward spreadler: patikadan arındırılmış görüş
+
+Spot spreadler ilk yılın gürültüsünü taşır; forwardlar onu soyar. Temsili eğriden (zero
+yaklaşımıyla): **1y1y ≈ 25,7 · 2y1y ≈ 20,8 · 3y2y ≈ 19,7 · 5y5y ≈ 20,1.** Piyasanın
+cümlesi net: *"2027'de büyük gevşeme, 2028'den itibaren ~%20 platosu."*
+
+| Yapı (temsili) | Ne fiyatlar | Yön → görüş |
+| --- | --- | --- |
+| **1y1y: ~25,7** | 2027 ortalama TLREF'i | Receive: döngü 2027'de fiyatlanandan derin. Pay: 2027'de duraklama/yeniden sıkılaşma riski — spot 1y payer'ından farkı, ilk yılın kilitli fixing yükünü taşımaması |
+| **2y1y: ~20,8** | 2028: platonun ilk yılı | Receive: plato kırılır, tek haneye yol açılır. Pay: %20 platosu iyimser; prim geri gelir |
+| **1y1y − 2y1y: ~+490** | Gevşemenin 2027'ye yığılma derecesi | Genişleme işlemi (pay 1y1y / rec 2y1y): "2027 yavaşlar, döngü 2028'e taşar". Daralma (rec 1y1y / pay 2y1y): "2027'de bitirirler, sonrası düz plato" |
+| **3y2y / 5y5y: ~19,7 / ~20,1** | Uzun dönem denge + prim çapası | Makro fonların rejim işlemi; 5y5y receive = tam normalizasyon, pay = yapısal prim görüşü. Klip küçük, 5y+10y bacaklarıyla kurulur |
+
+**Kurulum reçetesi.** Forward'ı spot bacaklarla kurmak (temsili DV01'lerle, 100 mn taban):
+
+$$
+\text{receive } 1y1y \approx \text{receive } 2y\,(100\ \text{mn}) + \text{pay } 1y\,(100\ \text{mn})
+$$
+
+İlk yıl DV01'i netleşir ($8.300 - 8.300$), kalan ~6.400 TL/bp saf 2. yıl riskidir.
+
+$$
+\text{pay } 2y1y \approx \text{pay } 3y\,(100\ \text{mn}) + \text{receive } 2y\,(100\ \text{mn})
+$$
+
+kalan ~5.600 TL/bp, 3. yıl riski.
+
+Not: **1y1y−2y1y paketi spot uçlara çökertildiğinde 1y2y3y fly'ına eşdeğerdir** (genişleme
+= long fly, daralma = short fly) — forward spread dili ile fly dili aynı riskin iki
+yazımıdır (Bölüm 6).
+
+
+## B.6 Fly katalogu ve mekanik
+
+Hatırlatma — ders konvansiyonu: **fly = 2 × gövde − kanatlar**; long fly = gövde pay +
+kanatlar receive, fly yükselirse kazanır. Fly, spreadin de nötralize edemediği şeyi
+nötralize eder: **eğrinin genel eğimini**. Geriye kalan tek risk yerel bükülmedir — ve
+TRY'de bükülmeler ya patika zamanlamasından (ön uç) ya akış yoğunlaşmasından (2y+) doğar.
+Katalog, 3. ve 4. bölümde derinlemesine işlenen 3m6m1y (+80) ve 5y6y7y (−20) dışındaki
+yapıları kapsar; seviyeler temsili eğriden.
+
+#### 6.0 Genel gramer: fly hangi beklentiyle yapılır, ne zaman kazandırır?
+
+Fly'ın seviyesi üç kaynaktan beslenir: **patika konveksitesi** (beklenen faiz yolunun o
+bölgedeki bükümü — ön uçta baskın), **vadeye özgü akış/arz primi** (belirli noktaya yığılan
+hedge, ihraç veya yatırım talebi — orta ve uzun uçta baskın) ve **eğri kurma yöntemi**
+(interpolasyonun ürettiği yapay büküm). Fly işlemi bu üçünden birinin *değişeceği*
+beklentisiyle yapılır ve hangisine oynadığını bilmek, hedefle stop'un neye bağlanacağını
+belirler: patikaya oynuyorsan tetik merkez bankası iletişimidir, akışa oynuyorsan tetik
+akışın kendisidir, **mark'a oynuyorsan muhtemelen oynamamalısın**.
+
+**Ne zaman kazandırır** (rejimden bağımsız dört kaynak):
+
+- **Dislokasyon fade'i:** tek yönlü akış bir noktayı kanatlarından koparmıştır; normalize
+  olmasına oynanır (4.4'teki örnek). Hedef, akış öncesi banda dönüş; süre, akışın bitmesi.
+- **Patika şekli görüşü:** toplam hareketin değil dağılımının fiyatlanması — "front-load vs
+  erteleme" (3.4'ün genel hâli). Her döngü fazında çalışır; sıkılaşmada işaretler aynalanır.
+- **Takvimli akış öncesi pozisyonlanma:** bilinen ihraç/itfa/hedge programının belirli
+  vadeyi taşıyacağı öngörülür; akıştan önce kurulur, akışla kapatılır. Kaynağı bilgi değil
+  **takvim okumaktır**.
+- **Büküm göçü:** döngü ilerledikçe eğrinin maksimum büküm noktası vade ekseninde yer
+  değiştirir — gevşeme fiyatlandıkça kink uzaktan yakına iner. Göçün geldiği bölgede long,
+  terk ettiği bölgede short fly yavaş ama ısrarcı bir kaynaktır.
+
+**Ne zaman kaybettirir** — fly'ın kayıp modları kazanç modlarından daha öğreticidir:
+
+- **Yanlış katman:** görüş seviyede/eğimde doğru çıkar ama büküm değişmez — fly tanımı
+  gereği ödemez; maliyet ve taşıma birikir. En sık hata, outright görüşünü "daha güvenli"
+  diye fly'a çevirmektir: **fly güvenli outright değil, başka bir şeyin işlemidir.**
+- **Taşıma sessizliği:** fly da kendi forward'ına akar (taşıma = spot fly − forward fly);
+  küçük görünen fark, dar bantlı fly'larda beklenen hareketin yarısını yiyebilir —
+  6.5'teki 3× maliyet kuralının nedeni budur.
+- **Kanat korelasyonunun kırılması:** stres gününde likit olmayan kanat hareket etmez;
+  50:50 DV01 nötrlüğü kâğıtta kalır, yapı fiilen outright/spread olur ve stres yönünde açık
+  taşırsın.
+- **Kalabalık RV çözülmesi:** aynı fly'da yoğunlaşmış defterler zorunlu unwind'a girdiğinde
+  dislokasyon önce derinleşir — "ucuz, daha ucuz olur". Stop teze bağlanır ama seviyesiz
+  bırakılmaz.
+- **Mark yanılsaması:** interpolasyonla girilen kâr, interpolasyonla çıkılamayan zarardır
+  (4.4, 6.3).
+- **Reset ihmali:** "duration'sız" yapının fixing bacakları vardır; kanat resetleri
+  PPK/vergi haftalarında beklenmedik P&L üretir (3.4, 6.5).
+
+Bu liste fly'ın doğasını da özetler: fly, düşük olasılıkla büyük değil, **yüksek olasılıkla
+küçük** kazanan bir enstrümandır — edge'i ancak maliyet, taşıma ve likidite disipliniyle
+korunduğu sürece vardır. Aşağıdaki katalog, bu gramerin vadelere uygulanmış hâlidir.
+
+#### 6.1 Ön uç fly'ları: zamanlama işlemleri
+
+| Yapı (temsili) | Ne fiyatlar | Long fly kazanır eğer | Tuzak |
+| --- | --- | --- | --- |
+| **1m3m6m: +50** | Eylül 2026 adımının Ekim-Aralık bloğuna oranı | İlk toplantılar pas geçilir ama yıl sonu bloğu fiyatta kalırsa | 1m kanadı saf fixing; vergi/ZK sıçraması fly'ı taşır |
+| **3m6m9m: −15** | Ekim-Aralık 2026 yoğunluğu vs uçlar | Orta blok (Eki-Ara) fiyatlanandan az teslim ederse | Gerçek 9m kotasyonu şart; interpolasyonla girme |
+| **6m9m1y: −35** | 2026 kapanışı ile 2027 açılışı arasındaki geçiş | Gevşeme 2027 başına ötelenirse (9m ucuzlar) | Üç bacak da PPK strip'ine bağlı; sürpriz metinde korelasyon 1'e gider |
+
+#### 6.2 Geçiş fly'ları: bükümün kendisi
+
+| Yapı (temsili) | Ne fiyatlar | Long fly kazanır eğer | Tuzak |
+| --- | --- | --- | --- |
+| **6m1y2y: +260** | Eğrinin ana büküm noktası — döngünün orta kısmının dikliği | 1y bölgesindeki gevşeme fiyatı sönerse (duraklamalı döngü) | Seviye yüksek çünkü kink gerçek; +260'ı "ucuzluk" sanma |
+| **1y18m2y: −45** | Bükümün ince ayarı | 18m gerçek akışla ucuzlarsa | 18m çoğu gün türetilmiş mark — önce kotasyon, sonra pozisyon |
+| **1y2y3y: −155** | 2027 vs 2028 gevşeme dağılımı; 1y1y−2y1y'nin fly yazımı | 2027 yavaşlar, döngü 2028'e taşarsa | Forward spread ile aynı anda taşıma — çifte pozisyonlanmaya dikkat |
+
+#### 6.3 Belly fly'ları: akışın izi
+
+| Yapı (temsili) | Ne fiyatlar | Long fly kazanır eğer | Tuzak |
+| --- | --- | --- | --- |
+| **1y2y5y: +145** | Makro temanın (2y) taşıma noktasının zenginliği | Offshore 2y receive yoğunlaşması çözülürse | Tema akışıyla kavga — stop disiplini olmadan girme |
+| **2y3y5y: −30** | Plato bölgesine geçişin şekli | 3y, plato fiyatlamasında yalnız kalırsa | Hareket bandı dar (±30−40); maliyet/edge oranını hesapla |
+| **3y4y5y: −60** | 4y noktasının mark kalitesi | 4y gerçek akışla ucuzlarsa | Neredeyse saf interpolasyon RV; kâğıt kârı riski yüksek |
+| **2y5y10y: −430** | Klasik 2s5s10s: belly'nin barbell'e göre fiyatı | 5y'yi taşıyan ASW/yapılandırılmış talep çekilirse | 10y bacağı — klip küçük, kotasyon talep üzerine |
+
+#### 6.4 Uzun uç fly'ları
+
+| Yapı (temsili) | Ne fiyatlar | Long fly kazanır eğer | Tuzak |
+| --- | --- | --- | --- |
+| **3y5y7y: −180** | 5y'nin makro segment ile yapılandırılmış segment arasındaki yeri | 5y'deki alıcı yoğunluğu (dezenflasyon teması) seyrelirse | 7y bacağı için 4. bölümdeki gerçekleşebilirlik testi aynen geçerli |
+| **5y7y10y: −40** | Uzun ucun kendi içindeki eğriliği | 7y tek yönlü akışla dislokasyona uğrarsa (fade işlemi) | Üç bacağın üçü de ince; sadece akışa karşılık kur |
+
+#### 6.5 Mekanik: ağırlık, maliyet, unwind
+
+**Ağırlıklama:** defter standardı **50:50 DV01** (gövde DV01'inin yarısı her kanada):
+
+$$
+N_{\text{kanat}} = 0{,}5\cdot N_{\text{gövde}}\cdot
+\frac{\text{DV01}_{\text{gövde}}}{\text{DV01}_{\text{kanat}}}
+$$
+
+İstatistiksel nötrlük istiyorsan kanat ağırlıklarını son 3−6 ayın günlük değişim
+regresyonuyla trimleyebilirsin (ön uçta kısa kanadın betası düşüktür, payı artar); ama
+regresyon ağırlıklı fly'ın unwind'ı standart pakete göre pahalıdır. Pratik çözüm: pozisyonu
+50:50 kur, regresyonu sinyal/geri-test tarafında kullan.
+
+**Maliyet/edge testi:** all-in kuruluş+çıkış maliyeti paket kotasyonda ~6−10 bp, bacak
+bacak 12−18 bp'dir. Kural: **beklenen normalize hareket, toplam maliyetin en az 3 katı
+değilse fly'a girme** — 2y3y5y ve 3y4y5y gibi dar bantlı yapılar bu testte sık elenir.
+
+**Unwind riski:** likidite kaybolduğunda fly bacak bacak çözülür ve kalan bacaklar
+outright'a döner. Boyut kuralı: her bacak için **tek başına çıkış kotasyonu alabildiğin**
+nosyonelin üstüne çıkma; en ince bacak yapının boyutunu belirler.
+
+**Reset yönetimi:** kanatlarda receive bacaklar fixing toplar; PPK haftalarında fly'ın
+"duration'sızlığına" güvenip reset takvimini ihmal etme (3. bölümdeki uyarı burada da
+geçerli).
+
+<FlyAgirlikHesaplayici />
+
+Araç yukarıdaki eğriyi tüketir: carry aracında bir pillar'ı değiştirirseniz DV01'ler ve
+ağırlıklar burada da yenilenir. Varsayılan kurulum dersteki 3m6m1y fly'ıdır (gövde 400 mn
+→ kanatlar 400 mn / 111 mn); **Net DV01** satırı nötrlüğün sağlamasıdır, sıfırdan belirgin
+saparsa yapı gizli bir outright taşıyor demektir. Alttaki yorum §6.5'teki **3× maliyet
+testini** uygular — dar bantlı yapılar (2y3y5y, 3y4y5y) bu testte sık elenir.
+
+#### 6.6 Yapı bozunması: bacak kapandıkça ne kalır?
+
+Her çok bacaklı yapı, bacakları kapandıkça daha basit bir yapıya bozunur: **fly − bir kanat
+= spread; spread − bir bacak = outright.** Bozunma iki şekilde yaşanır: planlı (kâr alma
+sıralaması) veya zorunlu (likidite kaybı, limit, karşı taraf). Kurallar:
+
+- **Bozunma her zaman yeni bir işlemdir:** kalan yapının senaryo tablosu, taşıması ve limit
+  görünümü aynı gün yeniden yazılır ve tez hâlâ geçerliyse taşınır — "fly'dan arta kalan"
+  diye pozisyon tutulmaz.
+- **Planlı bozunmada sıra likiditeye göre:** önce en likit bacaktan kâr alınırsa kalan yapı
+  en pahalı bacaklarda kilitlenir; doğrusu **en az likit bacağı ilk kapatmaktır** (3.
+  bölümdeki fly çıkış notunun genellemesi).
+- **Zorunlu bozunmada** (bir bacak dönmüyor) kalan riski komşu vadeyle proxy'le (7y yerine
+  5y ağırlığı artırma örneği, 4.4) ve **baz riskini deftere ayrı satır olarak yaz**.
+- Bozunmuş yapının P&L'i orijinal yapının teziyle raporlanmaz; "2s5s'ten kalan 5y pay"
+  artık bir **5y pay**'dir ve 4. bölümün outright disiplinine tabidir.
+
+
+## B.7 Masa pratiği ve vakalar
+
+#### 7.1 İşlem öncesi kontrol listesi
+
+- **Görüş cümlesi tek satır:** "X vadesinde piyasa Y fiyatlıyor, ben Z bekliyorum."
+  Yazamıyorsan işlem yok.
+- **Referans testi:** görüş forward'a karşı mı (patika), eğriye karşı mı (RV)? Yanlış
+  enstrümanla doğru görüş para kaybettirir.
+- **Taşıma, iki senaryo:** forwardlar gerçekleşirse / eğri sabitse — ikisini de mn TL olarak
+  yaz.
+- **DV01 ve limit:** bucket bazında net etki; risk sisteminde swap DV01'inin bucket'lara
+  pro-rata dağıldığını unutma — spread/fly'ların bucket raporundaki görünümünü işlem öncesi
+  kontrol et.
+- **Likidite ve çıkış planı:** her bacak için tek başına çıkış kotasyonu; stop ve hedef
+  seviyeleri emir olarak değilse bile deftere yazılı.
+- **Karşı taraf / CSA:** teminat TL nakit mi, iskonto tutarlı mı; yeni offshore karşı tarafta
+  BDDK/uyum teyidi.
+- **Muhasebe:** hedge ilişkisi kurulacaksa dokümantasyon işlem günü; kurulmayacaksa MTM
+  oynaklığı bütçeye yazıldı mı?
+- **Fixing/reset takvimi:** pozisyonun ilk 2 haftadaki fixing duyarlılığı; PPK, vergi
+  haftası, ay/çeyrek sonu çakışmaları.
+
+#### 7.2 Vaka 1 — PPK öncesi taşıma işlemi: 6m pay
+
+**Görüş (5 Ağustos):** enflasyon katılığı ve enerji riskiyle TCMB Eylül 2026'da pas geçer, Ekim
+şüpheli; strip'teki ~−425 bp/6m fazla iyimser. **İşlem:** 500 mn 6m pay @ %37,50
+(DV01 ≈ 23.000 TL/bp).
+
+| Kalem (3 aylık ufuk) | mn TL | Not |
+| --- | --- | --- |
+| Fixing carry: $(39{,}95 - 37{,}50)\times 92/365$ | **+3,1** | Hiç indirim gelmezse; her −125'lik adım gerçekleştikçe azalır |
+| Rolldown: 6m→3m $(38{,}95 - 37{,}50)\times A(3m)$ | **+1,7** | Eğri sabit varsayımı |
+| Eğri-sabit toplam | **+4,8** | Beklerken maaş |
+| Stres: Eylül 2026'da −250 güvercin sürpriz | ≈ **−3,5** | 6m ~−120/−150 bp reprice × DV01; carry kısmen tamponlar |
+
+**Yönetim:** stop 6m %36,60 (≈ −90 bp, −2,1 mn); hedef %38,40 (+0,9 × DV01 ≈ +2,1 mn) +
+tahakkuk eden taşıma. PPK metni faize dokunmadan fonlamayı gevşetirse (fixing 39,95'ten
+politikaya doğru inerse) **tez bozulmuştur** — MTM beklemeden küçült. Bu işlemin özü budur:
+kâr motoru MTM değil taşıma, o yüzden çıkış disiplini fixing patikasına bağlanır.
+
+#### 7.3 Vaka 2 — Dezenflasyon teması: outright mı, steepener mı?
+
+**Görüş:** döngü Eylül-Ekim 2026'da yeniden başlar ve piyasanın fiyatladığından hızlı
+derinleşir. İki ifade: **(A)** 200 mn 2y receive @ 30,40; **(B)** 2s5s bull steepener:
+200 mn 2y receive + 97 mn 5y pay (DV01 eşit, ~29.400 TL/bp).
+
+| Yapı | Eğri-sabit taşıma (3m) | Kazandığı dünya | Kaybettiği dünya |
+| --- | --- | --- | --- |
+| **(A)** 2y receive | ≈ −7,7 mn | Her tür ralli; en çok bull steepener | Genel satış; oyalama (taşıma erimesi) |
+| **(B)** 2s5s steepener | ≈ −3,2 mn | Bull steepener (öne çekilen indirim) | Bear flattener (stres); bull flattener'da yatay |
+
+**Karar mantığı:** görüş **zamanlamaya** dairse (indirimler öne çekilecek) B, **rejime**
+dairse (Türkiye faizi kalıcı düşecek) A. B taşımayı yarılar ve stres dünyasının bir kısmını
+(bear steepener) lehine çevirir; karşılığında bull flattener dünyasındaki kazancı 5y
+bacağına iade eder. Komiteye ikisi tek sayfada, bu tabloyla sunulur — "receive'im var"
+cümlesi tek başına pozisyon değildir.
+
+#### 7.4 Vaka 3 — Forward'a taşınmak: 1y1y receive
+
+**Görüş:** 2027 gevşemesi fiyatlanandan derin; ama ilk yılın %39,95'ten kilitli fixing
+yükünü taşımak istemiyorum. **Kurulum:** 300 mn 2y receive + 300 mn 1y pay (eşit nosyonel
+⇒ ilk yıl DV01'i netleşir; kalan ~19.200 TL/bp saf 2. yıl riski, 1y1y ≈ %25,7'den receive
+edilmiş olur).
+
+**Taşıma:** eğri-sabit senaryoda ~−6,2 mn/çeyrek — outright 300 mn 2y receive'in
+(~−11,6 mn) yaklaşık yarısı. Forward, ters eğride taşımayı **azaltır ama sıfırlamaz**:
+forward seviyesi her çeyrek spota doğru yukarı "roll" eder.
+
+**Tetikleyici avantaj:** PPK pas geçtiğinde spot 2y, 1y bacağındaki payer kazancıyla kısmen
+korunur; pozisyonun betası "toplantı" değil "döngü" olur.
+
+**Çıkış:** hedef 1y1y'nin 23,50 altına inmesi (~+220 bp × 19.200 ≈ +4,2 mn); yapı
+bozulacaksa **iki bacağı aynı anda çöz** — tek bacak kapatmak seni istemediğin outright'ta
+bırakır.
+
+#### 7.5 Vaka 4 (mini) — PPK günü switch'i
+
+10 Eylül 2026 sabahı, karar öncesi: "pas" görüşüyle pay 2m 400 mn / receive 1m 795 mn
+(DV01 ≈ 6.500 TL/bp eşit). Pas + şahin metin gelirse Eylül-sonrası ilk toplantıya kadar
+olan fiyatlama söner, switch ~+40−60 bp kazandırır; −125 aynen gelirse kayıp benzer
+büyüklükte. Bu işlem türünde boyut, kanaatin gücüyle değil **karar sonrası ilk yarım saatte
+çıkabileceğin kliple** belirlenir; kotasyonlar o pencerede 3−4 kat genişler.
+
+#### 7.6 Vaka 5 — 5y: çıplak receive mi, ASW mi?
+
+**Görüş:** normalizasyon sürer, 5y faiz aşağı gider. Temsili seviyeler: 5y DİBS getirisi
+%26,00, 5y OIS %24,10 ⇒ **swap spreadi (DİBS − OIS) +190 bp**. Üç ifade yolu:
+
+| Yapı | Ne kazandırır | Taşıma profili | Ne zaman seç |
+| --- | --- | --- | --- |
+| **(A)** 100 mn 5y receive OIS | Saf faiz görüşü; spreade maruz değil | ≈ −4,7 mn/çeyrek (fixing + roll) | Faiz görüşü + arz dalgası/spread genişlemesi endişesi varsa |
+| **(B)** DİBS al + 5y pay (ASW) | TLREF + ~190 bp sentetik FRN; duration'sız | ≈ +190 bp/yıl − repo/bilanço maliyeti | Faiz görüşü yok, yalnız spread daralması bekleniyorsa |
+| **(C)** DİBS çıplak al | Faiz + spread görüşü birlikte | Kupon − repo (bugün derin negatif) + roll | Hem faiz düşer hem banka talebi spreadi daraltır deniyorsa |
+
+**Karar mantığı:** spread'in ana sürücüsü Hazine arz takvimi ile banka bilanço talebinin
+dengesidir. Arz yoğunlaşması bekleniyorsa (C) aynı faiz görüşünde (A)'dan **sistematik
+kötüdür** — bono ucuzlarken swap yerinde durur. Tersine, HTM/tesis kaynaklı talep dalgası
+bekleniyorsa (C), (A)'nın kazancına spread daralmasını ekler. Kural: **faiz görüşü OIS'te,
+spread görüşü ASW'de ifade edilir**; ikisini tek enstrümanda (C) birleştirmek bilinçli bir
+çifte bahistir ve komiteye öyle sunulur.
+
+#### 7.7 PPK haftası playbook'u
+
+**Pazartesi:** strip mutabakatı (kendi bootstrap'ı vs broker kotasyonları; sapma varsa
+nedeni bulunur), pozisyonların senaryo-P&L matrisi, hafta içi fixing duyarlılığı raporu.
+
+**Salı-Çarşamba:** fonlama kompozisyonu ipuçları — haftalık repo ihale tutarları, kotasyon
+davranışı, likidite tahmini (vergi, itfa, kupon çakışmaları); beklenti anketleri ve analist
+revizyon akışı; switch pozisyonlarının son boyut ayarı (2.2'deki dağılım okuması).
+
+**Perşembe:** 14:00 karar — 3.3'teki okuma sırası ve plan uygulaması; 15:00 sonrası fiyat
+keşfi ve yeni strip'in çıkarılması; komiteye aynı gün tek sayfalık "karar → pozisyon
+etkisi" notu.
+
+**Cuma:** karar sonrası ilk fixing ile bütün taşıma tabloları yenilenir; switch kalıntıları
+temizlenir; bir sonraki toplantıya kadar olan tema pozisyonu gözden geçirilir.
+
+#### 7.8 Pozisyon izleme rutini
+
+- **Sabah fixing raporu:** bugünkü TLREF'e duyarlı toplam nosyonel (bugün reset olan
+  bacaklar) + hafta içi PPK/vergi/ay sonu çakışmaları.
+- **Bucket DV01:** outright, spread ve fly'lar tek raporda bucket bazında; risk sisteminin
+  pro-rata dağılımının fly'ları komşu bucket'lara "sızdırdığını" bilerek oku — gerekirse
+  yapıları ayrı portföy kodunda tut.
+- **Taşıma yeniden hesabı:** eğri her belirgin harekette (±50 bp) eğri-sabit taşıma
+  tablosunu güncelle; **carry işaret değiştiren pozisyon**, tezi değişmemiş olsa da
+  komiteye yeniden gider.
+- **Mark kalitesi:** 18m, 4y, 6−7y, 10y bacaklarında hafta sonu P&L'ini işlem gören
+  seviyelerle mutabakat et; interpolasyon kârı ayrı satırda raporlanır.
+
+#### 7.9 Sık yapılan on hata
+
+1. **Taşımasız görüş sunumu:** "receive'im var" deyip iki senaryolu taşıma tablosunu (2.1)
+   eklememek.
+2. **Referans karışıklığı:** forward'a karşı görüşü eğri RV yapısıyla, eğri görüşünü
+   outright'la ifade etmek.
+3. **Nosyonel-nötr spread/fly kurmak** — gizli outright taşımak.
+4. **İnterpolasyon markıyla RV pozisyonuna girmek** ve kâğıt kârını gerçek sanmak (4.4, 6.3).
+5. **Karar günü ilk yarım saatte fiyat keşfine çıkmak** (3.3).
+6. **Switch'te "efektif adım = politika adımı" varsaymak**; fonlama kompozisyonunu unutmak
+   (2.2).
+7. **Stop'u tezin bozulmasına değil yuvarlak MTM sayısına bağlamak.**
+8. **Reset/fixing takvimini ihmal etmek** — "duration'sız" yapının fixing'li olduğunu
+   unutmak (3.4, 6.5).
+9. **Çok bacaklı yapıyı tek bacaktan çözmeye başlayıp** istenmeyen outright'ta kalmak (6.6).
+10. **Kalabalık pozisyonda normal likidite varsaymak:** herkesin aynı kapıya koştuğu gün
+    klipler küçülür, spreadler açılır — boyut, ortalama güne göre değil **o güne** göre
+    seçilir.
+
+### Kapanış: bu ders nasıl kullanılır?
+
+Yeni bir fikir geldiğinde akış şudur: **görüş cümlesini yaz** (7.1) → **hareketi
+sınıflandır:** seviye mi, eğim mi, büküm mü (2.1'deki enstrüman haritası) → **doğru
+vadeyi/yapıyı seç** (outright için 3−4; eğri için 5.0 genel grameri + seçim ağacı; büküm
+için 6.0 + kataloglar) → **taşımayı iki senaryoda hesapla** (2.1, 2.3; spread/fly'da taşıma
+yasası: 5.0, 6.0) → **boyutu üç kısıtla belirle** (2.6) → **kontrol listesini kapat** (7.1)
+→ **Ek E kartıyla** son bir tutarlılık kontrolü yap.
+
+Buradaki bütün seviyeler 5 Ağustos 2026 koşullarıyla tutarlı **temsili** kurgulardır; genel
+gramer bölümleri (2.1, 5.0, 6.0) ise **rejimden bağımsızdır** ve eğri şekli değişse de
+geçerliliğini korur. Eğri, DV01 tablosu ve fly/spread seviyeleri her çeyrek başında ve her
+büyük rejim değişiminde (koridor ayarı, fonlama kompozisyonu kırılması, PPK takvim
+revizyonu) tazelenir. Tazeleme sorumluluğu okuyandadır; kart ve tablolar güncel değilse bu
+metin yol gösterici olmaktan çıkar, **tarih belgesine dönüşür**.
+
+
+## B.8 Ekler
+
+### Ek A — Formül seti
+
+Derste kullanılan yaklaşıklıklar. **Bileşik değişken bacak** (dönem $D$ gün, fixingler
+$r_i$, gün sayıları $d_i$):
+
+$$
+F = \left[\prod_i \left(1 + r_i\cdot\frac{d_i}{365}\right) - 1\right]\cdot\frac{365}{D}
+$$
+
+**Par OIS oranı** (iskonto faktörleri $df$, dönem uzunlukları $\tau$) ve **annuity**:
+
+$$
+S_N = \frac{1 - df_N}{\sum_i df_i\,\tau_i},
+\qquad
+A_N = \sum_i df_i\,\tau_i
+$$
+
+**MTM (receiver)** ve **DV01**:
+
+$$
+PV \approx (K - S_{\text{piyasa}})\cdot A\cdot N,
+\qquad
+\text{DV01} \approx A\cdot N\cdot 10^{-4}
+$$
+
+**Taşıma** ($h$ ufku, receiver; payer için işaretler ters):
+
+$$
+\text{fixing carry} \approx (K - \overline{\text{TLREF}})\cdot\frac{h}{365}\cdot N,
+\qquad
+\text{rolldown} \approx (S_T - S_{T-h})\cdot A_{T-h}\cdot N
+$$
+
+**Basit forward:**
+
+$$
+F(t_1,t_2) \approx \frac{S_2 t_2 - S_1 t_1}{t_2 - t_1}
+$$
+
+**Toplantı merdiveni** (basit ortalama; bileşik düzeltme kısa vadede < 2 bp):
+
+$$
+\text{Kotasyon}_D \approx \frac{\sum_k \text{gün}_k\cdot \text{seviye}_k}{D},
+\qquad
+\text{seviye}_k = \text{TLREF}_0 + \sum_{j\le k}\Delta_j
+$$
+
+**Fly ağırlıkları** (50:50 DV01):
+
+$$
+N_{\text{kanat}} = 0{,}5\cdot N_{\text{gövde}}\cdot
+\frac{\text{DV01}_{\text{gövde}}}{\text{DV01}_{\text{kanat}}}
+$$
+
+**İşaret hafızası** — taşıma bileşenlerinin yönü eğri şekline bağlıdır:
+
+| Eğri / taraf | Fixing carry | Rolldown | Toplam (eğri sabit) |
+| --- | --- | --- | --- |
+| Ters eğri — receiver | − | − | **−** (bugünkü TRY) |
+| Ters eğri — payer | + | + | **+** |
+| Normal eğri — receiver | + | + | **+** |
+| Normal eğri — payer | − | − | **−** |
+
+### Ek B — Temsili DV01 tablosu
+
+Temsili eğri ve basit ACT/365 iskonto ile, **100 mn TL nosyonel başına TL/bp**. Masada
+canlı sistem/terminal değerleri esastır; tablo hızlı ağırlık hesabı içindir.
+
+| Vade | DV01 | Vade | DV01 | Vade | DV01 |
+| --- | --- | --- | --- | --- | --- |
+| 3m | 2.300 | 1y | 8.300 | 4y | 25.700 |
+| 6m | 4.600 | 18m | 11.700 | 5y | 30.400 |
+| 9m | 6.600 | 2y | 14.700 | 6y | 34.800 |
+|  |  | 3y | 20.600 | 7y | 38.900 |
+|  |  |  |  | 10y | 49.100 |
+
+**Hızlı kullanım:** spread nosyoneli = karşı bacak DV01 oranı (2s5s: 100 mn 2y ↔ 48 mn 5y);
+fly kanadı = Ek A'daki formül. Yüksek faiz ortamında DV01'ler eğriyle birlikte hızlı
+değişir — ±100 bp'lik paralel harekette tabloyu yenile.
+
+### Ek C — Sözlük
+
+| Terim | Masa tanımı |
+| --- | --- |
+| **TLREF** | BIST bünyesindeki DİBS teminatlı gecelik repo işlemlerinden hesaplanan, uç hacimler ayıklanmış hacim ağırlıklı referans faiz |
+| **AOFM** | TCMB ağırlıklı ortalama fonlama maliyeti; TLREF'in yerçekimi merkezi |
+| **Koridor** | Gecelik borçlanma − politika (1 hafta repo) − gecelik borç verme faiz bandı (bugün 35,50 / 37,00 / 40,00) |
+| **Efektif adım** | Bir PPK penceresinde TLREF'te fiyatlanan toplam değişim: politika adımı + fonlama kompozisyonu etkisi |
+| **Pay / Receive** | Sabit faizi ödemek / almak; payer faiz yükselişinden, receiver düşüşünden kazanır |
+| **Compounding in arrears** | Değişken bacağın dönem içindeki günlük TLREF'lerin bileşiğiyle dönem sonunda belirlenmesi |
+| **Annuity (A)** | Sabit bacağın 1 birim kupon için bugünkü değeri; MTM ve DV01'in ölçeği |
+| **DV01** | 1 bp faiz değişiminin pozisyon değerine etkisi (TL/bp) |
+| **Fixing carry** | Sabit bacak tahakkuku ile gerçekleşen bileşik TLREF arasındaki fark |
+| **Rolldown** | Eğri sabitken vade kısalmasının yarattığı yeniden fiyatlama |
+| **Steepener / Flattener** | Spreadin (uzun − kısa) yükselmesine / düşmesine oynayan DV01-nötr paket |
+| **Fly** | 2 × gövde − kanatlar; long fly = gövde pay + kanatlar receive (bu dersin konvansiyonu) |
+| **PPK switch'i** | Ardışık kısa vadelerin farkıyla tek toplantıyı izole eden işlem |
+| **1y1y (forward)** | 1 yıl sonra başlayan 1 yıllık faiz; spot bacaklarla sentezlenir |
+| **ASW / Swap spreadi** | DİBS getirisi − aynı vade OIS; bononun swap'a göre ucuzluk/pahalılık ölçüsü |
+| **CSA** | Teminat eki; TL nakit teminat + TLREF faizi ⇒ TLREF iskontosu |
+| **Turn** | Yıl sonu bilanço etkisiyle gecelik faizde oluşan geçici sıçramanın fiyatı |
+| **İnterpolasyon markı** | İşlem görmeyen vadenin komşu kotasyonlardan türetilmiş değeri; P&L kalitesi düşük |
+| **Plato / terminal** | Döngü sonunda ulaşılması beklenen ve bir süre korunan politika faizi bölgesi |
+| **Onshore-offshore baz** | USDTRY forward-implied TL getirisi ile onshore OIS arasındaki makas |
+
+### Ek D — Veri ve kaynak notu
+
+**Resmi çıpalar (5 Ağustos 2026):** politika faizi %37,00; koridor %35,50−40,00; TLREF
+fixingi ~%39,95; kalan 2026 PPK: 10 Eylül, 22 Ekim, 10 Aralık; 2027 ilan edilen ilk
+toplantılar: 21 Ocak, 18 Mart.
+
+- **TLREF metodolojisi ve günlük veri:** Borsa İstanbul TLREF sayfası
+  (borsaistanbul.com); metodoloji dokümanındaki ayıklama ve yedek prosedür detayları
+  bağlayıcıdır.
+- **PPK takvimi ve kararları:** tcmb.gov.tr — Para Politikası Kurulu sayfaları; karar
+  metinleri fonlama kompozisyonu sinyali için ayrıca okunmalı.
+- **Eğri ve DV01:** kendi bootstrap aracı + kurumsal risk sistemi. Buradaki tüm seviye ve
+  DV01'ler **temsilidir**; işlem anında canlı marklar esastır.
+
+### Ek E — Hızlı başvuru kartı
+
+Tek sayfalık özet: yapı → tek cümlelik görüş → eğri-sabit taşımanın işareti → ana tuzak.
+Taşıma işaretleri temsili eğriye göredir; eğri değiştikçe kart yenilenir.
+
+| Yapı | Tek cümle görüş | Taşıma | Ana tuzak |
+| --- | --- | --- | --- |
+| 3m pay | "Eylül-Ekim 2026'da fiyatlanan gelmez" | + | Fonlama gevşemesi sürprizi |
+| 6m pay | "İndirimler fiyatlanandan yavaş" | + | Güvercin metin + koridor indirimi |
+| 1y receive | "Döngü fiyatlanandan derin" | − | Taşıma erimesi; oyalama |
+| 2y receive | "Kalıcı dezenflasyon teması" | − | Bear flattener stresi |
+| 5y pay (hedge) | Bilanço duration kapağı | − | Hedge accounting kopması |
+| 5y receive | "Plato %20'nin altına kırılır" | − | Arz / prim şoku |
+| 1m−2m switch | Tek toplantı izolasyonu | ≈ | Politika/kompozisyon ayrışmazlığı |
+| 3m6m flattener | "Başlarlarsa arka arkaya gelir" | ≈ | 3m bacağının yarısı kilitli |
+| 6m1y steepener | "İlk adımlar var, devamı yok" | hafif + | Kalabalık pozisyonlanma |
+| 1y2y flattener | "Döngü kesintisiz sonuna gider" | ≈/− | Sürprizde outright gibi davranır |
+| 2s5s flattener | Stres hedge'i + kredibilite | + | Sakin-güvercin ortada kaybeder |
+| 5y10y steepener | "Mali gevşeme/arz uzun ucu bozar" | ≈ | 10y kotasyon inceliği |
+| 1y1y receive | "2027 derin; ilk yılın yükü bende kalmasın" | − (yarım) | Forward'ın spota roll'u |
+| 1y1y−2y1y genişleme | "2027 yavaşlar, 2028'e taşar" | ≈ | 1y2y3y fly ile çifte pozisyon |
+| 3m6m1y long fly | "Ertelenen ama derinliği korunan döngü" | ≈ | Kanat fixing gürültüsü |
+| 5y6y7y short fly | "Tek nokta akışla bozuldu, döner" (fade) | ≈ | İnterpolasyon kârı; unwind |
+| 2y5y10y long fly | "Belly'yi taşıyan talep çekilir" | ≈ | 10y bacağı; klip küçük |

@@ -1,0 +1,30 @@
+import { getCollection } from 'astro:content';
+
+// Derleme anında tüm içerikten arama endeksi üretir (istemci tarafı arama bunu çeker).
+const temizle = (kaynak: string) =>
+  kaynak
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/\$\$[\s\S]*?\$\$/g, ' ')
+    .replace(/\$[^$\n]*\$/g, ' ')
+    .replace(/import[^\n]*\n/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[#*_>`|[\]()]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 6000);
+
+export async function GET() {
+  const yap = (e: any, tur: 'proje' | 'arastirma') => ({
+    tur,
+    url: `/${tur === 'proje' ? 'projeler' : 'arastirma'}/${e.id}/`,
+    title: e.data.title,
+    description: e.data.description,
+    tags: e.data.tags ?? [],
+    govde: temizle(e.body ?? ''),
+  });
+  const projeler = (await getCollection('projeler')).map((e) => yap(e, 'proje'));
+  const arastirmalar = (await getCollection('arastirma')).map((e) => yap(e, 'arastirma'));
+  return new Response(JSON.stringify([...projeler, ...arastirmalar]), {
+    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+  });
+}

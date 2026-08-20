@@ -1,0 +1,30 @@
+---
+interface Props {
+  href: string;
+  sira: number;
+  title: string;
+  description: string;
+  tags?: string[];
+  durum?: 'aktif' | 'taslak' | 'arsiv';
+  guncelleme?: string;
+  gecikme?: number; // giriş animasyonu sırası (ms)
+}
+
+const { href, sira, title, description, tags = [], durum, guncelleme, gecikme = 0 } = Astro.props;
+const siraNo = `No ${String(sira).padStart(2, '0')}`;
+---
+
+<article class="kayit yuksel" style={`--d: ${gecikme}ms`}>
+  <div class="ust">
+    <span class="sira">{siraNo}</span>
+    {durum === 'taslak' && <span class="rozet rozet--taslak">Hazırlanıyor</span>}
+    {durum === 'aktif' && <span class="rozet rozet--aktif">Canlı</span>}
+    {durum === 'arsiv' && <span class="rozet rozet--arsiv">Arşiv</span>}
+  </div>
+  <h3><a href={href}>{title}</a></h3>
+  <p>{description}</p>
+  <div class="alt">
+    {guncelleme && <span>↻ {guncelleme}</span>}
+    {tags.map((t) => <span>#{t}</span>)}
+  </div>
+</article>

@@ -1,0 +1,226 @@
+---
+/**
+ * Fly / spread ağırlık hesaplayıcısı — TRY OIS dersi §6.5 ve Ek A.
+ * DV01-nötr kurulum: N_kanat = 0,5 · N_gövde · DV01_gövde / DV01_kanat
+ * Spread için: N_uzun = N_kısa · DV01_kısa / DV01_uzun
+ * Fly seviyesi = 2·gövde − kanatlar; maliyet/edge testi (3× kuralı) dahil.
+ *
+ * DV01'ler aynı sayfadaki carry aracının eğrisinden türetilir
+ * ('tryois-egri-guncellendi' olayı); araç yoksa Ek B tablosuna düşer.
+ * Doğrulama (ders §3.4): 3m/6m/1y, gövde 400 mn → kanatlar 400 mn / 111 mn,
+ * DV01 9.200 / 18.400 / 9.200 · fly = 2·37,50 − 38,95 − 35,25 = +80 bp.
+ */
+---
+
+<div class="hesap" id="fly-agirlik">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı</span>
+    <span class="hesap-ad">Fly / Spread — DV01-Nötr Ağırlıklar</span>
+  </div>
+
+  <p class="hesap-yonerge">
+    Vadeleri yıl cinsinden girin; DV01'ler yukarıdaki eğriden (çeyreklik annuity)
+    türetilir. Kanat nosyonelleri 50:50 DV01 kuralıyla hesaplanır — nosyonel-nötr
+    kurulum <b>gizli bir outright</b> taşır, bu araç onu engellemek içindir.
+  </p>
+
+  <div class="girdiler">
+    <label><span class="etiket">Yapı</span>
+      <select id="fa-tip">
+        <option value="fly" selected>Fly (2×gövde − kanatlar)</option>
+        <option value="spread">Spread (uzun − kısa)</option>
+      </select></label>
+    <label><span class="etiket">Kısa kanat / kısa bacak (yıl)</span>
+      <input type="number" id="fa-t1" value="0.25" step="0.25" min="0.08" /></label>
+    <label><span class="etiket">Gövde (yıl)</span>
+      <input type="number" id="fa-t2" value="0.5" step="0.25" min="0.08" /></label>
+    <label><span class="etiket">Uzun kanat / uzun bacak (yıl)</span>
+      <input type="number" id="fa-t3" value="1" step="0.25" min="0.08" /></label>
+    <label><span class="etiket">Gövde / kısa bacak nominali (mn TL)</span>
+      <input type="number" id="fa-n" value="400" step="50" min="1" /></label>
+    <label><span class="etiket">Beklenen normalize hareket (bp)</span>
+      <input type="number" id="fa-hedef" value="80" step="5" min="0" /></label>
+  </div>
+
+  <div class="tablo-kab">
+    <table>
+      <thead><tr><th>Bacak</th><th>Yön</th><th>Nominal (mn TL)</th><th>DV01 (TL/bp)</th></tr></thead>
+      <tbody id="fa-tablo"></tbody>
+    </table>
+  </div>
+
+  <div class="saglama">
+    <div class="sag-satir">
+      <div><span class="etiket">Yapının seviyesi</span><output class="ara-deger" id="fa-seviye">—</output></div>
+      <div><span class="etiket">Net DV01 (nötrlük kontrolü)</span><output class="ara-deger" id="fa-net">—</output></div>
+      <div><span class="etiket">Hedef P&amp;L</span><output class="ara-deger" id="fa-pnl">—</output></div>
+    </div>
+    <p class="mini-not" id="fa-yorum">—</p>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="fa-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Eğri değişince kendini yeniler.</span>
+  </div>
+
+  <p class="hesap-dip">
+    <b>Maliyet/edge testi (§6.5):</b> all-in kuruluş+çıkış paket kotasyonda ~6−10 bp,
+    bacak bacak 12−18 bp. Beklenen normalize hareket toplam maliyetin <b>en az 3
+    katı</b> değilse yapıya girilmez. Boyutu her zaman <b>en ince bacak</b> belirler.
+  </p>
+</div>
+
+<script>
+  // Ek B — temsili DV01 (100 mn nosyonel başına TL/bp); eğri aracı yoksa yedek.
+  const EKB: [number, number][] = [
+    [0.25, 2300], [0.5, 4600], [0.75, 6600], [1, 8300], [1.5, 11700],
+    [2, 14700], [3, 20600], [4, 25700], [5, 30400], [6, 34800],
+    [7, 38900], [10, 49100],
+  ];
+
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const sec = (id: string) => (document.getElementById(id) as HTMLSelectElement).value;
+  const yaz = (id: string, m: string) => ((document.getElementById(id) as HTMLElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b }).replace('-', '−');
+
+  // 100 mn başına DV01: önce canlı eğriden, yoksa Ek B'den interpolasyon.
+  function dv01Birim(t: number): number {
+    const e = (window as any).tryOisEgri;
+    if (e && typeof e.annuite === 'function') return e.annuite(t) * 1e8 * 1e-4;
+    const s = EKB;
+    if (t <= s[0][0]) return s[0][1];
+    if (t >= s[s.length - 1][0]) return s[s.length - 1][1];
+    for (let i = 0; i < s.length - 1; i++) {
+      if (t >= s[i][0] && t <= s[i + 1][0]) {
+        const w = (t - s[i][0]) / (s[i + 1][0] - s[i][0]);
+        return s[i][1] * (1 - w) + s[i + 1][1] * w;
+      }
+    }
+    return s[s.length - 1][1];
+  }
+
+  const oranAl = (t: number) => {
+    const e = (window as any).tryOisEgri;
+    return e && typeof e.oran === 'function' ? e.oran(t) : NaN;
+  };
+
+  function hesapla() {
+    const fly = sec('fa-tip') === 'fly';
+    const t1 = oku('fa-t1'), t2 = oku('fa-t2'), t3 = oku('fa-t3');
+    const N = oku('fa-n') * 1e6;
+    const hedefBp = oku('fa-hedef');
+    if (!(t1 > 0 && t2 > 0 && t3 > 0 && N > 0)) return;
+
+    const d1 = dv01Birim(t1) / 1e8, d2 = dv01Birim(t2) / 1e8, d3 = dv01Birim(t3) / 1e8;
+    const mn = (x: number) => tr(x / 1e6, 0);
+    const tl = (x: number) => tr(x, 0);
+    let satirlar = '', netDv01 = 0, seviye = NaN, hedefPnl = 0;
+
+    if (fly) {
+      // 50:50 DV01: her kanat gövde DV01'inin yarısını taşır
+      const dvGovde = N * d2;
+      const N1 = (0.5 * dvGovde) / d1;
+      const N3 = (0.5 * dvGovde) / d3;
+      netDv01 = dvGovde - N1 * d1 - N3 * d3;
+      satirlar =
+        `<tr><td>Kısa kanat (${tr(t1, 2)}y)</td><td class="rec">receive</td><td>${mn(N1)}</td><td>${tl(N1 * d1)}</td></tr>` +
+        `<tr><td><b>Gövde (${tr(t2, 2)}y)</b></td><td class="pay">pay</td><td><b>${mn(N)}</b></td><td><b>${tl(dvGovde)}</b></td></tr>` +
+        `<tr><td>Uzun kanat (${tr(t3, 2)}y)</td><td class="rec">receive</td><td>${mn(N3)}</td><td>${tl(N3 * d3)}</td></tr>`;
+      const s1 = oranAl(t1), s2 = oranAl(t2), s3 = oranAl(t3);
+      seviye = (2 * s2 - s1 - s3) * 100;
+      hedefPnl = (hedefBp * dvGovde) / 1e6;
+    } else {
+      // Spread: uzun bacak nosyoneli DV01 oranıyla
+      const N3 = (N * d1) / d3;
+      netDv01 = N * d1 - N3 * d3;
+      satirlar =
+        `<tr><td>Kısa bacak (${tr(t1, 2)}y)</td><td class="rec">receive</td><td>${mn(N)}</td><td>${tl(N * d1)}</td></tr>` +
+        `<tr><td>Uzun bacak (${tr(t3, 2)}y)</td><td class="pay">pay</td><td>${mn(N3)}</td><td>${tl(N3 * d3)}</td></tr>`;
+      const s1 = oranAl(t1), s3 = oranAl(t3);
+      seviye = (s3 - s1) * 100;
+      hedefPnl = (hedefBp * N * d1) / 1e6;
+    }
+
+    (document.getElementById('fa-tablo') as HTMLElement).innerHTML = satirlar;
+    yaz('fa-seviye', isFinite(seviye) ? tr(seviye, 0) + ' bp' : '— (eğri aracı yok)');
+    yaz('fa-net', tl(netDv01) + ' TL/bp');
+    yaz('fa-pnl', tr(hedefPnl, 1) + ' mn TL');
+
+    // Maliyet/edge testi: paket ~8 bp, bacak bacak ~15 bp varsayımı
+    const paket = 8, bacak = fly ? 15 : 12;
+    const oranPaket = hedefBp / paket;
+    const el = document.getElementById('fa-yorum') as HTMLElement;
+    const gecti = oranPaket >= 3;
+    el.innerHTML =
+      `Beklenen hareket <b>${tr(hedefBp, 0)} bp</b>; paket kotasyonla all-in maliyet ~${paket} bp ` +
+      `⇒ oran <b>${tr(oranPaket, 1)}×</b>. ` +
+      (gecti
+        ? `3× eşiğini <b style="color:var(--teal)">geçiyor</b> — yapı savunulabilir.`
+        : `3× eşiğinin <b style="color:var(--claret)">altında</b> — bu yapıya girme (§6.5). ` +
+          `Aynı görüşü daha geniş bantlı bir yapıyla ifade et.`) +
+      ` Bacak bacak kurulursa maliyet ~${bacak} bp'ye çıkar ve oran ${tr(hedefBp / bacak, 1)}× olur; ` +
+      `broker'dan <b>paket</b> kotasyon iste.`;
+  }
+
+  document.querySelectorAll('#fly-agirlik input, #fly-agirlik select').forEach((el) =>
+    el.addEventListener('input', hesapla)
+  );
+  document.addEventListener('tryois-egri-guncellendi', hesapla);
+  const btn = document.getElementById('fa-hesapla')!;
+  btn.addEventListener('click', () => {
+    hesapla();
+    btn.classList.add('tamam');
+    btn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => { btn.classList.remove('tamam'); btn.textContent = 'Hesapla ↻'; }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.7rem;
+    padding: 0.9rem 1rem 0.4rem;
+  }
+  .tablo-kab {
+    padding: 0.6rem 1rem;
+    overflow-x: auto;
+  }
+  .tablo-kab :global(.pay) {
+    color: var(--claret);
+    font-weight: 600;
+  }
+  .tablo-kab :global(.rec) {
+    color: var(--teal);
+    font-weight: 600;
+  }
+  .saglama {
+    border-top: 1px solid var(--ink-15);
+    padding: 0.8rem 1rem 0.4rem;
+  }
+  .sag-satir {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin-bottom: 0.6rem;
+  }
+  .sag-satir .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .mini-not {
+    margin: 0.4rem 0 0;
+    font-size: 0.84rem;
+    font-style: italic;
+    color: var(--ink-70);
+    line-height: 1.55;
+  }
+  @media (max-width: 640px) {
+    .girdiler {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

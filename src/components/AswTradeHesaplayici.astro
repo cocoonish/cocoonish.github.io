@@ -1,0 +1,325 @@
+---
+/**
+ * ASW Trade hesaplayıcısı — ASW_Trade_Ornek.xlsx'in canlı portu.
+ * A) Eğri & spread: yarı yıllık DF düğümleri → log-lineer interp çeyreklik grid →
+ *    3M IRS par oranı = (1−DF_N)/Στ·DF → ASW, ASW değeri (PV), DV01, carry.
+ * B) MTM patikası: senaryo satırları (Δfaiz, ASW) → DV01-lineer P&L ayrıştırması.
+ * Varsayılan girdiler Excel'in TRT160431T35 örneğini birebir üretir
+ * (par %33,3627 · ASW 91,35bp · ASW değeri 2.089.170 · carry 913.503).
+ */
+---
+
+<div class="hesap" id="asw-trade">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı</span>
+    <span class="hesap-ad">Asset Swap Trade — Spread, DV01, Carry &amp; MTM</span>
+  </div>
+
+  <p class="hesap-yonerge">
+    Yarı yıllık DF düğümlerini ve tahvil girdilerini değiştirin; 3 aylık IRS par oranı,
+    ASW spread'i, DV01 eşli hedge ve carry anında yeniden hesaplanır. Alt blokta
+    senaryo satırları (kümülatif Δfaiz ve o gün geçerli ASW) DV01-lineer P&L'i verir.
+  </p>
+
+  <div class="blok">
+    <p class="blok-baslik etiket">A · Eğri, spread ve carry</p>
+    <div class="ust-girdi">
+      <label><span class="etiket">Nominal (TL)</span>
+        <input type="number" id="at-nom" value="100000000" step="10000000" /></label>
+      <label><span class="etiket">Tahvil kirli fiyat</span>
+        <input type="number" id="at-kirli" value="102.5823" step="0.01" /></label>
+      <label><span class="etiket">Kupon (yıllık %)</span>
+        <input type="number" id="at-kupon" value="33.26" step="0.05" /></label>
+      <label><span class="etiket">Tahvil DV01 (TL/bp)</span>
+        <input type="number" id="at-dv01" value="21285.74" step="100" /></label>
+    </div>
+
+    <div class="df-kab">
+      <span class="etiket df-baslik">Eğri DF'leri — yarı yıllık düğümler (gün : DF)</span>
+      <div class="df-izgara" id="at-dfler"></div>
+    </div>
+
+    <div class="ciktilar">
+      <div><span class="etiket">3M IRS par oranı</span><output class="ara-deger" id="at-par">—</output></div>
+      <div><span class="etiket">Annüite Στ·DF</span><output class="ara-deger" id="at-ann">—</output></div>
+      <div><span class="etiket">Swap nominal (DV01 eşli)</span><output class="ara-deger" id="at-swapnom">—</output></div>
+      <div><span class="etiket">Hedge oranı</span><output class="ara-deger" id="at-hedge">—</output></div>
+      <div><span class="etiket">Yıllık carry</span><output class="ara-deger" id="at-carry">—</output></div>
+      <div><span class="etiket">Günlük carry</span><output class="ara-deger" id="at-gcarry">—</output></div>
+    </div>
+    <div class="sonuc-cift">
+      <div><span class="etiket">ASW spread</span><output class="sonuc-buyuk" id="at-asw">—</output></div>
+      <div><span class="etiket">ASW değeri (spread PV)</span><output class="sonuc-buyuk sonuc-teal" id="at-aswpv">—</output></div>
+    </div>
+  </div>
+
+  <div class="blok">
+    <p class="blok-baslik etiket">B · Süreç içinde MTM &amp; P&amp;L (DV01-lineer)</p>
+    <div class="tablo-kab">
+      <table id="at-mtm">
+        <thead>
+          <tr>
+            <th>Mark</th><th>Gün</th><th>Δfaiz (bp)</th><th>ASW (bp)</th>
+            <th>Tahvil MTM</th><th>Swap MTM</th><th>Net spread</th><th>Küm. carry</th><th>Toplam P&amp;L</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="mini-not">
+      Mavi sütunlar girdi (kümülatif Δfaiz ve o gün geçerli ASW). Net spread =
+      −TahvilDV01×Δspread; paralel faiz hareketi hedge'lidir, tahvil ve swap MTM'i
+      birbirini götürür. Gerçek MTM eğriyi yeniden fiyatlar (konveksite dahil);
+      bu tablo masa-içi yön/mertebe tahminidir.
+    </p>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="at-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Girdiler değişince canlı güncellenir.</span>
+  </div>
+
+  <p class="hesap-dip">
+    Par oran = (1 − DF_N)/Στ·DF. ASW değeri = spread × annüite × nominal =
+    değişken bacaktaki fazla marjın PV'si — gün-1 kârı DEĞİL, gelecekteki carry'nin
+    bugünkü değeri. Swap nominali tahvil DV01'ini nötrleyecek şekilde ölçeklenir.
+  </p>
+</div>
+
+<script>
+  // ── Varsayılan yarı yıllık DF düğümleri (Excel Swap Oranı sekmesi) ──
+  const VARSAYILAN_DF: Array<[number, number]> = [
+    [0, 1], [93, 0.906], [275, 0.758], [457, 0.642], [639, 0.544], [821, 0.466],
+    [1003, 0.4], [1185, 0.346], [1367, 0.303], [1549, 0.267], [1731, 0.237],
+  ];
+  // çeyreklik grid günleri (Excel G sütunu; son düğüm tahvil vadesi)
+  const Q_GUN = [0, 92, 184, 274, 365, 457, 549, 640, 731, 823, 915, 1005, 1096,
+                 1188, 1280, 1370, 1461, 1553, 1645, 1731];
+  // MTM senaryo satırları: [etiket, gün, Δfaiz(bp), ASW(bp)]
+  const VARSAYILAN_MTM: Array<[string, number, number, number]> = [
+    ['t0 (giriş)', 0, 0, 91.4],
+    ['+3 ay', 92, -80, 86],
+    ['+6 ay', 184, -150, 82],
+    ['+9 ay', 276, -180, 79],
+    ['+12 ay', 365, -220, 76],
+  ];
+
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const yaz = (id: string, m: string) =>
+    ((document.getElementById(id) as HTMLElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b });
+  const tl0 = (x: number) => x.toLocaleString('tr-TR', { maximumFractionDigits: 0 });
+
+  const kok = document.getElementById('asw-trade')!;
+  const dfKap = kok.querySelector('#at-dfler')!;
+  const mtmGovde = kok.querySelector('#at-mtm tbody')!;
+
+  // DF girdi alanları
+  dfKap.innerHTML = VARSAYILAN_DF.map(
+    ([g, d], i) =>
+      `<label><span class="etiket">${g}g</span>
+        <input type="number" step="0.001" data-i="${i}" value="${d}"
+        ${i === 0 ? 'disabled title="DF(0)=1"' : ''} /></label>`
+  ).join('');
+
+  // MTM senaryo satırları (girdi hücreli)
+  mtmGovde.innerHTML = VARSAYILAN_MTM.map(
+    ([ad, gun, df, asw], i) => `
+    <tr>
+      <td>${ad}</td>
+      <td>${gun}</td>
+      <td><input type="number" step="10" data-i="${i}" data-k="df" value="${df}" ${i === 0 ? 'disabled' : ''} /></td>
+      <td><input type="number" step="0.5" data-i="${i}" data-k="asw" value="${asw}" /></td>
+      <td class="c-bmtm">—</td><td class="c-smtm">—</td><td class="c-net">—</td>
+      <td class="c-carry">—</td><td class="c-top">—</td>
+    </tr>`
+  ).join('');
+
+  function dfNodes(): Array<[number, number]> {
+    const inp = [...dfKap.querySelectorAll('input')] as HTMLInputElement[];
+    return VARSAYILAN_DF.map(([g], i) => [g, i === 0 ? 1 : parseFloat(inp[i].value)]);
+  }
+
+  function logLinDF(t: number, nodes: Array<[number, number]>): number {
+    if (t <= 0) return 1;
+    let i = 0;
+    for (let k = 0; k < nodes.length - 1; k++) if (nodes[k][0] <= t) i = k;
+    i = Math.min(i, nodes.length - 2);
+    const [t1, d1] = nodes[i], [t2, d2] = nodes[i + 1];
+    return Math.exp(Math.log(d1) + ((Math.log(d2) - Math.log(d1)) * (t - t1)) / (t2 - t1));
+  }
+
+  function hesapla() {
+    const nodes = dfNodes();
+    if (nodes.some(([, d]) => !(d > 0 && d <= 1))) return;
+
+    // çeyreklik grid → annüite & DF_N
+    const dfs = Q_GUN.map((t) => logLinDF(t, nodes));
+    let annuite = 0;
+    for (let k = 1; k < Q_GUN.length; k++)
+      annuite += ((Q_GUN[k] - Q_GUN[k - 1]) / 365) * dfs[k];
+    const dfN = dfs[dfs.length - 1];
+    const par = (1 - dfN) / annuite;
+
+    const N = oku('at-nom');
+    const dv01 = oku('at-dv01');
+    const kupon = oku('at-kupon') / 100;
+    const kirliFiyat = oku('at-kirli');
+
+    // ASW değeri = tahvilin SWAP eğrisindeki PV'si − kirli değer.
+    // Tahvil kupon tarihleri = yarı yıllık DF düğümleri (nodes[1..]).
+    const yariKupon = (kupon / 2) * N;
+    let pvBond = 0;
+    for (let i = 1; i < nodes.length; i++)
+      pvBond += (yariKupon + (i === nodes.length - 1 ? N : 0)) * nodes[i][1];
+    const dirtyValue = (kirliFiyat / 100) * N;
+    const aswPV = pvBond - dirtyValue; // spread'in PV'si
+    const asw = aswPV / (annuite * N); // spread (oran biçiminde)
+    const aswBp = asw * 10000;
+    const carryYr = asw * N;
+
+    // Swap nominali tahvil DV01'ini eşleyecek şekilde ölçeklenir. Par swap'ın
+    // birim nominal DV01'i = annüite × 1bp; dolayısıyla:
+    //   swap nominal = tahvil DV01 / (annüite × 1bp).
+    // Excel örneği: 21.285,74/(2,28699×0,0001) = 93.073.280 → hedge 0,931.
+    const swapNom = dv01 / (annuite * 1e-4);
+
+    yaz('at-par', '%' + tr(par * 100, 4));
+    yaz('at-ann', tr(annuite, 5));
+    yaz('at-swapnom', tl0(swapNom) + ' TL');
+    yaz('at-hedge', tr(swapNom / N, 3));
+    yaz('at-carry', tl0(carryYr) + ' TL');
+    yaz('at-gcarry', tl0(carryYr / 365) + ' TL');
+    yaz('at-asw', (aswBp >= 0 ? '+' : '') + tr(aswBp, 1) + ' bp');
+    yaz('at-aswpv', tl0(aswPV) + ' TL');
+
+    // ── B) MTM patikası ──
+    const carryDaily = carryYr / 365;
+    const aswBaslangic = VARSAYILAN_MTM[0][3]; // t0 ASW referansı
+    const satirlar = [...mtmGovde.querySelectorAll('tr')];
+    satirlar.forEach((satir, i) => {
+      const gun = VARSAYILAN_MTM[i][1];
+      const dfInp = satir.querySelector('input[data-k="df"]') as HTMLInputElement;
+      const aswInp = satir.querySelector('input[data-k="asw"]') as HTMLInputElement;
+      const dFaiz = i === 0 ? 0 : parseFloat(dfInp.value);
+      const aswGun = parseFloat(aswInp.value);
+      const dSpread = aswGun - aswBaslangic;
+      const bondMTM = -dv01 * (dFaiz + dSpread);
+      const swapMTM = dv01 * dFaiz;
+      const net = bondMTM + swapMTM;
+      const cumCarry = carryDaily * gun;
+      const toplam = net + cumCarry;
+      (satir.querySelector('.c-bmtm') as HTMLElement).textContent = tl0(bondMTM);
+      (satir.querySelector('.c-smtm') as HTMLElement).textContent = tl0(swapMTM);
+      (satir.querySelector('.c-net') as HTMLElement).textContent = tl0(net);
+      (satir.querySelector('.c-carry') as HTMLElement).textContent = tl0(cumCarry);
+      const tc = satir.querySelector('.c-top') as HTMLElement;
+      tc.textContent = tl0(toplam);
+      tc.style.color = toplam >= 0 ? 'var(--teal)' : 'var(--claret)';
+    });
+  }
+
+  kok.querySelectorAll('input').forEach((el) => el.addEventListener('input', hesapla));
+  const btn = document.getElementById('at-hesapla')!;
+  btn.addEventListener('click', () => {
+    hesapla();
+    btn.classList.add('tamam');
+    btn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => { btn.classList.remove('tamam'); btn.textContent = 'Hesapla ↻'; }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .blok {
+    padding: 1rem;
+  }
+  .blok + .blok {
+    border-top: 1px solid var(--ink-15);
+  }
+  .blok-baslik {
+    color: var(--claret);
+    margin: 0 0 0.7rem;
+  }
+  .ust-girdi {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.7rem;
+  }
+  .df-kab {
+    margin-top: 0.9rem;
+  }
+  .df-baslik {
+    color: var(--ink-50);
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+  .df-izgara {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    gap: 0.35rem;
+  }
+  .df-izgara :global(input) {
+    font-size: 0.76rem;
+    padding: 0.28rem 0.2rem;
+    text-align: center;
+  }
+  .df-izgara :global(.etiket) {
+    color: var(--ink-50);
+    font-size: 0.54rem;
+  }
+  .ciktilar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.8rem;
+    margin-top: 1rem;
+  }
+  .ciktilar .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .sonuc-cift {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.9rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--ink-30);
+  }
+  .sonuc-cift .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .sonuc-teal {
+    color: var(--teal);
+  }
+  #at-mtm :global(input) {
+    width: 5.2rem;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.35rem;
+    text-align: right;
+  }
+  #at-mtm td {
+    white-space: nowrap;
+  }
+  .mini-not {
+    margin: 0.7rem 0 0;
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--ink-50);
+  }
+  @media (max-width: 640px) {
+    .ust-girdi {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .df-izgara {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .sonuc-cift {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

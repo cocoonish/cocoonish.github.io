@@ -1,0 +1,292 @@
+---
+title: 'Hazine İhraç Takvimi & İhale Analizi'
+description: 'Hazine iç borçlanmasının tam panosu: ihale bazlı veri seti üzerinde hacim/tür/maliyet/talep/vade analizi, strateji revizyon takibi, canlı ihraç takvimi ve ihale bazlı backtest — 13 grafik, kullanım kılavuzuyla.'
+pubDate: 2026-07-15
+updatedDate: 2026-08-18
+tags: ['hazine', 'tahvil', 'ihale']
+durum: 'aktif'
+kaynak: 'T.C. Hazine ve Maliye Bakanlığı'
+guncelleme: 'ihale dönemlerinde (aylık)'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+import VeriTablosu from '../../components/VeriTablosu.astro';
+
+Hazine'nin aylık iç borçlanma stratejisi ile fiilen gerçekleşen ihraçlar arasındaki
+fark, TL faiz piyasası için başlı başına bir sinyaldir. Bu proje ihale sonuçlarını ve
+planlanan takvimi otomatik toplar ve **Şubat 2020'den bu yana <Deger proje="hazine-ihrac" anahtar="n_ihale" ondalik={0}>448</Deger> ihaleyi** (toplam
+<Deger proje="hazine-ihrac" anahtar="toplam_mlr" ondalik={1}>7.302,0</Deger> milyar TL) analiz panosuna döker: hacim, tür kırılımı, maliyet,
+talep, vade, strateji revizyonları, ileriye dönük tahmin ve backtest.
+
+## Bu sayfa nasıl kullanılır? (iş akışı)
+
+1. **Takvimle başla** — Şekil 11: önümüzdeki hafta hangi senetler, ne büyüklükte?
+2. **Bağlamı kur** — Şekil 01-02: hedefe göre gerçekleşme ve stratejinin *revizyon
+   yönü* (yukarı revizyon = arz baskısı sinyali).
+3. **Arzın bileşimini oku** — Şekil 03-05: tür kırılımı, dolar cinsi hacim, tempo.
+4. **Fiyatlamayı izle** — Şekil 06-08: maliyet eğilimi, talep (bid-to-cover, kabul
+   oranı), fiyat bantları.
+5. **Duration'ı ölç** — Şekil 09-10: WAM ve vade dağılımı.
+6. **Tahmine güven kalibre et** — Şekil 12-13: ihale ve ay bazında backtest.
+
+## Sözlük: bu projede ne nedir?
+
+| Terim | Tanım | Neden önemli |
+| --- | --- | --- |
+| İhale / Doğrudan satış | ihale: fiyat teklifle; doğrudan satış (kira sert., altın/dolar senedi): idari | tahmin modeli yalnız ihaleleri kapsar |
+| Net satış | brüt − geri alım/değişim | tüm seriler net üzerinedir |
+| Bid-to-cover (B/C) | toplam teklif / satış | talep gücü; düşüşü zayıf ihale sinyali |
+| Kabul oranı | satış / teklif | Hazine'nin talebi ne kadar "kestiği" |
+| Strateji hedefi | aylık programdaki tutar; **revizyonlar sürümlenir** | revizyon yönü başlı başına sinyal |
+| Gerçekleşme oranı | gerçekleşen / hedef | tahminlerin ölçekleme katsayısı (%78 varsayımı) |
+| WAM | net satış ağırlıklı ortalama vade | duration talebinin ölçüsü |
+
+## Veri hattı: duyurudan tabloya
+
+1. **Kaynak tarama** — Hazine sitesinin WordPress REST API'si doğrudan sorgulanır;
+   ihale sonuç ve strateji PDF'leri ayrıştırılır.
+2. **İnkremental indirme** — işlenmiş URL önbelleği; yalnız yeni duyurular işlenir;
+   PDF'ler eşzamanlı iner, paralel parse edilir.
+3. **PDF ayrıştırma** — senet tanımı, tarihler, net/brüt satış, teklif, fiyat/faiz.
+4. **Strateji sürümleme** — her ayın hedefi doküman bazında saklanır: "o gün hangi
+   hedef geçerliydi" geriye dönük doğru cevaplanır (Şekil 02'nin hammaddesi).
+
+## Hedef, gerçekleşme ve stratejinin revizyonları
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/hedef_gerceklesme.html"
+  baslik="Aylık ihraç hedefi ve gerçekleşme (milyar TL)"
+  no="01"
+  yukseklik={560}
+/>
+
+**Şekil 01.** İhale kayıtları ay bazında toplanır, strateji hedefiyle eşlenir.
+<Deger proje="hazine-ihrac" anahtar="n_ay" ondalik={0}>79</Deger> gerçekleşmeli ayda ortalama gerçekleşme **%<Deger proje="hazine-ihrac" anahtar="gerceklesme_ort" ondalik={1}>96,8</Deger>**. Oranın kalıcı 1 altı seyri
+programın yumuşak uygulandığını, 1 üstü sıçramalar ek finansman ihtiyacını gösterir.
+
+<div class="not">
+  <span class="etiket">Model denetim notu — strateji hedefi ayrıştırıcısı (05.08.2026)</span>
+  Bu ortalama önceki sürümde <strong>%86,1</strong> yazıyordu; aradaki fark yeni veriden
+  değil, bir <em>ayrıştırıcı hatasının</em> düzeltilmesinden geliyor. Strateji PDF'lerindeki
+  sayılar koşulsuz olarak "Türkçe binlik ayracı" varsayımıyla okunuyordu
+  (<code>float(v.replace('.','').replace(',','.'))</code>); nokta ondalıklı yazılmış bir
+  değer bu yüzden <strong>10 kat şişiyordu</strong> — "25.4" → 254,0. Hata 2020-21
+  dönemindeki 8 ayı bozmuştu ve şişmiş hedefler ortalama gerçekleşmeyi aşağı çekiyordu.
+  Ayrıştırıcı biçim-duyarlı hale getirildi, bozuk kayıtlar sürüm damgasıyla geçersizleştirildi
+  ve hedeflerin <code>strategy_data</code>'ya girdiği <em>her</em> yola (PDF, CSV geri
+  tohumlama, önbellek) makullik kontrolü kondu — hatanın kendini geri tohumlayarak
+  yeniden üretmesi böylece kapatıldı.
+</div>
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/strateji_revizyon.html"
+  baslik="Strateji revizyonları (doküman bazlı) ve kümülatif hedef vs gerçekleşen"
+  no="02"
+  yukseklik={640}
+/>
+
+**Şekil 02.** Üst panel: aynı ay için ardışık strateji dokümanlarındaki hedefler yan
+yana — revizyonun *yönü* okunur. Örnekler: Haziran 2026 hedefi 412 → 392 → 304'e
+**aşağı** inerken, Ağustos 2026 356'dan 417'ye **yukarı** revize edildi — önümüzdeki
+ay için açık arz baskısı sinyali. Alt panel kümülatif hedef/gerçekleşen alanıdır
+(gelecek ayların hedefi dahil olduğundan oran düşük görünür; doğru metrik üstteki %85,7'dir).
+
+## Arzın bileşimi ve temposu
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/ihrac_hacmi.html"
+  baslik="Aylık ihraç hacmi — senet türü kırılımı ve yüzde paylar"
+  no="03"
+  yukseklik={680}
+/>
+
+**Şekil 03.** Aylık net satış, senet türüne göre yığılı; alt panel yüzde pay. Dönem
+toplam payları: **sabit kuponlu %<Deger proje="hazine-ihrac" anahtar="pay_sabit" ondalik={1}>48,1</Deger> · TLREF'e endeksli %<Deger proje="hazine-ihrac" anahtar="pay_tlref" ondalik={1}>24,5</Deger> · TÜFE'ye endeksli
+%<Deger proje="hazine-ihrac" anahtar="pay_tufe" ondalik={1}>9,4</Deger> · bono %<Deger proje="hazine-ihrac" anahtar="pay_bono" ondalik={1}>9,7</Deger> · değişken %<Deger proje="hazine-ihrac" anahtar="pay_degisken" ondalik={1}>6,8</Deger> · kuponsuz %<Deger proje="hazine-ihrac" anahtar="pay_kuponsuz" ondalik={1}>1,6</Deger>**. Sabit kupon payının daraldığı,
+TLREF-endeksli payın büyüdüğü aylar piyasanın sabit faiz almak istemediği dönemlerdir.
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/ihrac_usd.html"
+  baslik="Aylık ihraç hacmi (milyar USD) ve USD/TRY"
+  no="04"
+  yukseklik={560}
+/>
+
+**Şekil 04.** TL hacim, ay sonu kuruyla USD'ye çevrilir (çift eksen). TL enflasyonu
+hacim serisini büyüttüğü için *reel* arz karşılaştırması ancak USD cinsinden yapılır —
+2020'nin 3 milyar dolarlık ayları ile son ayın <Deger proje="hazine-ihrac" anahtar="usd_son_ay_mlr" ondalik={1}>7,3</Deger> milyar dolarlık hacmi arasındaki fark,
+TL rakamların ima ettiğinden çok daha küçüktür.
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/ihrac_tempo.html"
+  baslik="Çeyreklik ihraç trendi ve aylık ihale sayısı"
+  no="05"
+  yukseklik={620}
+/>
+
+**Şekil 05.** Çeyreklik toplamlar (<Deger proje="hazine-ihrac" anahtar="ceyrek_adet" ondalik={0}>27</Deger> çeyrek) ve aylık ihale adedi (ortalama <Deger proje="hazine-ihrac" anahtar="ihale_ay_ort" ondalik={1}>5,7</Deger>).
+Tempo, takvim yoğunluğunun DV01 bütçesine çevrildiği yerdir: aynı hacmin 4 ihaleye mi
+8 ihaleye mi yayıldığı, ihale günü konsantrasyon riskini belirler.
+
+## Maliyet, talep ve fiyat
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/faiz_gelisimi.html"
+  baslik="Bileşik faiz gelişimi ve teklif-vs-gerçekleşme"
+  no="06"
+  yukseklik={680}
+/>
+
+**Şekil 06.** Üst panel: ihale bazında bileşik faiz (tür renkli) + **hacim ağırlıklı
+aylık ortalama maliyet** çizgisi (TÜFE'ye endeksliler reel getiri kote ettiğinden
+ortalamaya dahil edilmez). Zirve Mayıs 2025 **%52,1**; son ay **%<Deger proje="hazine-ihrac" anahtar="maliyet_son" ondalik={1}>41,0</Deger>**. Alt
+panel: ihale öncesi/sonrası faiz karşılaştırması, $y=x$ referanslı.
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/talep_analizi.html"
+  baslik="Bid-to-cover ve kabul oranı"
+  no="07"
+  yukseklik={680}
+/>
+
+**Şekil 07.** Üst: ihale bazında B/C + aylık toplam B/C (Σteklif/Σsatış, 1,0x
+referanslı) — son ay **<Deger proje="hazine-ihrac" anahtar="b2c_son" ondalik={2}>2,16</Deger>x**, son 12 ay ortalaması <Deger proje="hazine-ihrac" anahtar="b2c_12ay" ondalik={2}>2,12</Deger>x; 2'nin altına
+yerleşme talep yorgunluğudur. Alt: kabul oranı (satış/teklif) — son ay %<Deger proje="hazine-ihrac" anahtar="kabul_son" ondalik={1}>46,3</Deger>,
+tüm dönem %<Deger proje="hazine-ihrac" anahtar="kabul_tum" ondalik={1}>48,6</Deger>: Hazine talebin yarısını kesiyor; oranın yükselmesi "ne gelirse alındı"
+demektir ve maliyet tavizinin habercisidir.
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/fiyat_araligi.html"
+  baslik="Son 50 ihalede fiyat aralığı (min – ortalama – maks)"
+  no="08"
+  yukseklik={560}
+/>
+
+**Şekil 08.** İhale içi fiyat bandı: geniş bant, teklif defterinin dağınıklığı —
+fiyat keşfinin zorlaştığı, marjinal alıcının uzaklaştığı ihaleler. Hover'da ISIN.
+
+## Vade yapısı
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/vade_analizi.html"
+  baslik="İhraçların vade dağılımı ve ağırlıklı ortalama vade"
+  no="09"
+  yukseklik={560}
+/>
+
+**Şekil 09.** WAM: $\overline{V}_{ay} = \sum \text{NetSatış}_i V_i / \sum \text{NetSatış}_i$ —
+son ayda **<Deger proje="hazine-ihrac" anahtar="wam_son" ondalik={2}>3,82</Deger> yıl** (3 aylık ağırlıklı ort. <Deger proje="hazine-ihrac" anahtar="wam_3ay" ondalik={2}>3,28</Deger>). Uzayan WAM piyasanın
+duration hazmı, kısalan WAM temkin işaretidir. Temmuz 2026 koşusunda WAM 4,13'ten 3,07
+yıla indi; kırılım tek bir ihaleden değil, uzun sabit kuponlu ihraç payının düşüp
+TLREF endeksli/kısa bono payının artmasından geliyor — WAM'ı düşüren şeyin **kompozisyon**
+olduğunu doğrulamak için Şekil 10'daki tür bazında kutu grafiğine bakın.
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/vade_dagilimi.html"
+  baslik="Vade ısı haritası (yıl × ay) ve tür bazında çeyreklik kutu grafiği"
+  no="10"
+  yukseklik={680}
+/>
+
+**Şekil 10.** Isı haritası hangi yıl-ay hücresinde ne kadar vade ihraç edildiğini,
+kutu grafiği tür bazında vade dağılımının medyan/çeyrekliklerini verir — "uzun vade"
+etiketi hangi senet türünün sırtında taşınıyor, burada görünür.
+
+## Tahmin: sıradaki ihraçlarda ne beklemeli?
+
+Beklenen tutar iki katmanla üretilir: **strateji-tutarlı ölçekleme** (hedef × son
+ayların gerçekleşme oranı, ayın kalanı ihalelere dağıtılır) + **benzer senet
+dağılımı** (tanım+vade eşleşmeli tarihsel paylar; beklenen teklif geçmiş B/C'den).
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/planlanan_ihraclar.html"
+  baslik="Planlı ihraç takvimi ve ihale başına beklenen net satış (tarih aralığı grafikte)"
+  no="11"
+  yukseklik={600}
+/>
+
+**Şekil 11.** Takvimde **<Deger proje="hazine-ihrac" anahtar="plan_adet" ondalik={0}>14</Deger> planlı ihraç**: <Deger proje="hazine-ihrac" anahtar="plan_ihale_adet" ondalik={0}>8</Deger> ihale (tahminli) + doğrudan satışlar.
+Beklenen ihale toplamı **<Deger proje="hazine-ihrac" anahtar="plan_toplam_mlr" ondalik={1}>420,1</Deger> milyar TL**; takvim
+<Deger proje="hazine-ihrac" anahtar="plan_bas">20.08.2026</Deger> – <Deger proje="hazine-ihrac" anahtar="plan_son">13.10.2026</Deger> arasını kapsar. Ay bazında beklenen ihale satışı vs strateji hedefi (ilk iki ay):
+<Deger proje="hazine-ihrac" anahtar="plan_ay1_ad">Eylül 2026</Deger> <Deger proje="hazine-ihrac" anahtar="plan_ay1_beklenen" ondalik={1}>215,6</Deger> vs <Deger proje="hazine-ihrac" anahtar="plan_ay1_hedef" ondalik={1}>247,9</Deger> · <Deger proje="hazine-ihrac" anahtar="plan_ay2_ad">Ekim 2026</Deger> <Deger proje="hazine-ihrac" anahtar="plan_ay2_beklenen" ondalik={1}>204,5</Deger> vs <Deger proje="hazine-ihrac" anahtar="plan_ay2_hedef" ondalik={1}>235,1</Deger> milyar TL
+(kalan aylar grafiğin alt panelinde). Hover'daki "kıyas ihale sayısına" bakın: n küçükse tahmin zayıftır.
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/tahmin_dogrulama.html"
+  baslik="Backtest: ihale bazında tahmin vs gerçekleşen"
+  no="12"
+  yukseklik={600}
+/>
+
+**Şekil 12.** İhale bazında "o gün elde olan bilgiyle" tahmin vs gerçekleşen; $y=x$
+mükemmel tahmin. Tüm dönem (n=<Deger proje="hazine-ihrac" anahtar="backtest_n" ondalik={0}>442</Deger>) **medyan sapma %<Deger proje="hazine-ihrac" anahtar="medyan_sapma" ondalik={1}>38,1</Deger>**; son 12 ay MAPE %<Deger proje="hazine-ihrac" anahtar="son12_mape" ondalik={1}>53,8</Deger>.
+Bid-to-cover tahmini çok daha isabetli: **MAPE %<Deger proje="hazine-ihrac" anahtar="b2c_mape" ondalik={1}>25,8</Deger>** — talep, tutardan öngörülebilir.
+
+<GrafikEmbed
+  src="/projeler/hazine-ihrac/tahmin_aylik.html"
+  baslik="Aylık toplamda üç model: gerçekleşen vs ham / düzeltilmiş / strateji"
+  no="13"
+  yukseklik={560}
+/>
+
+**Şekil 13.** Aynı backtest ay toplamında: **ham model aylık MAPE %<Deger proje="hazine-ihrac" anahtar="aylik_ham_mape" ondalik={1}>25,3</Deger>** — ihale
+bazındaki %<Deger proje="hazine-ihrac" anahtar="ihale_ham_mape" ondalik={0}>67</Deger>'ye karşı. Ders: model tekil ihaleyi ±%50 bandında bilir ama *ayın
+toplam arzını* dörtte bir hatayla yakalar; DV01 bütçesi ay bazında planlanmalıdır.
+(Düzeltilmiş/strateji modellerin aylık MAPE'sindeki şişkinlik 2020-21 hedef artefaktıdır.)
+
+## Ham veri: veri setinin tamamı, tablo olarak
+
+Yukarıdaki grafiklerin arkasındaki veri seti burada, **hiçbir sütun eksiltilmeden**.
+Sütun başlığına tıklayınca sıralanır, arama kutusu tüm sütunlarda süzer, "Sütun grupları"
+ile 32 sütunun tamamı grup grup açılır; **CSV indir** o anki süzgeç ve sıralamayla,
+yalnız açık sütunları indirir (`;` ayraçlı, BOM'lu — Türkçe yerel ayarlı tablo programlarında doğrudan açılır). Tablolar cron'un
+her koşusunda `tablo_uret.py` ile yeniden üretilir — grafiklerle aynı anda tazelenir.
+
+<VeriTablosu proje="hazine-ihrac" tablo="ihaleler"
+  baslik="İhale verileri — tüm ihaleler, 32 sütun"
+  varsayilan={['ISIN','Senet Tanımı','İhale Tarihi','İtfa Tarihi','Vade (Yıl)','Toplam(Teklif)','Toplam(Gerçekleşme)','Ortalama Yıllık Bileşik(Gerçekleşme)']}
+  gruplar={{
+    'ROT': ['ROT Toplam(Teklif)','ROT Toplam(Gerçekleşme)','ROT Kamu(Teklif)','ROT Kamu(Gerçekleşme)','ROT Piyasa Yapıcılar(Teklif)','ROT Piyasa Yapıcılar(Gerçekleşme)','ROT Piyasa Yapıcılar Kabul Oranı (%)'],
+    'İhale': ['İhale(Teklif)','İhale(Gerçekleşme)','İhale Kabul Oranı (%)','Toplam(Teklif)','Toplam(Gerçekleşme)'],
+    'Faiz (basit)': ['Ortalama Yıllık Basit(Teklif)','Ortalama Yıllık Basit(Gerçekleşme)'],
+    'Faiz (bileşik)': ['Ortalama Yıllık Bileşik(Teklif)','Ortalama Yıllık Bileşik(Gerçekleşme)','En Düşük Yıllık Bileşik(Teklif)','En Düşük Yıllık Bileşik(Gerçekleşme)','En Yüksek Yıllık Bileşik(Teklif)','En Yüksek Yıllık Bileşik(Gerçekleşme)'],
+    'Fiyat': ['Ortalama Fiyat(Teklif)','Ortalama Fiyat(Gerçekleşme)','En Düşük Fiyat(Teklif)','En Düşük Fiyat(Gerçekleşme)','En Yüksek Fiyat(Teklif)','En Yüksek Fiyat(Gerçekleşme)'],
+    'Tarihler': ['İhale Tarihi','Valör Tarihi','İtfa Tarihi','Vade (Yıl)'],
+  }}
+/>
+
+<VeriTablosu proje="hazine-ihrac" tablo="planli"
+  baslik="Planlı ihraç takvimi ve tahminler (14 sütun)"
+  varsayilan={['İhale Tarihi','Senet Tanımı','Vade Terimi','Yöntem','Aylık Strateji Hedefi (Milyar TL)','Tahmini Gerçekleşme (Milyon TL)','Tahmini Bid-to-Cover','Kıyas İhale Sayısı']}
+  gruplar={{ 'Tahmin ayrıntısı': ['Gerçekleşme Oranı Varsayımı (%)','Tahmini Teklif (Milyon TL)','Geçmiş Ort. Gerçekleşme (Milyon TL)','Kıyas Bazı','Son İhale Tarihi','İtfa Tarihi'] }}
+  sayfa={25}
+/>
+
+<VeriTablosu proje="hazine-ihrac" tablo="hedef"
+  baslik="Aylık hedef vs gerçekleşme"
+  sayfa={20}
+/>
+
+<VeriTablosu proje="hazine-ihrac" tablo="vade"
+  baslik="Ay bazında ağırlıklı ortalama vade"
+  sayfa={20}
+/>
+
+<VeriTablosu proje="hazine-ihrac" tablo="backtest"
+  baslik="Backtest — ihale bazında tahmin vs gerçekleşen (16 sütun)"
+  varsayilan={['İhale Tarihi','Senet Tanımı','Gerçek Gerçekleşme (Milyon TL)','Tahmin-Düzeltilmiş (Milyon TL)','Tutar Sapma % (düzeltilmiş)','Gerçek Bid-to-Cover','Tahmin Bid-to-Cover']}
+  gruplar={{
+    'Üç tahmin': ['Tahmin-Ham (Milyon TL)','Tahmin-Strateji (Milyon TL)','Tahmin-Düzeltilmiş (Milyon TL)','Tutar Sapma % (ham)','Tutar Sapma % (strateji)','Tutar Sapma % (düzeltilmiş)'],
+    'Talep': ['Gerçek Bid-to-Cover','Tahmin Bid-to-Cover','B2C Sapma %','Gerçek Teklif (Milyon TL)','Tahmin Teklif (Milyon TL)','Teklif Sapma %'],
+    'Kıyas': ['Kıyas Bazı'],
+  }}
+  sayfa={25}
+/>
+
+## Sınırlar
+
+- Doğrudan satışlar tahmin dışıdır; aylık hedef karşılaştırmasında bu fark yapısaldır.
+- Ağırlıklı maliyet çizgisi TÜFE'ye endekslileri (reel kote) içermez.
+- PDF formatı değişirse ayrıştırıcı loglayarak durur; grafiklerdeki son veri tarihi
+  her zaman kontrol edilmelidir (son ihale verisi: <Deger proje="hazine-ihrac" anahtar="_tarih" ondalik={1}>18.08.2026</Deger>).

@@ -1,0 +1,220 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Arama" description="Projeler ve araştırma notları içinde tam metin arama.">
+  <header class="liste-baslik yuksel">
+    <p class="etiket kicker">04 — Bölüm</p>
+    <h1>Arama</h1>
+    <p class="alt">
+      Başlık, etiket ve metinlerde arar: <em>bootstrap</em>, <em>rezerv</em>,
+      <em>MPC</em>, <em>REDK</em>, <em>swaption</em>…
+    </p>
+  </header>
+
+  <div class="arama-kutu yuksel" style="--d: 80ms">
+    <span class="etiket buyutec">Ara</span>
+    <input
+      type="search"
+      id="arama-girdi"
+      placeholder="ör. forward swap, işlemiş faiz, devalüasyon…"
+      autocomplete="off"
+      autofocus
+    />
+  </div>
+
+  <div id="arama-durum" class="etiket durum yuksel" style="--d: 140ms">Endeks yükleniyor…</div>
+  <div id="arama-sonuc" class="sonuclar"></div>
+</Base>
+
+<script>
+  type Kayit = {
+    tur: string;
+    url: string;
+    title: string;
+    description: string;
+    tags: string[];
+    govde: string;
+  };
+
+  const girdi = document.getElementById('arama-girdi') as HTMLInputElement;
+  const durum = document.getElementById('arama-durum')!;
+  const sonucKap = document.getElementById('arama-sonuc')!;
+  let endeks: Kayit[] = [];
+
+  const kucult = (s: string) => s.toLocaleLowerCase('tr');
+  const kacis = (s: string) =>
+    s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+
+  fetch('/arama-endeksi.json')
+    .then((r) => r.json())
+    .then((veri) => {
+      endeks = veri;
+      durum.textContent = `${endeks.length} içerik endekslendi — yazmaya başlayın.`;
+      ara();
+    })
+    .catch(() => (durum.textContent = 'Endeks yüklenemedi.'));
+
+  function skorla(k: Kayit, kelimeler: string[]) {
+    let skor = 0;
+    const baslik = kucult(k.title);
+    const aciklama = kucult(k.description);
+    const etiketler = kucult(k.tags.join(' '));
+    const govde = kucult(k.govde);
+    for (const kelime of kelimeler) {
+      let eslesme = 0;
+      if (baslik.includes(kelime)) eslesme += 6;
+      if (etiketler.includes(kelime)) eslesme += 4;
+      if (aciklama.includes(kelime)) eslesme += 3;
+      const govdeSayi = govde.split(kelime).length - 1;
+      if (govdeSayi > 0) eslesme += Math.min(govdeSayi, 5);
+      if (eslesme === 0) return 0; // tüm kelimeler geçmeli
+      skor += eslesme;
+    }
+    return skor;
+  }
+
+  function parcaBul(k: Kayit, kelime: string) {
+    const g = kucult(k.govde);
+    const yer = g.indexOf(kelime);
+    if (yer < 0) return kacis(k.description);
+    const bas = Math.max(0, yer - 70);
+    const parca = k.govde.slice(bas, yer + kelime.length + 110);
+    const ham = (bas > 0 ? '…' : '') + parca + '…';
+    return kacis(ham).replace(
+      new RegExp(kelime.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+      (e) => `<mark>${e}</mark>`
+    );
+  }
+
+  function ara() {
+    const sorgu = kucult(girdi.value.trim());
+    if (sorgu.length < 2) {
+      sonucKap.innerHTML = '';
+      if (endeks.length) durum.textContent = `${endeks.length} içerik endekslendi — en az 2 harf yazın.`;
+      return;
+    }
+    const kelimeler = sorgu.split(/\s+/).filter(Boolean);
+    const bulunan = endeks
+      .map((k) => ({ k, skor: skorla(k, kelimeler) }))
+      .filter((x) => x.skor > 0)
+      .sort((a, b) => b.skor - a.skor);
+
+    durum.textContent = bulunan.length
+      ? `${bulunan.length} sonuç`
+      : 'Sonuç yok — farklı bir terim deneyin.';
+
+    sonucKap.innerHTML = bulunan
+      .map(
+        ({ k }, i) => `
+      <article class="sonuc yuksel" style="--d:${i * 40}ms">
+        <div class="ust">
+          <span class="etiket tur ${k.tur}">${k.tur === 'proje' ? 'Proje' : 'Araştırma'}</span>
+          ${k.tags.map((t: string) => `<span class="etiket tag">#${kacis(t)}</span>`).join('')}
+        </div>
+        <h3><a href="${k.url}">${kacis(k.title)}</a></h3>
+        <p>${parcaBul(k, kelimeler[0])}</p>
+      </article>`
+      )
+      .join('');
+  }
+
+  girdi.addEventListener('input', ara);
+</script>
+
+<style>
+  .liste-baslik {
+    padding: 3rem 0 1.6rem;
+    max-width: 52ch;
+  }
+  .kicker {
+    color: var(--claret);
+    margin: 0 0 0.8rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 72;
+    font-size: clamp(2.2rem, 5vw, 3rem);
+    font-weight: 540;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin: 0 0 0.9rem;
+  }
+  .alt {
+    font-size: 1.08rem;
+    color: var(--ink-70);
+    margin: 0;
+  }
+  .arama-kutu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid var(--ink);
+    background: var(--paper-2);
+    padding: 0.4rem 1.1rem;
+    max-width: 44rem;
+  }
+  .buyutec {
+    color: var(--claret);
+  }
+  #arama-girdi {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: var(--font-body);
+    font-size: 1.15rem;
+    padding: 0.55rem 0;
+    color: var(--ink);
+  }
+  #arama-girdi:focus {
+    outline: none;
+  }
+  .arama-kutu:focus-within {
+    outline: 2px solid var(--claret);
+    outline-offset: -1px;
+  }
+  .durum {
+    margin: 0.9rem 0 1.4rem;
+    color: var(--ink-50);
+  }
+  .sonuclar {
+    max-width: 44rem;
+  }
+  .sonuclar :global(.sonuc) {
+    border-top: 1px solid var(--ink-30);
+    padding: 1rem 0 1.3rem;
+  }
+  .sonuclar :global(.ust) {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.3rem;
+  }
+  .sonuclar :global(.tur) {
+    color: var(--claret);
+  }
+  .sonuclar :global(.tag) {
+    color: var(--ink-50);
+  }
+  .sonuclar :global(h3) {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 30;
+    font-size: 1.3rem;
+    font-weight: 580;
+    margin: 0 0 0.35rem;
+  }
+  .sonuclar :global(h3 a) {
+    text-decoration: none;
+  }
+  .sonuclar :global(p) {
+    margin: 0;
+    font-size: 0.96rem;
+    line-height: 1.55;
+    color: var(--ink-70);
+  }
+  .sonuclar :global(mark) {
+    background: color-mix(in srgb, var(--gold) 30%, transparent);
+    color: var(--ink);
+    padding: 0 0.1em;
+  }
+</style>

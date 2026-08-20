@@ -1,0 +1,210 @@
+---
+/**
+ * Sabit kuponlu tahvil fiyat & durasyon hesaplayıcısı.
+ * Sitedeki "okur tarayıcıda hesap yapabilsin" kalıbının ilk örneği:
+ * tamamen istemci tarafında, kütüphanesiz vanilla JS.
+ * Yeni hesaplayıcılar bu bileşen kopyalanarak türetilebilir.
+ */
+---
+
+<div class="hesap" id="tahvil-hesap">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı</span>
+    <span class="hesap-ad">Sabit Kuponlu Tahvil — Fiyat & Durasyon</span>
+  </div>
+  <div class="hesap-govde">
+    <div class="girdiler">
+      <label>
+        <span class="etiket">Kupon oranı (yıllık %)</span>
+        <input type="number" id="th-kupon" value="25" step="0.25" min="0" />
+      </label>
+      <label>
+        <span class="etiket">Piyasa faizi / getiri (%)</span>
+        <input type="number" id="th-getiri" value="30" step="0.25" min="0" />
+      </label>
+      <label>
+        <span class="etiket">Vade (yıl)</span>
+        <input type="number" id="th-vade" value="5" step="0.5" min="0.5" max="50" />
+      </label>
+      <label>
+        <span class="etiket">Kupon sıklığı</span>
+        <select id="th-siklik">
+          <option value="1">Yıllık</option>
+          <option value="2" selected>6 aylık</option>
+          <option value="4">3 aylık</option>
+        </select>
+      </label>
+    </div>
+    <div class="ciktilar">
+      <div class="cikti">
+        <span class="etiket">Fiyat (100 nominal)</span>
+        <output id="th-fiyat">—</output>
+      </div>
+      <div class="cikti">
+        <span class="etiket">Macaulay durasyon</span>
+        <output id="th-durasyon">—</output>
+      </div>
+      <div class="cikti">
+        <span class="etiket">Modifiye durasyon</span>
+        <output id="th-mod">—</output>
+      </div>
+    </div>
+  </div>
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="th-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Girdiler değişince canlı güncellenir.</span>
+  </div>
+
+  <p class="hesap-dip">
+    Fiyat = kupon akımlarının ve anaparanın bileşik iskontolu bugünkü değeri.
+    Tüm hesap tarayıcınızda çalışır; veri gönderilmez.
+  </p>
+</div>
+
+<script>
+  function hesapla() {
+    const oku = (id: string) =>
+      parseFloat((document.getElementById(id) as HTMLInputElement).value);
+    const kupon = oku('th-kupon') / 100;
+    const getiri = oku('th-getiri') / 100;
+    const vade = oku('th-vade');
+    const m = parseInt((document.getElementById('th-siklik') as HTMLSelectElement).value);
+
+    const n = Math.round(vade * m);
+    const c = (kupon / m) * 100; // dönemsel kupon tutarı
+    const r = getiri / m; // dönemsel iskonto oranı
+
+    let fiyat = 0;
+    let agirlikliZaman = 0;
+    for (let t = 1; t <= n; t++) {
+      const nakit = c + (t === n ? 100 : 0);
+      const bd = nakit / Math.pow(1 + r, t);
+      fiyat += bd;
+      agirlikliZaman += (t / m) * bd;
+    }
+    const macaulay = agirlikliZaman / fiyat;
+    const modifiye = macaulay / (1 + r);
+
+    const tr = (x: number, b = 2) =>
+      x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b });
+    (document.getElementById('th-fiyat') as HTMLOutputElement).textContent = tr(fiyat);
+    (document.getElementById('th-durasyon') as HTMLOutputElement).textContent =
+      tr(macaulay) + ' yıl';
+    (document.getElementById('th-mod') as HTMLOutputElement).textContent = tr(modifiye);
+  }
+
+  document
+    .querySelectorAll('#tahvil-hesap input, #tahvil-hesap select')
+    .forEach((el) => el.addEventListener('input', hesapla));
+  const thBtn = document.getElementById('th-hesapla')!;
+  thBtn.addEventListener('click', () => {
+    hesapla();
+    thBtn.classList.add('tamam');
+    thBtn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => {
+      thBtn.classList.remove('tamam');
+      thBtn.textContent = 'Hesapla ↻';
+    }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .hesap {
+    margin: 2.2em 0;
+    border: 1px solid var(--ink);
+    background: var(--paper-2);
+  }
+  .hesap-ust {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    padding: 0.55rem 1rem;
+    border-bottom: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .hesap-ust .etiket {
+    color: var(--gold);
+  }
+  .hesap-ad {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.95rem;
+  }
+  .hesap-govde {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    padding: 1.2rem 1rem;
+  }
+  .girdiler {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+  }
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  label .etiket {
+    color: var(--ink-50);
+    font-size: 0.6rem;
+  }
+  input,
+  select {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--ink-30);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  input:focus,
+  select:focus {
+    outline: 2px solid var(--claret);
+    outline-offset: -1px;
+  }
+  .ciktilar {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.8rem;
+    border-left: 1px solid var(--ink-30);
+    padding-left: 1.5rem;
+  }
+  .cikti .etiket {
+    color: var(--ink-50);
+    font-size: 0.6rem;
+    display: block;
+  }
+  output {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 60;
+    font-size: 1.7rem;
+    font-weight: 560;
+    color: var(--claret);
+    font-variant-numeric: tabular-nums;
+  }
+  .hesap-dip {
+    margin: 0;
+    padding: 0.6rem 1rem;
+    border-top: 1px solid var(--ink-15);
+    font-size: 0.82rem;
+    font-style: italic;
+    color: var(--ink-50);
+  }
+  @media (max-width: 640px) {
+    .hesap-govde {
+      grid-template-columns: 1fr;
+    }
+    .ciktilar {
+      border-left: none;
+      border-top: 1px solid var(--ink-30);
+      padding-left: 0;
+      padding-top: 1rem;
+    }
+  }
+</style>

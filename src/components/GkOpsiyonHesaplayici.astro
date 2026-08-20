@@ -1,0 +1,203 @@
+---
+/**
+ * Garman-Kohlhagen FX opsiyon fiyatlayıcısı — "FX Opsiyon Book Yönetimi"
+ * dersinin aracı. İki faizli Black-Scholes: yerli (r_d) ve yabancı (r_f)
+ * faiz ayrımı, forward, prim (iki para cinsinden) ve temel Greekler.
+ * Bağımsız çalışır (eğri aracına bağlı değil).
+ */
+---
+
+<div class="hesap" id="gk-hesap">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı</span>
+    <span class="hesap-ad">Garman-Kohlhagen — FX Opsiyon Fiyat & Greekler</span>
+  </div>
+
+  <div class="girdiler">
+    <label><span class="etiket">Spot S</span>
+      <input type="number" id="gk-s" value="47.00" step="0.05" /></label>
+    <label><span class="etiket">Strike K</span>
+      <input type="number" id="gk-k" value="50.00" step="0.05" /></label>
+    <label><span class="etiket">Vade (yıl)</span>
+      <input type="number" id="gk-t" value="0.25" step="0.05" min="0.01" /></label>
+    <label><span class="etiket">Vol σ (%)</span>
+      <input type="number" id="gk-vol" value="22" step="0.5" min="0.1" /></label>
+    <label><span class="etiket">Yerli faiz r_d (%)</span>
+      <input type="number" id="gk-rd" value="40" step="0.25" /></label>
+    <label><span class="etiket">Yabancı faiz r_f (%)</span>
+      <input type="number" id="gk-rf" value="4.5" step="0.25" /></label>
+    <label><span class="etiket">Yön</span>
+      <select id="gk-yon"><option value="call" selected>Call (yerli para put)</option><option value="put">Put</option></select></label>
+    <label><span class="etiket">Nominal (yabancı p.b.)</span>
+      <input type="number" id="gk-nom" value="1000000" step="100000" /></label>
+  </div>
+
+  <div class="orta">
+    <div><span class="etiket">Forward F = S·e^((r_d−r_f)T)</span><output class="ara-deger" id="gk-f">—</output></div>
+    <div><span class="etiket">d₁ / d₂</span><output class="ara-deger" id="gk-d">—</output></div>
+    <div><span class="etiket">Moneyness (K/F)</span><output class="ara-deger" id="gk-m">—</output></div>
+  </div>
+
+  <div class="fiyatlar">
+    <div class="fiyat">
+      <span class="etiket">Prim (yerli p.b., birim başına)</span>
+      <output class="sonuc-buyuk" id="gk-prim">—</output>
+    </div>
+    <div class="fiyat">
+      <span class="etiket">Prim (toplam, yerli p.b.)</span>
+      <output class="sonuc-buyuk sonuc-alt" id="gk-toplam">—</output>
+    </div>
+  </div>
+
+  <div class="tablo-kab">
+    <table>
+      <thead><tr><th>Greek</th><th>Değer</th><th>Nominal karşılığı</th><th>Okunuşu</th></tr></thead>
+      <tbody id="gk-greeks"></tbody>
+    </table>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="gk-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Girdiler değişince canlı güncellenir.</span>
+  </div>
+
+  <p class="hesap-dip">
+    Call = S·e^(−r_f T)·N(d₁) − K·e^(−r_d T)·N(d₂). Delta spot deltadır
+    (premium-adjusted değil); vega %1 vol, theta 1 takvim günü içindir.
+    TRY gibi yüksek faiz ortamında forward'ın spottan ne kadar koptuğuna dikkat:
+    moneyness spota değil forward'a göre okunur.
+  </p>
+</div>
+
+<script>
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const yaz = (id: string, m: string) =>
+    ((document.getElementById(id) as HTMLElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b });
+
+  function N(x: number): number {
+    const t = 1 / (1 + 0.2316419 * Math.abs(x));
+    const d = Math.exp((-x * x) / 2) / Math.sqrt(2 * Math.PI);
+    const p =
+      d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    return x >= 0 ? 1 - p : p;
+  }
+  const n = (x: number) => Math.exp((-x * x) / 2) / Math.sqrt(2 * Math.PI);
+
+  function hesapla() {
+    const S = oku('gk-s'), K = oku('gk-k'), T = oku('gk-t');
+    const vol = oku('gk-vol') / 100, rd = oku('gk-rd') / 100, rf = oku('gk-rf') / 100;
+    const nom = oku('gk-nom');
+    const call = (document.getElementById('gk-yon') as HTMLSelectElement).value === 'call';
+    if (!(S > 0 && K > 0 && T > 0 && vol > 0)) return;
+
+    const F = S * Math.exp((rd - rf) * T);
+    const sT = vol * Math.sqrt(T);
+    const d1 = (Math.log(S / K) + (rd - rf + (vol * vol) / 2) * T) / sT;
+    const d2 = d1 - sT;
+    const dfd = Math.exp(-rd * T), dff = Math.exp(-rf * T);
+
+    const prim = call
+      ? S * dff * N(d1) - K * dfd * N(d2)
+      : K * dfd * N(-d2) - S * dff * N(-d1);
+
+    yaz('gk-f', tr(F, 4));
+    yaz('gk-d', d1.toFixed(3) + ' / ' + d2.toFixed(3));
+    yaz('gk-m', tr(K / F, 4));
+    yaz('gk-prim', tr(prim, 4));
+    yaz('gk-toplam', tr(prim * nom, 0));
+
+    const delta = call ? dff * N(d1) : dff * (N(d1) - 1);
+    const gamma = (dff * n(d1)) / (S * sT);
+    const vega = S * dff * Math.sqrt(T) * n(d1) * 0.01;
+    const theta =
+      (-(S * dff * vol * n(d1)) / (2 * Math.sqrt(T)) +
+        (call ? rf * S * dff * N(d1) - rd * K * dfd * N(d2)
+              : rd * K * dfd * N(-d2) - rf * S * dff * N(-d1))) / 365;
+
+    const satir = (ad: string, deger: number, nomK: string, yorum: string, b = 4) =>
+      `<tr><td>${ad}</td><td>${tr(deger, b)}</td><td>${nomK}</td><td class="yorum">${yorum}</td></tr>`;
+    (document.getElementById('gk-greeks') as HTMLElement).innerHTML =
+      satir('Delta (spot)', delta, tr(delta * nom, 0) + ' yb. p.b.', 'spot hedge miktarı') +
+      satir('Gamma', gamma, tr(gamma * nom * S * 0.01, 0) + ' / %1 spot', 'deltanın değişim hızı', 6) +
+      satir('Vega (%1σ)', vega, tr(vega * nom, 0), 'vol +1 puan → prim değişimi') +
+      satir('Theta (günlük)', theta, tr(theta * nom, 0), 'bir günün maliyeti/geliri', 6);
+  }
+
+  document.querySelectorAll('#gk-hesap input, #gk-hesap select').forEach((el) =>
+    el.addEventListener('input', hesapla)
+  );
+  const gkBtn = document.getElementById('gk-hesapla')!;
+  gkBtn.addEventListener('click', () => {
+    hesapla();
+    gkBtn.classList.add('tamam');
+    gkBtn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => { gkBtn.classList.remove('tamam'); gkBtn.textContent = 'Hesapla ↻'; }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.7rem;
+    padding: 0.9rem 1rem 0.4rem;
+  }
+  .orta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    padding: 0.5rem 1rem;
+  }
+  .orta .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .fiyatlar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--ink-15);
+    border-bottom: 1px solid var(--ink-15);
+    margin-top: 0.4rem;
+  }
+  .fiyat {
+    padding: 0.7rem 1rem;
+  }
+  .fiyat + .fiyat {
+    border-left: 1px solid var(--ink-15);
+  }
+  .fiyat .etiket {
+    display: block;
+    color: var(--ink-50);
+    font-size: 0.58rem;
+  }
+  .sonuc-alt {
+    color: var(--teal);
+  }
+  .tablo-kab {
+    padding: 0.6rem 1rem;
+    overflow-x: auto;
+  }
+  .tablo-kab :global(.yorum) {
+    font-family: var(--font-body);
+    font-style: italic;
+    color: var(--ink-50);
+    text-align: left;
+    padding-left: 0.8rem;
+  }
+  @media (max-width: 640px) {
+    .girdiler {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .fiyatlar {
+      grid-template-columns: 1fr;
+    }
+    .fiyat + .fiyat {
+      border-left: none;
+      border-top: 1px solid var(--ink-15);
+    }
+  }
+</style>

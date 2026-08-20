@@ -1,0 +1,52 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import KayitKarti from '../../components/KayitKarti.astro';
+
+const projeler = (await getCollection('projeler'))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .sort((a, b) => (a.data.durum === 'arsiv' ? 1 : 0) - (b.data.durum === 'arsiv' ? 1 : 0));
+---
+
+<Base title="Projeler" description="Düzenli aralıklarla güncellenen veri projeleri ve canlı grafikler.">
+  <header class="liste-baslik yuksel">
+    <p class="etiket kicker">01 — Bölüm</p>
+    <h1>Projeler</h1>
+    <p class="alt">
+      Her proje bir Python hattına bağlıdır: veri çekilir, hesap yeniden koşulur,
+      grafik bu sayfalara işlenir. Kartlardaki ↻ işareti güncelleme sıklığını gösterir.
+    </p>
+  </header>
+  <div class="kayit-izgara">
+    {
+      projeler.map((p, i) => (
+        <KayitKarti href={`/projeler/${p.id}/`} sira={i + 1} gecikme={i * 60} {...p.data} />
+      ))
+    }
+  </div>
+</Base>
+
+<style>
+  .liste-baslik {
+    padding: 3rem 0 2.2rem;
+    max-width: 52ch;
+  }
+  .kicker {
+    color: var(--claret);
+    margin: 0 0 0.8rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 72;
+    font-size: clamp(2.2rem, 5vw, 3rem);
+    font-weight: 540;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin: 0 0 0.9rem;
+  }
+  .alt {
+    font-size: 1.08rem;
+    color: var(--ink-70);
+    margin: 0;
+  }
+</style>
