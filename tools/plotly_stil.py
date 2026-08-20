@@ -155,14 +155,25 @@ EV_STILI = """
 """
 
 
+BANNER = re.compile(r"plotly\.js v(\d+\.\d+\.\d+)")
+
+
 def cdnlestir(metin: str) -> tuple[str, bool]:
-    """Gömülü plotly.js bloğunu (>1MB script) sürümü korunmuş CDN etiketiyle değiştirir."""
+    """Gömülü plotly.js bloğunu (>1MB script) sürümü korunmuş CDN etiketiyle değiştirir.
+
+    DİKKAT — blok yalnız plotly.js BANNER'ı ("plotly.js vX.Y.Z") taşıyorsa değiştirilir.
+    Eski koşul "1 MB'tan büyük + içinde 'Plotly' geçiyor" idi; uzun günlük serilerle
+    üretilen figürlerde `Plotly.newPlot(...)` VERİ bloğu da 1 MB'ı aşabiliyor ve
+    grafiğin bütün verisi sessizce siliniyordu (dosya ~7 KB'a düşüyor, sayfa boş
+    çıkıyor). Banner koşulu bu sınıfı kapatır: gömülü kütüphane bundle'larının
+    hepsinde banner vardır, veri bloklarında yoktur."""
     en_buyuk = None
     for m in re.finditer(r"<script[^>]*>", metin):
         kapanis = metin.find("</script>", m.end())
         if kapanis < 0:
             continue
-        if kapanis - m.end() > 1_000_000 and "Plotly" in metin[m.end():m.end() + 200_000]:
+        bas = metin[m.end():m.end() + 200_000]
+        if kapanis - m.end() > 1_000_000 and BANNER.search(bas):
             en_buyuk = (m.start(), kapanis + len("</script>"))
             break
     if not en_buyuk:
@@ -170,7 +181,7 @@ def cdnlestir(metin: str) -> tuple[str, bool]:
     govde = metin[en_buyuk[0]:en_buyuk[1]]
     # plotly.js'in KENDİ sürümü banner'dadır ("plotly.js vX.Y.Z");
     # version:"..." deseni Python paket sürümünü yakalayabilir — kullanma.
-    surum_m = re.search(r"plotly\.js v(\d+\.\d+\.\d+)", govde)
+    surum_m = BANNER.search(govde)
     surum = surum_m.group(1) if surum_m else "3.3.0"
     etiket = f'<script src="https://cdn.plot.ly/plotly-{surum}.min.js" charset="utf-8"></script>'
     return metin[:en_buyuk[0]] + etiket + metin[en_buyuk[1]:], True

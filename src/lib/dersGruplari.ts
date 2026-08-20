@@ -71,11 +71,22 @@ export const GRUPLAR: DersGrubu[] = [
     slugSirasi: ['bloomberg-hra-korelasyon'],
     etiketler: ['korelasyon', 'regresyon', 'rv', 'bloomberg'],
   },
+  {
+    id: 'makro-tarih',
+    no: '05',
+    baslik: 'Makro & piyasa tarihi',
+    aciklama:
+      'Türkiye piyasalarının otuz yedi yılı, epizot epizot: kırılganlığın nerede ' +
+      'biriktiği, şokun hangi sırayla dolaştığı ve politikanın hangi kolu çektiği — ' +
+      'gerçek veriyle. Kural cümleleri göreli dille, epizot ölçümleri çıpalı tarihle.',
+    slugSirasi: ['turkiye-piyasa-tarihi'],
+    etiketler: ['makro', 'kriz', 'tcmb', 'tarih', 'türkiye', 'rezerv', 'enflasyon'],
+  },
 ];
 
 export const DIGER_GRUP: DersGrubu = {
   id: 'diger',
-  no: '05',
+  no: '06',
   baslik: 'Diğer notlar',
   aciklama: 'Henüz bir hatta bağlanmamış tekil araştırma notları.',
 };

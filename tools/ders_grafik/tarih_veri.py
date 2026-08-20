@@ -123,12 +123,18 @@ TARIF = {
                     "TP.BISPOLFAIZ.RUS", "TP.BISPOLFAIZ.MEX", "TP.BISPOLFAIZ.ZAF",
                     "TP.BISPOLFAIZ.IND", "TP.BISPOLFAIZ.IDN"], "1990-01-01", BUGUN, 40),
     "mevfaiz":    (["TP.MT210AGS.TRY.MT02", "TP.MT210AGS.TRY.MT06"], "2000-06-01", BUGUN, 30),
+    # akım (yeni açılan mevduata uygulanan) ağırlıklı ortalama faiz — haftalık.
+    # Ders metnindeki mevduat faizi okumaları bu serinin AY ORTALAMASIDIR.
+    "mevfaiz_akim": (["TP.TRY.MT02", "TP.TRY.MT06"], "2000-06-01", BUGUN, 12),
     "mevduat":    (["TP.KM.F01", "TP.KM.F04", "TP.KM.F07", "TP.KM.F13",
                     "TP.KM.F19", "TP.KM.F22"], "1986-01-01", BUGUN, 40),
     "kkm":        (["TP.KKM.K1", "TP.KKM.K2", "TP.KKM.K3", "TP.KKM.K4"], "2021-12-01", BUGUN, 10),
     "krediler":   (["TP.KREDI.L001"], "2007-10-01", BUGUN, 20),
     "beklenti":   (["TP.ENFBEK.PKA12ENF", "TP.BEK.S01.D.M"], "2013-01-01", BUGUN, 15),
     # haftalık
+    # Stand-By Cari 2A Net Uluslararası Rezervler (bin TL) — Bölüm 4'ün rezerv
+    # ölçümleri bu seriden, aynı tarihli USD alış kuruyla çevrilerek üretilir.
+    "sb_nir":     (["TP.AB.N06"], "2010-01-01", BUGUN, 5),
     "yabanci_eski": (["TP.PYUK1", "TP.PYUK2", "TP.PYUK3", "TP.PYUK4"], "2005-01-01", "2021-08-06", 8),
 }
 

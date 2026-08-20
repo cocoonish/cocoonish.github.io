@@ -127,6 +127,26 @@ def mevduat_faizi() -> pd.Series:
     return S("mevfaiz")["MT210AGS.TRY.MT02"].dropna()
 
 
+def mevduat_faizi_akim() -> pd.Series:
+    """3 aya kadar vadeli TL mevduat faizi — AKIM (yeni açılan mevduat), aylık (%).
+
+    EVDS TP.TRY.MT02 haftalıktır; ders metnindeki okumalar bu serinin ay ortalamasıdır.
+    Stok serisi (TP.MT210AGS.TRY.MT02) mevcut tüm mevduat bakiyesinin ortalama
+    maliyetini verir ve dönüş noktalarında akımın gerisinde kalır — bu yüzden
+    epizot grafiklerinde akım serisi kullanılır (metinle aynı seri)."""
+    s = S("mevfaiz_akim")["TRY.MT02"].dropna()
+    return s.resample("MS").mean().dropna()
+
+
+def reel_fisher(i: pd.Series, pi: pd.Series) -> pd.Series:
+    """Fisher reel faizi (%): r = ((1+i)/(1+pi) - 1) * 100.
+
+    Ders boyunca TEK reel faiz tanımı budur; basit çıkarma (i - pi) yalnız
+    kendini açıkça öyle beyan eden yerlerde kullanılır."""
+    ort = i.dropna().index.intersection(pi.dropna().index)
+    return (((1 + i.loc[ort] / 100) / (1 + pi.loc[ort] / 100) - 1) * 100).dropna()
+
+
 def dth_payi() -> pd.Series:
     """Döviz tevdiat hesaplarının toplam mevduat içindeki payı (%), aylık."""
     d = S("mevduat")
@@ -1209,7 +1229,7 @@ def g18():
     k = kes(kur(), bas, bit)
     t = kes(tufe_yoy(), "2021-01-01", "2022-06-30")
     p = kes(politika(), "2021-01-01", "2022-06-30")
-    reel = (p.reindex(t.index).ffill() - t).dropna()
+    reel = reel_fisher(p.reindex(t.index).ffill(), t)
     tl = kes(S("tlref")["BISTTLREF.ORAN"].dropna(), "2021-11-01", "2022-01-31")
     a = kes(aofm(), "2021-11-01", "2022-01-31")
     ort = tl.index.intersection(a.index)
@@ -1222,7 +1242,7 @@ def g18():
     fig = make_subplots(rows=4, cols=1, shared_xaxes=False, vertical_spacing=0.075,
                         subplot_titles=(
                             "USD/TRY — TCMB gösterge kuru; dikey çizgiler faiz indirimi kararları",
-                            "Politika faizi (basamak), TÜFE yıllık ve reel politika faizi (dolgu) — aylık",
+                            "Politika faizi (basamak), TÜFE yıllık ve reel politika faizi (dolgu, Fisher) — aylık",
                             "TLREF − AOFM farkı (baz puan) — gecelik piyasa faizinin fonlama maliyetinden sapması",
                             "Haftalık rezerv: brüt, net ve swap hariç net (mlr USD)"))
     cizgi(fig, k, "USD/TRY", TEAL, row=1, w=2.2)
@@ -1280,16 +1300,16 @@ def g19():
     kk = S("kkm")
     dd = kk["KKM.K1"].dropna()
     tlk = kk["KKM.K4"].dropna()
-    mev = mevduat_faizi()
+    mev = mevduat_faizi_akim()
     t = tufe_yoy()
-    reel_mev = (mev - t.reindex(mev.index)).dropna().loc["2021-12-01":]
+    reel_mev = reel_fisher(mev, t.reindex(mev.index)).loc["2021-12-01":]
 
     fig = make_subplots(rows=3, cols=1, shared_xaxes=False, vertical_spacing=0.085,
                         specs=[[{"secondary_y": False}], [{"secondary_y": True}], [{"secondary_y": False}]],
                         subplot_titles=(
                             "USD/TRY — TCMB gösterge kuru, ilan penceresi",
                             "KKM stoku: dövizden dönüşümlü (mlr USD, sütun) ve TL kaynaklı (mlr TL, çizgi, sağ eksen)",
-                            "Reel 3 aylık TL mevduat faizi (%, mevduat faizi − TÜFE yıllık) — ürünün ömrünü belirleyen değişken"))
+                            "Reel 3 aylık TL mevduat faizi (%, Fisher: (1+i)/(1+π)−1; akım seri) — ürünün ömrünü belirleyen değişken"))
     cizgi(fig, k, "USD/TRY", TEAL, row=1, w=2.4)
     sutun(fig, dd, "DDKKM (mlr USD)", TEAL, row=2, birim=" mlr $")
     fig.add_trace(go.Scatter(x=tlk.index, y=tlk.values, name="TL KKM (mlr TL)", mode="lines",
@@ -1327,7 +1347,7 @@ def g19():
     fig.update_xaxes(title_text="tarih", row=3)
     duzen(fig, "KKM'nin hayat döngüsü: bir gecede kuru düşüren ürün, pozitif reel faiz dönünce eridi",
           "panel 1: 01.12.2021–28.02.2022 · panel 2–3: 12.2021–06.2026", 1150,
-          alt="EVDS TP.KKM.K1/K4 · TP.MT210AGS.TRY.MT02 · TÜFE · TP.DK.USD.A.YTL")
+          alt="EVDS TP.KKM.K1/K4 · TP.TRY.MT02 (akım, ay ortalaması) · TÜFE · TP.DK.USD.A.YTL")
     kaydet(fig, "19_kkm_hayat_dongusu", "KKM'nin hayat döngüsü", "2021-12 → 2026-06")
 
 
@@ -1337,9 +1357,9 @@ def g19():
 def g20():
     t = kes(tufe_yoy(), "2021-01-01", "2026-07-31")
     p = kes(politika(), "2021-01-01", "2026-07-31")
-    mev = kes(mevduat_faizi(), "2021-01-01", "2026-07-31")
-    reel_p = (p.reindex(t.index).ffill() - t).dropna()
-    reel_m = (mev - t.reindex(mev.index)).dropna()
+    mev = kes(mevduat_faizi_akim(), "2021-01-01", "2026-07-31")
+    reel_p = reel_fisher(p.reindex(t.index).ffill(), t)
+    reel_m = reel_fisher(mev, t.reindex(mev.index))
     xu = Y("XU100.IS")
     ya = yabanci_akim()
     dort = kes(ya[["hisse", "dibs"]].rolling(4).sum().dropna(), "2021-01-01", "2026-08-14")
@@ -1347,7 +1367,7 @@ def g20():
     fig = make_subplots(rows=4, cols=1, shared_xaxes=False, vertical_spacing=0.07,
                         subplot_titles=(
                             "TÜFE yıllık (%) ve politika faizi (%, basamak) — aylık",
-                            "Reel politika faizi ve reel 3 aylık mevduat faizi (%) — negatif alan taralı",
+                            "Reel politika faizi ve reel 3 aylık mevduat faizi (%, Fisher: (1+i)/(1+π)−1) — negatif alan taralı",
                             "BIST-100, TL ve dolar bazında, 31.12.2021 = 100 (günlük)",
                             "Yurt dışı yerleşiklerin net akımı, 4 haftalık toplam (mn USD): hisse ve DİBS"))
     cizgi(fig, t, "TÜFE yıllık (%)", ALTIN, row=1, w=2.0)
@@ -1388,7 +1408,7 @@ def g20():
     fig.update_xaxes(title_text="tarih", row=4)
     duzen(fig, "2022 labirenti: enflasyon zirvesi, negatif reel faiz ve yabancı tabanının çekilmesi",
           "01.2021 – 08.2026", 1400,
-          alt="EVDS TÜFE · TP.BISPOLFAIZ.TUR · TP.MT210AGS.TRY.MT02 · yfinance XU100.IS · TP.PYUK3/PYUK4 ve ForeignHoldings hattı")
+          alt="EVDS TÜFE · TP.BISPOLFAIZ.TUR · TP.TRY.MT02 (akım, ay ortalaması) · yfinance XU100.IS · TP.PYUK3/PYUK4 ve ForeignHoldings hattı")
     kaydet(fig, "20_2022_labirenti", "2022 labirenti: enflasyon, reel faiz, yabancı akımı",
            "2021-01 → 2026-08")
 
@@ -1668,7 +1688,7 @@ def g25():
     g = gecelik().resample("MS").mean()
     t = tufe_yoy()
     ort = g.index.intersection(t.index)
-    reel = (g.loc[ort] - t.loc[ort]).dropna()
+    reel = reel_fisher(g.loc[ort], t.loc[ort])
     reel = reel.loc["1989-01-01":]
     k = kur().resample("MS").last()
     ileri = (100 * (k.shift(-12) / k - 1)).dropna()
@@ -1678,7 +1698,7 @@ def g25():
 
     fig = make_subplots(rows=2, cols=1, shared_xaxes=False, vertical_spacing=0.11,
                         subplot_titles=(
-                            "Ex-post reel gecelik faiz (%): aylık ortalama gecelik faiz − TÜFE yıllık; negatif bölge taralı",
+                            "Ex-post reel gecelik faiz (%, Fisher: (1+i)/(1+π)−1; i = aylık ortalama gecelik faiz, π = TÜFE yıllık) — negatif bölge taralı",
                             "Örüntü: reel gecelik faiz (yatay) ile sonraki 12 aydaki USD/TRY değişimi (dikey) — her nokta bir ay"))
     fig.add_trace(go.Scatter(x=reel.index, y=reel.values, name="reel gecelik faiz (%)",
                              mode="lines", line=dict(color=BORDO, width=1.8),
