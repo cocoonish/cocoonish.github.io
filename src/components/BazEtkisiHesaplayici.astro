@@ -1,0 +1,603 @@
+---
+/**
+ * Baz etkisi hesaplayıcısı — yıllık enflasyonun mekaniği.
+ *
+ * Kimlik:  1+π⁽¹²⁾_{t+h} = (1+π⁽¹²⁾_t) · Π(1+π_{t+s}) / Π(1+π_{t+s−12})
+ * Paydadaki çarpım TAMAMEN BİLİNİR (düşen aylar); araç yalnız payı — önümüzdeki
+ * 12 ayın aylık patikasını — kullanıcıdan alır. Çıktı: yıllık enflasyon patikası
+ * ve değişimin "gelen aylar" / "düşen aylar (baz)" ayrıştırması.
+ *
+ * Veri: /projeler/<proje>/ozet.json  → `tufe_12a_tam` (4 ondalıklı başlangıç yıllık;
+ * yoksa `tufe_12a`),
+ * `baz_dusen` (12 ay × düşen aylık oran, ozet_uret.py yazar), `donem`,
+ * `baz_momentum_aylik`, `baz_son12_aylik`. Sabit sayı gömülmez: veri
+ * tazelendiğinde araç da tazelenir. JSON yüklenemezse araç sayı UYDURMAZ,
+ * görünür biçimde devre dışı kalır.
+ *
+ * Saf istemci tarafı, kütüphanesiz vanilla JS (TahvilHesaplayici kalıbı).
+ */
+interface Props {
+  proje?: string;
+  /** hedefle uyumlu tempo düğmesi için yıllık hedef (%) */
+  hedef?: number;
+}
+const { proje = 'enflasyon', hedef = 5 } = Astro.props;
+---
+
+<div class="hesap baz-hesap" id="baz-hesap" data-proje={proje} data-hedef={hedef}>
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı</span>
+    <span class="hesap-ad">Baz Etkisi — yıllık enflasyon nereye gider?</span>
+    <span class="etiket bh-kaynak" id="bh-kaynak">…</span>
+  </div>
+
+  <div class="bh-uyari" id="bh-uyari" hidden></div>
+
+  <div class="bh-govde">
+    <div class="bh-sol">
+      <div class="bh-satir">
+        <label class="bh-tek">
+          <span class="etiket">Tek oran — 12 ayın tamamına aylık %</span>
+          <input type="number" id="bh-tek" value="2.00" step="0.05" min="-5" max="20" />
+        </label>
+        <button type="button" class="bh-btn" id="bh-uygula">Tümüne uygula →</button>
+      </div>
+
+      <div class="bh-satir bh-hazir">
+        <span class="etiket">Hazır patikalar</span>
+        <button type="button" class="bh-btn" data-hazir="momentum">Momentum (son 3 ay MA)</button>
+        <button type="button" class="bh-btn" data-hazir="son12">Son 12 ay ort.</button>
+        <button type="button" class="bh-btn" data-hazir="tekrar">Geçen yıl tekrar</button>
+        <button type="button" class="bh-btn" data-hazir="hedef">Hedefle uyumlu</button>
+      </div>
+
+      <div class="bh-aylar" id="bh-aylar"></div>
+    </div>
+
+    <div class="bh-sag">
+      <div class="cikti">
+        <span class="etiket" id="bh-yilsonu-et">Yıl sonu</span>
+        <output id="bh-yilsonu">—</output>
+      </div>
+      <div class="cikti">
+        <span class="etiket" id="bh-son-et">12 ay sonra</span>
+        <output id="bh-son">—</output>
+      </div>
+      <div class="cikti kucuk">
+        <span class="etiket">12 ayda değişim = gelen aylar + baz</span>
+        <output id="bh-ayristirma" class="kucuk-cikti">—</output>
+        <p class="bh-girdi-not" id="bh-girdi-not" hidden></p>
+      </div>
+      <svg id="bh-grafik" viewBox="0 0 320 130" role="img"
+           aria-label="Yıllık enflasyon patikası"></svg>
+    </div>
+  </div>
+
+  <div class="bh-tablo-kap">
+    <table class="bh-tablo">
+      <thead>
+        <tr>
+          <th>Ay</th>
+          <th>Gelen aylık %</th>
+          <th>Düşen aylık %</th>
+          <th>Yıllık %</th>
+          <th>Δ (puan)</th>
+          <th>gelen katkı</th>
+          <th>baz katkı</th>
+        </tr>
+      </thead>
+      <tbody id="bh-govde-satir"></tbody>
+    </table>
+  </div>
+
+  <p class="hesap-dip">
+    Baz etkisi bir öngörü değil, bir <em>muhasebe kimliğidir</em>: düşen ayların
+    (payda) katkısı bugünkü fiyatlama davranışından bağımsızdır ve tamamen
+    bilinir. "Geçen yıl tekrar" patikası seçildiğinde yıllık oran on iki ay boyunca
+    sabit kalmalıdır — aracın kendini doğrulaması budur. Aylık girdiler iki ondalıkla
+    tutulduğu için sonuç, hattın kendi senaryo hesabından yüzde birlik puan
+    mertebesinde ayrışabilir. Hesap tarayıcınızda çalışır, veri gönderilmez.
+  </p>
+</div>
+
+<script>
+  const kap = document.getElementById('baz-hesap');
+  if (kap) {
+    type Dusen = { kod: string; ay: string; oran: number };
+    const proje = (kap as HTMLElement).dataset.proje!;
+    const hedefYillik = parseFloat((kap as HTMLElement).dataset.hedef || '5');
+
+    const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+    // −0,00 basmamak için ÖNCE gösterilecek hassasiyete yuvarla, sonra biçimle.
+    // (|| 0 eksi sıfırı sıfıra çevirir.) Kaynağı hesap hatası değil yuvarlamadır:
+    // tufe_12a 2 ondalık tutulurken baz_dusen.oran 4 ondalıktır; aradaki artık
+    // "geçen yıl tekrar" patikasında −0,0031 puan olarak kalıyordu.
+    const tr = (x: number, b = 2) => {
+      const y = Math.round(x * 10 ** b) / 10 ** b || 0;
+      return y
+        .toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b })
+        .replace('-', '−');
+    };
+    const trIsaretli = (x: number, b = 2) => {
+      const y = Math.round(x * 10 ** b) / 10 ** b || 0;
+      return (y > 0 ? '+' : '') + tr(y, b);
+    };
+
+    let baslangic = 0; // π⁽¹²⁾_t, yüzde
+    let dusen: Dusen[] = [];
+    let hazirlar: Record<string, number | null> = {};
+
+    const uyariGoster = (m: string) => {
+      const u = el<HTMLElement>('bh-uyari');
+      u.textContent = m;
+      u.hidden = false;
+      kap.classList.add('bozuk');
+    };
+
+    const kur = async () => {
+      let oz: any;
+      try {
+        const r = await fetch(`/projeler/${proje}/ozet.json`, { cache: 'no-cache' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        oz = await r.json();
+      } catch (e) {
+        uyariGoster(
+          'Veri dosyası (ozet.json) yüklenemedi; araç devre dışı. ' +
+            'Sayı uydurmak yerine boş bırakıldı — sayfayı yenilemeyi deneyin.'
+        );
+        return;
+      }
+      if (typeof oz.tufe_12a !== 'number' || !Array.isArray(oz.baz_dusen) || !oz.baz_dusen.length) {
+        uyariGoster(
+          'ozet.json içinde `tufe_12a` / `baz_dusen` alanları yok; hattın ozet_uret.py adımı ' +
+            'güncellenmemiş olabilir. Araç devre dışı.'
+        );
+        return;
+      }
+      // 4 ondalıklı değer varsa O kullanılır: baz_dusen.oran da 4 ondalıklıdır ve
+      // 2 ondalıklı başlangıçla kıyaslanınca "geçen yıl tekrar" patikasında
+      // −0,003 puanlık bir artık kalıyordu.
+      baslangic = typeof oz.tufe_12a_tam === 'number' ? oz.tufe_12a_tam : oz.tufe_12a;
+      dusen = oz.baz_dusen as Dusen[];
+      hazirlar = {
+        momentum: typeof oz.baz_momentum_aylik === 'number' ? oz.baz_momentum_aylik : null,
+        son12: typeof oz.baz_son12_aylik === 'number' ? oz.baz_son12_aylik : null,
+        hedef: (Math.pow(1 + hedefYillik / 100, 1 / 12) - 1) * 100,
+      };
+      el<HTMLElement>('bh-kaynak').textContent =
+        `başlangıç: ${oz.donem ?? oz._tarih ?? ''} · yıllık %${tr(baslangic)}`;
+
+      // ay ay girdi kutuları
+      const kutular = dusen
+        .map(
+          (d, i) => `<label class="bh-ay">
+             <span class="etiket">${d.ay}</span>
+             <input type="number" class="bh-giren" data-i="${i}" step="0.05"
+                    min="-10" max="30" value="2.00" />
+           </label>`
+        )
+        .join('');
+      el<HTMLElement>('bh-aylar').innerHTML = kutular;
+      el<HTMLElement>('bh-son-et').textContent = `${dusen[dusen.length - 1].ay} (12 ay sonra)`;
+      const ara = dusen.find((d) => d.kod.startsWith('12.'));
+      el<HTMLElement>('bh-yilsonu-et').textContent = ara ? `${ara.ay} — yıl sonu` : 'Yıl sonu';
+
+      document
+        .querySelectorAll('#bh-aylar input, #bh-tek')
+        .forEach((i) => i.addEventListener('input', hesapla));
+      uygula(parseFloat(el<HTMLInputElement>('bh-tek').value));
+    };
+
+    // Boş kutu sessizce %0 sayılırsa bu GÖRÜNMEZ BİR VARSAYIM olur; aracın
+    // "sayı uydurmaz" disiplini buna izin vermiyor. Boş ya da aralık dışı girdi
+    // kutuda işaretlenir ve altta kaç kutunun etkilendiği yazılır.
+    let girdiNotu = '';
+    const girenler = () => {
+      const kutular = [...document.querySelectorAll<HTMLInputElement>('.bh-giren')];
+      let bos = 0,
+        disi = 0;
+      const v = kutular.map((i) => {
+        const ham = parseFloat(i.value);
+        const gecersiz = !Number.isFinite(ham);
+        const alt = parseFloat(i.min),
+          ust = parseFloat(i.max);
+        const tasti =
+          !gecersiz &&
+          ((Number.isFinite(alt) && ham < alt) || (Number.isFinite(ust) && ham > ust));
+        i.classList.toggle('gecersiz', gecersiz || tasti);
+        if (gecersiz) bos++;
+        else if (tasti) disi++;
+        return gecersiz ? 0 : ham;
+      });
+      const p: string[] = [];
+      if (bos) p.push(`${bos} boş kutu %0 sayıldı`);
+      if (disi) p.push(`${disi} kutu önerilen aralığın dışında`);
+      girdiNotu = p.join(' · ');
+      return v;
+    };
+
+    const uygula = (v: number | number[]) => {
+      document.querySelectorAll<HTMLInputElement>('.bh-giren').forEach((i, k) => {
+        const x = Array.isArray(v) ? v[k] : v;
+        i.value = (Math.round(x * 100) / 100).toFixed(2);
+      });
+      hesapla();
+    };
+
+    const cizgi = (y: number[]) => {
+      const g = el<SVGSVGElement>('bh-grafik');
+      const hepsi = y.concat([baslangic]);
+      const alt = Math.min(...hepsi),
+        ust = Math.max(...hepsi);
+      const pay = Math.max(ust - alt, 1);
+      const x = (i: number) => 24 + (i * (320 - 34)) / y.length;
+      const py = (v: number) => 114 - ((v - alt + pay * 0.12) / (pay * 1.24)) * 100;
+      const nokta = y.map((v, i) => `${x(i + 1).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
+      g.innerHTML =
+        `<line x1="20" y1="${py(baslangic).toFixed(1)}" x2="312" y2="${py(baslangic).toFixed(1)}"
+               stroke="currentColor" stroke-dasharray="3 3" opacity=".35"/>` +
+        `<text x="20" y="${(py(baslangic) - 4).toFixed(1)}" font-size="8" opacity=".55">bugün ${tr(baslangic, 1)}</text>` +
+        `<polyline points="${x(0).toFixed(1)},${py(baslangic).toFixed(1)} ${nokta}"
+               fill="none" stroke="var(--claret)" stroke-width="1.8"/>` +
+        y
+          .map((v, i) => `<circle cx="${x(i + 1).toFixed(1)}" cy="${py(v).toFixed(1)}" r="1.9" fill="var(--claret)"/>`)
+          .join('') +
+        `<text x="312" y="${(py(y[y.length - 1]) - 5).toFixed(1)}" text-anchor="end"
+               font-size="9" fill="var(--claret)">${tr(y[y.length - 1], 1)}</text>`;
+    };
+
+    function hesapla() {
+      if (!dusen.length) return;
+      const giren = girenler();
+      const b = baslangic / 100;
+      let pay = 1,
+        payda = 1;
+      const satirlar: string[] = [];
+      const yol: number[] = [];
+      let sonYillik = baslangic,
+        sonGelen = 0,
+        sonBaz = 0,
+        yilSonu: number | null = null;
+
+      dusen.forEach((d, h) => {
+        pay *= 1 + giren[h] / 100;
+        payda *= 1 + d.oran / 100;
+        const yillik = ((1 + b) * (pay / payda) - 1) * 100;
+        // Kalıntısız ayrıştırma: Δ = (1+b)(pay−1)/payda − (1+b)(payda−1)/payda
+        const gelenKatki = ((1 + b) * (pay - 1)) / payda * 100;
+        const bazKatki = (-((1 + b) * (payda - 1)) / payda) * 100;
+        const delta = yillik - baslangic;
+        yol.push(yillik);
+        if (d.kod.startsWith('12.') && yilSonu === null) yilSonu = yillik;
+        sonYillik = yillik;
+        sonGelen = gelenKatki;
+        sonBaz = bazKatki;
+        satirlar.push(
+          `<tr${d.kod.startsWith('12.') ? ' class="vurgu"' : ''}>
+             <td>${d.ay}</td>
+             <td class="sayi">${tr(giren[h])}</td>
+             <td class="sayi soluk">${tr(d.oran)}</td>
+             <td class="sayi kalin">${tr(yillik)}</td>
+             <td class="sayi">${trIsaretli(delta, 1)}</td>
+             <td class="sayi soluk">${trIsaretli(gelenKatki, 1)}</td>
+             <td class="sayi soluk">${trIsaretli(bazKatki, 1)}</td>
+           </tr>`
+        );
+      });
+
+      el<HTMLElement>('bh-govde-satir').innerHTML = satirlar.join('');
+      el<HTMLOutputElement>('bh-yilsonu').textContent =
+        yilSonu === null ? '—' : '%' + tr(yilSonu);
+      el<HTMLOutputElement>('bh-son').textContent = '%' + tr(sonYillik);
+      el<HTMLOutputElement>('bh-ayristirma').textContent =
+        `${trIsaretli(sonYillik - baslangic, 1)} puan = ${trIsaretli(sonGelen, 1)} gelen ${trIsaretli(sonBaz, 1)} baz`;
+      const gn = el<HTMLElement>('bh-girdi-not');
+      gn.textContent = girdiNotu;
+      gn.hidden = !girdiNotu;
+      cizgi(yol);
+    }
+
+    el<HTMLButtonElement>('bh-uygula').addEventListener('click', () => {
+      const g = el<HTMLInputElement>('bh-tek');
+      const x = parseFloat(g.value);
+      // HTML number girdisinde min/max KISITLAYICI DEĞİLDİR (elle 999 yazılabilir);
+      // JS tarafında sınırlanır ve sınırlandığı kutuya yazılır.
+      const alt = parseFloat(g.min),
+        ust = parseFloat(g.max);
+      const y = Number.isFinite(x) ? Math.min(Math.max(x, alt), ust) : 0;
+      if (y !== x) g.value = y.toFixed(2);
+      uygula(y);
+    });
+    document.querySelectorAll<HTMLButtonElement>('[data-hazir]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const ad = b.dataset.hazir!;
+        if (ad === 'tekrar') {
+          uygula(dusen.map((d) => d.oran));
+          return;
+        }
+        const v = hazirlar[ad];
+        if (v === null || v === undefined) return;
+        el<HTMLInputElement>('bh-tek').value = v.toFixed(2);
+        uygula(v);
+      })
+    );
+
+    kur();
+  }
+</script>
+
+<style>
+  .hesap {
+    margin: 2.2em 0;
+    border: 1px solid var(--ink);
+    background: var(--paper-2);
+  }
+  .hesap-ust {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    padding: 0.55rem 1rem;
+    border-bottom: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .hesap-ust .etiket {
+    color: var(--gold);
+  }
+  .hesap-ad {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.95rem;
+  }
+  .bh-kaynak {
+    margin-left: auto;
+    color: var(--paper) !important;
+    opacity: 0.6;
+    white-space: nowrap;
+  }
+  .bh-uyari {
+    padding: 0.7rem 1rem;
+    background: color-mix(in srgb, var(--claret) 10%, var(--paper));
+    border-bottom: 1px solid var(--ink-30);
+    font-size: 0.85rem;
+    color: var(--claret);
+  }
+  /* Başlık şeridi dar ekranda SAYFAYI kaydırıyordu: kaynak etiketi 309 px ve
+     .etiket global olarak white-space:nowrap. Sarmalamaya izin ver. */
+  .baz-hesap .hesap-ust {
+    flex-wrap: wrap;
+  }
+  .baz-hesap .bh-kaynak {
+    white-space: normal;
+    min-width: 0;
+  }
+  /* Boş ya da aralık dışı girdi GÖRÜNÜR olur — sessizce %0 sayılmaz. */
+  .bh-giren.gecersiz {
+    border-color: var(--claret);
+    box-shadow: inset 0 0 0 1px var(--claret);
+  }
+  .bh-girdi-not {
+    margin: 0.35rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    color: var(--claret);
+  }
+  .bozuk .bh-govde,
+  .bozuk .bh-tablo-kap {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .bh-govde {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 1.4rem;
+    padding: 1.1rem 1rem;
+  }
+  .bh-satir {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 0.9rem;
+  }
+  .bh-hazir {
+    align-items: baseline;
+  }
+  .bh-hazir .etiket {
+    color: var(--ink-50);
+    font-size: 0.6rem;
+    width: 100%;
+    margin-bottom: -0.3rem;
+  }
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  label .etiket {
+    color: var(--ink-50);
+    font-size: 0.6rem;
+  }
+  input {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--ink-30);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
+    width: 100%;
+  }
+  .bh-tek {
+    max-width: 15rem;
+    flex: 1 1 10rem;
+  }
+  input:focus {
+    outline: 2px solid var(--claret);
+    outline-offset: -1px;
+  }
+  /* Okçuklar dar kutularda sayının üstüne biniyordu; girdi zaten step'li. */
+  input[type='number'] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .bh-btn {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    padding: 0.42rem 0.6rem;
+    border: 1px solid var(--ink-30);
+    background: var(--paper);
+    color: var(--ink-70);
+    cursor: pointer;
+  }
+  .bh-btn:hover {
+    border-color: var(--claret);
+    color: var(--claret);
+  }
+  .bh-aylar {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.45rem;
+  }
+  /* Ay kutuları ve tablo satırları JS ile (innerHTML) üretiliyor; Astro'nun
+     kapsam (scope) niteliği yalnız derleme anında var olan düğümlere basılır,
+     bu yüzden dinamik düğümlerin kuralları :global() ile yazılmak zorunda. */
+  :global(#bh-aylar .bh-ay) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  :global(#bh-aylar .bh-ay .etiket) {
+    font-size: 0.55rem;
+    color: var(--ink-50);
+  }
+  :global(#bh-aylar input) {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    padding: 0.3rem 0.3rem;
+    text-align: right;
+    width: 100%;
+    border: 1px solid var(--ink-30);
+    border-radius: 2px;
+    background: var(--paper);
+    color: var(--ink);
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+  :global(#bh-aylar input:focus) {
+    outline: 2px solid var(--claret);
+    outline-offset: -1px;
+  }
+  :global(#bh-aylar input::-webkit-outer-spin-button),
+  :global(#bh-aylar input::-webkit-inner-spin-button) {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .bh-sag {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    border-left: 1px solid var(--ink-30);
+    padding-left: 1.4rem;
+  }
+  .cikti .etiket {
+    color: var(--ink-50);
+    font-size: 0.6rem;
+    display: block;
+  }
+  output {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 60;
+    font-size: 1.7rem;
+    font-weight: 560;
+    color: var(--claret);
+    font-variant-numeric: tabular-nums;
+  }
+  output.kucuk-cikti {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--ink-70);
+  }
+  #bh-grafik {
+    width: 100%;
+    height: auto;
+    color: var(--ink);
+    margin-top: auto;
+  }
+  .bh-tablo-kap {
+    overflow-x: auto;
+    border-top: 1px solid var(--ink-15);
+  }
+  .bh-tablo {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+  }
+  .bh-tablo th {
+    text-align: right;
+    font-weight: 400;
+    color: var(--ink-50);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.45rem 0.7rem;
+    border-bottom: 1px solid var(--ink-30);
+    white-space: nowrap;
+  }
+  .bh-tablo th:first-child,
+  .bh-tablo td:first-child {
+    text-align: left;
+  }
+  :global(#bh-govde-satir td) {
+    padding: 0.3rem 0.7rem;
+    border-bottom: 1px solid var(--ink-15);
+    text-align: left;
+  }
+  :global(#bh-govde-satir td.sayi) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  :global(#bh-govde-satir td.kalin) {
+    font-weight: 600;
+    color: var(--claret);
+  }
+  :global(#bh-govde-satir td.soluk) {
+    color: var(--ink-50);
+  }
+  :global(#bh-govde-satir tr.vurgu td) {
+    background: color-mix(in srgb, var(--gold) 22%, transparent);
+  }
+  .hesap-dip {
+    margin: 0;
+    padding: 0.6rem 1rem;
+    border-top: 1px solid var(--ink-15);
+    font-size: 0.82rem;
+    font-style: italic;
+    color: var(--ink-50);
+  }
+  @media (max-width: 720px) {
+    .bh-govde {
+      grid-template-columns: 1fr;
+    }
+    .bh-sag {
+      border-left: none;
+      border-top: 1px solid var(--ink-30);
+      padding-left: 0;
+      padding-top: 1rem;
+    }
+    .bh-aylar {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+</style>

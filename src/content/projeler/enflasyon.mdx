@@ -1,0 +1,1018 @@
+---
+title: 'Enflasyon Panosu'
+description: 'Merkezinde manşet değil momentum olan bir enflasyon panosu: mevsimsellikten arındırılmış aylık değişimin 3 ve 6 aylık yıllıklandırılmışı (SAAR), çekirdek, kırpılmış ortalama, difüzyon, katkı ayrıştırması, hizmet ataleti, beklenti isabeti, reel faiz ve interaktif baz etkisi hesabı.'
+pubDate: 2026-08-20
+updatedDate: 2026-08-20
+tags: ['enflasyon', 'tüfe', 'momentum', 'saar', 'tcmb', 'çekirdek']
+durum: 'aktif'
+kaynak: 'TCMB EVDS3 — TÜİK TÜFE (2025=100) ve ÖKTG ağacı, Yİ-ÜFE, Piyasa Katılımcıları Anketi, İYA, TCMB AOFM'
+guncelleme: 'aylık — TÜFE yayınıyla (ayın 3''ü, 10:00); faiz tarafı iş günü'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+import BazEtkisiHesaplayici from '../../components/BazEtkisiHesaplayici.astro';
+
+Enflasyon tartışmasının neredeyse tamamı tek bir sayı üzerinden yürür: **yıllık
+enflasyon**. Oysa yıllık oran, bugünün fiyatlama davranışının ölçüsü değildir — son on
+iki ayın ölçüsüdür. Cebiri buna izin vermez zaten:
+
+$$
+1+\pi^{(12)}_t = \prod_{s=t-11}^{t}(1+\pi_s)
+$$
+
+yani manşet, aylık temponun on iki aylık hareketli çarpımıdır. Hareketli ortalamalar
+dönüşleri geç gösterir; enflasyon aylar önce yön değiştirdiğinde manşet hâlâ eski
+rejimi anlatır.
+
+Bu pano bu yüzden **momentumu merkeze alır**: mevsimsellikten arındırılmış aylık
+değişimin **3 ve 6 aylık yıllıklandırılmış** hâli (SAAR). Soru şudur — *bugünkü tempo
+on iki ay sürerse yıllık enflasyon nerede olur?* Manşet cevabı bir yıl geriden verir;
+SAAR bugünden verir, ama karşılığında gürültü taşır. Sayfanın omurgası bu ödünleşimin
+üzerine kuruludur.
+
+<div class="not">
+  <span class="etiket">Bu sayfadaki arındırma TÜİK'in ya da TCMB'nin serisi DEĞİLDİR</span>
+  TÜİK mevsimsellikten arındırılmış TÜFE'yi bülten tablolarında yayımlıyor ama
+  <strong>EVDS'te makine-okunur biçimde dağıtmıyor</strong> (52.694 seri tarandı;
+  arındırılmış olarak dağıtılanlar GSYH, sanayi üretimi, işgücü, KKO ve güven
+  endeksleri). Buradaki bütün "arındırılmış" seriler <strong>bu çalışmanın kendi STL
+  arındırmasıdır</strong>: <Deger proje="enflasyon" anahtar="sa_yontem" ondalik={0}>STL(log, period=12, seasonal=13, robust) + hareketli tatil ön-arındırması</Deger>.
+  TCMB kendi yayınlarında X-13ARIMA-SEATS kullanır; sayımız TCMB'nin yayımladığı
+  arındırılmış sayıyla birebir tutmayabilir. Aradaki farkı ölçmedik ve ölçmediğimizi
+  yazıyoruz.
+</div>
+
+## Güncel okuma
+
+**<Deger proje="enflasyon" anahtar="donem" ondalik={0}>Temmuz 2026</Deger>** verisiyle
+(TÜİK yayımı <Deger proje="enflasyon" anahtar="yayim_tarihi" ondalik={0}>03.08.2026</Deger>,
+bu koşum <Deger proje="enflasyon" anahtar="kosum_tarihi" ondalik={0}>20.08.2026</Deger>):
+
+| Seri | Aylık % | Arındırılmış aylık % | **3a SAAR** | **6a SAAR** | 12 aylık % |
+| --- | --- | --- | --- | --- | --- |
+| **TÜFE (manşet)** | <Deger proje="enflasyon" anahtar="tufe_aylik" ondalik={2}>1,78</Deger> | <Deger proje="enflasyon" anahtar="tufe_aylik_sa" ondalik={2}>2,15</Deger> | **<Deger proje="enflasyon" anahtar="tufe_3a" ondalik={2}>30,62</Deger>** | **<Deger proje="enflasyon" anahtar="tufe_6a" ondalik={2}>32,17</Deger>** | <Deger proje="enflasyon" anahtar="tufe_12a" ondalik={2}>31,75</Deger> |
+| Çekirdek B | <Deger proje="enflasyon" anahtar="b_aylik" ondalik={2}>1,66</Deger> | <Deger proje="enflasyon" anahtar="b_aylik_sa" ondalik={2}>2,17</Deger> | <Deger proje="enflasyon" anahtar="b_3a" ondalik={2}>31,67</Deger> | <Deger proje="enflasyon" anahtar="b_6a" ondalik={2}>32,16</Deger> | <Deger proje="enflasyon" anahtar="b_12a" ondalik={2}>30,98</Deger> |
+| Çekirdek C | <Deger proje="enflasyon" anahtar="c_aylik" ondalik={2}>1,80</Deger> | <Deger proje="enflasyon" anahtar="c_aylik_sa" ondalik={2}>2,36</Deger> | <Deger proje="enflasyon" anahtar="c_3a" ondalik={2}>32,66</Deger> | <Deger proje="enflasyon" anahtar="c_6a" ondalik={2}>28,92</Deger> | <Deger proje="enflasyon" anahtar="c_12a" ondalik={2}>29,91</Deger> |
+| Hizmet | <Deger proje="enflasyon" anahtar="hizmet_aylik" ondalik={2}>3,18</Deger> | <Deger proje="enflasyon" anahtar="hizmet_aylik_sa" ondalik={2}>4,17</Deger> | <Deger proje="enflasyon" anahtar="hizmet_3a" ondalik={2}>36,86</Deger> | <Deger proje="enflasyon" anahtar="hizmet_6a" ondalik={2}>39,18</Deger> | <Deger proje="enflasyon" anahtar="hizmet_12a" ondalik={2}>39,70</Deger> |
+| Temel mallar | <Deger proje="enflasyon" anahtar="mal_aylik" ondalik={2}>−0,38</Deger> | <Deger proje="enflasyon" anahtar="mal_aylik_sa" ondalik={2}>1,19</Deger> | <Deger proje="enflasyon" anahtar="mal_3a" ondalik={2}>19,67</Deger> | <Deger proje="enflasyon" anahtar="mal_6a" ondalik={2}>17,46</Deger> | <Deger proje="enflasyon" anahtar="mal_12a" ondalik={2}>16,82</Deger> |
+| Kira | <Deger proje="enflasyon" anahtar="kira_aylik" ondalik={2}>2,85</Deger> | <Deger proje="enflasyon" anahtar="kira_aylik_sa" ondalik={2}>1,90</Deger> | <Deger proje="enflasyon" anahtar="kira_3a" ondalik={2}>41,18</Deger> | <Deger proje="enflasyon" anahtar="kira_6a" ondalik={2}>45,16</Deger> | <Deger proje="enflasyon" anahtar="kira_12a" ondalik={2}>45,29</Deger> |
+| Gıda | <Deger proje="enflasyon" anahtar="gida_aylik" ondalik={2}>1,61</Deger> | <Deger proje="enflasyon" anahtar="gida_aylik_sa" ondalik={2}>2,09</Deger> | <Deger proje="enflasyon" anahtar="gida_3a" ondalik={2}>31,98</Deger> | <Deger proje="enflasyon" anahtar="gida_6a" ondalik={2}>35,64</Deger> | <Deger proje="enflasyon" anahtar="gida_12a" ondalik={2}>37,52</Deger> |
+| İşlenmemiş gıda \* | <Deger proje="enflasyon" anahtar="hamgida_aylik" ondalik={2}>2,37</Deger> | <Deger proje="enflasyon" anahtar="hamgida_aylik_sa" ondalik={2}>3,93</Deger> | <Deger proje="enflasyon" anahtar="hamgida_3a" ondalik={2}>25,18</Deger> | <Deger proje="enflasyon" anahtar="hamgida_6a" ondalik={2}>30,94</Deger> | <Deger proje="enflasyon" anahtar="hamgida_12a" ondalik={2}>39,69</Deger> |
+| İşlenmiş gıda ° | <Deger proje="enflasyon" anahtar="islgida_aylik" ondalik={2}>1,03</Deger> | <Deger proje="enflasyon" anahtar="islgida_aylik_sa" ondalik={2}>1,03</Deger> | <Deger proje="enflasyon" anahtar="islgida_3a" ondalik={2}>28,12</Deger> | <Deger proje="enflasyon" anahtar="islgida_6a" ondalik={2}>35,11</Deger> | <Deger proje="enflasyon" anahtar="islgida_12a" ondalik={2}>35,95</Deger> |
+| Enerji \* | <Deger proje="enflasyon" anahtar="enerji_aylik" ondalik={2}>2,30</Deger> | <Deger proje="enflasyon" anahtar="enerji_aylik_sa" ondalik={2}>−4,84</Deger> | <Deger proje="enflasyon" anahtar="enerji_3a" ondalik={2}>−23,39</Deger> | <Deger proje="enflasyon" anahtar="enerji_6a" ondalik={2}>37,13</Deger> | <Deger proje="enflasyon" anahtar="enerji_12a" ondalik={2}>32,86</Deger> |
+| Alkol-tütün-altın | <Deger proje="enflasyon" anahtar="atg_aylik" ondalik={2}>1,40</Deger> | <Deger proje="enflasyon" anahtar="atg_aylik_sa" ondalik={2}>−0,78</Deger> | <Deger proje="enflasyon" anahtar="atg_3a" ondalik={2}>19,71</Deger> | <Deger proje="enflasyon" anahtar="atg_6a" ondalik={2}>24,59</Deger> | <Deger proje="enflasyon" anahtar="atg_12a" ondalik={2}>28,93</Deger> |
+| Yönetilen fiyatlar hariç | <Deger proje="enflasyon" anahtar="fharic_aylik" ondalik={2}>1,39</Deger> | <Deger proje="enflasyon" anahtar="fharic_aylik_sa" ondalik={2}>2,35</Deger> | <Deger proje="enflasyon" anahtar="fharic_3a" ondalik={2}>29,30</Deger> | <Deger proje="enflasyon" anahtar="fharic_6a" ondalik={2}>30,86</Deger> | <Deger proje="enflasyon" anahtar="fharic_12a" ondalik={2}>30,37</Deger> |
+| Yİ-ÜFE ° | <Deger proje="enflasyon" anahtar="ufe_aylik" ondalik={2}>1,52</Deger> | <Deger proje="enflasyon" anahtar="ufe_aylik_sa" ondalik={2}>1,52</Deger> | <Deger proje="enflasyon" anahtar="ufe_3a" ondalik={2}>27,16</Deger> | <Deger proje="enflasyon" anahtar="ufe_6a" ondalik={2}>31,78</Deger> | <Deger proje="enflasyon" anahtar="ufe_12a" ondalik={2}>27,83</Deger> |
+
+\* **oynak kalem** — üç aylık pencerede tek bir aykırı ay ölçüyü savurur; bu satırların
+3a SAAR'ı merkezî bir eğilim ölçüsü sayılmaz. ° **mevsimsellik anlamsız** — ay
+kuklalarının F testi eşiği geçmedi, seri arındırılmadan geçirildi; o satırlarda
+"arındırılmış aylık" ham aylıkla aynıdır (aşağıda, Şekil 03).
+
+Diğer ana eğilim ölçüleri, hepsi arındırılmış aylık değişimin 3 aylık
+yıllıklandırılmışı: **medyan <Deger proje="enflasyon" anahtar="medyan_3a" ondalik={2}>31,22</Deger>**,
+**kırpılmış ortalama (α = 0,08) <Deger proje="enflasyon" anahtar="kirpma_3a" ondalik={2}>29,80</Deger>**
+(α = 0,05–0,10 bandı <Deger proje="enflasyon" anahtar="kirpma_bant_alt" ondalik={2}>29,68</Deger> –
+<Deger proje="enflasyon" anahtar="kirpma_bant_ust" ondalik={2}>30,41</Deger>).
+Yaygınlık: fiyatı artan kalemlerin ağırlıklı payı
+**%<Deger proje="enflasyon" anahtar="difuzyon" ondalik={1}>89,7</Deger>**,
+hedefle uyumlu tempoyu aşan pay
+%<Deger proje="enflasyon" anahtar="difuzyon_hedef" ondalik={1}>87,5</Deger>
+(<Deger proje="enflasyon" anahtar="kesit_n" ondalik={0}>43</Deger> üç haneli grup üzerinden).
+
+Tek cümlelik okuma: manşet
+(<Deger proje="enflasyon" anahtar="tufe_12a" ondalik={2}>31,75</Deger>) ile 3 aylık momentum
+(<Deger proje="enflasyon" anahtar="tufe_3a" ondalik={2}>30,62</Deger>) birbirine yakın —
+**yani dezenflasyon şu an yıllık oranı aşağı çeken bir tempo üretmiyor.** Ayrışma
+kompozisyondadır: hizmet momentumu
+<Deger proje="enflasyon" anahtar="hizmet_3a" ondalik={2}>36,86</Deger> iken temel mal
+<Deger proje="enflasyon" anahtar="mal_3a" ondalik={2}>19,67</Deger>.
+
+## Neden momentum? 12 aylık oranın yapısal sorunu
+
+Manşet yıllık enflasyon, aylık temponun **on iki aylık hareketli çarpımıdır**. Bunun üç
+sonucu var ve üçü de pratikte pahalıdır:
+
+1. **Gecikme.** Bir hareketli ortalamanın ortalama gecikmesi $(n-1)/2$ dönemdir; on iki
+   aylık pencerede bu **5,5 ay**. Aylık tempo bugün yön değiştirse, manşet ancak
+   aylar sonra döner.
+2. **Baz kirliliği.** $\pi^{(12)}$ her ay bir yeni ay alır, **bir yıl önceki ayı atar**.
+   Bugünün verisi hiç değişmese bile manşet, on iki ay önce olan bir şey yüzünden
+   oynar. Bu, bilgi değil muhasebedir (Şekil 09 ve hesap aracı bunu ayrıştırır).
+3. **Rejim değişiminde yanıltıcılık.** Dezenflasyonun ilk aylarında manşet hâlâ eski
+   rejimin yüksek aylarını taşır; bu dönemde manşete bakarak politika duruşu
+   değerlendirmek, sıkılığı sistematik olarak eksik ölçer (Şekil 08).
+
+Momentum ölçüsü bu üçünü de keser. $n$ aylık pencereyi yıllıklandırmanın **zincir
+(geometrik)** tanımı:
+
+$$
+\pi^{\text{SAAR}}_{t,n} \;=\; \left(\prod_{s=t-n+1}^{t}\left(1+\pi^{\text{MA}}_s\right)\right)^{12/n} - 1
+\;=\; \left(\frac{P^{\text{MA}}_t}{P^{\text{MA}}_{t-n}}\right)^{12/n} - 1
+$$
+
+Endeks zaten çarpımsal olduğu için aylık oranları tek tek çarpmaya gerek yoktur: $n$ ay
+önceki **arındırılmış endeks seviyesine bölmek** yeterlidir. Üs $12/n$'dir — 3 ay için
+4'üncü kuvvet, 6 ay için karesi. Sık yapılan hata $n/12$ yazmaktır.
+
+### Üç rakip tanım, ve ikisinin neden kullanılmadığı
+
+Aynı pencerenin yıllıklandırılmasının üç yolu vardır:
+
+$$
+\underbrace{\left(\frac{P_t}{P_{t-n}}\right)^{12/n}\!\!-1}_{\text{zincir}}
+\qquad
+\underbrace{(1+\bar\pi_{t,n})^{12}-1}_{\text{aritmetik ortalama} \to \text{bileşik}}
+\qquad
+\underbrace{12\cdot\bar\pi_{t,n}}_{\text{basit ölçekleme}}
+$$
+
+Bunlar Türkiye'nin bugünkü rejiminde ihmal edilebilir farklarda değildir. Metodolojik
+doğrulama örneği (Temmuz 2026 ham verisi; aylık değişimler %1,715 · %0,987 · %1,785 —
+**bu satır statiktir, yöntem kıyasıdır**):
+
+| Tanım | 3 ay | 6 ay |
+| --- | --- | --- |
+| Zincir (geometrik) — **kullanılan** | %19,49 | %30,71 |
+| Aritmetik ortalama → bileşik | %19,50 | %30,79 |
+| Basit $\times 12$ | %17,94 | %27,14 |
+
+İlk ikisi arasındaki fark Jensen eşitsizliğinden gelir (aylık oranların varyansı
+arttıkça büyür) ve 0,01–0,08 puandır. Üçüncüsüyle fark **1,5–3,6 puandır**: basit
+ölçekleme bileşiklenmeyi ihmal eder ve yüksek enflasyonda kullanılamaz. Zincir tanımı
+seçildi çünkü (i) doğrudan endeks seviyesinden gelir, ara yuvarlamaya dokunmaz;
+(ii) "bu tempo 12 ay sürerse yıllık enflasyon şu olur" cümlesinin **tam** karşılığıdır.
+
+### 3 ay mı 6 ay mı? İkisi farklı soruların cevabı
+
+Bu, tercih meselesi değil, **ufuk** meselesidir:
+
+- **3 aylık SAAR** en güncel ölçüdür ve dönüşü ilk o gösterir. Bedeli: tek bir aykırı
+  ay ölçüyü 4'üncü kuvvetle savurur. Bu koşuda enerjinin 3a SAAR'ı
+  <Deger proje="enflasyon" anahtar="enerji_3a" ondalik={2}>−23,39</Deger> iken 6 aylığı
+  <Deger proje="enflasyon" anahtar="enerji_6a" ondalik={2}>37,13</Deger> — aynı serinin
+  iki penceresi arasındaki bu uçurum tam olarak o kırılganlığın ölçüsüdür.
+  **Ne kadarı fiyattan, ne kadarı filtreden?** Aynı ayın **ham** 3a SAAR'ı
+  <Deger proje="enflasyon" anahtar="enerji_3a_ham" ondalik={2}>4,88</Deger>; yani −23,39'un
+  neredeyse tamamı arındırmadan geliyor. Üstelik enerji, mevsimsellik testini
+  **sınırda** geçen seridir ($p = $ <Deger proje="enflasyon" anahtar="enerji_mevsim_p" ondalik={3}>0,026</Deger>,
+  eşik 0,10 — arındırılan diğer serilerin hepsi $p \le 0{,}003$) ve arındırılmış
+  yıllık değişimi ham yıllıktan son on yılda en çok
+  <Deger proje="enflasyon" anahtar="enerji_sa_ham_maks" ondalik={2}>1,83</Deger> puan ayrışıyor
+  (son ayda <Deger proje="enflasyon" anahtar="enerji_sa_ham_son" ondalik={2} isaret={true}>−1,11</Deger>) —
+  tüm seriler içindeki en büyük tutarsızlık. Bu satır bir dezenflasyon iddiası değil,
+  arındırmanın oynak serilerde ne yaptığının ölçüsüdür.
+- **6 aylık SAAR** gürültünün yarısını yutar, karşılığında ~1,5 ay gecikir. Dönüşü
+  teyit etmek için doğru ölçü budur.
+- **Okuma kuralı:** ikisi aynı yöne bakıyorsa sinyal gerçektir. Ayrışıyorlarsa
+  (3a $<$ 6a) bir dönüş başlamış olabilir — ama önce o dönüşün tek bir kalemden mi
+  geldiğine bakın (Şekil 04 ve 05).
+
+Şu an TÜFE'de 3a <Deger proje="enflasyon" anahtar="tufe_3a" ondalik={2}>30,62</Deger>,
+6a <Deger proje="enflasyon" anahtar="tufe_6a" ondalik={2}>32,17</Deger>: kısa pencere
+uzunun bir miktar altında, yani tempo çok hafif yavaşlıyor — ama ikisi de manşetin
+(<Deger proje="enflasyon" anahtar="tufe_12a" ondalik={2}>31,75</Deger>) etrafında
+duruyor. Bu, dezenflasyonun **durduğu** okumasıdır, hızlandığı değil.
+
+## Şekil 01 — Manşet momentum: 3 ve 6 aylık yıllıklandırılmış
+
+<GrafikEmbed
+  src="/projeler/enflasyon/01_manset_momentum.html"
+  baslik="TÜFE: 12 aylık, 3 ve 6 aylık SAAR, ECB tipi 3a/3a momentum — yakın plan ve tam tarihçe"
+  no="01"
+  yukseklik={1215}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** EVDS3, `bie_tukfiy2025` veri grubu, `TP.TUKFIY2025.GENEL` (TÜFE, 2025=100,
+ECOICOP v2), Ocak 2005'ten bugüne aylık endeks **seviyeleri**. Yayımlanmış oranlardan
+zincir kurulmaz: TÜİK aylık değişimi iki ondalıkla yayımlar, on iki ayı çarparsanız
+yuvarlama hatası birikir ve yüksek enflasyonda 0,1–0,3 puana çıkar.
+
+**Çizilen dört seri.**
+
+| Seri | Formül | Not |
+| --- | --- | --- |
+| 12 aylık (manşet) | $P_t/P_{t-12}-1$ | ham endeksten; arındırma gerekmez, mevsimsellik yıllık farkta zaten sadeleşir |
+| 6 aylık SAAR | $(P^{\text{MA}}_t/P^{\text{MA}}_{t-6})^{2}-1$ | arındırılmış endeksten |
+| 3 aylık SAAR | $(P^{\text{MA}}_t/P^{\text{MA}}_{t-3})^{4}-1$ | başrol seri |
+| ECB tipi 3a/3a | $\left(\frac{\frac13\sum_{s=0}^{2}P^{\text{MA}}_{t-s}}{\frac13\sum_{s=3}^{5}P^{\text{MA}}_{t-s}}\right)^{4}-1$ | üç aylık **hareketli ortalamaların** oranı |
+
+ECB'nin momentum tanımının ayrı çizilmesinin sebebi şudur: iki kez düzleştirdiği için
+daha az oynaktır ama yaklaşık **1,5 ay daha gecikmelidir**. Bugün
+<Deger proje="enflasyon" anahtar="tufe_ecb3" ondalik={2}>32,78</Deger>, bizim 3a
+SAAR'ımız <Deger proje="enflasyon" anahtar="tufe_3a" ondalik={2}>30,62</Deger>; aradaki
+fark yöntem farkıdır, veri farkı değil.
+
+**İki panel neden alt alta.** Üst panel dezenflasyon dönemine yakın plandır; alt panel
+tam tarihçedir. 2022–23 sıçramaları (3a SAAR yer yer %200'ün üzerine çıkar) tek eksene
+konursa bugünkü 30 civarı düz bir çizgiye dönüşür ve okunmaz. Ölçek bastırması bir
+sunum kusuru değil, bilgi kaybıdır; iki panel bunu çözer.
+
+**İçi boş son üç nokta.** Arındırma filtresi serinin ucunda tek taraflıdır (end-point
+problem): son ayların SAAR değeri, gelecek koşularda revize olur. Bunun büyüklüğü
+**ölçülüyor** — iki koşunun çıktısı kıyaslanarak değil (aynı veriyle koşulduğunda o
+ölçü yapısal olarak sıfır çıkar ve sahte güvence üretir), **vintage testiyle**: seri
+$k = 1\ldots$<Deger proje="enflasyon" anahtar="sa_rev_k" ondalik={0}>6</Deger> ay kesilip yeniden
+arındırılır ve o ay "son ay" iken hesaplanmış olacak değer bugünküyle karşılaştırılır.
+
+Bu koşuda ölçülenler (puan, maksimum sapma):
+
+| Seri | Arındırılmış aylık % | 3 aylık SAAR |
+| --- | --- | --- |
+| TÜFE (manşet) | <Deger proje="enflasyon" anahtar="sa_rev_tufe_maks" ondalik={2}>0,12</Deger> (ort. <Deger proje="enflasyon" anahtar="sa_rev_tufe_ort" ondalik={2}>0,04</Deger>) | <Deger proje="enflasyon" anahtar="sa_rev_tufe_saar3" ondalik={2}>0,74</Deger> |
+| Çekirdek C | <Deger proje="enflasyon" anahtar="sa_rev_c_maks" ondalik={2}>0,65</Deger> | <Deger proje="enflasyon" anahtar="sa_rev_c_saar3" ondalik={2}>5,17</Deger> |
+| Temel mallar | <Deger proje="enflasyon" anahtar="sa_rev_mal_maks" ondalik={2}>0,47</Deger> | <Deger proje="enflasyon" anahtar="sa_rev_mal_saar3" ondalik={2}>2,33</Deger> |
+| **Hizmet** | **<Deger proje="enflasyon" anahtar="sa_rev_hizmet_maks" ondalik={2}>4,33</Deger>** (ort. <Deger proje="enflasyon" anahtar="sa_rev_hizmet_ort" ondalik={2}>1,63</Deger>) | **<Deger proje="enflasyon" anahtar="sa_rev_hizmet_saar3" ondalik={2}>17,05</Deger>** |
+
+Tek bir sayıyla geçilemez, çünkü **seriler arasındaki fark mertebe farkıdır**: manşetin
+arındırılmış aylık temposu uçta en çok
+<Deger proje="enflasyon" anahtar="sa_rev_tufe_maks" ondalik={2}>0,12</Deger> puan oynarken —
+ihmal edilebilir — panonun merkezî ölçülerinden biri olan
+**<Deger proje="enflasyon" anahtar="sa_rev_enoynak_ad" ondalik={0}>Hizmet</Deger>** için aynı ölçü
+<Deger proje="enflasyon" anahtar="sa_rev_enoynak_maks" ondalik={2}>4,33</Deger> puana, 3 aylık
+SAAR'ında <Deger proje="enflasyon" anahtar="sa_rev_enoynak_saar3" ondalik={2}>17,05</Deger> puana
+çıkıyor. Yani hizmet momentumunun son ayları **oturmamıştır**; o satır bir dönüş
+sinyali gibi okunmamalıdır. ("Oynak" etiketli serilerde daha da büyüktür:
+<Deger proje="enflasyon" anahtar="sa_rev_oynak_ad" ondalik={0}>Enerji</Deger> için 3a SAAR
+revizyonu <Deger proje="enflasyon" anahtar="sa_rev_oynak_saar3" ondalik={2}>48,32</Deger> puan —
+tablodaki yıldız tam da bunun içindir.)
+
+Manşet için eşik 0,30 puandır; aşılırsa `uyarilar.json`'a görünür uyarı düşer. Ayrıca
+her koşu bir önceki koşunun arındırılmış serisiyle de kıyaslanır; kaynak veri
+değişmediyse bu kıyas **ölçüm vermez** ve sayfaya sayı basılmaz — durumu:
+*<Deger proje="enflasyon" anahtar="kosu_revizyon_durum" ondalik={0}>önceki koşu AYNI veriyle yapılmış (sa.csv değişmedi) — koşular arası revizyon bu koşuda ölçülemedi</Deger>.*
+
+**Varsayımlar.** (i) Arındırma çarpımsaldır (log dönüşümü); (ii) yıllıklandırma zincir
+tanımıyladır; (iii) manşet endeks **doğrudan** arındırılır — alt kalemleri ayrı ayrı
+arındırıp toplamak (dolaylı) farklı sonuç verir ve panoda bu tutarsızlık bilerek
+korunur, aşağıda ilan edilir.
+
+## Şekil 02 — Çekirdek göstergelerde momentum
+
+<GrafikEmbed
+  src="/projeler/enflasyon/02_cekirdek_momentum.html"
+  baslik="ÖKTG-B ve ÖKTG-C: 12 aylık, 3 ve 6 aylık SAAR"
+  no="02"
+  yukseklik={959}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+Aynı üç ölçü (12 aylık, 3a ve 6a SAAR), bu kez TCMB'nin özel kapsamlı göstergelerine
+uygulanır. EVDS `bie_oktug2025`: **B** = `TP.FE25.OKTG03`, **C** = `TP.FE25.OKTG04`.
+Tanımlar TCMB'nindir, bizim değil:
+
+- **B** — işlenmemiş gıda, enerji, alkollü içkiler ve tütün ile **altın** hariç TÜFE.
+- **C** — enerji, gıda ve alkolsüz içecekler, alkollü içkiler, tütün ve altın hariç
+  TÜFE. En dar kapsam.
+
+**B ile C arasındaki tek fark işlenmiş gıdadır** ve bu fark Türkiye'de sistematiktir:
+işlenmiş gıda hem uluslararası emtia (kakao, kahve, tahıl, sıvı yağ) hem kur
+geçişkenliği taşır. Bu koşuda B'nin 3a SAAR'ı
+<Deger proje="enflasyon" anahtar="b_3a" ondalik={2}>31,67</Deger>, C'nin
+<Deger proje="enflasyon" anahtar="c_3a" ondalik={2}>32,66</Deger>; 6 aylıkta sıra
+tersine döner (<Deger proje="enflasyon" anahtar="b_6a" ondalik={2}>32,16</Deger> ve
+<Deger proje="enflasyon" anahtar="c_6a" ondalik={2}>28,92</Deger>). İkisini birlikte
+izlemek zorunludur; tek bir çekirdek seçmek, işlenmiş gıdadaki şoku ya tamamen içeri
+almak ya tamamen dışarı atmak demektir.
+
+**Dışlama tabanlı çekirdeğin sınırı.** Yüksek enflasyon rejiminde "geçici şok" ile
+"genel eğilim" sınırı bulanıklaşır: enerji ve gıda dışlansa bile kur geçişkenliği tüm
+sepete yayılır. Bu yüzden B ve C tek başına yeterli değildir; istatistiksel çekirdek
+ölçüleri (kırpılmış ortalama, medyan) Şekil 05'te ayrıca verilir.
+
+## Şekil 03 — Mevsimsellikten arındırma ne yapıyor?
+
+<GrafikEmbed
+  src="/projeler/enflasyon/03_arindirma.html"
+  baslik="Aylık değişim: ham ve arındırılmış · 3 aylık SAAR: ham veriyle hesaplamanın bedeli"
+  no="03"
+  yukseklik={1009}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Arındırma opsiyonel bir rafine adım değil, ölçünün tanımının parçasıdır.** Alt panel
+bunun bedelini gösterir: bu koşuda ham veriyle hesaplanan 3 aylık SAAR
+<Deger proje="enflasyon" anahtar="tufe_3a_ham" ondalik={2}>19,49</Deger>, arındırılmış
+<Deger proje="enflasyon" anahtar="tufe_3a" ondalik={2}>30,62</Deger> —
+**<Deger proje="enflasyon" anahtar="tufe_3a_arindirma_farki" ondalik={2}>11,13</Deger>
+puan fark.** Bu bir yöntem tercihi değil, ölçüm hatasıdır: Mayıs–Temmuz Türkiye
+TÜFE'sinde mevsimsel olarak "ucuz" aylardır, aynı hesabı Ocak–Mart penceresinde
+yapsanız ölçü yukarı saperdi. Ham 3 aylık SAAR yalnızca *"hangi üç ay pencereye düştü"*
+sorusunu ölçer.
+
+**Türkiye TÜFE'sinde bilinen mevsimsellik.** Ocak (yılbaşı zam dalgası: ÖTV, harçlar,
+tarifeler, asgari ücret sonrası hizmet fiyatlaması, kira sözleşmeleri) mevsimsel faktörü
+en büyük aydır. Taze meyve–sebze yaz aylarında geriler, kışın sıçrar. Giyimde yılda iki
+indirim dönemi (Ocak–Şubat, Temmuz–Ağustos) keskin negatif aylık değişim üretir. Eğitim
+Eylül'de tek seferlik sıçrar. Ulaştırma ve konaklama yaz/bayram dönemlerinde oynar.
+
+**Hareketli tatiller ayrı bir sorundur.** Ramazan, Ramazan Bayramı ve Kurban Bayramı
+Hicri takvime bağlıdır, Miladi takvimde her yıl ~11 gün geriye kayar ve 33 yılda tüm
+ayları dolaşır. Bu, "yıldan yıla aynı ayda tekrar eden" mevsimsellik tanımına uymaz;
+otomatik filtreler bu etkiyi mevsimsel bileşene ayrıştıramaz, düzensiz bileşene atar.
+Doğru yaklaşım tatili **filtreden önce** bir regresörle modellemektir. Hat bunu yapar:
+
+$$
+\Delta \ln P_t = \alpha + \sum_{k} \gamma_k\,\text{Tatil}_{kt} + \varepsilon_t
+$$
+
+Regresörler **uzun dönem ay ortalamasıyla merkezlenir** (Census Bureau'nun `genhol`
+aracının mantığı): böylece belirtilen aralık dışındaki her ay aynı sabit düzeltmeyi
+alır ve regresör yıllık toplamda mevsimsel bileşene sızmaz. Hicri takvim aritmetik
+(tabular) yaklaşımla üretilir; Diyanet'in rasat tabanlı ilanından ±1 gün sapabilir.
+**Ana serilerin hiçbirinde tatil regresörü** $|t| > 1{,}96$ **eşiğini geçmiyor** — bu
+koşuda en yüksek değer $|t| = $ <Deger proje="enflasyon" anahtar="tatil_ana_maks_t" ondalik={2}>1,23</Deger>,
+eşiği geçen regresör sayısı <Deger proje="enflasyon" anahtar="tatil_ana_gecen" ondalik={0}>0</Deger>.
+Ters yönlü kalemler (gıda yukarı, ulaştırma aşağı) birbirini götürüyor; yani ön-arındırma
+manşet ve çekirdek serilerde fiilen **atıl** kalıyor ve bunu yazmak dürüstlüktür.
+İş yaptığı yer alt kalemlerdir: dağılım kesitindeki
+<Deger proje="enflasyon" anahtar="tatil_gecen_alt" ondalik={0}>3</Deger> üç haneli grupta eşik
+geçiliyor ve düzeltme **uygulanıyor** (<Deger proje="enflasyon" anahtar="tatil_gecen_alt_ad" ondalik={0}>Okul Öncesi Ve Temel Eğitim İlkokul, Ortaöğretim Eğitimi Ortaokul Ve Lise, Rutin Ev Bakımı İçin Mal Ve Hizmetler</Deger>);
+tanıları $t$ ve katsayılarıyla birlikte `sa_tani.json`'un `alt_kalemler` bloğuna yazılır.
+Bu kalemler medyan, kırpılmış ortalama ve difüzyon kesitine girdiği için düzeltme
+**yayımlanan ana eğilim ölçülerini etkiler**.
+
+<div class="not">
+  <span class="etiket">Sınırda bir $t$, büyük görünen bir katsayı üretebilir</span>
+  Eğitim grubunda bayram regresörünün katsayısı −10,5 puan/birim çıkıyor ama
+  $|t| = 1{,}98$ ile eşiği <em>kıl payı</em> geçiyor. Regresörün kendisi merkezlenmiş
+  bir <em>oran</em> olduğu için genliği ±0,13 mertebesindedir; fiilî aylık etki
+  bu yüzden ~±1,4 puandır, 10,5 değil. Katsayıyı tek başına okumak yanıltır —
+  etkiyi görmek için katsayı ile regresörün genliği birlikte okunmalıdır.
+</div>
+
+**Filtre: STL, X-13 değil.** Ön aşamadan sonra $\ln P_t$ üzerinde
+`STL(period=12, seasonal=13, robust=True)` koşulur ve
+$P^{\text{MA}}_t = \exp(\ln P_t - S_t)$ ile geri dönülür. X-13ARIMA-SEATS altın
+standarttır ama Python'daki sarmalayıcı Census Bureau'nun `x13as` **ikili dosyasına**
+bağımlıdır; `pip install` ile gelmez, cron/CI ortamında sessiz kırılma riski taşır.
+Bu bir ödünleşimdir ve bedeli ölçülmemiştir: STL ile X-13 arasındaki 3 aylık SAAR farkı
+bilinmiyor. Yazıyoruz.
+
+**Mevsimsellik anlamlılık sınaması.** Her seri için $\Delta\ln P$ üzerinde 11 ay
+kuklasının F testi koşulur — ama **önce trend alınarak** (13 aylık ortalanmış hareketli
+ortalama çıkarılarak). Ham $\Delta\ln P$ ile testin gücü çöküyordu: aylık enflasyonun
+ortalaması 2005–2026 boyunca %0,5 ile %5 arasında gezindiği için ay kuklaları bu
+sürüklenmeyle yarışıyordu (çekirdek B: ham $p = 0{,}15$ → trendden arındırılmış
+$p = 0{,}002$ — *bu satır statiktir, yöntem kıyasıdır*). Anlamsız çıkan seri
+**arındırılmadan** geçirilir: bu koşuda
+<Deger proje="enflasyon" anahtar="sa_arindirilmayanlar" ondalik={0}>İşlenmiş gıda ve Yİ-ÜFE</Deger>
+(sırasıyla $p = $ <Deger proje="enflasyon" anahtar="sa_p_islgida" ondalik={3}>0,285</Deger> ve
+$p = $ <Deger proje="enflasyon" anahtar="sa_p_ufe" ondalik={3}>0,524</Deger>). Yukarıdaki "Güncel
+okuma" tablosunda ° işaretli satırlar bunlardır; o satırlarda ham ve arındırılmış
+aylık değişim birebir aynıdır. TCMB de Aralık 2024 Fiyat Gelişmeleri notunda işlenmiş
+gıda için aynı notu düşmüştü.
+
+**Revizyon riski — dürüst uyarı.** Arındırma geçmişi değiştiren bir işlemdir. Yeni ay
+eklendiğinde filtre yeniden koşar ve önceki ayların arındırılmış aylık değişimleri
+revize olur. Bu veri hatası değil, yöntemin doğasıdır. Kurumsal karşılığı: BLS her yıl
+mevsimsel faktörleri yeniden hesaplar ve **son beş yılın** arındırılmış endekslerini
+revize eder. Hattın ele alışı: her koşuda önceki koşunun arındırılmış serisi saklanır,
+son 12 ayın revizyonu ölçülür, 0,30 puan eşiği aşılırsa uyarı düşer, grafikte son 3
+nokta içi boş çizilir.
+
+## Şekil 04 — Enflasyon nereden geliyor? Katkı ayrıştırması
+
+<GrafikEmbed
+  src="/projeler/enflasyon/04_katki.html"
+  baslik="TCMB'nin beşli gruplaması: yıllık enflasyona katkı (ileriye bileşiklenmiş) ve son 36 ayın aylık katkıları"
+  no="04"
+  yukseklik={1035}
+/>
+
+### Bu ayrıştırma nasıl yapılıyor?
+
+TÜFE, yıl içinde **bir önceki yılın Aralık ayını temel alan zincirleme Laspeyres**
+yapısındadır. Yıl $y$ içinde kimlik tamdır:
+
+$$
+\frac{P_t}{P_{\text{Ara},y-1}} = \sum_i w_i^{y}\,\frac{P_{it}}{P_{i,\text{Ara},y-1}}
+$$
+
+Buradan **aylık** katkı tam olarak ayrıştırılır:
+
+$$
+\pi_t = \sum_i \underbrace{\omega_{i,t-1}\, r_{it}}_{C_{it}},\qquad
+r_{it}=\frac{P_{it}}{P_{i,t-1}}-1,\qquad
+\omega_{i,t-1} = \frac{w_i^{y}\,\bigl(P_{i,t-1}/P_{i,\text{Ara},y-1}\bigr)}{\sum_j w_j^{y}\,\bigl(P_{j,t-1}/P_{j,\text{Ara},y-1}\bigr)}
+$$
+
+$\omega$ **etkin ağırlıktır**: yıl başı ağırlığı değil, kalemin yıl içinde göreli olarak
+pahalılaşmasıyla güncellenen ağırlık. Yıl başı ağırlığıyla hesaplayan bir uygulamada
+sapma yıl sonuna doğru büyür. Aynı $\omega$ kırpma ve medyanda da kullanılır.
+
+**Yıllık katkı zincirlenir, yaklaşılmaz.** Yaygın hata yıllık katkıyı
+$w_i\,(P_{it}/P_{i,t-12}-1)$ diye yazmaktır; Aralık ağırlık güncellemesi bu formülü bozar
+ve toplam manşete oturmaz. Doğrusu aylık katkıları **ileriye bileşikleyerek** toplamaktır:
+
+$$
+\pi^{(12)}_t = \sum_i \underbrace{\sum_{s=t-11}^{t} C_{is}\prod_{u=s+1}^{t}(1+\pi_u)}_{C^{(12)}_{it}}
+$$
+
+Bu ayrıştırma tam toplanabilirdir ve Aralık splice'ını doğal olarak taşır. Denetim iki
+ayrı ölçü ve iki ayrı eşiktir — karıştırılmamalıdır:
+
+| Artık | Son 24 ay (maks) | Tüm tarihçe (maks) | Eşik | Aşılırsa |
+| --- | --- | --- | --- | --- |
+| **Aylık**: $\sum_i C_{it} - \pi_t$ | <Deger proje="enflasyon" anahtar="katki_ay_artik_pp" ondalik={4}>0,0037</Deger> | <Deger proje="enflasyon" anahtar="katki_ay_artik_tum_pp" ondalik={4}>0,0058</Deger> | 0,02 puan | uyarı |
+| **Yıllık**: $\sum_i C^{(12)}_{it} - \pi^{(12)}_t$ | <Deger proje="enflasyon" anahtar="katki_yil_artik_pp" ondalik={4}>0,0019</Deger> | <Deger proje="enflasyon" anahtar="katki_yil_artik_tum_pp" ondalik={4}>0,0065</Deger> | 0,05 puan | uyarı |
+
+Aylık kimlik birebir sağlanmak zorundadır (eşik bu yüzden dar); yıllıkta ağırlık
+tahmininin payı olduğu için eşik biraz gevşektir. **Bu iki eşik grafiği durdurmaz,
+görünür uyarı düşürür.** Katkı grafiğini üretmeyen tek denetim ağırlık kimliğinin
+artığıdır (aşağıdaki nota bakın).
+
+**Kırılım TCMB'nin beşlisidir** — aylık Fiyat Gelişmeleri raporunda yıllık enflasyona
+katkılar tam olarak bu gruplarla verilir: gıda (`OKTG10`), hizmet (`OKTG23`), temel mal
+(`OKTG18`), enerji (`OKTG09`), alkol–tütün–altın (`OKTG22`).
+
+Bu koşuda yıllık enflasyona katkılar (puan, toplam
+<Deger proje="enflasyon" anahtar="katki_toplam" ondalik={2}>31,75</Deger>):
+
+| Grup | Ağırlık (%) | Yıllık katkı (puan) |
+| --- | --- | --- |
+| Hizmet | <Deger proje="enflasyon" anahtar="agirlik_23" ondalik={1}>38,5</Deger> | **<Deger proje="enflasyon" anahtar="katki_23_puan" ondalik={2}>14,39</Deger>** |
+| Gıda ve alkolsüz içecekler | <Deger proje="enflasyon" anahtar="agirlik_10" ondalik={1}>24,4</Deger> | <Deger proje="enflasyon" anahtar="katki_10_puan" ondalik={2}>9,26</Deger> |
+| Temel mallar | <Deger proje="enflasyon" anahtar="agirlik_18" ondalik={1}>26,9</Deger> | <Deger proje="enflasyon" anahtar="katki_18_puan" ondalik={2}>4,57</Deger> |
+| Enerji | <Deger proje="enflasyon" anahtar="agirlik_09" ondalik={1}>7,0</Deger> | <Deger proje="enflasyon" anahtar="katki_09_puan" ondalik={2}>2,47</Deger> |
+| Alkol, tütün ve altın | <Deger proje="enflasyon" anahtar="agirlik_22" ondalik={1}>3,2</Deger> | <Deger proje="enflasyon" anahtar="katki_22_puan" ondalik={2}>1,06</Deger> |
+
+Hizmet, sepetin
+<Deger proje="enflasyon" anahtar="agirlik_23" ondalik={1}>38,5</Deger>'i olup yıllık
+enflasyonun <Deger proje="enflasyon" anahtar="katki_23_puan" ondalik={2}>14,39</Deger>
+puanını, yani neredeyse yarısını üretiyor. Son ayın **aylık** enflasyonunda payı daha da
+belirgin: <Deger proje="enflasyon" anahtar="katki_aylik_23_puan" ondalik={2}>1,26</Deger>
+puanla toplam <Deger proje="enflasyon" anahtar="tufe_aylik" ondalik={2}>1,78</Deger>
+puanın büyük kısmı.
+
+<div class="not">
+  <span class="etiket">Ağırlıklar TAHMİNDİR — TÜİK'in yayımladığı sayılar değil</span>
+  EVDS endeks dağıtır, <strong>ağırlık dağıtmaz</strong>. Ağırlıklar yukarıdaki
+  zincir-Laspeyres kimliğinden geri çıkarıldı: kimlik $w$ üzerinde tam doğrusaldır
+  (yıl içindeki her ay bir denklem, $\sum w = 1$ bir kısıt), aşırı belirlenmişse EKK
+  ile çözülür. Yöntemin <strong>bağımsız sınavı</strong>: 2026 için hizmet ağırlığında
+  <strong>+7,5</strong>, enerjide <strong>−3,2</strong>, temel malda <strong>−2,9</strong>
+  puanlık kayma buluyoruz; TCMB Blog'un duyurduğu <strong>+7,4 / −3,2 / −3,0</strong>
+  ile örtüşüyor. <Deger proje="enflasyon" anahtar="agirlik_yil" ondalik={0}>2026</Deger>
+  kimlik artığı <Deger proje="enflasyon" anahtar="agirlik_artik_pp" ondalik={4}>0,0022</Deger>
+  puan. Yine de bunlar bir <em>çıkarımdır</em>; ana grup düğümü bir tam yılda tam
+  belirlenmiştir (12 denklem + $\sum w = 1$, 13 bilinmeyen) ve artığının sıfır çıkması
+  bir doğrulama değildir. Kimlik artığı 0,05 puanı aşarsa hat <strong>DURUR</strong>
+  (<code>metrik.py</code> hata vererek düşer, siteye kopyalama yapılmaz) — sessizce
+  eski ya da yanlış ağırlıkla yayımlamak yasaktır.
+</div>
+
+## Şekil 05 — Dağılım ölçüleri: kırpılmış ortalama, medyan ve yaygınlık
+
+<GrafikEmbed
+  src="/projeler/enflasyon/05_dagilim_difuzyon.html"
+  baslik="Kırpılmış ortalama / medyan (3 aylık ortalamanın yıllıklandırılmışı) ve difüzyon endeksleri"
+  no="05"
+  yukseklik={1085}
+/>
+
+### Bu seriler nasıl hesaplanıyor?
+
+Çekirdeğin iki felsefesi vardır: **dışlama** (Şekil 02 — sabit kalemleri çıkar) ve
+**kırpma** (her ay dağılımın uçlarını at). İkincisi üstündür, çünkü hangi kalemin gürültü
+ürettiği aydan aya değişir.
+
+Her ay <Deger proje="enflasyon" anahtar="kesit_n" ondalik={0}>43</Deger> adet üç haneli
+COICOP grubunun aylık değişimleri, etkin ağırlıklarıyla birlikte küçükten büyüğe
+sıralanır; ağırlıkların kümülatif toplamı $F(\cdot)$ olsun.
+
+**"Arındırılmış" sözcüğü kesitin tamamı için doğru değildir.** Her alt kalem için de
+aynı mevsimsellik sınaması koşulur ve testten geçemeyen kalem **ham** aylık değişimiyle
+kesite girer: bu koşuda
+<Deger proje="enflasyon" anahtar="kesit_arindirilmayan_n" ondalik={0}>10</Deger> grup, yani
+kesitin ağırlıkça **%<Deger proje="enflasyon" anahtar="kesit_arindirilmayan_agirlik" ondalik={1}>16,6</Deger>**'sı.
+Medyan, kırpılmış ortalama ve difüzyon dolayısıyla **karma** bir kesit üzerinde
+hesaplanıyor. Bunun yönü de bilinebilir: TÜFE'de Ocak ayının ortalama mevsimsel
+düzeltmesi <Deger proje="enflasyon" anahtar="ocak_duzeltme_pp" ondalik={2}>0,91</Deger> puandır
+(<Deger proje="enflasyon" anahtar="ocak_n" ondalik={0}>21</Deger> Ocak ortalaması: ham
+%<Deger proje="enflasyon" anahtar="ocak_ham_ort" ondalik={2}>2,58</Deger> →
+arındırılmış %<Deger proje="enflasyon" anahtar="ocak_sa_ort" ondalik={2}>1,67</Deger>);
+arındırılmayan kalemlerde bu düzeltme **hiç uygulanmadığı** için Ocak gibi yönetilen
+fiyat/zam aylarında medyan ve difüzyon yukarı sapar. Düzeltmiyoruz, ilan ediyoruz — kalemlerin listesi ve $p$ değerleri
+`sa_tani.json`'un `alt_kalemler` bloğundadır.
+
+$$
+\pi^{\text{med}}_t = r_{(k)t},\qquad k = \min\left\lbrace j : F(r_{(j)t}) \ge 0{,}5 \right\rbrace,\qquad F(r_{(j)t}) = \textstyle\sum_{l\le j}\omega_{(l)t} - \tfrac{\omega_{(j)t}}{2}
+$$
+
+Konvansiyon açıkça yazılıyor, çünkü seçim sonucu değiştirebilir: $F$ kalemin **orta
+noktasındaki** kümülatif ağırlıktır, üst kenarındaki değil. Kırpılmış ortalama da aynı
+$F$'i kullanır; iki ölçünün aynı konvansiyonda olması, medyanın $\alpha \to 0{,}5$
+limitinde kırpılmış ortalamayla çakışmasını sağlar. Ağırlığın beşte birini tek bir
+kalemin taşıdığı bu kesitte (aşağıda) üst-kenar konvansiyonu medyanı bir **tam kalem**
+kaydırabilirdi.
+
+$$
+\pi^{\text{trim}}_{t,\alpha} = \frac{\sum_{i \,:\, \alpha \le F(r_{it}) \le 1-\alpha} \omega_{it}\, r_{it}}{\sum_{i \,:\, \alpha \le F(r_{it}) \le 1-\alpha} \omega_{it}}
+$$
+
+$\alpha = 0{,}08$ Cleveland Fed'in standardıdır (**%16 kırpılmış ortalama**: ağırlık
+dağılımının üst %8'i ve alt %8'i atılır). Medyan, $\alpha \to 0{,}5$ limitidir. TCMB'nin
+**SATRIM**'i de arındırılmış veriyle hesaplanan budanmış ortalamadır ve aylık
+değişimlerin 3 aylık ortalaması yıllıklandırılarak sunulur — grafikteki sunum da odur.
+
+**Kesit sayıldığı kadar geniş değil.** Cleveland Fed benzetmesi yöntem için doğrudur,
+kesitin *genişliği* için değil: bizim <Deger proje="enflasyon" anahtar="kesit_n" ondalik={0}>43</Deger>
+grubumuz çok yoğundur. Tek bir kalem —
+<Deger proje="enflasyon" anahtar="kesit_en_buyuk_ad" ondalik={0}>Gıda</Deger> — etkin ağırlığın
+**%<Deger proje="enflasyon" anahtar="kesit_en_buyuk_pay" ondalik={1}>21,9</Deger>**'unu, en büyük üç
+kalem birlikte %<Deger proje="enflasyon" anahtar="kesit_ilk3_pay" ondalik={1}>36,4</Deger>'ünü
+taşıyor. Ağırlıkların Herfindahl endeksi
+<Deger proje="enflasyon" anahtar="kesit_hhi" ondalik={4}>0,0779</Deger>, yani **eşdeğer bağımsız
+kalem sayısı 43 değil <Deger proje="enflasyon" anahtar="kesit_esdeger_n" ondalik={1}>12,8</Deger>**.
+Somut sonucu: <Deger proje="enflasyon" anahtar="medyan_kalem_bas" ondalik={0}>2021-01</Deger>'den bu
+yana geçen <Deger proje="enflasyon" anahtar="medyan_kalem_ay" ondalik={0}>67</Deger> ayın
+**%<Deger proje="enflasyon" anahtar="medyan_kalem_pay" ondalik={0}>22</Deger>'sinde** medyanı veren
+kalem <Deger proje="enflasyon" anahtar="medyan_kalem_ad" ondalik={0}>Gıda</Deger> oldu — "medyan
+TÜFE" bu kesitte zaman zaman doğrudan gıda enflasyonunu okuyor. Kırpma da kesiti
+daraltıyor: $\alpha = 0{,}08$ ile 43 kalemin yaklaşık 33'ü ayakta kalıyor,
+$\alpha = 0{,}10$ ile 31'i. Ölçüler doğru hesaplanıyor; genişleyen şey yorum olmamalı.
+
+**Kırpma seviyesi keyfîdir ve bunu yazmak dürüstlüktür.** Panoda $\alpha \in \lbrace 0{,}05;\ 0{,}08;\ 0{,}10\rbrace$
+üçlüsü birlikte hesaplanır; grafikteki taralı bant 0,05–0,10 aralığıdır ve
+**bandın genişliği ölçü belirsizliğinin kendisidir**. Bu koşuda bant
+<Deger proje="enflasyon" anahtar="kirpma_bant_alt" ondalik={2}>29,68</Deger> –
+<Deger proje="enflasyon" anahtar="kirpma_bant_ust" ondalik={2}>30,41</Deger>, α = 0,08
+değeri <Deger proje="enflasyon" anahtar="kirpma_3a" ondalik={2}>29,80</Deger>, medyan
+<Deger proje="enflasyon" anahtar="medyan_3a" ondalik={2}>31,22</Deger>.
+
+**Kırpılmış ortalamanın yanlılığı düzeltilmez, raporlanır.** Fiyat değişimi dağılımı
+sağa çarpıktır; simetrik kırpma bu yüzden manşetin altında bir ortalama üretir. Bazı
+merkez bankaları buna sabit bir kaydırma uygular; biz uygulamıyoruz — farkı ayrı bir
+gösterge olarak veriyoruz. Şu an kırpılmış ortalama TÜFE 3a SAAR'ının
+(<Deger proje="enflasyon" anahtar="tufe_3a" ondalik={2}>30,62</Deger>) altında, medyan
+üstünde: dağılımın iki ucu da hikâyeyi değiştiriyor.
+
+**Difüzyon — yaygınlık ölçüsü, seviye değil.**
+
+$$
+D_t(\tau) \;=\; \sum_i \omega_{i,t-1}\cdot \mathbf{1}\lbrace r^{\text{MA}}_{it} > \tau \rbrace
+$$
+
+Üç eşik çizilir: $\tau=0$ (fiyatı **artan** kalemlerin ağırlıklı payı,
+%<Deger proje="enflasyon" anahtar="difuzyon" ondalik={1}>89,7</Deger>), hedefle uyumlu
+tempo (%5 yıllık ≈ aylık %0,41; pay
+%<Deger proje="enflasyon" anahtar="difuzyon_hedef" ondalik={1}>87,5</Deger>) ve manşetin
+kendisi — **zamanla değişen eşik**, literatürde enflasyonu açıklama gücünü belirgin
+artırdığı bulunmuştur (%<Deger proje="enflasyon" anahtar="difuzyon_mansete_gore" ondalik={1}>72,1</Deger>).
+Grafikte üçü de 3 aylık ortalamayla çizilir: aylık difüzyon 60–100 arasında sert salınır
+ve okunmaz; ham aylık seri veri dosyasında durur.
+
+**Okuma kuralı:** enflasyon düşerken difüzyon yüksek kalıyorsa, düşüş birkaç kalemden
+geliyordur ve kırılgandır. Bugün kalemlerin ağırlıkça
+%<Deger proje="enflasyon" anahtar="difuzyon_hedef" ondalik={1}>87,5</Deger>'i, hedefle
+uyumlu tempodan **hızlı** artıyor — bu, dezenflasyonun henüz genele yayılmadığının en
+net tek göstergesidir.
+
+## Şekil 06 — Hizmet mi mal mı? Dezenflasyonun en yapışkan bileşeni
+
+<GrafikEmbed
+  src="/projeler/enflasyon/06_hizmet_mal.html"
+  baslik="Hizmet ve temel mal: 12 aylık, 3 aylık SAAR momentum ve 36 aylık yuvarlanan AR(1) kalıcılık katsayısı"
+  no="06"
+  yukseklik={1349}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+Üç panel, üç farklı soru:
+
+**1. Makas** (üst panel). $\pi^{(12),\text{hizmet}}_t - \pi^{(12),\text{temel mal}}_t$ —
+dezenflasyonun tamamlanıp tamamlanmadığının en okunaklı tek sayısı. Şu an
+**<Deger proje="enflasyon" anahtar="makas_12a" ondalik={2}>22,88</Deger> puan**
+(hizmet <Deger proje="enflasyon" anahtar="hizmet_12a" ondalik={2}>39,70</Deger>,
+temel mal <Deger proje="enflasyon" anahtar="mal_12a" ondalik={2}>16,82</Deger>).
+Momentum bazında makas daha dar:
+<Deger proje="enflasyon" anahtar="makas_3a" ondalik={2}>17,20</Deger> puan — yani
+ayrışma kapanma yönünde, ama yıllık oranlar bunu henüz göstermiyor.
+
+**2. Momentum** (orta panel). Aynı iki serinin 3 aylık SAAR'ı. Eğitim (Eylül),
+lokanta–otel (yaz), ulaştırma (bayram/yaz) mevsimselliği arındırılmadan bu makas
+okunamaz — bu yüzden panel arındırılmış seridir.
+
+**3. Kalıcılık** (alt panel). Ataletin doğrudan ölçüsü, 36 aylık yuvarlanan pencerede
+tahmin edilen AR(1) katsayısı:
+
+$$
+\pi^{\text{MA}}_t = c + \rho\,\pi^{\text{MA}}_{t-1} + \varepsilon_t
+$$
+
+$\rho$ 1'e yaklaştıkça fiyatlama geçmişe bağlıdır; şok kalıcı hâle gelir. Bu koşuda
+hizmet $\rho = $ <Deger proje="enflasyon" anahtar="atalet_hizmet" ondalik={3}>0,593</Deger>,
+temel mal <Deger proje="enflasyon" anahtar="atalet_mal" ondalik={3}>0,488</Deger>,
+manşet <Deger proje="enflasyon" anahtar="atalet_tufe" ondalik={3}>0,600</Deger>,
+kira <Deger proje="enflasyon" anahtar="atalet_kira" ondalik={3}>0,544</Deger>.
+
+**Kiranın kendine özgü mekaniği.** Kira, sözleşme yenileme mekaniği nedeniyle geçmiş
+enflasyonu 12 ay boyunca taşır: aylık kira enflasyonu ≈ (yenilenen sözleşme payı) ×
+(yenileme zammı). Bunun iki sonucu var — (i) kira serisinin **kendisi mevsimseldir**
+(yenileme yoğunluğu aylara göre değişir), (ii) kira dışı hizmetin ayrı izlenmesi gerekir.
+Kira momentumu şu an <Deger proje="enflasyon" anahtar="kira_3a" ondalik={2}>41,18</Deger>,
+yıllık <Deger proje="enflasyon" anahtar="kira_12a" ondalik={2}>45,29</Deger>: hizmet
+enflasyonunun en yapışkan alt kalemi.
+
+## Şekil 07 — Beklentiler ve gerçekleşme
+
+<GrafikEmbed
+  src="/projeler/enflasyon/07_beklenti.html"
+  baslik="Üç kesimin 12 ay sonrası beklentisi, PKA ufukları ve anket isabeti (MAE / yanlılık)"
+  no="07"
+  yukseklik={1373}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Kaynak.** TCMB Piyasa Katılımcıları Anketi (PKA), EVDS `bie_pkauo`; ayın ilk yarısında
+yapılır. Kullanılan seriler: cari ay / 1 ay / 2 ay sonrası **aylık** TÜFE beklentisi
+(`TP.PKAUO.S01.A/B/C.U`), cari yıl sonu, 12 ay ve 24 ay sonrası **yıllık** beklenti
+(`S01.D/E/F.U`), 12 ay sonrası politika faizi beklentisi (`S04.D.U`). Reel sektör (İYA)
+ve hanehalkı beklentileri ayrı serilerden gelir.
+
+<Deger proje="enflasyon" anahtar="pka_donem" ondalik={0}>Ağustos 2026</Deger> anketi
+(<Deger proje="enflasyon" anahtar="bek_n" ondalik={0}>63</Deger> katılımcı): yıl sonu
+**<Deger proje="enflasyon" anahtar="bek_yilsonu" ondalik={2}>29,43</Deger>**, 12 ay
+sonrası **<Deger proje="enflasyon" anahtar="bek_12a" ondalik={2}>23,69</Deger>**
+(medyan <Deger proje="enflasyon" anahtar="bek_medyan_12a" ondalik={2}>23,95</Deger>,
+standart sapma <Deger proje="enflasyon" anahtar="bek_std_12a" ondalik={2}>2,69</Deger>),
+24 ay sonrası <Deger proje="enflasyon" anahtar="bek_24a" ondalik={2}>18,03</Deger>,
+5 yıl sonrası <Deger proje="enflasyon" anahtar="bek_5y" ondalik={2}>11,14</Deger>.
+12 ay sonrası politika faizi beklentisi
+<Deger proje="enflasyon" anahtar="bek_faiz_12a" ondalik={2}>29,59</Deger>.
+
+**Üç kesimin ölçeği aynı değildir.** Hanehalkı beklentisi
+(<Deger proje="enflasyon" anahtar="bek_hane_12a" ondalik={2}>44,94</Deger>) piyasa
+katılımcılarının çok üzerinde, reel sektör
+(<Deger proje="enflasyon" anahtar="bek_reel_kesim_12a" ondalik={2}>32,50</Deger>) arada.
+Bu bir tutarsızlık değil, ölçüm çerçevesi farkıdır: hanehalkı anketleri her ülkede
+sistematik olarak yukarı okur (sepet algısı, sık alınan kalemlerin ağırlığı). Seviyeler
+değil, **yönler ve makaslar** karşılaştırılır.
+
+**İsabet ölçüleri.** $e_{t,h} = \pi_{t} - \pi^{e}_{t|t-h}$ üzerinden:
+
+$$
+\text{MAE}_h = \tfrac{1}{N}\sum |e_{t,h}|,\qquad
+\text{Yanlılık}_h = \tfrac{1}{N}\sum e_{t,h},\qquad
+\text{RMSE}_h = \sqrt{\tfrac{1}{N}\sum e_{t,h}^2}
+$$
+
+Yanlılığın **işareti** anlamlıdır: pozitifse gerçekleşme beklentiyi aşmış, yani anket
+enflasyonu **eksik tahmin** etmiştir.
+
+| Ufuk | MAE (36 ay) | Yanlılık (36 ay) | MAE (60 ay) |
+| --- | --- | --- | --- |
+| Cari ay (nowcast) | <Deger proje="enflasyon" anahtar="isabet_h0_p36_mae" ondalik={2}>0,61</Deger> | <Deger proje="enflasyon" anahtar="isabet_h0_p36_yanlilik" ondalik={2} isaret={true}>+0,15</Deger> | <Deger proje="enflasyon" anahtar="isabet_h0_p60_mae" ondalik={2}>1,08</Deger> |
+| 1 ay ileri | <Deger proje="enflasyon" anahtar="isabet_h1_p36_mae" ondalik={2}>0,79</Deger> | <Deger proje="enflasyon" anahtar="isabet_h1_p36_yanlilik" ondalik={2} isaret={true}>+0,40</Deger> | <Deger proje="enflasyon" anahtar="isabet_h1_p60_mae" ondalik={2}>1,40</Deger> |
+| 2 ay ileri | <Deger proje="enflasyon" anahtar="isabet_h2_p36_mae" ondalik={2}>0,84</Deger> | <Deger proje="enflasyon" anahtar="isabet_h2_p36_yanlilik" ondalik={2} isaret={true}>+0,53</Deger> | <Deger proje="enflasyon" anahtar="isabet_h2_p60_mae" ondalik={2}>1,47</Deger> |
+
+Puan cinsinden. Üç okuma: (i) hata ufukla monoton artıyor — beklenen; (ii) yanlılık
+**pozitif ve ufukla büyüyor**, yani anket sistematik olarak eksik tahmin ediyor;
+(iii) 60 aylık pencerede hatalar 36 aylığın
+<Deger proje="enflasyon" anahtar="isabet_p60_p36_orani" ondalik={1}>1,8</Deger> katı — 2021–22 şok
+döneminin izi. Tek
+pencere seçmek sonucu yönlendirmek olurdu; ikisi de veriliyor.
+
+**Denetim:** PKA katılımcı sayısı 12 aylık ortalamanın %75'inin altına düşerse uyarı
+basılır — anketin temsil gücü sessizce zayıflamasın diye.
+
+## Şekil 08 — Reel faiz: hangi enflasyonla ölçüyorsunuz?
+
+<GrafikEmbed
+  src="/projeler/enflasyon/08_reel_faiz.html"
+  baslik="Dört reel faiz ölçüsü (tam Fisher) ve nominal faiz–enflasyon karşılaştırması"
+  no="08"
+  yukseklik={1057}
+/>
+
+### Bu seriler nasıl hesaplanıyor?
+
+**Faiz serisi seçimi.** EVDS'te "politika faizi" adında bir seri **yoktur**; kullanılan
+`TP.APIFON4`, TCMB'nin **ağırlıklı ortalama fonlama maliyetidir** (AOFM, iş günü). Bu bir
+tercih değil zorunluluktur ve sonuçları vardır: fiilî fonlama maliyeti, ilan edilen
+haftalık repo oranından koridor kullanımı kadar ayrışabilir. Son gözlem
+<Deger proje="enflasyon" anahtar="faiz_gun" ondalik={0}>20.08.2026</Deger> tarihiyle
+%<Deger proje="enflasyon" anahtar="faiz" ondalik={2}>40,00</Deger>.
+
+**Tam Fisher zorunludur.** Yaklaşık formül ($r \approx i - \pi$) yüksek enflasyonda
+kullanılamaz:
+
+$$
+r^{\text{ex-post}}_t = \frac{1+i_t}{1+\pi^{(12)}_t}-1,
+\qquad
+r^{\text{ex-ante}}_t = \frac{1+i_t}{1+\pi^{e}_{t,12}}-1
+$$
+
+Bu koşuda yaklaşık formülün hatası
+**<Deger proje="enflasyon" anahtar="reel_yaklasik_hata" ondalik={2}>1,99</Deger> puandır** —
+politika duruşu tartışmasında iki puan, tartışmanın kendisi kadar büyüktür.
+
+Dört ölçü birlikte çizilir:
+
+| Ölçü | Payda | Değer (%) | Ne sorar? |
+| --- | --- | --- | --- |
+| ex-post | gerçekleşen 12 aylık | <Deger proje="enflasyon" anahtar="reel_expost" ondalik={2}>6,26</Deger> | geçen yıl ne kadar sıkıydık? |
+| ex-ante | PKA 12 ay beklentisi | <Deger proje="enflasyon" anahtar="reel_exante" ondalik={2}>13,19</Deger> | piyasaya göre önümüzdeki yıl? |
+| ana eğilime göre | 3 aylık SAAR | <Deger proje="enflasyon" anahtar="reel_egilim" ondalik={2}>7,18</Deger> | **bugünkü tempoya göre?** |
+| ileriye dönük | 12 ay sonraki faiz / 24 ay sonraki enflasyon beklentisi | <Deger proje="enflasyon" anahtar="reel_ileri" ondalik={2}>9,79</Deger> | patika sonunda? |
+
+**Ana eğilime göre reel faiz** — $r^{\text{eğilim}}_t = (1+i_t)/(1+\pi^{\text{SAAR}}_{t,3})-1$ —
+bu sayfanın momentum tercihinin doğrudan sonucudur ve politika duruşunun en güncel
+ölçüsüdür. Yıllık enflasyonla hesaplanan reel faiz, dezenflasyon dönemlerinde sıkılığı
+**sistematik olarak eksik gösterir**; hızlanma dönemlerinde ise fazla gösterir.
+Ex-ante ile ex-post arasındaki fark
+(<Deger proje="enflasyon" anahtar="reel_exante" ondalik={2}>13,19</Deger> vs
+<Deger proje="enflasyon" anahtar="reel_expost" ondalik={2}>6,26</Deger>) tam olarak
+beklenti ile gerçekleşme arasındaki farktır: piyasa düşüşü fiyatlıyor, gerçekleşme henüz
+düşmemiş.
+
+## Şekil 09 — Baz etkisi: önümüzdeki 12 ayın mekaniği
+
+<GrafikEmbed
+  src="/projeler/enflasyon/09_baz_etkisi.html"
+  baslik="Üç senaryoda yıllık enflasyon patikası ve hesaptan düşen aylık oranlar"
+  no="09"
+  yukseklik={1059}
+/>
+
+### Bu patika nasıl hesaplanıyor?
+
+Yıllık enflasyon, gelen ay ile **düşen ay** arasındaki farkla mekanik olarak hareket
+eder. Özdeşlik:
+
+$$
+1+\pi^{(12)}_t \;=\; \bigl(1+\pi^{(12)}_{t-1}\bigr)\cdot\frac{1+\pi_t}{1+\pi_{t-12}}
+$$
+
+Yani yıllık enflasyon **yalnızca** $\pi_t > \pi_{t-12}$ ise yükselir. $h$ ay ileri
+genellemesi, sayfadaki hesap aracının da matematiğidir:
+
+$$
+1+\pi^{(12)}_{t+h} \;=\; \bigl(1+\pi^{(12)}_{t}\bigr)\cdot\frac{\prod_{s=1}^{h}\bigl(1+\pi_{t+s}\bigr)}{\prod_{s=1}^{h}\bigl(1+\pi_{t+s-12}\bigr)}
+$$
+
+**Paydadaki çarpım tamamen bilinir** — düşen aylar zaten gerçekleşmiştir. Belirsizliğin
+tamamı **paydadır**: önümüzdeki 12 ayın aylık patikası. Grafikteki üç senaryo bu payı üç
+farklı varsayımla doldurur:
+
+| Senaryo | Aylık varsayım (%) | Yıl sonu (%) | 12 ay sonra (%) |
+| --- | --- | --- | --- |
+| Momentum — arındırılmış son 3 ayın temposu | <Deger proje="enflasyon" anahtar="baz_momentum_aylik" ondalik={2}>2,25</Deger> | <Deger proje="enflasyon" anahtar="baz_momentum_yilsonu" ondalik={2}>33,97</Deger> | <Deger proje="enflasyon" anahtar="baz_momentum_12ay" ondalik={2}>30,62</Deger> |
+| Son 12 ayın ortalaması | <Deger proje="enflasyon" anahtar="baz_son12_aylik" ondalik={2}>2,32</Deger> | <Deger proje="enflasyon" anahtar="baz_son12_yilsonu" ondalik={2}>34,45</Deger> | <Deger proje="enflasyon" anahtar="baz_son12_12ay" ondalik={2}>31,75</Deger> |
+| Geçen yılın aylık oranları tekrarlarsa | ay ay değişir | <Deger proje="enflasyon" anahtar="baz_tekrar_yilsonu" ondalik={2}>31,75</Deger> | <Deger proje="enflasyon" anahtar="baz_tekrar_12ay" ondalik={2}>31,75</Deger> |
+
+Üçüncü senaryo bir **kendini doğrulama**dır: geçen yılın oranları birebir tekrarlarsa
+pay ile payda sadeleşir ve yıllık enflasyon on iki ay boyunca sabit kalır. Tablodaki iki
+sütunun da <Deger proje="enflasyon" anahtar="tufe_12a" ondalik={2}>31,75</Deger> çıkması
+hesabın doğru kurulduğunun kanıtıdır.
+
+**Alt panel: baz elverişli mi?** Çubuklar hesaptan **düşen** (bir yıl önceki) aylık
+oranlardır; kesikli çizgi ileri varsayımdır. Bir çubuk çizginin **üstündeyse** o ay
+yıllık enflasyon mekanik olarak geriler — baz elverişlidir. Kıyas ölçütü ileri
+varsayımdır; momentum senaryosunun aylık temposunu
+(%<Deger proje="enflasyon" anahtar="baz_kiyas_aylik" ondalik={2}>2,25</Deger>) alırsak önümüzdeki
+12 ayda baz **elverişli** olduğu aylar
+<Deger proje="enflasyon" anahtar="baz_elverisli_aylar" ondalik={0}>Eylül–Ekim, Ocak–Şubat ve Nisan</Deger>
+(<Deger proje="enflasyon" anahtar="baz_elverisli_n" ondalik={0}>5</Deger> ay), **elverişsiz** olduğu
+aylar <Deger proje="enflasyon" anahtar="baz_elverissiz_aylar" ondalik={0}>Ağustos, Kasım–Aralık, Mart ve Mayıs–Temmuz</Deger>.
+Ay adları bu listeden gelir, metne gömülü değildir: TÜFE bir ay ilerlediğinde pencere
+kayar ve cümle sessizce yanlışa dönerdi. Bu asimetri, **aynı aylık tempoda bile** yıllık
+enflasyonun düz değil basamaklı bir patika izleyeceği anlamına gelir.
+
+<div class="not">
+  <span class="etiket">"Baz etkisiyle enflasyon düşecek" cümlesi tek başına anlamsızdır</span>
+  Baz etkisi bir öngörü değil, bir <strong>muhasebe kimliğidir</strong>. Kimliğin
+  paydası bilinir; payı bilinmez. İleri aylık patika varsayımı yazılmadan kurulan her
+  baz etkisi cümlesi, varsayımını gizleyen bir tahmindir. Bu yüzden hem grafikte hem
+  hesap aracında her senaryonun <strong>aylık varsayımı görünürdür</strong>.
+</div>
+
+## Hesap aracı — baz etkisini kendiniz kurun
+
+Aşağıdaki araç yukarıdaki kimliğin interaktif hâlidir. Payda (düşen aylar) veriden gelir
+ve siz değiştiremezsiniz; pay (önümüzdeki 12 ayın aylık patikası) sizindir.
+
+<BazEtkisiHesaplayici proje="enflasyon" hedef={5} />
+
+**Nasıl kullanılır.**
+
+1. **Tek oran** kutusuna aylık bir tempo yazıp "Tümüne uygula" deyin — 12 ayın tamamı o
+   oranla doldurulur. "Enflasyon aylık %2'de kalırsa yıl sonu ne olur?" sorusunun cevabı
+   budur.
+2. **Hazır patikalar** dört düğmedir: *Momentum* (arındırılmış son 3 ayın temposu),
+   *Son 12 ay ort.*, *Geçen yıl tekrar* (aracın kendini doğrulaması — yıllık oran sabit
+   kalmalı) ve *Hedefle uyumlu* (%5 yıllığın aylık karşılığı, $(1{,}05)^{1/12}-1$).
+3. **Ay ay** girmek isterseniz alttaki 12 kutuyu tek tek düzenleyin: Ocak'a asgari ücret
+   zammı, Temmuz'a yönetilen fiyat ayarlaması koyup gerisini momentumda bırakabilirsiniz.
+4. Sağdaki iki büyük sayı **yıl sonu** ve **12 ay sonra** yıllık enflasyondur; altındaki
+   satır değişimi ikiye ayırır.
+
+Aylık girdiler iki ondalıkla tutulur, bu yüzden hazır patikaların sonucu Şekil 09'un
+senaryo tablosundan yüzde birlik puan mertebesinde ayrışabilir; fark yöntemsel değil,
+yuvarlamadır. Aracın kendi doğrulaması da bu hassasiyetle çalışır: "Geçen yıl tekrar"
+seçildiğinde on iki ayın tamamı
+<Deger proje="enflasyon" anahtar="tufe_12a" ondalik={2}>31,75</Deger> civarında düz
+gitmelidir.
+
+**Ayrıştırma nasıl yapılıyor?** Yıllık enflasyondaki değişim, kalıntısız biçimde iki
+terime bölünür:
+
+$$
+\underbrace{\pi^{(12)}_{t+h} - \pi^{(12)}_{t}}_{\Delta}
+= \underbrace{\frac{(1+\pi^{(12)}_t)\,(\Pi_{\text{gelen}}-1)}{\Pi_{\text{düşen}}}}_{\text{gelen aylar}}
+\;-\; \underbrace{\frac{(1+\pi^{(12)}_t)\,(\Pi_{\text{düşen}}-1)}{\Pi_{\text{düşen}}}}_{\text{baz etkisi}}
+$$
+
+Burada $\Pi_{\text{gelen}} = \prod_{s=1}^{h}(1+\pi_{t+s})$ ve
+$\Pi_{\text{düşen}} = \prod_{s=1}^{h}(1+\pi_{t+s-12})$. İki terim **tam olarak** $\Delta$'ya
+toplanır. Dürüst not: bu ayrıştırma tek değildir — çarpımsal bir kimliği toplamsal iki
+terime bölerken çapraz terimin nereye yazılacağı bir seçimdir. Buradaki seçim her iki
+terimi de bilinen paydaya bölerek kalıntıyı sıfırlar; alternatif bir bölüşüm terimleri
+ikinci mertebeden kaydırırdı. Büyüklük sırası ve işaret her iki tanımda da aynıdır.
+
+**Araç sayı uydurmaz.** Başlangıç yıllık oranı ve 12 aylık düşen-ay dizisi
+`/projeler/enflasyon/ozet.json` dosyasından okunur; veri tazelendiğinde araç da tazelenir.
+Dosya yüklenemezse araç görünür biçimde devre dışı kalır — statik bir yedek sayıyla
+çalışıp bayat sonuç üretmez.
+
+## Yİ-ÜFE, İTO ve öncü göstergeler üzerine bir uyarı
+
+Üretici fiyatları (Yİ-ÜFE) sık sık "TÜFE'nin öncüsü" diye okunur. Bu koşuda Yİ-ÜFE 3a
+SAAR <Deger proje="enflasyon" anahtar="ufe_3a" ondalik={2}>27,16</Deger>, 12 aylık
+<Deger proje="enflasyon" anahtar="ufe_12a" ondalik={2}>27,83</Deger> — TÜFE'nin altında.
+Ama Yİ-ÜFE'nin mevsimselliği bu koşuda **istatistiksel olarak anlamsız** çıktığı için
+($p = $ <Deger proje="enflasyon" anahtar="sa_p_ufe" ondalik={3}>0,524</Deger>) arındırılmadan
+geçirildi; ham ve arındırılmış aynıdır.
+
+İTO Geçinme Endeksi ise **aynı ayın nowcast'idir, gelecek ayın öncüsü değildir**. Ölçüldü:
+İstanbul aylık ile TÜFE aylık arasındaki eşanlı korelasyon
+$r = $ <Deger proje="enflasyon" anahtar="ito_r" ondalik={3}>0,874</Deger>
+($R^2 = $ <Deger proje="enflasyon" anahtar="ito_r2" ondalik={3}>0,764</Deger>,
+$n = $ <Deger proje="enflasyon" anahtar="ito_n" ondalik={0}>30</Deger>), **bir ay
+önceden** ise <Deger proje="enflasyon" anahtar="ito_r_onceden" ondalik={3}>−0,015</Deger>
+— yani sıfır. Zamanda kaydırılmış bir "öncü gösterge" çizimi yanlış olurdu ve
+çizilmiyor. Regresyon katsayıları her koşuda yeniden tahmin edilir, koda gömülmez:
+$\pi^{\text{TÜFE}} = $ <Deger proje="enflasyon" anahtar="ito_sabit" ondalik={3}>0,032</Deger>
+$+$ <Deger proje="enflasyon" anahtar="ito_egim" ondalik={3}>0,873</Deger>
+$\times\,\pi^{\text{İTO}}$. Son İTO aylık
+<Deger proje="enflasyon" anahtar="ito_son_aylik" ondalik={2}>2,06</Deger>, bunun ima
+ettiği TÜFE aylık <Deger proje="enflasyon" anahtar="ito_ima_aylik" ondalik={2}>1,83</Deger>.
+
+**Bu sayı 0,01 hassasiyetinde okunmamalıdır.** Regresyonun artık standart sapması
+<Deger proje="enflasyon" anahtar="ito_se_artik" ondalik={2}>0,56</Deger> puandır; nokta tahminin
+%95 **öngörü aralığı** (güven aralığı değil — yeni bir gözlemin nereye düşeceğini sorar)
+**<Deger proje="enflasyon" anahtar="ito_ima_alt" ondalik={2}>0,66</Deger> –
+<Deger proje="enflasyon" anahtar="ito_ima_ust" ondalik={2}>3,01</Deger>**, yani
+±<Deger proje="enflasyon" anahtar="ito_ima_yari" ondalik={2}>1,17</Deger> puan. Katsayılar da
+kesin değildir: eğimin standart hatası
+<Deger proje="enflasyon" anahtar="ito_se_egim" ondalik={3}>0,092</Deger>, sabitinki
+<Deger proje="enflasyon" anahtar="ito_se_sabit" ondalik={3}>0,283</Deger> — yani "katsayılar her
+koşuda yeniden tahmin edilir" cümlesi, eğimin her ay ±0,18 mertebesinde oynayabileceği
+anlamına da gelir. Örneklem
+$n = $ <Deger proje="enflasyon" anahtar="ito_n" ondalik={0}>30</Deger> aydır ve
+$R^2 = $ <Deger proje="enflasyon" anahtar="ito_r2" ondalik={3}>0,764</Deger> **tamamen örneklem
+içidir**: örneklem-dışı geri-sınama yapılmadı ve yapılmadığını yazıyoruz. Nowcast bir
+çıpa olarak okunabilir, bir tahmin olarak değil.
+
+## Doğrulama ve sessiz bayatlama denetimi
+
+Bir veri hattının en sinsi hatası çökmek değil, **koşup ilerlememektir**. Bu hatta yedi
+denetim var; üçü hattı durdurur. Sıralama, denetimin *ne ölçtüğüne* göredir — bir
+formül denetimini "sessiz bayatlama denetimi" diye sunmak okuru yanlış yönlendirir.
+
+### Bayatlık denetimleri
+
+**1. Aile bazlı tazelik — asıl bayatlık denetimi budur.** Tek bir eşik her ay yanlış
+alarm üretirdi: TÜFE/ÖKTG/Yİ-ÜFE ayın 3'ünde, PKA ayın ikinci yarısında, hanehalkı
+beklentisi ay ortasında, İTO ayın ilk günlerinde, faiz her iş günü tazelenir. Her aile
+kendi takvimiyle denetlenir; eksik ay/gün sayılır ve uyarı basılır. Bu sayfada TÜFE
+verisi <Deger proje="enflasyon" anahtar="donem" ondalik={0}>Temmuz 2026</Deger>, yayımdan bu yana
+<Deger proje="enflasyon" anahtar="yayim_gecikme_gun" ondalik={0}>17</Deger> gün geçti; günlük bacağın
+son dolu iş günü <Deger proje="enflasyon" anahtar="faiz_gun" ondalik={0}>20.08.2026</Deger>. İki
+frekans ayrı ayrı izlenir: biri donarken diğeri ilerleyebiliyor.
+
+**2. EVDS'in `LAST_UPDATED` alanı tazelik ölçüsü DEĞİLDİR** — tuzaktır. Ölçüldü:
+`bie_tukfiy2025` verisi 07.2026'da biterken alan 22.04.2026 diyordu. Tazelik yalnız
+**son dolu gözlemden** okunur.
+
+**3. TTL'li önbellek — hattı DURDURABİLİR.** Seri verisi 12 saat, seri kataloğu 168 saat.
+Ağ düşerse eski önbelleğe düşülür ama **sessiz kalınmaz**: kaç gün eski olduğu yazılır
+ve uyarı `uyarilar.json`'a girer. Önbellek de yoksa hat hata vererek durur — eksik
+seriyle grafik üretmez.
+
+**4. Eksik figür denetimi — hattı DURDURUR.** `grafik.py` dokuz şeklin herhangi birini
+üretemezse çıkış kodu 1 verir ve siteye kopyalama **yapılmaz**. Bu denetim olmasaydı
+kopyalama adımı var olan (eski) HTML'leri kopyalayıp başarıyla biterdi: grafik bayat,
+metin taze — projenin yasakladığı sessiz bayatlama sınıfının tam örneği.
+
+### Doğruluk denetimleri
+
+**5. Çapraz doğrulama (formül ve kolon hizalaması) — hattı DURDURUR.** Endeks
+seviyelerinden hesapladığımız 12 aylık değişim, EVDS'in kendi oran çıktısıyla
+(`formulas=3`) 0,05 puan içinde tutmak zorundadır; tutmazsa `metrik.py` hata vererek
+düşer. Aylık için eşik 0,01 puandır (uyarı). Bu koşuda
+<Deger proje="enflasyon" anahtar="dogrulama_n" ondalik={0}>36</Deger> aylık örtüşmede
+maksimum fark: yıllıkta
+<Deger proje="enflasyon" anahtar="dogrulama_yillik_pp" ondalik={3}>0,000</Deger> puan,
+aylıkta <Deger proje="enflasyon" anahtar="dogrulama_aylik_pp" ondalik={3}>0,000</Deger> puan.
+
+Bu denetimin **ne ölçmediği** de yazılmalı: bayatlığı yakalamaz. Sınandı — endeks 3 ve
+6 ay bayatlatıldığında maksimum fark yine 0,000000 puan çıktı. Nedeni yapısal: EVDS'in
+`formulas=3` çıktısı bizim indirdiğimiz serinin sunucu tarafındaki dönüşümüdür ve kıyas
+yalnız **kesişen** tarihlerde yapılır; seri bayatlarsa iki taraf birlikte bayatlar.
+Yakaladığı hata sınıfı yanlış kolon eşleşmesi, kayan seri kaydı, baz değişimi ve
+yıllıklandırma formülünün bozulmasıdır. Tek tazelik katkısı: pencere **koşum gününden**
+türetilir ve EVDS bizden ileri bir ay döndürürse görünür uyarı düşer.
+
+**6. Yapısal denetimler.** `TP.FE25.OKTG01` ile `TP.TUKFIY2025.GENEL` birebir aynı
+olmalıdır (ÖKTG ağacının kökü manşetin kendisidir); aylık katkı toplamı manşetten 0,02,
+yıllık katkı toplamı 0,05 puandan fazla sapamaz (uyarı); **ağırlık kimliğinin artığı
+0,05 puanı aşarsa hat DURUR**.
+
+**7. Ölü alt kalem denetimi.** Üç haneli grupların son gözlem ayı genel endeksle
+karşılaştırılır. <Deger proje="enflasyon" anahtar="uyari_cumlesi" ondalik={0}>Bu koşuda düşen tek uyarı budur:</Deger>
+<Deger proje="enflasyon" anahtar="uyari_metni" ondalik={0}>ALT KALEM: 2 adet üç haneli grup son ayda (Temmuz 2026) veri vermiyor: 095, 105.</Deger>
+Bunlar 2026 sınıflama değişiminde düşen kalemlerdir; güncel kesitten çıkarılır,
+yaşadıkları yılların ağırlık tahmininde korunur, etkin ağırlıklar yeniden ölçeklenir.
+
+**Ayrıca:** arındırmanın uç-nokta revizyonu her koşuda vintage testiyle ölçülür ve
+sayfaya basılır (yukarıda, Şekil 03) — "ölçü koşuyor ama ilerlemiyor" hâline karşı.
+
+## Sınırlar ve yorum notları
+
+Hiçbiri bir kalibrasyon sabitiyle kapatılmamıştır; kapatmak, ölçüm hatasını modele
+gömmek olurdu.
+
+- **Ağırlıklar tahmindir.** TÜİK'in yayımladığı sayılar değil, zincir-Laspeyres
+  kimliğinden geri çıkarılmış değerlerdir. Kimlik artığı binde iki puan mertebesinde ve
+  TCMB'nin duyurduğu 2026 kayması yeniden üretiliyor — ama bu bir çıkarımdır.
+- **Arındırma bizimdir, TÜİK'in ya da TCMB'nin değil.** X-13ARIMA-SEATS kurulu değil;
+  STL ile X-13 arasındaki 3 aylık SAAR farkı **ölçülmedi**. TCMB'nin yayımladığı
+  arındırılmış sayıyla birebir tutmayabilir.
+- **Arındırma geçmişi değiştirir.** Son 6–12 gözlemin arındırılmış aylık değişimleri
+  sonraki koşularda revize olur (uç nokta sorunu). Grafiklerde son 3 nokta içi boş
+  çizilir. Bu **bizim ürettiğimiz** bir revizyondur; TÜFE endeksinin kendisi revize
+  edilmez.
+- **Doğrudan/dolaylı tutarsızlığı bilerek korunuyor.** Manşet doğrudan arındırılır, katkı
+  ve dağılım hesabındaki alt kalemler kendi içlerinde arındırılır. Dolaylı toplam,
+  doğrudan arındırılmış manşetle birebir örtüşmez.
+- **Hareketli tatil düzeltmesi ön aşamadadır, RegARIMA değildir.** Hicri takvim aritmetik
+  yaklaşımla üretilir, rasat tabanlı ilandan ±1 gün sapabilir.
+- **Kırpma seviyesi keyfîdir** ve kırpılmış ortalamanın sağa çarpık dağılımdan gelen
+  negatif yanlılığı **düzeltilmez**, ayrı gösterge olarak raporlanır.
+- **Alt kesit üç haneli düzeydedir** (<Deger proje="enflasyon" anahtar="kesit_n" ondalik={0}>43</Deger>
+  grup), beş haneli 188 temel başlık değil. Sebebi TÜİK'in kendi duyurusudur: 2026
+  sınıflama değişiminde "bazı alt endekslerde farklılık görülebilir" deniyor; 4–5 haneli
+  düzeyde geriye dönük kıyas güvenli değil.
+- **Oynak kalemlerin 3 aylık SAAR'ı merkezî eğilim ölçüsü değildir.** Enerji ve
+  işlenmemiş gıda için tabloda yıldızlı satırlar bunun içindir; enerjinin bu koşudaki
+  <Deger proje="enflasyon" anahtar="enerji_3a" ondalik={2}>−23,39</Deger> değeri bir
+  dezenflasyon işareti değil, tek bir ayın filtre üzerindeki etkisidir.
+- **"Politika faizi" serisi kullanılmıyor**, ağırlıklı ortalama fonlama maliyeti (AOFM)
+  kullanılıyor — EVDS'te politika faizi adında bir seri yok. İkisi koridor kullanımı
+  kadar ayrışabilir.
+- **2026 temel yılı kırılması alt endeksleri etkiler.** Manşet için splice gerekmez
+  (2025=100 serisi Ocak 2005'e uzanır ve o dönemin yıllık oranları eskisiyle aynıdır),
+  ama **alt endekslerde geriye dönük karşılaştırma yapılmamalıdır** — TÜİK'in kendisi
+  farklılık olabileceğini söylüyor. Ayrıca hizmetlerin ağırlığı ~7,4 puan arttı; 2026'nın
+  hizmet–mal ayrışmasının bir kısmı ölçüm çerçevesinin değişmesinden gelir.
+- **Yapışkan/esnek fiyat ayrımı yapılmadı.** TÜİK madde düzeyinde fiyat değiştirme
+  sıklığı mikro verisi yayımlamıyor; Atlanta Fed'in Bils–Klenow tipi sınıflaması
+  replike edilemez. Vekil bir sınıflama kurmak mümkündü ama "mikro veriye dayalı değil"
+  ibaresiyle sunulması gerekirdi; bu koşuda üretilmedi.
+- **Alternatif ölçümlerle (ENAG vb.) kıyas bu panoda yapılmıyor.** Yapılsaydı bile
+  panonun tutumu şu olurdu: ağırlık, kapsam ve derleme yöntemi farkları **ölçülebilir**;
+  niyet ve müdahale iddiaları **ölçülemez**. Ham madde düzeyi fiyat verisi ve derleme
+  kayıtları olmadan "hangi endeks doğru" sorusu dışarıdan yanıtlanamaz.
+
+## Kaynaklar
+
+- TÜİK, *TÜFE Temel Yıl Güncellemesi ve Hesaplama Sisteminde Yapılacak Değişikliklere
+  İlişkin Kamuoyu Duyurusu*, 30.10.2025 (2025=100, ECOICOP v2, ağırlık kaynağı).
+- TÜİK, *TÜFE Sonuçlarının Mevsimsellikten Arındırılmış Olarak Yayımlanması*, Kamuoyu
+  Duyurusu No 31, 02.10.2024.
+- TÜİK, *Mevsim ve Takvim Etkilerinden Arındırılmış Endeksler — Metaveri* (dört takvim
+  etkisi, hareketli dinî tatiller).
+- TCMB, *Aylık Fiyat Gelişmeleri* (ÖKTG B/C/D/F tanımları, katkı grupları, ana eğilim
+  göstergeleri: B, C, SATRIM, Medyan, oynak kalemleri dışlayan gösterge, dinamik faktör
+  modeli).
+- TCMB Blog, *2026 Yılı Tüketici Fiyat Endeksindeki Güncellemeler ve Etkileri* (ağırlık
+  kaymaları).
+- TCMB, *Piyasa Katılımcıları Anketi*.
+- ECB, *Underlying inflation* (momentum = mevsim ve takvim etkisinden arındırılmış
+  endeksin 3a/3a değişimi, yıllıklandırılmış), 2023 ve 2024 güncellemesi.
+- Federal Reserve Bank of Cleveland, *Median CPI* — %16 kırpılmış ortalama tanımı.
+- Federal Reserve Bank of Atlanta, *Sticky-Price CPI* — 4,3 ay eşiği, Bils–Klenow.
+- BLS, *Seasonal Adjustment Methodology* — X-13ARIMA-SEATS, son 5 yıl revizyonu.
+- U.S. Census Bureau, *Notes on Centering Holiday Regressors* — hareketli tatil
+  regresörlerinin ortalamayla merkezlenmesi.
+- Federal Reserve Board, *New tools to monitor inflation in real time*, FEDS Notes,
+  20.12.2024 — zamanla değişen eşikli difüzyon endeksi.
