@@ -24,10 +24,12 @@ const { proje, sayi = 0 } = Astro.props;
 <div class="not kosu" data-kosu-proje={proje}>
   <span class="etiket" data-kosu-baslik>Bu koşunun durumu</span>
   <p class="kosu-tazelik" data-kosu-tazelik>Tazelik bilgisi yükleniyor…</p>
-  <p class="kosu-uyari">
+  <!-- div, p DEĞİL: MDX slot içeriğini kendi <p>'sine sarar; <p> içinde <p>
+       geçersizdir ve tarayıcı dış paragrafı erkenden kapatır. -->
+  <div class="kosu-uyari">
     <strong data-kosu-cumle>Bu koşuda {sayi} uyarı düştü:</strong>{' '}
     <span data-kosu-metin><slot /></span>
-  </p>
+  </div>
   <p class="kosu-kaynak">
     Tam liste: <a href={`/projeler/${proje}/uyarilar.json`}>uyarilar.json</a> ·
     sayfadaki canlı değerler: <a href={`/projeler/${proje}/ozet.json`}>ozet.json</a>
@@ -58,8 +60,14 @@ const { proje, sayi = 0 } = Astro.props;
     }
   });
 </script><style>
-  .not.kosu p {
+  .not.kosu p,
+  .not.kosu .kosu-uyari {
     margin: 0.35rem 0;
+  }
+  /* MDX slot içeriği bir <p> ile gelir; kutuda satır içi akmalı. */
+  .not.kosu .kosu-uyari span > p {
+    display: inline;
+    margin: 0;
   }
   .not.kosu .kosu-kaynak {
     font-size: 0.86rem;
