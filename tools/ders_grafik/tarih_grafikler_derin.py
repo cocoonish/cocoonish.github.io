@@ -2,12 +2,13 @@
 """Türkiye Piyasa Tarihi — 1854–2001 arkı · UZUN UFUK grafik seti.
 
 Tek komut:  python3 site/tools/ders_grafik/tarih_grafikler_derin.py
-Çıktı:      site/public/arastirma/turkiye-piyasa-tarihi/DNN_ad.html
+Çıktı:      site/public/arastirma/turkiye-piyasa-tarihi/NN_ad.html
 
 Bu modül `tarih_grafikler.py`'yi BOZMAZ; oradan yalnız yardımcıları (palet, düzen,
-kaydet, dikey, not_) ödünç alır ve kendi figürlerini üretir. Dosya adları geçici
-`DNN_` önekiyle yazılır; yazım aşamasında şekil numaraları belge sırasına göre
-kesinleşince dosya adları / MDX `no` / metin atıfları BİRLİKTE güncellenir.
+kaydet, dikey, not_) ödünç alır ve kendi figürlerini üretir. Şekil numaraları BELGE
+SIRASINI izler ve kesinleşmiştir: bu modül Şekil 03–13 ile Şekil 38'i üretir
+(`tarih_grafikler.py` Şekil 01–02 ve 14–37'yi üretir). Araya yeni bir grafik girerse
+dosya adları / MDX `src` ve `no` / metin atıfları BİRLİKTE güncellenmelidir.
 
 Kurallar (ders standardı):
   · Sentetik seri YOK. Seriler ya EVDS önbelleğinden (_tarih/*.csv) ya da
@@ -342,9 +343,9 @@ T_TAKSIT = pd.DataFrame({
 
 
 # ======================================================================
-#  D01 — Uzun ufuk kur
+#  Şekil 07 — Uzun ufuk kur
 # ======================================================================
-def d01():
+def g07():
     bas, bit = "1946-01-01", "2026-08-21"
     # ESKİ TL ile çizilir (yeni TL'de eksen 0,0000028 – 47,86 arasına yayılıyor ve
     # tikler mikro önekiyle okunmaz hâle geliyor). Eski TL, dönemin kendi birimidir:
@@ -418,14 +419,14 @@ def d01():
               "1946–1949 basamağı EVDS dışıdır: TCMB açıklaması, Cumhuriyet 8.9.1946 "
               "→ Tuna (2007) s.97 · rejim bantları: TCMB 'Dünden Bugüne TCMB', "
               "FRUS 1958–60 X/2 blg.322, 32 sayılı Karar")
-    kaydet(fig, "D01_uzun_ufuk_kur", "TL/USD'nin uzun ufku ve kur rejimleri",
+    kaydet(fig, "07_uzun_ufuk_kur", "TL/USD'nin uzun ufku ve kur rejimleri",
            "1946 → 2026-08")
 
 
 # ======================================================================
-#  D02 — Uzun ufuk enflasyon
+#  Şekil 08 — Uzun ufuk enflasyon
 # ======================================================================
-def d02():
+def g08():
     bas, bit = "1964-01-01", "2026-08-21"
     pi = kes(enflasyon_yoy(), bas, bit)
     p = kes(fiyat_endeksi(), bas, bit)
@@ -479,14 +480,14 @@ def d02():
               "1968–86) · TP.FG.A01 (TÜFE 1987=100) · TP.FG.J0 (TÜFE 2003=100) · "
               "TP.TUKFIY2025.GENEL — oran zincirlemesiyle eklemlendi; 1987 öncesi "
               "TOPTAN EŞYA endeksidir, tüketici endeksiyle birebir karşılaştırılamaz")
-    kaydet(fig, "D02_uzun_ufuk_enflasyon", "Yıllık enflasyon ve fiyat düzeyi, 1964–2026",
+    kaydet(fig, "08_uzun_ufuk_enflasyon", "Yıllık enflasyon ve fiyat düzeyi, 1964–2026",
            "1964-01 → 2026-08")
 
 
 # ======================================================================
-#  D03 — Reel getirinin uzun ufku ve mali baskınlık
+#  Şekil 12 — Reel getirinin uzun ufku ve mali baskınlık
 # ======================================================================
-def d03():
+def g12():
     bas, bit = "1985-01-01", "2026-08-21"
     pi = enflasyon_yoy()
 
@@ -537,7 +538,14 @@ def d03():
     zirve = kes(oran, "1993-01-01", "1995-12-31")
     if len(zirve):
         t = zirve.idxmax()
-        not_(fig, t, zirve.max(), f"{t.strftime('%m.%Y')} zirve: {tr(zirve.max(), 2)}×",
+        # Seri İŞ GÜNÜ frekansındadır: bu etiket AY İÇİ zirvedir. Ders metni
+        # her yerde AY SONU konvansiyonunu kullanır (31.03.1994 = 3,24×), bu
+        # yüzden etiket iki okumayı da yazar — yoksa metin ile grafik ayrışır.
+        ay_sonu = oran.resample("ME").last()
+        as_deger = ay_sonu.loc[ay_sonu.index.to_period("M") == t.to_period("M")]
+        ek = f" · ay sonu {tr(float(as_deger.iloc[0]), 2)}×" if len(as_deger) else ""
+        not_(fig, t, zirve.max(),
+             f"{t.strftime('%d.%m.%Y')} ay içi zirve: {tr(zirve.max(), 2)}×{ek}",
              row=3, ay=-30, boyut=9.5, renk=TURUNCU)
     # Panelin 1997 sonrası boşluğu VERİ EKSİKLİĞİ değil, kurumsal sonucun kendisidir:
     # kanal üç aşamada kapatıldı. Boşluk, üç dikey çizgi ve bir kutuyla anlatılıyor.
@@ -569,15 +577,15 @@ def d03():
           "01.1985 – 08.2026", 1180,
           alt="EVDS TP.FA.F07 (azami mevduat faizi, 1984-04→1996-12) · TP.TRY.MT06 "
               "(yeni açılan mevduat, haftalıktan ay ort.) · TP.PY.P06.ON · "
-              "TP.AB.A05 / TP.AB.A17 (analitik bilanço, iş günü) · enflasyon: D02 "
+              "TP.AB.A05 / TP.AB.A17 (analitik bilanço, iş günü) · enflasyon: Şekil 08 "
               "eklemlenmiş endeksi · 1984–96 mevduat faizi İDARİ TAVANDIR, fiilî "
               "ödenen faiz değildir")
-    kaydet(fig, "D03_reel_getiri_mali_baskinlik",
+    kaydet(fig, "12_reel_getiri_mali_baskinlik",
            "Reel mevduat getirisi ve mali baskınlık, 1985–2026", "1985-01 → 2026-08")
 
 
 # ======================================================================
-#  D04 — Kriz karşılaştırma paneli (DERSİN OMURGASI)
+#  Şekil 38 — Kriz karşılaştırma paneli (DERSİN OMURGASI)
 # ======================================================================
 KRIZ = [
     ("1993-12-31", "1994 · t₀ = 31.12.1993 (kriz öncesi son iş günü)", BORDO),
@@ -601,7 +609,7 @@ def _hizala(s: pd.Series, t0: str, n: int = UFUK, endeks=True) -> pd.Series:
     return out
 
 
-def d04():
+def g38():
     k = kur_uzun()
     g = gecelik()
     bist = _oku("bist.csv").set_index("dt")["MK.F.BILESIK"].dropna()
@@ -619,7 +627,7 @@ def d04():
         for row, seri, endeks in ((1, k, True), (2, g, False), (3, bist_usd, True)):
             s = _hizala(seri, t0, endeks=endeks)
             if not len(s):
-                ATLANAN.append(f"D04 — {ad}: panel {row} için veri yok")
+                ATLANAN.append(f"Şekil 38 — {ad}: panel {row} için veri yok")
                 continue
             fig.add_trace(go.Scatter(
                 x=s.index, y=s.values, name=ad, mode="lines",
@@ -656,15 +664,15 @@ def d04():
               "t₀ seçimleri lejantta yazılıdır ve tartışmaya açıktır: farklı t₀ "
               "eğrilerin başlangıç eğimini değiştirir, sıralamasını değiştirmez",
           legend_y=-0.055)
-    kaydet(fig, "D04_kriz_karsilastirma",
+    kaydet(fig, "38_kriz_karsilastirma",
            "Dört krizin t₀ hizalı karşılaştırması (kur · gecelik faiz · BIST-USD)",
            "t₀ + 250 iş günü")
 
 
 # ======================================================================
-#  D05 — Kur ne zaman "fiyat" oldu?
+#  Şekil 11 — Kur ne zaman "fiyat" oldu?
 # ======================================================================
-def d05():
+def g11():
     bas, bit = "1950-01-01", "1996-12-31"
     k = kes(kur_uzun(), bas, bit) * 1e6                  # eski TL — dönemin birimi
     degisti = (k.diff() != 0) & k.diff().notna()
@@ -725,15 +733,15 @@ def d05():
           "02.01.1950 – 31.12.1996", 1150,
           alt="EVDS TP.DK.USD.A.YTL (arşiv günlük seri) · 'değiştiği gün' = kotasyonun "
               "bir önceki gözlemden farklı olduğu gün · 1958 çoklu kur bilgisi: FRUS "
-              "1958–60 X/2 blg.322 · enflasyon: D02 eklemlenmiş endeksi (1964'ten)")
-    kaydet(fig, "D05_kur_fiyat_oldugu_gun", "Kur ne zaman fiyat oldu? 1950–1996",
+              "1958–60 X/2 blg.322 · enflasyon: Şekil 08'in eklemlenmiş endeksi (1964'ten)")
+    kaydet(fig, "11_kur_fiyat_oldugu_gun", "Kur ne zaman fiyat oldu? 1950–1996",
            "1950-01 → 1996-12")
 
 
 # ======================================================================
-#  D06 — Gecelik faizin uzun ufku
+#  Şekil 13 — Gecelik faizin uzun ufku
 # ======================================================================
-def d06():
+def g13():
     bas, bit = "1990-01-01", "2026-08-21"
     ao = kes(gecelik("PY.P06.ON"), bas, bit)
     enY_g = kes(gecelik("PY.P05.ON"), bas, bit)
@@ -819,14 +827,14 @@ def d06():
               "TP.PY.P04.ON (en düşük) · TP.PY.P03.ON (hacim) — hepsi iş günü, "
               "02.01.1990'dan itibaren · ağırlıklı ortalama GÜNLÜK; zarf ve hacim "
               "HAFTALIK özetlendi (hafta maks./min./ort.) — uç değerler korunur")
-    kaydet(fig, "D06_gecelik_faiz_uzun_ufuk",
+    kaydet(fig, "13_gecelik_faiz_uzun_ufuk",
            "Gecelik faiz, gün içi menzil ve hacim, 1990–2026", "1990-01 → 2026-08")
 
 
 # ======================================================================
-#  D07 — Osmanlı istikrazları: nominal, ele geçen, ihraç fiyatı
+#  Şekil 05 — Osmanlı istikrazları: nominal, ele geçen, ihraç fiyatı
 # ======================================================================
-def d07():
+def g05():
     t = T_ISTIKRAZ
     # KATEGORİ EKSENİ KULLANILMIYOR: etiketlerin çoğu ("1854", "1874") sayıya
     # benziyor ve plotly bunları koordinata çevirip bütün çubukları tek noktaya
@@ -901,14 +909,14 @@ def d07():
           alt="KAYNAK: Eldem, V. (1970), s.160–161 ve s.260–262; Dikmen (2005) Tablo 1–2 "
               "(Yeniay'dan); Arslan, İ. (2015), Journal of History Studies 7/4 · "
               "EVDS'te bu dönem için seri YOKTUR — tablo elle kodlanmıştır")
-    kaydet(fig, "D07_osmanli_istikrazlari",
+    kaydet(fig, "05_osmanli_istikrazlari",
            "Osmanlı istikrazları: nominal, ele geçen, ihraç fiyatı", "1854 → 1874")
 
 
 # ======================================================================
-#  D08 — Borç stokunun yüz yılı ve iki kesinti
+#  Şekil 06 — Borç stokunun yüz yılı ve iki kesinti
 # ======================================================================
-def d08():
+def g06():
     t = T_STOK
     x = list(range(len(t)))
     etiket = t["etiket"].tolist()
@@ -1010,14 +1018,14 @@ def d08():
               "'Düyûn-ı Umûmiyye'; Kıray (1993) s.145 · 1881 için üç kaynak üç ayrı "
               "büyüklük verir (kapsam farkı: gecikmiş faizler, iç borcun sayılıp "
               "sayılmaması, parite kabulü) — tek bir rakam 'doğru' diye seçilmemiştir")
-    kaydet(fig, "D08_borc_stoku_yuz_yil",
+    kaydet(fig, "06_borc_stoku_yuz_yil",
            "Osmanlı/TC dış borç stoku 1854–1954 ve iki kesinti", "1854 → 1954")
 
 
 # ======================================================================
-#  D09 — Gümrük tarifesi ve Düyun-u Umumiye'nin gelir payı
+#  Şekil 04 — Gümrük tarifesi ve Düyun-u Umumiye'nin gelir payı
 # ======================================================================
-def d09():
+def g04():
     t = T_TARIFE
     fig = make_subplots(
         rows=2, cols=1, shared_xaxes=False, vertical_spacing=0.13,
@@ -1088,12 +1096,12 @@ def d09():
               "konusunda içsel tutarsızlık vardır; grafik, %12 → %1 indiriminin "
               "İHRACAT vergisinde olduğu okumasını izler · KAYNAK (alt): İnce, "
               "'Devlet Borçlanması' s.65 → Dikmen (2005) Tablo 5")
-    kaydet(fig, "D09_tarife_ve_duyun",
+    kaydet(fig, "04_tarife_ve_duyun",
            "Gümrük tarifesi 1830–1914 ve Düyun-u Umumiye'nin gelir payı", "1830 → 1914")
 
 
 # ======================================================================
-#  D10 — Rejim zaman çizelgesi 1854–2026
+#  Şekil 03 — Rejim zaman çizelgesi 1854–2026
 # ======================================================================
 # Kaynaklar: TCMB 'Kâğıt Paranın Tarihçesi' ve 'Dünden Bugüne TCMB'; 1567 sayılı
 # TPKK Kanunu (20.02.1930); 1715 s.K. (11.06.1930, RG 30.06.1930); 1211 s.K. (1970);
@@ -1157,7 +1165,7 @@ KRIZ_ISARET = [
 ]
 
 
-def d10():
+def g03():
     satirlar = []
     for s, *_ in ZAMAN_CIZELGESI:
         if s not in satirlar:
@@ -1245,22 +1253,23 @@ def d10():
                      showticklabels=False, showgrid=False, zeroline=False)
     fig.update_xaxes(range=[X0, X1], dtick=10, zeroline=False, row=1)
     fig.update_xaxes(title_text="yıl", range=[X0, X1], dtick=10, zeroline=False, row=2)
-    duzen(fig, "Yüz yetmiş yılın rejim şeridi: kur · para otoritesi · sermaye hesabı",
+    duzen(fig, "Yüz seksen sekiz yılın rejim şeridi: kur · para otoritesi · sermaye hesabı",
           "1838 – 2026", 1080,
           alt="KAYNAK: TCMB 'Kâğıt Paranın Tarihçesi' ve 'Dünden Bugüne TCMB'; 1567 s. "
               "TPKK Kanunu (20.02.1930); 1715 s.K. (11.06.1930, RG 30.06.1930); 1211 s.K. "
-              "(1970); 32 sayılı Karar (11.08.1989); 4651 s.K. (25.04.2001); Arslan "
+              "(1970, md. 8 ve md. 50); 32 sayılı Karar (11.08.1989); 4651 s.K. (kabul "
+              "25.04.2001, RG 05.05.2001, yasak 05.11.2001); Arslan "
               "(2015); Dikmen (2005); TDV 'Düyûn-ı Umûmiyye'; FRUS 1958–60 X/2 blg.322; "
               "Tuna (2007) · dönem sınırları YUVARLANMIŞTIR: şerit kronoloji değil, "
               "REJİM haritasıdır")
-    kaydet(fig, "D10_rejim_zaman_cizelgesi", "Rejim zaman çizelgesi 1838–2026",
+    kaydet(fig, "03_rejim_zaman_cizelgesi", "Rejim zaman çizelgesi 1838–2026",
            "1838 → 2026")
 
 
 # ======================================================================
-#  D11 — Korunma araçlarının uzun ufku (altın · döviz · fiyat düzeyi)
+#  Şekil 09 — Korunma araçlarının uzun ufku (altın · döviz · fiyat düzeyi)
 # ======================================================================
-def d11():
+def g09():
     # TABAN 1963-12: altın serisi 1978 öncesinde YALNIZ ARALIK gözlemi taşır,
     # 1963-01 tabanı altın serisini tamamen NaN yapıyordu (endeksle() taban
     # tarihinden ÖNCEKİ son gözlemi arar, altında öyle bir gözlem yoktur).
@@ -1273,7 +1282,7 @@ def d11():
     cum = pd.concat([eski["TP_MK_CUM_YTL"].dropna().loc[:"1989-12-31"],
                      yeni["MK.CUM.YTL"].dropna().loc["1990-01-01":]]).sort_index()
     if not len(kul) or not len(cum):
-        ATLANAN.append("D11 — altın serisi boş, grafik üretilmedi")
+        ATLANAN.append("Şekil 09 — altın serisi boş, grafik üretilmedi")
         return
 
     k = kur_uzun().resample("MS").last()
@@ -1337,19 +1346,287 @@ def d11():
           "12.1963 – 05.2026", 940,
           alt="EVDS TP.MK.KUL.YTL / TP.MK.CUM.YTL (Ankara Kuyumcular Odası; 1978 "
               "öncesi yalnız ARALIK gözlemi vardır — o dönemde çizgi yıllık noktaları "
-              "birleştirir) · TP.DK.USD.A.YTL · fiyat düzeyi: D02 eklemlenmiş endeksi · "
+              "birleştirir) · TP.DK.USD.A.YTL · fiyat düzeyi: Şekil 08'in eklemlenmiş endeksi · "
               "1963–86 toptan eşya endeksi kullanıldığı için o dönemin REEL "
               "hesapları tüketici sepetiyle birebir karşılaştırılamaz · UYARI: alt "
               "paneldeki USD çizgisi REEL KUR DEĞİLDİR — reel kur yabancı fiyat "
               "endeksini de ister; buradaki ölçü, faizsiz tutulan bir dolar nakit "
               "pozisyonunun Türkiye malları cinsinden satın alma gücüdür")
-    kaydet(fig, "D11_korunma_araclari_uzun_ufuk",
+    kaydet(fig, "09_korunma_araclari_uzun_ufuk",
            "Altın, dolar ve fiyat düzeyi — nominal ve reel, 1963–2026",
            "1963-01 → 2026-05")
 
 
 # ======================================================================
-FIGURLER = [d01, d02, d03, d04, d05, d06, d07, d08, d09, d10, d11]
+#  Şekil 10 — Kur garantisinin ilk sürümü: işçi dövizi, DÇM ve KKM'ye uzanan hat
+# ======================================================================
+# T7 · İşçi gelirlerinin ödemeler dengesindeki yeri, 1964–1980 (milyon USD).
+# KAYNAK: Atalay, A. (2005), TCMB Uzmanlık Yeterlilik Tezi, Tablo 2.1, s.45;
+# asıl kaynak Apak vd. (2002), s.163.
+# DİKKAT — kaynağın KENDİ İÇİNDE tutarsızlığı: 1975 satırında dış ticaret dengesi
+# −3.337 yazar ama aynı satırın ihracat/ithalatı 1.401 − 4.838 = −3.437 verir.
+# Tablo kaynaktaki hâliyle korunur, fark grafikte açıkça işaretlenir.
+T_ISCI = pd.DataFrame({
+    "yil":     [1964, 1965, 1966, 1967, 1968, 1969, 1970, 1971, 1972,
+                1973, 1974, 1975, 1976, 1977, 1978, 1979, 1980],
+    "isci":    [8.1, 69.8, 115.3, 93.0, 107.3, 140.6, 273.0, 471.4, 740.0,
+                1183.0, 1425.0, 1312.0, 982.0, 930.0, 983.0, 1694.0, 2071.0],
+    "ihracat": [411, 464, 490, 523, 496, 537, 588, 677, 885,
+                1317, 1532, 1401, 1960, 1753, 2288, 2261, 2910],
+    "ithalat": [537, 572, 718, 685, 764, 801, 948, 1171, 1563,
+                2086, 3777, 4838, 5129, 5797, 4599, 5069, 7909],
+    "dtd":     [np.nan, -108, -228, -162, -268, -264, -360, -494, -769,
+                -693, -2245, -3337, -3169, -4044, -2311, -2808, -4999],
+})
+
+# T8 · DÇM stoku — YALNIZ KAYNAKLI NOKTA GÖZLEMLER (milyon USD). Ara değerler
+# İNTERPOLE EDİLMEMİŞTİR; EVDS'te 1979 öncesi DÇM serisi YOKTUR.
+# KAYNAK: Atalay (2005), s.69–74 (Seri VII tebliğ kronolojisi ve 1975 büyüme
+# gözlemleri); Sönmez (1998), s.474–475 → Atalay (2005), s.74 (erteleme stoku).
+# "kesin_tarih" = kaynağın tarihi açıkça verdiği gözlem; False olan gözlemin
+# tarihi kaynakta belirsizdir ve grafikte öyle etiketlenir.
+T_DCM = pd.DataFrame({
+    "dt":          pd.to_datetime(["1975-06-30", "1975-08-31", "1975-12-31",
+                                   "1979-08-29"]),
+    "stok":        [225.0, 777.5, 946.0, 2500.0],
+    "kesin_tarih": [True, True, False, True],
+    "not_":        ["1975 Haziran sonu — altı haftada 225 mn $ (Atalay 2005, s.72)",
+                    "iki ay sonra 777,5 mn $ (Atalay 2005, s.72)",
+                    "ardından 946 mn $ — TARİH KAYNAKTA BELİRTİLMEMİŞTİR, "
+                    "1975 sonuna yerleştirildi",
+                    "29.08.1979 Erteleme Anlaşması: vadesi 01.01.1981'e kadar "
+                    "dolacak ≈2.500 mn $'lık stok kamu borcuna dönüştü "
+                    "(Sönmez 1998, s.475)"],
+})
+# Zirve stok için KAYNAKLAR AYRIŞIYOR — iki okuma da çizilir, biri seçilmez.
+DCM_ZIRVE = [
+    (2200.0, 2500.0, "zirve okuması 1: Atalay (2005) Grafik 2.4 ölçeği ≈2,2–2,5 mlr USD "
+                     "(1978–79)", GRI),
+    (3600.0, 3600.0, "zirve okuması 2: başka bir derleme 1978'de 3,6 mlr USD — "
+                     "KAYNAKLAR AYRIŞIYOR", BORDO),
+]
+# Etiketler KISA tutulur: altı kapı 1967–1979'a sıkışıyor ve -90° döndürülmüş uzun
+# metinler panelin altından taşıyordu. Tebliğ künyeleri altyazıda tam hâliyle yazılı.
+DCM_KAPI = [
+    ("1967-06-09", "09.06.1967 — DÇM başlar"),
+    ("1973-01-24", "01.1973 — kapı KAPANIR"),
+    ("1975-05-08", "08.05.1975 — kapı AÇILIR"),
+    ("1977-03-01", "01.03.1977 — vade şartı"),
+    ("1978-02-16", "16.02.1978 — yurt içine kısıt"),
+    ("1979-07-13", "13.07.1979 — DÇM BİTER"),
+]
+
+# T9 · İki kur garantili mevduatın mekaniği. Satırlar not defterinden; sayısal
+# hücrelerin kaynağı hücrenin içinde yazılıdır.
+T_MEKANIK = [
+    ("Mevduatı kim açıyor",
+     "Yurt dışı yerleşik (asıl hedef: yurt dışındaki işçi)",
+     "Yurt içi yerleşik (hane ve firma)"),
+    ("Kur riskini kim taşıyor",
+     "TCMB / Hazine",
+     "Hazine / TCMB"),
+    ("Amaç",
+     "Ülkeye döviz girişi sağlamak",
+     "Dövizden TL'ye geçişi sağlamak"),
+    ("Örtük sübvansiyonun büyüklüğü",
+     "Beklenen devalüasyonun ARTAN fonksiyonu (Celâsun &amp; Rodrik 1989, s.196)",
+     "Beklenen devalüasyonun ARTAN fonksiyonu — aynı mekanik"),
+    ("Zirve stok",
+     "≈2,2–2,5 mlr USD (1978–79) · bir derlemede 3,6 mlr USD — KAYNAKLAR AYRIŞIYOR",
+     "97,2 mlr USD (07.2023) · EVDS TP.KKM.K1"),
+    ("Nasıl bitti",
+     "13.07.1979 uygulama yasağı → 29.08.1979 erteleme → stok kamu borcuna "
+     "dönüştü, 1984–89'da ödendi",
+     "Pozitif reel faize dönüşle kademeli çıkış; stok eridi"),
+    ("Hedefini tutturdu mu",
+     "HAYIR — işçi dövizinin DÇM içindeki payı %10'da kaldı; fon büyük ölçüde "
+     "yabancı bankalardan geldi (Atalay 2005, s.74)",
+     "Kur seviyesini bir süre tuttu; maliyeti kamu bilançosunda kaldı"),
+]
+
+
+def g10():
+    t = T_ISCI
+    oran = 100 * t["isci"] / t["ihracat"]
+
+    fig = make_subplots(
+        rows=3, cols=1, shared_xaxes=False, vertical_spacing=0.075,
+        row_heights=[0.31, 0.31, 0.38],
+        specs=[[{"type": "xy", "secondary_y": True}],
+               [{"type": "xy"}],
+               [{"type": "table"}]],
+        subplot_titles=(
+            "Döviz gelirinin iki kaynağı: işçi geliri ve ihracat (milyon USD, çubuk) — "
+            "sağ eksende işçi geliri / ihracat (%)",
+            "DÇM stoku (milyon USD) — YALNIZ KAYNAKLI NOKTA GÖZLEMLER, ara değerler "
+            "interpole EDİLMEMİŞTİR. Dikey çizgiler mevzuat kapılarıdır",
+            "Aynı mekaniğin iki sürümü: DÇM (1967–1979) ve KKM (2021–2023+)"))
+
+    # --- Panel 1 ------------------------------------------------------
+    fig.add_trace(go.Bar(x=t["yil"], y=t["ihracat"], name="ihracat (mn USD)",
+                         marker=dict(color=rgba(GRI, 0.55), line=dict(width=0)),
+                         width=0.38, offset=-0.40,
+                         hovertemplate="%{y:,.0f} mn USD<extra>ihracat</extra>"),
+                  row=1, col=1, secondary_y=False)
+    fig.add_trace(go.Bar(x=t["yil"], y=t["isci"], name="işçi geliri (mn USD)",
+                         marker=dict(color=TEAL, line=dict(width=0)),
+                         width=0.38, offset=0.02,
+                         hovertemplate="%{y:,.1f} mn USD<extra>işçi geliri</extra>"),
+                  row=1, col=1, secondary_y=False)
+    fig.add_trace(go.Scatter(x=t["yil"], y=oran, name="işçi geliri / ihracat (%)",
+                             mode="lines+markers", line=dict(color=BORDO, width=2.0),
+                             marker=dict(size=6, color=BORDO),
+                             hovertemplate="%{y:.0f}%<extra>işçi geliri / ihracat</extra>"),
+                  row=1, col=1, secondary_y=True)
+
+    zirve = int(oran.idxmax())
+    fig.add_annotation(x=t.loc[zirve, "yil"], y=oran.loc[zirve], yref="y2",
+                       text=f"{int(t.loc[zirve, 'yil'])}: işçi geliri, ihracatın "
+                            f"<b>%{tr(oran.loc[zirve], 0)}</b>'i kadar",
+                       showarrow=True, arrowhead=2, arrowwidth=1.1, arrowcolor=BORDO,
+                       ax=-10, ay=-34, font=dict(size=9.5, color=BORDO),
+                       bgcolor="rgba(255,255,255,0.86)", bordercolor=rgba(BORDO, 0.35),
+                       borderwidth=0.8, borderpad=3, row=1, col=1)
+    i70 = t.index[t["yil"] == 1971][0]
+    not_(fig, 1971, t.loc[i70, "isci"],
+         "10.08.1970 devalüasyonu havaleyi resmî kanala çekti:<br>"
+         "140,6 (1969) → 471,4 (1971) mn USD",
+         row=1, ay=-52, ax=26, boyut=9.2, renk=TEAL, xanchor="left")
+
+    for yil, etiket in [(1967, "09.06.1967 — DÇM"), (1970, "10.08.1970 — devalüasyon"),
+                        (1973, "1973 — petrol şoku"), (1979, "13.07.1979 — DÇM biter")]:
+        fig.add_shape(type="line", x0=yil, x1=yil, y0=0, y1=1, yref="y domain",
+                      line=dict(color=rgba(MUREKKEP, 0.35), width=1, dash="dot"),
+                      row=1, col=1)
+        fig.add_annotation(x=yil, y=1.0, yref="y domain", yanchor="top", xanchor="left",
+                           text=" " + etiket, showarrow=False, textangle=-90,
+                           font=dict(size=8.2, color=GRI), row=1, col=1)
+
+    fig.add_annotation(
+        x=1963.7, y=0.99, yref="y domain", xanchor="left", yanchor="top", align="left",
+        showarrow=False,
+        text="KAYNAĞIN KENDİ İÇİNDE TUTARSIZLIK: 1975 satırında dış ticaret dengesi "
+             "<b>−3.337</b> yazar, ama aynı satırın<br>ihracat−ithalatı "
+             "1.401 − 4.838 = <b>−3.437</b>'dir. Tablo kaynaktaki hâliyle bırakıldı, "
+             "düzeltilmedi.",
+        font=dict(size=9, color=GRI), bgcolor="rgba(255,255,255,0.90)",
+        bordercolor=rgba(GRI, 0.4), borderwidth=0.8, borderpad=3, row=1, col=1)
+
+    # --- Panel 2 ------------------------------------------------------
+    # SIRA ÖNEMLİ: plotly'nin add_hline/add_hrect/add_vline/add_vrect çağrıları
+    # `row=` ile verildiğinde, o satıra HENÜZ İZ EKLENMEMİŞSE hiçbir şey üretmez ve
+    # HATA DA VERMEZ — çağrı sessizce düşer. (Denendi: iz yokken şekil sayısı 0
+    # kalıyor; add_shape/add_annotation aynı durumda çalışıyor.) Bu yüzden zirve
+    # bantları izlerden SONRA çizilir.
+    kesin = T_DCM[T_DCM["kesin_tarih"]]
+    belirsiz = T_DCM[~T_DCM["kesin_tarih"]]
+    fig.add_trace(go.Scatter(x=kesin["dt"], y=kesin["stok"],
+                             name="DÇM stoku — kaynaklı gözlem (tarihi kesin)",
+                             mode="markers", marker=dict(size=13, color=MOR,
+                                                         symbol="diamond"),
+                             customdata=kesin["not_"],
+                             hovertemplate="%{y:,.1f} mn USD<br>%{customdata}<extra></extra>"),
+                  row=2, col=1)
+    fig.add_trace(go.Scatter(x=belirsiz["dt"], y=belirsiz["stok"],
+                             name="DÇM stoku — tarihi kaynakta BELİRSİZ",
+                             mode="markers", marker=dict(size=13, color=MOR,
+                                                         symbol="diamond-open",
+                                                         line=dict(width=2, color=MOR)),
+                             customdata=belirsiz["not_"],
+                             hovertemplate="%{y:,.1f} mn USD<br>%{customdata}<extra></extra>"),
+                  row=2, col=1)
+
+    for alt_, ust_, etiket, renk in DCM_ZIRVE:
+        if ust_ > alt_:                                  # aralık → bant
+            fig.add_hrect(y0=alt_, y1=ust_, row=2, col=1,
+                          fillcolor=rgba(renk, 0.16), line_width=0, layer="below",
+                          annotation_text=etiket, annotation_position="top left",
+                          annotation=dict(font=dict(size=9, color=renk)))
+        else:                                            # tek değer → çizgi
+            # Bir noktayı sıfır yükseklikli dikdörtgenle çizmek onu GÖRÜNMEZ yapar
+            # (hrect kalınlığı 0 piksel); tek değerler kesikli hline ile gösterilir.
+            fig.add_hline(y=alt_, row=2, col=1,
+                          line=dict(color=rgba(renk, 0.8), width=1.4, dash="dash"),
+                          annotation_text=etiket, annotation_position="top left",
+                          annotation=dict(font=dict(size=9, color=renk)))
+    # Değer etiketleri: 777,5 ve 946 hem x hem y'de yakın düştüğü için üst üste
+    # biniyordu — her nokta için kayma ayrı verilir.
+    for (dx, dy), (_, r) in zip([(0, 20), (-30, -4), (6, 20), (0, 20)],
+                                T_DCM.iterrows()):
+        fig.add_annotation(x=r["dt"], y=r["stok"], text=f"<b>{tr(r['stok'], 1)}</b>",
+                           showarrow=False, xshift=dx, yshift=dy,
+                           font=dict(size=9.5, color=MOR), row=2, col=1)
+
+    # Etiketler kısaltıldığı için hepsi ÜSTTE durabiliyor; kademeli yerleşim
+    # metinleri panelin altından taşırıyordu.
+    for tar, etiket in DCM_KAPI:
+        dikey(fig, tar, etiket, row=2, renk=BORDO, boyut=8.4, y_konum=1.0)
+
+    fig.add_vrect(x0=pd.Timestamp("1984-01-01"), x1=pd.Timestamp("1989-12-31"),
+                  fillcolor=rgba(YESIL, 0.10), line_width=0, layer="below", row=2, col=1,
+                  annotation_text="1984–1989: stok kamu borcu olarak ödendi",
+                  annotation_position="bottom right",
+                  annotation=dict(font=dict(size=8.6, color=YESIL)))
+    # Mekanik kutusu, kapı etiketlerinin bittiği BOŞ sağ bölgeye konur (1981 sonrası).
+    fig.add_annotation(
+        x=pd.Timestamp("1991-03-31"), y=4780, xanchor="right", yanchor="top",
+        align="left", showarrow=False,
+        text="<b>Mekanik:</b> yurt dışı yerleşik döviz yatırır → banka dövizi TCMB'ye "
+             "devreder, TL'yi yurt içinde<br>kredi olarak kullandırır → vade sonunda "
+             "geri ödeme DÖVİZDİR, kur farkı TCMB/Hazine'de<br>kalır. Yani yurt içi "
+             "borçlanan taraf döviz borcu alır ama TL riski taşımaz.",
+        font=dict(size=9.2, color=MUREKKEP), bgcolor="rgba(255,255,255,0.92)",
+        bordercolor=rgba(GRI, 0.4), borderwidth=0.8, borderpad=4, row=2, col=1)
+
+    # --- Panel 3 (tablo) ----------------------------------------------
+    fig.add_trace(go.Table(
+        columnwidth=[26, 40, 40],
+        header=dict(values=["<b></b>", "<b>DÇM (1967–1979)</b>",
+                            "<b>KKM (2021–2023+)</b>"],
+                    fill_color=rgba(MUREKKEP, 0.06), align="left",
+                    font=dict(size=11.5, color=MUREKKEP), height=26,
+                    line=dict(color=rgba(GRI, 0.35), width=0.8)),
+        cells=dict(values=[[r[0] for r in T_MEKANIK],
+                           [r[1] for r in T_MEKANIK],
+                           [r[2] for r in T_MEKANIK]],
+                   fill_color=[[rgba(MUREKKEP, 0.03)] * len(T_MEKANIK),
+                               [rgba(MOR, 0.05)] * len(T_MEKANIK),
+                               [rgba(TEAL, 0.05)] * len(T_MEKANIK)],
+                   align="left", font=dict(size=10.2, color=MUREKKEP), height=56,
+                   line=dict(color=rgba(GRI, 0.28), width=0.6))),
+        row=3, col=1)
+
+    # Panel 1'in üst sınırı ÇİZİLEN en büyük değere göre verilir (ihracat 2.910);
+    # ithalat bu panelde yoktur. Önceki 8.600 tavanı panelin üçte ikisini boş
+    # bırakıyor, çubukları okunmaz hâle getiriyordu.
+    fig.update_yaxes(title_text="milyon USD", row=1, secondary_y=False, range=[0, 3900])
+    fig.update_yaxes(title_text="%", row=1, secondary_y=True, range=[0, 130],
+                     showgrid=False)
+    # Üst boşluk, mekanik kutusu ile 3.600'lük zirve okuması çizgisinin çakışmaması
+    # için açık bırakılır.
+    fig.update_yaxes(title_text="milyon USD", row=2, range=[0, 4900])
+    fig.update_xaxes(title_text="yıl", row=1, dtick=2, range=[1963.4, 1980.6])
+    fig.update_xaxes(title_text="tarih", row=2,
+                     range=[pd.Timestamp("1966-01-01"), pd.Timestamp("1991-06-30")],
+                     dtick="M60", tickformat="%Y")
+    fig.update_layout(barmode="overlay")
+    duzen(fig, "Kur garantisinin ilk sürümü: işçi dövizi, DÇM ve KKM'ye uzanan hat",
+          "1964 – 1990 (üçüncü panel 2023'e uzanır)", 1540,
+          alt="KAYNAK — panel 1: Atalay (2005), TCMB Uzmanlık Tezi, Tablo 2.1 s.45 → "
+              "Apak vd. (2002) s.163 · panel 2: Atalay (2005) s.69–74 (Seri VII 37/105/"
+              "106/145/176 ve Seri I 6-1 tebliğleri), Sönmez (1998) s.474–475, Celâsun "
+              "&amp; Rodrik (1989) s.196 · KKM: EVDS TP.KKM.K1 · DÇM için EVDS'te 1979 "
+              "öncesi seri YOKTUR: yalnız kaynakta açıkça verilen dört gözlem "
+              "noktalanmış, ara değerler interpole edilmemiştir · iki stok aynı "
+              "büyüklükte ekonomilere ait DEĞİLDİR — karşılaştırma mekaniğindir",
+          legend_y=-0.045)
+    kaydet(fig, "10_dcm_isci_dovizi_kkm",
+           "İşçi dövizi, DÇM ve kur garantisinin KKM'ye uzanan hattı",
+           "1964 → 1990 (tablo 2023'e uzanır)")
+
+
+# ======================================================================
+FIGURLER = [g03, g04, g05, g06, g07, g08, g09, g10, g11, g12, g13, g38]
 
 
 def main():

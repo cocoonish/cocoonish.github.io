@@ -1,0 +1,76 @@
+---
+/**
+ * Koşu kutusu: bir veri hattının SON KOŞUSUNUN durumu — tazelik + uyarılar.
+ *
+ * İki hat da aynı kalıbı kullanır ve kutu sayfanın BAŞINDA durur: "kaynak
+ * düşerse GÖRÜNÜR uyarı" ilkesi, uyarıyı 800. satıra gömen bir sayfada
+ * karşılanmış sayılmaz.
+ *
+ * Değerler /projeler/<proje>/ozet.json'dan istemci tarafında okunur:
+ *   bayat          → true ise kutu kırmızıya döner ve başlığı "BAYAT VERİ" olur
+ *   bayat_cumlesi  → bayatlığın gerekçesi (ya da "veri taze" cümlesi)
+ *   uyari_sayisi / uyari_cumlesi / uyari_metni → bu koşuda düşen uyarılar
+ *
+ * Statik yedek (JSON yüklenemezse) slot içeriğinde durur.
+ */
+interface Props {
+  proje: string;
+  /** Statik yedek: son bilinen uyarı sayısı */
+  sayi?: number;
+}
+const { proje, sayi = 0 } = Astro.props;
+---
+
+<div class="not kosu" data-kosu-proje={proje}>
+  <span class="etiket" data-kosu-baslik>Bu koşunun durumu</span>
+  <p class="kosu-tazelik" data-kosu-tazelik>Tazelik bilgisi yükleniyor…</p>
+  <p class="kosu-uyari">
+    <strong data-kosu-cumle>Bu koşuda {sayi} uyarı düştü:</strong>{' '}
+    <span data-kosu-metin><slot /></span>
+  </p>
+  <p class="kosu-kaynak">
+    Tam liste: <a href={`/projeler/${proje}/uyarilar.json`}>uyarilar.json</a> ·
+    sayfadaki canlı değerler: <a href={`/projeler/${proje}/ozet.json`}>ozet.json</a>
+  </p>
+</div><script>
+  const kutular = [...document.querySelectorAll('[data-kosu-proje]')] as HTMLElement[];
+  kutular.forEach(async (kutu) => {
+    const proje = kutu.dataset.kosuProje!;
+    try {
+      const r = await fetch(`/projeler/${proje}/ozet.json`, { cache: 'no-cache' });
+      if (!r.ok) return;
+      const o = await r.json();
+      const taze = kutu.querySelector('[data-kosu-tazelik]') as HTMLElement | null;
+      const baslik = kutu.querySelector('[data-kosu-baslik]') as HTMLElement | null;
+      const cumle = kutu.querySelector('[data-kosu-cumle]') as HTMLElement | null;
+      const metin = kutu.querySelector('[data-kosu-metin]') as HTMLElement | null;
+      if (taze && o.bayat_cumlesi) taze.textContent = o.bayat_cumlesi;
+      if (cumle && o.uyari_cumlesi) cumle.textContent = o.uyari_cumlesi;
+      if (metin && o.uyari_metni) metin.textContent = o.uyari_metni;
+      if (o.bayat === true) {
+        kutu.classList.add('bayat');
+        if (baslik) baslik.textContent = 'BAYAT VERİ — bu koşuda sayılar ilerlemedi';
+      } else if (baslik && o._tarih) {
+        baslik.textContent = `Bu koşunun durumu · veri ${o._tarih}`;
+      }
+    } catch {
+      /* statik yedek kalır */
+    }
+  });
+</script><style>
+  .not.kosu p {
+    margin: 0.35rem 0;
+  }
+  .not.kosu .kosu-kaynak {
+    font-size: 0.86rem;
+    color: var(--ink-70);
+  }
+  .not.kosu.bayat {
+    border-left-color: var(--claret);
+    border-color: var(--claret);
+  }
+  .not.kosu.bayat .etiket {
+    color: var(--claret);
+    font-weight: 600;
+  }
+</style>

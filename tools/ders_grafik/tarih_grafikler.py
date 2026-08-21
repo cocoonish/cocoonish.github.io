@@ -429,7 +429,7 @@ def g02():
 # ==========================================================================
 #  03 — 2000–2001: çıpanın kırılması
 # ==========================================================================
-def g03():
+def g14():
     bas, bit = "2000-01-03", "2001-06-29"
     k = kes(kur(), bas, bit)
     b = kes(S("bist")["MK.F.BILESIK"].dropna(), bas, bit)
@@ -477,13 +477,13 @@ def g03():
     duzen(fig, "Çıpa tutuyordu, fiyatlar tutmuyordu: 2000 programının son on beş ayı",
           "03.01.2000 – 29.06.2001", 1300,
           alt="EVDS TP.DK.USD.A.YTL · TP.MK.F.BILESIK (Ocak 1986 = 0,01 tabanlı; geleneksel kotasyonun yüzde biri) · TP.PY.P06.ON · patika: 2000 programının ilan ettiği yıllık +%20 çıpanın yaklaşık dolar bacağı")
-    kaydet(fig, "03_2000_2001_cipa", "2000–2001: çıpanın kırılması", "2000-01 → 2001-06")
+    kaydet(fig, "14_2000_2001_cipa", "2000–2001: çıpanın kırılması", "2000-01 → 2001-06")
 
 
 # ==========================================================================
 #  04 — İMKB: aynı şok, iki para birimi (1990–2003)
 # ==========================================================================
-def g04():
+def g15():
     bas, bit = "1990-01-01", "2003-12-31"
     b = kes(S("bist")["MK.F.BILESIK"].dropna(), bas, bit)
     k = kes(kur(), bas, bit)
@@ -516,13 +516,13 @@ def g04():
     duzen(fig, "Aynı şok, iki para birimi: yerel parayla ve dolarla bakanın gördüğü iki farklı kriz",
           "01.01.1990 – 31.12.2003", 780,
           alt="EVDS TP.MK.F.BILESIK (Ocak 1986 = 0,01 tabanlı; geleneksel kotasyonun yüzde biri) · TP.DK.USD.A.YTL — dolar bazı, endeksin gösterge kura bölünmesiyle hesaplanmıştır")
-    kaydet(fig, "04_imkb_tl_usd", "İMKB-100: TL bazlı ve dolar bazlı, 1990–2003", "1990-01 → 2003-12")
+    kaydet(fig, "15_imkb_tl_usd", "İMKB-100: TL bazlı ve dolar bazlı, 1990–2003", "1990-01 → 2003-12")
 
 
 # ==========================================================================
 #  05 — Carry'nin gövdesi ve kuyruğu
 # ==========================================================================
-def g05():
+def g16():
     k = kes(kur(), "1990-01-01", "2026-08-21")
     yil_son = k.resample("YE").last()
     degisim = (100 * (yil_son / yil_son.shift(1) - 1)).dropna()
@@ -550,13 +550,13 @@ def g05():
     duzen(fig, "Carry'nin gövdesi ve kuyruğu: sessiz yılların sayısı çok, kuyruk yıllarının büyüklüğü çok",
           "1991 – 2026 (2026 yılbaşından 21.08.2026'ya)", 780,
           alt="EVDS TP.DK.USD.A.YTL yıl sonu kapanışları · oynaklık günlük log getirilerden hesaplandı")
-    kaydet(fig, "05_yillik_kur_degisimi", "USD/TRY yıllık değişim ve yıl içi oynaklık", "1991 → 2026")
+    kaydet(fig, "16_yillik_kur_degisimi", "USD/TRY yıllık değişim ve yıl içi oynaklık", "1991 → 2026")
 
 
 # ==========================================================================
 #  06 — Rejim değişikliği: 2003–2013
 # ==========================================================================
-def g06():
+def g17():
     bas, bit = "2003-01-01", "2013-12-31"
     t = kes(tufe_yoy(), bas, bit)
     k = kes(kur(), bas, bit)
@@ -590,7 +590,7 @@ def g06():
     duzen(fig, "Rejim değişikliği ve kırılganlığın yer değiştirmesi: bolluk dönemi",
           "01.01.2003 – 31.12.2013", 1000,
           alt="EVDS TÜFE · TP.DK.USD.A.YTL · depo hattı TCMBNetRezerv/haftalik_rezerv.csv")
-    kaydet(fig, "06_rejim_degisikligi", "Rejim değişikliği: enflasyon, kur, rezerv (2003–2013)",
+    kaydet(fig, "17_rejim_degisikligi", "Rejim değişikliği: enflasyon, kur, rezerv (2003–2013)",
            "2003-01 → 2013-12")
 
 
@@ -650,7 +650,7 @@ def politika_gunluk(bas, bit) -> pd.Series:
 # ==========================================================================
 #  07 — 2013 taper
 # ==========================================================================
-def g07():
+def g18():
     bas, bit = "2013-01-01", "2013-12-31"
     tnx = Y("^TNX", "2010-01-01")
     xu = Y("XU100.IS")
@@ -702,13 +702,13 @@ def g07():
     duzen(fig, "Küresel fitil, yerel yangın: 2013 taper şokunun aktarım sırası",
           "01.01.2013 – 31.12.2013", 1250,
           alt="yfinance ^TNX/XU100.IS/EEM · EVDS TP.DK.USD.A.YTL · TP.APIFON4 · TP.PY.P01.ON/P02.ON")
-    kaydet(fig, "07_taper_2013", "2013 taper şokunun aktarım sırası", "2013-01 → 2013-12")
+    kaydet(fig, "18_taper_2013", "2013 taper şokunun aktarım sırası", "2013-01 → 2013-12")
 
 
 # ==========================================================================
 #  08 — Aralık 2013 – Ocak 2014
 # ==========================================================================
-def g08():
+def g19():
     bas, bit = "2013-12-01", "2014-03-31"
     k = kes(kur(), bas, bit)
     a = kes(aofm(), bas, bit)
@@ -760,13 +760,13 @@ def g08():
     duzen(fig, "550 baz puanın iz düşümü: faiz şoku hangi göstergede ne zaman göründü?",
           "01.12.2013 – 31.03.2014", 1250,
           alt="EVDS TP.DK.USD.A.YTL · TP.APIFON4 · TP.APIFON1.TOP · TP.PY.P01.ON/P02.ON · yfinance XU100.IS")
-    kaydet(fig, "08_ocak2014_soku", "Ocak 2014 faiz şokunun iz düşümü", "2013-12 → 2014-03")
+    kaydet(fig, "19_ocak2014_soku", "Ocak 2014 faiz şokunun iz düşümü", "2013-12 → 2014-03")
 
 
 # ==========================================================================
 #  09 — Politika faizi ile fonlama maliyetinin ayrışması
 # ==========================================================================
-def g09():
+def g20():
     bas, bit = "2011-01-03", "2026-08-20"
     a = kes(aofm(), bas, bit)
     p = politika_gunluk(bas, bit).reindex(a.index).ffill()
@@ -803,14 +803,14 @@ def g09():
     duzen(fig, "Duruşun ölçüsü ilan edilen faiz değil, gerçekleşen fonlama maliyetidir",
           "03.01.2011 – 20.08.2026", 1000,
           alt="EVDS TP.APIFON4 · TP.APIFON1.TOP · TP.PY.P01.ON/P02.ON · TP.BISPOLFAIZ.TUR (aylık)")
-    kaydet(fig, "09_aofm_politika_ayrismasi", "AOFM ile politika faizinin ayrışması",
+    kaydet(fig, "20_aofm_politika_ayrismasi", "AOFM ile politika faizinin ayrışması",
            "2011-01 → 2026-08")
 
 
 # ==========================================================================
 #  10 — 2015: tek şok değil, şok dizisi
 # ==========================================================================
-def g10():
+def g21():
     bas, bit = "2015-01-01", "2015-12-31"
     t0 = "2015-01-02"
     k = endeksle(kes(kur(), bas, bit), t0)
@@ -854,13 +854,13 @@ def g10():
     duzen(fig, "Tek şok değil, şok dizisi: belirsizliğin kronikleştiği bir yılın imzası",
           "01.01.2015 – 31.12.2015", 1000,
           alt="EVDS TP.DK.USD.A.YTL · TP.APIFON4 · TP.PY.P01.ON/P02.ON · yfinance XU100.IS / EEM")
-    kaydet(fig, "10_2015_sok_dizisi", "2015: şok dizisinin varlık sınıfı imzası", "2015-01 → 2015-12")
+    kaydet(fig, "21_2015_sok_dizisi", "2015: şok dizisinin varlık sınıfı imzası", "2015-01 → 2015-12")
 
 
 # ==========================================================================
 #  11 — Üç şok, t = 0 hizalı
 # ==========================================================================
-def g11():
+def g22():
     xu = Y("XU100.IS")
     if xu is None:
         ATLANAN.append("11 — üç şok hizalı: XU100.IS çekilemedi")
@@ -915,14 +915,14 @@ def g11():
     duzen(fig, "Aynı ülke, üç şok, üç farklı imza: hangi göstergede ne büyüklükte tepki?",
           "t = −10 … +40 işlem günü; t₀ = 22.05.2013 · 17.12.2013 · 15.07.2016", 1000,
           alt="yfinance XU100.IS · EVDS TP.DK.USD.A.YTL · TP.APIFON4")
-    kaydet(fig, "11_uc_sok_hizalanmis", "Üç şokun t=0 hizalı karşılaştırması",
+    kaydet(fig, "22_uc_sok_hizalanmis", "Üç şokun t=0 hizalı karşılaştırması",
            "2013-05 / 2013-12 / 2016-07")
 
 
 # ==========================================================================
 #  12 — Reel efektif döviz kuru tarihçesi
 # ==========================================================================
-def g12():
+def g23():
     r = D(tv.depo_reer)
     bas, bit = "1994-01-01", "2026-07-31"
     cpi = kes(r["CPI_REER"].dropna(), bas, bit)
@@ -957,13 +957,13 @@ def g12():
     duzen(fig, "Reel kur: nominal kur hikâyesinin arkasındaki rekabetçilik hikâyesi",
           "01.1994 – 07.2026", 800,
           alt="depo hattı TRYREER/reer_analysis_data.csv (EVDS TP.RK.T1.Y ve TP.RK.U1.Y kaynaklı)")
-    kaydet(fig, "12_redk_tarihce", "Reel efektif döviz kuru tarihçesi", "1994-01 → 2026-07")
+    kaydet(fig, "23_redk_tarihce", "Reel efektif döviz kuru tarihçesi", "1994-01 → 2026-07")
 
 
 # ==========================================================================
 #  13 — Ağustos 2018, gün gün
 # ==========================================================================
-def g13():
+def g24():
     bas, bit = "2018-07-15", "2018-09-30"
     yu = Y("USDTRY=X")
     if yu is None:
@@ -1018,13 +1018,13 @@ def g13():
     duzen(fig, "Ağustos 2018, gün gün: resmî kur ile piyasa fiyatının ayrıldığı pencere",
           "15.07.2018 – 30.09.2018", 1000,
           alt="yfinance USDTRY=X (gün içi) · EVDS TP.DK.USD.A.YTL (resmî kayıt) · TP.APIFON4 · TP.PY.P01.ON/P02.ON")
-    kaydet(fig, "13_agustos2018", "Ağustos 2018 krizi, gün gün", "2018-07 → 2018-09")
+    kaydet(fig, "24_agustos2018", "Ağustos 2018 krizi, gün gün", "2018-07 → 2018-09")
 
 
 # ==========================================================================
 #  14 — Rezervin üç tanımı
 # ==========================================================================
-def g14():
+def g25():
     bas, bit = "2010-01-01", "2026-08-07"
     h = D(tv.depo_haftalik_rezerv)
     brut = kes(h["brut_rezerv_usd"].dropna(), bas, bit)
@@ -1071,14 +1071,14 @@ def g14():
     duzen(fig, "Rezervin üç tanımı: hangi satıra baktığınız neyi göreceğinizi belirler",
           "01.01.2010 – 07.08.2026", 1000,
           alt="depo hattı TCMBNetRezerv/haftalik_rezerv.csv (TCMB analitik bilanço + IRFCL swap stoku)")
-    kaydet(fig, "14_rezervin_uc_tanimi", "Rezervin üç tanımı (brüt / net / swap hariç net)",
+    kaydet(fig, "25_rezervin_uc_tanimi", "Rezervin üç tanımı (brüt / net / swap hariç net)",
            "2010-01 → 2026-08")
 
 
 # ==========================================================================
 #  15 — Mart 2019 sıkışması
 # ==========================================================================
-def g15():
+def g26():
     bas, bit = "2019-01-01", "2019-05-31"
     h = D(tv.depo_haftalik_rezerv)
     sw = kes(h["swap_haric_net_rezerv_usd"].dropna(), bas, bit)
@@ -1125,13 +1125,13 @@ def g15():
     duzen(fig, "Mart 2019: yurt dışı TL likiditesinin kesilmesi ve rezervde görünen bedel",
           "01.01.2019 – 31.05.2019", 1200,
           alt="depo hattı TCMBNetRezerv/haftalik_rezerv.csv · EVDS TP.APIFON4 · TP.PY.P06.ON · TP.DK.USD.A.YTL")
-    kaydet(fig, "15_mart2019_sikisma", "Mart 2019 offshore sıkışması", "2019-01 → 2019-05")
+    kaydet(fig, "26_mart2019_sikisma", "Mart 2019 offshore sıkışması", "2019-01 → 2019-05")
 
 
 # ==========================================================================
 #  16 — 2020: rezerv erimesi ve kredi patlaması
 # ==========================================================================
-def g16():
+def g27():
     bas, bit = "2019-01-01", "2021-06-30"
     h = D(tv.depo_haftalik_rezerv)
     sw = kes(h["swap_haric_net_rezerv_usd"].dropna(), bas, bit)
@@ -1177,13 +1177,13 @@ def g16():
     duzen(fig, "2020: kredi genişlemesinin faturası rezervde kesildi",
           "01.01.2019 – 30.06.2021", 1000,
           alt="depo hattı TCMBNetRezerv/haftalik_rezerv.csv · EVDS TP.KREDI.L001 (haftalık, arşiv) · TP.APIFON4 · TP.PY.P01.ON/P02.ON")
-    kaydet(fig, "16_2020_rezerv_kredi", "2020: rezerv erimesi ve kredi genişlemesi", "2019-01 → 2021-06")
+    kaydet(fig, "27_2020_rezerv_kredi", "2020: rezerv erimesi ve kredi genişlemesi", "2019-01 → 2021-06")
 
 
 # ==========================================================================
 #  17 — Bilanço krizi: endeksler
 # ==========================================================================
-def g17():
+def g28():
     bas, bit = "2018-01-02", "2021-01-29"
     xu, xb = Y("XU100.IS"), Y("XBANK.IS")
     if xu is None or xb is None:
@@ -1217,14 +1217,14 @@ def g17():
     duzen(fig, "Bilanço krizinin fiyattaki karşılığı: TL bazında yatay, dolar bazında yarı yarıya",
           "02.01.2018 – 29.01.2021", 800,
           alt="yfinance XU100.IS / XBANK.IS · EVDS TP.DK.USD.A.YTL")
-    kaydet(fig, "17_bilanco_krizi_endeksler", "BIST-100 ve BIST Banka: TL ve dolar bazında",
+    kaydet(fig, "28_bilanco_krizi_endeksler", "BIST-100 ve BIST Banka: TL ve dolar bazında",
            "2018-01 → 2021-01")
 
 
 # ==========================================================================
 #  18 — 2021 spirali
 # ==========================================================================
-def g18():
+def g29():
     bas, bit = "2021-06-01", "2022-03-31"
     k = kes(kur(), bas, bit)
     t = kes(tufe_yoy(), "2021-01-01", "2022-06-30")
@@ -1289,13 +1289,13 @@ def g18():
     duzen(fig, "2021 spirali: reel faiz sıfırın çok altındayken yapılan indirimlerin fiyattaki karşılığı",
           "panel 1: 01.06.2021–31.03.2022 · panel 2: 01.2021–06.2022 · panel 3: 01.11.2021–31.01.2022 · panel 4: 01.09.2021–31.03.2022",
           1400, alt="EVDS TP.DK.USD.A.YTL · TP.BISPOLFAIZ.TUR · TÜFE · TP.BISTTLREF.ORAN · TP.APIFON4 · depo hattı haftalik_rezerv.csv")
-    kaydet(fig, "18_2021_spirali", "2021 faiz indirimi spirali", "2021-06 → 2022-03")
+    kaydet(fig, "29_2021_spirali", "2021 faiz indirimi spirali", "2021-06 → 2022-03")
 
 
 # ==========================================================================
 #  19 — KKM'nin hayat döngüsü
 # ==========================================================================
-def g19():
+def g30():
     k = kes(kur(), "2021-12-01", "2022-02-28")
     kk = S("kkm")
     dd = kk["KKM.K1"].dropna()
@@ -1348,13 +1348,13 @@ def g19():
     duzen(fig, "KKM'nin hayat döngüsü: bir gecede kuru düşüren ürün, pozitif reel faiz dönünce eridi",
           "panel 1: 01.12.2021–28.02.2022 · panel 2–3: 12.2021–06.2026", 1150,
           alt="EVDS TP.KKM.K1/K4 · TP.TRY.MT02 (akım, ay ortalaması) · TÜFE · TP.DK.USD.A.YTL")
-    kaydet(fig, "19_kkm_hayat_dongusu", "KKM'nin hayat döngüsü", "2021-12 → 2026-06")
+    kaydet(fig, "30_kkm_hayat_dongusu", "KKM'nin hayat döngüsü", "2021-12 → 2026-06")
 
 
 # ==========================================================================
 #  20 — 2022 labirenti
 # ==========================================================================
-def g20():
+def g31():
     t = kes(tufe_yoy(), "2021-01-01", "2026-07-31")
     p = kes(politika(), "2021-01-01", "2026-07-31")
     mev = kes(mevduat_faizi_akim(), "2021-01-01", "2026-07-31")
@@ -1409,14 +1409,14 @@ def g20():
     duzen(fig, "2022 labirenti: enflasyon zirvesi, negatif reel faiz ve yabancı tabanının çekilmesi",
           "01.2021 – 08.2026", 1400,
           alt="EVDS TÜFE · TP.BISPOLFAIZ.TUR · TP.TRY.MT02 (akım, ay ortalaması) · yfinance XU100.IS · TP.PYUK3/PYUK4 ve ForeignHoldings hattı")
-    kaydet(fig, "20_2022_labirenti", "2022 labirenti: enflasyon, reel faiz, yabancı akımı",
+    kaydet(fig, "31_2022_labirenti", "2022 labirenti: enflasyon, reel faiz, yabancı akımı",
            "2021-01 → 2026-08")
 
 
 # ==========================================================================
 #  21 — Tahvil piyasası: ihale ihale
 # ==========================================================================
-def g21():
+def g32():
     d = D(tv.depo_ihale)
     d = d.loc["2021-06-01":"2026-08-21"]
     d = d[d["Senet Tanımı"].astype(str).str.contains("Sabit Kuponlu|Hazine Bonosu", na=False)]
@@ -1484,13 +1484,13 @@ def g21():
     duzen(fig, "Tahvil piyasasının bozulması ve toparlanması: ihale ihale kayıt",
           "01.06.2021 – 21.08.2026", 1100,
           alt="depo hattı hazineihrac/hazine_ihale_verileri.csv (Hazine ihale sonuçları) · EVDS TÜFE")
-    kaydet(fig, "21_tahvil_ihale", "Hazine ihalelerinde faiz, hacim ve eğim", "2021-06 → 2026-08")
+    kaydet(fig, "32_tahvil_ihale", "Hazine ihalelerinde faiz, hacim ve eğim", "2021-06 → 2026-08")
 
 
 # ==========================================================================
 #  22 — 2023 dönüşü
 # ==========================================================================
-def g22():
+def g33():
     bas, bit = "2023-01-01", "2024-12-31"
     p = politika_gunluk(bas, bit)
     a = kes(aofm(), bas, bit)
@@ -1555,13 +1555,13 @@ def g22():
     duzen(fig, "2023 dönüşü: ilan edilen faiz ile gerçekleşen fonlama maliyeti arasındaki geçiş penceresi",
           "01.01.2023 – 31.12.2024", 1400,
           alt="EVDS TP.BISPOLFAIZ.TUR · TP.APIFON4 · TP.BISTTLREF.ORAN · TP.DK.USD.A.YTL · TÜFE · depo hatları")
-    kaydet(fig, "22_2023_donusu", "2023 politika dönüşü", "2023-01 → 2024-12")
+    kaydet(fig, "33_2023_donusu", "2023 politika dönüşü", "2023-01 → 2024-12")
 
 
 # ==========================================================================
 #  23 — 19 Mart 2025
 # ==========================================================================
-def g23():
+def g34():
     bas, bit = "2025-03-03", "2025-04-30"
     k = kes(kur(), bas, bit)
     yu = Y("USDTRY=X")
@@ -1620,13 +1620,13 @@ def g23():
     duzen(fig, "19 Mart 2025: resmî kur ilk gün bilgi taşımadı — gün içi fiyat, banka hissesi ve bilanço konuştu",
           "03.03.2025 – 30.04.2025", 1150,
           alt="EVDS TP.DK.USD.A.YTL · TP.APIFON3 · yfinance USDTRY=X / XU100.IS / XBANK.IS · depo hattı TCMBNetRezerv/gunluk.csv")
-    kaydet(fig, "23_mart2025", "19 Mart 2025 şokunun anatomisi", "2025-03 → 2025-04")
+    kaydet(fig, "34_mart2025", "19 Mart 2025 şokunun anatomisi", "2025-03 → 2025-04")
 
 
 # ==========================================================================
 #  24 — Program panosu
 # ==========================================================================
-def g24():
+def g35():
     bas, bit = "2024-01-01", "2026-08-21"
     p = politika_gunluk(bas, bit)
     a = kes(aofm(), bas, bit)
@@ -1678,13 +1678,13 @@ def g24():
     duzen(fig, "Dezenflasyon programının panosu: faiz, enflasyon, reel kur ve rezerv aynı ekranda",
           "01.01.2024 – 21.08.2026", 1400,
           alt="EVDS TP.BISPOLFAIZ.TUR · TP.APIFON4 · TÜFE · TP.ENFBEK.PKA12ENF · depo hatları TRYREER ve TCMBNetRezerv/gunluk.csv")
-    kaydet(fig, "24_program_panosu", "Dezenflasyon programı panosu", "2024-01 → 2026-08")
+    kaydet(fig, "35_program_panosu", "Dezenflasyon programı panosu", "2024-01 → 2026-08")
 
 
 # ==========================================================================
 #  25 — Reel faiz örüntüsü
 # ==========================================================================
-def g25():
+def g36():
     g = gecelik().resample("MS").mean()
     t = tufe_yoy()
     ort = g.index.intersection(t.index)
@@ -1767,13 +1767,13 @@ def g25():
     duzen(fig, "Reel faiz ile sonraki yılın kur değişimi: otuz yedi yılın saçılımı",
           "01.1989 – 08.2026 (saçılımda sonraki 12 ay gözlemi olan aylar: 01.1989 – 08.2025)", 950,
           alt="EVDS TP.PY.P06.ON (aylık ortalama) · TÜFE · TP.DK.USD.A.YTL — ilişki ölçümdür, nedensellik iddiası değildir")
-    kaydet(fig, "25_reel_faiz_oruntusu", "Reel faiz ve sonraki 12 ay kur değişimi", "1989-01 → 2026-08")
+    kaydet(fig, "36_reel_faiz_oruntusu", "Reel faiz ve sonraki 12 ay kur değişimi", "1989-01 → 2026-08")
 
 
 # ==========================================================================
 #  26 — EM karşılaştırması
 # ==========================================================================
-def g26():
+def g37():
     bas, bit = "2013-01-01", "2026-08-20"
     pariteler = [("USDTRY=X", "kur · TRY", BORDO), ("ZAR=X", "kur · ZAR", MAVI),
                  ("MXN=X", "kur · MXN", TEAL), ("BRL=X", "kur · BRL", ALTIN),
@@ -1821,12 +1821,12 @@ def g26():
     duzen(fig, "Şok yerel mi küresel mi? Aynı pencerede bir gelişmekte olan piyasa sepeti",
           "02.01.2013 – 20.08.2026", 950,
           alt="yfinance USDTRY=X / ZAR=X / MXN=X / BRL=X / INR=X · EVDS TP.BISPOLFAIZ.* (BIS derlemesi)")
-    kaydet(fig, "26_em_karsilastirma", "TRY ve EM paraları, politika faizleri", "2013-01 → 2026-08")
+    kaydet(fig, "37_em_karsilastirma", "TRY ve EM paraları, politika faizleri", "2013-01 → 2026-08")
 
 
 # ==========================================================================
-FIGURLER = [g01, g02, g03, g04, g05, g06, g07, g08, g09, g10, g11, g12, g13,
-            g14, g15, g16, g17, g18, g19, g20, g21, g22, g23, g24, g25, g26]
+FIGURLER = [g01, g02, g14, g15, g16, g17, g18, g19, g20, g21, g22, g23, g24,
+            g25, g26, g27, g28, g29, g30, g31, g32, g33, g34, g35, g36, g37]
 
 
 def main():

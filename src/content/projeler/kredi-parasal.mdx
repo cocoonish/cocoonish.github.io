@@ -1,0 +1,1144 @@
+---
+title: 'Kredi ve Parasal Büyüklükler'
+description: 'Merkezinde kur etkisinden arındırma olan bir kredi panosu: haftalık zincirleme arındırma, Laspeyres kur etkisi ayrıştırması, kredi türü kırılımı, faizler ve tam Fisher reel faiz, M1/M2/M3 ve para çarpanı, dolarizasyonun arındırılmış payı, KKM stoku, takipteki alacaklar ve kredi–enflasyon gecikmeli korelasyonu.'
+pubDate: 2026-08-21
+updatedDate: 2026-08-21
+tags: ['kredi', 'para arzı', 'dolarizasyon', 'kkm', 'tcmb', 'makro ihtiyati']
+durum: 'aktif'
+kaynak: 'TCMB EVDS3 — haftalık para ve banka istatistikleri, aylık kredi hacmi, analitik bilanço, zorunlu karşılık tabanı, KKM stoku, Banka Kredileri Eğilim Anketi, Piyasa Katılımcıları Anketi'
+guncelleme: 'haftalık (Perşembe, Cuma verisi); faiz ve bilanço aileleri iş günü, KKM ve banka türü aylık, BKEA üç aylık'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+import KosuKutusu from '../../components/KosuKutusu.astro';
+
+Türkiye'de kredi büyümesi tartışması neredeyse her zaman yanlış sayı üzerinden yürür.
+Yayımlanan seri bankacılık sektörünün **TL cinsinden** kredi stokudur; oysa o stokun
+<Deger proje="kredi-parasal" anahtar="yp_pay" ondalik={2}>33,46</Deger>'ü döviz cinsi
+kredidir ve TL karşılığı her gün kurla birlikte oynar. Kur bir haftada yüzde iki
+yükseldiğinde hiç kimse yeni kredi kullanmasa bile "kredi stoku" büyür. Bu büyüme bir
+finansal koşul değil, bir **muhasebe kalemidir**.
+
+Bu sayfanın kalbi o ayrımdır: **kur etkisinden arındırma**. Önce neden gerektiğini,
+sonra formülünü, sonra da — asıl önemlisi — *arındırma yönteminin seçiminin sonucu ne
+kadar değiştirdiğini* ölçüyoruz. Ardından aynı mantığı parasal büyüklüklere (Türkiye'nin
+M1'i döviz vadesiz mevduatı içerir; "M1 patladı" cümlesi çoğu zaman bir kur cümlesidir),
+mevduat dolarizasyonuna ve KKM'nin bitmiş tarihine taşıyoruz.
+
+<div class="not">
+  <span class="etiket">Bu seri TCMB'nin makro ihtiyati düzenleme serisi DEĞİLDİR</span>
+  TCMB'nin kredi büyümesine koyduğu aylık sınırların referans kuru, oranı, kapsam dışı
+  bıraktığı kalemler ve hesap penceresi <strong>tebliğ ve basın duyurularında</strong>
+  belirlenir, dönemler arasında değişir ve EVDS'te makine-okunur bir seri olarak
+  <strong>yayımlanmaz</strong>. Bu sayfadaki arındırma kendi tanımımızdır:
+  <Deger proje="kredi-parasal" anahtar="arindirma_yontem" ondalik={0}>zincirleme_sepet</Deger>
+  — haftalık zincirleme, mevduattan ima edilen sepet kuruyla. Aşağıdaki grafiklere
+  <strong>düzenleme sınırı çizgisi çizilmez</strong>; çizilseydi, bizim serimizle
+  TCMB'nin ölçtüğü serinin aynı şey olduğu ima edilirdi. Değildir.
+</div>
+
+## Güncel okuma
+
+Haftalık çıpa **<Deger proje="kredi-parasal" anahtar="hafta" ondalik={0}>14 Ağustos 2026</Deger>**
+(yayım <Deger proje="kredi-parasal" anahtar="yayim_tarihi" ondalik={0}>20.08.2026</Deger>,
+gecikme <Deger proje="kredi-parasal" anahtar="yayim_gecikme_gun" ondalik={0}>1</Deger> gün);
+günlük aileler <Deger proje="kredi-parasal" anahtar="gun" ondalik={0}>21 Ağustos 2026</Deger>,
+aylık aileler <Deger proje="kredi-parasal" anahtar="ay" ondalik={0}>Haziran 2026</Deger>,
+üç aylık <Deger proje="kredi-parasal" anahtar="ceyrek" ondalik={0}>2026-Ç2</Deger>.
+Bu koşum: <Deger proje="kredi-parasal" anahtar="kosum_tarihi" ondalik={0}>21.08.2026</Deger>.
+
+### Kredi büyümesi
+
+| Seri | 13 haftalık, yıllıklandırılmış | 52 haftalık |
+| --- | --- | --- |
+| **Toplam — kur etkisinden arındırılmış (ana seri)** | **%<Deger proje="kredi-parasal" anahtar="g_ar_13y" ondalik={2}>25,86</Deger>** | **%<Deger proje="kredi-parasal" anahtar="g_ar_52" ondalik={2}>29,67</Deger>** |
+| Toplam — ham (arındırılmamış) | %<Deger proje="kredi-parasal" anahtar="g_ham_13y" ondalik={2}>34,50</Deger> | %<Deger proje="kredi-parasal" anahtar="g_ham_52" ondalik={2}>36,87</Deger> |
+| TL krediler | %<Deger proje="kredi-parasal" anahtar="g_tl_13y" ondalik={2}>37,31</Deger> | %<Deger proje="kredi-parasal" anahtar="g_tl_52" ondalik={2}>42,48</Deger> |
+| YP krediler — döviz cinsinden | %<Deger proje="kredi-parasal" anahtar="g_yp_ar_13y" ondalik={2}>5,91</Deger> | %<Deger proje="kredi-parasal" anahtar="g_yp_ar_52" ondalik={2}>8,40</Deger> |
+| **Kur etkisi (ham − arındırılmış)** | **<Deger proje="kredi-parasal" anahtar="kur_etkisi_13y" ondalik={2}>8,63</Deger> puan** | — |
+| Tanı: arındırılmış, USD kuruyla | %<Deger proje="kredi-parasal" anahtar="g_ar_usd_13y" ondalik={2}>25,74</Deger> | — |
+| Tanı: çıpalı (sabit kur) arındırma | %<Deger proje="kredi-parasal" anahtar="g_cipa_13y" ondalik={2}>26,01</Deger> | — |
+
+Tek cümleyle: manşet kredi büyümesi
+%<Deger proje="kredi-parasal" anahtar="g_ham_13y" ondalik={2}>34,50</Deger> görünüyor,
+ama bunun <Deger proje="kredi-parasal" anahtar="kur_etkisi_13y" ondalik={2}>8,63</Deger>
+puanı yeni kredi değil, mevcut döviz kredisinin yeniden değerlenmesidir. Finansal
+koşulların ölçüsü olan sayı
+**%<Deger proje="kredi-parasal" anahtar="g_ar_13y" ondalik={2}>25,86</Deger>**'dir. Bu
+fark soyut değil: son <Deger proje="kredi-parasal" anahtar="pencere_hafta" ondalik={0}>13</Deger>
+haftada yayımlanan stok artışının
+<Deger proje="kredi-parasal" anahtar="delta_13h_mlr" ondalik={0}>1.868</Deger> milyar
+TL'sinin <Deger proje="kredi-parasal" anahtar="gama_13h_mlr" ondalik={0}>417</Deger>
+milyar TL'si (%<Deger proje="kredi-parasal" anahtar="gama_pay" ondalik={1}>22,3</Deger>)
+kur etkisidir.
+
+### Stok ve kırılım
+
+Toplam kredi stoku <Deger proje="kredi-parasal" anahtar="kredi_toplam_trn" ondalik={1}>27,0</Deger>
+trilyon TL: TL <Deger proje="kredi-parasal" anahtar="kredi_tl_mlr" ondalik={0}>17.409</Deger>
+milyar, YP (TL karşılığı) <Deger proje="kredi-parasal" anahtar="kredi_yp_mlr" ondalik={0}>8.754</Deger>
+milyar. Kredi/mevduat oranı
+%<Deger proje="kredi-parasal" anahtar="kredi_mevduat" ondalik={1}>81,1</Deger>
+(paydası **sektör toplamı** mevduattır, dolarizasyon bölümündeki ZK tabanı değil).
+
+<div class="not">
+  <span class="etiket">Taban sözlüğü — hangi pay hangi paydayla okunur</span>
+  <Deger proje="kredi-parasal" anahtar="taban_sozlugu" ondalik={0}>Bu sayfada iki ayrı kredi ve iki ayrı mevduat tabanı geçer.</Deger>
+</div>
+
+| Kredi türü | 13 haftalık yıllıklandırılmış | Not |
+| --- | --- | --- |
+| Tüketici (TL+YP birleşik) | %<Deger proje="kredi-parasal" anahtar="g_tuketici_13y" ondalik={2}>43,00</Deger> | ham |
+| — İhtiyaç | %<Deger proje="kredi-parasal" anahtar="g_ihtiyac_13y" ondalik={2}>36,66</Deger> | ham |
+| — Konut | %<Deger proje="kredi-parasal" anahtar="g_konut_13y" ondalik={2}>24,29</Deger> | ham |
+| — Taşıt | %<Deger proje="kredi-parasal" anahtar="g_tasit_13y" ondalik={2}>−24,56</Deger> | ham |
+| Ticari ve diğer | %<Deger proje="kredi-parasal" anahtar="g_ticari_13y" ondalik={2}>18,68</Deger> | arındırılmış |
+| KOBİ | %<Deger proje="kredi-parasal" anahtar="g_kobi_13y" ondalik={2}>19,11</Deger> | arındırılmış |
+| Bireysel kredi kartı | %<Deger proje="kredi-parasal" anahtar="g_bkk_13y" ondalik={2}>54,52</Deger> | ham |
+| Kurumsal kredi kartı | %<Deger proje="kredi-parasal" anahtar="g_kurumsal_kart_13y" ondalik={2}>50,59</Deger> | ham |
+| Finansal kuruluşlara | %<Deger proje="kredi-parasal" anahtar="g_finansal_13y" ondalik={2}>48,04</Deger> | ham |
+
+Kompozisyon okuması: hanehalkı bacağı (tüketici + bireysel kart) ticari bacağın iki
+katından hızlı büyüyor. Ticari tarafın yavaşlığının bir kısmı **arındırmanın kendisidir**
+— ticaride TL/YP ayrımı yayımlandığı için oradan kur etkisi çıkarılabiliyor, tüketici
+kalemlerinde çıkarılamıyor. İki sütun aynı cümlede okunmaz.
+
+### Faizler ve reel faiz
+
+| Ölçü | Değer |
+| --- | --- |
+| Ticari TL kredi faizi (akım) | %<Deger proje="kredi-parasal" anahtar="f_ticari_tl" ondalik={2}>53,15</Deger> |
+| İhtiyaç kredisi | %<Deger proje="kredi-parasal" anahtar="f_ihtiyac" ondalik={2}>65,46</Deger> |
+| Konut kredisi | %<Deger proje="kredi-parasal" anahtar="f_konut" ondalik={2}>42,03</Deger> |
+| Taşıt kredisi | %<Deger proje="kredi-parasal" anahtar="f_tasit" ondalik={2}>47,30</Deger> |
+| Tüketici (bileşik) | %<Deger proje="kredi-parasal" anahtar="f_tuketici" ondalik={2}>63,29</Deger> |
+| TL mevduat faizi | %<Deger proje="kredi-parasal" anahtar="mev_tl" ondalik={2}>46,46</Deger> |
+| Politika faizi (1 hafta repo kotasyonu) | %<Deger proje="kredi-parasal" anahtar="politika" ondalik={2}>37,00</Deger> |
+| AOFM — son **geçerli** hafta (<Deger proje="kredi-parasal" anahtar="aofm_tarih" ondalik={0}>07.08.2026</Deger>) | %<Deger proje="kredi-parasal" anahtar="aofm" ondalik={2}>40,00</Deger> |
+| Faiz koridoru | %<Deger proje="kredi-parasal" anahtar="koridor_alt" ondalik={2}>35,50</Deger> – %<Deger proje="kredi-parasal" anahtar="koridor_ust" ondalik={2}>40,00</Deger> |
+| **Aracılık marjı (kredi − mevduat)** | <Deger proje="kredi-parasal" anahtar="makas_kredi_mevduat" ondalik={2}>6,69</Deger> puan |
+| Kredi − politika faizi | <Deger proje="kredi-parasal" anahtar="spread_politika" ondalik={2}>16,15</Deger> puan |
+| Kredi − AOFM (aynı gün: <Deger proje="kredi-parasal" anahtar="spread_aofm_tarih" ondalik={0}>07.08.2026</Deger>) | <Deger proje="kredi-parasal" anahtar="spread_aofm" ondalik={2}>15,52</Deger> puan |
+| **Reel ticari kredi faizi — tam Fisher** | **%<Deger proje="kredi-parasal" anahtar="reel_ticari" ondalik={2}>23,82</Deger>** |
+| Reel tüketici kredi faizi | %<Deger proje="kredi-parasal" anahtar="reel_tuketici" ondalik={2}>32,02</Deger> |
+| Reel TL mevduat faizi | %<Deger proje="kredi-parasal" anahtar="reel_mevduat" ondalik={2}>18,41</Deger> |
+| Tanı: $i - \pi$ yaklaşımı (kullanılmaz) | %<Deger proje="kredi-parasal" anahtar="reel_ticari_yaklasik" ondalik={2}>29,46</Deger> |
+| **Yaklaşımın sapması** | <Deger proje="kredi-parasal" anahtar="fisher_farki" ondalik={2}>5,64</Deger> puan |
+
+<div class="not">
+  <span class="etiket">AOFM her gün "fonlama maliyeti" değildir</span>
+  <Deger proje="kredi-parasal" anahtar="aofm_cumlesi" ondalik={0}>AOFM bu koşuda GEÇERSİZ: haftalık çıpa gününde APİ fonlaması eşiğin altında.</Deger>
+  Eşik (<Deger proje="kredi-parasal" anahtar="aofm_taban_esik_mlr" ondalik={0}>5</Deger>
+  milyar TL) ve testin kendisi{' '}
+  <a href="/projeler/fonlama-likidite/">TCMB Fonlama ve Likidite</a> hattındakiyle
+  <strong>birebir aynıdır</strong>: iki kardeş sayfanın aynı gün aynı büyüklük için
+  farklı sayı yayımlaması, yanlış bir sayıdan daha kötüdür — okur hangisine
+  güveneceğini bilemez. Geçersiz haftalarda "kredi − AOFM" makası üretilmez; duruş
+  ölçüsü olarak politika faizi makası ya da fonlama sayfasındaki <em>marjinal</em>
+  TCMB faizi okunur.
+</div>
+
+Beklenti girdisi PKA 12 aylık TÜFE beklentisi:
+%<Deger proje="kredi-parasal" anahtar="pka_12a" ondalik={2}>23,69</Deger>
+(<Deger proje="kredi-parasal" anahtar="pka_tarih" ondalik={0}>01.08.2026</Deger> damgalı;
+faiz gözleminden <Deger proje="kredi-parasal" anahtar="pka_yas_gun" ondalik={0}>13</Deger>
+gün eski). Aylık anket haftalık eksene taşındığı için beklentinin **yaşı** ayrıca
+yayımlanır: yaş 45 günü aşarsa görünür uyarı düşer, çünkü anket yayını gecikirse reel
+faizler sessizce eski beklentiyle hesaplanmaya devam ederdi.
+
+### Parasal büyüklükler ve dolarizasyon
+
+| Ölçü | Değer | | Ölçü | Değer |
+| --- | --- | --- | --- | --- |
+| M1 | <Deger proje="kredi-parasal" anahtar="m1_mlr" ondalik={0}>11.066</Deger> mlr TL | | ARIM1 (13h yıllık.) | %<Deger proje="kredi-parasal" anahtar="tcmb_ar_m1_13y" ondalik={2}>0,08</Deger> |
+| M2 | <Deger proje="kredi-parasal" anahtar="m2_mlr" ondalik={0}>28.567</Deger> mlr TL | | ARIM2 | %<Deger proje="kredi-parasal" anahtar="tcmb_ar_m2_13y" ondalik={2}>22,99</Deger> |
+| M3 | <Deger proje="kredi-parasal" anahtar="m3_mlr" ondalik={0}>31.863</Deger> mlr TL | | ARIM3 | %<Deger proje="kredi-parasal" anahtar="tcmb_ar_m3_13y" ondalik={2}>29,44</Deger> |
+| Rezerv para | <Deger proje="kredi-parasal" anahtar="rezerv_para_mlr" ondalik={0}>4.809</Deger> mlr TL | | HAMM2 (ham) | %<Deger proje="kredi-parasal" anahtar="tcmb_ham_m2_13y" ondalik={2}>28,32</Deger> |
+| Emisyon | <Deger proje="kredi-parasal" anahtar="emisyon_mlr" ondalik={0}>978</Deger> mlr TL | | M2'de kur etkisi — **TCMB'nin endeksleri** | <Deger proje="kredi-parasal" anahtar="m2_kur_etkisi_tcmb" ondalik={2}>5,33</Deger> puan |
+| ZK bloke hesabı | <Deger proje="kredi-parasal" anahtar="zk_bloke_mlr" ondalik={0}>1.141</Deger> mlr TL | | M2'de kur etkisi — **bizim tanımımız** | <Deger proje="kredi-parasal" anahtar="m2_kur_etkisi_biz" ondalik={2}>9,13</Deger> puan |
+| Bankalar serbest mevduatı | <Deger proje="kredi-parasal" anahtar="serbest_mevduat_mlr" ondalik={0}>2.681</Deger> mlr TL | | Çarpan m1 | <Deger proje="kredi-parasal" anahtar="carpan_m1" ondalik={3}>2,301</Deger> |
+| Merkez Bankası parası | <Deger proje="kredi-parasal" anahtar="mb_parasi_mlr" ondalik={0}>6.448</Deger> mlr TL | | Çarpan m2 | <Deger proje="kredi-parasal" anahtar="carpan_m2" ondalik={3}>5,940</Deger> |
+| | | | Çarpan m3 | <Deger proje="kredi-parasal" anahtar="carpan_m3" ondalik={3}>6,625</Deger> |
+
+Emisyonun M1'e oranı %<Deger proje="kredi-parasal" anahtar="emisyon_m1" ondalik={2}>8,84</Deger>;
+ima edilen bileşik zorunlu karşılık oranı
+%<Deger proje="kredi-parasal" anahtar="zk_ima_oran" ondalik={2}>4,23</Deger> (tebliğdeki
+herhangi bir tek orana eşit değildir, aşağıda).
+
+Mevduat tarafı: TL <Deger proje="kredi-parasal" anahtar="mevduat_tl_mlr" ondalik={0}>16.156</Deger>
+milyar TL, DTH <Deger proje="kredi-parasal" anahtar="mevduat_yp_mlr" ondalik={0}>10.552</Deger>
+milyar TL karşılığı — döviz cinsinden
+<Deger proje="kredi-parasal" anahtar="mevduat_yp_usd_mia" ondalik={1}>228,2</Deger> milyar
+dolar. DTH payı **ham %<Deger proje="kredi-parasal" anahtar="dth_pay_ham" ondalik={2}>39,51</Deger>**,
+**arındırılmış %<Deger proje="kredi-parasal" anahtar="dth_pay_ar" ondalik={2}>37,08</Deger>**.
+Yıl başından bu yana ham pay
+<Deger proje="kredi-parasal" anahtar="dol_ham_degisim" ondalik={2}>−1,17</Deger> puan
+gerilemiş görünüyor; arındırılmış pay
+<Deger proje="kredi-parasal" anahtar="dol_ar_degisim" ondalik={2}>−3,60</Deger> puan
+gerilemiş. Aradaki **<Deger proje="kredi-parasal" anahtar="dol_gizlenen" ondalik={2}>2,43</Deger>
+puan**, kurun gizlediği ters dolarizasyondur.
+
+### Takipteki alacaklar
+
+Takip oranı toplam %<Deger proje="kredi-parasal" anahtar="npl" ondalik={2}>3,00</Deger>;
+tüketici %<Deger proje="kredi-parasal" anahtar="npl_tuketici" ondalik={2}>4,85</Deger>,
+ticari %<Deger proje="kredi-parasal" anahtar="npl_ticari" ondalik={2}>2,44</Deger>.
+Karşılık oranı %<Deger proje="kredi-parasal" anahtar="karsilik_orani" ondalik={2}>123,85</Deger>.
+
+<KosuKutusu proje="kredi-parasal" sayi={4}>
+  SERİ KIRILMASI (para arzı): seviye tablosu ile TCMB endeksi bazı haftalarda ayrıştı,
+  zincir o haftalarda koparıldı. · AOFM TABANSIZ: son 52 haftanın bir bölümünde APİ
+  fonlaması eşiğin altındayken EVDS bir AOFM basmış. · KKM: program fiilen kapanmış
+  (stok ~0). · BLOK TARİHİ: dolarizasyon bloğu ortak tarihe çıpalandı.
+</KosuKutusu>
+
+Kutu **bu koşunun** durumunu gösterir ve veri katmanının uyarılarını da taşır (tazelik
+alarmları, "ESKİ ÖNBELLEK: n gün eski" düşüşü). Yayım gecikmesi haftalık aile
+toleransını (<Deger proje="kredi-parasal" anahtar="bayat_tolerans_hafta" ondalik={0}>12</Deger>
+gün) aşarsa kutu kırmızıya döner ve başlığı **BAYAT VERİ** olur — fonlama sayfasındaki
+kutunun aynısıdır, iki hat aynı kalıbı kullanır.
+
+## Kur etkisinden arındırma
+
+### Neden gerekli — sorun mekaniktir, yorum değil
+
+Bankacılık sektörünün kredi stoku iki bacaktan oluşur: TL cinsi krediler $K^{TL}$ ve
+döviz cinsi krediler. İkincisi bilançoda **TL karşılığıyla** durur, yani döviz cinsinden
+miktar $K^{YP,fc}$ ile o günün kuru $e$ çarpımı olarak:
+
+$$
+K_t \;=\; K^{TL}_t \;+\; e_t \cdot K^{YP,fc}_t
+$$
+
+Bir haftalık değişimi tam diferansiyelle açalım:
+
+$$
+\Delta K_t \;=\; \underbrace{\Delta K^{TL}_t + e_t\,\Delta K^{YP,fc}_t}_{\text{gerçek kredi akımı}}
+\;+\; \underbrace{K^{YP,fc}_{t-1}\,\Delta e_t}_{\text{yeniden değerleme}}
+$$
+
+İkinci terim **hiç kimse kredi kullanmasa bile** sıfırdan farklıdır. Kur %1 arttığında,
+döviz kredisi stokunun %1'i kadar TL "yeni kredi" gibi görünür. Bugünkü kompozisyonda YP
+payı %<Deger proje="kredi-parasal" anahtar="yp_pay" ondalik={2}>33,46</Deger> olduğuna
+göre, kurdaki %1'lik hareket toplam stoka mekanik olarak
+~<Deger proje="kredi-parasal" anahtar="kur1_puan" ondalik={2}>0,33</Deger> puan ekler.
+Kur yıllık %30 giderse bu tek başına yıllık
+~<Deger proje="kredi-parasal" anahtar="kur30_puan" ondalik={0}>10</Deger> puanlık sahte
+kredi büyümesi demektir. (Bu iki sayı da `yp_pay`'den türetilir ve `ozet.json`'dan gelir;
+elle yazılsaydı YP payı değiştiğinde cümle kendiyle çelişirdi.)
+
+Bu bir "detay" değildir çünkü **işareti bile değiştirebilir**: kur sıçrarken reel kredi
+akımı durmuş olabilir ve manşet yine de hızlanma gösterir. Politika duruşunu manşetten
+okuyan biri, sıkılığın tam sıkılaştığı anda gevşediğini sanır.
+
+### Formül — zincirleme arındırma
+
+Arındırma, YP bacağını **önceki haftanın kuruyla** yeniden değerleyerek büyüme oranını
+kurar. Haftalık arındırılmış büyüme:
+
+$$
+g_s \;=\; \frac{K^{TL}_s + K^{YP}_s\cdot\left(\dfrac{e_{s-1}}{e_s}\right)}{K^{TL}_{s-1} + K^{YP}_{s-1}} \;-\; 1
+$$
+
+Burada $K^{YP}$ **yayımlanan TL karşılığıdır**; $e_{s-1}/e_s$ çarpanı onu bir hafta
+önceki kura geri döndürür. Döviz cinsinden miktar $K^{YP,fc}$ EVDS'te yayımlanmadığı için
+hesap bu şekilde kurulur — sonuç matematiksel olarak $K^{YP,fc}$ ile yapılan hesaba
+özdeştir.
+
+13 haftalık yıllıklandırma **bileşiktir**:
+
+$$
+G^{13,\text{yıllık}}_t \;=\; \left(\prod_{s=t-12}^{t}\left(1+g_s\right)\right)^{52/13} - 1
+$$
+
+Üs <Deger proje="kredi-parasal" anahtar="yillik_us" ondalik={0}>4</Deger>'tür (52/13).
+Basit ölçekleme ($4\times G^{13}$) bileşiklenmeyi ihmal eder; bu büyüme oranı düzeyinde
+iki puandan fazla sapar ve **kullanılmaz**.
+
+**Sıra bağlayıcıdır: önce arındır → sonra zincirle → sonra yıllıklandır.** Ters sırada
+kur etkisi de yıllıklandırılır ve hata dört katına çıkar. Bu, pratikte en sık yapılan
+hatadır: analistler çoğu zaman yıllıklandırılmış ham büyümeden yıllıklandırılmış kur
+değişimini çıkarır. O işlem tanımsızdır; çıkarılacak şey haftalık düzeyde tanımlıdır.
+
+### Hangi kur? Seçim sonucu değiştirir
+
+YP kredinin **para cinsi bileşimi** (dolar/euro/diğer) yayımlanmıyor. Dolayısıyla
+"doğru" kur bilinemez; bir vekil seçmek zorundayız. Bu sayfada ana seri, **mevduat
+tarafından ima edilen sepet kuruyla** hesaplanır:
+
+$$
+e^{\text{sepet}}_t \;=\; \frac{\text{ZK'ya tabi DTH, milyon TL}}{\text{ZK'ya tabi DTH, milyon USD}}
+\;=\; \frac{\texttt{TP.ZORUNDTH.KB8}}{\texttt{TP.ZORUNDTH.KB7}}
+$$
+
+Kaynak: <Deger proje="kredi-parasal" anahtar="kur_serisi" ondalik={0}>TP.ZORUNDTH.KB8 / TP.ZORUNDTH.KB7 (ima edilen sepet); tanı: TP.DK.USD.A.YTL</Deger>.
+
+Bu **bir yaklaşımdır** ve iki bilinen kusuru vardır: (i) ölçülen sepet **mevduat**
+sepetidir, kredi sepeti değildir; (ii) taban kıymetli maden depo hesaplarını da içerir.
+Kusuru kapatacak bir kalibrasyon sabiti kullanılmıyor — yerine **sonucun seçime ne kadar
+duyarlı olduğu ölçülüp yayımlanıyor**:
+
+| Kur seçimi | 13 haftalık yıllıklandırılmış | Ana seriden fark |
+| --- | --- | --- |
+| **Sepet kuru — ana seri** | %<Deger proje="kredi-parasal" anahtar="g_ar_13y" ondalik={2}>25,86</Deger> | — |
+| USD kuru | %<Deger proje="kredi-parasal" anahtar="g_ar_usd_13y" ondalik={2}>25,74</Deger> | <Deger proje="kredi-parasal" anahtar="usd_sepet_farki_13y" ondalik={2}>−0,13</Deger> puan |
+| Çıpalı (sabit kur, pencere içi = $t-13$) | %<Deger proje="kredi-parasal" anahtar="g_cipa_13y" ondalik={2}>26,01</Deger> | <Deger proje="kredi-parasal" anahtar="cipa_zincir_farki" ondalik={2}>0,14</Deger> puan |
+| Çıpa **yıl başı** (pencere dışı) | %<Deger proje="kredi-parasal" anahtar="g_cipa_yilbasi_13y" ondalik={2}>26,44</Deger> | — |
+| Çıpa **52 hafta öncesi** (pencere dışı) | %<Deger proje="kredi-parasal" anahtar="g_cipa_52hafta_13y" ondalik={2}>26,78</Deger> | — |
+| **Sepet kuru tahmin bandı** (aşağıda) | %<Deger proje="kredi-parasal" anahtar="g_ar_13y_tahmin_alt" ondalik={2}>25,07</Deger> – %<Deger proje="kredi-parasal" anahtar="g_ar_13y_tahmin_ust" ondalik={2}>26,67</Deger> | ±<Deger proje="kredi-parasal" anahtar="sepet_tahmin_buyume_bandi_pp" ondalik={2}>0,80</Deger> puan |
+
+**Test edilen seçenekler arasında** kur seçiminin etkisi küçüktür: ölçülmüş üç
+seçeneğin yayılımı çeyrek puanın altında, çıpa seçiminin yayılımı (pencere içi ve dışı,
+üçü birlikte) <Deger proje="kredi-parasal" anahtar="cipa_yayilim_pp" ondalik={2}>0,92</Deger>
+puandır. Cümleyi buradan öteye genişletmiyoruz: "kur seçimi önemsizdir" demek yerine
+"bu üç–beş seçenek arasında önemsizdir" diyoruz, çünkü sınanmamış bir seçeneğin nereye
+gideceğini bilmiyoruz.
+
+Buna karşılık **asıl belirsizlik kur seçiminde değil, son haftaların ölçülmemiş
+olmasındadır**: tablonun son satırındaki
+±<Deger proje="kredi-parasal" anahtar="sepet_tahmin_buyume_bandi_pp" ondalik={2}>0,80</Deger>
+puanlık bant, ölçülmüş üç seçeneğin tüm yayılımından **birkaç kat büyüktür**. Tabloya
+bakıp "kur seçimi önemsiz" diyen okur, asıl belirsizliği tabloda göremezdi; bu yüzden
+bant tablonun içine kondu.
+
+Ve her ikisinin de üstünde: **arındırıp arındırmamanın** etkisi
+<Deger proje="kredi-parasal" anahtar="kur_etkisi_13y" ondalik={2}>8,63</Deger>
+puandır. Mertebe farkı bilerek yan yana konuyor: doğru tartışma "hangi kur" değil,
+"arındırılmış mı" tartışmasıdır.
+
+<div class="not">
+  <span class="etiket">Çıpa duyarlılığı nasıl ölçülüyor</span>
+  Pencere dışı çıpa hesaplanırken <strong>hem pay hem payda</strong> aynı sabit kurla
+  değerlenir; yalnız payı çıpaya bağlayıp paydayı ham bırakmak, çıpa ile ölçüm günü
+  arasındaki kur hareketini büyüme oranına sahte olarak yükler ve on puanlarla oynayan
+  anlamsız sayılar üretir. Doğru kurulduğunda çıpa seçiminin 13 haftalık büyüme oranına
+  etkisi küçüktür — çünkü çıpa düzeyi pay ve paydada büyük ölçüde sadeleşir. Çıpa
+  seçimi <em>seviye</em> serilerinde (dolarizasyon payı gibi) belirleyicidir, büyüme
+  <em>oranlarında</em> değil; sayfa bu ayrımı ölçerek yapıyor, iddia ederek değil.
+</div>
+
+**Kuyruk sorunu.** Zorunlu karşılık tabanı 13 gün gecikmeli yayımlanır; sepet kuru son
+1–2 haftada boştur. O kuyruk USD ve EUR üzerinden sabitsiz en küçük kareler ile
+(<Deger proje="kredi-parasal" anahtar="sepet_tahmin_n" ondalik={0}>104</Deger> haftalık
+pencere) **tahmin edilir** ve `ozet.json`'da işaretlenir. Bu koşuda son gözlemin kaynağı:
+<Deger proje="kredi-parasal" anahtar="sepet_kaynak" ondalik={0}>tahmin</Deger>. Tahminin
+eğitim penceresindeki artık standart sapması
+%<Deger proje="kredi-parasal" anahtar="sepet_tahmin_artik_std" ondalik={3}>0,092</Deger>,
+maksimum artık %<Deger proje="kredi-parasal" anahtar="sepet_tahmin_artik_maks" ondalik={3}>0,476</Deger>.
+Kuyruk dört haftayı aşarsa uyarı düşer.
+
+**Artık, kur düzeyinde bırakılmaz — büyümeye taşınır.** Tahmin edilen
+<Deger proje="kredi-parasal" anahtar="sepet_tahmin_hafta" ondalik={0}>2</Deger> hafta
+maksimum artık kadar yukarı ve aşağı kaydırılıp 13 haftalık yıllıklandırılmış büyüme
+yeniden hesaplanır: sonuç
+%<Deger proje="kredi-parasal" anahtar="g_ar_13y_tahmin_alt" ondalik={2}>25,07</Deger> ile
+%<Deger proje="kredi-parasal" anahtar="g_ar_13y_tahmin_ust" ondalik={2}>26,67</Deger>
+arasında, yani
+±<Deger proje="kredi-parasal" anahtar="sepet_tahmin_buyume_bandi_pp" ondalik={2}>0,80</Deger>
+puan oynuyor. Kur düzeyindeki binde birlik bir artık, büyüme düzeyinde neredeyse bir
+puana dönüşüyor — çünkü haftalık oranlar on üç kez bileşikleniyor ve sonra
+yıllıklandırılıyor. Bu bant `ozet.json`'da `sepet_tahmin_buyume_bandi_pp` anahtarıyla
+taşınır ve yukarıdaki duyarlılık tablosunun son satırıdır.
+
+**Kurun günü.** Haftalık gözlemler Cuma itibarıyladır ve kur **aynı Cuma** alınır (bu
+koşuda: <Deger proje="kredi-parasal" anahtar="kur_gun_kaynak" ondalik={0}>aynigun</Deger>).
+Cuma tatilse en yakın **önceki** iş gününe düşülür. İleri taşıma yapılmaz — gelecekteki
+bir kurla geçmiş bir stoğu değerlemek, ölçüm gününde bilinmeyen bilgiyi kullanmaktır.
+
+### Sabit kur (çıpalı) arındırma neden ana seri değil
+
+İkinci bir arındırma ailesi daha var ve TCMB'nin düzenleme tarafında kullandığı tanım
+buna daha yakındır: **çıpalı arındırma** — YP bacağı, seçilmiş sabit bir referans kuruyla
+$e^{*}$ değerlenir:
+
+$$
+\tilde{K}_t \;=\; K^{TL}_t + e^{*}\cdot K^{YP,fc}_t,
+\qquad
+\tilde{G}_{t} = \frac{\tilde{K}_t}{\tilde{K}_{t-13}} - 1
+$$
+
+İki tanım **aynı sayıyı vermez** ve fark tesadüfi değildir. Zincirleme tanım her hafta
+kendi kurunu kullanır; çıpalı tanım tüm pencereyi tek bir kura sabitler. Aradaki fark,
+kur değişimi ile YP kredi akımının **kovaryansından** gelir: döviz kredisi kurun
+yükseldiği haftalarda azalıyorsa çıpalı ölçü zincirlemeden yukarı, artıyorsa aşağı
+sapar. Bu sapma her koşuda **ölçülüyor**:
+$D_T = $ <Deger proje="kredi-parasal" anahtar="d_zincir_mlr" ondalik={1}>36,3</Deger>
+milyar TL (çıpa <Deger proje="kredi-parasal" anahtar="d_cipa" ondalik={0}>15 Mayıs 2026</Deger>).
+
+Ana seri **zincirlemedir**, üç sebeple: (i) çıpa seçimi keyfîdir ve çıpayı değiştirmek
+geçmiş bütün büyüme oranlarını değiştirir; (ii) çıpalı seri, çıpadan uzaklaştıkça
+"sabit kur" varsayımını taşıyamaz hâle gelir; (iii) zincirleme tanım, haftalık
+gözlemlerin her birinde o haftanın bilgi kümesiyle tanımlıdır. Çıpalı ölçü tanı olarak
+tutuluyor, grafiklerde noktalı çizgi olarak duruyor — silinmiyor, çünkü düzenleme
+tarafındaki tanım oraya daha yakın ve iki sayı arasındaki fark okurun bilmesi gereken
+bir şey.
+
+### TCMB'nin makro ihtiyati sınırlarında kullandığı tanım
+
+TCMB'nin kredi büyümesine koyduğu aylık büyüme sınırları — TL ticari krediler için ayrı,
+YP krediler için ayrı, bazı dönemlerde tüketici ve kredi kartı için ayrı — kendi kur
+arındırmasını taşır ve **çıpalı ailedendir**: tebliğ, YP kredilerin sabit bir referans
+kurdan değerleneceğini söyler. Ama sayfa o sınırı çizmez ve şu üç sebeple çizmemek
+zorundadır:
+
+1. **Referans kur ve oran tebliğle değişir.** Sınır dönem dönem yeniden belirlenir;
+   referans kurun hangi tarih olduğu, oranın aylık %1 mi %1,5 mi %2 mi olduğu duyurudan
+   duyuruya değişir. Kod içine gömülen her tarih ve oran, bir sonraki duyuruda **sessizce
+   yanlışa** döner — bu hattın yasakladığı hata sınıfı tam olarak budur.
+2. **Kapsam farklıdır.** Sınırın dışında bırakılan kalemler (yatırım kredileri,
+   ihracat ve yatırım taahhütlü krediler, esnaf ve tarım kredileri, KOBİ'nin bir kısmı,
+   kamu bankası istisnaları) EVDS'in haftalık tablolarında ayrı seri olarak yoktur.
+   Bizim serimiz **yurt içi yerleşiklere kullandırılan toplam** kredidir; düzenlemenin
+   ölçtüğü taban değildir.
+3. **Frekans farklıdır.** Sınır aylık büyümeye bakar, bizim ana serimiz 13 haftalık
+   yıllıklandırılmıştır.
+
+Sonuç: bu sayfadaki
+%<Deger proje="kredi-parasal" anahtar="g_ar_13y" ondalik={2}>25,86</Deger>, "TCMB'nin
+sınırı aşıldı mı" sorusunun cevabı **değildir**. Finansal koşulların ölçüsüdür.
+`ozet.json`'daki `arindirma_yontem` alanı
+(<Deger proje="kredi-parasal" anahtar="arindirma_yontem" ondalik={0}>zincirleme_sepet</Deger>)
+bu ayrımı taşır ve sayfayı okuyan her makine tarafında görünür.
+
+### Kur etkisinin büyüklüğü — Laspeyres ayrıştırma
+
+**<Deger proje="kredi-parasal" anahtar="kur_etkisi_13y" ondalik={1}>8,6</Deger> puan**
+soyut bir sayıdır; **<Deger proje="kredi-parasal" anahtar="gama_13h_mlr" ondalik={0}>417</Deger>
+milyar TL** değildir. Haftalık seviye değişimini iki
+bacağa ayırıyoruz — çerçeve, [rezerv hattındaki](/projeler/tcmb-net-rezerv/) altın fiyat
+etkisi ayrıştırmasıyla **birebir aynıdır** ve sözlük bilinçli olarak ortaktır:
+
+$$
+\Gamma_s = K^{YP,fc}_{s-1}\cdot\Delta e_s
+\qquad
+\Lambda_s = \Delta K^{TL}_s + e_s\cdot\Delta K^{YP,fc}_s
+\qquad
+\Gamma_s + \Lambda_s = \Delta K_s
+$$
+
+$\Gamma$ **atılan** bacaktır (kur etkisi), $\Lambda$ **tutulan** bacaktır (gerçek akım).
+Kimlik artıksızdır — kalan artık her koşuda ölçülür ve makine hassasiyetinin dışına
+çıkarsa uyarı düşer. Son 13 haftada:
+
+| Bileşen | Milyar TL |
+| --- | --- |
+| $\Gamma$ — kur etkisi | <Deger proje="kredi-parasal" anahtar="gama_13h_mlr" ondalik={0}>417</Deger> |
+| $\Lambda$ — gerçek kredi akımı | <Deger proje="kredi-parasal" anahtar="lamda_13h_mlr" ondalik={0}>1.451</Deger> |
+| $\Delta K$ — yayımlanan seviye değişimi | <Deger proje="kredi-parasal" anahtar="delta_13h_mlr" ondalik={0}>1.868</Deger> |
+| **Kur etkisinin payı** | **%<Deger proje="kredi-parasal" anahtar="gama_pay" ondalik={1}>22,3</Deger>** |
+
+Ayrıştırma **Laspeyres tipidir** (ağırlık: dönem başı stok). Simetrik Bennet varyantı
+hesaplanır ama yayımlanmaz; iki varyant arasındaki fark ikinci mertebedendir
+($\Delta e \cdot \Delta K^{YP,fc}$ terimi) ve haftalık frekansta ihmal edilebilir. Aylık
+ya da yıllık frekansta ihmal edilemez — bu, ayrıştırmayı haftalık kurmanın sebebidir.
+
+## Şekil 01 — Kredi büyümesi, kur etkisinden arındırılmış
+
+<GrafikEmbed
+  src="/projeler/kredi-parasal/01_kredi_buyume.html"
+  baslik="Arındırılmış kredi büyümesi — toplam, TL ve YP; ve uzun tarihçe (arşiv + yeni tablolar birleştirilmiş)"
+  no="01"
+  yukseklik={1061}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** EVDS3, `bie_hpbitablo2`: `TP.HPBITABLO2.24` (yurt içi yerleşiklere TL kredi) ve
+`TP.HPBITABLO2.28` (yurt içi yerleşiklere YP kredi, TL karşılığı). Birim **bin TL**.
+Kur: `bie_zorundth`. Kapsam: yurt içi şubeler, **katılım bankaları dahil**.
+
+**Üst panel.** Yukarıdaki zincirleme arındırma formülü, dört seri için:
+
+| Seri | Nasıl |
+| --- | --- |
+| Toplam (arındırılmış) | $g_s$ formülü, ardından 13 haftalık bileşik yıllıklandırma |
+| TL krediler | yalnız $K^{TL}$; arındırma gerekmez, tanımı gereği kur taşımaz |
+| YP krediler (döviz cinsinden) | $K^{YP}_s/e_s$ üzerinden; **döviz** cinsinden büyüme |
+| Toplam, 52 haftalık | aynı $g_s$, pencere 52 hafta, üs 1 |
+
+YP serisinin döviz cinsinden çizilmesi bilinçlidir: TL karşılığından çizilseydi panelde
+kurun grafiği görünürdü, kredinin değil.
+
+**Alt panel — uzun tarihçe ve seri kırılması.** Eski haftalık tablolar (`bie_kredi`)
+**31.01.2025**'te kapandı, yeni tablolar (`bie_hpbitablo*`)
+<Deger proje="kredi-parasal" anahtar="kredi_seri_kirilma_tr" ondalik={0}>28 Haziran 2024</Deger>'te
+başladı: <Deger proje="kredi-parasal" anahtar="ortusme_hafta" ondalik={0}>32</Deger>
+haftalık örtüşme var. Kural üç maddedir:
+
+1. **Seviyede uç uca ekleme yasaktır.** İki tablonun tanım farkı sabit değil,
+   sürükleniyor. Örtüşme oranı ilk haftada
+   <Deger proje="kredi-parasal" anahtar="ortusme_oran_ilk" ondalik={5}>1,00004</Deger>,
+   son haftada <Deger proje="kredi-parasal" anahtar="ortusme_oran_son" ondalik={5}>1,00003</Deger>;
+   haftalık sürükleme <Deger proje="kredi-parasal" anahtar="ortusme_surukleme" ondalik={6}>−0,000009</Deger>.
+   ±0,001'i aşarsa uyarı düşer.
+2. **Birleştirme yalnız büyüme oranı düzeyinde** yapılır.
+3. **Kırılma haftasında zincir koparılır.** O haftanın "büyümesi" iki farklı tanımın
+   farkıdır, büyüme değildir. Kırılma tarihi grafikte dikey çizgiyle işaretlenir.
+
+Birleştirilmiş seri <Deger proje="kredi-parasal" anahtar="uzun_bas" ondalik={0}>21 Nisan 2006</Deger>'ya
+uzanır; bugünkü değeri %<Deger proje="kredi-parasal" anahtar="uzun_g_ar_13y" ondalik={2}>25,86</Deger>
+(yakın plan seriyle örtüşür — örtüşmezse birleştirme bozulmuş demektir).
+
+**Varsayımlar.** (i) YP kredinin para cinsi bileşimi mevduat sepetiyle aynıdır;
+(ii) haftalık gözlem ile kur aynı güne aittir; (iii) katılım bankaları kapsam içindedir
+ve kapsam dönem boyunca sabittir.
+
+## Şekil 02 — Kur etkisinin büyüklüğü
+
+<GrafikEmbed
+  src="/projeler/kredi-parasal/02_kur_etkisi.html"
+  baslik="Ham ve arındırılmış büyüme · kur etkisi ve sepet kurunun değişimi · Laspeyres ayrıştırma"
+  no="02"
+  yukseklik={1423}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Panel 1 — dört tanım yan yana.** Ham (arındırılmamış) seri
+$\left(K_t/K_{t-13}\right)^{4}-1$; ana seri zincirleme-sepet; iki tanı serisi
+(USD kuruyla ve çıpalı). Dört serinin bir arada durması, "arındırma bir tercihtir"
+iddiasına verilen cevaptır: tercih olan **kur seçimidir** ve etkisi çeyrek puan;
+arındırmanın kendisi tercih değildir, ölçünün tanımıdır.
+
+**Panel 2 — kur etkisi ve sürücüsü.** Sol eksende çubuklar:
+
+$$
+\text{kur etkisi}_t \;=\; G^{\text{ham}}_t - G^{\text{ar}}_t
+$$
+
+Sağ eksende sepet kurunun 13 haftalık değişimi. İki serinin birlikte hareket etmesi
+beklenen sonuçtur; **birlikte hareket etmediği dönemler** bilgi taşır — o dönemlerde YP
+kredi stokunun payı değişmiştir (kur aynı hareketi yapsa bile etki küçülür ya da büyür).
+
+**Panel 3 — Laspeyres.** $\Gamma$, $\Lambda$ ve $\Delta K$'nın 13 haftalık yuvarlanan
+toplamı, milyar TL. Kimlik $\Gamma+\Lambda=\Delta K$ grafikte de görülür: gri noktalı
+$\Delta K$ çizgisi her noktada diğer ikisinin toplamıdır. Zincirleme sapması $D_T$ alt
+başlıkta yazılır, çizilmez.
+
+**Varsayım.** Ayrıştırma dönem başı ağırlıklıdır (Laspeyres); hafta içi kur yolu
+gözlenmediği için etki, hafta sonu kuruyla tek adımda ölçülür.
+
+## Şekil 03 — Kredi kırılımı ve kredi arzı–talebi
+
+<GrafikEmbed
+  src="/projeler/kredi-parasal/03_kredi_kirilim.html"
+  baslik="Kredi türüne göre büyüme · stok kompozisyonu · katılım bankaları dahil/hariç · Banka Kredileri Eğilim Anketi"
+  no="03"
+  yukseklik={1811}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Panel 1 — tür bazında büyüme.** `bie_hpbitablo6` (haftalık kredi kırılımı,
+28.06.2024'te başlar). Kritik ayrım şudur ve grafikte etiketlerde taşınır:
+
+- **Ticari ve KOBİ** serilerinde TL/YP kırılımı yayımlanıyor → **arındırma uygulanır**.
+- **Tüketici, kredi kartı, finansal kuruluşlara** serileri EVDS'te **TL+YP birleşik**
+  yayımlanıyor → arındırılamaz, **ham** kalır.
+
+Bu yüzden tüketici (%<Deger proje="kredi-parasal" anahtar="g_tuketici_13y" ondalik={2}>43,00</Deger>)
+ile ticari (%<Deger proje="kredi-parasal" anahtar="g_ticari_13y" ondalik={2}>18,68</Deger>)
+farkının bir kısmı **ölçüm farkıdır**, davranış farkı değil. Tüketici kredilerinin YP
+payı küçük olduğu için ham/arındırılmış farkı da küçüktür — ama sıfır değildir ve
+ölçülemez.
+
+**Panel 2 — stok kompozisyonu**, milyar TL. Ticari kredi TL ve YP olarak ayrı çizilir;
+YP çizgisinin kur hareketleriyle birlikte sıçraması, panel 1'deki arındırmanın neyi
+temizlediğinin görsel karşılığıdır.
+
+**Panel 3 — katılım bankaları.** Bu panel **aylık** seridendir (`bie_krehacbs`), çünkü
+banka türü kırılımı haftalık tabloda yok. Aylık seride TL/YP ayrımı da yok:
+**bu paneldeki üç büyüme HAM'dır** ve panel 1'in arındırılmış serileriyle aynı cümlede
+okunmaz. Bugün: katılım dahil
+%<Deger proje="kredi-parasal" anahtar="g_kh_toplam_yil" ondalik={2}>37,46</Deger>, hariç
+%<Deger proje="kredi-parasal" anahtar="g_kh_haric_yil" ondalik={2}>37,33</Deger>, yalnız
+katılım %<Deger proje="kredi-parasal" anahtar="g_kh_katilim_yil" ondalik={2}>38,96</Deger>;
+katılım payı %<Deger proje="kredi-parasal" anahtar="katilim_pay" ondalik={2}>8,11</Deger>
+(<Deger proje="kredi-parasal" anahtar="kh_katilim_mlr" ondalik={0}>2.086</Deger> /
+<Deger proje="kredi-parasal" anahtar="kh_toplam_mlr" ondalik={0}>25.729</Deger> milyar TL).
+Katılım bankalarının toplam büyümeye katkı farkı
+<Deger proje="kredi-parasal" anahtar="katilim_etkisi" ondalik={2}>0,13</Deger> puan — yani
+"katılım bankaları manşeti şişiriyor" iddiası bu koşuda ölçülebilir bir büyüklük değil.
+
+**Panel 4 — Banka Kredileri Eğilim Anketi** (`bie_bkea`, üç aylık). Seriler **net yüzde
+değişimdir**, seviye değil: anketteki "sıkılaştırdım" diyen bankaların ağırlıklı payından
+"gevşettim" diyenlerin payı çıkarılır. İşaret okuması:
+
+$$
+\text{net \%} = w_{\text{sıkılaştıran}} - w_{\text{gevşeten}}
+$$
+
+Standart serilerinde **negatif = gevşeme**, talep serilerinde **pozitif = artan talep**.
+Bu koşuda işletme kredisi standartları
+<Deger proje="kredi-parasal" anahtar="bkea_std_isletme" ondalik={1}>−20,4</Deger>, KOBİ
+<Deger proje="kredi-parasal" anahtar="bkea_std_kobi" ondalik={1}>−20,4</Deger>, konut
+<Deger proje="kredi-parasal" anahtar="bkea_std_konut" ondalik={1}>−0,6</Deger>, diğer
+bireysel <Deger proje="kredi-parasal" anahtar="bkea_std_diger" ondalik={1}>−18,2</Deger>;
+talep <Deger proje="kredi-parasal" anahtar="bkea_talep" ondalik={1}>41,1</Deger>, gelecek
+çeyrek beklentisi <Deger proje="kredi-parasal" anahtar="bkea_talep_bek" ondalik={1}>54,4</Deger>.
+
+Ankete bakmanın sebebi bir öncüllük iddiası değil, **arz–talep ayrımıdır**: kredi
+büyümesi tek başına arzın mı talebin mi hareket ettiğini söylemez. Standartlar gevşerken
+talep artıyorsa iki kuvvet aynı yöne bakıyor demektir.
+
+## Şekil 04 — Kredi faizleri, makaslar ve reel faiz
+
+<GrafikEmbed
+  src="/projeler/kredi-parasal/04_faiz_spread.html"
+  baslik="Kredi ve mevduat faizleri, politika faizi ve koridor · makaslar · tam Fisher reel faiz"
+  no="04"
+  yukseklik={1447}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** `bie_kt100h` (kredi faizleri), `bie_mt100h` (mevduat faizleri), `bie_pyintbnk`
+(politika faizi ve koridor), `bie_apifon` (AOFM), `bie_beklenti` (PKA).
+
+**Faizler akım faizidir, stok değil.** Yayımlanan seri, o hafta **yeni kullandırılan**
+kredilerin ağırlıklı ortalama yıllık bileşik faizidir. Stok faizi değildir; politika
+değişiminin stok maliyetine geçişi aylar sürer ve bu grafik o geçişi göstermez.
+
+**Politika faizi tek başına çizilmez.** Koridor (alt–üst) ve AOFM ile birlikte çizilir,
+çünkü fonlamanın fiilî maliyeti koridor kullanımına göre kotasyondan ayrışır. Bu koşuda
+AOFM %<Deger proje="kredi-parasal" anahtar="aofm" ondalik={2}>40,00</Deger>, kotasyon
+%<Deger proje="kredi-parasal" anahtar="politika" ondalik={2}>37,00</Deger> — aradaki
+<Deger proje="kredi-parasal" anahtar="spread_politika" ondalik={2}>16,15</Deger> puanlık
+kredi makasının bir kısmı bu ayrışmadan gelir. Fonlama kompozisyonunun kendisi
+[TCMB fonlama ve likidite](/projeler/fonlama-likidite/) sayfasının konusudur.
+
+**Panel 2 — makaslar.** Üç fark: kredi − mevduat (aracılık marjı), kredi − politika,
+kredi − AOFM. Aracılık marjı bankanın vade ve kredi riski primini taşır; kredi − AOFM
+makası ise fonlama maliyeti üzerine binen toplam primdir.
+
+**Panel 3 — reel faiz, TAM FISHER.** Kullanılan tanım:
+
+$$
+r \;=\; \frac{1+i}{1+\pi^{e}} - 1
+$$
+
+$i-\pi$ **yaklaşımı yasaktır**. Sebebi bu düzeyde aritmetiktir: yaklaşımın hatası
+$\dfrac{i-\pi^e}{1+\pi^e}$ ile $i-\pi^e$ arasındaki farktır ve $\pi^e$ büyüdükçe büyür.
+Bu koşuda ticari kredide tam Fisher
+%<Deger proje="kredi-parasal" anahtar="reel_ticari" ondalik={2}>23,82</Deger>, yaklaşım
+%<Deger proje="kredi-parasal" anahtar="reel_ticari_yaklasik" ondalik={2}>29,46</Deger> —
+**<Deger proje="kredi-parasal" anahtar="fisher_farki" ondalik={2}>5,64</Deger> puan**
+sapma. Yaklaşım grafiğe yalnızca noktalı **tanı** izi olarak girer; hiçbir cümlede
+kullanılmaz.
+
+**Beklenti girdisi.** PKA 12 aylık TÜFE beklentisi (`TP.PKAUO.S01.E.U`, aylık;
+%<Deger proje="kredi-parasal" anahtar="pka_12a" ondalik={2}>23,69</Deger>). Aylık seri
+haftalık eksene **son yayımlanan değerle taşınır** — ileri taşıma değil, geri taşıma:
+her hafta o hafta bilinen en son anket değerini görür.
+
+**Varsayım ve sınır.** Reel faiz beklenti tabanlıdır; anket beklentisi gerçekleşen
+enflasyondan sistematik sapabilir. Gerçekleşen enflasyonla hesaplanan *ex post* reel
+faiz farklı bir ölçüdür ve burada yayımlanmaz. Enflasyon tarafının kendi momentum
+ölçüleri için [Enflasyon Panosu](/projeler/enflasyon/) sayfasına bakın; faizin
+konvansiyonları (bileşik/basit, gün sayma, efektif dönüşüm) için
+[Faiz Eğrisi ve Konvansiyonlar](/arastirma/faiz-egrisi-ve-konvansiyonlar/) dersine.
+
+## Parasal büyüklükler
+
+Kredi tarafında kur etkisini temizlemek zorunluysa, para tarafında **daha da** zorunlu —
+çünkü Türkiye'nin M1 tanımı **YP vadesiz mevduatı içerir**. Kimlikler:
+
+$$
+M1 = \text{Dolaşımdaki para} + \text{Vadesiz mevduat (TL + YP)}
+$$
+
+$$
+M2 = M1 + \text{Vadeli mevduat (TL + YP)}
+\qquad
+M3 = M2 + \text{Repo} + \text{Para piyasası fonları} + \text{İhraç edilen menkul kıymetler}
+$$
+
+M1'in YP payı üçte ikiye yakın olduğu için **arındırma seçimi M1'de sonucu domine eder**:
+bu koşuda ham M1 büyümesi
+%<Deger proje="kredi-parasal" anahtar="g_m1_ham_13y" ondalik={2}>6,87</Deger>, bizim
+arındırmamız %<Deger proje="kredi-parasal" anahtar="g_m1_ar_13y" ondalik={2}>−6,38</Deger>,
+TCMB'nin ARIM1 endeksi %<Deger proje="kredi-parasal" anahtar="tcmb_ar_m1_13y" ondalik={2}>0,08</Deger>.
+Üç sayı da aynı seriyi anlatıyor; farkları **yöntem farkıdır** ve aşağıda ölçülüp
+yayımlanıyor.
+
+**"Kur etkisi" bu sayfada iki farklı şeyi adlandırır ve ikisi karıştırılmamalıdır.**
+TCMB'nin kendi endekslerinden okunan fark (HAMM2 − ARIM2)
+<Deger proje="kredi-parasal" anahtar="m2_kur_etkisi_tcmb" ondalik={2}>5,33</Deger>
+puandır; **bizim** ham M2 ile **bizim** arındırılmış M2'miz arasındaki fark ise
+<Deger proje="kredi-parasal" anahtar="m2_kur_etkisi_biz" ondalik={2}>9,13</Deger> puan.
+İkisi aynı sayı değildir, çünkü TCMB'nin arındırma **yöntemi yayımlanmıyor**; ölçülen
+yöntem yanlılığı M2'de
+<Deger proje="kredi-parasal" anahtar="dog_ar_m2_yanlilik" ondalik={2}>3,76</Deger> puan,
+RMSE <Deger proje="kredi-parasal" anahtar="dog_ar_m2_rmse" ondalik={2}>8,84</Deger>,
+korelasyon <Deger proje="kredi-parasal" anahtar="dog_ar_m2_korel" ondalik={3}>0,653</Deger>.
+Kredi tarafındaki
+<Deger proje="kredi-parasal" anahtar="kur_etkisi_13y" ondalik={2}>8,63</Deger> puanlık
+kur etkisi **bizim** tanımımızla hesaplandığı için, karşılaştırılacak M2 sayısı
+<Deger proje="kredi-parasal" anahtar="m2_kur_etkisi_biz" ondalik={2}>9,13</Deger>'tür —
+5,33 ile karşılaştırmak iki farklı arındırma yöntemini karşılaştırmak olurdu.
+
+Bu yüzden panonun **başrol para serisi TCMB'nin kendi arındırdığı endekslerdir**
+(ARIM1/ARIM2/ARIM3): kendi arındırmamızı başrole koymak, ölçüm belirsizliğini yayımlanmış
+bir ürünmüş gibi sunmak olurdu. Kendi arındırmamız ikinci panelde, **kıyas** olarak
+duruyor.
+
+## Şekil 05 — Parasal büyüklükler ve para çarpanı
+
+<GrafikEmbed
+  src="/projeler/kredi-parasal/05_para_arzi.html"
+  baslik="ARIM1/ARIM2/ARIM3 · yöntem kıyası · para çarpanı · rezerv para bileşenleri"
+  no="05"
+  yukseklik={1789}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Panel 1 — TCMB'nin arındırılmış endeksleri.** `bie_kavramsal` veri grubu,
+30.12.2005 = 100 endeksleri. 13 haftalık bileşik yıllıklandırma, kredi tarafıyla **aynı**
+formül. Ham HAMM2 noktalı çizgiyle birlikte çizilir; iki çizginin arası M2'deki kur
+etkisidir.
+
+İlk iki panel tarihçenin tamamını göstermez. Sebebi ölçek: Aralık 2021 kur şokunda ham M2
+momentumu %300'ü aşıyor ve tüm tarihçe tek eksene sığdırıldığında bugünkü bant düz bir
+çizgiye dönüşüyor. Ölçek bastırması sunum kusuru değil, bilgi kaybıdır.
+
+**Panel 2 — yöntem kıyası (sınav B).** Bu çalışmanın zincirleme-sepet arındırmasıyla
+hesaplanan M2 büyümesi ile TCMB'nin ARIM2 endeksi yan yana. **Eşitlik beklenmiyor** —
+TCMB arındırma yöntemini yayımlamıyor. Ölçülen: yanlılık
+<Deger proje="kredi-parasal" anahtar="dog_ar_m2_yanlilik" ondalik={2}>3,76</Deger> puan,
+RMSE <Deger proje="kredi-parasal" anahtar="dog_ar_m2_rmse" ondalik={2}>8,84</Deger> puan,
+korelasyon <Deger proje="kredi-parasal" anahtar="dog_ar_m2_korel" ondalik={3}>0,653</Deger>
+(<Deger proje="kredi-parasal" anahtar="dog_ham_m2_n" ondalik={0}>104</Deger> hafta).
+
+**Panel 3 — para çarpanı.** $m_i = M_i / RP$, rezerv para paydada
+(`bie_abanlbil`, analitik bilanço). Çarpan bir **davranış parametresi değildir**, bir
+orandır: zorunlu karşılık oranı idari olarak değiştiğinde payda sıçrar ve çarpan, hiçbir
+davranış değişmeden zıplar. Bu yüzden altındaki panelde ZK bloke hesabı da çizilir —
+çarpandaki her sıçramanın idari mi davranışsal mı olduğu oradan okunur.
+
+**Panel 4 — rezerv para bileşenleri**, milyar TL: emisyon
+(<Deger proje="kredi-parasal" anahtar="emisyon_mlr" ondalik={0}>978</Deger>), ZK bloke
+hesabı (<Deger proje="kredi-parasal" anahtar="zk_bloke_mlr" ondalik={0}>1.141</Deger>),
+bankaların serbest mevduatı
+(<Deger proje="kredi-parasal" anahtar="serbest_mevduat_mlr" ondalik={0}>2.681</Deger>) ve
+toplam rezerv para
+(<Deger proje="kredi-parasal" anahtar="rezerv_para_mlr" ondalik={0}>4.809</Deger>).
+
+**Türetilen ve etiketlenen bir oran.** `zk_ima_oran` = ZK bloke hesabı / ZK'ya tabi taban
+= %<Deger proje="kredi-parasal" anahtar="zk_ima_oran" ondalik={2}>4,23</Deger>. Bu
+**ima edilen bileşik orandır** ve tebliğdeki herhangi bir tek orana eşit değildir:
+tebliğ vade, para cinsi ve yükümlülük türüne göre farklı oranlar tanımlar, üstelik bir
+kısmı TL cinsinden döviz tesisi ve altın tesisi ile karşılanır. EVDS'te zorunlu karşılık
+oranı serisi **yoktur**; bu satır bir vekil ölçüdür ve öyle etiketlenir.
+
+**Frekans notu.** Analitik bilanço iş günü, para arzı haftalık yayımlanır. Bilanço
+kalemleri haftalık eksene **geri taşıma** ile hizalanır (her hafta o hafta bilinen son
+iş günü değeri). İleri taşıma yapılmaz.
+
+## Dolarizasyon
+
+Mevduat dolarizasyonunun manşet ölçüsü — DTH'ın toplam mevduata payı — kredi
+büyümesiyle **aynı hastalığı** taşır: pay, DTH'ın TL karşılığı üzerinden hesaplanır ve
+kur yükselirken kimse dolar almasa bile yükselir. Arındırılmış pay, DTH'ı **çıpa
+haftasının** kuruyla yeniden değerler:
+
+$$
+\tilde{\delta}_t \;=\; \frac{D^{YP}_t\cdot\left(\dfrac{e^{*}}{e_t}\right)}{D^{TL}_t + D^{YP}_t\cdot\left(\dfrac{e^{*}}{e_t}\right)}
+$$
+
+Çıpa, içinde bulunulan **takvim yılının ilk gözlemidir** — bu koşuda
+<Deger proje="kredi-parasal" anahtar="dol_cipa" ondalik={0}>2 Ocak 2026</Deger>, sepet
+kuru <Deger proje="kredi-parasal" anahtar="dol_cipa_kur" ondalik={3}>42,881</Deger> — ve
+yıl dönünce kendiliğinden ilerler; kodda sabit tarih yoktur.
+
+Burada çıpalı tanımın kullanılmasının sebebi, kredi tarafındaki tercihin tersine
+görünüyor ama değil: **ölçülen şey farklıdır.** Kredi tarafında ölçtüğümüz bir *akımdır*
+(büyüme oranı) ve akımın her haftası kendi bilgi kümesiyle tanımlıdır. Burada ölçtüğümüz
+bir *kompozisyondur* (pay) ve payın anlamlı olması için bütün gözlemlerin **aynı fiyat
+setiyle** değerlenmesi gerekir. Sabit kur burada bir sadeleştirme değil, tanımın kendisi.
+
+Bunun bedeli açık: **arındırılmış seri çıpadan öncesine uzatılamaz.** Uzatılsaydı,
+çizilen şey dolarizasyon değil kurun tarihi olurdu.
+
+## Şekil 06 — Mevduat kompozisyonu ve dolarizasyon
+
+<GrafikEmbed
+  src="/projeler/kredi-parasal/06_dolarizasyon.html"
+  baslik="TL ve döviz mevduatı · DTH payı, ham ve arındırılmış · döviz mevduatı, döviz cinsinden"
+  no="06"
+  yukseklik={1425}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** `bie_tldthvade` ve `bie_zorundth` (zorunlu karşılığa tabi taban),
+`bie_hpbitablo2` (kıyas için sektör bilançosu). Bu tabanda sepet kuru **doğrudan
+ölçülebilir**, çünkü aynı büyüklük hem TL hem USD karşılığıyla yayımlanır — kredi
+tarafındaki tahmin sorunu burada yok.
+
+**Panel 1.** TL mevduat, DTH (TL karşılığı) ve DTH'ın çıpa kuruyla değerlenmiş hâli.
+Üçüncü çizgi ile ikincisinin arası, kurun mevduat kompozisyonuna yaptığı mekanik
+katkıdır.
+
+**Panel 2 — payın iki hâli.** Bu bloğun tamamı **tek ortak tarihe** çıpalıdır:
+<Deger proje="kredi-parasal" anahtar="dol_tarih" ondalik={0}>7 Ağustos 2026</Deger>
+(haftalık çıpadan <Deger proje="kredi-parasal" anahtar="dol_cipa_fark_gun" ondalik={0}>7</Deger>
+gün geride, çünkü ZK tabanı 13 gün gecikmeli yayımlanır). Ham
+%<Deger proje="kredi-parasal" anahtar="dth_pay_ham" ondalik={2}>39,51</Deger>,
+arındırılmış %<Deger proje="kredi-parasal" anahtar="dth_pay_ar" ondalik={2}>37,08</Deger>.
+Kıyas çizgisi olarak sektör bilançosundan hesaplanan ham pay
+(%<Deger proje="kredi-parasal" anahtar="bilanco_pay_ham" ondalik={2}>37,77</Deger>)
+noktalı çizilir; iki ham ölçünün farkı **taban farkıdır** (ZK tabanı yurt dışı
+yerleşiklerin bir kısmını ve kıymetli maden hesaplarını farklı kapsar), ölçüm hatası
+değil. Çıpa haftası dikey çizgiyle işaretlenir.
+
+<div class="not">
+  <span class="etiket">Neden blok tek tarihe çıpalanıyor</span>
+  Bilanço serileri ZK tabanından bir hafta önde gelir. Her sütunun kendi son dolu
+  gözlemini bağımsız okumak, aynı blokta <strong>iki farklı tarihi</strong> yan yana
+  basar; "iki ham ölçünün farkı taban farkıdır" cümlesi o zaman bir haftalık kur ve
+  akım hareketini de içine alır ve tanımsal olmayan bir farkı tanımsal diye sunar.
+  Bu yüzden blok, tüm sütunların dolu olduğu ortak tarihe hizalanır ve o tarih sayfada
+  gösterilir. Blokta birden çok son tarih görüldüğünde ayrıca <strong>görünür
+  uyarı</strong> düşer — kural blok bazında geneldir, yalnız bu sayfaya özel değil.
+</div>
+
+Yıl başından bu yana okuma: ham pay
+<Deger proje="kredi-parasal" anahtar="dol_ham_degisim" ondalik={2}>−1,17</Deger> puan,
+arındırılmış pay
+<Deger proje="kredi-parasal" anahtar="dol_ar_degisim" ondalik={2}>−3,60</Deger> puan
+gerilemiş. Yani gerçek ters dolarizasyon manşetin gösterdiğinden
+<Deger proje="kredi-parasal" anahtar="dol_gizlenen" ondalik={2}>2,43</Deger> puan daha
+güçlü; farkı kur gizliyor.
+
+**Panel 3 — davranışsal ölçü.** Yurt içi yerleşiklerin döviz mevduatı **döviz cinsinden**
+(<Deger proje="kredi-parasal" anahtar="mevduat_yp_usd_mia" ondalik={1}>228,2</Deger> milyar
+dolar). Bu panel arındırma gerektirmez: dolar cinsinden stok, tanımı gereği kur
+taşımaz. Pay ölçüsü ile birlikte okunmalıdır — pay hem paydan hem paydadan etkilenir,
+dolar stoku yalnız hanehalkı ve firmaların döviz tutma kararını ölçer.
+
+**Varsayım.** Taban kıymetli maden depo hesaplarını içerir; altın fiyatı hareketleri
+DTH'ın TL ve USD karşılıklarına birlikte girer ve ima edilen sepet kuruna küçük bir
+altın bileşeni katar. Bu bileşen ayrıştırılmıyor.
+
+## Şekil 07 — Kur Korumalı Mevduat
+
+<GrafikEmbed
+  src="/projeler/kredi-parasal/07_kkm.html"
+  baslik="KKM stoku — TL KKM ve döviz dönüşümlü KKM · aylık değişim (erime hızı)"
+  no="07"
+  yukseklik={1011}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** `bie_kkm`: `TP.KKM.K1` (döviz dönüşümlü KKM, milyar USD) ve `TP.KKM.K4`
+(TL KKM, milyar TL). **Aylık** stok; EVDS'te haftalık KKM serisi yoktur.
+
+**KKM neyin neresinde durur?** TL cinsinden açılan ama getirisi kur artışına endeksli bir
+mevduattır. Bu yüzden M2'nin **TL bacağında** durur, YP bacağında değil. Sonucu şudur:
+KKM'den DTH'ye geçiş, M2 sabitken dolarizasyon payını yükseltir; KKM'den TL mevduata
+geçiş ise iki ölçüyü de kıpırdatmaz. Bu, KKM döneminde dolarizasyon serisini okumayı
+zorlaştıran yapısal ayrıntıdır.
+
+Çıkışın gidebileceği üç yer ve her birinin ölçüdeki izi:
+
+| Nereye | Dolarizasyon payı | M2 | M3 |
+| --- | --- | --- | --- |
+| TL mevduata | değişmez | değişmez | değişmez |
+| DTH'ye | **yükselir** | değişmez | değişmez |
+| Sistem dışına (fon, repo, menkul kıymet) | değişmez | **küçülür** | fon kalemleri büyür |
+
+**Bu koşudaki durum.** TL KKM stoku
+<Deger proje="kredi-parasal" anahtar="kkm_son_mlr_tl" ondalik={1}>0,0</Deger> milyar TL;
+zirve <Deger proje="kredi-parasal" anahtar="kkm_zirve_mlr_tl" ondalik={0}>1.061</Deger>
+milyar TL idi (<Deger proje="kredi-parasal" anahtar="kkm_zirve_donem" ondalik={0}>Ağustos 2023</Deger>).
+Döviz dönüşümlü KKM
+<Deger proje="kredi-parasal" anahtar="kkm_ddkkm_mia_usd" ondalik={3}>0,007</Deger> milyar
+dolar; zirvesi <Deger proje="kredi-parasal" anahtar="kkm_ddkkm_zirve_mia_usd" ondalik={1}>97,2</Deger>
+milyar dolardı. Erime son
+<Deger proje="kredi-parasal" anahtar="kkm_erime_ay" ondalik={0}>34</Deger> ayda ortalama
+<Deger proje="kredi-parasal" anahtar="kkm_erime_ay_mlr" ondalik={1}>31,2</Deger> milyar
+TL/ay hızındaydı.
+
+**<Deger proje="kredi-parasal" anahtar="kkm_cumlesi" ondalik={0}>Program fiilen kapanmıştır; grafik bir akım hikâyesi değil, bitmiş bir rejimin tarihidir.</Deger>**
+
+Bunun sayfa metnindeki sonucu doğrudandır: **güncel dolarizasyon hareketi "KKM çıkışı"
+ile açıklanmaz.** Stok sıfırsa çıkacak stok yoktur. Sayfanın bu bölümü `ozet.json`'daki
+`kkm_aktif` bayrağına bağlıdır; program yeniden açılırsa bayrak döner ve bu paragrafın
+dayandığı cümle (`kkm_cumlesi`) kendiliğinden değişir. Serinin taze olması olgunun
+sürdüğü anlamına gelmiyor — bu, hattın "sessiz bayatlama" denetiminin tersinden
+örneğidir: **veri taze, olgu bitmiş.**
+
+## Şekil 08 — Takipteki alacaklar ve karşılıklar
+
+<GrafikEmbed
+  src="/projeler/kredi-parasal/08_takip.html"
+  baslik="Takipteki alacak oranı (toplam, tüketici, ticari) · takip stoku ve karşılık oranı"
+  no="08"
+  yukseklik={1061}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Oranın paydası kritiktir.** Kullanılan tanım:
+
+$$
+\text{NPL}_t \;=\; \frac{\text{Takipteki alacaklar}_t}{\text{Krediler}_t + \text{Takipteki alacaklar}_t}
+$$
+
+Takibin kendisi paydaya girer. Yalnız krediyi paydaya koyan yaygın alternatif tanım
+**sistematik olarak daha yüksek** bir sayı üretir; iki tanımı karıştırmak, banka
+raporlarıyla makro seriyi kıyaslarken en sık yapılan hatadır.
+
+**Karşılık oranı** = (özel karşılıklar + beklenen zarar karşılıkları) / takip stoku.
+Bu koşuda %<Deger proje="kredi-parasal" anahtar="karsilik_orani" ondalik={2}>123,85</Deger> —
+**%100'ü aşması bir tutarsızlık değildir**: TFRS 9 altında beklenen zarar karşılığı
+canlı krediler için de ayrılır, pay o karşılıkları da içerirken payda yalnız takip
+stokudur.
+
+**Oranı düşüren mekanik etki.** Takipteki alacak **satışı** oranı payda değişmeden
+düşürür. Oranın gerilemesi tek başına kredi kalitesinin iyileştiği anlamına gelmez;
+bu yüzden alt panelde **stok** (milyar TL) ayrıca çizilir — satış, stokta seviye
+sıçraması olarak görünür.
+
+**Kapsam notu.** Haftalık kredi kırılımı tablosu 28.06.2024'te başladığı için şekil o
+tarihten itibaren çizilir. Tüketici NPL'i
+%<Deger proje="kredi-parasal" anahtar="npl_tuketici" ondalik={2}>4,85</Deger>, ticari
+%<Deger proje="kredi-parasal" anahtar="npl_ticari" ondalik={2}>2,44</Deger>: hanehalkı
+bacağının hem daha hızlı büyümesi hem daha yüksek takip oranı taşıması, kompozisyon
+riskinin nerede biriktiğini gösterir.
+
+## Şekil 09 — Kredi büyümesi ve enflasyon momentumu
+
+<GrafikEmbed
+  src="/projeler/kredi-parasal/09_kredi_enflasyon.html"
+  baslik="Arındırılmış kredi büyümesi ve TÜFE momentumu · gecikmeli korelasyon"
+  no="09"
+  yukseklik={1035}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Girdiler.** Üst panelde bu sayfanın arındırılmış kredi büyümesi (haftalıktan **ay
+ortalamasıyla** aylığa indirgenmiş) ile [Enflasyon Panosu](/projeler/enflasyon/)
+hattının ürettiği TÜFE momentum serileri: 3 ve 6 aylık SAAR ve 12 aylık manşet. İki hat
+arasındaki bu bağ, aynı repoda iki ayrı pipeline'ın çıktısının birleştirilmesidir; kredi
+hattı enflasyon hattının CSV çıktısını okur.
+
+**Alt panel — gecikmeli korelasyon.** Her $k$ gecikmesi için:
+
+$$
+r_k \;=\; \operatorname{corr}\left(G^{\text{ar}}_t,\; \pi^{\text{SAAR6}}_{t+k}\right)
+$$
+
+Pozitif $k$: kredi öncül. Negatif $k$: enflasyon öncül. Örneklem
+<Deger proje="kredi-parasal" anahtar="capraz_bas" ondalik={0}>04.2006</Deger> →
+<Deger proje="kredi-parasal" anahtar="capraz_son" ondalik={0}>07.2026</Deger>
+(<Deger proje="kredi-parasal" anahtar="capraz_n" ondalik={0}>240</Deger> ay). En yüksek
+mutlak korelasyon $k = $
+<Deger proje="kredi-parasal" anahtar="capraz_en_iyi_gecikme" ondalik={0}>−12</Deger> ayda
+($r = $ <Deger proje="kredi-parasal" anahtar="capraz_en_iyi_korel" ondalik={3}>0,408</Deger>):
+bu örneklemde
+**<Deger proje="kredi-parasal" anahtar="capraz_yon" ondalik={0}>enflasyon momentumu kredi büyümesinin önünde</Deger>**.
+Eşanlı korelasyon $r = $
+<Deger proje="kredi-parasal" anahtar="capraz_esanli_korel" ondalik={3}>0,205</Deger>.
+
+**Bu bir nedensellik iddiası DEĞİLDİR** ve şu üç sebeple olamaz: (i) aynı pencerede her
+iki seriyi de kur hareketi besliyor olabilir — ortak sürücü, nedensellik değil; (ii) en
+iyi gecikmenin taranarak seçilmesi, çoklu karşılaştırma yanlılığı üretir ve $r$'yi
+yukarı saptırır; (iii) örneklem içinde en az iki farklı para politikası rejimi var,
+gecikme yapısının rejimler arasında sabit kalması beklenmez. Grafik bir tanı aracıdır:
+"kredi hızlandı, enflasyon şu kadar ay sonra gelir" cümlesi bu veriden **çıkarılamaz**.
+
+Rejimlerin kendisi ve Türkiye'de kredi–kur–enflasyon üçgeninin tarihi için
+[Türkiye Piyasa Tarihi](/arastirma/turkiye-piyasa-tarihi/) dersine, bu tür sinyalleri
+pozisyona çevirirken uygulanacak disipline
+[Trade Pratiği](/arastirma/trade-pratigi/) dersine bakın.
+
+## Tazelik, kimlik ve doğrulama denetimleri
+
+### Tazelik — aile bazlı, tek eşik yok
+
+Bu hatta **beş ayrı yayım ritmi** var; tek eşik her koşuda ya yanlış alarm ya sessiz
+kabul üretir. Referans **duvar saatidir**, verinin kendi son tarihi değil.
+
+| Aile | Beklenen gecikme | Tolerans | Ölçüm noktası |
+| --- | --- | --- | --- |
+| APİ fonlaması / AOFM | aynı gün | 3 iş günü | son gözlemden |
+| Analitik bilanço | 1 iş günü | 4 iş günü | son gözlemden |
+| Döviz kuru | −1 gün (bir gün önceden ilan) | 4 iş günü | negatif gecikme alarm üretmez |
+| Haftalık para ve banka | 6 gün (Perşembe) | 12 gün | son gözlemden |
+| ZK tabanı | 13 gün | 20 gün | son gözlemden |
+| Aylık para ve banka | 51 gün | 70 gün | **dönem sonundan** |
+| BKEA (üç aylık) | 51 gün | 110 gün | **dönem sonundan** |
+
+Son iki satırın ayrı olmasının sebebi ince ama pahalı: aylık ve üç aylık gözlemler
+dönemin **ilk** gününe damgalanır (`2026-6` → `01.06.2026`), TCMB ise gecikmeyi dönemin
+**sonundan** sayar. Damgadan ölçmek her ay bir aylık sahte gecikme ekler ve bir süre sonra
+uyarı gürültüye dönüşüp okunmaz olur.
+
+**EVDS'in `LAST_UPDATED` alanı tazelik ölçüsü değildir** — metaveri kaydının güncellenme
+tarihidir ve seri bayatken de tazelenebilir. Tazelik yalnız **son dolu gözlemden**
+okunur.
+
+### Birim kimlikleri — bu hattın en sinsi hata kaynağı
+
+EVDS aynı hatta beş farklı birim kullanıyor: haftalık para ve banka tabloları **bin TL**,
+analitik bilanço **bin TL**, APİ fonlaması **milyon TL**, YP mevduat **milyon USD**,
+KKM **milyar**. Bin katlık bir hata trilyon mertebesinde gözle yakalanmaz. İki bağımsız
+kimlik denetimi bunu yakalar:
+
+1. `TP.AB.A24` (bin TL) ile $-$`TP.APIFON3` (milyon TL) aynı günde aynı sayı olmalıdır.
+   Denetim **medyana** bakar, maksimuma değil: kimlik ay ve çeyrek kapanışlarında
+   değerleme farkıyla birkaç günde sapıyor ve tabanı küçük bir günde bağıl fark %3'e
+   çıkabiliyor. Aranan hata sınıfı başkadır — birim bozulursa sapma **her gün** olur.
+2. İma edilen sepet kuru, USD kurunun 0,5–2 katı bandında olmalıdır. Dışına çıkarsa
+   birim varsayımı bozulmuştur; hat USD kuruna düşer ve **görünür uyarı** basar.
+
+Ayrıca her koşuda toplanabilirlik kimlikleri denetlenir: toplam kredi = yurt içi + yurt
+dışı · yurt içi kredi = TL + YP · M1/M2/M3 kimlikleri · Laspeyres $\Gamma+\Lambda=\Delta K$ ·
+arşiv/yeni örtüşme oranı.
+
+### Üç bağımsız doğrulama sınavı
+
+Üç sınav, **üç ayrı soru** sorar. Aynı soruyu üç kez sormak doğrulama değildir.
+
+**Sınav A — kimlik (hattı DURDURUR).** Seviye tablosundan hesapladığımız **ham** M1/M2/M3
+büyümesi ile TCMB'nin ayrı bir ürünü olan ham endekslerden (`bie_kavramsal` HAMM\*)
+hesaplanan büyüme **aynı büyüklüğü** anlatmalıdır. Eşitlik beklenir; fark
+<Deger proje="kredi-parasal" anahtar="dog_esik_ham" ondalik={1}>2,0</Deger> puanı aşarsa
+hat durur.
+
+| Seri | Bizim (ham) | TCMB ham endeksi | Maksimum sapma (puan) |
+| --- | --- | --- | --- |
+| M1 | %<Deger proje="kredi-parasal" anahtar="dog_ham_m1_biz" ondalik={2}>6,87</Deger> | %<Deger proje="kredi-parasal" anahtar="dog_ham_m1_tcmb" ondalik={2}>6,87</Deger> | <Deger proje="kredi-parasal" anahtar="dog_ham_m1_maks" ondalik={3}>1,504</Deger> |
+| M2 | %<Deger proje="kredi-parasal" anahtar="dog_ham_m2_biz" ondalik={2}>28,32</Deger> | %<Deger proje="kredi-parasal" anahtar="dog_ham_m2_tcmb" ondalik={2}>28,32</Deger> | <Deger proje="kredi-parasal" anahtar="dog_ham_m2_maks" ondalik={3}>0,455</Deger> |
+| M3 | %<Deger proje="kredi-parasal" anahtar="dog_ham_m3_biz" ondalik={2}>34,47</Deger> | %<Deger proje="kredi-parasal" anahtar="dog_ham_m3_tcmb" ondalik={2}>34,47</Deger> | <Deger proje="kredi-parasal" anahtar="dog_ham_m3_maks" ondalik={3}>0,015</Deger> |
+
+M1'deki 1,5 puanlık maksimum sapma bir hata değil, **seri kırılmasının izidir**: aynı
+kırılma para arzı seviye tablosunda da var ve zincir o haftalarda koparılıyor. Kırılma
+tarihi koda gömülmez — seviyeden hesaplanan haftalık büyüme, TCMB'nin ham endeksinden
+hesaplananla karşılaştırılır ve %0,5'ten fazla ayrışan hafta **veriden bulunur**.
+
+**Sınav B — yöntem (eşitlik BEKLENMEZ).** Bu çalışmanın arındırdığı seriler ile TCMB'nin
+ARIM endeksleri. TCMB yöntemini yayımlamadığı için eşitlik beklenmez; ölçülen yanlılık,
+RMSE ve korelasyondur. Yanlılık eşiği
+<Deger proje="kredi-parasal" anahtar="dog_esik_ar" ondalik={1}>6,0</Deger> puan.
+
+| Seri | Bizim | TCMB ARIM | Yanlılık (puan) | RMSE | Korelasyon |
+| --- | --- | --- | --- | --- | --- |
+| M1 | %<Deger proje="kredi-parasal" anahtar="dog_ar_m1_biz" ondalik={2}>−6,38</Deger> | %<Deger proje="kredi-parasal" anahtar="dog_ar_m1_tcmb" ondalik={2}>0,08</Deger> | <Deger proje="kredi-parasal" anahtar="dog_ar_m1_yanlilik" ondalik={2}>10,23</Deger> | <Deger proje="kredi-parasal" anahtar="dog_ar_m1_rmse" ondalik={2}>20,11</Deger> | <Deger proje="kredi-parasal" anahtar="dog_ar_m1_korel" ondalik={3}>0,855</Deger> |
+| M2 | %<Deger proje="kredi-parasal" anahtar="dog_ar_m2_biz" ondalik={2}>19,18</Deger> | %<Deger proje="kredi-parasal" anahtar="dog_ar_m2_tcmb" ondalik={2}>22,99</Deger> | <Deger proje="kredi-parasal" anahtar="dog_ar_m2_yanlilik" ondalik={2}>3,76</Deger> | <Deger proje="kredi-parasal" anahtar="dog_ar_m2_rmse" ondalik={2}>8,84</Deger> | <Deger proje="kredi-parasal" anahtar="dog_ar_m2_korel" ondalik={3}>0,653</Deger> |
+| M3 | %<Deger proje="kredi-parasal" anahtar="dog_ar_m3_biz" ondalik={2}>25,77</Deger> | %<Deger proje="kredi-parasal" anahtar="dog_ar_m3_tcmb" ondalik={2}>29,44</Deger> | <Deger proje="kredi-parasal" anahtar="dog_ar_m3_yanlilik" ondalik={2}>3,17</Deger> | <Deger proje="kredi-parasal" anahtar="dog_ar_m3_rmse" ondalik={2}>7,91</Deger> | <Deger proje="kredi-parasal" anahtar="dog_ar_m3_korel" ondalik={3}>0,617</Deger> |
+
+M1'deki büyük fark **beklenen** ve açıklanabilir: M1'in YP payı üçte ikiye yakındır,
+dolayısıyla arındırma seçimi sonucu domine eder. Bu satır, panonun M1'i kendi
+arındırmamızla değil TCMB'nin ARIM1'iyle yayımlamasının gerekçesidir.
+
+**Sınav C — seviye.** Haftalık kredi serisi (`bie_hpbitablo6`) ile aylık kredi serisi
+(`bie_krehacbs`) iki ayrı üründür; aynı şeyi ölçüyorlarsa seviye oranları 1'e yakın
+olmalıdır. Ölçülen: ortalama oran
+<Deger proje="kredi-parasal" anahtar="dog_kredi_oran" ondalik={4}>1,0027</Deger>, standart
+sapma <Deger proje="kredi-parasal" anahtar="dog_kredi_oran_std" ondalik={3}>0,004</Deger>.
+12 aylık büyümelerde
+<Deger proje="kredi-parasal" anahtar="dog_kredi_n" ondalik={0}>13</Deger> örtüşen ayda
+yanlılık <Deger proje="kredi-parasal" anahtar="dog_kredi_yanlilik" ondalik={2}>−0,28</Deger>
+puan, maksimum <Deger proje="kredi-parasal" anahtar="dog_kredi_maks" ondalik={2}>1,54</Deger>
+puan; son değerler haftalıktan
+%<Deger proje="kredi-parasal" anahtar="dog_kredi_haftalik" ondalik={2}>37,17</Deger>,
+aylıktan %<Deger proje="kredi-parasal" anahtar="dog_kredi_aylik" ondalik={2}>37,46</Deger>.
+
+### Bu denetimlerin yakalamadığı şey
+
+Hiçbiri **bayatlığı** yakalamaz: iki taraf birlikte bayatlarsa kimlik yine tutar. Bayatlık
+ayrı denetlenir — tazelik tablosundan, duvar saatiyle. Ayrıca bir figür üretilemezse
+`grafik.py` çıkış kodu 1 verir ve **siteye kopyalama yapılmaz**; eski grafikle taze metin
+yayımlanmasın diye.
+
+## Sınırlar ve yorum notları
+
+Hiçbiri bir kalibrasyon sabitiyle kapatılmamıştır; kapatmak, ölçüm hatasını modele
+gömmek olurdu.
+
+- **Kredi sepeti ölçülemiyor.** YP kredinin para cinsi bileşimi yayımlanmıyor; ana seri
+  **mevduat** sepetini vekil alıyor. Bu bir yaklaşımdır. Etkisi ölçülüp yayımlanıyor
+  (USD ile fark bu koşuda
+  <Deger proje="kredi-parasal" anahtar="usd_sepet_farki_13y" ondalik={2}>−0,13</Deger>
+  puan), ama sıfır olduğu iddia edilmiyor.
+- **Sepet kurunun son haftaları tahmindir.** ZK tabanı 13 gün gecikmeli; kuyruk USD ve
+  EUR ile tahmin ediliyor ve `sepet_kaynak` alanında işaretleniyor. Bu koşuda son
+  gözlem: <Deger proje="kredi-parasal" anahtar="sepet_kaynak" ondalik={0}>tahmin</Deger>.
+- **Bu seri TCMB'nin makro ihtiyati düzenleme serisi değildir.** Referans kur, oran ve
+  kapsam tebliğle belirlenir, EVDS'te yayımlanmaz; sınır çizgisi grafiğe çizilmez.
+- **Haftalık kredi kırılımı 28.06.2024'te başlıyor.** Tüketici/ticari/KOBİ büyümeleri o
+  tarihten öncesi için haftalık frekansta yoktur; uzun tarihçe yalnız birleştirilmiş
+  **toplam** seride vardır.
+- **Tüketici kalemleri TL+YP birleşik yayımlanıyor**, ayrıştırılamıyor. O seriler
+  **ham**'dır ve arındırılmış serilerle aynı cümlede okunmaz.
+- **Aylık banka türü serilerinde TL/YP kırılımı yok**: katılım bankaları dahil/hariç
+  kıyası ham büyüme üzerinden yapılır.
+- **Arındırma yöntemimiz TCMB'ninkiyle birebir aynı değildir** (sınav B). Fark ölçülüp
+  yayımlanıyor; M1'de büyüktür ve bu yüzden M1 başrolde bizim serimizle çizilmez.
+- **Para çarpanı bir davranış parametresi değildir.** Zorunlu karşılık oranı idari olarak
+  değişince payda sıçrar; çarpandaki hareket kredi mekanizmasının değişimi olarak
+  okunmamalıdır.
+- **`zk_ima_oran` tebliğdeki bir orana eşit değildir.** İma edilen bileşik orandır;
+  EVDS'te zorunlu karşılık oranı serisi yoktur.
+- **Arındırılmış dolarizasyon payı çıpadan öncesine uzatılmaz.** Sabit kurla değerlenmiş
+  pay çıpaya göre tanımlıdır; geriye uzatılırsa dolarizasyon değil kur okunur.
+- **DTH tabanı kıymetli maden hesaplarını içerir.** Altın fiyatı hareketleri ima edilen
+  sepet kuruna küçük bir bileşen olarak girer; ayrıştırılmıyor.
+- **KKM yalnız aylık stok olarak var**; haftalık KKM serisi yoktur. Program fiilen
+  kapandığı için `kkm_aktif` bayrağı kapalıdır ve "KKM çıkışı" gerekçesi güncel
+  dolarizasyon yorumunda kullanılmaz.
+- **Takip oranı satış ve yeniden yapılandırmaya duyarlıdır.** Oranın gerilemesi tek
+  başına kredi kalitesinin iyileştiği anlamına gelmez; alt panelde stok bu yüzden var.
+- **Kredi ↔ enflasyon ilişkisi gecikmeli korelasyondur, nedensellik değildir.** En iyi
+  gecikmenin taranarak seçilmesi korelasyonu yukarı saptırır; örneklem birden fazla
+  politika rejimi içerir.
+- **Faizler akım (yeni kullandırım) faizidir**, stok faizi değil. Politika değişiminin
+  stok maliyetine geçişi bu grafiklerde görünmez.
+- **Reel faiz beklenti tabanlıdır.** PKA beklentisi gerçekleşenden sistematik sapabilir;
+  *ex post* reel faiz burada yayımlanmıyor.
+- **BKEA net yüzde değişimdir, seviye değildir**, ve anket tabanlıdır: bankaların beyanı
+  ile fiilî kredi standardı arasındaki fark ölçülmüyor.
+
+## İlgili sayfalar ve dersler
+
+- [Enflasyon Panosu](/projeler/enflasyon/) — Şekil 09'un momentum girdisi oradan gelir;
+  reel faiz hesabının enflasyon tarafı da orada ayrıntılı.
+- [TCMB Net Rezerv Takibi](/projeler/tcmb-net-rezerv/) — bu sayfadaki Laspeyres kur
+  etkisi ayrıştırması ile oradaki altın fiyat etkisi ayrıştırması **aynı çerçevedir**;
+  $\Gamma$ / $\Lambda$ sözlüğü ortaktır.
+- [TCMB Fonlama ve Likidite](/projeler/fonlama-likidite/) — AOFM, koridor kullanımı ve
+  rezerv para bileşenlerinin fonlama tarafı.
+- [Faiz Eğrisi ve Konvansiyonlar](/arastirma/faiz-egrisi-ve-konvansiyonlar/) — bileşik
+  faiz, yıllıklandırma ve efektif dönüşüm konvansiyonları; bu sayfadaki "üs 52/13"
+  tartışmasının teorik tabanı.
+- [Trade Pratiği](/arastirma/trade-pratigi/) — makro sinyali pozisyona çevirirken
+  uygulanan disiplin; kredi ve para verisinin yayım takvimiyle işlem planlaması.
+- [Türkiye Piyasa Tarihi](/arastirma/turkiye-piyasa-tarihi/) — KKM rejimi, dolarizasyon
+  dalgaları ve makro ihtiyati sınırların tarihi.
+
+## Kaynaklar
+
+- TCMB, *Haftalık Para ve Banka İstatistikleri* — tablo tanımları, kapsam, birim notları.
+- TCMB, *Aylık Para ve Banka İstatistikleri* — kredi hacmi, banka türü kırılımı.
+- TCMB, *Analitik Bilanço* — rezerv para, emisyon, zorunlu karşılık bloke hesabı,
+  Merkez Bankası parası tanımları.
+- TCMB, *Parasal Büyüklükler Metaveri* — M1/M2/M3 kapsamı; YP vadesiz mevduatın M1'e
+  dahil edilmesi.
+- TCMB, *Kur Etkisinden Arındırılmış Parasal Büyüklükler (ARIM1/ARIM2/ARIM3)* — endeks
+  ürünü; yöntem ayrıntısı yayımlanmamıştır.
+- TCMB, *Zorunlu Karşılıklar Hakkında Tebliğ* ve ilgili basın duyuruları — oran, taban
+  ve tesis kuralları.
+- TCMB, *Banka Kredileri Eğilim Anketi* — net yüzde değişim tanımı, soru kapsamı.
+- TCMB, *Piyasa Katılımcıları Anketi* — 12 ay sonrası TÜFE beklentisi.
+- BDDK, *Türk Bankacılık Sektörü Temel Göstergeleri* — takipteki alacak ve karşılık
+  tanımları (TFRS 9 beklenen zarar karşılığı).
+- ECB, *Monetary developments in the euro area* — kur ve yeniden sınıflandırma
+  etkilerinden arındırılmış akım hesabının kurumsal örneği.
+- BIS, *Credit-to-GDP gaps and macroprudential policy* — kredi büyümesi ölçümünde
+  değerleme etkilerinin ayrıştırılması.

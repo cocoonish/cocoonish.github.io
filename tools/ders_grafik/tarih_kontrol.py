@@ -88,8 +88,10 @@ for yol in sorted(DIZIN.glob("*.html")):
                  and "domain" in yerlesim[k]])
     sutun = max(1, len(sol))
     yuk = yerlesim.get("height", 0)
+    # tablo izlerinin x/y'si yoktur (cells/header taşırlar) — boş iz sayılmazlar
     bos = [iz.get("name", "?") for iz in izler
-           if not (iz.get("y") or iz.get("close") or iz.get("x"))]
+           if iz.get("type") != "table"
+           and not (iz.get("y") or iz.get("close") or iz.get("x"))]
     sorun = []
     if kb < 15:
         sorun.append("BOYUT<15KB")

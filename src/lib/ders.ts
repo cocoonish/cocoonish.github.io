@@ -92,6 +92,16 @@ export function sureYaz(dakika: number): string {
   return dk === 0 ? `${sa} sa` : `${sa} sa ${dk} dk`;
 }
 
+/**
+ * Bölüm sayısı. Ders "## Bölüm N — …" kalıbını kullanıyorsa YALNIZ o başlıklar
+ * sayılır; "## Özet tablo" / "## Sözlük" gibi ek h2'ler bölüm değildir ve künye
+ * şeridini şişirirdi. Kalıbı kullanmayan derslerde eski davranış (tüm h2) sürer.
+ */
+function bolumSay(govde: string): number {
+  const numarali = say(govde, /^## Bölüm\s+\d+/gm);
+  return numarali > 0 ? numarali : say(govde, /^## /gm);
+}
+
 export function olc(govde: string | undefined): DersOlcum {
   const g = govde ?? '';
   const kelime = kelimeSay(duzMetin(g));
@@ -102,7 +112,7 @@ export function olc(govde: string | undefined): DersOlcum {
     sure: sureYaz(dakika),
     grafik: say(g, /<GrafikEmbed\b/g),
     arac: aracSay(g),
-    bolum: say(g, /^## /gm),
+    bolum: bolumSay(g),
     pratik: say(g, /<div class="pratik"/g),
     alistirma: say(g, /<details\b/g),
     tablo: tabloSay(g),

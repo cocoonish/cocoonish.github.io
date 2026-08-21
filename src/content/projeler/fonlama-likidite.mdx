@@ -1,0 +1,1038 @@
+---
+title: 'TCMB Fonlama ve Likidite'
+description: 'Politika faizi ile fiilî TCMB faizi arasındaki farkı ölçen bir pano: AOFM nasıl oluşur, fazla likidite rejiminde onun yerini alan sterilizasyon maliyeti (AOSM), TLREF ve koridor konumu, net açık piyasa fonlaması ve kompozisyonu, swap stoku, zorunlu karşılık tesisi ve kredi/mevduat faizine geçişkenlik.'
+pubDate: 2026-08-21
+updatedDate: 2026-08-21
+tags: ['tcmb', 'faiz', 'likidite', 'aofm', 'tlref', 'zorunlu karşılık', 'para politikası']
+durum: 'aktif'
+kaynak: 'TCMB EVDS3 — açık piyasa işlemleri, faiz kotasyonları, TLREF ve BİST gecelik repo, analitik bilanço, swap stokları, haftalık kredi ve mevduat faizleri'
+guncelleme: 'her iş günü (APİ, faiz, analitik bilanço) + haftalık (kredi/mevduat faizi, ZK tabanı)'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+import KosuKutusu from '../../components/KosuKutusu.astro';
+
+Para politikası tartışmasının tamamı tek bir sayı üzerinden yürür: **politika faizi**.
+Oysa hiçbir banka politika faizinden borçlanmaz ya da borç vermez. Bankanın gerçekte
+ödediği — ya da aldığı — fiyat, Merkez Bankası'nın o gün hangi kanaldan, hangi vadede
+ve hangi miktarda işlem yaptığına bağlıdır. İlan edilen faiz bir **kotasyondur**;
+fiilî faiz bir **ağırlıklı ortalamadır**. İkisi aynı olmak zorunda değildir ve
+Türkiye'de sık sık aynı olmamıştır.
+
+Bu ayrım akademik değil, doğrudan fiyatlamayla ilgilidir. TLREF üzerine kurulmuş bir
+OIS eğrisi, TLREF'i besleyen gecelik piyasa faizini fiyatlar — politika faizini değil.
+Bir asset swap'ın carry'si, bir forward'ın taşıma maliyeti, bir tahvil pozisyonunun repo
+maliyeti hep aynı yerden beslenir: **fiilî fonlama faizi**. Politika faizine bakarak
+kurulan bir carry hesabı, koridor kullanımının açtığı farkı sistematik olarak kaçırır.
+
+Bu sayfa o farkı ölçer. Önce fiyatı: koridor, politika faizi, ağırlıklı ortalama fonlama
+maliyeti (AOFM) ve fazla likidite rejiminde onun aynası olan sterilizasyon maliyeti.
+Sonra miktarı: net açık piyasa fonlaması ve kompozisyonu, swap stoku, zorunlu karşılık
+tesisi. En sonda da bu fiyatın bankacılık sistemine ne kadarının geçtiği.
+
+<div class="not gezinme">
+  <span class="etiket">Bu sayfa nereye bağlanır</span>
+  Buradaki gecelik faiz, <a href="/arastirma/faiz-egrisi-ve-konvansiyonlar/">Faiz
+  Teorisi ve Eğri İnşası</a> dersindeki TLREF/OIS eğrisinin kısa ucunu besleyen
+  büyüklüktür; o ders buradaki fiyatı <em>veri</em> kabul eder. Fonlama maliyetinin
+  P&amp;L'ye nasıl girdiği <a href="/arastirma/trade-pratigi/">Trade Pratiği</a>
+  dersindedir. 2017–18 koridor kullanımının, 2021 sonrası fazla likidite rejiminin ve
+  swap defterinin tarihsel bağlamı için
+  <a href="/arastirma/turkiye-piyasa-tarihi/">Türkiye Piyasa Tarihi</a>. Swap stokunun
+  rezerv tarafındaki karşılığı <a href="/projeler/tcmb-net-rezerv/">TCMB Net Rezerv
+  Takibi</a>, faizin reel karşılığı ise <a href="/projeler/enflasyon/">Enflasyon
+  Panosu</a> sayfasındadır.
+</div>
+
+## Güncel okuma
+
+**Çıpa: <Deger proje="fonlama-likidite" anahtar="gun_kisa" ondalik={0}>20.08.2026</Deger>**
+(iş günü verisi; yayımdan bu yana
+<Deger proje="fonlama-likidite" anahtar="yayim_gecikme_gun" ondalik={0}>1</Deger> gün geçti)
+· haftalık bacak
+<Deger proje="fonlama-likidite" anahtar="hafta_kisa" ondalik={0}>14.08.2026</Deger>
+(<Deger proje="fonlama-likidite" anahtar="hafta_gecikme_gun" ondalik={0}>7</Deger> gün gecikme)
+· ZK tabanı
+<Deger proje="fonlama-likidite" anahtar="zk_taban_tarih" ondalik={0}>07.08.2026</Deger>
+· koşum <Deger proje="fonlama-likidite" anahtar="kosum_tarihi" ondalik={0}>21.08.2026</Deger>.
+
+<KosuKutusu proje="fonlama-likidite" sayi={5}>
+  AYRI KALEM DEĞİL: ZK bloke hesabı 15.03.2024 tarihinde doluyor. · ZK TABANI VİNTAJ:
+  bir haftada iki tablo %1'den fazla ayrışıyor. · AOFM BANT DIŞI: bir iş gününde AOFM
+  GLP satış faizinin de üstünde. · AOFM TABANSIZ: son bir yılda 33 iş gününde fonlama
+  eşiğin altındayken EVDS bir AOFM değeri basmış. · ÖLÜ SERİ: glp_alis son 252 iş
+  gününün tamamında 0.
+</KosuKutusu>
+
+Kutu **bu koşunun** durumunu gösterir ve veri katmanının uyarılarını da taşır: ağ
+düşüp eski önbelleğe düşüldüğünde, ya da bir yayın durduğunda kutu kırmızıya döner ve
+başlığı **BAYAT VERİ** olur. Bayatlık ölçüsü sayfanın kendi tazelik toleranslarından
+okunur (günlük aile <Deger proje="fonlama-likidite" anahtar="bayat_tolerans_gun" ondalik={0}>4</Deger>
+gün, haftalık aile <Deger proje="fonlama-likidite" anahtar="bayat_tolerans_hafta" ondalik={0}>12</Deger>
+gün) — iki yerde ayrı eşik tutulmaz.
+
+### Fiyat
+
+| Ölçü | Değer (%) | Tarih |
+| --- | --- | --- |
+| **Politika faizi** (1 hafta vadeli repo satış kotasyonu) | <Deger proje="fonlama-likidite" anahtar="politika" ondalik={2}>37,00</Deger> | <Deger proje="fonlama-likidite" anahtar="politika_tarih" ondalik={0}>20.08.2026</Deger> |
+| Koridor tabanı (gecelik borç alma) | <Deger proje="fonlama-likidite" anahtar="koridor_alt" ondalik={2}>35,50</Deger> | <Deger proje="fonlama-likidite" anahtar="koridor_alt_tarih" ondalik={0}>20.08.2026</Deger> |
+| Koridor tavanı (gecelik borç verme) | <Deger proje="fonlama-likidite" anahtar="koridor_ust" ondalik={2}>40,00</Deger> | <Deger proje="fonlama-likidite" anahtar="koridor_ust_tarih" ondalik={0}>20.08.2026</Deger> |
+| Geç likidite penceresi (borç verme) | <Deger proje="fonlama-likidite" anahtar="glp" ondalik={2}>43,00</Deger> | <Deger proje="fonlama-likidite" anahtar="glp_tarih" ondalik={0}>20.08.2026</Deger> |
+| AOFM — son **geçerli** gün | <Deger proje="fonlama-likidite" anahtar="aofm" ondalik={2}>40,00</Deger> | <Deger proje="fonlama-likidite" anahtar="aofm_tarih" ondalik={0}>07.08.2026</Deger> |
+| **AOSM** — sterilizasyonun ağırlıklı maliyeti (türetme) | <Deger proje="fonlama-likidite" anahtar="aosm" ondalik={2}>40,01</Deger> | <Deger proje="fonlama-likidite" anahtar="aosm_tarih" ondalik={0}>20.08.2026</Deger> |
+| **Marjinal TCMB faizi** (kaynak: <Deger proje="fonlama-likidite" anahtar="marjinal_kaynak" ondalik={0}>AOSM</Deger>) | **<Deger proje="fonlama-likidite" anahtar="marjinal" ondalik={2}>40,01</Deger>** | <Deger proje="fonlama-likidite" anahtar="marjinal_tarih" ondalik={0}>20.08.2026</Deger> |
+| TLREF | <Deger proje="fonlama-likidite" anahtar="tlref" ondalik={2}>39,83</Deger> | <Deger proje="fonlama-likidite" anahtar="tlref_tarih" ondalik={0}>19.08.2026</Deger> |
+| BİST gecelik repo AOF (bağımsız kontrol) | <Deger proje="fonlama-likidite" anahtar="bist_on" ondalik={2}>39,95</Deger> | <Deger proje="fonlama-likidite" anahtar="bist_on_tarih" ondalik={0}>20.08.2026</Deger> |
+
+Makaslar (puan): TLREF − politika
+**<Deger proje="fonlama-likidite" anahtar="spread_tlref_politika" ondalik={2} isaret={true}>+2,83</Deger>**
+· marjinal TCMB faizi − politika
+**<Deger proje="fonlama-likidite" anahtar="spread_marjinal_politika" ondalik={2} isaret={true}>+3,01</Deger>**
+· TLREF − AOFM
+<Deger proje="fonlama-likidite" anahtar="spread_tlref_aofm" ondalik={2} isaret={true}>−0,08</Deger>
+(AOFM'nin son geçerli günü olan
+<Deger proje="fonlama-likidite" anahtar="spread_tlref_aofm_tarih" ondalik={0}>07.08.2026</Deger>
+itibarıyla). TLREF'in koridordaki konumu
+**%<Deger proje="fonlama-likidite" anahtar="konum_tlref_yuzde" ondalik={1}>96,2</Deger>**
+(0 = taban, 1 = tavan); marjinal TCMB faizinin konumu
+**%<Deger proje="fonlama-likidite" anahtar="konum_marjinal_yuzde" ondalik={1}>100,2</Deger>**
+— evet, **%100'ü aşabilir** (aşağıda). Koridor genişliği
+<Deger proje="fonlama-likidite" anahtar="koridor_bant" ondalik={2}>4,50</Deger> puan ve
+koridor **simetrik değildir**: tavan ile taban politika faizine eşit uzaklıkta durmaz,
+asimetri <Deger proje="fonlama-likidite" anahtar="koridor_asimetri_pp" ondalik={2} isaret={true}>+1,50</Deger>
+puandır (artı = tavan daha uzakta).
+
+<div class="not">
+  <span class="etiket">Bu üç makas birbirinden çıkarılamaz</span>
+  Her makas <strong>kendi son dolu gününden</strong> okunur ve AOFM tabansız günlerde
+  tanımsız olduğu için AOFM'li makaslar TLREF'li makastan geride kalabilir. O yüzden
+  (TLREF − politika) − (AOFM − politika) aritmetiği yayımlanan (TLREF − AOFM) değerini
+  vermez; bu koşudaki kapanma artığı{' '}
+  <Deger proje="fonlama-likidite" anahtar="spread_vintaj_artik_pp" ondalik={2} isaret={true}>−0,09</Deger>
+  puandır ve tamamen <em>vintaj</em> farkıdır. Üçünü birlikte okumak isteyen için
+  <code>ozet.json</code> ayrıca son <strong>ortak</strong> güne çıpalı sürümleri taşır
+  (<code>*_ortak_gun</code>): ortak gün{' '}
+  <Deger proje="fonlama-likidite" anahtar="spread_ortak_gun" ondalik={0}>07.08.2026</Deger>{' '}
+  (<Deger proje="fonlama-likidite" anahtar="spread_ortak_yas_gun" ondalik={0}>13</Deger> gün
+  geride), TLREF − politika{' '}
+  <Deger proje="fonlama-likidite" anahtar="spread_tlref_politika_ortak_gun" ondalik={2} isaret={true}>+2,92</Deger>,
+  AOFM − politika{' '}
+  <Deger proje="fonlama-likidite" anahtar="spread_aofm_politika_ortak_gun" ondalik={2} isaret={true}>+3,00</Deger>,
+  TLREF − AOFM{' '}
+  <Deger proje="fonlama-likidite" anahtar="spread_tlref_aofm_ortak_gun" ondalik={2} isaret={true}>−0,08</Deger>.
+  Bu üçlü kendi içinde kapanır.
+</div>
+
+### Miktar
+
+| Ölçü | Değer | Birim |
+| --- | --- | --- |
+| **Net APİ fonlaması (A − B)** | **<Deger proje="fonlama-likidite" anahtar="net_fonlama_mlr" ondalik={1} isaret={true}>−902,9</Deger>** | milyar TL |
+| Fonlama bacağı (A) | <Deger proje="fonlama-likidite" anahtar="fonlama_mlr" ondalik={1}>0,7</Deger> | milyar TL |
+| Sterilizasyon bacağı (B) | <Deger proje="fonlama-likidite" anahtar="sterilizasyon_mlr" ondalik={1}>903,6</Deger> | milyar TL |
+| Swap ile SAĞLANAN TL (alım yönlü) | <Deger proje="fonlama-likidite" anahtar="swap_alim_mlr_tl" ondalik={1}>0,0</Deger> | milyar TL |
+| Swap ile ÇEKİLEN TL (satım yönlü) | <Deger proje="fonlama-likidite" anahtar="swap_satim_mlr_tl" ondalik={1}>224,6</Deger> | milyar TL |
+| **Swap dâhil TCMB kaynaklı net TL** (net APİ + alım − satım) | **<Deger proje="fonlama-likidite" anahtar="tcmb_tl_saglama_mlr" ondalik={1} isaret={true}>−1.127,5</Deger>** | milyar TL |
+| Tanı: yalnız alım bacaklı eski tanım | <Deger proje="fonlama-likidite" anahtar="api_ve_swap_alim_mlr" ondalik={1} isaret={true}>−902,9</Deger> | milyar TL |
+| Bankalar serbest mevduatı | <Deger proje="fonlama-likidite" anahtar="serbest_mevduat_mlr" ondalik={1}>1.765,9</Deger> | milyar TL |
+| Gün başı toplam likidite | <Deger proje="fonlama-likidite" anahtar="gun_basi_likidite_mlr" ondalik={1}>2.677,6</Deger> | milyar TL |
+| ZK bloke hesabı | <Deger proje="fonlama-likidite" anahtar="zk_bloke_mlr" ondalik={1}>1.140,6</Deger> | milyar TL |
+| Swap stoku — alım yönlü | <Deger proje="fonlama-likidite" anahtar="swap_alim_mn_usd" ondalik={0}>0</Deger> | milyon USD |
+| Swap stoku — satım yönlü | <Deger proje="fonlama-likidite" anahtar="swap_satim_mn_usd" ondalik={0}>4.695</Deger> | milyon USD |
+
+İşaret rejimi belirler: net fonlama negatif olduğunda **sistem TCMB'nin net alacaklısıdır**
+— bugünkü durum, tek cümlelik hâliyle:
+*<Deger proje="fonlama-likidite" anahtar="net_fonlama_isaret" ondalik={0}>sistem TCMB'nin net alacaklısı</Deger>*.
+Son <Deger proje="fonlama-likidite" anahtar="rejim_pencere_gun" ondalik={0}>253</Deger>
+iş gününün
+<Deger proje="fonlama-likidite" anahtar="rejim_net_negatif_gun" ondalik={0}>210</Deger>'unda
+(%<Deger proje="fonlama-likidite" anahtar="rejim_negatif_pay" ondalik={0}>83</Deger>)
+işaret negatifti;
+<Deger proje="fonlama-likidite" anahtar="rejim_fonlama_sifir_gun" ondalik={0}>20</Deger>
+iş gününde fonlama bacağı **tam sıfırdı**.
+
+### Bir cümlelik okuma
+
+İlan edilen politika faizi
+<Deger proje="fonlama-likidite" anahtar="politika" ondalik={2}>37,00</Deger> iken, TCMB'nin
+o gün fiilen işlem yaptığı marjinal fiyat
+<Deger proje="fonlama-likidite" anahtar="marjinal" ondalik={2}>40,01</Deger> —
+aradaki
+<Deger proje="fonlama-likidite" anahtar="spread_marjinal_politika" ondalik={2}>3,01</Deger>
+puan, bir tahmin değil, **gerçekleşmiş işlemlerin ağırlıklı ortalamasıdır**. Üstelik bu
+fark bu kez fonlamadan değil **sterilizasyondan** geliyor: TCMB para vermiyor, para
+çekiyor ve bunu koridor tavanı civarında yapıyor. Yani sıkılık, "TCMB bankaları pahalıya
+fonluyor" biçiminde değil, "TCMB fazla TL'yi pahalıya emiyor ve böylece piyasa gecelik
+faizine yüksek bir taban kuruyor" biçiminde çalışıyor. TLREF'in koridorun
+%<Deger proje="fonlama-likidite" anahtar="konum_tlref_yuzde" ondalik={1}>96,2</Deger>'sinde
+durması bunun piyasa tarafındaki izidir.
+
+## Politika faizi ne değildir
+
+Bir merkez bankasının **faiz koridoru** üç fiyattan oluşur:
+
+- **Gecelik borç alma (taban).** Bankanın gün sonunda elinde kalan fazla TL'yi Merkez
+  Bankası'na yatırdığında alacağı faiz. Bu, para piyasası faizi için teorik **taban**dır:
+  hiçbir banka, TCMB'ye yatırıp bu faizi alabilecekken piyasaya bunun altında borç
+  vermez.
+- **Gecelik borç verme (tavan).** Bankanın TCMB'den teminat karşılığı gecelik
+  borçlanabileceği faiz. Teorik **tavan**: hiçbir banka, TCMB'den bu faize
+  borçlanabilecekken piyasadan bunun üstüne borçlanmaz.
+- **Politika faizi.** Bu ikisinin arasında bir yerde duran, **1 hafta vadeli repo ihalesi
+  satış kotasyonu**. TCMB'nin sistemi ana fonlama aracıyla fonlamayı taahhüt ettiği fiyat.
+
+Kritik nokta: politika faizi bir **fiyat taahhüdüdür, miktar taahhüdü değildir.** TCMB
+haftalık repo ihalesinden ne kadar fon vereceğine kendisi karar verir. Miktar kısılırsa
+banka farkı başka bir kanaldan kapatmak zorunda kalır — gecelik kotasyondan, geç
+likidite penceresinden ya da piyasadan. Her kanalın kendi fiyatı vardır. Sistemin
+ödediği **ortalama** fiyat, kanal ağırlıklarına göre belirlenir ve politika faizinden
+uzaklaşır. Buna **koridor kullanımı** denir.
+
+Bunun tersi de doğrudur: sistemde fazla TL varsa TCMB ihaleyle fonlamaz, **çeker**.
+O zaman marjinal fiyatı fonlamanın değil, **sterilizasyonun** maliyeti belirler ve
+sterilizasyon faizi bu kez gecelik piyasa faizi için taban kurar.
+
+<div class="not">
+  <span class="etiket">Bu hattın kurucu gözlemi</span>
+  2018'in ilk çeyreğinde AOFM tam olarak <strong>%12,75</strong> — yani geç likidite
+  penceresi faizi — düzeyindeydi: ilan edilen politika faizinin 475 baz puan üzerinde ve
+  koridorun tavanının da dışında. TCMB o dönemde sistemi ana araçla değil, en pahalı
+  araçla fonluyordu. Politika faizine bakan bir gözlemci o çeyrekte para politikasının
+  duruşunu <strong>475 baz puan gevşek</strong> ölçmüş olurdu. Faiz grafiğinde politika
+  faizi bu yüzden <strong>tek başına çizilmez</strong>.
+</div>
+
+## Şekil 01 — Koridor, politika faizi ve fiilî TCMB faizi
+
+<GrafikEmbed
+  src="/projeler/fonlama-likidite/01_koridor_faizler.html"
+  baslik="Faiz koridoru, politika faizi ve fiilî TCMB faizi — yakın dönem ve tam tarihçe, örtük sıkılaştırma dönemleri gölgeli"
+  no="01"
+  yukseklik={1137}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** EVDS3, iş günü frekansı. Kotasyonlar: `TP.PY.P01.ON` (gecelik borç alma),
+`TP.PY.P02.ON` (gecelik borç verme), `TP.PY.P02.1H` (1 hafta vadeli repo satış =
+politika faizi), `TP.PY.P02.LON` (geç likidite penceresi borç verme). Fiilî fonlama
+maliyeti: `TP.APIFON4`. Piyasa gecelik faizi: `TP.BISTTLREF.ORAN`.
+
+**Koridor bandı bir dolgu, iki çizgi değil.** Alt bant görünmez bir iz olarak çizilir,
+üst bant ona doldurulur; böylece koridorun *genişliği* göz tarafından tek bakışta
+okunur. Politika faizinin bandın neresinde durduğu — ortada mı, tavana yakın mı —
+başlı başına bir politika duruşu bilgisidir ve Şekil 07'de sayısallaştırılır.
+
+**İki panel neden alt alta.** Üst panel yakın dönemdir; alt panel tam tarihçedir.
+2018 ve 2023 sıçramaları tek eksene konursa bugünkü 35–43 aralığı okunamayacak kadar
+sıkışır. Ölçek bastırması bir sunum kusuru değil, bilgi kaybıdır.
+
+**Sıfır bir faiz oranı değildir.** `TP.PY.P01.LON` (geç likidite penceresi *alış*
+kotasyonu) son <Deger proje="fonlama-likidite" anahtar="rejim_pencere_gun" ondalik={0}>253</Deger>
+iş gününün tamamında 0 basıyor. Bu "faiz sıfır" demek değil, "bu yönde kotasyon
+verilmiyor" demektir. Ham hâliyle grafiğe basılsa koridor bandını tabana çeker ve
+sahte bir gevşeme üretirdi. Hat, **kotasyon serilerinde 0 değerini NaN'a çevirir** ve
+bunu görünür bir tanı olarak raporlar.
+
+**Politika faizi çizgisi 14.09.2018'de başlar.** Öncesinde haftalık repo ihaleyle
+fonlanıyordu ve TCMB bu vadede kotasyon yayımlamıyordu; gerçekleşen 1 haftalık işlem
+faizi (`TP.PY.P06.1H`) de aynı tarihte başlar, dolayısıyla günlük bir vekil de yok.
+Tam tarihçe panelinde 2018 öncesi için koridor, AOFM ve geç likidite penceresi çizilir,
+politika faizi **çizilmez**. Boşluk kapatılmadı çünkü kapatılacak veri yok. *(Ölçüldü,
+statik: kotasyon ile gerçekleşen 1 haftalık işlem faizi örtüşme penceresinde 1.526 iş
+gününün 1.503'ünde birebir aynı; ayrıştıkları 23 gün PPK karar günleridir — kotasyon
+aynı gün güncellenir, gerçekleşen işlem o gün hâlâ eski faizdedir.)*
+
+**Gölgeli alanlar örtük sıkılaştırma dönemleridir.** Tanım Şekil 07'dedir; kısaca
+AOFM'nin koridor tavanını en az 0,05 puan aşarak en az 5 iş günü sürmesi.
+
+## AOFM: fiilî fonlama maliyeti nasıl oluşur
+
+Ağırlıklı ortalama fonlama maliyeti, TCMB'nin o gün **fonlama** amacıyla açtığı bütün
+kanalların, tutarla ağırlıklandırılmış faizidir:
+
+$$
+\text{AOFM}_t=\frac{\sum_{k\in\mathcal{A}}F_{k,t}\,i_{k,t}}{\sum_{k\in\mathcal{A}}F_{k,t}}
+$$
+
+$\mathcal{A}$ **yalnız fonlama bacağıdır**: haftalık repo ihalesi, gecelik repo
+kotasyonu, geç likidite penceresi. Sterilizasyon paydaya **girmez** — AOFM "TCMB'nin
+sistemle yaptığı işlemlerin ortalama faizi" değil, "TCMB'nin sisteme verdiği paranın
+ortalama faizi"dir.
+
+Formülün doğrudan sonucu: **ağırlıklar politikadır.** TCMB haftalık ihale miktarını
+kısıp bankaları gecelik kotasyona iterse, tek bir kotasyon değişmese bile AOFM yukarı
+gider. Bu, PPK kararı olmadan yapılan bir sıkılaştırmadır ve tam da bu yüzden "örtük"
+diye adlandırılır.
+
+### AOFM'nin tabanı yokken neden yayımlanmıyor
+
+Payda sıfıra giderse AOFM tanımsızdır. Bugünkü rejimde bu teorik bir uç durum değil,
+**sık görülen bir hâldir**: son
+<Deger proje="fonlama-likidite" anahtar="rejim_pencere_gun" ondalik={0}>253</Deger> iş
+gününün <Deger proje="fonlama-likidite" anahtar="rejim_fonlama_sifir_gun" ondalik={0}>20</Deger>
+gününde fonlama bacağı tam sıfırdı.
+
+Sorun şu: **EVDS o günlerde de bir AOFM değeri basıyor.** Son bir yılda
+<Deger proje="fonlama-likidite" anahtar="rejim_aofm_gecersizken_dolu_gun" ondalik={0}>33</Deger>
+iş gününde fonlama, <Deger proje="fonlama-likidite" anahtar="aofm_taban_esik_mlr" ondalik={0}>5</Deger>
+milyar TL eşiğinin altında olduğu hâlde seride dolu bir sayı duruyordu. Bu, sessiz
+bayatlamanın **veri kaynağı tarafından üretilen** biçimidir: seri taze, değer geçersiz.
+Bir sayfa bu değeri "fonlama maliyeti" diye yazarsa, olmayan bir işlemin fiyatını
+yayımlamış olur.
+
+Hattın ele alışı üç adımlıdır: (i) fonlama tabanı eşiğin altındaki günler
+`aofm_gecerli = false` işaretlenir; (ii) temiz seri o günlerde NaN'dır ve **grafikte
+çizilmez** (kesikli gösterilir); (iii) sayfa metninde o günler için "fonlama maliyeti"
+cümlesi **kurulmaz**. Bu koşuda AOFM'nin son geçerli günü
+<Deger proje="fonlama-likidite" anahtar="aofm_tarih" ondalik={0}>07.08.2026</Deger>,
+değeri <Deger proje="fonlama-likidite" anahtar="aofm" ondalik={2}>40,00</Deger> — yani
+yukarıdaki tablodaki AOFM satırı, çıpa gününün değil, **son geçerli günün** ölçüsüdür ve
+tarihi bu yüzden ayrı bir sütunda duruyor.
+
+## AOSM: fazla likidite rejiminde marjinal fiyat
+
+Sistem net alacaklıysa TCMB'nin fiyatı fonlamayla değil, **çekmeyle** belirlenir.
+EVDS'te bu fiyatın hazır bir serisi yoktur; hat onu ihale verilerinden türetir:
+
+$$
+\text{AOSM}_t=\frac{S^{\text{ONI}}_t\,i^{\text{ONI}}_t+\big(S^{\text{ihale}}_t-S^{\text{ONI}}_t\big)\,\bar{i}^{\text{1HI}}_{t,5}}{S^{\text{ihale}}_t}
+$$
+
+Mantık vade üzerinden kurulur. Gecelik depo **alım** ihalesinin (ONI) vadesi bir gündür;
+o günkü kabul tutarı aynı zamanda o günkü **stoktur**. İhale yoluyla sterilizasyon
+stokunun kalanı haftalık depo alım ihalesinden (1HI) gelir ve stokta yaklaşık 5 iş günü
+kalır. Kalan bacak bu yüzden **son 5 iş gününün tutar-ağırlıklı 1HI faiziyle** değerlenir.
+
+Girdiler: `TP.PY.P06.ONI` / `TP.PY.P07.ONI` (gecelik depo alım ihalesi faizi ve kabul
+tutarı), `TP.PY.P06.1HI` / `TP.PY.P07.1HI` (haftalık), `TP.APIFON2.IHA` (ihale yoluyla
+sterilizasyon stoku).
+
+<div class="not">
+  <span class="etiket">AOSM bir TCMB serisi DEĞİLDİR</span>
+  <Deger proje="fonlama-likidite" anahtar="aosm_not" ondalik={0}>AOSM bu çalışmanın türetmesidir; TCMB tarafından yayımlanan bir seri DEĞİLDİR.</Deger>
+  Varsayım açıktır: kalan sterilizasyon bacağının <strong>tamamının</strong> haftalık
+  depo alım ihalesi olduğu kabul ediliyor. Kırık vadeli ya da 4 haftalık ihaleler
+  açıldığı dönemlerde varsayım zayıflar.
+</div>
+
+**Varsayım ölçülüyor, ilan ediliyor.** Denetim `kalan ÷ günlük 1HI tutarı` oranını
+hesaplar; teorik olarak 5 civarında olmalıdır. Ölçülen medyan
+<Deger proje="fonlama-likidite" anahtar="aosm_taban_kat" ondalik={1}>5,5</Deger>
+(n = <Deger proje="fonlama-likidite" anahtar="aosm_taban_n" ondalik={0}>297</Deger> gün).
+Oran 3–7 aralığının dışına çıkarsa **görünür uyarı** düşer — yani varsayımın ne zaman
+bozulduğu okurdan gizlenmez.
+
+### Marjinal TCMB faizi: hangi rejimde hangi fiyat
+
+Sayfanın kullandığı tek faiz serisi budur ve rejime göre kaynak değiştirir:
+
+| Rejim | Marjinal fiyat | Gerekçe |
+| --- | --- | --- |
+| $\text{net fonlama} > 0$ — sistem net **borçlu** | AOFM | Sistem son marjinal TL'yi TCMB'den alıyor |
+| $\text{net fonlama} < 0$ — sistem net **alacaklı** | AOSM | Sistem son marjinal TL'yi TCMB'ye plase ediyor |
+| AOSM yok (09.05.2024 öncesi fazla likidite günleri) | TLREF, **vekil** olarak işaretli | İhale verisi yok; piyasa faizi vekil alınıyor |
+
+Vekil payı gizlenmez, **sayılır**. Son bir yılın dağılımı:
+<Deger proje="fonlama-likidite" anahtar="marjinal_kaynak_dagilim" ondalik={0}>AOSM: 210 gün · AOFM: 42 gün · yok: 1 gün</Deger>.
+Bu koşuda çıpa gününün kaynağı
+**<Deger proje="fonlama-likidite" anahtar="marjinal_kaynak" ondalik={0}>AOSM</Deger>**.
+Vekil payı yükselirse "TCMB'nin marjinal fiyatı" cümlesi zayıflar; o zaman bu tablo
+metnin kendisi hâline gelir.
+
+## Şekil 02 — Makaslar: politika faizi ile fiilî faiz arasındaki mesafe
+
+<GrafikEmbed
+  src="/projeler/fonlama-likidite/02_spreadler.html"
+  baslik="TLREF − politika faizi · fiilî TCMB faizi − politika faizi · TLREF − AOFM (rejime göre ortalamalar)"
+  no="02"
+  yukseklik={1453}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+Üç makas, üç ayrı soru. Hepsi puan cinsindendir ve sıfır çizgisi her panelde çizilidir.
+
+**a) TLREF − politika faizi.** Piyasa gecelik faizinin ilan edilen faize göre nerede
+durduğu. Pozitifse piyasa, TCMB'nin ana aracından **pahalıya** işlem görüyor demektir:
+ya TCMB miktar kısıyor ya sistem yapısal olarak likidite açığında. Çıpa günü
+<Deger proje="fonlama-likidite" anahtar="spread_tlref_politika" ondalik={2} isaret={true}>+2,83</Deger>
+puan (<Deger proje="fonlama-likidite" anahtar="spread_tlref_politika_tarih" ondalik={0}>19.08.2026</Deger>).
+
+**b) Fiilî TCMB faizi − politika faizi.** İki çizgi: AOFM−politika (yalnız geçerli
+günlerde) ve marjinal TCMB faizi−politika (kesikli, rejime göre kaynak değiştiren seri).
+İkincisi **para politikası duruşunun fiilî ölçüsüdür.** Çıpa günü
+<Deger proje="fonlama-likidite" anahtar="spread_marjinal_politika" ondalik={2} isaret={true}>+3,01</Deger>
+puan. Bu, sistemin son marjinal lirasının politika faizinden 3 puan pahalı olduğu
+anlamına gelir — ve bugün bu, TCMB fazladan fon verdiği için değil, fazla TL'yi
+tavana yakın bir fiyattan çektiği için böyledir.
+
+**c) TLREF − AOFM.** Piyasa, TCMB'den pahalıya mı borçlanıyor? Bu makasın **işareti bir
+rejim göstergesidir**, seviyesi değil. Şekilde iki rejim ortalaması ayrı ayrı yazılır:
+net fonlama pozitifken ve negatifken. Sistem net borçluyken TLREF'in AOFM'nin belirgin
+üzerine çıkması, TCMB fonlamasının **tayınlandığı** (kısıldığı) anlamına gelir: banka
+istediği kadar TCMB'den alamıyor, farkı piyasadan daha pahalıya kapatıyor. Belirgin
+pozitif sıçramalar **tekil olaydır, rejim değil** — vergi ödemesi, ihale takası, bayram
+öncesi nakit talebi gibi tek günlük likidite şokları.
+
+**Bu makas AOFM geçersizken hesaplanmaz.** Çıpa günü fonlama bacağı eşiğin altında
+olduğu için (c) panelinin son geçerli değeri
+<Deger proje="fonlama-likidite" anahtar="spread_tlref_aofm_tarih" ondalik={0}>07.08.2026</Deger>
+tarihlidir:
+<Deger proje="fonlama-likidite" anahtar="spread_tlref_aofm" ondalik={2} isaret={true}>−0,08</Deger>
+puan. Metinde ve tabloda bu tarih ayrıca yazılır; yazılmasaydı okur bu sayıyı çıpa
+gününe ait sanırdı — sessiz bayatlamanın en ucuz üretilen biçimi budur.
+
+### Makas okuma kuralları
+
+- **Makasın işareti yönü, seviyesi şiddeti verir.** İşaret değişimi rejim değişimidir;
+  seviye oynaması aynı rejim içinde şiddet değişimidir.
+- **Politika faizine göre makas, PPK kararı olmadan da hareket eder.** Kotasyonlar
+  sabitken kanal ağırlıkları değiştiğinde makas açılır. Sıkılaştırmanın tarihini PPK
+  takviminden değil bu seriden okuyun.
+- **TLREF ile marjinal TCMB faizi arasındaki fark, aktarımın kalitesidir.** İkisi
+  birbirine yapışıksa TCMB'nin fiyatı piyasaya birebir geçiyor; ayrışıyorsa arada bir
+  sürtünme — teminat kısıtı, limit, tayınlama — var demektir.
+
+## Şekil 03 — Miktar tarafı: net açık piyasa fonlaması ve kompozisyonu
+
+<GrafikEmbed
+  src="/projeler/fonlama-likidite/03_net_api_kompozisyon.html"
+  baslik="TCMB net açık piyasa fonlaması (A − B) ve iki bacağın kanal kırılımı"
+  no="03"
+  yukseklik={1425}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Kimlik.** EVDS üç seriyi ayrı ayrı yayımlar ve aralarındaki ilişki tanım gereği tamdır:
+
+$$
+\underbrace{\texttt{TP.APIFON1.TOP}}_{A:\ \text{fonlama}} \;-\; \underbrace{\texttt{TP.APIFON2.TOP}}_{B:\ \text{sterilizasyon}} \;=\; \underbrace{\texttt{TP.APIFON3}}_{\text{net}}
+$$
+
+Bu kimlik **hattı durduran** bir denetimdir: sapma 1e−6 milyon TL'yi aşarsa `metrik.py`
+hata verip düşer. Ölçülen maksimum fark
+<Deger proje="fonlama-likidite" anahtar="dog_net_maks" ondalik={0}>1.2e-10</Deger>
+milyon TL (n = <Deger proje="fonlama-likidite" anahtar="dog_net_n" ondalik={0}>3.928</Deger>
+iş günü) — yani kaynak tutarlı ve bizim kolon eşleştirmemiz doğru.
+
+**Birim tuzağı.** `TP.APIFON*` ailesi **milyon TL**, analitik bilanço (`TP.AB.A*`)
+**bin TL**, ihale kabul tutarları (`TP.PY.P07.*`) **bin TL** cinsindendir. Bin katlık
+bir hata trilyon TL ölçeğinde gözle yakalanmaz — sayı hâlâ "makul" görünür. Dönüşüm bu
+yüzden **tek yerde** (`metrik.py`) yapılır ve grafikte hepsi milyar TL'ye indirgenir.
+
+**Üç panel.** (a) net stok, işaretli; (b) fonlama bacağı kanal kırılımıyla yığılı;
+(c) sterilizasyon bacağı kanal kırılımıyla yığılı. Yığılı gösterim burada zorunludur:
+toplamın seviyesi kadar **hangi kanaldan geldiği** de politika bilgisidir.
+
+Çıpa günü kompozisyon (
+<Deger proje="fonlama-likidite" anahtar="gun_kisa" ondalik={0}>20.08.2026</Deger>):
+
+| Bacak | Kanal | Tutar (milyar TL) | Bacak içi pay (%) |
+| --- | --- | --- | --- |
+| A — fonlama | Haftalık repo ihalesi | <Deger proje="fonlama-likidite" anahtar="fon_ihale_mlr" ondalik={1}>0,0</Deger> | — |
+| A — fonlama | Gecelik repo kotasyonu | <Deger proje="fonlama-likidite" anahtar="fon_kot_repo_mlr" ondalik={1}>0,7</Deger> | — |
+| A — fonlama | Geç likidite penceresi | <Deger proje="fonlama-likidite" anahtar="fon_glp_mlr" ondalik={1}>0,0</Deger> | — |
+| **A toplam** | | **<Deger proje="fonlama-likidite" anahtar="fonlama_mlr" ondalik={1}>0,7</Deger>** | |
+| B — sterilizasyon | Depo alım ihalesi | <Deger proje="fonlama-likidite" anahtar="ste_ihale_mlr" ondalik={1}>903,2</Deger> | <Deger proje="fonlama-likidite" anahtar="pay_ste_ihale" ondalik={2}>100,00</Deger> |
+| B — sterilizasyon | Kotasyon (gecelik depo) | <Deger proje="fonlama-likidite" anahtar="ste_kotasyon_mlr" ondalik={1}>0,4</Deger> | <Deger proje="fonlama-likidite" anahtar="pay_ste_kotasyon" ondalik={2}>0,04</Deger> |
+| B — sterilizasyon | Likidite senedi | <Deger proje="fonlama-likidite" anahtar="ste_liksen_mlr" ondalik={1}>0,0</Deger> | <Deger proje="fonlama-likidite" anahtar="pay_ste_liksen" ondalik={2}>0,00</Deger> |
+| **B toplam** | | **<Deger proje="fonlama-likidite" anahtar="sterilizasyon_mlr" ondalik={1}>903,6</Deger>** | |
+
+Okuma: sterilizasyonun tamamına yakını **ihale** yoluyla yapılıyor, kotasyon kanalı
+fiilen boş. Bu önemlidir, çünkü ihale **fiyat oluşturur** (rekabetçi teklif), kotasyon
+ise TCMB'nin ilan ettiği sabit faizdir. Sterilizasyonun ihaleye kayması, marjinal
+fiyatın piyasa tarafından belirlendiği anlamına gelir — ve AOSM'nin neden anlamlı bir
+ölçü olduğunun da gerekçesidir.
+
+**Likidite senedi 14.03.2025'te doğdu.** Öncesindeki sıfırlar "kullanılmadı" değil,
+"araç yoktu" demektir. Seri başlangıcı grafikte sabit bir tarihe gömülmez, verinin
+kendisinden türetilir.
+
+**Bir kimlik daha, ve neden hattı durdurmadığı.** Analitik bilançonun APİ kalemi ile
+net fonlama arasında `TP.AB.A24 / 1000 = −TP.APIFON3` ilişkisi beklenir. Son
+<Deger proje="fonlama-likidite" anahtar="kimlik_api_n" ondalik={0}>250</Deger> iş
+gününde ölçülen maksimum fark
+<Deger proje="fonlama-likidite" anahtar="kimlik_api_maks_mlr" ondalik={2}>4,03</Deger>
+milyar TL. Bu artık bir hata değil **kapsam farkıdır**: bilançonun APİ kalemi işlemiş
+faizi de taşır, APİ serisi ise anaparayı. Hattı durdurmak yanlış alarm olurdu; tanı
+olarak raporlanır ve tipik APİ büyüklüğünün %1'ini aşarsa uyarıya dönüşür.
+
+## Şekil 04 — Swap: bilanço dışı görünen, bilanço içi çalışan kanal
+
+<GrafikEmbed
+  src="/projeler/fonlama-likidite/04_swap_fonlama.html"
+  baslik="TCMB taraflı swap stokunun kanal kırılımı ve swap ile sağlanan TL ile APİ fonlamasının karşılaştırması"
+  no="04"
+  yukseklik={1159}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Neden APİ ile birlikte çiziliyor.** TCMB döviz karşılığı TL swapında bankaya döviz
+verip TL alır ya da tersini yapar. **Alım yönlü** swap (TCMB döviz alır, TL verir)
+ekonomik olarak bir TL fonlamasıdır — ama açık piyasa işlemleri serisinde görünmez.
+Yalnız APİ'ye bakan bir gözlemci, swapla sağlanan TL'yi tamamen kaçırır.
+
+Kanal **iki yönlüdür** ve toplam bu yüzden bir FARKTIR: satım yönlü swapta TCMB döviz
+satıp TL çeker, yani likidite sağlamaz, geri alır. Tek bacak toplanırsa satım stoku
+büyürken "TCMB'nin sağladığı TL" sabit görünür — ölçüm gününde satım bacağı
+<Deger proje="fonlama-likidite" anahtar="swap_satim_mlr_tl" ondalik={1}>224,6</Deger>
+milyar TL'ye denk geliyor ve bu, tek bacaklı bir toplamda **hiç görünmezdi**.
+
+$$
+\text{TCMB kaynaklı net TL}_t = \underbrace{\texttt{TP.APIFON3}}_{\text{net APİ}} + \underbrace{\frac{\text{swap}^{\text{alım}}_t \cdot e_t}{1000}}_{\text{sağlanan TL}} - \underbrace{\frac{\text{swap}^{\text{satım}}_t \cdot e_t}{1000}}_{\text{çekilen TL}}
+$$
+
+$e_t$ = USD/TRY (`TP.DK.USD.A.YTL`). Çıpa günü kur
+<Deger proje="fonlama-likidite" anahtar="kur" ondalik={4}>47,8642</Deger>; swapla
+sağlanan TL <Deger proje="fonlama-likidite" anahtar="swap_alim_mlr_tl" ondalik={1}>0,0</Deger>
+milyar TL, çekilen TL
+<Deger proje="fonlama-likidite" anahtar="swap_satim_mlr_tl" ondalik={1}>224,6</Deger>
+milyar TL; toplam TCMB kaynaklı net TL
+<Deger proje="fonlama-likidite" anahtar="tcmb_tl_saglama_mlr" ondalik={1} isaret={true}>−1.127,5</Deger>
+milyar TL.
+
+**Hangi bacaklar dâhil?** Bu soru sayfada tahmine bırakılmaz; kapsam `ozet.json`'da bir
+metin anahtarı olarak taşınır:
+<Deger proje="fonlama-likidite" anahtar="tcmb_tl_saglama_kapsam" ondalik={0}>Net APİ fonlaması (A − B) + alım yönlü swap stokunun TL karşılığı − satım yönlü swap stokunun TL karşılığı.</Deger>
+
+**Kanal kırılımı.** `TP.SWAPTEKTAR.*` ailesi stoku beş kanala ayırır: TCMB döviz
+karşılığı TL swap piyasası, BİST swap piyasası, geleneksel swap ihaleleri, miktar
+ihaleleri, altın swap piyasası. Kırılım politika bilgisi taşır — aynı toplam stok,
+BİST üzerinden mi yoksa doğrudan TCMB penceresinden mi kuruldu sorusu farklı
+mekanizmalara işaret eder.
+
+<div class="not">
+  <span class="etiket">Olgu bittiğinde cümle de bitmeli</span>
+  <Deger proje="fonlama-likidite" anahtar="swap_cumlesi" ondalik={0}>Alım yönlü swap stoku 0 milyon dolar — kanal bu ölçüm gününde kapalı.</Deger>
+  Bu cümle <code>ozet.json</code>'daki <code>swap_alim_aktif</code> bayrağından
+  üretilir. Bayrağa bağlanmayan bir sayfada "swap ile TL sağlanıyor" cümlesi olgu
+  bittikten <em>sonra</em> da yayında kalırdı — bu, hiç güncellenmeyen bir sayıdan
+  kötüdür, çünkü yanlış bir <strong>mekanizma</strong> anlatır. Aynı mantık
+  <code>glp_aktif</code>, <code>likidite_senedi_aktif</code> ve
+  <code>ihale_fonlama_aktif</code> için de geçerlidir.
+</div>
+
+Çıpa günü stoklar: alım yönlü
+<Deger proje="fonlama-likidite" anahtar="swap_alim_mn_usd" ondalik={0}>0</Deger>
+milyon USD, satım yönlü
+<Deger proje="fonlama-likidite" anahtar="swap_satim_mn_usd" ondalik={0}>4.695</Deger>
+milyon USD (<Deger proje="fonlama-likidite" anahtar="swap_satim_mlr_usd" ondalik={2}>4,69</Deger>
+milyar USD). Satım yönlü stok TL fonlaması **sağlamaz**, tersine TL çeker; bu yüzden
+toplama **eksi işaretiyle** girer. Kanalın kendisi kapalı olsa bile (alım stoku sıfır)
+satım bacağı açık olabilir — bu koşuda tam olarak öyledir, ve toplam
+<Deger proje="fonlama-likidite" anahtar="swap_satim_mlr_tl" ondalik={1}>224,6</Deger>
+milyar TL kadar aşağı çekilmektedir.
+
+## Şekil 05 — Zorunlu karşılıklar, tesis ve sistem likiditesi
+
+<GrafikEmbed
+  src="/projeler/fonlama-likidite/05_zk_likidite.html"
+  baslik="ZK bloke hesabı ve tabanı · ima edilen efektif tesis oranı · tesis dönemi adımları · bankalar serbest mevduatı ve gün başı likidite"
+  no="05"
+  yukseklik={1921}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+Zorunlu karşılık, faiz dışı bir sıkılaştırma aracıdır: bankanın yükümlülüklerinin bir
+bölümünü TCMB'de bloke tutması, kredi verebileceği kaynağı doğrudan küçültür. Politika
+faizi hiç değişmeden de para politikası bu kanaldan sıkılaşabilir ya da gevşeyebilir.
+
+**Sorun: ZK oranları EVDS'te yayımlanmıyor.** Yayımlanan yalnız sonuçtur — bloke hesabın
+tutarı ve tabanın büyüklüğü. Hat oranı bu ikisinden geri çıkarır:
+
+$$
+\hat r_t=\frac{\texttt{TP.AB.A19}\ (\text{bin TL})}{\texttt{TP.TLDTHVADE.KB18}\ (\text{bin TL})}
+$$
+
+<div class="not">
+  <span class="etiket">Birim tuzağı — 1000 katlık hata</span>
+  Tabanın iki bacağı <strong>iki ayrı veri grubundan</strong> gelir ve ölçekleri
+  farklıdır: <code>bie_tldthvade</code> (TL mevduat tabanı, <code>KB6</code>) <strong>bin
+  TL</strong>, <code>bie_zorundth</code> (DTH, <code>KB8</code>) <strong>milyon TL</strong>
+  yayımlar. Kanıtı EVDS'in kendi içinde durur: <code>TP.TLDTHVADE.KB12</code> tam olarak
+  <code>TP.ZORUNDTH.KB8</code>'in bin katıdır. İkisini birim çevirmeden toplamak DTH
+  bacağını bin kat küçültür, yani tabanı fiilen yalnız TL mevduata indirir ve ima edilen
+  tesis oranını yaklaşık <strong>%65 abartır</strong>. Hat bu yüzden tabanı EVDS'in
+  <em>kendi</em> yayımladığı toplamdan (<code>KB18</code>) okur ve her koşuda denetler:
+  elde kurulan toplam (<code>KB6/1000 + KB8</code>) EVDS toplamından medyanda ya da son
+  gözlemde %1'den fazla ayrışırsa <strong>hat durur</strong>, oran üretilmez. Bu koşuda
+  kullanılan kaynak:{' '}
+  <Deger proje="fonlama-likidite" anahtar="zk_taban_kaynak" ondalik={0}>TP.TLDTHVADE.KB18 (bin TL → mn TL)</Deger>.
+  Tekil haftalarda iki tablonun ayrışması bir <em>revizyon</em> farkıdır, birim değil;
+  o haftalar uyarı olarak sayılır ama hesabı etkilemez (taban zaten toplam seriden okunur).
+</div>
+
+<div class="not">
+  <span class="etiket">Bu oran tebliğdeki oran DEĞİLDİR</span>
+  <Deger proje="fonlama-likidite" anahtar="zk_oran_not" ondalik={0}>İma edilen ZK oranı gerçekleşmiş TESİS oranıdır; TCMB'nin tebliğle ilan ettiği oran DEĞİLDİR.</Deger>
+  Sebebi yapısal: vade dilimlerine ve para cinsine göre farklı oranlar uygulanır, YP
+  karşılıklar döviz olarak tutulabilir, ve bazı kalemler tesis edilebilir varlıklarla
+  ikame edilebilir. "ZK oranı yüzde şu kadara indirildi" cümlesi bu seriden
+  <strong>türetilmez</strong>, tebliğden okunur.
+</div>
+
+Çıpa günü ima edilen efektif tesis oranı
+**%<Deger proje="fonlama-likidite" anahtar="zk_oran" ondalik={2}>4,27</Deger>**
+(<Deger proje="fonlama-likidite" anahtar="zk_oran_tarih" ondalik={0}>19.08.2026</Deger>);
+bir yıl önce %<Deger proje="fonlama-likidite" anahtar="zk_oran_1y_once" ondalik={2}>5,27</Deger>
+idi, yani <Deger proje="fonlama-likidite" anahtar="zk_oran_1y_fark" ondalik={2} isaret={true}>−1,00</Deger>
+puan. Bloke hesap
+<Deger proje="fonlama-likidite" anahtar="zk_bloke_mlr" ondalik={1}>1.140,6</Deger>
+milyar TL, taban
+<Deger proje="fonlama-likidite" anahtar="zk_taban_mlr" ondalik={0}>26.707</Deger>
+milyar TL (<Deger proje="fonlama-likidite" anahtar="zk_taban_tarih" ondalik={0}>07.08.2026</Deger>).
+
+**Oranın düşmesi tek başına "gevşeme" demek değildir.** Pay ve payda ayrı ayrı hareket
+eder: oran, TCMB tebliğle oranı indirdiği için de düşebilir, taban büyürken bloke hesap
+aynı kaldığı için de. İkisini ayırmak ZK serisinden **mümkün değildir**; bu yüzden
+grafik ikisini birlikte, aynı panelde ve **ayrı eksenlerle** çizer. Panelin işi
+sonucu göstermek değil, soruyu ayrıştırılabilir hâle getirmektir.
+
+**Seri bir basamak fonksiyonudur.** Tesis dönemi iki haftadır; bloke hesap dönem
+başlarında sıçrar, arada sabit kalır. Ölçülen medyan adım aralığı
+<Deger proje="fonlama-likidite" anahtar="zk_adim_medyan_gun" ondalik={0}>14</Deger> gün,
+toplam <Deger proje="fonlama-likidite" anahtar="zk_adim_sayisi" ondalik={0}>76</Deger>
+adım. **Günlük farkını "günlük likidite etkisi" saymak bu yüzden yanlıştır** — adım
+günlerinde tüm iki haftanın etkisi tek güne yığılır. (c) paneli bu yüzden günlük fark
+değil, **adımların kendisini** çizer. Son adım
+<Deger proje="fonlama-likidite" anahtar="zk_son_adim_tarih" ondalik={0}>14.08.2026</Deger>
+tarihinde
+<Deger proje="fonlama-likidite" anahtar="zk_son_adim_mlr" ondalik={1} isaret={true}>+9,9</Deger>
+milyar TL; ölçülen en büyük adım
+<Deger proje="fonlama-likidite" anahtar="zk_enbuyuk_adim_tarih" ondalik={0}>17.07.2026</Deger>
+tarihinde
+<Deger proje="fonlama-likidite" anahtar="zk_enbuyuk_adim_mlr" ondalik={1} isaret={true}>−135,3</Deger>
+milyar TL.
+
+**Taban 13 gün gecikmeli gelir** ve ileriye taşınır. Taşıma 21 günü aşarsa oran
+**hesaplanmaz**: bayat bir paydayla bölüp taze görünen bir oran yayımlamak, hiç
+yayımlamamaktan kötüdür.
+
+<div class="not">
+  <span class="etiket">Sıfır her zaman veri değildir</span>
+  <Deger proje="fonlama-likidite" anahtar="uyari_metni" ondalik={0}>AYRI KALEM DEĞİL: ZK bloke hesabı (TP.AB.A19) 3323 iş günü boyunca tam sıfır basmış ve 15.03.2024 tarihinde doluyor.</Deger>
+  Yani ZK panelinin başlangıç tarihi bir tercih değil, verinin doğduğu andır ve koda
+  sabit olarak gömülmez.
+</div>
+
+**(d) paneli — sistem likiditesi.** `TP.PPIBSM` bankaların TCMB nezdindeki serbest
+mevduatı, `TP.PPIGBTL` gün başı toplam TL likiditesi. Bunlar analitik bilanço ailesinden
+**ayrı** bir seri ailesidir; bloke hesap ile serbest mevduat arasında birebir aritmetik
+kurulmaz, çünkü tanımlar örtüşmez. Çıpa günü serbest mevduat
+<Deger proje="fonlama-likidite" anahtar="serbest_mevduat_mlr" ondalik={1}>1.765,9</Deger>
+milyar TL, gün başı likidite
+<Deger proje="fonlama-likidite" anahtar="gun_basi_likidite_mlr" ondalik={1}>2.677,6</Deger>
+milyar TL.
+
+### Bağlam: analitik bilanço büyüklükleri
+
+| Kalem | Değer (milyar TL) |
+| --- | --- |
+| Emisyon | <Deger proje="fonlama-likidite" anahtar="emisyon_mlr" ondalik={1}>971,0</Deger> |
+| Bankalar mevduatı (`TP.AB.A18`) | <Deger proje="fonlama-likidite" anahtar="bankalar_mevduati_mlr" ondalik={1}>3.743,2</Deger> |
+| — bunun ZK bloke kısmı (`TP.AB.A19`) | <Deger proje="fonlama-likidite" anahtar="zk_bloke_mlr" ondalik={1}>1.140,6</Deger> |
+| Kamu mevduatı | <Deger proje="fonlama-likidite" anahtar="kamu_mevduati_mlr" ondalik={1}>308,8</Deger> |
+| **Rezerv para** | <Deger proje="fonlama-likidite" anahtar="rezerv_para_mlr" ondalik={1}>4.724,6</Deger> |
+| **Merkez Bankası parası** | <Deger proje="fonlama-likidite" anahtar="mb_parasi_mlr" ondalik={1}>6.508,9</Deger> |
+
+Analitik bilanço tarihi
+<Deger proje="fonlama-likidite" anahtar="bilanco_tarih" ondalik={0}>19.08.2026</Deger>
+— APİ serilerinden bir gün geride olabilir ve bu fark ayrı izlenir. Bilanço
+kimlikleri (`A16 = A17+A18+A21+A22`, `A18 = A19+A20`, `A15 = A16+A24+A25`) her koşuda
+sınanır ve üçü de yuvarlama hassasiyetinde kapanır.
+
+## Şekil 06 — Fonlama maliyetinden kredi ve mevduat faizine geçişkenlik
+
+<GrafikEmbed
+  src="/projeler/fonlama-likidite/06_gecirgenlik.html"
+  baslik="Marjinal TCMB faizi ile kredi ve mevduat faizleri · aracılık marjları · 52 haftalık yuvarlanan geçişkenlik katsayısı"
+  no="06"
+  yukseklik={1449}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+Buraya kadar TCMB'nin fiyatını ölçtük. Asıl soru şudur: **bu fiyat nereye geçiyor?**
+Haftalık bacak (`TP.KTF17` ticari TL kredi, `TP.KTFTUK` tüketici, `TP.KTF10` ihtiyaç,
+`TP.KTF12` konut, `TP.TRY.MT06` TL mevduat) günlük marjinal faizle Cuma frekansında
+hizalanır.
+
+Çıpa: <Deger proje="fonlama-likidite" anahtar="hafta_kisa" ondalik={0}>14.08.2026</Deger>.
+
+| Faiz | % |
+| --- | --- |
+| Marjinal TCMB faizi | <Deger proje="fonlama-likidite" anahtar="marjinal" ondalik={2}>40,01</Deger> |
+| Ticari kredi (TL, akım) | <Deger proje="fonlama-likidite" anahtar="kredi_ticari" ondalik={2}>53,15</Deger> |
+| Tüketici kredisi | <Deger proje="fonlama-likidite" anahtar="kredi_tuketici" ondalik={2}>63,29</Deger> |
+| — ihtiyaç | <Deger proje="fonlama-likidite" anahtar="kredi_ihtiyac" ondalik={2}>65,46</Deger> |
+| — konut | <Deger proje="fonlama-likidite" anahtar="kredi_konut" ondalik={2}>42,03</Deger> |
+| TL mevduat | <Deger proje="fonlama-likidite" anahtar="mevduat_tl" ondalik={2}>46,46</Deger> |
+
+Üç marj, üç ayrı tanım — karıştırılmamalıdır:
+
+$$
+\text{makas} = i^{\text{ticari}} - i^{\text{mevduat}}, \qquad
+\text{kredi marjı} = i^{\text{ticari}} - i^{\text{marjinal}}, \qquad
+\text{mevduat marjı} = i^{\text{marjinal}} - i^{\text{mevduat}}
+$$
+
+Çıpa günü: makas
+<Deger proje="fonlama-likidite" anahtar="makas" ondalik={2}>6,69</Deger> puan · kredi
+marjı <Deger proje="fonlama-likidite" anahtar="kredi_marj" ondalik={2}>13,14</Deger>
+puan · mevduat marjı
+<Deger proje="fonlama-likidite" anahtar="mevduat_marj" ondalik={2} isaret={true}>−6,45</Deger>
+puan. Mevduat marjının **negatif** olması şunu söyler: banka mevduata, TCMB'ye plase
+ederek alabileceğinden daha fazlasını ödüyor. Bu bir anomali değil, mevduatın TCMB
+plasmanının ikamesi olmadığının göstergesidir — mevduat aynı zamanda müşteri ilişkisi,
+ZK yükümlülüğü ve likidite oranı taşır.
+
+### Geçişkenlik katsayısı ve neden nedensellik değildir
+
+Haftalık farklar üzerinde 52 haftalık yuvarlanan en küçük kareler:
+
+$$
+\Delta i^{\text{kredi}}_s=\alpha+\beta\,\Delta i^{\text{marjinal}}_{s-k}+\varepsilon_s
+$$
+
+Gecikme $k$, tam örneklemde çapraz korelasyon taramasıyla 0–8 hafta arasında seçilir.
+Bu koşuda her iki seri için de $k = 0$ hafta (ticari kredi ve mevduat, n =
+<Deger proje="fonlama-likidite" anahtar="beta_ticari_n" ondalik={0}>710</Deger> hafta).
+
+| Seri | Tam örneklem β | Son 52 haftalık β | $R^2$ |
+| --- | --- | --- | --- |
+| Ticari TL kredi | <Deger proje="fonlama-likidite" anahtar="beta_ticari_tam" ondalik={2}>0,58</Deger> | **<Deger proje="fonlama-likidite" anahtar="beta_ticari_son" ondalik={2}>0,98</Deger>** | <Deger proje="fonlama-likidite" anahtar="beta_ticari_r2" ondalik={2}>0,06</Deger> |
+| TL mevduat | <Deger proje="fonlama-likidite" anahtar="beta_mevduat_tam" ondalik={2}>0,46</Deger> | **<Deger proje="fonlama-likidite" anahtar="beta_mevduat_son" ondalik={2}>0,41</Deger>** | <Deger proje="fonlama-likidite" anahtar="beta_mevduat_r2" ondalik={2}>0,25</Deger> |
+
+**$R^2$ okunmadan β okunmaz.** Ticari kredide son pencerenin β'sı
+<Deger proje="fonlama-likidite" anahtar="beta_ticari_son" ondalik={2}>0,98</Deger> —
+"tam geçişkenlik" diye okunmaya çok müsait bir sayı. Ama aynı pencerenin $R^2$'si
+<Deger proje="fonlama-likidite" anahtar="beta_ticari_r2" ondalik={2}>0,06</Deger>: ticari
+kredi faizindeki haftalık değişimin **yüzde altısı** marjinal TCMB faizindeki değişimle
+açıklanıyor. Katsayı büyük ama kesişimin etrafındaki bulut neredeyse dairesel; o β bir
+mekanizma ölçüsü değil, gürültünün eğimidir. Mevduat tarafında β daha küçük
+(<Deger proje="fonlama-likidite" anahtar="beta_mevduat_son" ondalik={2}>0,41</Deger>)
+ama $R^2$ dört kat yüksek
+(<Deger proje="fonlama-likidite" anahtar="beta_mevduat_r2" ondalik={2}>0,25</Deger>) —
+yani **daha zayıf ama daha gerçek** bir geçişkenlik. Bu sıralamayı ters okumak, sayfanın
+en pahalı yorum hatası olurdu.
+
+**Nedensellik iddiası yok.** Aynı pencerede her iki seriyi de kur, risk primi, kredi
+büyüme sınırlamaları ya da PPK beklentisi besliyor olabilir. Ayrıca marjinal faiz serisi
+rejime göre kaynak değiştirir (AOFM / AOSM / TLREF vekili); rejim geçişleri katsayıda
+kırılma üretir ve bu kırılmalar düzeltilmez, **gösterilir**.
+
+## Şekil 07 — Koridorun neresindeyiz? Örtük sıkılaştırmanın ölçüsü
+
+<GrafikEmbed
+  src="/projeler/fonlama-likidite/07_koridor_konumu.html"
+  baslik="Gecelik faizin koridordaki konumu · AOFM ile koridor tavanı arasındaki fark · koridor genişliği ve politika faizinin bant içindeki yeri"
+  no="07"
+  yukseklik={1399}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Konum, seviyeden daha bilgilidir.** Faizlerin mutlak düzeyi enflasyonla birlikte
+hareket eder; koridor içindeki **göreli konum** ise doğrudan politika tercihini gösterir:
+
+$$
+\text{konum}_t=\frac{i^{\text{gecelik}}_t-i^{\text{alt}}_t}{i^{\text{üst}}_t-i^{\text{alt}}_t}
+$$
+
+0 = taban, 1 = tavan. Hem TLREF hem AOFM için ayrı ayrı hesaplanır.
+
+**Kırpılmaz.** Bandın dışına çıkması bir hesap hatası değil, **asıl anlatılacak
+olgudur**: 1'in üzerindeki değerler, sistemin koridor tavanının da üzerinde bir fiyattan
+işlem gördüğü — yani geç likidite penceresinin devrede olduğu — günlerdir. Kırpılsaydı
+sayfanın en önemli olgusu görünmez olurdu. Çıpa günü TLREF'in konumu
+%<Deger proje="fonlama-likidite" anahtar="konum_tlref_yuzde" ondalik={1}>96,2</Deger>.
+
+**Ölçü %100'ü aşabilir ve bu koşuda aşıyor.** Marjinal TCMB faizinin konumu
+%<Deger proje="fonlama-likidite" anahtar="konum_marjinal_yuzde" ondalik={1}>100,2</Deger>:
+fazla likidite rejiminde marjinal fiyatı sterilizasyon belirliyor ve sterilizasyonun
+ağırlıklı maliyeti (AOSM) koridor tavanının **birkaç baz puan üstüne** çıkabiliyor.
+Bu bir veri hatası değildir — tavan bir *borç verme* kotasyonudur, sterilizasyonun
+fiyatına üst sınır koymaz.
+
+**Koridor simetrik değildir.** "Politika faizi koridorun ortasıdır" cümlesi bu sayfada
+hiçbir yerde kurulmaz, çünkü doğru değildir: çıpa günü tavan politika faizinden
+<Deger proje="fonlama-likidite" anahtar="koridor_asimetri_pp" ondalik={2} isaret={true}>+1,50</Deger>
+puan daha uzaktır. Asimetri politika tercihidir ve `ozet.json`'da ayrı bir anahtar
+olarak taşınır (`koridor_asimetri_pp`).
+
+**Örtük sıkılaştırma dönemi tanımı.** AOFM'nin koridor tavanını en az **0,05 puan**
+aşarak en az **5 iş günü** sürmesi. İki eşik de keyfîdir ve keyfî olduğu yazılıdır:
+0,05 puan yuvarlama gürültüsünü elemek için, 5 iş günü tek günlük teknik sapmaları
+elemek içindir.
+
+Tanım **simetrik olarak** uygulanır: aynı eşiklerle koridorun *altında* kalan dönemler
+de çıkarılır (bkz. doğrulama bölümü). Tek yönlü bakan bir sayfa, AOFM'yi "sistemin
+ödediği fiyat" diye sunarken faiz artışı haftalarında stok gecikmesi yüzünden geri
+kaldığını hiç söylemezdi.
+
+Bu tanımla ölçülen dönem sayısı
+**<Deger proje="fonlama-likidite" anahtar="donem_sayisi" ondalik={0}>8</Deger>**.
+İlki <Deger proje="fonlama-likidite" anahtar="donem_ilk_bas" ondalik={0}>16.01.2017</Deger>
+tarihinde başlıyor, sonuncusu
+<Deger proje="fonlama-likidite" anahtar="donem_son_son" ondalik={0}>18.11.2020</Deger>
+tarihinde bitiyor.
+
+| Ölçü | Değer |
+| --- | --- |
+| En uzun dönem | <Deger proje="fonlama-likidite" anahtar="donem_uzun_bas" ondalik={0}>26.01.2017</Deger> – <Deger proje="fonlama-likidite" anahtar="donem_uzun_son" ondalik={0}>29.08.2017</Deger> (<Deger proje="fonlama-likidite" anahtar="donem_uzun_gun" ondalik={0}>150</Deger> iş günü) |
+| — o dönemin ortalama AOFM'si | %<Deger proje="fonlama-likidite" anahtar="donem_uzun_aofm" ondalik={2}>11,49</Deger> |
+| — ortalama koridor tavanı | %<Deger proje="fonlama-likidite" anahtar="donem_uzun_tavan" ondalik={2}>9,25</Deger> |
+| — ortalama geç likidite penceresi | %<Deger proje="fonlama-likidite" anahtar="donem_uzun_glp" ondalik={2}>11,85</Deger> |
+| — **ortalama aşım** | <Deger proje="fonlama-likidite" anahtar="donem_uzun_asim" ondalik={2}>2,24</Deger> puan |
+| En derin aşım | <Deger proje="fonlama-likidite" anahtar="donem_derin_asim" ondalik={2}>7,25</Deger> puan (<Deger proje="fonlama-likidite" anahtar="donem_derin_bas" ondalik={0}>02.05.2018</Deger> başlangıçlı dönem) |
+
+En uzun dönemin ortalama AOFM'si
+(%<Deger proje="fonlama-likidite" anahtar="donem_uzun_aofm" ondalik={2}>11,49</Deger>),
+ortalama geç likidite penceresi faizine
+(%<Deger proje="fonlama-likidite" anahtar="donem_uzun_glp" ondalik={2}>11,85</Deger>)
+neredeyse yapışıktır: sistem fiilen **en pahalı pencereden** fonlanıyordu ve koridor
+tavanı bağlayıcı olmaktan çıkmıştı.
+
+<div class="not">
+  <span class="etiket">Bugünkü sıkılık bu tanımla ölçülmez</span>
+  Ölçülen sekiz dönemin sonuncusu 2020'de bitiyor; bugün AOFM koridor tavanının üzerinde
+  değil. Ama bu, "örtük sıkılaştırma yok" demek değildir — <strong>kanal
+  değişmiştir</strong>. 2017–18'de sıkılık fonlamanın pahalılaşmasıyla üretiliyordu
+  (AOFM tavanın üstüne çıkıyordu); bugün fazla likidite rejiminde sıkılık,
+  <strong>sterilizasyonun</strong> politika faizinin belirgin üzerinde yapılmasıyla
+  üretiliyor. Doğru ölçü bu yüzden bugün AOFM−tavan değil, Şekil 02'nin (b) panelidir:
+  marjinal TCMB faizi − politika faizi =
+  <Deger proje="fonlama-likidite" anahtar="spread_marjinal_politika" ondalik={2} isaret={true}>+3,01</Deger>
+  puan. Tanımı bugünkü rejimi kapsayacak şekilde genişletmedik, çünkü genişletmek
+  tarihsel karşılaştırılabilirliği bozardı; bunun yerine tanımın <em>neyi
+  ölçmediğini</em> yazıyoruz.
+</div>
+
+**(c) paneli — koridorun genişliği ve asimetrisi.** Koridor genişliği
+$i^{\text{üst}} - i^{\text{alt}}$, çıpa günü
+<Deger proje="fonlama-likidite" anahtar="koridor_bant" ondalik={2}>4,50</Deger> puan.
+Politika faizinin bant içindeki yeri ayrı bir bilgidir: simetrik bir koridorda politika
+faizi tam ortadadır; tavana yakınsa TCMB gecelik borç vermeyi caydırıyor, tabana
+yakınsa fazla likiditeyi ucuza almak istiyor demektir. Koridor genişliğinin daralması
+faiz oynaklığını bastırır, genişlemesi TCMB'ye miktar tarafında hareket alanı açar.
+
+## Şekil 08 — İki hattın kesişimi: swap stoku ve net rezerv
+
+<GrafikEmbed
+  src="/projeler/fonlama-likidite/08_rezerv_capraz.html"
+  baslik="Bu hattın swap stoku ile rezerv hattının yerleşik swap düzeltmesi · net rezerv ve swap hariç net rezerv"
+  no="08"
+  yukseklik={1137}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+Bu figür, kardeş hattın (<a href="/projeler/tcmb-net-rezerv/">TCMB Net Rezerv Takibi</a>)
+günlük çıktısını okur ve iki bağımsız boru hattının **aynı büyüklüğü aynı sayıyla**
+ürettiğini sınar:
+
+$$
+\frac{\text{swap}^{\text{alım}}_t - \text{swap}^{\text{satım}}_t}{1000} \;\overset{?}{=}\; \text{rezerv hattının yerleşik swap düzeltmesi}_t
+$$
+
+Ölçülen maksimum fark
+<Deger proje="fonlama-likidite" anahtar="dog_swap_maks" ondalik={0}>7.1e-15</Deger>
+milyar USD (n = <Deger proje="fonlama-likidite" anahtar="dog_swap_n" ondalik={0}>909</Deger>
+ortak iş günü) — yani kayan nokta gürültüsü mertebesinde. Ayrışsalardı sitede iki farklı
+"swap stoku" dolaşıyor olurdu ve iki sayfa birbiriyle çelişirdi.
+
+**Kapsam farkı ilan edilir.** Bu hattın `TP.SWAPTEKTAR.*` stoku **yurt içi piyasa
+bacağıdır**; rezerv hattının swap düzeltmesi yurt dışı merkez bankalarıyla yapılan
+swapları da içerir. İkisi aynı büyüklük değildir; sınanan, ortak olan bacaktır.
+
+**Bu figür üretilemezse hat durur.** Kardeş hattın `gunluk.csv` dosyası yoksa figür
+üretilmez ve `grafik.py` çıkış kodu 1 verir; siteye kopyalama yapılmaz. Eksik panelli
+bir sayfa yayımlanmaz — çünkü eksik panel, okurun fark edemeyeceği bir bayatlamadır.
+
+## Doğrulama ve sessiz bayatlama denetimi
+
+Bir veri hattının en sinsi hatası çökmek değil, **koşup ilerlememektir**. Bu hatta iki
+sınıf denetim var; sıralama denetimin *ne yaptığına* göredir.
+
+### Hattı DURDURANLAR
+
+| Sınav | Eşik | Ölçülen |
+| --- | --- | --- |
+| $A - B = \text{net}$ (`TP.APIFON1.TOP` − `TP.APIFON2.TOP` = `TP.APIFON3`) | 1e−6 mn TL | <Deger proje="fonlama-likidite" anahtar="dog_net_maks" ondalik={0}>1.2e-10</Deger> (n = <Deger proje="fonlama-likidite" anahtar="dog_net_n" ondalik={0}>3.928</Deger>) |
+| Günlük politika kotasyonunun ay sonu değeri ↔ EVDS'in **ayrı** yayımladığı aylık BIS serisi | 0,01 puan | <Deger proje="fonlama-likidite" anahtar="dog_politika_maks" ondalik={3}>0,000</Deger> puan (n = <Deger proje="fonlama-likidite" anahtar="dog_politika_n" ondalik={0}>94</Deger> ay) |
+| TLREF ↔ BİST gecelik repo ağırlıklı ortalama faizi | 1,00 puan | ort. <Deger proje="fonlama-likidite" anahtar="dog_tlref_ort" ondalik={4}>0,0241</Deger> · maks <Deger proje="fonlama-likidite" anahtar="dog_tlref_maks" ondalik={3}>0,536</Deger> (n = <Deger proje="fonlama-likidite" anahtar="dog_tlref_n" ondalik={0}>1.889</Deger>) |
+| ZK tabanının **birim** denetimi (elde kurulan toplam ↔ EVDS toplamı) | %1 (medyan ve son gözlem) | medyan <Deger proje="fonlama-likidite" anahtar="zk_taban_birim_bagil_medyan" ondalik={6}>0,000000</Deger> |
+| Herhangi bir figür üretilemezse | — | siteye kopyalama yapılmaz |
+
+İkinci satır özellikle önemlidir: **iki bağımsız EVDS yayınının** (günlük kotasyon ve
+aylık BIS derlemesi) aynı politika faizini vermesi, kolon eşleşmemizin ve seri
+kaydımızın doğru olduğunu gösterir. Üçüncü satır ise TLREF'in bağımsız kontrolüdür —
+iki seri aynı aracı ölçmez ama aynı piyasayı ölçer; ortalama fark yüzde birkaç baz puan
+mertebesindedir.
+
+### TANI sınavları — durdurmaz, ama sessiz kalmaz
+
+| Sınav | Ne sorar | Ölçülen |
+| --- | --- | --- |
+| **AOFM kompozisyonu** — kalem kırılımından yeniden türetme | (ihale × politika + kotasyon reposu × koridor tavanı + GLP × GLP satış) ÷ toplam, `TP.APIFON4`'ü verir mi? | son 250 iş gününde medyan <Deger proje="fonlama-likidite" anahtar="dog_aofm_son250_medyan_pp" ondalik={3}>0,000</Deger> puan · tüm tarihçede medyan <Deger proje="fonlama-likidite" anahtar="dog_aofm_medyan_pp" ondalik={3}>0,445</Deger>, p95 <Deger proje="fonlama-likidite" anahtar="dog_aofm_p95_pp" ondalik={2}>8,75</Deger> puan (n = <Deger proje="fonlama-likidite" anahtar="dog_aofm_n" ondalik={0}>3.851</Deger>) |
+| **AOFM bandı** | AOFM, koridor tabanı ile GLP satış faizi arasında mı? | tavanın üstünde <Deger proje="fonlama-likidite" anahtar="dog_bant_ust_gun" ondalik={0}>1</Deger> gün · tabanın altında <Deger proje="fonlama-likidite" anahtar="dog_bant_alt_gun" ondalik={0}>31</Deger> gün |
+
+**AOFM neden çaprazlanıyor?** Çünkü tek bir EVDS serisinden geliyor ve EVDS kalem
+numaralandırması değişebiliyor (kotasyon alt kalemlerinin kodları geçmişte kaydı). Aynı
+gün yayımlanan **kalem kırılımı**, AOFM'yi bağımsız olarak yeniden kurmaya yeter: her
+kalem kendi kanalının kotasyonundan fiyatlanır. Son 250 iş günündeki medyan sapma sıfırdır
+— yani eşleme yerindedir. Tüm tarihçedeki p95 sapma geç likidite penceresi dönemlerinde
+ve kompozisyon geçişlerinde yoğunlaşır; **kalibrasyon sabiti kullanılmaz**, sapma
+olduğu gibi raporlanır.
+
+**AOFM bandın dışına düşebilir — ve düşüyor.** AOFM bir **stok** ortalamasıdır: faiz
+kararı haftalarında eski, ucuz fonlama hâlâ stokta durduğu için ağırlıklı ortalama
+koridorun **tabanının altına** inebilir. Bu mekanik gecikmedir, "örtük gevşeme"
+değildir. Simetrik ölçüm bu yüzden yapılıyor: koridorun altında kalan, en az 5 iş günü
+süren dönem sayısı
+**<Deger proje="fonlama-likidite" anahtar="donem_alti_sayisi" ondalik={0}>1</Deger>**
+(toplam <Deger proje="fonlama-likidite" anahtar="donem_alti_toplam_gun" ondalik={0}>6</Deger>
+iş günü); en uzunu
+<Deger proje="fonlama-likidite" anahtar="donem_alti_uzun_bas" ondalik={0}>22.06.2023</Deger>
+tarihinde başlıyor ve o dönemde AOFM ortalama
+<Deger proje="fonlama-likidite" anahtar="donem_alti_uzun_sapma" ondalik={2}>4,76</Deger>
+puan koridor tabanının altındadır. Tavanın üstünde geçen tek gün ise tanım gereği
+imkânsızdır (AOFM, GLP satış faizini aşamaz) ve kotasyon serisinde eksik gün
+olduğuna işaret eder — uyarı olarak düşer, gizlenmez.
+
+### GÖRÜNÜR UYARI düşürenler
+
+**Tazelik, aile bazlı.** Tek bir eşik her hafta yanlış alarm üretirdi: APİ, kotasyon ve
+sistem likiditesi her iş günü; TLREF ve analitik bilanço bir gün gecikmeli; haftalık
+faiz ailesi altı gün; ZK tabanı on üç gün gecikmelidir. Her aile kendi takvimiyle
+denetlenir (sırasıyla 4 · 5 · 12 · 20 gün eşikleriyle). Referans **duvar saatidir** —
+verinin kendi son gününü referans almak, denetimi kendi kendine referanslı hâle
+getirirdi ve hiçbir bayatlama yakalanmazdı.
+
+**Kur serisi muaftır**, çünkü gecikmesi **negatiftir**: TCMB ertesi günün kurunu bir gün
+önce ilan eder. Bu muafiyet olmasa tazelik denetimi her gün yanlış alarm verirdi.
+
+**`LAST_UPDATED` bir tazelik ölçüsü değildir.** EVDS'in metaveri kaydı, serinin son
+gözlemiyle ilgisiz bir tarihe işaret edebilir. Tazelik yalnız **son dolu gözlemden**
+okunur.
+
+**Veri katmanının uyarıları hesap katmanına DEVREDİLİR.** Bu bir uygulama ayrıntısı
+değil, sayfanın en temel sözleşmesidir. Tazelik alarmları, "ESKİ ÖNBELLEK: n gün eski"
+düşüşü, ölü seri ve düşen demet uyarıları `veri.py`'de basılır ve `veri_durum.json`'a
+yazılır — ama o dosya siteye kopyalanmaz. Hesap katmanı bu listeyi koşum başında
+**devralmasaydı**, uyarılar `uyarilar.json`'a hiç girmez ve sayfada tek bir görünür iz
+bırakmazdı: kaynak durur, hat yeşil biter, tarih ilerlemez, sayfa hiçbir şey söylemez.
+Düzenin yasakladığı sessiz bayatlamanın tam kendisi. Devir iki kaynaktan birden yapılır
+(bellekteki liste + `veri_durum.json`), böylece `veri.py` ayrı koşulmuş olsa bile uyarı
+kaybolmaz; `ozet_uret.py` de son bir savunma olarak aynı dosyayı bir kez daha okur.
+
+**Bu koşuda düşen uyarılar
+(<Deger proje="fonlama-likidite" anahtar="uyari_sayisi" ondalik={0}>5</Deger> adet)**
+sayfanın başındaki koşu kutusunda durur — okurun aşağı inmesi gerekmez. Ayrıntılı
+liste:
+<Deger proje="fonlama-likidite" anahtar="uyari_cumlesi" ondalik={0}>Bu koşuda 5 uyarı düştü:</Deger>
+<Deger proje="fonlama-likidite" anahtar="uyari_metni" ondalik={0}>AYRI KALEM DEĞİL: ZK bloke hesabı 15.03.2024 tarihinde doluyor. · AOFM TABANSIZ: son bir yılda 33 iş gününde fonlama 5 milyar TL eşiğinin altında olduğu hâlde EVDS bir AOFM değeri basmış.</Deger>
+
+**Bayat veri bayrağı.** `ozet.json` yayım gecikmesini aile toleranslarıyla karşılaştırır
+ve aşılırsa `bayat: true` yazar; sayfanın başındaki kutu o bayrakla kırmızıya döner ve
+`uyari_metni`nin başına bir **BAYAT VERİ** cümlesi eklenir. Eşikler tazelik denetiminin
+kendi tablosundan okunur — iki yerde ayrı eşik tutulsaydı biri güncellenir, öteki
+unutulurdu.
+
+Uyarıların tam listesi her koşuda
+[`uyarilar.json`](/projeler/fonlama-likidite/uyarilar.json) dosyasına yazılır; sayfadaki
+canlı değerlerin kaynağı ise
+[`ozet.json`](/projeler/fonlama-likidite/ozet.json).
+
+### EVDS3 erişiminin kendi tuzakları
+
+Bu hattın verisi `https://evds3.tcmb.gov.tr/igmevdsms-dis/` ucundan çekilir; eski
+`evds2` servisi **ölüdür** ve anahtar URL'de değil, istek **başlığında** taşınır.
+İki tuzak sessiz bayatlama üretir:
+
+1. **Tek istek yaklaşık 1000 satırla sınırlıdır ve EVDS aralığın SONUNDAN geriye
+   doldurur.** Fazlasını uyarı vermeden kırpar — yani 2005'ten bugüne bir iş günü
+   serisi istendiğinde geri gelen veri **son üç yıl** olur ve hiçbir hata mesajı düşmez.
+   Hat bu yüzden iş günü serilerini 366 günlük, haftalık serileri 900 haftalık parçalar
+   hâlinde çeker. Haftalık seriler 2013'ten başlar: 2005'ten çekilirse 1080 satır olur
+   ve serinin **başı** sessizce kırpılır.
+2. **Satır sınırı seri sayısına bağlı değildir.** Tek istekte altı seri çekmek satır
+   sayısını değiştirmez; hat bu yüzden serileri altılı demetler hâlinde çeker. Bir
+   demette bozuk kod varsa EVDS **bütün isteği** reddeder — o zaman seriler tek tek
+   denenir ve düşen seri adıyla raporlanır.
+
+**Önbellek: seri verisi 12 saat, katalog 168 saat TTL.** Ağ düşerse eski önbelleğe
+düşülür ama **sessiz kalınmaz**: kaç gün eski olduğu yazılır, uyarı hesap katmanınca
+devralınıp `uyarilar.json`'a yazılır ve sayfanın başındaki koşu kutusunda görünür.
+Önbellek de yoksa hat hata vererek durur — eksik seriyle grafik üretmez.
+
+## Sınırlar ve yorum notları
+
+Hiçbiri bir kalibrasyon sabitiyle kapatılmamıştır; kapatmak, ölçüm hatasını modele
+gömmek olurdu.
+
+- **AOSM bir TCMB serisi değildir.** Kalan sterilizasyon bacağının tamamının haftalık
+  depo alım ihalesi olduğu varsayılıyor. Kırık vadeli ve 4 haftalık ihaleler açıldığı
+  dönemlerde varsayım zayıflar; ölçülen medyan oran
+  <Deger proje="fonlama-likidite" anahtar="aosm_taban_kat" ondalik={1}>5,5</Deger>
+  (teorik beklenti 5) ve 3–7 dışına çıkarsa uyarı düşer. Varsayımın ürettiği hata
+  **puan cinsinden ölçülmedi** — ölçmek için ihale bazında vade kırılımı gerekir, o da
+  yayımlanmıyor.
+- **Marjinal faiz serisi rejime göre kaynak değiştirir.** AOFM / AOSM / TLREF vekili
+  arasındaki geçişler seriye kırılma sokar. Geçişkenlik katsayısı bu kırılmaların
+  üzerinden geçer; kırılma dönemlerinde β yorumu zayıftır.
+- **Geçişkenlik nedensellik değildir**, ve bu koşuda ticari kredi tarafında $R^2$
+  <Deger proje="fonlama-likidite" anahtar="beta_ticari_r2" ondalik={2}>0,06</Deger>
+  düzeyindedir — β sayısı tek başına okunursa yanıltır.
+- **ZK oranı tebliğdeki oran değildir.** Gerçekleşmiş tesis oranıdır; bir tesis
+  dönemindeki düşüşün "oran indirimi mi, taban daralması mı" olduğunu bu seri
+  **ayırt etmez**.
+- **AOFM tabansızken yayımlanmıyor.** Son bir yılda
+  <Deger proje="fonlama-likidite" anahtar="rejim_aofm_gecersiz_gun" ondalik={0}>34</Deger>
+  iş günü geçersiz işaretlendi. Bu, seride görünür boşluklar üretir; boşluk bir veri
+  kaybı değil, **olmayan bir işlemin fiyatının yazılmaması**dır.
+- **Politika faizi kotasyonu 14.09.2018'de başlıyor.** Öncesi için günlük bir politika
+  faizi serisi yok; tam tarihçe panelinde o dönemde çizgi yoktur. Boşluk interpolasyonla
+  kapatılmadı.
+- **Swap kapsam farkı.** Bu hattın stoku yurt içi piyasa bacağıdır; rezerv hattının swap
+  düzeltmesi yurt dışı merkez bankası swaplarını da içerir. İkisi aynı büyüklük değildir.
+- **Analitik bilanço ile APİ serileri arasında kalıcı bir artık vardır** ve bu kapsam
+  farkıdır (bilanço kalemi işlemiş faizi de taşır). Son
+  <Deger proje="fonlama-likidite" anahtar="kimlik_api_n" ondalik={0}>250</Deger> iş
+  gününde maksimum
+  <Deger proje="fonlama-likidite" anahtar="kimlik_api_maks_mlr" ondalik={2}>4,03</Deger>
+  milyar TL. Düzeltilmedi, raporlandı.
+- **Sistem likiditesi serileri ile analitik bilanço kalemleri birebir toplanmaz.**
+  Serbest mevduat (`TP.PPIBSM`) ile bankalar mevduatı (`TP.AB.A18`) farklı tanımlardır;
+  aralarında aritmetik kurmak yaygın ama hatalıdır.
+- **Örtük sıkılaştırma tanımı bugünkü rejimi kapsamaz.** Tanım AOFM−tavan üzerinden
+  kuruludur ve fazla likidite rejiminde sıfır verir; bugünkü sıkılığın ölçüsü
+  marjinal−politika makasıdır. Tanım tarihsel karşılaştırılabilirlik uğruna
+  genişletilmedi.
+- **Hiçbir seride mevsimsel arındırma yapılmadı.** Ay sonu, vergi ödeme dönemleri,
+  bayram öncesi nakit talebi APİ ve serbest mevduat serilerinde düzenli desenler üretir;
+  bunlar arındırılmadı, çünkü bu sayfanın sorusu "temel eğilim ne" değil, "TCMB o gün ne
+  yaptı"dır. Tek günlük sıçramaları rejim değişimi diye okumayın.
+- **Kredi ve mevduat faizleri akım (yeni açılan işlem) faizleridir**, stok faizi değil.
+  Bir politika değişiminin bankacılık sistemi bilançosuna geçişi, akım faizinden çok
+  daha yavaştır ve bu sayfada ölçülmez.
+
+## Kaynaklar
+
+- TCMB, *Para Politikası Metni* ve *Likidite Yönetimi Stratejisi* duyuruları — koridor,
+  ana araç, geç likidite penceresi tanımları.
+- TCMB, *Açık Piyasa İşlemleri* istatistikleri (`TP.APIFON1`–`TP.APIFON4`).
+- TCMB, *Analitik Bilanço* (`TP.AB.A*`) — rezerv para, Merkez Bankası parası, emisyon,
+  ZK bloke hesabı, APİ kalemi.
+- TCMB, *Zorunlu Karşılıklar Hakkında Tebliğ* — oranlar, tesis dönemi, ikame imkânları.
+- BİST, *TLREF — Türk Lirası Gecelik Referans Faiz Oranı* metodoloji dokümanı.
+- BIS, *Policy rate statistics* (EVDS'te `TP.BISPOLFAIZ.TUR` olarak yeniden yayımlanır).
+- TCMB, *Swap İşlemleri* istatistikleri (`TP.SWAPTEKTAR.*`).
+- TCMB, *Bankalarca Açılan Kredilere Uygulanan Ağırlıklı Ortalama Faiz Oranları* ve
+  *Mevduata Uygulanan Ağırlıklı Ortalama Faiz Oranları* (haftalık).
