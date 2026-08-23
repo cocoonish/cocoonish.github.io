@@ -264,8 +264,14 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
         ayrımıyla. Her bölümün altında haberin geldiği kaynaklar listelenir.
       </p>
       {b.haberler.bolumler.map((bol: any) => (
-        <div class="gundem-bolum">
+        <div class:list={['gundem-bolum', { kilit: bol.id === 'kilit' }]}>
           <h3>{bol.baslik}</h3>
+          {bol.id === 'kilit' && (
+            <p class="kilit-not">
+              Piyasayı fiilen hareket ettiren gelişmeler: konu ağırlığı, kaynak itibarı
+              ve kaç yayının haberi taşıdığı birlikte değerlendirilerek seçildi.
+            </p>
+          )}
           {b.gundem && b.gundem[bol.id] && (
             <div class="gundem-metin" set:html={b.gundem[bol.id]} />
           )}
@@ -274,7 +280,10 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
               <li>
                 <a href={m.baglanti} target="_blank" rel="noopener">{m.baslik}</a>
                 {m.ozet && <span class="h-ozet">{m.ozet}</span>}
-                <span class="kaynak-not">{m.kaynak}</span>
+                <span class="kaynak-not">
+                  {m.kaynak}
+                  {bol.id === 'kilit' && m.kaynak_sayisi > 1 && ` · ${m.kaynak_sayisi} yayın taşıdı`}
+                </span>
               </li>
             ))}
           </ul>
@@ -426,6 +435,14 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
   .gundem-metin { margin: 0 0 0.7rem; line-height: 1.6; }
   .gundem-metin p { margin: 0 0 0.6rem; }
   .yazi-bolum h3 { color: var(--ink); }
+  .gundem-bolum.kilit {
+    border-left: 3px solid var(--claret); padding-left: 1rem;
+    background: color-mix(in srgb, var(--claret) 3%, transparent);
+    padding-top: 0.6rem; padding-bottom: 0.6rem;
+  }
+  .gundem-bolum.kilit h3 { font-size: 1rem; color: var(--claret); }
+  .gundem-bolum.kilit .haber-liste a { font-weight: 600; }
+  .kilit-not { font-size: 0.76rem; color: var(--ink-70); font-style: italic; margin: -0.2rem 0 0.7rem; }
   .h-ozet { display: block; font-size: 0.82rem; color: var(--ink-70); line-height: 1.45; }
 
 

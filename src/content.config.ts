@@ -33,4 +33,12 @@ const arastirma = defineCollection({
   schema: ortakSema,
 });
 
-export const collections = { projeler, arastirma };
+// Analiz: tek bir piyasa gelişmesini derinlemesine inceleyen yazılar. Bültenden
+// farkı kapsam değil DERİNLİK: bülten günün tamamını özetler, analiz tek bir
+// olayı mekanizmasına, tarihsel emsaline ve fiyat etkisine kadar açar.
+const analiz = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/analiz' }),
+  schema: ortakSema,
+});
+
+export const collections = { projeler, arastirma, analiz };

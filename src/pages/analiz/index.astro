@@ -1,0 +1,41 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import KayitKarti from '../../components/KayitKarti.astro';
+
+const yazilar = (await getCollection('analiz')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<Base
+  title="Analiz"
+  description="Tek bir piyasa gelişmesini mekanizmasına, tarihsel emsaline ve fiyat etkisine kadar açan uzun yazılar."
+>
+  <header class="liste-baslik yuksel">
+    <p class="etiket kicker">02 — Bölüm</p>
+    <h1>Analiz</h1>
+    <p class="alt">
+      Günlük bülten gündemin tamamını özetler; buradaki yazılar tek bir gelişmeyi
+      alıp sonuna kadar açar: ne oldu, mekanizması nasıl işliyor, daha önce benzeri
+      yaşandı mı, ne bekleniyor ve fiyatlara nasıl geçiyor.
+    </p>
+  </header>
+  {yazilar.length === 0 ? (
+    <p class="bos">İlk analiz yazısı hazırlanıyor.</p>
+  ) : (
+    <div class="kayit-izgara">
+      {yazilar.map((y, i) => (
+        <KayitKarti href={`/analiz/${y.id}/`} sira={i + 1} gecikme={i * 60} {...y.data} />
+      ))}
+    </div>
+  )}
+</Base>
+
+<style>
+  .liste-baslik { padding: 3rem 0 2.2rem; max-width: 52ch; }
+  .kicker { color: var(--claret); margin: 0 0 0.8rem; }
+  h1 { font-family: var(--font-display); font-size: clamp(2rem, 4.4vw, 3rem); margin: 0 0 0.8rem; }
+  .alt { color: var(--ink-70); }
+  .bos { color: var(--ink-70); font-style: italic; }
+</style>
