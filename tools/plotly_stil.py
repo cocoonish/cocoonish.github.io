@@ -8,7 +8,9 @@ Kaynak verinin/formüllerin olduğu kısma dokunulmaz. İşlem idempotenttir ve
 sürüm yükseltmelerinde eski blok söküp yenisi takılır.
 
 Kullanım:
-  python3 site/tools/plotly_stil.py --hepsi     # public/projeler altındaki tüm HTML'ler
+  python3 site/tools/plotly_stil.py --hepsi     # projeler + dersler altındaki tüm HTML'ler
+  python3 site/tools/plotly_stil.py --projeler  # yalnız proje grafikleri
+  python3 site/tools/plotly_stil.py --dersler   # yalnız ders grafikleri
   python3 site/tools/plotly_stil.py dosya.html …
 """
 
@@ -209,11 +211,20 @@ def isle(yol: Path) -> str:
 
 def main():
     argv = sys.argv[1:]
-    kok = Path(__file__).resolve().parents[1] / "public" / "projeler"
-    dosyalar = (
-        sorted(kok.rglob("*.html")) if (not argv or argv[0] == "--hepsi")
-        else [Path(a) for a in argv]
-    )
+    # --hepsi ESKİDEN yalnız public/projeler altını tarıyordu; ders grafikleri
+    # public/arastirma altında olduğu için sessizce kapsam dışında kalıyordu.
+    # Brooks dersinin 94 figürü bu yüzden ev stiline girmemişti (yol elle verilerek
+    # kurtarıldı). Artık iki kök de taranır.
+    kokler = [Path(__file__).resolve().parents[1] / "public" / "projeler",
+              Path(__file__).resolve().parents[1] / "public" / "arastirma"]
+    if not argv or argv[0] == "--hepsi":
+        dosyalar = sorted(y for k in kokler if k.exists() for y in k.rglob("*.html"))
+    elif argv[0] == "--projeler":
+        dosyalar = sorted(kokler[0].rglob("*.html"))
+    elif argv[0] == "--dersler":
+        dosyalar = sorted(kokler[1].rglob("*.html"))
+    else:
+        dosyalar = [Path(a) for a in argv]
     for d in dosyalar:
         print(f"{d.name:36s} {isle(d)}")
 

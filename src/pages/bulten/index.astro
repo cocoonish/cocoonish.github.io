@@ -4,11 +4,20 @@ import BultenGovde from '../../components/BultenGovde.astro';
 
 // Bültenler derleme sırasında dosyadan okunur; en yenisi bu sayfada, hepsi arşivde.
 const dosyalar = import.meta.glob('../../data/bulten/*.json', { eager: true });
+// YAYIN KAPISI: yalnız YAZILMIŞ bültenler siteye çıkar. Kural tabanlı çekirdek her
+// koşuda bir iskelet üretir (piyasa fotoğrafı, takvim, haberler); yazı katmanı
+// çalışana kadar o dosya bir bülten DEĞİL, yarım bir taslaktır. Sabah 07:30'daki
+// koşu yazıyı ekleyip gundem_kaynagi alanını 'yazili' yapar; o ana kadar sayfa
+// bir önceki tam bülteni gösterir. Yarım bülteni yayımlamak, okura bültenin
+// standardı hakkında yanlış fikir verirdi.
+const yazilmis = (b: any) => b?.gundem_kaynagi === 'yazili';
+
 const bultenler = Object.entries(dosyalar)
   .map(([yol, m]: [string, any]) => ({
     tarih: yol.split('/').pop()!.replace('.json', ''),
     b: (m as any).default ?? m,
   }))
+  .filter((x) => yazilmis(x.b))
   .sort((a, b) => (a.tarih < b.tarih ? 1 : -1));
 
 const son = bultenler[0];

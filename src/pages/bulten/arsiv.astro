@@ -2,7 +2,9 @@
 import Base from '../../layouts/Base.astro';
 
 const dosyalar = import.meta.glob('../../data/bulten/*.json', { eager: true });
+// Arşiv de yalnız yazılmış bültenleri listeler (bkz. yayın kapısı).
 const hepsi = Object.entries(dosyalar)
+  .filter(([, m]: [string, any]) => ((m as any).default ?? m)?.gundem_kaynagi === 'yazili')
   .map(([yol, m]: [string, any]) => {
     const b: any = (m as any).default ?? m;
     return {

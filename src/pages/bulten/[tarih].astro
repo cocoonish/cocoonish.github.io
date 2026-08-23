@@ -4,11 +4,13 @@ import BultenGovde from '../../components/BultenGovde.astro';
 
 export async function getStaticPaths() {
   const dosyalar = import.meta.glob('../../data/bulten/*.json', { eager: true });
+  // Yalnız YAZILMIŞ bültenlerin sayfası üretilir; yarım taslak siteye çıkmaz.
   const sirali = Object.entries(dosyalar)
     .map(([yol, m]: [string, any]) => ({
       tarih: yol.split('/').pop()!.replace('.json', ''),
       b: (m as any).default ?? m,
     }))
+    .filter((x) => x.b?.gundem_kaynagi === 'yazili')
     .sort((a, b) => (a.tarih < b.tarih ? -1 : 1));
   // Bültenler arasında ileri/geri gezinme: arşive dönmeden gün gün okunabilsin.
   return sirali.map((x, i) => ({
