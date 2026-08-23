@@ -12,7 +12,7 @@ interface Props {
   durum?: 'aktif' | 'taslak' | 'arsiv';
   kaynak?: string;
   guncelleme?: string;
-  tur: 'proje' | 'arastirma';
+  tur: 'proje' | 'arastirma' | 'analiz';
   /** Ders sayfalarında künye şeridi (okuma süresi, grafik, pratik…). */
   olcum?: DersOlcum;
   seviye?: 'giris' | 'orta' | 'ileri';
@@ -42,6 +42,13 @@ const {
 // 'ders' etiketi bütün derslerde var; ayırt etmediği için künye satırında gösterilmez.
 const gorunenEtiketler = tags.filter((t) => t !== 'ders');
 
+// Künye kicker'ında görünen tür adı. Yeni koleksiyon eklenirse buraya da eklenmeli.
+const TUR_ETIKET: Record<string, string> = {
+  proje: 'Proje',
+  arastirma: 'Araştırma',
+  analiz: 'Analiz',
+};
+
 const tarih = (d: Date) =>
   new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
 ---
@@ -50,7 +57,7 @@ const tarih = (d: Date) =>
   <article>
     <header class="makale-baslik yuksel">
       <p class="kicker etiket">
-        {tur === 'proje' ? 'Proje' : 'Araştırma'}
+        {TUR_ETIKET[tur] ?? 'Araştırma'}
         {grupAdi && (
           <>
             {' · '}

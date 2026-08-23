@@ -256,6 +256,67 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
     ))}
   </section>
 
+
+  {b.temalar && b.temalar.temalar && b.temalar.temalar.length > 0 && (
+    <section class="blok temalar">
+      <h2>İzlenen temalar</h2>
+      <p class="alt-not">
+        Haftalarca süren ve birden çok varlığı aynı anda hareket ettiren anlatılar.
+        Her temanın altında onu doğrulayacak ve çürütecek işaretler, izlenecek tek
+        gösterge ve o temaya bağlı varlıkların güncel hareketi var.
+      </p>
+      {b.temalar.temalar.map((t: any) => (
+        <div class:list={['tema', t.durum]}>
+          <h3>
+            {t.ad}
+            <span class="tema-durum">{t.durum}</span>
+          </h3>
+          <p class="tema-tez">{t.tez}</p>
+          {t.son_gozlem && <p class="tema-gozlem"><strong>Son gözlem.</strong> {t.son_gozlem}</p>}
+          {t.olculer && t.olculer.length > 0 && (
+            <div class="p-kaydir">
+              <table class="p-tablo">
+                <tbody>
+                  {t.olculer.map((r: any) => (
+                    <tr>
+                      <td class="p-ad">{r.ad}</td>
+                      <td class="sag p-son">{r.son?.toLocaleString('tr-TR')}<span class="p-birim">{r.birim}</span></td>
+                      {['h1', 'ybb'].map((alan) => (
+                        <td class:list={['sag', 'p-degisim', { arti: (r[alan] ?? 0) > 0, eksi: (r[alan] ?? 0) < 0 }]}>
+                          {r[alan] === null || r[alan] === undefined
+                            ? '—'
+                            : `${r[alan] > 0 ? '+' : ''}${r[alan].toLocaleString('tr-TR')}${r.degisim_birim}`}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p class="tema-sutun">sütunlar: son · 1 hafta · yılbaşından</p>
+            </div>
+          )}
+          <div class="tema-isaret">
+            {t.dogrulayan && t.dogrulayan.length > 0 && (
+              <div>
+                <span class="isaret-baslik">Doğrularsa</span>
+                <ul>{t.dogrulayan.map((x: string) => <li>{x}</li>)}</ul>
+              </div>
+            )}
+            {t.curuten && t.curuten.length > 0 && (
+              <div>
+                <span class="isaret-baslik">Çürütürse</span>
+                <ul>{t.curuten.map((x: string) => <li>{x}</li>)}</ul>
+              </div>
+            )}
+          </div>
+          {t.izlenecek_gosterge && (
+            <p class="tema-gosterge">İzlenecek tek gösterge: <strong>{t.izlenecek_gosterge}</strong></p>
+          )}
+        </div>
+      ))}
+    </section>
+  )}
+
   {b.haberler.bolumler && b.haberler.bolumler.length > 0 && (
     <section class="blok gundem">
       <h2>Gündem</h2>
@@ -480,6 +541,26 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
     display: inline-block; margin-left: 0.4rem; font-family: var(--font-mono);
     font-size: 0.62rem; color: #b45309; border: 1px solid #b45309; padding: 0 0.28rem;
   }
+
+
+  .temalar .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1.1rem; }
+  .tema { margin: 1.5rem 0; padding-left: 1rem; border-left: 3px solid var(--ink-30); }
+  .tema.aktif { border-left-color: var(--claret); }
+  .tema.izlemede { border-left-color: #b45309; }
+  .tema h3 { font-size: 1rem; margin: 0 0 0.4rem; display: flex; gap: 0.6rem; align-items: baseline; }
+  .tema-durum {
+    font-family: var(--font-mono); font-size: 0.64rem; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--ink-70); border: 1px solid var(--ink-30);
+    padding: 0.02rem 0.34rem;
+  }
+  .tema-tez { margin: 0 0 0.5rem; line-height: 1.5; font-size: 0.92rem; }
+  .tema-gozlem { margin: 0 0 0.6rem; font-size: 0.85rem; color: var(--ink-70); }
+  .tema-sutun { font-family: var(--font-mono); font-size: 0.66rem; color: var(--ink-30); margin: 0.2rem 0 0; }
+  .tema-isaret { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.9rem; margin: 0.8rem 0 0.4rem; }
+  .isaret-baslik { font-variant: small-caps; letter-spacing: 0.06em; font-size: 0.78rem; color: var(--claret); }
+  .tema-isaret ul { margin: 0.2rem 0 0; padding-left: 1.1rem; }
+  .tema-isaret li { font-size: 0.82rem; line-height: 1.4; color: var(--ink-70); }
+  .tema-gosterge { font-size: 0.85rem; margin: 0.5rem 0 0; }
 
   .kunye { border-top: 1px solid var(--ink-30); padding-top: 0.9rem; margin-top: 2.6rem; }
   .kunye p { font-size: 0.76rem; color: var(--ink-70); margin: 0 0 0.35rem; }

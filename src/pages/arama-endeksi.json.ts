@@ -14,9 +14,16 @@ const temizle = (kaynak: string) =>
     .slice(0, 6000);
 
 export async function GET() {
-  const yap = (e: any, tur: 'proje' | 'arastirma') => ({
+  // Koleksiyon → URL kökü. Yeni bir koleksiyon açıldığında BURAYA da eklenmeli;
+  // aksi halde yazı sitede aranamaz.
+  const kok: Record<string, string> = {
+    proje: 'projeler',
+    arastirma: 'arastirma',
+    analiz: 'analiz',
+  };
+  const yap = (e: any, tur: 'proje' | 'arastirma' | 'analiz') => ({
     tur,
-    url: `/${tur === 'proje' ? 'projeler' : 'arastirma'}/${e.id}/`,
+    url: `/${kok[tur]}/${e.id}/`,
     title: e.data.title,
     description: e.data.description,
     tags: e.data.tags ?? [],
@@ -24,7 +31,8 @@ export async function GET() {
   });
   const projeler = (await getCollection('projeler')).map((e) => yap(e, 'proje'));
   const arastirmalar = (await getCollection('arastirma')).map((e) => yap(e, 'arastirma'));
-  return new Response(JSON.stringify([...projeler, ...arastirmalar]), {
+  const analizler = (await getCollection('analiz')).map((e) => yap(e, 'analiz'));
+  return new Response(JSON.stringify([...analizler, ...projeler, ...arastirmalar]), {
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
   });
 }

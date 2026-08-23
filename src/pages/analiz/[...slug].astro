@@ -2,7 +2,6 @@
 import { getCollection, render } from 'astro:content';
 import Yazi from '../../layouts/Yazi.astro';
 import { olc } from '../../lib/ders';
-import { grupBul } from '../../lib/dersGruplari';
 
 export async function getStaticPaths() {
   const arastirmalar = await getCollection('analiz');
@@ -14,7 +13,6 @@ export async function getStaticPaths() {
       entry: a,
       // Künye sayıları derleme anında gövdeden sayılır; MDX'e elle yazılmaz.
       olcum: olc(a.body),
-      grup: grupBul(a.id, a.data.tags),
       onkosullar: (a.data.onkosul ?? [])
         .filter((s) => basliklar.has(s))
         .map((s) => ({ href: `/analiz/${s}/`, title: basliklar.get(s)! })),
@@ -22,7 +20,9 @@ export async function getStaticPaths() {
   }));
 }
 
-const { entry, olcum, grup, onkosullar } = Astro.props;
+// Not: analiz yazıları ders GRUPLARINA bağlanmaz. /analiz/ düz bir kart ızgarasıdır,
+// grup çapası (#faiz-masasi vb.) orada yoktur; grupAdi/grupHref bu yüzden geçilmez.
+const { entry, olcum, onkosullar } = Astro.props;
 const { Content } = await render(entry);
 ---
 
@@ -30,8 +30,6 @@ const { Content } = await render(entry);
   {...entry.data}
   tur="analiz"
   olcum={olcum}
-  grupAdi={grup.baslik}
-  grupHref={`/analiz/#${grup.id}`}
   onkosullar={onkosullar}
 >
   <Content />

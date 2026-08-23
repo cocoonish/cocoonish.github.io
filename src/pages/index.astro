@@ -11,6 +11,7 @@ const sirala = <T extends { data: { pubDate: Date; durum: string } }>(liste: T[]
     .sort((a, b) => (a.data.durum === 'arsiv' ? 1 : 0) - (b.data.durum === 'arsiv' ? 1 : 0));
 
 const projeler = sirala(await getCollection('projeler'));
+const analizler = sirala(await getCollection('analiz'));
 
 // Araştırma bölümü: /arastirma/ ile aynı gruplama ve aynı ölçümler.
 const { gruplar, toplam } = await dersleriTopla();
@@ -28,9 +29,30 @@ const { gruplar, toplam } = await dersleriTopla();
     </p>
   </section>
 
+  {
+    analizler.length > 0 && (
+      <section>
+        <div class="bolum-baslik yuksel" style="--d: 80ms">
+          <span class="no">01</span>
+          <h2>Analiz</h2>
+          <a class="tumu" href="/analiz/">Tümü →</a>
+        </div>
+        <p class="bolum-giris yuksel" style="--d: 100ms">
+          Tek bir piyasa gelişmesini mekanizmasına, tarihsel emsaline ve fiyat etkisine
+          kadar açan uzun yazılar.
+        </p>
+        <div class="kayit-izgara">
+          {analizler.map((y, i) => (
+            <KayitKarti href={`/analiz/${y.id}/`} sira={i + 1} gecikme={120 + i * 60} {...y.data} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
   <section>
     <div class="bolum-baslik yuksel" style="--d: 80ms">
-      <span class="no">01</span>
+      <span class="no">02</span>
       <h2>Projeler</h2>
       <a class="tumu" href="/projeler/">Tümü →</a>
     </div>
@@ -50,7 +72,7 @@ const { gruplar, toplam } = await dersleriTopla();
 
   <section>
     <div class="bolum-baslik yuksel" style="--d: 160ms">
-      <span class="no">02</span>
+      <span class="no">03</span>
       <h2>Dersler</h2>
       <a class="tumu" href="/arastirma/">Tümü →</a>
     </div>
