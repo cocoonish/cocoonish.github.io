@@ -1,0 +1,1250 @@
+---
+title: 'DİBS Verim Eğrisi ve Reel Faiz'
+description: 'Türk lirası devlet iç borçlanma senetlerinin sıfır kuponlu (spot) verim eğrisi: strip fiyatlarından bootstrapsız kurulan eğri, eğim ve bükülme, taşıma, ileri oranlar, Fisher reel faizi, TÜFEX reel eğrisi ve başabaş enflasyon — her ölçünün formülü, veri kaynağı, varsayımı ve kendi kendini sınayan denetimleriyle.'
+pubDate: 2026-08-23
+updatedDate: 2026-08-23
+tags: ['dibs', 'tahvil', 'verim eğrisi', 'reel faiz', 'tüfex', 'başabaş enflasyon', 'forward', 'carry', 'fisher']
+durum: 'aktif'
+kaynak: 'TCMB EVDS3 — DİBS gösterge niteliğindeki değerleri (bie_pydibs ve arşiv eşi), TLREF, politika faizi, AOFM, faiz koridoru, Piyasa Katılımcıları Anketi, TÜFE'
+guncelleme: 'her iş günü (eğri, referans faizler) + aylık (anket beklentileri, TÜFE)'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+import KosuKutusu from '../../components/KosuKutusu.astro';
+
+Bir piyasada tek bir "faiz" yoktur. Vade sayısı kadar faiz vardır ve bunların
+oluşturduğu yüzey — verim eğrisi — para politikasının bugünkü duruşunu, piyasanın
+gelecek için fiyatladığı patikayı, taşımanın maliyetini ve enflasyonun risk primini
+aynı anda taşır. Türkiye'de bu yüzeyin okunması iki nedenle zordur: eğri sık sık
+**ters** durur (kısa uç uzun ucun üstündedir) ve nominal faizin reel karşılığı,
+hangi enflasyon ölçüsünün paydaya konduğuna göre onlarca puan değişir.
+
+Bu sayfa o yüzeyi kurar ve her katmanını ayrı ayrı ölçer. Önce **nominal spot eğri**:
+sıfır kuponlu getiri, düğümler, eğim, bükülme. Sonra **taşıma**: eğrinin fonlama
+maliyetine göre nerede durduğu. Sonra **ileri oranlar**: bugünkü eğrinin ima ettiği
+gelecek faiz patikası. Sonra **reel taraf**: Fisher kimliğiyle hesaplanan ileri ve
+geriye dönük reel faiz, TÜFE'ye endeksli DİBS'lerden (TÜFEX) kurulan reel eğri ve
+ikisinin oranından çıkan başabaş enflasyon. En sonda da hattın **kendi sağlığını**
+ölçtüğü tanı paneli: eğri kaç noktadan kuruluyor, noktalar birbirini tutuyor mu,
+eğri gerçek tahvil fiyatlarını açıklıyor mu.
+
+Bir şey baştan söylensin: bu eğri **bootstrap gerektirmiyor**. Sebebi aşağıda uzun
+uzun anlatılıyor ve piyasa altyapısına dair bir şans eseridir — Türkiye'de kurumsal
+bir veri ayrıntısı, başka piyasalarda yapılması zorunlu olan bir tahmin adımını
+gereksiz kılıyor.
+
+<div class="not gezinme">
+  <span class="etiket">Bu sayfa nereye bağlanır</span>
+  Buradaki eğrinin <em>teorisi</em> — iskonto çarpanı, gün sayım konvansiyonları,
+  spot/forward ilişkisi, bootstrap'ın neden gerektiği ve burada neden gerekmediği —
+  <a href="/arastirma/faiz-egrisi-ve-konvansiyonlar/">Faiz Teorisi ve Eğri İnşası</a>
+  dersindedir. Eğriden fiyatlanan enstrümanlar (tahvil, swap, forward swap)
+  <a href="/arastirma/enstruman-fiyatlama/">Enstrüman Fiyatlama</a>, pozisyonun
+  P&amp;L'i ve taşımanın günlük muhasebesi
+  <a href="/arastirma/trade-pratigi/">Trade Pratiği</a>, DV01 ve hedge oranları
+  <a href="/arastirma/risk-ve-hedge/">Risk ve Hedge</a> dersinde. Bu sayfadaki
+  gecelik fonlama faizinin nasıl oluştuğu
+  <a href="/projeler/fonlama-likidite/">TCMB Fonlama ve Likidite</a>, paydadaki
+  enflasyonun ayrıştırması <a href="/projeler/enflasyon/">Enflasyon Panosu</a>,
+  eğriye kıymet basan tarafın takvimi ve ihale sonuçları
+  <a href="/projeler/hazine-ihrac/">Hazine İhraç Takibi</a> sayfasındadır. Ters
+  eğrinin ve reel faiz rejimlerinin tarihsel bağlamı için
+  <a href="/arastirma/turkiye-piyasa-tarihi/">Türkiye Piyasa Tarihi</a>.
+</div>
+
+## Güncel okuma
+
+**Çıpa: <Deger proje="dibs-verim-egrisi" anahtar="gun_kisa" ondalik={0}>21.08.2026</Deger>**
+(iş günü; gösterge değerlerinin yayımından bu yana
+<Deger proje="dibs-verim-egrisi" anahtar="yayim_gecikme_gun" ondalik={0}>2</Deger>
+gün geçti) · anket bacağı
+<Deger proje="dibs-verim-egrisi" anahtar="anket_ay" ondalik={0}>Ağustos 2026</Deger>
+(<Deger proje="dibs-verim-egrisi" anahtar="anket_gecikme_gun" ondalik={0}>3</Deger>
+gün gecikme) · enflasyon bacağı
+<Deger proje="dibs-verim-egrisi" anahtar="tufe_ay" ondalik={0}>Temmuz 2026</Deger>
+· koşum
+<Deger proje="dibs-verim-egrisi" anahtar="kosum_tarihi" ondalik={0}>23.08.2026</Deger>.
+Eğri o gün
+<Deger proje="dibs-verim-egrisi" anahtar="nokta_sayisi" ondalik={0}>193</Deger>
+sıfır kuponlu noktadan kuruldu; vade aralığı
+<Deger proje="dibs-verim-egrisi" anahtar="vade_min" ondalik={2}>0,05</Deger>–<Deger proje="dibs-verim-egrisi" anahtar="vade_maks" ondalik={2}>9,05</Deger>
+yıl.
+
+<KosuKutusu proje="dibs-verim-egrisi" sayi={1}>
+  AD BİÇİMİ: bie_pydibsarsiv grubunda 13 seri adı ayrıştırılamadı (0,2%) — TCMB ad
+  biçimini değiştirmiş olabilir; bu kıymetler evrene girmedi.
+</KosuKutusu>
+
+Kutu **bu koşunun** durumunu gösterir. İki frekans ayrı ayrı denetlenir: eğri bacağı
+günlük (tolerans
+<Deger proje="dibs-verim-egrisi" anahtar="bayat_tolerans_gun" ondalik={0}>5</Deger>
+gün), anket/enflasyon bacağı aylık (tolerans
+<Deger proje="dibs-verim-egrisi" anahtar="bayat_tolerans_ay" ondalik={0}>45</Deger>
+gün). Biri aşılırsa kutu kırmızıya döner ve başlığı **BAYAT VERİ** olur — çünkü bu
+sayfanın en tehlikeli hata sınıfı yanlış sayı değil, **ilerlememiş** sayıdır.
+
+### Nominal spot eğri — sabit vadeli düğümler
+
+| Düğüm | Getiri (%) | Ölçüm günü |
+| --- | --- | --- |
+| 3 ay | <Deger proje="dibs-verim-egrisi" anahtar="spot_3a" ondalik={2}>40,61</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="spot_3a_tarih" ondalik={0}>21.08.2026</Deger> |
+| 6 ay | <Deger proje="dibs-verim-egrisi" anahtar="spot_6a" ondalik={2}>39,22</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="spot_6a_tarih" ondalik={0}>21.08.2026</Deger> |
+| 1 yıl | <Deger proje="dibs-verim-egrisi" anahtar="spot_1y" ondalik={2}>40,32</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="spot_1y_tarih" ondalik={0}>21.08.2026</Deger> |
+| **2 yıl** | **<Deger proje="dibs-verim-egrisi" anahtar="spot_2y" ondalik={2}>40,46</Deger>** | <Deger proje="dibs-verim-egrisi" anahtar="spot_2y_tarih" ondalik={0}>21.08.2026</Deger> |
+| 3 yıl | <Deger proje="dibs-verim-egrisi" anahtar="spot_3y" ondalik={2}>39,30</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="spot_3y_tarih" ondalik={0}>21.08.2026</Deger> |
+| 5 yıl | <Deger proje="dibs-verim-egrisi" anahtar="spot_5y" ondalik={2}>35,66</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="spot_5y_tarih" ondalik={0}>21.08.2026</Deger> |
+| 7 yıl | <Deger proje="dibs-verim-egrisi" anahtar="spot_7y" ondalik={2}>32,40</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="spot_7y_tarih" ondalik={0}>21.08.2026</Deger> |
+| 9 yıl | <Deger proje="dibs-verim-egrisi" anahtar="spot_9y" ondalik={2}>30,31</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="spot_9y_tarih" ondalik={0}>21.08.2026</Deger> |
+| 2 yıllık **par** getiri (gösterge karşılığı) | <Deger proje="dibs-verim-egrisi" anahtar="par_2y" ondalik={2}>40,40</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="par_2y_tarih" ondalik={0}>21.08.2026</Deger> |
+
+Bütün getiriler **ACT/365, yıllık bileşik**tir. Par getiri eğriden türetilir ve
+piyasanın "gösterge bileşik faiz" dediği büyüklüğün sabit vadeli karşılığıdır; spot
+2 yıllıktan farkı, kupon ödemelerinin ara vadelerdeki iskonto çarpanlarıyla
+değerlenmesinden gelir.
+
+### Eğim, bükülme, ileri oranlar
+
+| Ölçü | Değer (puan / %) | Ölçüm günü |
+| --- | --- | --- |
+| Eğim 2y − 9y (10 yıl ucu yok, **vekil**) | <Deger proje="dibs-verim-egrisi" anahtar="egim_2y9y" ondalik={2} isaret={true}>−10,15</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="egim_2y9y_tarih" ondalik={0}>21.08.2026</Deger> |
+| Eğim 2y − 5y | <Deger proje="dibs-verim-egrisi" anahtar="egim_2y5y" ondalik={2} isaret={true}>−4,80</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="egim_2y5y_tarih" ondalik={0}>21.08.2026</Deger> |
+| Kısa uç eğimi 2y − 3a | <Deger proje="dibs-verim-egrisi" anahtar="egim_2y3a" ondalik={2} isaret={true}>−0,15</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="egim_2y3a_tarih" ondalik={0}>21.08.2026</Deger> |
+| Kelebek 2×2y − 1y − 5y | <Deger proje="dibs-verim-egrisi" anahtar="kelebek_1_2_5" ondalik={2} isaret={true}>+4,95</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="kelebek_1_2_5_tarih" ondalik={0}>21.08.2026</Deger> |
+| Kelebek 2×5y − 2y − 9y (uzun) | <Deger proje="dibs-verim-egrisi" anahtar="kelebek_2_5_9" ondalik={2} isaret={true}>+0,55</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="kelebek_2_5_9_tarih" ondalik={0}>21.08.2026</Deger> |
+| İleri 1y1y | <Deger proje="dibs-verim-egrisi" anahtar="forward_1y1y" ondalik={2}>40,61</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="forward_1y1y_tarih" ondalik={0}>21.08.2026</Deger> |
+| İleri 2y1y | <Deger proje="dibs-verim-egrisi" anahtar="forward_2y1y" ondalik={2}>36,99</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="forward_2y1y_tarih" ondalik={0}>21.08.2026</Deger> |
+| İleri 2y3y | <Deger proje="dibs-verim-egrisi" anahtar="forward_2y3y" ondalik={2}>32,55</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="forward_2y3y_tarih" ondalik={0}>21.08.2026</Deger> |
+
+Tek cümleyle:
+*<Deger proje="dibs-verim-egrisi" anahtar="egim_cumlesi" ondalik={0}>Eğri TERS: 2 yıllık getiri 9 yıllıktan 10,15 puan yüksek.</Deger>*
+
+### Taşıma ve fonlama tarafı
+
+| Ölçü | Değer | Ölçüm günü |
+| --- | --- | --- |
+| TLREF (piyasa gecelik) | <Deger proje="dibs-verim-egrisi" anahtar="tlref" ondalik={2}>39,86</Deger> % | <Deger proje="dibs-verim-egrisi" anahtar="tlref_tarih" ondalik={0}>21.08.2026</Deger> |
+| Politika faizi (1 hafta repo kotasyonu) | <Deger proje="dibs-verim-egrisi" anahtar="politika" ondalik={2}>37,00</Deger> % | <Deger proje="dibs-verim-egrisi" anahtar="politika_tarih" ondalik={0}>21.08.2026</Deger> |
+| AOFM (fiilî fonlama maliyeti) | <Deger proje="dibs-verim-egrisi" anahtar="aofm" ondalik={2}>40,00</Deger> % | <Deger proje="dibs-verim-egrisi" anahtar="aofm_tarih" ondalik={0}>21.08.2026</Deger> |
+| Koridor tabanı / tavanı | <Deger proje="dibs-verim-egrisi" anahtar="koridor_alt" ondalik={2}>35,50</Deger> — <Deger proje="dibs-verim-egrisi" anahtar="koridor_ust" ondalik={2}>40,00</Deger> % | <Deger proje="dibs-verim-egrisi" anahtar="koridor_ust_tarih" ondalik={0}>21.08.2026</Deger> |
+| **Taşıma: 2 yıl − AOFM** | **<Deger proje="dibs-verim-egrisi" anahtar="carry_2y_aofm" ondalik={2} isaret={true}>+0,46</Deger>** puan | <Deger proje="dibs-verim-egrisi" anahtar="carry_2y_aofm_tarih" ondalik={0}>21.08.2026</Deger> |
+| Taşıma: 2 yıl − TLREF | <Deger proje="dibs-verim-egrisi" anahtar="carry_2y_tlref" ondalik={2} isaret={true}>+0,61</Deger> puan | <Deger proje="dibs-verim-egrisi" anahtar="carry_2y_tlref_tarih" ondalik={0}>21.08.2026</Deger> |
+| Taşıma: 2 yıl − politika faizi | <Deger proje="dibs-verim-egrisi" anahtar="carry_2y_politika" ondalik={2} isaret={true}>+3,46</Deger> puan | <Deger proje="dibs-verim-egrisi" anahtar="carry_2y_politika_tarih" ondalik={0}>21.08.2026</Deger> |
+| Taşıma: 3 ay − TLREF (kısa uç) | <Deger proje="dibs-verim-egrisi" anahtar="carry_3a_tlref" ondalik={2} isaret={true}>+0,76</Deger> puan | <Deger proje="dibs-verim-egrisi" anahtar="carry_3a_tlref_tarih" ondalik={0}>21.08.2026</Deger> |
+
+*<Deger proje="dibs-verim-egrisi" anahtar="carry_cumlesi" ondalik={0}>2 yıllık spot getiri fonlama maliyetinin 0,46 PUAN ÜSTÜNDE — taşıma pozitif.</Deger>*
+
+### Reel taraf
+
+| Ölçü | Değer (%) | Ölçüm günü / ayı |
+| --- | --- | --- |
+| **Fisher ileri reel faiz** (1y nominal ÷ PKA 12 ay) | **<Deger proje="dibs-verim-egrisi" anahtar="reel_ileri" ondalik={2}>13,44</Deger>** | <Deger proje="dibs-verim-egrisi" anahtar="reel_ileri_tarih" ondalik={0}>21.08.2026</Deger> |
+| Fisher geriye dönük reel faiz (1y ÷ gerçekleşen TÜFE) | <Deger proje="dibs-verim-egrisi" anahtar="reel_geriye" ondalik={2}>6,50</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="reel_geriye_tarih" ondalik={0}>21.08.2026</Deger> |
+| Fisher ileri reel faiz — 2 yıl (2y ÷ PKA 24 ay) | <Deger proje="dibs-verim-egrisi" anahtar="reel_ileri_2y" ondalik={2}>19,00</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="reel_ileri_2y_tarih" ondalik={0}>21.08.2026</Deger> |
+| *Basit çıkarma* (i − π), yalnız yöntem dersi için | <Deger proje="dibs-verim-egrisi" anahtar="reel_ileri_basit" ondalik={2}>16,63</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="reel_ileri_basit_tarih" ondalik={0}>21.08.2026</Deger> |
+| PKA 12 ay TÜFE beklentisi | <Deger proje="dibs-verim-egrisi" anahtar="pka_12a" ondalik={2}>23,69</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="pka_12a_tarih" ondalik={0}>Ağustos 2026</Deger> |
+| PKA 24 ay TÜFE beklentisi | <Deger proje="dibs-verim-egrisi" anahtar="pka_24a" ondalik={2}>18,03</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="pka_24a_tarih" ondalik={0}>Ağustos 2026</Deger> |
+| PKA 5 yıl TÜFE beklentisi | <Deger proje="dibs-verim-egrisi" anahtar="pka_5y" ondalik={2}>11,14</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="pka_5y_tarih" ondalik={0}>Ağustos 2026</Deger> |
+| Gerçekleşen yıllık TÜFE | <Deger proje="dibs-verim-egrisi" anahtar="tufe_yillik" ondalik={2}>31,75</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="tufe_yillik_tarih" ondalik={0}>Temmuz 2026</Deger> |
+| TÜFEX reel eğri — 1 / 2 / 5 / 7 yıl | <Deger proje="dibs-verim-egrisi" anahtar="reel_egri_1y" ondalik={2}>9,87</Deger> · <Deger proje="dibs-verim-egrisi" anahtar="reel_egri_2y" ondalik={2}>8,18</Deger> · <Deger proje="dibs-verim-egrisi" anahtar="reel_egri_5y" ondalik={2}>3,56</Deger> · <Deger proje="dibs-verim-egrisi" anahtar="reel_egri_7y" ondalik={2}>3,84</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="reel_egri_2y_tarih" ondalik={0}>21.08.2026</Deger> |
+| Başabaş enflasyon — 1 / 2 / 5 / 7 yıl | <Deger proje="dibs-verim-egrisi" anahtar="basabas_1y" ondalik={2}>27,71</Deger> · <Deger proje="dibs-verim-egrisi" anahtar="basabas_2y" ondalik={2}>29,84</Deger> · <Deger proje="dibs-verim-egrisi" anahtar="basabas_5y" ondalik={2}>30,99</Deger> · <Deger proje="dibs-verim-egrisi" anahtar="basabas_7y" ondalik={2}>27,50</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="basabas_2y_tarih" ondalik={0}>21.08.2026</Deger> |
+| Başabaş − anket farkı (risk + likidite primi) 1 / 2 / 5 yıl | <Deger proje="dibs-verim-egrisi" anahtar="risk_primi_1y" ondalik={2} isaret={true}>+4,02</Deger> · <Deger proje="dibs-verim-egrisi" anahtar="risk_primi_2y" ondalik={2} isaret={true}>+11,80</Deger> · <Deger proje="dibs-verim-egrisi" anahtar="risk_primi_5y" ondalik={2} isaret={true}>+19,85</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="risk_primi_5y_tarih" ondalik={0}>21.08.2026</Deger> |
+
+*<Deger proje="dibs-verim-egrisi" anahtar="reel_faiz_cumlesi" ondalik={0}>Fisher ileri reel faiz %13,44, geriye dönük %6,50; makas 6,94 puan.</Deger>*
+
+### Bir cümlelik okuma
+
+Kısa uç fonlama maliyetine yapışık, uzun uç ondan
+<Deger proje="dibs-verim-egrisi" anahtar="egim_2y9y" ondalik={1}>10,2</Deger>
+puan aşağıda: piyasa bugünkü sıkılığın **kalıcı olmadığını**, ama düşüşün ancak
+birkaç yıla yayılarak geleceğini fiyatlıyor. Bunun ileri oran karşılığı
+<Deger proje="dibs-verim-egrisi" anahtar="forward_2y3y" ondalik={2}>32,55</Deger> —
+iki yıl sonrasının üç yıllık faizi. Reel tarafta ise iki ölçü arasındaki makas
+<Deger proje="dibs-verim-egrisi" anahtar="reel_makas" ondalik={2}>6,94</Deger>
+puan; bu makas dezenflasyonun **henüz gerçekleşen veriye tam yansımadığının**
+ölçüsüdür ve tek başına "reel faiz şu kadar" cümlesinin neden kurulamayacağını
+gösterir.
+
+## Bu eğrinin bootstrap'ı yok — ve bu bir şans
+
+Standart bir piyasada spot (sıfır kuponlu) eğri **doğrudan gözlenmez**. Gözlenen
+şey kuponlu tahvillerin fiyatlarıdır; her fiyat, o tahvilin bütün nakit akışlarının
+iskonto edilmiş toplamıdır ve tek bir gözlemde birden çok bilinmeyen vardır. Bu
+yüzden kısa vadeden başlayıp adım adım ileri doğru çözülür: **bootstrap**. Bootstrap
+bir tahmin adımıdır ve hata biriktirir — kısa uçtaki bir ölçüm gürültüsü uzun uca
+taşınır.
+
+<div class="not">
+  <span class="etiket">Burada gerekmiyor</span>
+  <Deger proje="dibs-verim-egrisi" anahtar="not_bootstrap" ondalik={0}>Spot eğri BOOTSTRAP GEREKTİRMEZ: TCMB her tahvilin strip'lerini ayrı yayımlıyor ve strip sıfır kuponludur; getiri doğrudan ödeme/fiyat oranından okunur.</Deger>
+</div>
+
+### Strip nedir, TCMB tam olarak ne yayımlıyor
+
+Bir sabit kuponlu tahvil, ödeme takvimi açısından bir **sıfır kuponlu kıymetler
+sepetidir**: her kupon ayrı bir tarihte tek bir ödeme, anapara da vade gününde tek
+bir ödeme. "Strip" bu bileşenlerin ayrıştırılmış hâlidir. TCMB'nin *Devlet İç
+Borçlanma Senetlerinin Gösterge Niteliğindeki Değerleri* veri grubu (`bie_pydibs`)
+her bileşen için **ayrı bir seri** yayımlar: `TP.<ISIN>` fiyatı, `TP.<ISIN>.ORAN`
+ise o kıymetin ödemesini taşır.
+
+Bu yüzden spot getiri tek satırlık bir hesaptır:
+
+$$
+y \;=\; \left(\frac{\text{ödeme}}{\text{fiyat}}\right)^{\frac{365}{\text{kalan gün}}} - 1
+$$
+
+Ödeme, **anapara strip'inde 100 TL**; **kupon strip'inde** o serinin kendi `.ORAN`
+değeridir. Fiyat, 100 TL nominal başına gösterge fiyattır. Gün sayımı ACT/365,
+bileşikleme yıllıktır.
+
+<div class="not">
+  <span class="etiket">Aritmetiği görmek için — uydurma yuvarlak sayılarla</span>
+  Kalan vadesi 730 gün olan bir anapara strip'i düşünün: vade gününde 100 TL
+  ödeyecek, bugünkü gösterge fiyatı 51,00 TL olsun. O zaman
+  (100 ÷ 51,00) = 1,96078 ve 365/730 = 0,5 üssü karekök demektir:
+  1,96078<sup>0,5</sup> = 1,40028, yani yıllık bileşik getiri <strong>%40,03</strong>.
+  Bu örnekteki fiyat gerçek bir gözlem değildir; yalnız formülün nasıl işlediğini
+  göstermek için seçilmiştir. Sayfadaki bütün gerçek sayılar koşudan gelir.
+</div>
+
+Kuponlu tahvil hiçbir yerde bu zincirin girdisi değildir. Kuponlu tahvil yalnız
+**sınama** amacıyla kullanılır (aşağıda, YTM çapraz sınaması).
+
+### Ödeme tanımı: bu hattın en pahalı tuzağı
+
+`.ORAN` serisinin EVDS'teki adı **"Kupon Faiz Oranı"**dır. İçerik ise **yıllık oran
+değil, dönemsel kupon TUTARIDIR** — 100 TL nominal başına, o dönem ödenecek lira.
+Bu ölçüldü: `TRT150328A17.ORAN` = 18,40 ve aynı tahvilin ilgili kupon strip'i tam
+18,40 ödüyor; yıllık kupon oranı %36,8'dir. Değeri "yıllık oran" sanıp ikiye bölen
+bir hesap, pay tarafını yarıya indirir ve **eğriyi yaklaşık 15 puan kaydırır**.
+Kaydırma sistematiktir: grafik hâlâ "makul" görünür, sadece yanlış yerdedir. Sessiz
+hata sınıfının ders kitabı örneğidir.
+
+İkinci tuzak Hazine **bonolarındadır**: bonoda `.ORAN` faiz değil **kalan gün
+sayısıdır** (seri adında tür alanı "Diğer" yazar). Ölçüldü: ilgili bono serisinin
+`.ORAN` değeri her gün bir azalıyor. Faiz sanılırsa eğriye "%206" gibi bir gözlem
+girer ve o gün eğrinin kısa ucu tamamen bozulur.
+
+Üçüncüsü ölçek: **ISIN'in 10. karakteri "F" olan** kıymetler yaklaşık 48.000
+mertebesinde fiyat basar; 100 nominal ölçeğinde değildirler. Formüle sokulduğunda
+ödeme/fiyat oranı sıfıra yakınsar ve getiri −%100'e düşer.
+
+### Evren nasıl süzülüyor
+
+Sınıflandırma tamamen seri **adından** okunur ve üç farklı ad biçimi dolaşımdadır
+(tarih ayracı nokta, tire ya da ISO; "Değer" kimi kayıtta aksansız "Deger"). Tek
+biçim varsayan bir ayrıştırıcı, ölçüldüğü kadarıyla 2.079 kıymetin 288'ini sessizce
+düşürüyordu. Arşiv grubunda ad ayrıca `(Arşiv)` ekiyle biter; bu son parantez
+soyulmazsa etiket alanı "Arşiv" olur, sınıflandırma çöker ve **tarihçenin kısa ucu**
+kaybolur.
+
+Bu koşuda evren:
+
+| Kalem | Adet |
+| --- | --- |
+| Ayrıştırılan toplam kıymet | <Deger proje="dibs-verim-egrisi" anahtar="evren_kiymet" ondalik={0}>6.190</Deger> |
+| Nominal eğriye giren sıfır kuponlu strip | <Deger proje="dibs-verim-egrisi" anahtar="evren_nominal" ondalik={0}>860</Deger> |
+| TÜFEX anapara strip'i (reel eğri) | <Deger proje="dibs-verim-egrisi" anahtar="evren_tufex" ondalik={0}>20</Deger> |
+| Aktif kuponlu tahvil (yalnız çapraz sınama) | <Deger proje="dibs-verim-egrisi" anahtar="evren_tahvil" ondalik={0}>50</Deger> |
+| Ödeme tutarı sabit çıkmadığı için atılan kupon strip'i | <Deger proje="dibs-verim-egrisi" anahtar="evren_degisken_atilan" ondalik={0}>0</Deger> |
+| Kupon strip'i olup `.ORAN` kardeşi bulunamayan | <Deger proje="dibs-verim-egrisi" anahtar="evren_oransiz_kupon" ondalik={0}>0</Deger> |
+| Makul getiri aralığının dışında kaldığı için atılan gözlem | <Deger proje="dibs-verim-egrisi" anahtar="getiri_araligi_disi" ondalik={0}>28</Deger> |
+
+Dışlama kuralları:
+
+- **Sukuk (kira sertifikası)** — tür alanı "Kira Getirisi Oranı". Nominal DİBS eğrisi
+  değildir; kendi arz/talep dinamiği vardır.
+- **Hazine bonosu** — tür alanı "Diğer"; `.ORAN` faiz değil kalan gün.
+- **TÜFEX** — tür alanı "Reel Kupon Oranı". Nominal eğriye **girmez**, ayrı reel
+  eğriyi kurar.
+- **Değişken faizli / endeksli kıymetler** — etiket gövdesinin sonunda "D" taşır
+  (49T4D, 85T2D gibi). Yayımlanan kupon yalnız **cari dönemin** kuponudur; ileri
+  vadeli bir kupon strip'ine uygulanınca getiri %1 ile %105 arasında saçılır
+  (ölçüldü). Ayrıca her kupon strip'inin ödemesi **kendi ömrü boyunca sabit mi**
+  diye ayrıca sınanır: min ile maks eşit değilse kıymet eğriden çıkarılır.
+- **Kalan vadesi <Deger proje="dibs-verim-egrisi" anahtar="esik_min_gun" ondalik={0}>15</Deger>
+  günden kısa strip** — fiyat üç haneye yuvarlanıyor; 100/99,98 gibi bir oranı
+  365/5 kuvvetine çıkarmak gürültüyü onlarca puana çevirir.
+- **Makul aralık dışı getiri** — −%20 ile %500 dışına düşen gözlem bir sınıflandırma
+  hatasının işaretidir; eğriye alınmaz ve sayılır.
+
+Bir gün için eğri kurulabilmesinin şartı, o gün en az
+<Deger proje="dibs-verim-egrisi" anahtar="esik_min_nokta" ondalik={0}>12</Deger>
+geçerli nokta bulunmasıdır. Tarihçe
+<Deger proje="dibs-verim-egrisi" anahtar="tarihce_bas" ondalik={0}>01.01.2013</Deger>
+tarihinden başlar ve
+<Deger proje="dibs-verim-egrisi" anahtar="gun_sayisi" ondalik={0}>3.558</Deger>
+iş günü kapsar; günlük nokta sayısının medyanı
+<Deger proje="dibs-verim-egrisi" anahtar="nokta_medyan" ondalik={0}>194</Deger>.
+
+<div class="not">
+  <span class="etiket">Arşiv birleştirilmezse tarihçe yoktur</span>
+  Vadesi dolan kıymet güncel veri grubundan <strong>düşer</strong>. Yalnız
+  <code>bie_pydibs</code> ile 2013 yılı için elde beş nokta kalıyor (ölçüldü) —
+  yani eğri kurulamıyor. Tarihçe ancak arşiv grubuyla (<code>bie_pydibsarsiv</code>)
+  birleştirilerek kurulabilir; çakışan kıymetlerde fiyat penceresi iki grubun
+  <em>birleşimi</em> alınır, çünkü arşiv erken ucu, güncel grup geç ucu taşır.
+</div>
+
+### Düğüm kurma: ara değer var, ekstrapolasyon yok
+
+Ham noktalar düzensiz vadelerdedir; karşılaştırma yapabilmek için sabit vadeli
+**düğümler** kurulur: 3 ay, 6 ay, 1, 2, 3, 5, 7 ve 9 yıl. Kural üç maddedir:
+
+1. **Aynı vadeye düşen birden çok gözlem** varsa medyan alınır — ortalama tek bir
+   bozuk noktadan etkilenir.
+2. **Ara değer doğrusaldır** (vade ekseninde), ama hedef en kısa ile en uzun gözlem
+   arasında değilse düğüm **boş bırakılır**: ekstrapolasyon yoktur.
+3. **Boşluk guard'ı**: hedefi saran iki komşu nokta arasındaki mesafe, vadeye bağlı
+   bir sınırı (kabaca hedef vadenin üçte biri, en az yarım yıl) aşarsa düğüm yine
+   **boş bırakılır**. İki yıl ile yedi yıl arasına çekilen düz bir çizgiyi "5 yıllık
+   faiz" diye okumak, veri değil çizgi okumaktır.
+
+Bu üçüncü kural, grafikte görünür boşluklar üretir. Boşluk bir arıza değil, **o gün
+o vadede fiyat olmadığının** dürüst gösterimidir.
+
+<div class="not">
+  <span class="etiket">10 yıllık düğüm neden yok</span>
+  <Deger proje="dibs-verim-egrisi" anahtar="not_on_yil" ondalik={0}>Aktif sıfır kuponlu evrenin en uzun noktası ~9 yıl. '2y−10y' eğimi burada 2y−9y ile VEKİL edilmiştir.</Deger>
+  9 yıllık düğüm bile her gün kurulamıyor: tarihçenin
+  <Deger proje="dibs-verim-egrisi" anahtar="dugum_9y_dolu" ondalik={0}>2.969</Deger>
+  gününde var (%<Deger proje="dibs-verim-egrisi" anahtar="dugum_9y_pay" ondalik={1}>83,4</Deger>),
+  7 yıllık düğüm ise
+  <Deger proje="dibs-verim-egrisi" anahtar="dugum_7y_dolu" ondalik={0}>3.558</Deger>
+  günün tamamında dolu. Uluslararası kıyaslarda "2y−10y" denen ölçü burada bir yıl
+  kısa bir vekildir ve mutlak değerce biraz küçük çıkar.
+</div>
+
+## Şekil 01 — Bugünün eğrisi ve nereden geldiği
+
+<GrafikEmbed
+  src="/projeler/dibs-verim-egrisi/01_egri_bugun.html"
+  baslik="Spot (sıfır kuponlu) eğri: bugün, 1 ay, 3 ay ve 1 yıl önceki kesitler; altta düğüm bazında baz puan değişimi"
+  no="01"
+  yukseklik={1243}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** TCMB EVDS3, `bie_pydibs` ve `bie_pydibsarsiv` veri grupları; kıymet
+bazında `TP.<ISIN>` (gösterge fiyat, 100 nominal başına TL) ve `TP.<ISIN>.ORAN`
+(dönemsel kupon tutarı). Referans faizler ayrıca çekilir ama bu şekle girmez.
+
+**Noktalar ham, çizgi türetme.** Panel (a)'daki her nokta tek bir strip'tir: kendi
+itfa günü, kendi ödemesi, kendi fiyatı. Çizgi bu noktalardan tekilleştirme ve
+doğrusal ara değerle uydurulmuştur; noktaların bulunmadığı vade aralıklarında
+**kesilir**. Çıpa gününde
+<Deger proje="dibs-verim-egrisi" anahtar="kesit_anapara" ondalik={0}>24</Deger>
+anapara ve
+<Deger proje="dibs-verim-egrisi" anahtar="kesit_kupon" ondalik={0}>169</Deger>
+kupon strip'i kullanıldı.
+
+**Kıyas günleri veriden türetilir, sabit yazılmaz.** Çıpadan geriye bir ay, üç ay ve
+bir yıl gidilir; o tarihe eşit ya da ondan önceki **son dolu** iş günü alınır. Bu
+koşuda kıyas günleri
+<Deger proje="dibs-verim-egrisi" anahtar="kiyas_1ay" ondalik={0}>21.07.2026</Deger>,
+<Deger proje="dibs-verim-egrisi" anahtar="kiyas_3ay" ondalik={0}>21.05.2026</Deger>
+ve
+<Deger proje="dibs-verim-egrisi" anahtar="kiyas_1yil" ondalik={0}>21.08.2025</Deger>.
+
+**Panel (b) baz puan cinsindendir** ve düğüm bazında okunur — ham noktalardan değil,
+sabit vadeli düğümlerden. Sebebi basit: bir ay önceki eğrinin noktaları bugünkülerle
+aynı vadelerde değildir (her kıymetin kalan vadesi bir ay kısaldı), dolayısıyla ham
+nokta farkı **vade kayması** ile **fiyat hareketini** birbirine karıştırırdı.
+
+Bu koşudaki değişimler:
+
+| Düğüm | 1 aya göre (bp) | 3 aya göre (bp) | 1 yıla göre (bp) |
+| --- | --- | --- | --- |
+| 1 yıl | <Deger proje="dibs-verim-egrisi" anahtar="kiyas_1ay_1y_degisim_bp" ondalik={0} isaret={true}>−114</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="kiyas_3ay_1y_degisim_bp" ondalik={0} isaret={true}>−439</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="kiyas_1yil_1y_degisim_bp" ondalik={0} isaret={true}>−11</Deger> |
+| 2 yıl | <Deger proje="dibs-verim-egrisi" anahtar="kiyas_1ay_2y_degisim_bp" ondalik={0} isaret={true}>−134</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="kiyas_3ay_2y_degisim_bp" ondalik={0} isaret={true}>−303</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="kiyas_1yil_2y_degisim_bp" ondalik={0} isaret={true}>+99</Deger> |
+| 9 yıl | <Deger proje="dibs-verim-egrisi" anahtar="kiyas_1ay_9y_degisim_bp" ondalik={0} isaret={true}>+133</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="kiyas_3ay_9y_degisim_bp" ondalik={0} isaret={true}>−133</Deger> | <Deger proje="dibs-verim-egrisi" anahtar="kiyas_1yil_9y_degisim_bp" ondalik={0} isaret={true}>+524</Deger> |
+
+Bu tablonun okunuşu doğrudan bir rejim tarifidir: son bir aylık dilimde kısa uç
+düşerken uzun uç yükselmiş — yani eğri **dikleşmiş** (ters eğri zayıflamış). Son üç
+aylık dilimde ise bütün eğri aşağı kaymış, en çok da kısa uç. Bir yıllık dilimde
+uzun uç belirgin biçimde yukarıda: uzun vadeli faizin *seviyesi* bir yılda yeniden
+fiyatlanmış.
+
+**Varsayımlar ve tuzaklar.** (i) Gösterge fiyat, işlem görmemiş kıymette TCMB'nin
+model fiyatı olabilir — noktalar tam bağımsız gözlem değildir. (ii) Vade eksenindeki
+doğrusal ara değer, eğrinin gerçek eğriliğini kısa aralıklarda hafifçe düzler; düğüm
+sayısı bu yüzden yoğun tutulmuştur. (iii) Hafta sonları bilinçli olarak dışarıda:
+TCMB gösterge değeri takvim günü işliyor, ama TLREF ve politika faizi iş günü
+serileridir; eğriyi takvim gününde tutmak taşıma ölçülerini bir gün kaydırırdı.
+
+## Şekil 02 — Eğri zaman içinde nasıl hareket ediyor
+
+<GrafikEmbed
+  src="/projeler/dibs-verim-egrisi/02_egri_hareketi.html"
+  baslik="Sabit vadeli düğümlerin tarihçesi, düğüm × tarih ısı haritası ve ana bileşen skorları (seviye, eğim, bükülme)"
+  no="02"
+  yukseklik={1597}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Panel (a).** Düğüm serileri, her gün o günün noktalarından **yeniden** kurulur.
+Sabit bir kıymete bağlanmaz: kıymet vadesi geldikçe eğri kendini yeniler. Bu,
+"gösterge tahvil" serileriyle arasındaki temel farktır — gösterge tahvil değiştiğinde
+o serilerde yapay bir sıçrama olur, burada olmaz.
+
+**Panel (b) ısı haritası** haftalık örneklenir (Cuma kapanışı). Günlük 3.558 sütun
+dosyayı gereksiz şişirirdi ve gözle okunan bilgi değişmezdi. Okuma kuralı: yatay bir
+renk şeridinin **bütün olarak** koyulaşması seviye hareketidir; şeridin üstü ile
+altının **ters yönde** değişmesi eğim hareketidir.
+
+**Panel (c) ana bileşenler.** Düğüm panelinin ortalamadan sapmalarına tekil değer
+ayrışımı uygulanır. Ölçek normalleştirilmez — bütün düğümler zaten puan
+cinsindendir; normalleştirme, oynaklığı düşük düğümleri yapay olarak büyütürdü.
+
+$$
+X_{t,\,j} \;=\; y_{t,\,j}-\bar{y}_j, \qquad X = U\,\Sigma\,V^{\!\top}, \qquad
+\text{skor}_{t,k} = U_{t,k}\,\sigma_k
+$$
+
+Açıklanan paylar bu koşuda:
+PC1 %<Deger proje="dibs-verim-egrisi" anahtar="pca_pay_pc1" ondalik={1}>96,9</Deger> ·
+PC2 %<Deger proje="dibs-verim-egrisi" anahtar="pca_pay_pc2" ondalik={1}>2,6</Deger> ·
+PC3 %<Deger proje="dibs-verim-egrisi" anahtar="pca_pay_pc3" ondalik={1}>0,3</Deger>
+(toplam %<Deger proje="dibs-verim-egrisi" anahtar="pca_pay_toplam" ondalik={1}>99,8</Deger>),
+<Deger proje="dibs-verim-egrisi" anahtar="pca_gun" ondalik={0}>3.558</Deger>
+tam gün üzerinden. Çıpa gününde skorlar:
+PC1 <Deger proje="dibs-verim-egrisi" anahtar="pc1_son" ondalik={2} isaret={true}>+52,16</Deger> ·
+PC2 <Deger proje="dibs-verim-egrisi" anahtar="pc2_son" ondalik={2} isaret={true}>+8,58</Deger> ·
+PC3 <Deger proje="dibs-verim-egrisi" anahtar="pc3_son" ondalik={2} isaret={true}>−1,36</Deger>.
+
+**İşaret konvansiyonu sabitlenmiştir**, çünkü tekil değer ayrışımında işaret
+keyfîdir ve sabitlenmezse grafik koşumdan koşuma ters dönerdi. Kural: PC1 yukarı =
+eğrinin **tamamı** yükseliyor; PC2 yukarı = eğri **dikleşiyor**; PC3 yukarı = orta
+vade uçlara göre yükseliyor.
+
+**9 yıllık düğüm PCA'ya alınmadı.** PCA tam satır ister; 9 yıl her gün dolu
+olmadığından dâhil edilseydi skor serisi parçalanırdı. Kullanılan düğümler:
+<Deger proje="dibs-verim-egrisi" anahtar="pca_dugum" ondalik={0}>n3a, n6a, n1y, n2y, n3y, n5y, n7y</Deger>.
+
+**Yorum tuzağı.** PC1'in payının bu kadar yüksek olması "eğri tek boyutlu" demek
+**değildir**. Türkiye gibi seviye oynaklığı çok yüksek bir piyasada seviye bileşeni
+varyansın büyük kısmını mekanik olarak yutar; eğim ve bükülme ticari olarak hâlâ
+anlamlıdır — sadece varyans payları küçüktür. Bir eğim işlemi tasarlarken PC2'nin
+payına değil, PC2'nin **süreğenliğine** ve işlem maliyetine bakılır.
+
+## Eğim ve bükülme: ters eğri ne söyler, ne söylemez
+
+Eğim, iki farklı vadedeki spot getirinin **aynı günün** eğrisinden okunan farkıdır:
+
+$$
+\text{eğim}_{a\to b} \;=\; s_b - s_a, \qquad
+\text{kelebek}_{a,b,c} \;=\; 2\,s_b - s_a - s_c
+$$
+
+Kelebek, eğrinin **ortasının** uçlara göre konumudur: pozitifse orta vade, iki uca
+çizilen doğrunun üstündedir. Politika faizi beklentisinin tepe noktası orta vadeye
+oturduğunda bu ölçü yükselir.
+
+Ters eğri (negatif eğim) gelişmiş piyasalarda çoğunlukla **resesyon sinyali** diye
+okunur. Türkiye'de bu okuma doğrudan aktarılamaz. Buradaki ters eğri esas olarak
+**dezenflasyon patikasının fiyatlanmasıdır**: piyasa bugünkü yüksek nominal faizin
+geçici olduğunu, enflasyon indikçe faizin de ineceğini fiyatlar. İkinci bileşen ise
+**vade primi**dir ve Türkiye'de sıklıkla negatiftir — uzun vadeli TL kıymetin
+alıcısı yapısal olarak sınırlıdır, ama aynı zamanda kısa uçta fonlama maliyeti
+politika yoluyla yüksek tutulmaktadır.
+
+Tarihçede eğimin ölçülebildiği günlerin
+%<Deger proje="dibs-verim-egrisi" anahtar="ters_egri_pay" ondalik={1}>70,6</Deger>'sı
+ters eğridir
+(<Deger proje="dibs-verim-egrisi" anahtar="ters_egri_gun" ondalik={0}>2.095</Deger>
+gün). Yani Türkiye'de ters eğri **istisna değil, varsayılan hâldir** ve "ters eğri
+oldu" cümlesi tek başına bir bilgi taşımaz. Bilgi taşıyan şey eğimin **seviyesi** ve
+**yönüdür**. Süregelen dönem
+<Deger proje="dibs-verim-egrisi" anahtar="ters_egri_suren_gun" ondalik={0}>738</Deger>
+iş günüdür ve en son
+<Deger proje="dibs-verim-egrisi" anahtar="ters_egri_son" ondalik={0}>21.08.2026</Deger>
+gününde ölçülmüştür.
+
+## Şekil 03 — Eğim ve bükülme
+
+<GrafikEmbed
+  src="/projeler/dibs-verim-egrisi/03_egim_bukulme.html"
+  baslik="Eğri eğimi (2y−9y, 2y−5y, 2y−3a; taralı alanlar ters eğri dönemleri) ve bükülme (kelebek) ölçüleri"
+  no="03"
+  yukseklik={1087}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Yukarıdaki düğüm panelinden türetilir; yeni bir seri çekilmez. İki nokta
+da **aynı günün** eğrisinden okunur — farklı günlerin düğümlerinden eğim kurmak
+takvim etkisi üretir.
+
+**İşaret yönü tek tiptir.** Üç eğim ölçüsü de "uzun düğüm − kısa düğüm" biçiminde
+yazılmıştır; 2y−3a ölçüsünde bile kısa uç 3 aydır, uzun uç 2 yıl. Böylece üç panelde
+de negatif = ters okunur. Karışık işaret konvansiyonu, eğim grafiklerinde en sık
+yapılan okuma hatasıdır.
+
+**Taralı alanlar** eğimin negatif olduğu dönemlerdir ve oran, eğimin **ölçülebildiği**
+günlere bölünerek hesaplanır — bütün pencereye bölünseydi 9 yıllık düğümün boş
+olduğu günler payda şişirir ve sayfadaki oran ile grafikteki oran birbirini
+tutmazdı.
+
+**Kelebek yorumu.** 2×2y − 1y − 5y ölçüsü bu koşuda
+<Deger proje="dibs-verim-egrisi" anahtar="kelebek_1_2_5" ondalik={2} isaret={true}>+4,95</Deger>
+puan: orta vade, 1 yıl ile 5 yıl arasına çizilen doğrunun belirgin biçimde üstünde.
+Uzun kelebek (2×5y − 2y − 9y)
+<Deger proje="dibs-verim-egrisi" anahtar="kelebek_2_5_9" ondalik={2} isaret={true}>+0,55</Deger>
+ile neredeyse düz — yani eğriliğin tamamı **kısa-orta** bölgede toplanmış durumda.
+Bu, faiz indirim patikasının başlangıcının 1–2 yıl bandına fiyatlandığının işaretidir.
+
+**Tuzak.** Kelebek bir **göreli değer** ölçüsüdür, yön ölçüsü değil. Pozitif kelebek
+"orta vade pahalı" demek değildir; orta vadenin uçlara göre nerede durduğunu söyler.
+Karşılık gelen işlem de yönlü değil, DV01-nötr üç bacaklı bir yapıdır — bkz.
+<a href="/arastirma/risk-ve-hedge/">Risk ve Hedge</a>.
+
+## Taşıma (carry): pozisyonun günlük kirası
+
+Bir tahvil pozisyonu iki kaynaktan para kazanır ya da kaybeder: **fiyat hareketi** ve
+**taşıma**. Taşıma, eğri hiç kımıldamazsa pozisyonun kazandığı/kaybettiği tutardır ve
+kabaca tahvilin getirisi ile onu fonlama maliyetinin farkıdır:
+
+$$
+\text{carry}_{2y} \;=\; s_{2y} - i^{\text{fonlama}}
+$$
+
+Hangi fonlama faizi? Üçü de farklı bir soruyu yanıtlar:
+
+- **AOFM** — TCMB'nin o gün fiilen ödettiği ağırlıklı ortalama. "TCMB kaynağıyla
+  fonlansaydım" sorusunun cevabı.
+- **TLREF** — piyasanın teminatlı gecelik faizi. Repo defteri gerçekte buradan
+  fonlanır; **fiilen ödenen** maliyete en yakın ölçü budur.
+- **Politika faizi** — kotasyon. Hiçbir banka bu faizden fonlanmaz; makas bu yüzden
+  bilgi taşır ama maliyet değildir. Bu koşuda 2 yıl − politika farkı
+  <Deger proje="dibs-verim-egrisi" anahtar="carry_2y_politika" ondalik={2} isaret={true}>+3,46</Deger>
+  puan iken 2 yıl − AOFM farkı yalnızca
+  <Deger proje="dibs-verim-egrisi" anahtar="carry_2y_aofm" ondalik={2} isaret={true}>+0,46</Deger>
+  puan — aradaki üç puan, politika faizine bakarak kurulan bir carry hesabının
+  **sistematik hatasıdır**.
+
+Tarihçede taşıma
+<Deger proje="dibs-verim-egrisi" anahtar="carry_negatif_gun" ondalik={0}>1.431</Deger>
+iş gününde negatifti
+(%<Deger proje="dibs-verim-egrisi" anahtar="carry_negatif_pay" ondalik={1}>41,8</Deger>).
+Negatif taşıma, uzun pozisyonun **her gün para kaybettiği** anlamına gelir; pozisyon
+ancak faiz **inişi** beklentisiyle tutulur ve beklenti gerçekleşmezse zarar iki
+kanaldan birden gelir.
+
+<div class="not">
+  <span class="etiket">Taşıma ile roll-down aynı şey değildir</span>
+  Bu sayfadaki taşıma ölçüsü <strong>yalnız getiri − fonlama</strong> farkıdır.
+  Pozisyonun bir de <em>roll-down</em> bileşeni vardır: eğri sabit kalsa bile
+  kıymetin kalan vadesi kısaldıkça eğrinin daha kısa (ve ters eğride daha
+  <em>yüksek</em>) bir noktasına kayar. Ters eğride roll-down <strong>negatiftir</strong>
+  ve pozitif taşımayı yiyebilir. Bu sayfa roll-down'ı ayrıca ölçmez;
+  <a href="/arastirma/trade-pratigi/">Trade Pratiği</a> dersinde toplam getirinin
+  ayrıştırması yapılır.
+</div>
+
+## Şekil 04 — Taşıma: eğri ile fonlama maliyeti arasındaki makas
+
+<GrafikEmbed
+  src="/projeler/dibs-verim-egrisi/04_carry.html"
+  baslik="2 yıllık spot getiri ile gecelik fonlama faizleri (AOFM, TLREF, politika) ve aralarındaki taşıma makasları"
+  no="04"
+  yukseklik={1163}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Eğri tarafı düğüm panelinden. Faiz tarafı EVDS3, iş günü:
+`TP.BISTTLREF.ORAN` (TLREF), `TP.PY.P02.1H` (1 hafta vadeli repo satış kotasyonu =
+politika faizi), `TP.PY.P06.1H` (gerçekleşen 1 haftalık repo), `TP.APIFON4` (AOFM),
+`TP.PY.P01.ON` / `TP.PY.P02.ON` (koridor tabanı/tavanı), `TP.AOFOBAP` (BİST gecelik
+repo AOF, bağımsız kontrol). Hepsi **yüzde** birimindedir ve her birine büyüklük
+mertebesi denetimi uygulanır (−10 ile 500 arası); EVDS3 meta verisinde **birim alanı
+yoktur**, birim seri adından okunur.
+
+**İki seri iki tarihte başlar ve bu bilinçli olarak kapatılmaz.** Politika faizi
+kotasyonu 14.09.2018'de, TLREF 28.12.2018'de başlar. Öncesinde haftalık repo
+ihaleyle fonlanıyordu ve bu vadede kotasyon yayımlanmıyordu. O dönem için politika
+faizi yerine **gerçekleşen** 1 haftalık repo faizi vekil alınır; grafikte kesintisiz
+olan çizgi AOFM'dir. Boşluk interpolasyonla doldurulmadı, çünkü doldurulacak veri
+yok.
+
+**Üç faiz aynı günde farklı sayılar verir** ve bu bir tutarsızlık değildir: AOFM
+TCMB'nin fiilen ödettiği ortalama, TLREF piyasanın teminatlı gecelik faizi, politika
+faizi ise bir kotasyondur. Bu üçünün nasıl ayrıştığı, hangi rejimde hangisinin
+marjinal fiyat olduğu ve fazla likidite rejiminde AOFM'nin neden tanımsız
+kalabildiği ayrı bir hattın konusudur:
+<a href="/projeler/fonlama-likidite/">TCMB Fonlama ve Likidite</a>.
+
+**Tuzak.** Taşıma ölçüsü **anlıktır**, gerçekleşmiş bir getiri değildir. "Bugünkü
+taşıma +0,5 puan" cümlesi, pozisyonun yıllıklandırılmış anlık kirasını verir; bir
+yıl tutulduğunda kazanılacak tutarı vermez, çünkü fonlama faizi her gün değişir.
+Gerçekleşen taşıma ancak geçmişe dönük, günlük fonlama maliyetleri toplanarak
+hesaplanır.
+
+## Reel faiz: Fisher kimliği, basit çıkarma değil
+
+Reel faiz, nominal faizin enflasyondan **arındırılmış** hâlidir. Arındırma iki
+yöntemle yapılır ve bu depoda hangisinin kullanılacağı **bağlayıcı bir karardır**:
+
+$$
+\underbrace{r \;=\; \frac{1+i}{1+\pi}-1}_{\text{FISHER — kullanılan}}
+\qquad\text{ve}\qquad
+\underbrace{r^{\text{basit}} \;=\; i-\pi}_{\text{yalnız ders için}}
+$$
+
+İkisi arasındaki fark, düşük enflasyonda ihmal edilebilir; yüksek enflasyonda
+**büyüktür ve tek yönlüdür**. Cebirsel olarak:
+
+$$
+r^{\text{basit}} - r \;=\; \frac{\pi\,(i-\pi)}{1+\pi}
+$$
+
+Yani nominal faiz enflasyonun üstündeyken basit çıkarma reel faizi **yüksek**
+gösterir ve hata, hem enflasyon hem de reel faiz büyüdükçe artar.
+
+<div class="not">
+  <span class="etiket">Bu depoda bağlayıcı</span>
+  <Deger proje="dibs-verim-egrisi" anahtar="not_fisher" ondalik={0}>Reel faiz FISHER kimliğiyle hesaplanır: (1+i)/(1+π)−1. Basit çıkarma yalnız yöntem farkını göstermek için hesaplanmıştır.</Deger>
+</div>
+
+### Sayısal örnek: iki yöntem çıpa gününde ne diyor
+
+Girdiler — nominal 1 yıllık spot getiri
+$i$ = <Deger proje="dibs-verim-egrisi" anahtar="spot_1y" ondalik={2}>40,32</Deger>%
+ve PKA 12 aylık TÜFE beklentisi
+$\pi^e$ = <Deger proje="dibs-verim-egrisi" anahtar="pka_12a" ondalik={2}>23,69</Deger>%
+(<Deger proje="dibs-verim-egrisi" anahtar="pka_katilimci" ondalik={0}>63</Deger>
+katılımcılı
+<Deger proje="dibs-verim-egrisi" anahtar="anket_ay" ondalik={0}>Ağustos 2026</Deger>
+anketi).
+
+Fisher sonucu
+**<Deger proje="dibs-verim-egrisi" anahtar="reel_ileri" ondalik={2}>13,44</Deger>%**;
+basit çıkarma
+<Deger proje="dibs-verim-egrisi" anahtar="reel_ileri_basit" ondalik={2}>16,63</Deger>%
+derdi. Fark:
+<Deger proje="dibs-verim-egrisi" anahtar="fisher_basit_fark" ondalik={2} isaret={true}>+3,18</Deger>
+puan. Tek cümleyle:
+*<Deger proje="dibs-verim-egrisi" anahtar="fisher_cumlesi" ondalik={0}>Basit çıkarma reel faizi 3,18 puan YÜKSEK gösteriyor: %16,63 yerine Fisher %13,44 veriyor.</Deger>*
+
+Üç puanlık bir yöntem farkı, para politikası duruşu tartışmasında **kararı
+değiştirecek** büyüklüktedir. Bu yüzden bir reel faiz sayısı gördüğünüzde sorulacak
+ilk soru "hangi enflasyon" değil, "hangi **formül**"dür.
+
+### İleri mi, geriye mi? İkisi de doğru, ikisi farklı soru
+
+- **İleri bakışlı reel faiz** paydaya **beklenen** enflasyonu koyar. Yatırımcının
+  bugün aldığı kararın beklenen reel karşılığıdır. Bu koşuda
+  <Deger proje="dibs-verim-egrisi" anahtar="reel_ileri" ondalik={2}>13,44</Deger>%.
+- **Geriye dönük reel faiz** paydaya **gerçekleşen** yıllık TÜFE'yi koyar
+  (<Deger proje="dibs-verim-egrisi" anahtar="tufe_yillik" ondalik={2}>31,75</Deger>%,
+  <Deger proje="dibs-verim-egrisi" anahtar="tufe_ay" ondalik={0}>Temmuz 2026</Deger>).
+  Bu koşuda
+  <Deger proje="dibs-verim-egrisi" anahtar="reel_geriye" ondalik={2}>6,50</Deger>%.
+- **Makas**
+  <Deger proje="dibs-verim-egrisi" anahtar="reel_makas" ondalik={2}>6,94</Deger>
+  puan. Makasın işareti rejimi söyler: **dezenflasyonda** beklenti gerçekleşmenin
+  altındadır, dolayısıyla ileri ölçü **yüksek** görünür. Enflasyon hızlanırken tersi
+  olur. Makas sıfıra yaklaştığında beklenti ile gerçekleşme yakınsamış demektir.
+
+Ayrıca iki yıllık vadede ileri reel faiz
+<Deger proje="dibs-verim-egrisi" anahtar="reel_ileri_2y" ondalik={2}>19,00</Deger>%
+— birinci yıldan **yüksek**. Bunun sebebi nominal eğrinin dikleşmesi değil,
+beklenti eğrisinin daha hızlı düşmesidir: PKA 24 aylık beklenti
+(<Deger proje="dibs-verim-egrisi" anahtar="pka_24a" ondalik={2}>18,03</Deger>%)
+12 aylıktan belirgin biçimde aşağıda. Yani piyasa katılımcıları, nominal faizin
+ikinci yılda enflasyondan **daha yavaş** ineceğini bekliyor.
+
+### Frekans uyumsuzluğu ve geleceğe bakma tuzağı
+
+Eğri **günlük**, beklenti ve enflasyon **aylıktır**. Aylık seriler EVDS'te ayın 1'i
+etiketiyle durur — ama o gün **yayımlanmamıştır**. Ay başından ileri doldurmak,
+o tarihte piyasanın bilmediği bir sayıyla reel faiz hesaplamak, yani **geleceğe
+bakmaktır**. Hat bu yüzden seriyi yayım gününden itibaren geçerli sayar ve günlüğe
+**basamak** olarak yayar:
+
+- PKA: ayın
+  <Deger proje="dibs-verim-egrisi" anahtar="esik_pka_yayim_gun" ondalik={0}>20</Deger>'sinden
+  itibaren geçerli.
+- TÜFE: **ertesi** ayın
+  <Deger proje="dibs-verim-egrisi" anahtar="esik_tufe_yayim_gecikme" ondalik={0}>5</Deger>'inden
+  itibaren geçerli.
+
+Bunun görünür sonucu, reel faiz serisindeki **keskin basamaklardır**. Bu basamaklar
+piyasa hareketi değildir; beklenti serisinin yenilenmesidir ve Şekil 05'te son on iki
+anket yayım günü dikey noktalı çizgilerle işaretlenmiştir. Basamağı piyasa hareketi
+sanmak, reel faizde olmayan bir oynaklık görmek demektir.
+
+Anket kalitesi de izlenir: katılımcı sayısı
+(<Deger proje="dibs-verim-egrisi" anahtar="pka_katilimci" ondalik={0}>63</Deger>)
+40'ın altına inerse beklenti serisi gürültülenir ve **görünür uyarı** düşer, çünkü o
+noktadan sonra reel faizdeki oynama piyasadan değil anketten gelir.
+
+## Şekil 05 — Reel faiz: Fisher ileri ve geriye dönük
+
+<GrafikEmbed
+  src="/projeler/dibs-verim-egrisi/05_reel_faiz.html"
+  baslik="Nominal 1 yıllık spot, PKA beklentisi ve gerçekleşen TÜFE; Fisher ileri/geriye reel faiz ve aradaki makas; basit çıkarma ile Fisher arasındaki yöntem farkı"
+  no="05"
+  yukseklik={1585}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Nominal bacak düğüm panelinden. Beklenti bacağı EVDS3 aylık:
+`TP.PKAUO.S01.E.U` (PKA 12 ay TÜFE beklentisi ortalaması), `TP.PKAUO.S01.F.U`
+(24 ay), `TP.PKAUO.S01.G.U` (5 yıl), `TP.BEK.S01.E.X` (12 ay katılımcı sayısı).
+Enflasyon bacağı `TP.TUKFIY2025.GENEL` (TÜFE endeksi, 2025=100), yıllık değişimi
+12 aylık yüzde farktan hesaplanır.
+
+**Panel (a)** üç seriyi aynı eksende gösterir: nominal, beklenti, gerçekleşen. Bu
+panelin işlevi, aşağıdaki iki reel faizin **paydalarını** görünür kılmaktır — reel
+faiz tartışmalarının çoğu, aslında hangi paydanın seçildiği tartışmasıdır.
+
+**Panel (b)** iki Fisher ölçüsünü ve aralarındaki taralı makası çizer. Taralı alan
+doğrudan reel makas serisidir.
+
+**Panel (c)** yöntem farkını ayrı bir eksende gösterir: basit çıkarma eksi Fisher.
+Bu panel enflasyon seviyesiyle birlikte açılıp kapanır ve yukarıdaki cebirsel
+ifadenin görsel karşılığıdır.
+
+**Varsayımlar ve tuzaklar.** (i) PKA bir **anket** ortalamasıdır; piyasa fiyatından
+türetilmemiştir ve katılımcı bileşimi değiştiğinde seride kırılma olabilir.
+(ii) Nominal bacak DİBS getirisidir, politika faizi değil — dolayısıyla bu reel faiz
+"TCMB'nin reel politika faizi" **değildir**; onun için nominal bacağa politika faizi
+konur ve sayı belirgin biçimde farklı çıkar. (iii) Beklenti serisi 12 aylık ufuktadır
+ve nominal bacak 1 yıllık spot getiridir: ufuklar eşleştirilmiştir. 2 yıllık ölçüde
+de aynı eşleme yapılır (2 yıllık spot ↔ 24 aylık beklenti). Ufukları karıştırmak —
+örneğin 2 yıllık faizi 12 aylık beklentiye bölmek — sık yapılan ve sistematik hata
+üreten bir kısayoldur.
+
+## TÜFEX: referans endeksin yeniden kurulması
+
+TÜFE'ye endeksli DİBS'ler (TÜFEX) reel getiriyi **doğrudan** fiyatlar. Ama EVDS'te
+yayımlanan "Değer" reel fiyat değildir: **endekslenmiş TL fiyatıdır**. Kıymetin
+anaparası ihraç gününden bugüne enflasyon oranında büyütülmüştür ve fiyat bu büyümüş
+anaparaya göre kote edilir. Endeks oranına bölünmeden reel getiri çıkmaz — bölünmezse
+fiyat 100'ün çok üstünde görünür ve getiri negatife düşer.
+
+Büyütme katsayısı Hazine'nin **referans endeksidir** ve bu seri EVDS'te **yoktur**.
+Hattın yeniden kurduğu tanım şudur — üç ay gecikmeli, ay içinde doğrusal ara değerli:
+
+$$
+\text{RefEndeks}(t) \;=\; \text{TÜFE}_{m-3} \;+\; \frac{g-1}{D}\,\bigl[\text{TÜFE}_{m-2} - \text{TÜFE}_{m-3}\bigr]
+$$
+
+Burada $m$ içinde bulunulan ay, $g$ ayın günü, $D$ o ayın gün sayısıdır. Üç aylık
+gecikme, TÜİK'in yayım takviminden gelir: bir ayın enflasyonu ancak ertesi ayın
+başında açıklanır, dolayısıyla kupon hesabında güvenle kullanılabilecek en yakın
+endeks üç ay öncesinindir.
+
+Reel getiri de buradan okunur:
+
+$$
+r \;=\; \left(\frac{100 \times \text{RefEndeks}(t)\,/\,\text{RefEndeks}(t_0)}{\text{fiyat}}\right)^{\frac{365}{\text{kalan gün}}} - 1
+$$
+
+$t_0$ kıymetin ihraç günüdür. Pay tarafındaki oran, anaparanın ihraçtan bugüne kaç
+kat büyüdüğünü verir.
+
+<div class="not">
+  <span class="etiket">Zincir katsayısı her koşuda yeniden okunur</span>
+  <Deger proje="dibs-verim-egrisi" anahtar="not_referans_endeks" ondalik={0}>TÜFEX referans endeksi EVDS'te YOK; Hazine'nin 3 ay gecikmeli doğrusal ara değerli tanımı yeniden kurulmuştur. Zincir katsayısı örtüşme ayından HER KOŞUDA okunur, sabit yazılmaz.</Deger>
+  Referans endeksin tabanı 2003=100 serisidir (<code>TP.FG.J0</code>); bu seri TÜİK'in
+  2025 baz değişikliğiyle dondu ve sonrası <code>TP.TUKFIY2025.GENEL</code> ile
+  zincirlenir. Bu koşudaki katsayı
+  <Deger proje="dibs-verim-egrisi" anahtar="tufe_zincir_kat" ondalik={4}>31,8312</Deger>,
+  örtüşme ayı
+  <Deger proje="dibs-verim-egrisi" anahtar="tufe_zincir_ay" ondalik={0}>01.01.2026</Deger>.
+  Sabit yazılsaydı, TÜİK yeni bir baz açıkladığında <strong>bütün reel eğri sessizce
+  kayardı</strong>.
+</div>
+
+### Başabaş enflasyon: piyasanın "beklentisi" değildir
+
+Aynı vadedeki nominal ve reel getirinin oranı **başabaş (breakeven) enflasyonu**
+verir — yani nominal ve reel kıymetin aynı getiriyi vereceği enflasyon düzeyi:
+
+$$
+\pi^{BE} \;=\; \frac{1+i}{1+r}-1
+$$
+
+Beş yıllık vadede girdiler: nominal
+<Deger proje="dibs-verim-egrisi" anahtar="spot_5y" ondalik={2}>35,66</Deger>%,
+reel <Deger proje="dibs-verim-egrisi" anahtar="reel_egri_5y" ondalik={2}>3,56</Deger>%
+→ başabaş
+**<Deger proje="dibs-verim-egrisi" anahtar="basabas_5y" ondalik={2}>30,99</Deger>%**.
+Aynı vadede anket beklentisi
+<Deger proje="dibs-verim-egrisi" anahtar="pka_5y" ondalik={2}>11,14</Deger>%.
+Aradaki
+<Deger proje="dibs-verim-egrisi" anahtar="risk_primi_5y" ondalik={2} isaret={true}>+19,85</Deger>
+puan, bir "beklenti farkı" olarak okunamaz.
+
+<div class="not">
+  <span class="etiket">Bu farkın içinde ne var</span>
+  <Deger proje="dibs-verim-egrisi" anahtar="not_basabas" ondalik={0}>Başabaş enflasyon PİYASA BEKLENTİSİ DEĞİLDİR: içinde enflasyon risk primi, likidite primi ve TÜFE ölçümüne güvensizlik vardır.</Deger>
+  Üç bileşen: (i) <strong>enflasyon risk primi</strong> — nominal kıymeti tutan
+  yatırımcı enflasyon sürprizine açıktır ve bunun için ek getiri ister;
+  (ii) <strong>likidite primi</strong> — TÜFEX evreni yalnız
+  <Deger proje="dibs-verim-egrisi" anahtar="evren_tufex" ondalik={0}>20</Deger>
+  anapara strip'idir ve nominal evrene göre çok incedir, bu incelik reel getiriyi
+  yukarı iter ve başabaşı mekanik olarak şişirir;
+  (iii) <strong>ölçüm güvensizliği</strong> — endeksin kendisine dair kuşku, kıymetin
+  koruma değerini düşürür. Üçünü ayrıştırmak ayrı bir modelleme işidir ve bu sayfada
+  <em>yapılmamıştır</em>.
+</div>
+
+Vade yapısı da bilgi taşır: başabaş 1 yılda
+<Deger proje="dibs-verim-egrisi" anahtar="basabas_1y" ondalik={2}>27,71</Deger>%,
+2 yılda <Deger proje="dibs-verim-egrisi" anahtar="basabas_2y" ondalik={2}>29,84</Deger>%,
+5 yılda <Deger proje="dibs-verim-egrisi" anahtar="basabas_5y" ondalik={2}>30,99</Deger>%,
+7 yılda <Deger proje="dibs-verim-egrisi" anahtar="basabas_7y" ondalik={2}>27,50</Deger>%.
+Nominal eğri belirgin biçimde aşağı eğimliyken başabaşın **yukarı** eğimli olması,
+uzun vadede reel getirinin nominal getiriden daha hızlı düştüğünü söyler — yani uzun
+uçtaki nominal düşüş, reel faiz düşüşünden çok **enflasyon riskinin fiyatlanması**
+biçiminde okunmalıdır. Risk primi ölçüsü de bu okumayı destekliyor: 1 yılda
+<Deger proje="dibs-verim-egrisi" anahtar="risk_primi_1y" ondalik={2} isaret={true}>+4,02</Deger>,
+2 yılda
+<Deger proje="dibs-verim-egrisi" anahtar="risk_primi_2y" ondalik={2} isaret={true}>+11,80</Deger>,
+5 yılda
+<Deger proje="dibs-verim-egrisi" anahtar="risk_primi_5y" ondalik={2} isaret={true}>+19,85</Deger>
+puan — vade uzadıkça hızla açılıyor.
+
+## Şekil 06 — TÜFEX reel eğrisi ve başabaş enflasyon
+
+<GrafikEmbed
+  src="/projeler/dibs-verim-egrisi/06_tufex_basabas.html"
+  baslik="TÜFEX reel spot eğrisi (noktalar tek tek kıymetler), vadeye göre başabaş enflasyon ile PKA beklentileri, ve 1/2/5 yıllık başabaşın zaman serisi"
+  no="06"
+  yukseklik={1611}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** TÜFEX **anapara** strip'leri (tür alanı "Reel Kupon Oranı"), fiyat serisi
+`TP.<ISIN>`; referans endeks yukarıdaki formülle TÜFE zincirinden kurulur. Kupon
+strip'leri reel eğriye alınmaz: TÜFEX'te yayımlanan kupon yalnız cari dönemin
+kuponudur ve ileri vadeli bir strip'e uygulanamaz.
+
+**Panel (a)** ham noktalardır — çıpa gününde
+<Deger proje="dibs-verim-egrisi" anahtar="tufex_nokta" ondalik={0}>15</Deger>
+kıymet, vade aralığı
+<Deger proje="dibs-verim-egrisi" anahtar="tufex_vade_min" ondalik={2}>0,99</Deger>–<Deger proje="dibs-verim-egrisi" anahtar="tufex_vade_maks" ondalik={2}>7,05</Deger>
+yıl, reel getiriler
+<Deger proje="dibs-verim-egrisi" anahtar="tufex_reel_min" ondalik={2}>3,44</Deger>%
+ile
+<Deger proje="dibs-verim-egrisi" anahtar="tufex_reel_maks" ondalik={2}>9,94</Deger>%
+arasında. Reel getirinin makul aralığı nominalden dardır (−%30 … +%60) ve kalan
+vadesi 60 günden kısa kıymet alınmaz: referans endeksin üç aylık gecikmesi, çok kısa
+vadede getiriyi mekanik olarak saçar.
+
+**Panel (b)** her TÜFEX noktasının **kendi vadesinde** nominal eğriyi okuyup oranı
+alır. Yani başabaş, sabit vadeli düğümlerden değil, gerçek kıymet vadelerinden
+hesaplanır — nominal ve reel bacağın vadesi birebir eşleşsin diye. Baklava işaretleri
+anket beklentileridir; kırmızı çizgi piyasanın fiyatladığıdır.
+
+**Panel (c)** başabaşın zaman serisidir ve burada sabit vadeli düğümler kullanılır,
+çünkü zaman içinde karşılaştırma ancak sabit vadeyle anlamlıdır.
+
+<div class="not">
+  <span class="etiket">Reel eğri nominal eğri kadar sık değildir</span>
+  <Deger proje="dibs-verim-egrisi" anahtar="reel_kapsama_notu" ondalik={0}>TÜFEX evreni 20 anapara strip'i; reel düğümler nominal düğümler kadar sık kurulamaz ve vade boşluğu geniş olan düğüm o gün BOŞ bırakılır (uydurulmuş ara değer basılmaz).</Deger>
+  Bu koşuda 3 yıllık reel düğüm ve dolayısıyla 3 yıllık başabaş <strong>yok</strong>:
+  o vade aralığında iki komşu kıymet arasındaki boşluk sınırı aşıyor. Kurulabilen
+  başabaş vadeleri:
+  <Deger proje="dibs-verim-egrisi" anahtar="basabas_vadeler" ondalik={0}>1 yıl, 2 yıl, 5 yıl, 7 yıl</Deger>.
+  Boş düğüm bir eksiklik değil, uydurmama kararıdır.
+</div>
+
+**Saçılma bir gürültü değil, ölçünün kendisidir.** Aynı vade civarındaki iki TÜFEX
+kıymeti aynı reel getiriyi vermez. Çıpa gününde kısa uçta (3 yıl ve altı) kıymetler
+arası saçılma
+<Deger proje="dibs-verim-egrisi" anahtar="tufex_kisa_sacilma" ondalik={2}>4,88</Deger>
+puan
+(<Deger proje="dibs-verim-egrisi" anahtar="tufex_kisa_alt" ondalik={2}>5,05</Deger>%
+ile
+<Deger proje="dibs-verim-egrisi" anahtar="tufex_kisa_ust" ondalik={2}>9,94</Deger>%
+arası); uzun uçta
+<Deger proje="dibs-verim-egrisi" anahtar="tufex_uzun_sacilma" ondalik={2}>1,27</Deger>
+puana daralıyor
+(<Deger proje="dibs-verim-egrisi" anahtar="tufex_uzun_alt" ondalik={2}>3,44</Deger>%–<Deger proje="dibs-verim-egrisi" anahtar="tufex_uzun_ust" ondalik={2}>4,71</Deger>%).
+Kısa uçtaki genişlik, hem likidite farkından hem de referans endeks yaklaşımının
+hata payından gelir: kalan vade kısaldıkça üç aylık gecikmeli endeksin payı büyür.
+Tek bir "reel faiz" çizgisine indirgemek burada **yanlış kesinlik** üretir; ham
+dağılım bilinçli olarak korunmuştur ve Şekil 08'in (c) panelinde ayrıca gösterilir.
+
+## İleri (forward) oranlar: eğrinin ima ettiği patika
+
+İleri oran, bugünkü spot getirilerden **arbitraj yokluğu** ile türetilir. İki farklı
+vadeye yatırım yapmanın aynı sonucu vermesi gerekir:
+
+$$
+(1+s_1)^{t_1}\,\bigl(1+f_{t_1\to t_2}\bigr)^{t_2-t_1} \;=\; (1+s_2)^{t_2}
+$$
+
+Buradan:
+
+$$
+f_{t_1\to t_2} \;=\; \left[\frac{(1+s_2)^{t_2}}{(1+s_1)^{t_1}}\right]^{\frac{1}{t_2-t_1}} - 1
+$$
+
+Bu **yeni bir veri değildir**; eğrinin kendi içindeki bilginin başka bir yazılışıdır.
+Ama okunması kolaylaşır: spot eğri "bugünden itibaren ortalama ne kazanırım"
+sorusunu, ileri eğri "belirli bir gelecek dilimde faiz ne olur" sorusunu yanıtlar.
+
+### Sayısal örnek
+
+1y1y oranı — bir yıl sonrasının bir yıllık faizi. Girdiler:
+$s_1$ = <Deger proje="dibs-verim-egrisi" anahtar="spot_1y" ondalik={2}>40,32</Deger>%
+($t_1$ = 1),
+$s_2$ = <Deger proje="dibs-verim-egrisi" anahtar="spot_2y" ondalik={2}>40,46</Deger>%
+($t_2$ = 2). Formül bu özel durumda sadeleşir:
+$f = (1+s_2)^2/(1+s_1) - 1$. Sonuç:
+**<Deger proje="dibs-verim-egrisi" anahtar="forward_1y1y" ondalik={2}>40,61</Deger>%**.
+
+Aynı mantıkla 2y1y (iki yıl sonrasının bir yıllık faizi)
+<Deger proje="dibs-verim-egrisi" anahtar="forward_2y1y" ondalik={2}>36,99</Deger>%
+ve 2y3y (iki yıl sonrasının üç yıllık faizi)
+<Deger proje="dibs-verim-egrisi" anahtar="forward_2y3y" ondalik={2}>32,55</Deger>%.
+
+Okuma kuralı: **ileri oran spotun altındaysa eğri faiz inişi fiyatlıyor demektir.**
+Bu koşuda 1y1y, 1 yıllık spotun hafifçe **üstünde** — yani ilk yıl dilimi için
+piyasa neredeyse hiç iniş fiyatlamıyor. Buna karşılık 2y1y ve 2y3y belirgin biçimde
+aşağıda: iniş **ikinci yıldan sonra** başlıyor. Politika tartışmasında "piyasa
+indirim bekliyor" cümlesinin ne zaman doğru olduğunu ancak bu ayrım söyler.
+
+## Şekil 07 — İleri oranlar ve ima edilen faiz patikası
+
+<GrafikEmbed
+  src="/projeler/dibs-verim-egrisi/07_forward.html"
+  baslik="İleri oranların tarihçesi (1y1y, 2y1y, 2y3y) ve bugünkü eğrinin ima ettiği yıl yıl bir yıllık faiz patikası ile PKA politika faizi beklentileri"
+  no="07"
+  yukseklik={1187}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Panel (a)** ileri oranların tarihçesidir; girdiler sabit vadeli düğümlerdir.
+Kıyas için 1 yıllık spot da noktalı olarak çizilir — ileri oranın spotun altına ne
+zaman geçtiği bu karşılaştırmadan okunur.
+
+**Panel (b)** bugünkü kesitten türetilen **yıl yıl bir yıllık ileri faiz
+patikasıdır**: $k$'ıncı yıl için $f_k = (1+s_{k+1})^{k+1}/(1+s_k)^k - 1$. Basamak
+çizgisi kullanılır çünkü her değer bir **yıl dilimini** temsil eder, bir noktayı
+değil. Bir yılın spot getirisi hesaplanamıyorsa o dilim çizilmez.
+
+Baklava işaretleri **anket** verisidir ve nominal patikayla aynı büyüklük değildir:
+bugünkü politika faizi
+(<Deger proje="dibs-verim-egrisi" anahtar="politika" ondalik={2}>37,00</Deger>%),
+PKA'nın 12 ay sonrası politika faizi beklentisi
+(<Deger proje="dibs-verim-egrisi" anahtar="pka_faiz_12a" ondalik={2}>29,59</Deger>%)
+ve 24 ay sonrası beklentisi
+(<Deger proje="dibs-verim-egrisi" anahtar="pka_faiz_24a" ondalik={2}>21,89</Deger>%).
+
+**Bu panelin en kritik yorum notu.** İma edilen patika bir **tahmin değildir**;
+içinde **vade primi** vardır:
+
+$$
+f_{t\to t+1} \;=\; \mathbb{E}\bigl[i_{t\to t+1}\bigr] \;+\; \underbrace{\text{vade primi}}_{\text{gözlenmez}}
+$$
+
+Vade primi pozitifse ima edilen patika, gerçek beklenen politika faizinin
+**üstünde** kalır. Baklava işaretleriyle patika arasındaki fark bu primin **kaba bir
+ölçüsüdür** — kaba, çünkü anket beklentisi de bir tahmindir ve kendi hatasını taşır.
+
+**İkinci not.** Patika DİBS getirisinden türer, politika faizinden değil. DİBS kredi
+riski taşımasa da likidite ve vade riski taşır; ayrıca gecelik fonlama ile tahvil
+getirisi arasında yapısal bir baz vardır. İki büyüklüğü birebir eşitlemek —
+"eğri politika faizinin şu düzeye ineceğini söylüyor" demek — bu iki farkı sıfır
+kabul etmektir.
+
+## Eğri kendini nasıl sınıyor
+
+Bir eğri hattının en büyük riski, **sessizce yanlış** olmasıdır: sınıflandırma
+bozulur, birim kayar, bir kıymet sınıfı sızar — ve grafik hâlâ pürüzsüz görünür.
+Bu hat iki bağımsız sınama taşır.
+
+### Kimlik denetimi: aynı itfa, aynı getiri
+
+Aynı itfa gününe düşen iki **bağımsız** strip (örneğin farklı tahvillerin kuponları)
+aynı getiriyi vermelidir. Vermiyorlarsa ya ödeme tanımı ya sınıflandırma bozulmuştur.
+Her gün, aynı vadeye düşen strip grupları içindeki **maksimum getiri farkı** ve bu
+farkların **medyanı** hesaplanır.
+
+Bu koşuda çıpa gününde
+<Deger proje="dibs-verim-egrisi" anahtar="kimlik_cok_kaynakli" ondalik={0}>52</Deger>
+vadede çoklu kaynak var; medyan sapma
+<Deger proje="dibs-verim-egrisi" anahtar="kimlik_medyan_sapma" ondalik={4}>0,0055</Deger>
+puan. Tarihçe boyunca medyan sapmanın medyanı
+<Deger proje="dibs-verim-egrisi" anahtar="kimlik_medyan_tarihce" ondalik={4}>0,0041</Deger>
+puan; en büyük tekil sapma
+<Deger proje="dibs-verim-egrisi" anahtar="kimlik_maks_sapma" ondalik={3}>1,013</Deger>
+puan
+(<Deger proje="dibs-verim-egrisi" anahtar="kimlik_maks_tarih" ondalik={0}>31.08.2018</Deger>).
+
+İki eşik vardır ve rolleri farklıdır:
+
+- Medyan sapma
+  <Deger proje="dibs-verim-egrisi" anahtar="kimlik_esik_medyan" ondalik={2}>0,15</Deger>
+  puanı aşarsa **görünür uyarı** düşer.
+- Maksimum sapma
+  <Deger proje="dibs-verim-egrisi" anahtar="kimlik_esik_maks" ondalik={1}>3,0</Deger>
+  puanı aşarsa **hat durur** ve siteye kopyalama yapılmaz: o noktada muhtemelen
+  değişken faizli bir kıymet nominal eğriye sızmıştır.
+
+<div class="not">
+  <span class="etiket">Bu denetimin sınırı</span>
+  <Deger proje="dibs-verim-egrisi" anahtar="not_gosterge_fiyat" ondalik={0}>bie_pydibs TCMB'nin GÖSTERGE NİTELİĞİNDEKİ değerleridir; işlem görmemiş kıymette model fiyatı olabilir. Noktalar tam bağımsız gözlem değildir — eğrinin bu kadar tutarlı çıkması kısmen bunun sonucudur.</Deger>
+  Denetim yine de değerlidir, ama <em>ne için</em> değerli olduğu net olmalı: piyasa
+  tutarlılığını değil, <strong>birim ve sınıflandırma tutarlılığını</strong> ölçer.
+  Bozulan şey ödeme tanımı ya da etiket ayrıştırması olduğunda bu denetim yakalar;
+  gösterge fiyatın piyasa fiyatından sapması ise bu denetimle görünmez.
+</div>
+
+### YTM çapraz sınaması ve par getiri
+
+İkinci sınama **dışarıdan** gelir: eğri, aynı gün işlem gören **kuponlu tahvillerin**
+fiyatını açıklayabiliyor mu? Her aktif kuponlu tahvil için:
+
+1. Nakit akışı **uydurulmaz** — o tahvilin kendi strip'lerinin itfa günleri ve
+   ödemeleri kullanılır. Bu, sayfanın en sevdiği türden bir kapanmadır: aynı veri
+   grubunun iki farklı yayını birbirini kontrol eder.
+2. Gözlenen fiyattan **bileşik iç verim** (YTM) hesaplanır. Kök arama ikiye bölme
+   ile yapılır; nakit akışları pozitif olduğu için fiyat getiride kesin azalandır ve
+   kök tektir.
+3. Aynı nakit akışı **spot eğriyle** iskonto edilerek model fiyatı ve model YTM'si
+   bulunur.
+
+Bu koşuda
+<Deger proje="dibs-verim-egrisi" anahtar="ytm_n" ondalik={0}>42</Deger>
+tahvil sınandı; medyan mutlak YTM farkı
+<Deger proje="dibs-verim-egrisi" anahtar="ytm_medyan_fark" ondalik={4}>0,0006</Deger>
+puan, en büyüğü
+<Deger proje="dibs-verim-egrisi" anahtar="ytm_maks_fark" ondalik={3}>0,007</Deger>
+puan; medyan fiyat farkı
+<Deger proje="dibs-verim-egrisi" anahtar="ytm_medyan_fiyat_fark" ondalik={3}>0,001</Deger>
+TL. Yani eğri, kuponlu tahvil fiyatlarını **baz puanın binde biri** mertebesinde
+hatayla açıklıyor.
+
+Çıpa gününde 2 yıla en yakın vadeli kuponlu tahvil örneği: itfa
+<Deger proje="dibs-verim-egrisi" anahtar="gosterge_itfa" ondalik={0}>19.07.2028</Deger>,
+kalan vade
+<Deger proje="dibs-verim-egrisi" anahtar="gosterge_vade" ondalik={2}>1,91</Deger>
+yıl,
+<Deger proje="dibs-verim-egrisi" anahtar="gosterge_nakit_akisi" ondalik={0}>5</Deger>
+nakit akışı, temiz fiyat
+<Deger proje="dibs-verim-egrisi" anahtar="gosterge_fiyat" ondalik={3}>75,913</Deger>
+TL. Piyasa YTM'si
+<Deger proje="dibs-verim-egrisi" anahtar="gosterge_ytm" ondalik={2}>40,48</Deger>%,
+eğriden hesaplanan model YTM'si
+<Deger proje="dibs-verim-egrisi" anahtar="gosterge_model_ytm" ondalik={2}>40,48</Deger>%.
+
+**Par getiri** aynı ailenin üçüncü üyesidir. Eğriden okunan iskonto çarpanlarıyla,
+başabaş (100) fiyat verecek kuponu çözer ve o farazi tahvilin bileşik YTM'sini
+hesaplar:
+
+$$
+c \;=\; 100\;\frac{1-\text{DF}(T)}{\sum_{k}\text{DF}(t_k)}
+$$
+
+Kupon zamanları vadeden geriye altı ayda birdir. Bu koşuda 2 yıllık par getiri
+<Deger proje="dibs-verim-egrisi" anahtar="par_2y" ondalik={2}>40,40</Deger>% —
+2 yıllık **spot** getiriden
+(<Deger proje="dibs-verim-egrisi" anahtar="spot_2y" ondalik={2}>40,46</Deger>%)
+biraz düşük. Fark, ara kuponların daha kısa (ve ters eğride daha yüksek)
+noktalardan iskonto edilmesinden gelir ve ters eğride par getirinin spot getirinin
+**altında** kalması beklenen davranıştır. Piyasada "gösterge bileşik faiz" denen
+büyüklüğün sabit vadeli karşılığı budur.
+
+## Şekil 08 — Tanı paneli: eğri ne kadar sağlam
+
+<GrafikEmbed
+  src="/projeler/dibs-verim-egrisi/08_tani_paneli.html"
+  baslik="Günlük kullanılabilir nokta sayısı ve vade kapsaması, kimlik denetimi sapmaları (log eksen) ve TÜFEX kıymetleri arası reel getiri saçılması"
+  no="08"
+  yukseklik={1613}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Panel (a)** günlük nokta sayısını vade bandına göre yığar: ≤ 1 yıl, 1–5 yıl,
+5 yıl üstü. Yığının tepesi zaten toplamdır; üstüne ayrıca bir toplam çizgisi
+konmamıştır — aynı sayıyı iki kez göstermek olurdu. Bu panelin işlevi, eğrinin bir
+dönemde neden "sertleştiğini" ya da bir düğümün neden boşaldığını açıklamaktır.
+
+**Panel (b)** kimlik denetiminin zaman serisidir ve **logaritmik** eksendedir:
+sapmalar dört büyüklük mertebesine yayılır, doğrusal eksende tamamı sıfır çizgisine
+yapışırdı. Ham günlük seri soluk arka planda kalır, üstüne 21 günlük yuvarlanan
+medyan çizilir — eğilim okunsun, aykırı gün kaybolmasın. Eşik çizgisi **yalnız
+medyan seriye** aittir; en büyük sapma serisi o eşiğe tabi değildir ve bu grafikte
+ayrıca yazılıdır.
+
+**Panel (c)** son bir yılın bütün TÜFEX gözlemlerini vadeye karşı saçar; çıpa gününün
+noktaları ayrı işaretle üstüne bindirilir. Bu panel, yukarıdaki "reel eğri tek bir
+çizgi değildir" cümlesinin kanıtıdır.
+
+**Bu panelin neden var olduğu.** Sayfanın diğer yedi şekli piyasayı ölçer; bu şekil
+**ölçüm aracını** ölçer. Bir eğri hattı, kendi girdilerinin sağlığını göstermeden
+yayımlandığında okur, grafiğin pürüzsüzlüğünü veri kalitesi sanır. Pürüzsüzlük
+burada kısmen gösterge fiyat olmanın sonucudur ve bu, gizlenmesi değil yazılması
+gereken bir şeydir.
+
+## Veri katmanı: EVDS3'ün kendi tuzakları
+
+Hattın verisi `https://evds3.tcmb.gov.tr/igmevdsms-dis/` ucundan çekilir. Eski
+`evds2` servisi **ölüdür**; anahtar URL'de değil, istek **başlığında** taşınır ve
+sorgu dizesi `?` ile başlamaz.
+
+1. **Tek istek yaklaşık 1000 satırla sınırlıdır ve EVDS aralığın SONUNDAN geriye
+   doldurur.** Fazlasını **uyarı vermeden** kırpar. 2013'ten bugüne bir iş günü
+   serisi istendiğinde geri gelen veri son üç yıl olur ve hiçbir hata mesajı düşmez —
+   tarihçenin başı sessizce yok olur. Hat bu yüzden serileri 900 günlük parçalar
+   hâlinde çeker.
+2. **Satır sınırı seri sayısına bağlı değildir**, tarih sayısına bağlıdır. Ölçüldü:
+   24 seri × 963 gün tek istekte 963 satır ve 24 dolu kolon döndü. Bu yüzden seriler
+   20'lik demetler hâlinde çekilir; bir demette bozuk kod varsa EVDS **bütün isteği**
+   reddeder ve o zaman seriler tek tek denenip düşen seri adıyla raporlanır.
+3. **Seri kodu tahmin edilmez.** Kıymet kodları veri grubu kataloğundan
+   (`serieList`) okunur; katalog önbelleklenir ama TTL'lidir.
+
+### Birim denetimi
+
+EVDS3 meta verisinde **birim alanı yoktur** — `serieList` yanıtındaki bütün alanlar
+tarandı, yok. Birim seri **adından** okunmak zorundadır ve bu, 1000× hata sınıfının
+kapısını açık bırakır. Hattın savunması **büyüklük mertebesi denetimidir**: her
+seriye beklenen aralık tanımlanır (faizler yüzde, −10 ile 500 arası; TÜFE endeksi
+50 ile 100.000 arası; katılımcı sayısı adet, 1 ile 500 arası) ve aralık dışına çıkan
+seri uyarı düşürür. Bin katlık bir hata, trilyon mertebesindeki bir kalemde gözle
+yakalanmaz — sayı hâlâ "makul" görünür.
+
+Bu hattın kendine özgü birim tuzakları yukarıda ayrıntılandırıldı: `.ORAN`'ın
+dönemsel tutar olması, bonoda kalan gün sayısı olması, "F" karakterli ISIN'lerin
+100 nominal ölçeğinde olmaması, TÜFEX "Değer"inin endekslenmiş TL olması.
+
+### Tazelik ve sessiz bayatlama
+
+Tazelik referansı **duvar saatidir**. Verinin kendi son gününü referans almak,
+denetimi kendi kendine referanslı hâle getirirdi ("son gözlem bugün, demek ki taze")
+ve hiçbir bayatlama yakalanmazdı.
+
+Aileler ayrı denetlenir: eğri ve iş günü faizleri
+<Deger proje="dibs-verim-egrisi" anahtar="bayat_tolerans_gun" ondalik={0}>5</Deger>
+gün, aylık anket ve enflasyon
+<Deger proje="dibs-verim-egrisi" anahtar="bayat_tolerans_ay" ondalik={0}>45</Deger>
+gün toleransla. Aylık tolerans geniştir, çünkü PKA ayın ikinci yarısında, TÜFE ertesi
+ayın ilk günlerinde yayımlanır; dar bir eşik her ay yanlış alarm üretirdi. Bu koşuda
+gecikmeler: eğri
+<Deger proje="dibs-verim-egrisi" anahtar="yayim_gecikme_gun" ondalik={0}>2</Deger>
+gün, anket
+<Deger proje="dibs-verim-egrisi" anahtar="anket_gecikme_gun" ondalik={0}>3</Deger>
+gün.
+
+Diğer savunmalar:
+
+- **Çıktı dosyaları her koşuda yeniden yazılır.** "Dosya varsa atla" mantığı yoktur;
+  tam da bu mantık, hattın koştuğu ama ilerlemediği hata sınıfını üretir.
+- **Önbellek TTL'lidir** ve kıymetin durumuna göre değişir: hâlâ işlem gören kıymet
+  12 saat, vadesi dolmuş kıymet 30 gün, katalog 24 saat. Vadesi dolmuş kıymetin
+  gösterge değeri artık değişmez — ama önbelleği yine de **TTL'siz değildir**.
+- **Ağ düşerse eski önbelleğe düşülür, ama sessiz kalınmaz**: kaç gün eski olduğu
+  yazılır, uyarı hesap katmanına devredilir ve sayfanın başındaki koşu kutusunda
+  görünür.
+- **Çıpa günü veriden okunur**, sabit tarih yazılmaz. Çıpa hafta sonuna düşerse bir
+  önceki iş gününe çekilir: TCMB gösterge değeri takvim günü işler ama referans
+  faizler iş günü serileridir.
+- **Çıpa gününde 2 yıllık düğüm kurulamıyorsa hat durur** ve siteye kopyalama
+  yapılmaz. Yarım bir eğriyle yayımlanmaktansa yayımlanmamak tercih edilmiştir.
+
+### GÖRÜNÜR UYARI düşürenler
+
+Uyarılar veri katmanında basılır, hesap katmanına **devredilir** ve
+`uyarilar.json`'a yazılır. Devir olmasaydı, veri katmanının uyarıları sayfada tek bir
+iz bırakmazdı: kaynak durur, hat yeşil biter, tarih ilerlemez, sayfa hiçbir şey
+söylemez.
+
+Uyarı düşüren durumlar: ad biçiminin ayrıştırılamaması; bir düğümün tarihçenin
+%30'undan azında kurulabilmesi; kimlik denetiminde medyan sapmanın eşiği aşması;
+YTM çapraz sınamasında medyan farkın 1 puanı geçmesi; PKA katılımcı sayısının 40'ın
+altına inmesi; TÜFE zincirinin kurulamaması; eski önbelleğe düşülmesi; bir serinin
+hiç gelmemesi.
+
+**Bu koşuda düşen uyarılar
+(<Deger proje="dibs-verim-egrisi" anahtar="uyari_sayisi" ondalik={0}>1</Deger> adet)**
+sayfanın başındaki koşu kutusunda durur:
+<Deger proje="dibs-verim-egrisi" anahtar="uyari_cumlesi" ondalik={0}>Bu koşuda düşen tek uyarı budur:</Deger>
+<Deger proje="dibs-verim-egrisi" anahtar="uyari_metni" ondalik={0}>AD BİÇİMİ: bie_pydibsarsiv grubunda 13 seri adı ayrıştırılamadı (0.2%) — TCMB ad biçimini değiştirmiş olabilir; bu kıymetler evrene girmedi.</Deger>
+
+Tam liste her koşuda
+[`uyarilar.json`](/projeler/dibs-verim-egrisi/uyarilar.json) dosyasına yazılır;
+sayfadaki canlı değerlerin kaynağı ise
+[makine okunur veri özeti](/projeler/dibs-verim-egrisi/ozet.json).
+
+## Sınırlar ve yorum notları
+
+Hiçbiri bir kalibrasyon sabitiyle kapatılmamıştır; kapatmak, ölçüm hatasını modele
+gömmek olurdu.
+
+- **Gösterge fiyat işlem fiyatı değildir.** İşlem görmemiş kıymette TCMB model fiyatı
+  basar. Eğrinin pürüzsüzlüğü kısmen bunun sonucudur ve noktalar tam bağımsız gözlem
+  değildir. Likit olmayan vade bölgelerinde eğri, piyasanın gerçekten işlem yapacağı
+  seviyeden sapabilir.
+- **10 yıllık düğüm yok.** Aktif sıfır kuponlu evrenin en uzun noktası yaklaşık 9
+  yıl; "2y−10y" eğimi burada 2y−9y ile vekil edilmiştir ve mutlak değerce biraz küçük
+  çıkar. Vekil olduğu grafikte ve metinde her yerde yazılıdır.
+- **Reel eğri seyrektir ve boş düğümler bırakır.** TÜFEX evreni
+  <Deger proje="dibs-verim-egrisi" anahtar="evren_tufex" ondalik={0}>20</Deger>
+  anapara strip'idir; vade ekseninde geniş boşluklar vardır. Bu koşuda 3 yıllık reel
+  düğüm kurulamadı. Boşluğun üstünden atlanmadı.
+- **Başabaş enflasyon beklenti değildir.** İçindeki risk primi, likidite primi ve
+  ölçüm güvensizliği bileşenleri **ayrıştırılmamıştır**. Ayrıştırmak, TÜFEX ve nominal
+  eğri arasındaki fiyat farkını modelleyen ayrı bir çalışma gerektirir.
+- **Referans endeks yeniden kurulmuştur, resmî değildir.** Hazine'nin tanımı
+  uygulanmıştır ama Hazine'nin yayımladığı günlük endeks değerleriyle birebir
+  karşılaştırma yapılmamıştır; yuvarlama ve tatil günü işleyişinden kaynaklanan küçük
+  farklar olabilir. Zincir katsayısı her koşuda yeniden okunur.
+- **PKA bir ankettir.** Piyasa fiyatından türetilmemiştir; katılımcı bileşimi
+  değiştiğinde seride kırılma olabilir ve katılımcı sayısı düştüğünde ortalama
+  gürültülenir. Reel faiz serisindeki basamaklar bu anketin yayım ritmindendir.
+- **Reel faizin nominal bacağı DİBS getirisidir, politika faizi değildir.** Bu sayfa
+  "TCMB'nin reel politika faizini" ölçmez; piyasa faizinin reel karşılığını ölçer.
+- **Taşıma ölçüsü roll-down içermez.** Ters eğride roll-down negatiftir ve pozitif
+  taşımayı yiyebilir. Toplam getiri ayrıştırması bu sayfada yapılmaz.
+- **İma edilen forward patikası tahmin değildir.** Vade primi gözlenmez ve
+  ayrıştırılmamıştır; anket beklentileriyle arasındaki fark ancak kaba bir ölçüdür.
+- **Ana bileşen payları eğrinin boyutunu ölçmez.** Seviye oynaklığının çok yüksek
+  olduğu bir piyasada PC1 varyansın büyük kısmını mekanik olarak yutar; eğim ve
+  bükülme ticari olarak hâlâ anlamlıdır.
+- **Hiçbir seride mevsimsel arındırma yapılmadı** ve hiçbir seri düzleştirilmedi.
+  Tek günlük sıçramaları rejim değişimi diye okumayın; özellikle ihale günleri ve
+  itfa yoğun günler kısa uçta desen üretir.
+- **Sukuk, hazine bonosu ve değişken faizli kıymetler evren dışıdır.** Bu bir kapsam
+  kararıdır: bu sayfa **nominal sabit getirili** TL devlet eğrisini ölçer. Sukuk ve
+  değişken faizli kıymetlerin kendi fiyatlama dinamiği vardır ve aynı eğriye
+  konulamaz.
+- **Kalan vadesi
+  <Deger proje="dibs-verim-egrisi" anahtar="esik_min_gun" ondalik={0}>15</Deger>
+  günden kısa strip eğriye alınmaz.** Bu, eğrinin en kısa ucunun bir-iki haftalık bir
+  kör noktası olduğu anlamına gelir; gecelik faiz ile eğrinin kısa ucu arasındaki
+  bağlantı bu yüzden doğrudan değil, TLREF üzerinden kurulur.
+
+## Kaynaklar
+
+- TCMB, *Devlet İç Borçlanma Senetlerinin Gösterge Niteliğindeki Değerleri* veri
+  grubu (`bie_pydibs`) ve arşiv eşi (`bie_pydibsarsiv`) — kıymet bazında gösterge
+  fiyat ve ödeme serileri.
+- Hazine ve Maliye Bakanlığı, *TÜFE'ye Endeksli Devlet Tahvilleri — Yatırımcı
+  Kılavuzu* — referans endeks tanımı, üç aylık gecikme ve ay içi doğrusal ara değer
+  kuralı.
+- TÜİK, *Tüketici Fiyat Endeksi* — 2003=100 ve 2025=100 serileri; baz değişikliği
+  duyurusu ve zincirleme kuralı.
+- TCMB, *Piyasa Katılımcıları Anketi* — 12 ay, 24 ay ve 5 yıl enflasyon beklentileri,
+  politika faizi beklentileri, katılımcı sayısı.
+- BİST, *TLREF — Türk Lirası Gecelik Referans Faiz Oranı* metodoloji dokümanı.
+- TCMB, *Açık Piyasa İşlemleri* istatistikleri (`TP.APIFON4`) ve faiz kotasyonları
+  (`TP.PY.P01.ON`, `TP.PY.P02.ON`, `TP.PY.P02.1H`, `TP.PY.P06.1H`).
+- Fisher, I., *The Theory of Interest* — nominal, reel faiz ve beklenen enflasyon
+  arasındaki kimlik.
+- Litterman, R. ve Scheinkman, J., *Common Factors Affecting Bond Returns* — verim
+  eğrisinin seviye/eğim/bükülme ayrışımı.

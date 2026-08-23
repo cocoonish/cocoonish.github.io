@@ -112,7 +112,7 @@ puandır (artı = tavan daha uzakta).
   vermez; bu koşudaki kapanma artığı{' '}
   <Deger proje="fonlama-likidite" anahtar="spread_vintaj_artik_pp" ondalik={2} isaret={true}>−0,09</Deger>
   puandır ve tamamen <em>vintaj</em> farkıdır. Üçünü birlikte okumak isteyen için
-  <code>ozet.json</code> ayrıca son <strong>ortak</strong> güne çıpalı sürümleri taşır
+  veri özeti ayrıca son <strong>ortak</strong> güne çıpalı sürümleri taşır
   (<code>*_ortak_gun</code>): ortak gün{' '}
   <Deger proje="fonlama-likidite" anahtar="spread_ortak_gun" ondalik={0}>07.08.2026</Deger>{' '}
   (<Deger proje="fonlama-likidite" anahtar="spread_ortak_yas_gun" ondalik={0}>13</Deger> gün
@@ -413,7 +413,7 @@ $$
 \underbrace{\texttt{TP.APIFON1.TOP}}_{A:\ \text{fonlama}} \;-\; \underbrace{\texttt{TP.APIFON2.TOP}}_{B:\ \text{sterilizasyon}} \;=\; \underbrace{\texttt{TP.APIFON3}}_{\text{net}}
 $$
 
-Bu kimlik **hattı durduran** bir denetimdir: sapma 1e−6 milyon TL'yi aşarsa `metrik.py`
+Bu kimlik **hattı durduran** bir denetimdir: sapma 1e−6 milyon TL'yi aşarsa hesap katmanı
 hata verip düşer. Ölçülen maksimum fark
 <Deger proje="fonlama-likidite" anahtar="dog_net_maks" ondalik={0}>1.2e-10</Deger>
 milyon TL (n = <Deger proje="fonlama-likidite" anahtar="dog_net_n" ondalik={0}>3.928</Deger>
@@ -422,7 +422,7 @@ iş günü) — yani kaynak tutarlı ve bizim kolon eşleştirmemiz doğru.
 **Birim tuzağı.** `TP.APIFON*` ailesi **milyon TL**, analitik bilanço (`TP.AB.A*`)
 **bin TL**, ihale kabul tutarları (`TP.PY.P07.*`) **bin TL** cinsindendir. Bin katlık
 bir hata trilyon TL ölçeğinde gözle yakalanmaz — sayı hâlâ "makul" görünür. Dönüşüm bu
-yüzden **tek yerde** (`metrik.py`) yapılır ve grafikte hepsi milyar TL'ye indirgenir.
+yüzden **tek yerde** (hesap katmanı) yapılır ve grafikte hepsi milyar TL'ye indirgenir.
 
 **Üç panel.** (a) net stok, işaretli; (b) fonlama bacağı kanal kırılımıyla yığılı;
 (c) sterilizasyon bacağı kanal kırılımıyla yığılı. Yığılı gösterim burada zorunludur:
@@ -496,8 +496,7 @@ milyar TL; toplam TCMB kaynaklı net TL
 <Deger proje="fonlama-likidite" anahtar="tcmb_tl_saglama_mlr" ondalik={1} isaret={true}>−1.127,5</Deger>
 milyar TL.
 
-**Hangi bacaklar dâhil?** Bu soru sayfada tahmine bırakılmaz; kapsam `ozet.json`'da bir
-metin anahtarı olarak taşınır:
+**Hangi bacaklar dâhil?** Bu soru sayfada tahmine bırakılmaz; kapsam, sayfayla birlikte yayımlanan veri özetinde metin olarak taşınır:
 <Deger proje="fonlama-likidite" anahtar="tcmb_tl_saglama_kapsam" ondalik={0}>Net APİ fonlaması (A − B) + alım yönlü swap stokunun TL karşılığı − satım yönlü swap stokunun TL karşılığı.</Deger>
 
 **Kanal kırılımı.** `TP.SWAPTEKTAR.*` ailesi stoku beş kanala ayırır: TCMB döviz
@@ -509,7 +508,7 @@ mekanizmalara işaret eder.
 <div class="not">
   <span class="etiket">Olgu bittiğinde cümle de bitmeli</span>
   <Deger proje="fonlama-likidite" anahtar="swap_cumlesi" ondalik={0}>Alım yönlü swap stoku 0 milyon dolar — kanal bu ölçüm gününde kapalı.</Deger>
-  Bu cümle <code>ozet.json</code>'daki <code>swap_alim_aktif</code> bayrağından
+  Bu cümle veri özetindeki <code>swap_alim_aktif</code> bayrağından
   üretilir. Bayrağa bağlanmayan bir sayfada "swap ile TL sağlanıyor" cümlesi olgu
   bittikten <em>sonra</em> da yayında kalırdı — bu, hiç güncellenmeyen bir sayıdan
   kötüdür, çünkü yanlış bir <strong>mekanizma</strong> anlatır. Aynı mantık
@@ -763,8 +762,8 @@ fiyatına üst sınır koymaz.
 **Koridor simetrik değildir.** "Politika faizi koridorun ortasıdır" cümlesi bu sayfada
 hiçbir yerde kurulmaz, çünkü doğru değildir: çıpa günü tavan politika faizinden
 <Deger proje="fonlama-likidite" anahtar="koridor_asimetri_pp" ondalik={2} isaret={true}>+1,50</Deger>
-puan daha uzaktır. Asimetri politika tercihidir ve `ozet.json`'da ayrı bir anahtar
-olarak taşınır (`koridor_asimetri_pp`).
+puan daha uzaktır. Asimetri politika tercihidir ve veri özetinde ayrı bir anahtar
+olarak taşınır.
 
 **Örtük sıkılaştırma dönemi tanımı.** AOFM'nin koridor tavanını en az **0,05 puan**
 aşarak en az **5 iş günü** sürmesi. İki eşik de keyfîdir ve keyfî olduğu yazılıdır:
@@ -852,7 +851,7 @@ bacağıdır**; rezerv hattının swap düzeltmesi yurt dışı merkez bankalar�
 swapları da içerir. İkisi aynı büyüklük değildir; sınanan, ortak olan bacaktır.
 
 **Bu figür üretilemezse hat durur.** Kardeş hattın `gunluk.csv` dosyası yoksa figür
-üretilmez ve `grafik.py` çıkış kodu 1 verir; siteye kopyalama yapılmaz. Eksik panelli
+üretilmez ve grafik üretimi çıkış kodu 1 verir; siteye kopyalama yapılmaz. Eksik panelli
 bir sayfa yayımlanmaz — çünkü eksik panel, okurun fark edemeyeceği bir bayatlamadır.
 
 ## Doğrulama ve sessiz bayatlama denetimi
@@ -924,13 +923,13 @@ okunur.
 
 **Veri katmanının uyarıları hesap katmanına DEVREDİLİR.** Bu bir uygulama ayrıntısı
 değil, sayfanın en temel sözleşmesidir. Tazelik alarmları, "ESKİ ÖNBELLEK: n gün eski"
-düşüşü, ölü seri ve düşen demet uyarıları `veri.py`'de basılır ve `veri_durum.json`'a
+düşüşü, ölü seri ve düşen demet uyarıları veri katmanında basılır ve veri durum kaydına
 yazılır — ama o dosya siteye kopyalanmaz. Hesap katmanı bu listeyi koşum başında
 **devralmasaydı**, uyarılar `uyarilar.json`'a hiç girmez ve sayfada tek bir görünür iz
 bırakmazdı: kaynak durur, hat yeşil biter, tarih ilerlemez, sayfa hiçbir şey söylemez.
 Düzenin yasakladığı sessiz bayatlamanın tam kendisi. Devir iki kaynaktan birden yapılır
-(bellekteki liste + `veri_durum.json`), böylece `veri.py` ayrı koşulmuş olsa bile uyarı
-kaybolmaz; `ozet_uret.py` de son bir savunma olarak aynı dosyayı bir kez daha okur.
+(bellekteki liste + veri durum kaydı), böylece veri katmanı ayrı koşulmuş olsa bile uyarı
+kaybolmaz; özet üretimi de son bir savunma olarak aynı dosyayı bir kez daha okur.
 
 **Bu koşuda düşen uyarılar
 (<Deger proje="fonlama-likidite" anahtar="uyari_sayisi" ondalik={0}>5</Deger> adet)**
@@ -939,16 +938,16 @@ liste:
 <Deger proje="fonlama-likidite" anahtar="uyari_cumlesi" ondalik={0}>Bu koşuda 5 uyarı düştü:</Deger>
 <Deger proje="fonlama-likidite" anahtar="uyari_metni" ondalik={0}>AYRI KALEM DEĞİL: ZK bloke hesabı 15.03.2024 tarihinde doluyor. · AOFM TABANSIZ: son bir yılda 33 iş gününde fonlama 5 milyar TL eşiğinin altında olduğu hâlde EVDS bir AOFM değeri basmış.</Deger>
 
-**Bayat veri bayrağı.** `ozet.json` yayım gecikmesini aile toleranslarıyla karşılaştırır
+**Bayat veri bayrağı.** veri özeti yayım gecikmesini aile toleranslarıyla karşılaştırır
 ve aşılırsa `bayat: true` yazar; sayfanın başındaki kutu o bayrakla kırmızıya döner ve
-`uyari_metni`nin başına bir **BAYAT VERİ** cümlesi eklenir. Eşikler tazelik denetiminin
+sayfadaki uyarı metninin başına bir **BAYAT VERİ** cümlesi eklenir. Eşikler tazelik denetiminin
 kendi tablosundan okunur — iki yerde ayrı eşik tutulsaydı biri güncellenir, öteki
 unutulurdu.
 
 Uyarıların tam listesi her koşuda
 [`uyarilar.json`](/projeler/fonlama-likidite/uyarilar.json) dosyasına yazılır; sayfadaki
 canlı değerlerin kaynağı ise
-[`ozet.json`](/projeler/fonlama-likidite/ozet.json).
+[makine okunur veri özeti](/projeler/fonlama-likidite/ozet.json).
 
 ### EVDS3 erişiminin kendi tuzakları
 

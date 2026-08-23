@@ -18,19 +18,37 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
 
 <article class="bulten">
   <header class="ust">
-    <p class="etiket kicker">Günlük bülten</p>
+    <p class="etiket kicker">{b.haftalik ? 'Haftaya bakış' : 'Günlük bülten'}</p>
     <h1>{b.tr_tarih} <span class="gun">{b.gun}</span></h1>
-    {b.haftalik && <p class="haftalik-rozet">Haftaya bakış — takvim kapsamı bu bültende geniş tutuldu</p>}
+    {b.haftalik && <p class="haftalik-rozet">geçen hafta ve önümüzdeki hafta</p>}
     <p class="alt">
-      Sayılar veri hatlarının en son koşusundan; her satırın yanında hangi veri
-      sürümünden geldiği yazılıdır. Eşikler <code>bulten/ayar.py</code> içinde.
+      {b.haftalik
+        ? 'Geçen hafta Türkiye makro verisinde ne değişti, önümüzdeki hafta hangi veriler ve kararlar var. Her sayının altında hangi tarihli veriden geldiği yazar.'
+        : 'Türkiye makro verisinde son yayımdan bu yana ne değişti, bugün ve önümüzdeki haftalarda ne bekleniyor. Her sayının altında hangi tarihli veriden geldiği yazar.'}
     </p>
   </header>
 
   {b.yorum && (
     <section class="yorum">
-      <p class="etiket">Günün okuması</p>
+      <p class="etiket">{b.haftalik ? 'Haftanın okuması' : 'Günün okuması'}</p>
       <div set:html={b.yorum} />
+    </section>
+  )}
+
+  {b.ozet && (b.ozet.ne_oldu || b.ozet.ne_bekleniyor) && (
+    <section class="ozet">
+      {b.ozet.ne_oldu && (
+        <div class="ozet-parca">
+          <h2>{b.haftalik ? 'Geçen hafta ne oldu' : 'Ne oldu'}</h2>
+          <p>{b.ozet.ne_oldu}</p>
+        </div>
+      )}
+      {b.ozet.ne_bekleniyor && (
+        <div class="ozet-parca">
+          <h2>{b.haftalik ? 'Önümüzdeki hafta ne bekleniyor' : 'Ne bekleniyor'}</h2>
+          <p>{b.ozet.ne_bekleniyor}</p>
+        </div>
+      )}
     </section>
   )}
 
@@ -69,9 +87,9 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
     <section class="blok kritik-blok">
       <h2>Kritik takvim — önümüzdeki {b.kritik_takvim[b.kritik_takvim.length - 1].kalan_gun} gün</h2>
       <p class="alt-not">
-        Yalnız birinci derece kayıtlar, önem sırasına göre değil TARİH sırasına göre.
-        Beklenti satırında “anket” piyasanın (TCMB Piyasa Katılımcıları Anketi),
-        “model” bu deponun kendi hesabının beklentisidir.
+        Yalnız birinci derece veriler, tarih sırasıyla. Beklenti satırında “anket”
+        piyasanın beklentisidir (TCMB Piyasa Katılımcıları Anketi); “model”, bu sitedeki
+        hesabın kendi tahminidir.
       </p>
       <ol class="kritik">
         {b.kritik_takvim.map((k: any) => (
@@ -124,7 +142,7 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
                   <td class="t-ulke">{k.ulke}</td>
                   <td class="t-olay">
                     {k.olay}
-                    {k.kesinlik !== 'kesin' && <span class="damga">{k.kesinlik}</span>}
+                    {k.kesinlik !== 'kesin' && <span class="damga">tarih kesinleşmedi</span>}
                     {k.beklenti && <span class="beklenti">{k.beklenti}</span>}
                     {k.not_ && <span class="dipnot">{k.not_}</span>}
                   </td>
@@ -188,12 +206,13 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
 
   <footer class="kunye">
     <p>
-      Üretim: {b.olusturma.replace('T', ' ')} · kural tabanlı çekirdek
-      (<code>bulten/</code>) {b.yorum_zamani ? `· yorum: ${b.yorum_zamani.replace('T', ' ')}` : '· yorum katmanı çalışmadı'}
+      Hazırlanma: {b.olusturma.replace('T', ' ').slice(0, 16)}
+      {b.yorum_zamani ? ` · okuma notu: ${b.yorum_zamani.replace('T', ' ').slice(0, 16)}` : ''}
     </p>
     <p class="feragat">
       Bülten yatırım tavsiyesi değildir. Sayılar kamuya açık kaynaklardan otomatik
-      derlenir; eşik aşımı bir yorum değil, bir ölçüm bildirimidir.
+      derlenir; bir büyüklüğün burada yer alması, önceden belirlenmiş bir değişim
+      sınırını aştığı anlamına gelir — yorum değil, ölçüm bildirimidir.
     </p>
   </footer>
 </article>
@@ -213,6 +232,13 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
     background: color-mix(in srgb, var(--claret) 4%, transparent);
   }
   .yorum .etiket { color: var(--claret); margin: 0 0 0.4rem; }
+
+
+  .ozet { margin: 0 0 2.4rem; display: grid; gap: 1.3rem; }
+  .ozet-parca h2 {
+    font-family: var(--font-display); font-size: 1.12rem; margin: 0 0 0.4rem;
+  }
+  .ozet-parca p { margin: 0; line-height: 1.62; }
 
   .gosterge-serit {
     display: grid;

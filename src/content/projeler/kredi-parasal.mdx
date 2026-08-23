@@ -225,7 +225,7 @@ göre, kurdaki %1'lik hareket toplam stoka mekanik olarak
 ~<Deger proje="kredi-parasal" anahtar="kur1_puan" ondalik={2}>0,33</Deger> puan ekler.
 Kur yıllık %30 giderse bu tek başına yıllık
 ~<Deger proje="kredi-parasal" anahtar="kur30_puan" ondalik={0}>10</Deger> puanlık sahte
-kredi büyümesi demektir. (Bu iki sayı da `yp_pay`'den türetilir ve `ozet.json`'dan gelir;
+kredi büyümesi demektir. (Bu iki sayı da yabancı para payından türetilir ve veri özetinden gelir;
 elle yazılsaydı YP payı değiştiğinde cümle kendiyle çelişirdi.)
 
 Bu bir "detay" değildir çünkü **işareti bile değiştirebilir**: kur sıçrarken reel kredi
@@ -321,7 +321,7 @@ puandır. Mertebe farkı bilerek yan yana konuyor: doğru tartışma "hangi kur"
 **Kuyruk sorunu.** Zorunlu karşılık tabanı 13 gün gecikmeli yayımlanır; sepet kuru son
 1–2 haftada boştur. O kuyruk USD ve EUR üzerinden sabitsiz en küçük kareler ile
 (<Deger proje="kredi-parasal" anahtar="sepet_tahmin_n" ondalik={0}>104</Deger> haftalık
-pencere) **tahmin edilir** ve `ozet.json`'da işaretlenir. Bu koşuda son gözlemin kaynağı:
+pencere) **tahmin edilir** ve veri özetinde işaretlenir. Bu koşuda son gözlemin kaynağı:
 <Deger proje="kredi-parasal" anahtar="sepet_kaynak" ondalik={0}>tahmin</Deger>. Tahminin
 eğitim penceresindeki artık standart sapması
 %<Deger proje="kredi-parasal" anahtar="sepet_tahmin_artik_std" ondalik={3}>0,092</Deger>,
@@ -338,7 +338,7 @@ arasında, yani
 ±<Deger proje="kredi-parasal" anahtar="sepet_tahmin_buyume_bandi_pp" ondalik={2}>0,80</Deger>
 puan oynuyor. Kur düzeyindeki binde birlik bir artık, büyüme düzeyinde neredeyse bir
 puana dönüşüyor — çünkü haftalık oranlar on üç kez bileşikleniyor ve sonra
-yıllıklandırılıyor. Bu bant `ozet.json`'da `sepet_tahmin_buyume_bandi_pp` anahtarıyla
+yıllıklandırılıyor. Bu bant veri özetinde ayrı bir alan olarak
 taşınır ve yukarıdaki duyarlılık tablosunun son satırıdır.
 
 **Kurun günü.** Haftalık gözlemler Cuma itibarıyladır ve kur **aynı Cuma** alınır (bu
@@ -397,7 +397,7 @@ zorundadır:
 Sonuç: bu sayfadaki
 %<Deger proje="kredi-parasal" anahtar="g_ar_13y" ondalik={2}>25,86</Deger>, "TCMB'nin
 sınırı aşıldı mı" sorusunun cevabı **değildir**. Finansal koşulların ölçüsüdür.
-`ozet.json`'daki `arindirma_yontem` alanı
+veri özetindeki arındırma yöntemi alanı
 (<Deger proje="kredi-parasal" anahtar="arindirma_yontem" ondalik={0}>zincirleme_sepet</Deger>)
 bu ayrımı taşır ve sayfayı okuyan her makine tarafında görünür.
 
@@ -726,7 +726,7 @@ bankaların serbest mevduatı
 toplam rezerv para
 (<Deger proje="kredi-parasal" anahtar="rezerv_para_mlr" ondalik={0}>4.809</Deger>).
 
-**Türetilen ve etiketlenen bir oran.** `zk_ima_oran` = ZK bloke hesabı / ZK'ya tabi taban
+**Türetilen ve etiketlenen bir oran.** İma edilen zorunlu karşılık oranı = ZK bloke hesabı / ZK'ya tabi taban
 = %<Deger proje="kredi-parasal" anahtar="zk_ima_oran" ondalik={2}>4,23</Deger>. Bu
 **ima edilen bileşik orandır** ve tebliğdeki herhangi bir tek orana eşit değildir:
 tebliğ vade, para cinsi ve yükümlülük türüne göre farklı oranlar tanımlar, üstelik bir
@@ -866,9 +866,9 @@ TL/ay hızındaydı.
 **<Deger proje="kredi-parasal" anahtar="kkm_cumlesi" ondalik={0}>Program fiilen kapanmıştır; grafik bir akım hikâyesi değil, bitmiş bir rejimin tarihidir.</Deger>**
 
 Bunun sayfa metnindeki sonucu doğrudandır: **güncel dolarizasyon hareketi "KKM çıkışı"
-ile açıklanmaz.** Stok sıfırsa çıkacak stok yoktur. Sayfanın bu bölümü `ozet.json`'daki
-`kkm_aktif` bayrağına bağlıdır; program yeniden açılırsa bayrak döner ve bu paragrafın
-dayandığı cümle (`kkm_cumlesi`) kendiliğinden değişir. Serinin taze olması olgunun
+ile açıklanmaz.** Stok sıfırsa çıkacak stok yoktur. Sayfanın bu bölümü veri özetindeki
+programın açık olup olmadığını taşıyan bir bayrağa bağlıdır; program yeniden açılırsa
+bayrak döner ve bu paragrafın dayandığı cümle kendiliğinden değişir. Serinin taze olması olgunun
 sürdüğü anlamına gelmiyor — bu, hattın "sessiz bayatlama" denetiminin tersinden
 örneğidir: **veri taze, olgu bitmiş.**
 
@@ -1055,7 +1055,7 @@ aylıktan %<Deger proje="kredi-parasal" anahtar="dog_kredi_aylik" ondalik={2}>37
 
 Hiçbiri **bayatlığı** yakalamaz: iki taraf birlikte bayatlarsa kimlik yine tutar. Bayatlık
 ayrı denetlenir — tazelik tablosundan, duvar saatiyle. Ayrıca bir figür üretilemezse
-`grafik.py` çıkış kodu 1 verir ve **siteye kopyalama yapılmaz**; eski grafikle taze metin
+grafik üretimi çıkış kodu 1 verir ve **siteye kopyalama yapılmaz**; eski grafikle taze metin
 yayımlanmasın diye.
 
 ## Sınırlar ve yorum notları
@@ -1069,7 +1069,7 @@ gömmek olurdu.
   <Deger proje="kredi-parasal" anahtar="usd_sepet_farki_13y" ondalik={2}>−0,13</Deger>
   puan), ama sıfır olduğu iddia edilmiyor.
 - **Sepet kurunun son haftaları tahmindir.** ZK tabanı 13 gün gecikmeli; kuyruk USD ve
-  EUR ile tahmin ediliyor ve `sepet_kaynak` alanında işaretleniyor. Bu koşuda son
+  EUR ile tahmin ediliyor ve son gözlemin kaynağı olarak işaretleniyor. Bu koşuda son
   gözlem: <Deger proje="kredi-parasal" anahtar="sepet_kaynak" ondalik={0}>tahmin</Deger>.
 - **Bu seri TCMB'nin makro ihtiyati düzenleme serisi değildir.** Referans kur, oran ve
   kapsam tebliğle belirlenir, EVDS'te yayımlanmaz; sınır çizgisi grafiğe çizilmez.
@@ -1085,14 +1085,14 @@ gömmek olurdu.
 - **Para çarpanı bir davranış parametresi değildir.** Zorunlu karşılık oranı idari olarak
   değişince payda sıçrar; çarpandaki hareket kredi mekanizmasının değişimi olarak
   okunmamalıdır.
-- **`zk_ima_oran` tebliğdeki bir orana eşit değildir.** İma edilen bileşik orandır;
+- **İma edilen zorunlu karşılık oranı, tebliğdeki bir orana eşit değildir.** İma edilen bileşik orandır;
   EVDS'te zorunlu karşılık oranı serisi yoktur.
 - **Arındırılmış dolarizasyon payı çıpadan öncesine uzatılmaz.** Sabit kurla değerlenmiş
   pay çıpaya göre tanımlıdır; geriye uzatılırsa dolarizasyon değil kur okunur.
 - **DTH tabanı kıymetli maden hesaplarını içerir.** Altın fiyatı hareketleri ima edilen
   sepet kuruna küçük bir bileşen olarak girer; ayrıştırılmıyor.
 - **KKM yalnız aylık stok olarak var**; haftalık KKM serisi yoktur. Program fiilen
-  kapandığı için `kkm_aktif` bayrağı kapalıdır ve "KKM çıkışı" gerekçesi güncel
+  kapandığı için ilgili bayrak kapalıdır ve "KKM çıkışı" gerekçesi güncel
   dolarizasyon yorumunda kullanılmaz.
 - **Takip oranı satış ve yeniden yapılandırmaya duyarlıdır.** Oranın gerilemesi tek
   başına kredi kalitesinin iyileştiği anlamına gelmez; alt panelde stok bu yüzden var.

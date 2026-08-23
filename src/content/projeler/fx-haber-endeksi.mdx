@@ -78,7 +78,7 @@ başına okunmaz; makale sayısı ve tarihçe (Şekil 02) ile birlikte okunur.
   yukseklik={560}
 />
 
-Her koşu `index_history.json`'a bir anlık görüntü ekler; çizgiler varlık başına endeks
+Her koşu endeks tarihçesine bir anlık görüntü ekler; çizgiler varlık başına endeks
 patikası, soluk bantlar kategori eşikleri. Değerin seviyesinden çok **bant geçişleri**
 izlenir: çizginin ±0,10'u kesmesi Alıcı/Satıcı'ya, ±0,50'yi kesmesi Aşırı'ya geçiştir.
 
@@ -90,7 +90,7 @@ yazılır — yeniden çalıştırma yalnız yeni haberleri işler.
 
 **2 — Duyarlılık skoru.** Başlıklar **FinBERT** ile skorlanır; model yüklenemezse
 VADER'a düşülür. Skorlar makale düzeyinde saklanır. Tahvil varlıklarında skor alım
-noktasında terslenir (`invert_sentiment`): "getiri düşecek" haberi fiyat için pozitiftir.
+noktasında terslenir: "getiri düşecek" haberi fiyat için pozitiftir.
 
 **3 — Ağırlıklandırma.**
 
@@ -280,7 +280,7 @@ kümesinin sürdüğüne bakın — tek kaynaklı tekrar zinciri mi, geniş taba
 - **İki farklı veri ufku var, karıştırmayın.** Endeks seviyesi (Şekil 01) ve manşetler
   her koşuda tazelenir; rejim/korelasyon/saçılım panelleri ise 52 haftalık *geçmiş haber
   önbelleğinden* hesaplanır. Önbelleğin şu anki ucu **<Deger proje="fx-haber-endeksi" anahtar="veri_sonu" ondalik={1}>16.08.2026</Deger>** — bu damga
-  `web_cikti.py`'nin rejim özetinden okunur ve kendiliğinden ilerlemez: `run.py --fetch-history`
+  web çıktısı üretiminin rejim özetinden okunur ve kendiliğinden ilerlemez: haber tarihçesini yeniden çeken tam koşu
   koşulmadığı sürece o tarihte donar ve rejim etiketi eskimiş bir korelasyon yapısını
   yansıtmaya başlar. Şekil 06'nın başlığındaki "veri sonu" damgasıyla karşılaştırın.
 - **Kalibrasyon tarihi ile veri tarihi ayrıdır.** Endeksler <Deger proje="fx-haber-endeksi" anahtar="opt_kalibrasyon" ondalik={1}>22.07.2026</Deger> kalibrasyonunun
@@ -290,7 +290,7 @@ kümesinin sürdüğüne bakın — tek kaynaklı tekrar zinciri mi, geniş taba
   yeniden kalibrasyon yapılmadı; kalibrasyon, veri penceresi anlamlı ölçüde
   kaydığında yenilenir.
 - Rejim tarihçesi (Şekil 08) yeni birikmeye başladı: pipeline her koşuda rejimi
-  `index_history`'ye yazıyor, ama şu an elde yalnız <Deger proje="fx-haber-endeksi" anahtar="snapshot_sayisi" ondalik={0}>6</Deger> koşu var.
+  endeks tarihçesine yazıyor, ama şu an elde yalnız <Deger proje="fx-haber-endeksi" anahtar="snapshot_sayisi" ondalik={0}>6</Deger> koşu var.
   Bu seri istatistiksel olarak yorumlanabilir hale gelene dek (birkaç düzine koşu)
   panele *trend* diye bakmayın; tek tek noktalar olarak okuyun.
 - **Endeks tarihçesi parametre rejimi karıştırır.** Her snapshot, o gün geçerli olan

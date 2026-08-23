@@ -1,0 +1,85 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const dosyalar = import.meta.glob('../../data/bulten/*.json', { eager: true });
+const hepsi = Object.entries(dosyalar)
+  .map(([yol, m]: [string, any]) => {
+    const b: any = (m as any).default ?? m;
+    return {
+      tarih: yol.split('/').pop()!.replace('.json', ''),
+      trTarih: b.tr_tarih ?? yol.split('/').pop()!.replace('.json', ''),
+      gun: b.gun ?? '',
+      haftalik: !!b.haftalik,
+      oneCikan: b.one_cikanlar?.length ?? 0,
+      not: b.notlar?.length ?? 0,
+      basliklar: (b.one_cikanlar ?? []).slice(0, 2).map((o: any) => o.baslik),
+    };
+  })
+  .sort((a, b) => (a.tarih < b.tarih ? 1 : -1));
+
+const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const aylar: { ad: string; kayitlar: typeof hepsi }[] = [];
+for (const k of hepsi) {
+  const [y, a] = k.tarih.split('-');
+  const ad = `${AYLAR[Number(a) - 1]} ${y}`;
+  const son = aylar[aylar.length - 1];
+  if (son && son.ad === ad) son.kayitlar.push(k);
+  else aylar.push({ ad, kayitlar: [k] });
+}
+---
+
+<Base title="Bülten arşivi" description="Geçmiş günlük ve haftalık makro bültenlerinin tamamı.">
+  <header class="ust">
+    <p class="etiket kicker">Arşiv</p>
+    <h1>Bülten arşivi</h1>
+    <p class="alt">
+      Yayımlanmış bütün bültenler. Hafta içi sabahları günlük, pazar akşamları
+      haftaya bakış. Toplam {hepsi.length} bülten.
+    </p>
+    <p class="don"><a href="/bulten/">← güncel bülten</a></p>
+  </header>
+
+  {aylar.map((ay) => (
+    <section class="ay">
+      <h2>{ay.ad}</h2>
+      <ul>
+        {ay.kayitlar.map((k) => (
+          <li>
+            <a href={`/bulten/${k.tarih}/`}>
+              <span class="a-tarih">{k.trTarih}</span>
+              <span class="a-gun">{k.gun}</span>
+            </a>
+            {k.haftalik && <span class="rozet">haftaya bakış</span>}
+            <span class="a-ozet">
+              {k.oneCikan > 0 ? `${k.oneCikan} öne çıkan` : 'öne çıkan yok'}
+              {k.not > 0 ? ` · ${k.not} not` : ''}
+              {k.basliklar.length > 0 ? ` — ${k.basliklar.join(', ')}` : ''}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</Base>
+
+<style>
+  .ust { padding: 2.4rem 0 1.6rem; max-width: 56ch; }
+  .kicker { color: var(--claret); margin: 0 0 0.6rem; }
+  h1 { font-family: var(--font-display); font-size: clamp(1.8rem, 3.4vw, 2.4rem); margin: 0 0 0.6rem; }
+  .alt { color: var(--ink-70); }
+  .don { font-family: var(--font-mono); font-size: 0.82rem; margin-top: 0.9rem; }
+  .ay { margin: 2rem 0; }
+  .ay h2 {
+    font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 0.7rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--ink-30);
+  }
+  .ay ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; }
+  .ay li { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: baseline; }
+  .a-tarih { font-family: var(--font-mono); font-size: 0.9rem; }
+  .a-gun { font-size: 0.76rem; color: var(--ink-30); margin-left: 0.4rem; }
+  .rozet {
+    font-family: var(--font-mono); font-size: 0.66rem; color: var(--claret);
+    border: 1px solid var(--claret); padding: 0.05rem 0.35rem;
+  }
+  .a-ozet { font-size: 0.78rem; color: var(--ink-70); flex: 1 1 18rem; }
+</style>
