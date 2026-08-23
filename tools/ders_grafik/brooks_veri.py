@@ -39,6 +39,14 @@ ISTEK = [
     ("ES=F", "15m", "60d"),
     ("ES=F", "1h", "730d"),
     ("ES=F", "1d", "10y"),
+    # Müfredatın birinci tercihi: BIST 30 içgün (Türk okur için tanıdık bar dizisi).
+    ("XU030.IS", "5m", "60d"),
+    ("XU030.IS", "15m", "60d"),
+    ("XU030.IS", "1h", "730d"),
+    ("XU100.IS", "5m", "60d"),
+    ("USDTRY=X", "5m", "60d"),
+    ("USDTRY=X", "15m", "60d"),
+    ("SPY", "5m", "60d"),        # Emini'nin hisse senedi vekili; kaynak örnekleriyle kıyas
     ("XU100.IS", "15m", "60d"),  # BIST 100
     ("XU100.IS", "1h", "730d"),
     ("XU100.IS", "1d", "10y"),

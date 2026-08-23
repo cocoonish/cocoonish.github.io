@@ -429,9 +429,22 @@ def kaydet(fig, ad: str, olcum: dict | None = None):
 
 
 def defter_yaz():
-    """Üretim sonunda çağrılır: yükseklikler + ölçümler diske."""
-    (CIKTI / "yukseklikler.json").write_text(
-        json.dumps(dict(sorted(YUKSEKLIK.items())), ensure_ascii=False, indent=1), encoding="utf-8")
+    """Üretim sonunda çağrılır: yükseklikler + ölçümler diske.
+
+    BİRLEŞTİREREK yazar. Ders 94 figürü altı ayrı script'e bölünmüş durumda ve her
+    biri ayrı süreçte koşuyor; üzerine yazmak, son koşan script'in dışındaki bütün
+    figürlerin yükseklik kaydını silerdi (ve sayfa denetimi hepsini "eksik" sanardı).
+    """
+    y = CIKTI / "yukseklikler.json"
+    birlesik = {}
+    if y.exists():
+        try:
+            birlesik = json.loads(y.read_text(encoding="utf-8"))
+        except Exception:
+            birlesik = {}
+    birlesik.update(YUKSEKLIK)
+    y.write_text(json.dumps(dict(sorted(birlesik.items())), ensure_ascii=False, indent=1),
+                 encoding="utf-8")
     if OLCUM:
         y = CIKTI / "olcumler.json"
         eski = json.loads(y.read_text(encoding="utf-8")) if y.exists() else {}
