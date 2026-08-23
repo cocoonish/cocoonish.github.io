@@ -118,8 +118,9 @@ birikimli seriye verir ve aylık gözlemi yalnız çubuk olarak arkada tutar.
 | Ölçü (12 aylık birikimli) | Değer | Birim |
 | --- | --- | --- |
 | **Net finansman girişi** (rezerv hariç, giriş işaretiyle) | **<Deger proje="odemeler-dengesi" anahtar="fin_giris12_mia" ondalik={1} isaret={true}>+32,4</Deger>** | milyar USD |
-| Brüt yükümlülük oluşumu (yabancının getirdiği brüt akım) | <Deger proje="odemeler-dengesi" anahtar="brut_yukumluluk12_mia" ondalik={1}>66,7</Deger> | milyar USD |
-| Yerleşiklerin dış varlık edinimi (çıkan brüt akım) | <Deger proje="odemeler-dengesi" anahtar="yerlesik_varlik12_mia" ondalik={1}>34,3</Deger> | milyar USD |
+| Yükümlülük oluşumu (net, finansal türevler **dâhil**) | <Deger proje="odemeler-dengesi" anahtar="brut_yukumluluk12_mia" ondalik={1}>66,7</Deger> | milyar USD |
+| Aynı büyüklük, finansal türevler **hariç** | <Deger proje="odemeler-dengesi" anahtar="payda_turevsiz12_mia" ondalik={1}>87,3</Deger> | milyar USD |
+| Yerleşiklerin dış varlık edinimi | <Deger proje="odemeler-dengesi" anahtar="yerlesik_varlik12_mia" ondalik={1}>34,3</Deger> | milyar USD |
 | Net doğrudan yatırım girişi | <Deger proje="odemeler-dengesi" anahtar="dyy_giris12_mia" ondalik={1} isaret={true}>+0,3</Deger> | milyar USD |
 | Net portföy girişi | <Deger proje="odemeler-dengesi" anahtar="portfoy_giris12_mia" ondalik={1} isaret={true}>+6,4</Deger> | milyar USD |
 | Net diğer yatırım girişi (kredi, mevduat, ticari kredi) | <Deger proje="odemeler-dengesi" anahtar="diger_giris12_mia" ondalik={1} isaret={true}>+31,0</Deger> | milyar USD |
@@ -137,15 +138,18 @@ birikimli seriye verir ve aylık gözlemi yalnız çubuk olarak arkada tutar.
 
 Manşet cari açık son 12 aylık dilimde
 <Deger proje="odemeler-dengesi" anahtar="cari12_mia" ondalik={1}>−38,9</Deger>
-milyar USD; ama bu açığın **tamamı ve fazlası** iki kalemden geliyor. Altın ve
-enerji hariç bırakıldığında ülke
+milyar USD; ama açığın kaynağı iki kalemdir. Altın ve enerji hariç
+bırakıldığında ülke
 <Deger proje="odemeler-dengesi" anahtar="cekirdek12_mia" ondalik={1}>28,9</Deger>
-milyar USD **fazla** veriyor.
+milyar USD **<Deger proje="odemeler-dengesi" anahtar="cekirdek_yon" ondalik={0}>fazla</Deger>**
+veriyor.
 *<Deger proje="odemeler-dengesi" anahtar="cari_cumlesi" ondalik={0}>12 aylık birikimli cari açık; altın ve enerji hariç çekirdek cari denge fazla. Aradaki makas iki kalemin toplam faturasıdır.</Deger>*
 
 Finansman tarafında ise net giriş
 <Deger proje="odemeler-dengesi" anahtar="fin_giris12_mia" ondalik={1}>32,4</Deger>
-milyar USD ile cari açığın altında kalıyor; aradaki farkı net hata ve noksan
+milyar USD ile cari açığın
+%<Deger proje="odemeler-dengesi" anahtar="fin_acik_karsilama" ondalik={1}>83,3</Deger>'ünü
+karşılıyor; aradaki farkı net hata ve noksan
 (<Deger proje="odemeler-dengesi" anahtar="nhn12_mia" ondalik={1}>−20,4</Deger>
 milyar USD) ve rezerv
 (<Deger proje="odemeler-dengesi" anahtar="rezerv_yon" ondalik={0}>azaldı</Deger>)
@@ -154,7 +158,9 @@ tek cümle, kur ve CDS fiyatlamasının başladığı yerdir.
 
 Brüt dış finansman ihtiyacı ise
 <Deger proje="odemeler-dengesi" anahtar="ihtiyac12_mia" ondalik={1}>125,7</Deger>
-milyar USD — cari açığın **üç katından fazla**. İhtiyacın yalnız
+milyar USD — cari açığın
+**<Deger proje="odemeler-dengesi" anahtar="ihtiyac_cari_kat" ondalik={1}>3,2</Deger>
+katı**. İhtiyacın yalnız
 %<Deger proje="odemeler-dengesi" anahtar="ihtiyacta_cari_acik_payi" ondalik={1}>30,9</Deger>'u
 cari açıktan geliyor; kalanı vadesi gelen uzun vadeli anaparadır. "Cari açık
 kapandı, dış kırılganlık bitti" cümlesinin neden yanlış olduğu tam olarak
@@ -188,11 +194,24 @@ değildir, gelen kaynağın rezervde biriken kısmıdır.
   <span class="etiket">Bu kimlik bu hatta bir denetimdir, bir varsayım değil</span>
   Kimlik her koşuda ayın kendisinde sınanır ve sapma eşiği aşarsa hat DURUR —
   eski grafiğin üstüne taze metin yazılmaz.{' '}
-  <Deger proje="odemeler-dengesi" anahtar="kimlik_cumlesi" ondalik={0}>Bu koşuda 21 kimlik sınandı, 21 tanesi geçti.</Deger>{' '}
+  <Deger proje="odemeler-dengesi" anahtar="kimlik_cumlesi" ondalik={0}>Bu koşuda 29 denetim çalıştı, 29 tanesi geçti; ayrıca 2 sunum tutarlılığı kaydı tautoloji olduğu için sayıma girmedi.</Deger>{' '}
   Ana kimlik <Deger proje="odemeler-dengesi" anahtar="kimlik_bop_n" ondalik={0}>431</Deger>{' '}
   ayda sınandı, en büyük sapma{' '}
   <Deger proje="odemeler-dengesi" anahtar="kimlik_bop_maks_sapma" ondalik={2}>0,00</Deger>{' '}
-  milyon USD.
+  milyon USD. Sayılan denetimlerin tamamı{' '}
+  [`uyarilar.json`](/projeler/odemeler-dengesi/uyarilar.json) dosyasında,
+  kayıt kayıt yayımlanır.
+</div>
+
+<div class="not">
+  <span class="etiket">Tautoloji sayılmaz</span>
+  Bir "kimlik", sol tarafı sağ taraftan **türetilmişse** hiçbir şeyi
+  sınamaz: sapması tanım gereği sıfırdır ve girdiler ne kadar bozulursa
+  bozulsun sıfır kalır. Bu sayfada iki kayıt böyledir (Şekil 05'in yığın
+  toplamı, Şekil 11'in alt paneli); ikisi de `"tautoloji": true` diye
+  işaretlenir, denetim sayısına **girmez** ve sayfada "sınandı" diye
+  sunulmaz. Yerlerine bağımsız kaynağa dayanan ölçümler kondu — artık
+  bandı ve mertebe kıyası (aşağıda).
 </div>
 
 ### İşaret rejimi: BPM6 tuzağı
@@ -551,7 +570,7 @@ işaretiyle** taşır:
   src="/projeler/odemeler-dengesi/05_finans_hesabi_kirilim.html"
   baslik="Finans hesabının kapı kapı kırılımı, giriş işaretiyle ve rezerv hariç: 12 aylık birikimli ve aylık hâli"
   no="05"
-  yukseklik={1291}
+  yukseklik={1421}
 />
 
 ### Bu şekil nasıl hesaplanıyor?
@@ -565,7 +584,7 @@ senedi `Q19`), diğer yatırım `Q25`, türevler `Q38`. Varlık bacakları: `Q14
 **Formül.** Net giriş, iki brüt bacağın farkıdır:
 
 $$
-F_t=\underbrace{\big(\text{DYY}^{y}_t+\text{PORT}^{y}_t+\text{TÜREV}^{y}_t+\text{DİĞER}^{y}_t\big)}_{\text{brüt yükümlülük oluşumu}}-\underbrace{\big(\text{DYY}^{v}_t+\text{PORT}^{v}_t+\text{TÜREV}^{v}_t+\text{DİĞER}^{v}_t\big)}_{\text{yerleşiklerin dış varlık edinimi}}
+F_t=\underbrace{\big(\text{DYY}^{y}_t+\text{PORT}^{y}_t+\text{TÜREV}^{y}_t+\text{DİĞER}^{y}_t\big)}_{\text{yükümlülük oluşumu (net)}}-\underbrace{\big(\text{DYY}^{v}_t+\text{PORT}^{v}_t+\text{TÜREV}^{v}_t+\text{DİĞER}^{v}_t\big)}_{\text{yerleşiklerin dış varlık edinimi}}
 $$
 
 Kimlik <Deger proje="odemeler-dengesi" anahtar="kimlik_isaret_n" ondalik={0}>431</Deger>
@@ -573,7 +592,22 @@ ayda sınandı; en büyük sapma
 <Deger proje="odemeler-dengesi" anahtar="kimlik_isaret_maks_sapma" ondalik={2}>0,00</Deger>
 milyon USD.
 
-**Neden brüt bacaklar ayrı çizilir.** Net giriş sıfır olabilir; bu, "hiçbir şey
+<div class="not">
+  <span class="etiket">"Brüt" değil, net yükümlülük oluşumu</span>
+  BPM6'da bu dört kalemin hepsi **net yükümlülük oluşumudur** (net incurrence
+  of liabilities) — `Q38`'in EVDS'teki adı bile "3.6.Finansal Türevler: **Net**
+  Yükümlülük Oluşumu". Negatif olabilirler ve olurlar: bu koşuda türev bacağı
+  <Deger proje="odemeler-dengesi" anahtar="turev_bacagi12_mia" ondalik={1} isaret={true}>−20,6</Deger>
+  milyar USD. Toplama "brüt akım" demek, kalemin yalnız girişleri saydığı
+  izlenimi verirdi; vermez. Sayfa bu yüzden iki büyüklüğü ayrı ayrı taşır:
+  türevler **dâhil**
+  <Deger proje="odemeler-dengesi" anahtar="brut_yukumluluk12_mia" ondalik={1}>66,7</Deger>
+  ve **hariç**
+  <Deger proje="odemeler-dengesi" anahtar="payda_turevsiz12_mia" ondalik={1}>87,3</Deger>
+  milyar USD.
+</div>
+
+**Neden iki bacak ayrı çizilir.** Net giriş sıfır olabilir; bu, "hiçbir şey
 olmadı" demek değildir. Yabancı
 <Deger proje="odemeler-dengesi" anahtar="brut_yukumluluk12_mia" ondalik={1}>66,7</Deger>
 milyar USD getirirken yerleşik
@@ -583,12 +617,38 @@ ikisi farklı şoklara tepki verir. Yerleşiğin dış varlık edinimi, çoğu k
 **yurt içi güven göstergesi** olarak okunur; yabancının brüt akımı ise küresel
 risk iştahına bağlıdır.
 
-**Yığındaki "diğer" kutusu uydurma değildir.** Portföy yükümlülüğünün hisse ve
-borç senedi dışındaki artığı (yatırım fonu payları) ve diğer yatırım
-yükümlülüğünün mevduat ile kredi dışındaki artığı (ticari krediler, SDR) ayrı
-kalemler olarak **türetilir**, böylece yığının toplamı brüt yükümlülüğe birebir
-oturur. Bir yığın grafikte kutuların toplamı çizgiye eşit değilse, o grafik
-okuru sessizce yanıltır.
+**Yığındaki "diğer" kutusu uydurma değildir — ama bir denetim de değildir.**
+Portföy yükümlülüğünün hisse ve borç senedi dışındaki artığı (yatırım fonu
+payları) ve diğer yatırım yükümlülüğünün mevduat ile kredi dışındaki artığı
+(ticari krediler, SDR) ayrı kalemler olarak **türetilir**, böylece yığının
+toplamı çizgiye birebir oturur. Bir yığın grafikte kutuların toplamı çizgiye
+eşit değilse, o grafik okuru sessizce yanıltır.
+
+<div class="not">
+  <span class="etiket">Artık kalem her hatayı yutar — bu yüzden denetim başka yerde</span>
+  Toplamın çizgiye oturması burada bir **tautolojidir**: artık kalem
+  "toplam eksi bilinenler" diye tanımlıdır, dolayısıyla alt kalemlerden biri
+  100 katına çıksa bile artık aynı miktarda küçülür ve toplam değişmez
+  (denendi: sapma yine 0,00). Gerçek denetim iki ayrı EVDS tablosunun
+  karşılaştırılmasıdır: analitik sunumun `Q25`'i ile ayrıntılı sunumun
+  `Q143 + Q157 + Q184 + Q203` toplamı. Eşitlik beklenmez — bu hat "3.4.4
+  Diğer Yükümlülükler" kalemini çekmiyor — ama **artık bir banda sığmalı**.
+  Bu koşuda artık, brüt cironun %
+  <Deger proje="odemeler-dengesi" anahtar="artik_son_yuzde" ondalik={2}>2,66</Deger>'si;
+  tarihçedeki en büyüğü %
+  <Deger proje="odemeler-dengesi" anahtar="artik_maks_yuzde" ondalik={2}>27,38</Deger>,
+  bant %<Deger proje="odemeler-dengesi" anahtar="artik_esik_yuzde" ondalik={0}>35</Deger>.
+  Ayrıca her bacağın son 24 aydaki boş oranı ölçülür: bir bacak sessizce
+  düşerse hat DURUR.
+</div>
+
+**Yığın ile çizgi arasındaki fark grafik katmanında ayrıca ölçülür.** Yığılmış
+çubukların toplamı ile toplam çizgisi arasındaki en büyük sapma her koşuda
+hesaplanıp `cikti/yigin_denetimi.json` dosyasına yazılır; sapma eşiği aşarsa
+figür yayımlanmaz. Bu denetim, metrik katmanının kimlik denetimlerinin
+göremediği bir hata sınıfını yakalar: çubuk bir kolonu, çizgi başka bir kolonu
+okuduğunda — özellikle biri ham `NaN`, diğeri `fillna(0)` kullandığında —
+yığın sessizce kısalır.
 
 **Rezerv neden yığında değil.** Analitik sunumda rezerv varlıklar finans
 hesabının **içinde değildir**. Grafikte ayrı, kesikli bir çizgi olarak durur ve
@@ -621,7 +681,7 @@ dönebilir. (iii) Türev kaleminin 2014 öncesi yokluğu bir veri eksikliği de�
   src="/projeler/odemeler-dengesi/06_kaliteli_finansman.html"
   baslik="Kaliteli finansman (net DYY + özel sektör net uzun vadeli kredisi), sıcak para ve kalite payı — payda eşiğin altındayken oran boş bırakılır"
   no="06"
-  yukseklik={1657}
+  yukseklik={1785}
 />
 
 ### Bu şekil nasıl hesaplanıyor?
@@ -658,8 +718,8 @@ bir varsayım değil.
 Yerleşiğin dış varlık edinimi başka bir sorunun cevabıdır ve buraya
 karıştırılmaz.
 
-**Oran neden ikincil.** Kalite payı iki paydayla hesaplanır: brüt yükümlülük
-oluşumu ve cari açık. İkisi de tek başına kırılgandır — payda sıfıra
+**Oran neden ikincil.** Kalite payı iki paydayla hesaplanır: yükümlülük
+oluşumu (net) ve cari açık. İkisi de tek başına kırılgandır — payda sıfıra
 yaklaştığında oran tavana fırlar ve okur bunu "finansman kalitesi patladı" diye
 okur. Oysa değişen paydadır. Bu yüzden:
 
@@ -676,22 +736,39 @@ ay, cari açık paydasında
 <Deger proje="odemeler-dengesi" anahtar="kalite_bos_ay_acik" ondalik={0}>160</Deger>
 ay. Grafikteki boşluklar bu yüzden vardır ve gerekçeleri altyazıda durur.
 
+<div class="not">
+  <span class="etiket">Paydanın türev bacağı ve 2014 tanım kırılması</span>
+  <Deger proje="odemeler-dengesi" anahtar="payda_notu" ondalik={0}>Ana payda BPM6'nın net yükümlülük oluşumudur ve finansal türevleri içerir; türev bacağı negatif olabildiği için paydayı küçültür ve oranı yukarı savurur. Kalem 2014-01'de başladığından payda tanımı o tarihte kırılır.</Deger>{' '}
+  <Deger proje="odemeler-dengesi" anahtar="payda_cumlesi" ondalik={0}>Türev bacağı −20,6 milyar USD olduğu için payda 66,7 milyar USD'ye iniyor ve oran %64,0 çıkıyor; türevsiz paydayla (87,3 milyar USD) aynı oran %48,9.</Deger>{' '}
+  Grafikte iki sürüm de çizilir (noktalı lacivert çizgi türevsiz olanıdır) ve
+  medyan **2014 sonrası** pencereden verilir: 2010 sonrası medyan, türevsiz ve
+  türevli olmak üzere iki farklı paydanın karışımıdır.
+</div>
+
 **Bu koşudaki okuma.**
 *<Deger proje="odemeler-dengesi" anahtar="kalite_cumlesi" ondalik={0}>Son 12 ayda kaliteli finansmanın neredeyse tamamı özel sektörün net uzun vadeli kredisinden geliyor; net doğrudan yatırımın payı ihmal edilebilir düzeyde.</Deger>*
-Kalite payı brüt yükümlülüğe göre
+Kalite payı, yükümlülük oluşumuna (net, türevler dâhil) göre
 %<Deger proje="odemeler-dengesi" anahtar="kalite_pay_brut" ondalik={1}>64,0</Deger>
-(2010 sonrası medyan
-%<Deger proje="odemeler-dengesi" anahtar="kalite_pay_brut_medyan" ondalik={1}>33,2</Deger>),
-cari açığı karşılama oranı
+— türevler hariç tutulduğunda
+%<Deger proje="odemeler-dengesi" anahtar="kalite_pay_turevsiz" ondalik={1}>48,9</Deger>,
+yani <Deger proje="odemeler-dengesi" anahtar="kalite_pay_turev_farki" ondalik={1}>15,1</Deger>
+puan aşağıda (2014 sonrası medyan
+%<Deger proje="odemeler-dengesi" anahtar="kalite_pay_brut_medyan_2014" ondalik={1}>40,5</Deger>).
+Cari açığı karşılama oranı
 %<Deger proje="odemeler-dengesi" anahtar="kalite_pay_acik" ondalik={1}>109,7</Deger>
-(medyan
+(2010 sonrası medyan
 %<Deger proje="odemeler-dengesi" anahtar="kalite_pay_acik_medyan" ondalik={1}>36,2</Deger>).
 
 Bu tablonun trader açısından anlamı şudur: **kalite oranı yüksek ama bileşimi
-tek bacaklı.** Kaliteli finansmanın neredeyse tamamı uzun vadeli kredi; net
-doğrudan yatırım fiilen sıfır. Uzun vadeli kredi bir sendikasyon piyasasına
-bağlıdır ve o piyasa kapanabilir — fabrika yatırımı gibi "içeride kilitli"
-değildir. Kalite ölçüsü vade üzerinden kurulduğu için bu ayrımı yakalamaz;
+tek bacaklı.** Ayrıştırması üstteki `kalite_cumlesi` satırındadır: kaliteli
+finansmanın
+<Deger proje="odemeler-dengesi" anahtar="ozel_uv_kredi12_mia" ondalik={1}>42,4</Deger>
+milyar USD'si özel sektörün net uzun vadeli kredisi,
+<Deger proje="odemeler-dengesi" anahtar="dyy12_mia" ondalik={1}>0,3</Deger>
+milyar USD'si net doğrudan yatırım. Uzun vadeli kredi bir sendikasyon
+piyasasına bağlıdır ve o piyasa kapanabilir — fabrika yatırımı gibi "içeride
+kilitli" değildir. Kalite ölçüsü vade üzerinden kurulduğu için bu ayrımı
+yakalamaz;
 ayrımı **bileşen panellerinden** okumak gerekir.
 
 **Tuzaklar.** (i) Kalite oranının %100'ü aşması, cari açığın tamamının uzun
@@ -941,7 +1018,7 @@ eşanlı belirlenir. (ii) 12 aylık birikimli şelale, dönem içindeki tek ayl�
   src="/projeler/odemeler-dengesi/11_finansman_ihtiyaci.html"
   baslik="Brüt dış finansman ihtiyacı (cari açık + uzun vadeli anapara) ve kimlikten birebir türetilen karşılanma bileşenleri"
   no="11"
-  yukseklik={1339}
+  yukseklik={1547}
 />
 
 ### Bu şekil nasıl hesaplanıyor?
@@ -1017,7 +1094,7 @@ değildir; vadesi gelecek borcun takvimi için TCMB'nin ayrı yayımladığı d�
   src="/projeler/odemeler-dengesi/12_eurobond_ve_odeme_takvimi.html"
   baslik="Eurobond ihracı ve anapara ödemesi (aylık ve 12 aylık) ile haftalık dış borç ödeme takvimi — sayfanın en taze verisi"
   no="12"
-  yukseklik={1503}
+  yukseklik={1607}
 />
 
 ### Bu şekil nasıl hesaplanıyor?

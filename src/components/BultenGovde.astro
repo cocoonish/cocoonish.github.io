@@ -155,35 +155,30 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
     ))}
   </section>
 
-  {(b.haberler.kurum.length > 0 || b.haberler.haber.length > 0) && (
-    <section class="blok">
-      <h2>Kaynak taraması</h2>
-      {b.haberler.kurum.length > 0 && (
-        <>
-          <h3>Kurum duyuruları</h3>
-          <ul class="haber-liste kurum">
-            {b.haberler.kurum.map((h: any) => (
-              <li>
-                <a href={h.baglanti} target="_blank" rel="noopener">{h.baslik}</a>
-                <span class="kaynak-not">{h.kaynak}</span>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      {b.haberler.haber.length > 0 && (
-        <>
-          <h3>Başlıklar</h3>
+  {b.haberler.bolumler && b.haberler.bolumler.length > 0 && (
+    <section class="blok gundem">
+      <h2>Gündem</h2>
+      <p class="alt-not">
+        Dün ve bu sabah öne çıkanlar: Türkiye ve global taraf, makro ve politika
+        ayrımıyla. Her bölümün altında haberin geldiği kaynaklar listelenir.
+      </p>
+      {b.haberler.bolumler.map((bol: any) => (
+        <div class="gundem-bolum">
+          <h3>{bol.baslik}</h3>
+          {b.gundem && b.gundem[bol.id] && (
+            <div class="gundem-metin" set:html={b.gundem[bol.id]} />
+          )}
           <ul class="haber-liste">
-            {b.haberler.haber.map((h: any) => (
+            {bol.maddeler.map((m: any) => (
               <li>
-                <a href={h.baglanti} target="_blank" rel="noopener">{h.baslik}</a>
-                <span class="kaynak-not">{h.kaynak}</span>
+                <a href={m.baglanti} target="_blank" rel="noopener">{m.baslik}</a>
+                {m.ozet && <span class="h-ozet">{m.ozet}</span>}
+                <span class="kaynak-not">{m.kaynak}</span>
               </li>
             ))}
           </ul>
-        </>
-      )}
+        </div>
+      ))}
       {b.haberler.okunamayan.length > 0 && (
         <p class="uyari">Okunamayan kaynak: {b.haberler.okunamayan.join(', ')}</p>
       )}
@@ -310,6 +305,18 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
   .k-olay { font-weight: 600; line-height: 1.35; }
   .k-zaman { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-70); }
   .k-beklenti { font-size: 0.79rem; color: var(--ink-70); }
+
+
+  .gundem .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1.1rem; }
+  .gundem-bolum { margin: 1.5rem 0; }
+  .gundem-bolum h3 {
+    font-size: 0.9rem; color: var(--claret); font-variant: small-caps;
+    letter-spacing: 0.07em; margin: 0 0 0.5rem;
+    border-bottom: 1px solid var(--ink-30); padding-bottom: 0.2rem;
+  }
+  .gundem-metin { margin: 0 0 0.7rem; line-height: 1.6; }
+  .gundem-metin p { margin: 0 0 0.6rem; }
+  .h-ozet { display: block; font-size: 0.82rem; color: var(--ink-70); line-height: 1.45; }
 
   .kunye { border-top: 1px solid var(--ink-30); padding-top: 0.9rem; margin-top: 2.6rem; }
   .kunye p { font-size: 0.76rem; color: var(--ink-70); margin: 0 0 0.35rem; }
