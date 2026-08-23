@@ -5,11 +5,16 @@ import BultenGovde from '../../components/BultenGovde.astro';
 // Bültenler derleme sırasında dosyadan okunur; en yenisi bu sayfada, hepsi arşivde.
 const dosyalar = import.meta.glob('../../data/bulten/*.json', { eager: true });
 const bultenler = Object.entries(dosyalar)
-  .map(([yol, m]: [string, any]) => ({ tarih: yol.split('/').pop()!.replace('.json', ''), b: m.default ?? m }))
+  .map(([yol, m]: [string, any]) => ({
+    tarih: yol.split('/').pop()!.replace('.json', ''),
+    b: (m as any).default ?? m,
+  }))
   .sort((a, b) => (a.tarih < b.tarih ? 1 : -1));
 
 const son = bultenler[0];
-const arsiv = bultenler.slice(1, 15);
+const sonGunluk = bultenler.find((x) => !x.b.haftalik);
+const sonHaftalik = bultenler.find((x) => x.b.haftalik);
+const arsiv = bultenler.slice(1, 12);
 ---
 
 <Base
@@ -18,22 +23,44 @@ const arsiv = bultenler.slice(1, 15);
 >
   {son ? (
     <>
+      <nav class="bulten-nav">
+        <span class="nav-etiket">Bülten</span>
+        {sonGunluk && (
+          <a href={sonGunluk.tarih === son.tarih ? '#' : `/bulten/${sonGunluk.tarih}/`}
+             class:list={['nav-oge', { aktif: sonGunluk.tarih === son.tarih }]}>
+            Son günlük <span class="nav-tarih">{sonGunluk.b.tr_tarih}</span>
+          </a>
+        )}
+        {sonHaftalik && (
+          <a href={sonHaftalik.tarih === son.tarih ? '#' : `/bulten/${sonHaftalik.tarih}/`}
+             class:list={['nav-oge', { aktif: sonHaftalik.tarih === son.tarih }]}>
+            Son haftaya bakış <span class="nav-tarih">{sonHaftalik.b.tr_tarih}</span>
+          </a>
+        )}
+        <a href="/bulten/arsiv/" class="nav-oge arsiv-link">Tüm arşiv ({bultenler.length})</a>
+      </nav>
       <BultenGovde b={son.b} />
-      {arsiv.length > 0 && (
-        <section class="arsiv">
-          <h2>Önceki bültenler <a class="tumu" href="/bulten/arsiv/">tümü →</a></h2>
+      <section class="arsiv">
+        <h2>Önceki bültenler <a class="tumu" href="/bulten/arsiv/">tümü →</a></h2>
+        {arsiv.length > 0 ? (
           <ul>
             {arsiv.map((x) => (
               <li>
                 <a href={`/bulten/${x.tarih}/`}>{x.b.tr_tarih ?? x.tarih}</a>
+                {x.b.haftalik && <span class="rozet">haftaya bakış</span>}
                 <span class="ozet">
                   {x.b.one_cikanlar?.length ?? 0} öne çıkan · {x.b.notlar?.length ?? 0} not
                 </span>
               </li>
             ))}
           </ul>
-        </section>
-      )}
+        ) : (
+          <p class="ilk">
+            Bu ilk bülten. Hafta içi her sabah 07:30'da günlük, pazar akşamı 18:00'da
+            haftaya bakış yayımlanır; hepsi <a href="/bulten/arsiv/">arşivde</a> birikir.
+          </p>
+        )}
+      </section>
     </>
   ) : (
     <section class="bos-durum">
@@ -44,6 +71,23 @@ const arsiv = bultenler.slice(1, 15);
 </Base>
 
 <style>
+  .bulten-nav {
+    display: flex; flex-wrap: wrap; gap: 0.9rem; align-items: baseline;
+    border-bottom: 1px solid var(--ink-30); padding: 1.4rem 0 0.7rem; margin-bottom: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.78rem;
+  }
+  .nav-etiket {
+    font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-30);
+  }
+  .nav-oge { text-decoration: none; border-bottom: 1px solid var(--ink-30); }
+  .nav-oge.aktif { border-bottom: 2px solid var(--claret); color: var(--claret); }
+  .nav-tarih { color: var(--ink-30); font-size: 0.9em; margin-left: 0.3em; }
+  .arsiv-link { margin-left: auto; }
+  .rozet {
+    font-family: var(--font-mono); font-size: 0.64rem; color: var(--claret);
+    border: 1px solid var(--claret); padding: 0.02rem 0.32rem;
+  }
+  .ilk { font-size: 0.85rem; color: var(--ink-70); margin: 0; }
   .arsiv { margin: 3rem 0 1rem; border-top: 4px double var(--ink); padding-top: 1.2rem; }
   .arsiv h2 { font-family: var(--font-display); font-size: 1.15rem; margin: 0 0 0.8rem; }
   .arsiv .tumu { font-family: var(--font-mono); font-size: 0.72rem; margin-left: 0.6rem; }
