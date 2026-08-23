@@ -1,0 +1,23 @@
+---
+import Base from '../../layouts/Base.astro';
+import BultenGovde from '../../components/BultenGovde.astro';
+
+export async function getStaticPaths() {
+  const dosyalar = import.meta.glob('../../data/bulten/*.json', { eager: true });
+  return Object.entries(dosyalar).map(([yol, m]: [string, any]) => {
+    const tarih = yol.split('/').pop()!.replace('.json', '');
+    return { params: { tarih }, props: { b: m.default ?? m } };
+  });
+}
+
+const { b } = Astro.props;
+---
+
+<Base title={`Bülten — ${b.tr_tarih ?? b.tarih}`} description={`${b.tr_tarih ?? b.tarih} günlük makro bülteni.`}>
+  <p class="geri"><a href="/bulten/">← güncel bültene dön</a></p>
+  <BultenGovde b={b} />
+</Base>
+
+<style>
+  .geri { margin: 1.6rem 0 0; font-family: var(--font-mono); font-size: 0.82rem; }
+</style>

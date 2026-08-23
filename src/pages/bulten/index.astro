@@ -1,0 +1,57 @@
+---
+import Base from '../../layouts/Base.astro';
+import BultenGovde from '../../components/BultenGovde.astro';
+
+// Bültenler derleme sırasında dosyadan okunur; en yenisi bu sayfada, hepsi arşivde.
+const dosyalar = import.meta.glob('../../data/bulten/*.json', { eager: true });
+const bultenler = Object.entries(dosyalar)
+  .map(([yol, m]: [string, any]) => ({ tarih: yol.split('/').pop()!.replace('.json', ''), b: m.default ?? m }))
+  .sort((a, b) => (a.tarih < b.tarih ? 1 : -1));
+
+const son = bultenler[0];
+const arsiv = bultenler.slice(1, 30);
+---
+
+<Base
+  title="Günlük bülten"
+  description="Veri hatlarının ölçtüğü değişimler, eşiği aşan olaylar ve önümüzdeki üç haftanın ekonomik takvimi — her sabah otomatik derlenir."
+>
+  {son ? (
+    <>
+      <BultenGovde b={son.b} />
+      {arsiv.length > 0 && (
+        <section class="arsiv">
+          <h2>Arşiv</h2>
+          <ul>
+            {arsiv.map((x) => (
+              <li>
+                <a href={`/bulten/${x.tarih}/`}>{x.b.tr_tarih ?? x.tarih}</a>
+                <span class="ozet">
+                  {x.b.one_cikanlar?.length ?? 0} öne çıkan · {x.b.notlar?.length ?? 0} not
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </>
+  ) : (
+    <section class="bos-durum">
+      <h1>Günlük bülten</h1>
+      <p>
+        Henüz bülten üretilmedi. Üretmek için depo kökünde: <code>python3 bulten.py</code>
+      </p>
+    </section>
+  )}
+</Base>
+
+<style>
+  .arsiv { margin: 3rem 0 1rem; border-top: 4px double var(--ink); padding-top: 1.2rem; }
+  .arsiv h2 { font-family: var(--font-display); font-size: 1.15rem; margin: 0 0 0.8rem; }
+  .arsiv ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
+  .arsiv li { display: flex; gap: 0.9rem; align-items: baseline; }
+  .arsiv a { font-family: var(--font-mono); font-size: 0.88rem; }
+  .ozet { font-size: 0.76rem; color: var(--ink-70); }
+  .bos-durum { padding: 3rem 0; }
+  .bos-durum h1 { font-family: var(--font-display); }
+</style>

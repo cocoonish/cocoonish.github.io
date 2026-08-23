@@ -33,6 +33,7 @@ HATLAR = [
     ("kredi-parasal", "Aktarılacak Projeler/Kredi"),
     ("fonlama-likidite", "Aktarılacak Projeler/Fonlama"),
     ("enflasyon", "Aktarılacak Projeler/Enflasyon"),
+    ("odemeler-dengesi", "Aktarılacak Projeler/OdemelerDengesi"),
 ]
 
 # (2) için: yalnız GERÇEKTEN oynak sayılar taranır. Tarih/oran metinleri, tek

@@ -1,0 +1,1255 @@
+---
+title: 'Merkezi Yönetim Bütçesi ve Borç Stoku'
+description: 'Maliye tarafının iki yüzünü tek panoda ölçen bir hat: akım (gelir, harcama, faiz dışı denge, vergi ve harcama kompozisyonu, reel seyir) ve stok (iç + dış borç, para kompozisyonu, kur duyarlılığı, vade, sahiplik, çevirme oranı, net borç). Reel dönüşüm Fisher konvansiyonuyla, stok türetmesi birim denetimli, oranlar son ortak çeyrekte kesilir.'
+pubDate: 2026-08-23
+updatedDate: 2026-08-23
+tags: ['maliye politikası', 'bütçe', 'borç stoku', 'dibs', 'eurobond', 'gsyh', 'hazine', 'faiz yükü']
+durum: 'aktif'
+kaynak: 'EVDS3 — HMB merkezi yönetim bütçe gerçekleşmeleri, iç borç stoku ve finansman tablosu · TCMB brüt dış borç · TÜİK GSYH ve TÜFE · HMB finansal hesaplar · haftalık DİBS ve eurobond menkul kıymet istatistikleri · TCMB döviz kurları'
+guncelleme: 'aylık (bütçe, iç borç, TÜFE) · haftalık (DİBS, eurobond, Cuma) · üç aylık (GSYH, brüt dış borç, finansal hesaplar) · günlük (kur)'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+import KosuKutusu from '../../components/KosuKutusu.astro';
+
+Maliye tarafı iki ayrı büyüklükten oluşur ve ikisi aynı cümlede kullanıldığında
+neredeyse her zaman bir hata üretilir. **Bütçe dengesi bir akımdır**: belirli bir
+dönemde tahsil edilen gelirle yapılan harcamanın farkı. **Borç stoku bir stoktur**:
+belirli bir anda ödenmemiş yükümlülüğün toplamı. Akımın birikmesi stoku vermez —
+aradaki köprüde kur farkı, nakit dışı ihraç, kapsam farkı ve değerleme etkileri
+durur. Bu sayfa iki büyüklüğü de ölçer, **ama aralarında bir özdeşlik kurmaz**;
+kurulamayacağını da ölçerek gösterir.
+
+Trader için mesele şu: Hazine'nin ihraç takvimi, DİBS eğrisinin arz baskısı, TL'nin
+mali baskınlık primi, hatta CDS'in taban seviyesi — hepsi bu iki büyüklüğün türevidir.
+Ama ham hâliyle hiçbiri kullanılamaz. Yüksek enflasyonda **nominal bütçe rakamı
+neredeyse bilgi taşımaz**: gelir yıllık
+<Deger proje="butce-borc" anahtar="gelir_nom_yy" ondalik={1}>43,9</Deger> puan
+büyürken reel artış yalnızca
+<Deger proje="butce-borc" anahtar="gelir_reel_yy" ondalik={1}>9,7</Deger> puandır;
+aradaki <Deger proje="butce-borc" anahtar="gelir_makas_pp" ondalik={1}>34,2</Deger>
+puan fiyat artışıdır. Aynı şekilde borç stokunun TL cinsinden büyümesinin bir kısmı
+borçlanma değil, **kurun stoku yeniden değerlemesidir**. Bu hat her iki gürültüyü de
+ayrıştırır.
+
+Sayfanın omurgası şudur: önce akım (Şekil 01–06), sonra stok (Şekil 07–11), sonra
+ikisini birbirine bağlayan mekanizmalar — çevirme oranı, stok ayrıştırması ve net
+borç (Şekil 12–13). Her figürün altında o serinin nasıl kurulduğu, hangi EVDS
+serisinden geldiği ve hangi tuzağın nerede beklediği yazılıdır.
+
+<div class="not gezinme">
+  <span class="etiket">Bu sayfa nereye bağlanır</span>
+  Buradaki borç <strong>stoku</strong> ve bütçe akımıdır; ihale tarafı — teklif,
+  karşılama oranı, kesim faizi, vade tercihi — <a href="/projeler/hazine-ihrac/">Hazine
+  İhraç Takibi</a> sayfasındadır ve iki sayfa aynı sayıyı tekrarlamaz. Faiz yükünün
+  reel karşılığını besleyen enflasyon ölçüleri <a href="/projeler/enflasyon/">Enflasyon
+  Panosu</a>, DİBS'te yurt dışı yerleşik payının akım okuması
+  <a href="/projeler/yabanci-pozisyon/">Yabancı Pozisyonu</a>, borcun fonlandığı gecelik
+  fiyat <a href="/projeler/fonlama-likidite/">TCMB Fonlama ve Likidite</a>, dış borcun
+  rezerv tarafındaki karşılığı <a href="/projeler/tcmb-net-rezerv/">TCMB Net Rezerv
+  Takibi</a> sayfasındadır. Stok/GSYH oranının eğri fiyatlamasına nasıl girdiği
+  <a href="/arastirma/faiz-egrisi-ve-konvansiyonlar/">Faiz Teorisi ve Eğri İnşası</a>,
+  2001 ve 2018 mali epizotlarının anatomisi
+  <a href="/arastirma/turkiye-piyasa-tarihi/">Türkiye Piyasa Tarihi</a> dersindedir.
+</div>
+
+## Güncel okuma
+
+**Çıpa: <Deger proje="butce-borc" anahtar="ay" ondalik={0}>Haziran 2026</Deger>**
+(bütçe gerçekleşmesi; yayımdan bu yana
+<Deger proje="butce-borc" anahtar="gecikme_butce_gun" ondalik={0}>83</Deger> gün geçti)
+· haftalık menkul kıymet bacağı
+<Deger proje="butce-borc" anahtar="hafta" ondalik={0}>14 Ağustos 2026</Deger>
+(<Deger proje="butce-borc" anahtar="gecikme_hafta_gun" ondalik={0}>9</Deger> gün)
+· brüt dış borç
+<Deger proje="butce-borc" anahtar="dis_ceyrek" ondalik={0}>2026-Ç2</Deger>
+(<Deger proje="butce-borc" anahtar="gecikme_dis_gun" ondalik={0}>54</Deger> gün)
+· GSYH ve finansal hesaplar
+<Deger proje="butce-borc" anahtar="ceyrek" ondalik={0}>2026-Ç1</Deger>
+(<Deger proje="butce-borc" anahtar="gecikme_ceyrek_gun" ondalik={0}>145</Deger> gün)
+· kur <Deger proje="butce-borc" anahtar="kur_gun" ondalik={0}>21 Ağustos 2026</Deger>
+· koşum <Deger proje="butce-borc" anahtar="kosum_tarihi" ondalik={0}>23.08.2026</Deger>.
+
+<KosuKutusu proje="butce-borc" sayi={0}>
+  Bu koşuda uyarı yok.
+</KosuKutusu>
+
+Kutu **bu koşunun** durumunu gösterir. Bir yayın durduğunda ya da ağ düşüp eski
+önbelleğe düşüldüğünde kutu kırmızıya döner ve başlığı **BAYAT VERİ** olur. Bayatlık
+ölçüsü tek bir eşikten değil, **aile bazlı** toleranslardan okunur — bu hatta altı ayrı
+yayım ritmi var ve tek eşik her hafta yanlış alarm üretirdi.
+
+### Akım tarafı — 12 aylık birikimli
+
+Çıpa: <Deger proje="butce-borc" anahtar="ay" ondalik={0}>Haziran 2026</Deger>.
+GSYH sütununun çıpası **farklıdır** ve daha geridedir
+(<Deger proje="butce-borc" anahtar="oran_ceyregi" ondalik={0}>2026-Ç1</Deger>);
+sebebi aşağıda.
+
+| Ölçü | Trilyon TL | % GSYH |
+| --- | --- | --- |
+| Gelir | <Deger proje="butce-borc" anahtar="gelir_12a" ondalik={2}>15,02</Deger> | <Deger proje="butce-borc" anahtar="gelir_gsyh" ondalik={2}>21,39</Deger> |
+| — vergi geliri | <Deger proje="butce-borc" anahtar="vergi_12a" ondalik={2}>12,90</Deger> | <Deger proje="butce-borc" anahtar="vergi_gsyh" ondalik={2}>18,35</Deger> |
+| Gider | <Deger proje="butce-borc" anahtar="gider_12a" ondalik={2}>16,79</Deger> | <Deger proje="butce-borc" anahtar="gider_gsyh" ondalik={2}>23,62</Deger> |
+| — faiz dışı gider | <Deger proje="butce-borc" anahtar="fdg_12a" ondalik={2}>14,38</Deger> | — |
+| — faiz gideri | <Deger proje="butce-borc" anahtar="faiz_12a" ondalik={2}>2,41</Deger> | <Deger proje="butce-borc" anahtar="faiz_gsyh" ondalik={2}>3,65</Deger> |
+| **Bütçe dengesi** | **<Deger proje="butce-borc" anahtar="denge_12a" ondalik={2} isaret={true}>−1,76</Deger>** | **<Deger proje="butce-borc" anahtar="denge_gsyh" ondalik={2} isaret={true}>−2,23</Deger>** |
+| **Faiz dışı denge** | **<Deger proje="butce-borc" anahtar="fdd_12a" ondalik={2} isaret={true}>+0,65</Deger>** | **<Deger proje="butce-borc" anahtar="fdd_gsyh" ondalik={2} isaret={true}>+1,42</Deger>** |
+| Genel bütçe dengesi (kapsam kontrolü) | <Deger proje="butce-borc" anahtar="gb_denge_12a" ondalik={2} isaret={true}>−1,85</Deger> | — |
+
+Tek cümlelik hâli:
+*<Deger proje="butce-borc" anahtar="denge_cumlesi" ondalik={0}>12 aylık birikimli merkezi yönetim bütçesi 1,76 trilyon TL açık veriyor; faiz dışı denge 0,65 trilyon TL fazla.</Deger>*
+Yani bütçe **<Deger proje="butce-borc" anahtar="denge_isaret" ondalik={0}>açık</Deger>**,
+faiz dışı denge **<Deger proje="butce-borc" anahtar="fdd_isaret" ondalik={0}>fazla</Deger>** —
+açığın tamamı ve fazlası faiz giderinden geliyor. Bu ayrım maliye politikası duruşunun
+tanımıdır: faiz dışı denge, hükümetin **bu yılki tercihlerinin** sonucudur; faiz gideri
+ise geçmiş yılların borç stokunun bugüne düşen faturasıdır.
+
+### Son ay — aylık gerçekleşme
+
+| Ölçü | Milyar TL |
+| --- | --- |
+| Gelir | <Deger proje="butce-borc" anahtar="gelir_ay" ondalik={1}>1.509,6</Deger> |
+| Gider | <Deger proje="butce-borc" anahtar="gider_ay" ondalik={1}>1.395,5</Deger> |
+| — faiz gideri | <Deger proje="butce-borc" anahtar="faiz_ay" ondalik={1}>201,6</Deger> |
+| Bütçe dengesi | <Deger proje="butce-borc" anahtar="denge_ay" ondalik={1} isaret={true}>+114,2</Deger> |
+| Faiz dışı denge | <Deger proje="butce-borc" anahtar="fdd_ay" ondalik={1} isaret={true}>+315,8</Deger> |
+
+**Aylık ve yıllık işaretin farklı olması bir çelişki değildir.** Bütçe akımı şiddetle
+mevsimseldir: kurumlar vergisi belirli aylarda yığılır, personel ödemeleri düzenli
+akar, faiz ödemeleri itfa takvimine yapışıktır. Tek bir ayın dengesine bakıp maliye
+duruşu okumak bu yüzden yanlıştır — okuma **12 aylık birikimliden** yapılır. Aylık
+panel bu sayfada duruyor, ama bir *duruş* ölçüsü olarak değil, mevsimselliğin şiddetini
+göstermek için.
+
+### Stok tarafı
+
+| Ölçü | Değer | Çıpa |
+| --- | --- | --- |
+| İç borç stoku | <Deger proje="butce-borc" anahtar="ic_borc_trl" ondalik={2}>9,01</Deger> trilyon TL | <Deger proje="butce-borc" anahtar="stok_son_ay" ondalik={0}>2026-06</Deger> |
+| — devlet tahvili | <Deger proje="butce-borc" anahtar="ic_tahvil_trl" ondalik={2}>8,83</Deger> trilyon TL | |
+| — hazine bonosu | <Deger proje="butce-borc" anahtar="ic_bono_trl" ondalik={2}>0,19</Deger> trilyon TL | |
+| Dış borç — merkezi yönetim | <Deger proje="butce-borc" anahtar="dis_borc_mlrusd" ondalik={1}>93,2</Deger> milyar USD | <Deger proje="butce-borc" anahtar="dis_ceyrek" ondalik={0}>2026-Ç2</Deger> |
+| — TL karşılığı | <Deger proje="butce-borc" anahtar="dis_borc_trl" ondalik={2}>4,34</Deger> trilyon TL | |
+| **Toplam stok** | **<Deger proje="butce-borc" anahtar="toplam_borc_trl" ondalik={2}>13,35</Deger>** trilyon TL | |
+| Döviz payı | %<Deger proje="butce-borc" anahtar="doviz_pay" ondalik={1}>32,5</Deger> | |
+| Brüt stok / GSYH | %<Deger proje="butce-borc" anahtar="stok_gsyh" ondalik={2}>18,75</Deger> | <Deger proje="butce-borc" anahtar="oran_ceyregi" ondalik={0}>2026-Ç1</Deger> |
+| Net stok / GSYH (nakit varlık düşülmüş) | %<Deger proje="butce-borc" anahtar="net_stok_gsyh" ondalik={2}>14,68</Deger> | |
+| Net finansal değer / GSYH (BF.9) | %<Deger proje="butce-borc" anahtar="net_fin_deger_gsyh" ondalik={2}>−8,85</Deger> | |
+
+*<Deger proje="butce-borc" anahtar="stok_cumlesi" ondalik={0}>Merkezi yönetim borç stoku 13,35 trilyon TL (iç 9,01 + dış 4,34); döviz payı %32,5.</Deger>*
+
+### Bir cümlelik okuma
+
+Türkiye'nin merkezi yönetim borç stoku GSYH'ye oran olarak
+%<Deger proje="butce-borc" anahtar="stok_gsyh" ondalik={2}>18,75</Deger> ile
+uluslararası ölçekte **düşük** görünür; nakit varlık düşülmüş net stok
+%<Deger proje="butce-borc" anahtar="net_stok_gsyh" ondalik={2}>14,68</Deger> ile
+daha da düşüktür. Ama bu oranın kendisi bir risk ölçüsü değildir: stokun
+%<Deger proje="butce-borc" anahtar="doviz_pay" ondalik={1}>32,5</Deger>'i döviz cinsi
+dış borçtur ve kur şokuna doğrudan açıktır; faiz gideri vergi gelirinin
+%<Deger proje="butce-borc" anahtar="faiz_vergi" ondalik={1}>18,7</Deger>'sini yiyor;
+ve stok üzerinden ima edilen nominal faiz
+%<Deger proje="butce-borc" anahtar="ima_faiz_nominal" ondalik={1}>20,7</Deger> ile
+enflasyonun (%<Deger proje="butce-borc" anahtar="tufe_yy" ondalik={1}>31,8</Deger>)
+belirgin altındadır — yani stok **reel olarak eriyor**, ama bu erime yeni borcun
+piyasa faizinden değil, eski stokun düşük kuponundan geliyor ve yenilendikçe kaybolur.
+Düşük borç oranını "mali alan var" diye okumadan önce bu üç kalemin birlikte okunması
+gerekir.
+
+## Neden altı ayrı takvim var
+
+Bu hattın en sık karşılaşılacak kullanıcı hatası, farklı çıpalardaki sayıları aynı
+cümlede kullanmaktır. Yayım ritimleri:
+
+<Deger proje="butce-borc" anahtar="gecikme_cumlesi" ondalik={0}>Bütçe gerçekleşmeleri 83 gün, brüt dış borç 54 gün, haftalık menkul kıymet istatistikleri 9 gün, GSYH ve finansal hesaplar 145 gün geriden geliyor.</Deger>
+
+Sonuç: sayfada **dört ayrı "son" tarihi** dolaşır ve hiçbiri diğerine taşınmaz.
+
+- **Aylık aile** (bütçe akımları, iç borç stoku, TÜFE) — çıpa
+  <Deger proje="butce-borc" anahtar="ay_kisa" ondalik={0}>06.2026</Deger>.
+- **Üç aylık dış borç** — çıpa
+  <Deger proje="butce-borc" anahtar="dis_ceyrek" ondalik={0}>2026-Ç2</Deger>. Birleşik
+  stok bu çeyreğin son ayında **biter**; ötesine `ffill` ile uzatılmaz.
+- **Üç aylık GSYH ve finansal hesaplar** — çıpa
+  <Deger proje="butce-borc" anahtar="oran_ceyregi" ondalik={0}>2026-Ç1</Deger>. Bütün
+  GSYH oranları burada kesilir.
+- **Haftalık menkul kıymet istatistikleri** (Cuma) — çıpa
+  <Deger proje="butce-borc" anahtar="hafta_kisa" ondalik={0}>14.08.2026</Deger>.
+- **Günlük kur** — çıpa
+  <Deger proje="butce-borc" anahtar="kur_gun" ondalik={0}>21 Ağustos 2026</Deger>.
+
+<div class="not">
+  <span class="etiket">GSYH'yi ileri taşımak sessiz bayatlamadır</span>
+  <Deger proje="butce-borc" anahtar="oran_gecikme_notu" ondalik={0}>Oran metrikleri EN SON ORTAK ÇEYREKTE biter. GSYH ve finansal hesaplar akım serilerinden ~2 çeyrek geridedir; GSYH'yi ileri taşıyıp (ffill) daha yeni bir oran üretmek sessiz bayatlamadır.</Deger>
+  Bu, "eksik veriyi doldurma" gibi masum görünen ama sonucu <em>taze görünen bayat bir
+  oran</em> olan bir işlemdir: pay ilerler, payda ilerlemez, oran mekanik olarak düşer ve
+  okur bunu "borç oranı geriledi" diye okur. Hat bu yüzden oranı üretmez ve seriyi
+  keser; grafikte alt panelin üst panelden erken bitmesi hata değil, <strong>yayım
+  gecikmesinin görünür hâlidir</strong>.
+</div>
+
+Tazelik toleransları (takvim günü, aile bazlı):
+bütçe <Deger proje="butce-borc" anahtar="tolerans_butce_gun" ondalik={0}>100</Deger> ·
+dış borç <Deger proje="butce-borc" anahtar="tolerans_disborc_gun" ondalik={0}>110</Deger> ·
+menkul kıymet <Deger proje="butce-borc" anahtar="tolerans_menkul_gun" ondalik={0}>12</Deger> ·
+GSYH ve finansal hesaplar <Deger proje="butce-borc" anahtar="tolerans_ceyrek_gun" ondalik={0}>170</Deger> ·
+kur <Deger proje="butce-borc" anahtar="tolerans_kur_gun" ondalik={0}>4</Deger>.
+Referans **duvar saatidir**, verinin kendi son günü değil — kendi kendine referanslı bir
+denetim hiçbir bayatlamayı yakalayamaz.
+
+## Şekil 01 — Bütçe dengesi: aylık ve 12 aylık birikimli
+
+<GrafikEmbed
+  src="/projeler/butce-borc/01_denge_aylik.html"
+  baslik="Merkezi yönetim bütçe dengesi ve faiz dışı denge — aylık gerçekleşme ve 12 aylık birikimli, genel bütçe kapsam kontrolüyle"
+  no="01"
+  yukseklik={1061}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** EVDS3, aylık frekans, HMB merkezi yönetim bütçe gerçekleşmeleri.
+Gelir tarafı `TP.KB.GEL001` (merkezi yönetim gelirleri), gider tarafı `TP.KB.GID001`
+(toplam gider) ve `TP.KB.GID002` (faiz hariç gider). Kapsam kontrolü için genel bütçe
+dengesi `TP.KB.GEN35`. Birim: **bin TL**.
+
+**Merkezi yönetim dengesi EVDS'te hazır bir seri olarak YOKTUR** — türetilir:
+
+$$
+\text{Denge}_t = \texttt{GEL001}_t - \texttt{GID001}_t, \qquad
+\text{FDD}_t = \texttt{GEL001}_t - \texttt{GID002}_t
+$$
+
+12 aylık birikimli sürüm bu farkların yuvarlanan 12 aylık toplamıdır. **Mevsimsellik
+bu yolla arındırılır**: 12 ardışık ay her takvim etkisini bir kez içerir, dolayısıyla
+oran değil düzey karşılaştırması yapılabilir hâle gelir.
+
+**Kapsam kontrolü neden gri ve kesikli.** Merkezi yönetim ile genel bütçe **aynı şey
+değildir**: merkezi yönetim, genel bütçeye ek olarak özel bütçeli idareleri ve
+düzenleyici/denetleyici kurumları da içerir. İki denge son 24 ayda ortalama
+%<Deger proje="butce-borc" anahtar="kapsam_farki" ondalik={1}>5,9</Deger> ayrışıyor ve
+**sıfır beklenmiyor**. Bu seri grafikte, ana seriyle aynı renge ve kalınlığa
+konmaz; kapsam farkının büyüklüğü izlenir, eşiği aşarsa uyarı düşer. Amaç şu: EVDS
+kalem numaralandırmasını değiştirdiğinde, iki serinin ayrışması bunu **sessiz
+kalmadan** haber versin.
+
+**Bütçe serileri AKIMDIR.** EVDS kataloğu bu veri grubunu "KÜMÜLATİF" etiketiyle
+sunar; bu etiket **düşük frekansa çevirme yöntemidir** (yıllık istendiğinde toplanır
+demektir), serinin yıl içi kümülatif olduğu anlamına gelmez. Hat bunu her koşuda
+sınar: seri yıl içinde monoton artıyor mu diye bakar; artmıyorsa akım olduğu
+doğrulanmış olur. Bu ayrımı kaçıran bir okuma Ocak'tan itibaren biriken bir seriyi
+aylık gerçekleşme sanır ve Aralık'ta 12 katlık bir sıçrama üretir.
+
+**Tuzak: ölçek bastırması.** Üst panel milyar TL, alt panel trilyon TL. Aynı eksene
+konsaydı aylık dalgalanma 12 aylık birikimli eğrinin yanında düz bir çizgiye dönerdi.
+Paneller **alt alta** dizilidir; yan yana dizmek zaman eksenini kısaltır ve ikisinin
+aynı tarihte ne yaptığını göz karşılaştıramaz hâle gelir.
+
+## Şekil 02 — Denge ve faiz yükünün GSYH'ye oranı
+
+<GrafikEmbed
+  src="/projeler/butce-borc/02_denge_gsyh.html"
+  baslik="12 aylık birikimli bütçe dengesi, faiz dışı denge ve faiz gideri — 4 çeyreklik GSYH'ye oran"
+  no="02"
+  yukseklik={1037}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Pay: yukarıdaki 12 aylık birikimli akımlar. Payda: `TP.GSYIH20.BY.B1GQ`
+(cari fiyatlarla üç aylık GSYH, **bin TL**), 4 çeyreklik yuvarlanan toplam.
+
+$$
+\left(\frac{X}{\text{GSYH}}\right)_q=\frac{\sum_{i=0}^{11}x_{q,\,\text{ay}-i}}{\sum_{j=0}^{3}\text{GSYH}_{q-j}}\times 100
+$$
+
+**Neden 4 çeyrek toplamı, tek çeyreğin dört katı değil.** Çeyreklik GSYH mevsimsel
+olarak dalgalıdır (Ç4 tipik olarak şişkindir). Tek çeyreği dörtle çarpmak, o çeyreğin
+mevsimselliğini doğrudan orana taşır ve oran her Ç4'te mekanik olarak düşer, her Ç1'de
+mekanik olarak yükselir. Dört çeyrek toplamı bu etkiyi kapatır.
+
+**Birim denetimi burada kritiktir.** Pay 12 aylık birikimli akım (trilyon TL'ye
+indirgenmiş), payda 4 çeyrek toplamı (trilyon TL'ye indirgenmiş) — **aynı birim**,
+dolayısıyla oran birimsiz. Biri bin TL kalsaydı oran 10⁹ katı çıkardı ve grafikte
+"%3.650.000.000" gibi bir sayı görünürdü. Bu hâliyle gözle yakalanır; asıl tehlikeli
+olan **1000 katlık** hatadır: bin TL ile milyon TL karıştığında iki seri de "trilyon"
+mertebesinde görünmeye devam eder ve hata görünmez. Hat bu yüzden birimi EVDS'in
+kendi veri grubu kataloğundan okur ve kodda yazılıyla karşılaştırır:
+<Deger proje="butce-borc" anahtar="birim_cumlesi" ondalik={0}>15/15 veri grubunda uyuşuyor.</Deger>
+
+**Seri burada biter.** 4 çeyreklik GSYH toplamının son değeri
+<Deger proje="butce-borc" anahtar="gsyh_yil_trl" ondalik={1}>67,5</Deger> trilyon TL,
+çeyreği <Deger proje="butce-borc" anahtar="oran_ceyregi" ondalik={0}>2026-Ç1</Deger>.
+Aylık seriler <Deger proje="butce-borc" anahtar="ay_kisa" ondalik={0}>06.2026</Deger>'ya
+kadar geliyor; oran serisi gelmiyor ve **gelmemesi gerekiyor**.
+
+**Faiz/GSYH ayrı panelde.** Faiz gideri GSYH'nin
+%<Deger proje="butce-borc" anahtar="faiz_gsyh" ondalik={2}>3,65</Deger>'i. Bu ölçü
+denge oranlarıyla aynı panele konmaz çünkü **farklı bir soruyu** yanıtlar: denge
+oranı maliye duruşunu, faiz oranı borç servisinin milli gelire yükünü ölçer. İkisini
+üst üste çizmek, birinin diğerinin bileşeni olduğunu (denge = faiz dışı denge − faiz)
+görsel olarak gizler.
+
+## Reel okuma: neden basit çıkarma yasak
+
+Yüksek enflasyonlu bir ekonomide bütçe serilerinin nominal hâli okunamaz. İki ayrı
+dönüşüm gerekir ve ikisi de sıra duyarlıdır.
+
+**1) Deflasyon sırası.** Aylık gerçekleşme önce **aylık** TÜFE ile deflate edilir,
+sonra 12 aylık toplam alınır:
+
+$$
+X^{\text{reel}}_{12a,\,t}=\sum_{i=0}^{11} x_{t-i}\cdot\frac{P_{\text{taban}}}{P_{t-i}}
+$$
+
+Önce toplayıp sonra tek bir deflatörle bölmek yıl içindeki fiyat hareketini yok sayar.
+Aylık enflasyonun tek haneli olduğu bir yılda bu yaklaşım %5'e varan hata verir; Ocak
+ayında yapılan bir harcamayla Aralık ayında yapılan bir harcama aynı satın alma
+gücünde sayılır.
+
+**2) Deflatörün tabanı.** Taban **son bütçe ayıdır**, son TÜFE ayı değil. Bu koşuda
+deflatör tabanı <Deger proje="butce-borc" anahtar="deflator_taban" ondalik={0}>2026-06</Deger>
+(endeks <Deger proje="butce-borc" anahtar="deflator_taban_endeks" ondalik={2}>129,99</Deger>),
+oysa TÜFE zaten
+<Deger proje="butce-borc" anahtar="tufe_son_ay" ondalik={0}>2026-07</Deger> ayına kadar
+yayımlanmış durumda. Taban ileri alınsaydı bütün reel seri, bütçesi **henüz
+yayımlanmamış** bir ayın fiyatlarına taşınırdı — sayfa "Temmuz fiyatlarıyla" derken
+Temmuz bütçesini göstermiyor olurdu.
+
+**3) Reel değişim çarpımsaldır.** Bu depoda bağlayıcı konvansiyon:
+
+$$
+r=\frac{1+i}{1+\pi}-1 \quad\text{— basit çıkarma } (i-\pi) \text{ DEĞİL}
+$$
+
+<div class="not">
+  <span class="etiket">Basit çıkarma kaç puan yanıltır</span>
+  <Deger proje="butce-borc" anahtar="fisher_notu" ondalik={0}>Reel değişim çarpımsal (Fisher) konvansiyonla hesaplanır: (1+nominal)/(1+deflatör) − 1. Basit çıkarma bu depoda yasak.</Deger>
+  Bu koşuda iki tanım son gözlemde{' '}
+  <Deger proje="butce-borc" anahtar="fisher_basit_fark_pp" ondalik={2}>3,02</Deger> puan
+  ayrışıyor. Üç puan, bir bütçe tartışmasında "reel harcama arttı mı azaldı mı"
+  sorusunun cevabını değiştirmeye yeter. Hat çarpımsal özdeşliği her koşuda sınar
+  (artık sıfır olmalı); tutmazsa reel seri türetimi bozulmuş demektir ve uyarı düşer.
+</div>
+
+## Şekil 03 — Reel gelir ve harcama
+
+<GrafikEmbed
+  src="/projeler/butce-borc/03_reel_gelir_harcama.html"
+  baslik="TÜFE ile deflate edilmiş 12 aylık birikimli gelir, faiz dışı harcama ve faiz gideri · reel ve nominal yıllık değişim"
+  no="03"
+  yukseklik={1087}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Yukarıdaki bütçe serileri + `TP.TUKFIY2025.GENEL` (TÜFE genel endeks,
+2025 = 100). Deflasyon ve Fisher kuralları önceki bölümdeki gibi.
+
+Çıpa günündeki reel düzeyler
+(<Deger proje="butce-borc" anahtar="deflator_taban" ondalik={0}>2026-06</Deger>
+fiyatlarıyla, 12 aylık birikimli, trilyon TL):
+
+| Kalem | Reel düzey | Reel y/y | Nominal y/y |
+| --- | --- | --- | --- |
+| Gelir | <Deger proje="butce-borc" anahtar="reel_gelir_12a" ondalik={2}>17,07</Deger> | <Deger proje="butce-borc" anahtar="gelir_reel_yy" ondalik={1} isaret={true}>+9,7</Deger>% | <Deger proje="butce-borc" anahtar="gelir_nom_yy" ondalik={1}>43,9</Deger>% |
+| — vergi geliri | <Deger proje="butce-borc" anahtar="reel_vergi_12a" ondalik={2}>14,67</Deger> | <Deger proje="butce-borc" anahtar="vergi_reel_yy" ondalik={1} isaret={true}>+11,0</Deger>% | <Deger proje="butce-borc" anahtar="vergi_nom_yy" ondalik={1}>45,5</Deger>% |
+| Faiz dışı harcama | <Deger proje="butce-borc" anahtar="reel_fdg_12a" ondalik={2}>16,32</Deger> | <Deger proje="butce-borc" anahtar="fdg_reel_yy" ondalik={1} isaret={true}>−0,6</Deger>% | <Deger proje="butce-borc" anahtar="fdg_nom_yy" ondalik={1}>31,1</Deger>% |
+| Faiz gideri | <Deger proje="butce-borc" anahtar="reel_faiz_12a" ondalik={2}>2,72</Deger> | <Deger proje="butce-borc" anahtar="faiz_reel_yy" ondalik={1} isaret={true}>+2,3</Deger>% | <Deger proje="butce-borc" anahtar="faiz_nom_yy" ondalik={1}>33,2</Deger>% |
+| TÜFE (deflatör) | — | — | <Deger proje="butce-borc" anahtar="tufe_yy" ondalik={1}>31,8</Deger>% |
+
+*<Deger proje="butce-borc" anahtar="reel_cumlesi" ondalik={0}>Aynı dönemde gelir nominal olarak %43,9 artarken reel artış %9,7; reel faiz dışı harcama −%0,6.</Deger>*
+
+**Bu tablo sayfanın asıl hikâyesidir.** Nominal olarak bakıldığında gelir de harcama
+da "patlıyor" görünür — gelirde
+<Deger proje="butce-borc" anahtar="gelir_nom_yy" ondalik={1}>43,9</Deger>%, faiz dışı
+harcamada <Deger proje="butce-borc" anahtar="fdg_nom_yy" ondalik={1}>31,1</Deger>%.
+Deflatör devreye girdiğinde tablo tersine döner: gelir reel olarak genişliyor
+(<Deger proje="butce-borc" anahtar="gelir_reel_yy" ondalik={1} isaret={true}>+9,7</Deger>%),
+faiz dışı harcama reel olarak **daralıyor**
+(<Deger proje="butce-borc" anahtar="fdg_reel_yy" ondalik={1} isaret={true}>−0,6</Deger>%).
+Yani faiz dışı dengedeki iyileşme bir harcama kesintisinden çok, **gelirin enflasyonu
+geçmesinden** geliyor.
+
+**İkinci panelde neden hem çubuk hem çizgi var.** Reel değişim çubuk, nominal değişim
+ve TÜFE çizgi olarak çizilir. Amaç, üç serinin **aynı eksende** görülmesidir: nominal
+çizgi ile TÜFE çizgisi arasındaki dikey mesafe, çubuğun boyuna denk gelmelidir. Göz
+bu tutarlılığı doğrudan denetleyebilir — Fisher düzeltmesi yüzünden birebir değil ama
+mertebe olarak örtüşür.
+
+**Tuzak: `pct_change`'in sessiz doldurması.** pandas'ın varsayılan davranışı NaN'ları
+ileri doldurup oran hesaplamaktır. Bu, bütçe serisinin bittiği aydan **sonraki** aylar
+için bile bir yıllık değişim üretiyordu — seri
+<Deger proje="butce-borc" anahtar="ay_kisa" ondalik={0}>06.2026</Deger>'da bittiği hâlde
+takip eden ay dolu geliyordu. Tam olarak yasaklanan sınıf: seri ilerlemediği hâlde
+sayfa ilerlemiş görünür. Hat bütün yıllık değişim hesaplarında doldurmayı kapatır.
+
+## Şekil 04 — Vergi kompozisyonu
+
+<GrafikEmbed
+  src="/projeler/butce-borc/04_vergi_kompozisyon.html"
+  baslik="Vergi gelirlerinin kalem kompozisyonu (12 aylık birikimli paylar) ve kalem bazında reel yıllık değişim kesiti"
+  no="04"
+  yukseklik={1085}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** `TP.KB.GEL003` (vergi gelirleri toplamı) ve altı kalem:
+`GEL005` gelir vergisi, `GEL010` kurumlar vergisi, `GEL018` dahilde alınan KDV,
+`GEL033` ithalde alınan KDV, `GEL021` ÖTV, `GEL035` damga vergisi.
+
+$$
+\text{pay}_{k,t}=\frac{\sum_{i=0}^{11} x_{k,\,t-i}}{\sum_{i=0}^{11}\texttt{GEL003}_{t-i}}\times 100
+$$
+
+Çıpa günündeki kompozisyon ve reel seyir:
+
+| Kalem | Pay (%) | 12 aylık (trl TL) | Reel y/y (%) |
+| --- | --- | --- | --- |
+| Gelir vergisi | <Deger proje="butce-borc" anahtar="pay_v_gelir" ondalik={1}>26,7</Deger> | <Deger proje="butce-borc" anahtar="v_gelir_12a" ondalik={2}>3,44</Deger> | <Deger proje="butce-borc" anahtar="v_gelir_reel_yy" ondalik={1} isaret={true}>+25,5</Deger> |
+| ÖTV | <Deger proje="butce-borc" anahtar="pay_v_otv" ondalik={1}>16,3</Deger> | <Deger proje="butce-borc" anahtar="v_otv_12a" ondalik={2}>2,10</Deger> | <Deger proje="butce-borc" anahtar="v_otv_reel_yy" ondalik={1} isaret={true}>−4,7</Deger> |
+| İthalde alınan KDV | <Deger proje="butce-borc" anahtar="pay_v_kdv_ithal" ondalik={1}>15,3</Deger> | <Deger proje="butce-borc" anahtar="v_kdv_ithal_12a" ondalik={2}>1,98</Deger> | <Deger proje="butce-borc" anahtar="v_kdv_ithal_reel_yy" ondalik={1} isaret={true}>+1,6</Deger> |
+| Dahilde alınan KDV | <Deger proje="butce-borc" anahtar="pay_v_kdv_dahil" ondalik={1}>14,1</Deger> | <Deger proje="butce-borc" anahtar="v_kdv_dahil_12a" ondalik={2}>1,82</Deger> | <Deger proje="butce-borc" anahtar="v_kdv_dahil_reel_yy" ondalik={1} isaret={true}>+11,0</Deger> |
+| Kurumlar vergisi | <Deger proje="butce-borc" anahtar="pay_v_kurumlar" ondalik={1}>11,8</Deger> | <Deger proje="butce-borc" anahtar="v_kurumlar_12a" ondalik={2}>1,52</Deger> | <Deger proje="butce-borc" anahtar="v_kurumlar_reel_yy" ondalik={1} isaret={true}>+22,0</Deger> |
+| Damga vergisi | <Deger proje="butce-borc" anahtar="pay_v_damga" ondalik={1}>2,2</Deger> | <Deger proje="butce-borc" anahtar="v_damga_12a" ondalik={2}>0,28</Deger> | <Deger proje="butce-borc" anahtar="v_damga_reel_yy" ondalik={1} isaret={true}>+14,9</Deger> |
+| Diğer vergiler (**artık**) | <Deger proje="butce-borc" anahtar="pay_v_diger" ondalik={1}>13,7</Deger> | — | — |
+
+**"Diğer" gizlenmiş bir kalem değil, açık bir artıktır**: toplam eksi yukarıdaki altı
+kalem. İçinde motorlu taşıtlar vergisi, harçlar, BSMV ve tahsilattan reddiyeler
+durur. Artık kalemi çizmeyip yığını %100'e tamamlamamak, okura kompozisyonun tamamını
+gördüğü yanılgısını verirdi.
+
+<div class="not">
+  <span class="etiket">Artık kalemin sessiz 100'ü — bu koşuda düzeltildi</span>
+  Artık kalem <code>100 − Σ pay</code> ile hesaplanıyor. pandas'ın toplama
+  varsayılanı, bütün bileşenlerin NaN olduğu bir satırda toplamı <strong>0</strong>
+  sayar; artık da <strong>100</strong> çıkar. Sonuç: 12 aylık pencere dolmadan önceki
+  aylarda ve bütçesi <em>henüz yayımlanmamış</em> son ayda yığın "tamamı diğer
+  vergiler" gösteriyordu (ölçüldü: 48 satır), ve <code>ozet.json</code> o sahte 100'ü
+  son değer diye okuyordu. Kalem toplamı artık en az bir dolu bileşen istiyor; boş
+  satırda artık da boş kalıyor. Bu, hattın kendi ilkesinin ihlaliydi ve raporlanarak
+  giderildi.
+</div>
+
+**Paylar neden 12 aylık birikimliden alınır.** Aylık paylar mevsimsellikten okunamaz:
+kurumlar vergisi belirli beyan aylarında yığılır, o aylarda payı iki katına çıkar,
+sonraki ay çöker. 12 aylık pencere her beyan dönemini bir kez içerir.
+
+**Alt panel bir KESİTTİR, zaman serisi değil.** Altı kalemin reel yıllık değişimi ayrı
+ayrı zaman serisi olarak çizilseydi tek panelde okunmuyordu. Kesit gösterimde her
+kalemin **bugünkü** reel değişimi ile **bir yıl önceki aynı ayın** değeri yan yana
+durur; gölge çubuk o çıpadır. "Yüksek mi düşük mü" sorusunun bir referansı olmadan
+tekil bir yüzde sayısı yorumlanamaz.
+
+**Kesit çubuğu nötr renktedir.** Üst panelde her kalemin kendi rengi var; alt panelde
+aynı renkleri kullanmak, iki panelde farklı anlam taşıyan aynı rengi doğuruyordu
+(üstte "kalem kimliği", altta "değişim yönü"). Renk bir boyutu kodlar; iki boyutu
+kodlayamaz.
+
+## Şekil 05 — Harcama kompozisyonu
+
+<GrafikEmbed
+  src="/projeler/butce-borc/05_harcama_kompozisyon.html"
+  baslik="Bütçe giderlerinin kalem kompozisyonu (12 aylık birikimli paylar) ve kalem bazında reel yıllık değişim kesiti"
+  no="05"
+  yukseklik={1085}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** `TP.KB.GID001` (toplam gider) ve sekiz üst düzey kalem:
+`GID003` personel, `GID008` SGK devlet primi, `GID014` mal ve hizmet alımı,
+`GID026` cari transferler, `GID110` sermaye gideri, `GID116` sermaye transferi,
+`GID131` borç verme, `GID152` faiz gideri.
+
+| Kalem | Pay (%) | 12 aylık (trl TL) | Reel y/y (%) |
+| --- | --- | --- | --- |
+| Cari transferler | <Deger proje="butce-borc" anahtar="pay_cari_transfer" ondalik={1}>35,8</Deger> | <Deger proje="butce-borc" anahtar="cari_transfer_12a" ondalik={2}>6,01</Deger> | <Deger proje="butce-borc" anahtar="cari_transfer_reel_yy" ondalik={1} isaret={true}>+0,8</Deger> |
+| Personel | <Deger proje="butce-borc" anahtar="pay_personel" ondalik={1}>26,1</Deger> | <Deger proje="butce-borc" anahtar="personel_12a" ondalik={2}>4,38</Deger> | <Deger proje="butce-borc" anahtar="personel_reel_yy" ondalik={1} isaret={true}>+5,8</Deger> |
+| Faiz gideri | <Deger proje="butce-borc" anahtar="pay_faiz" ondalik={1}>14,3</Deger> | <Deger proje="butce-borc" anahtar="faiz_12a" ondalik={2}>2,41</Deger> | <Deger proje="butce-borc" anahtar="faiz_reel_yy" ondalik={1} isaret={true}>+2,3</Deger> |
+| Sermaye gideri (yatırım) | <Deger proje="butce-borc" anahtar="pay_sermaye_gider" ondalik={1}>8,2</Deger> | <Deger proje="butce-borc" anahtar="sermaye_gider_12a" ondalik={2}>1,38</Deger> | <Deger proje="butce-borc" anahtar="sermaye_gider_reel_yy" ondalik={1} isaret={true}>−3,7</Deger> |
+| Mal ve hizmet alımı | <Deger proje="butce-borc" anahtar="pay_mal_hizmet" ondalik={1}>7,5</Deger> | <Deger proje="butce-borc" anahtar="mal_hizmet_12a" ondalik={2}>1,25</Deger> | <Deger proje="butce-borc" anahtar="mal_hizmet_reel_yy" ondalik={1} isaret={true}>+7,1</Deger> |
+| SGK devlet primi | <Deger proje="butce-borc" anahtar="pay_sgk_primi" ondalik={1}>3,3</Deger> | <Deger proje="butce-borc" anahtar="sgk_primi_12a" ondalik={2}>0,56</Deger> | <Deger proje="butce-borc" anahtar="sgk_primi_reel_yy" ondalik={1} isaret={true}>+9,4</Deger> |
+| Sermaye transferi | <Deger proje="butce-borc" anahtar="pay_sermaye_transfer" ondalik={1}>2,5</Deger> | <Deger proje="butce-borc" anahtar="sermaye_transfer_12a" ondalik={2}>0,43</Deger> | <Deger proje="butce-borc" anahtar="sermaye_transfer_reel_yy" ondalik={1} isaret={true}>−51,9</Deger> |
+| Borç verme | <Deger proje="butce-borc" anahtar="pay_borc_verme" ondalik={1}>2,2</Deger> | <Deger proje="butce-borc" anahtar="borc_verme_12a" ondalik={2}>0,37</Deger> | <Deger proje="butce-borc" anahtar="borc_verme_reel_yy" ondalik={1} isaret={true}>+1,8</Deger> |
+| Diğer giderler (**artık**) | <Deger proje="butce-borc" anahtar="pay_gider_diger" ondalik={1}>0,0</Deger> | — | — |
+
+**Yalnız üst düzey kalemler çizilir, ve bu bir tercih değil zorunluluktur.** EVDS'in
+gider tablosundaki pek çok alt kalem 2023 sonunda kesiliyor ve alt kırılımların toplamı
+üst kalemi **tutmuyor**. Alt kırılım kullanılsaydı yığın son iki yılda sessizce eksik
+kalır, "diğer" kalemi şişer ve okur bunu bir kompozisyon kayması sanırdı.
+
+**Faiz gideri yığının içinde tutulur.** Bazı sunumlar faizi dışarı alıp yalnız faiz
+dışı harcamayı gösterir. Burada tersi yapılıyor: faiz de bir harcamadır ve payının
+%<Deger proje="butce-borc" anahtar="pay_faiz" ondalik={1}>14,3</Deger> olması, bütçenin
+altıda birinin geçmiş borçlanmanın servisine gittiğini doğrudan gösterir. Faiz dışı
+okuma için Şekil 03 zaten ayrı duruyor.
+
+**Sermaye transferindeki
+<Deger proje="butce-borc" anahtar="sermaye_transfer_reel_yy" ondalik={1} isaret={true}>−51,9</Deger>%
+gibi uç değerler düzeltilmez.** Bu kalem küçük ve düzensizdir (payı
+%<Deger proje="butce-borc" anahtar="pay_sermaye_transfer" ondalik={1}>2,5</Deger>); tek
+bir büyük transferin bir yıl olup ertesi yıl olmaması yıllık değişimi yarıya böler.
+Kesit paneli bu yüzden pay bilgisiyle **birlikte** okunmalıdır: büyük yüzde değişim,
+küçük kalemde küçük mutlak etki demektir.
+
+## Şekil 06 — Faiz yükü ve faiz giderinin ayrışması
+
+<GrafikEmbed
+  src="/projeler/butce-borc/06_faiz_yuku.html"
+  baslik="Faiz gideri / vergi geliri ve / toplam gelir · faiz giderinin iç borç, dış borç, kira sertifikası ve iskonto bileşenlerine ayrışması"
+  no="06"
+  yukseklik={1035}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** `TP.KB.GID152` toplam faiz gideri ve bileşenleri: `GID153` iç borç faizi,
+`GID160` dış borç faizi, `GID163` kira sertifikası giderleri, `GID161` iskonto ve kısa
+vadeli nakit işlem giderleri.
+
+$$
+\text{faiz yükü}_t=\frac{\sum_{i=0}^{11}\texttt{GID152}_{t-i}}{\sum_{i=0}^{11}\texttt{GEL003}_{t-i}}\times 100
+$$
+
+*<Deger proje="butce-borc" anahtar="faiz_cumlesi" ondalik={0}>Faiz gideri 12 aylık birikimli 2,41 trilyon TL; vergi gelirlerine oranı %18,7, GSYH'ye oranı %3,65. Toplam faiz içinde iç borç faizinin payı %78,8.</Deger>*
+
+| Ölçü | Değer |
+| --- | --- |
+| Faiz gideri / vergi geliri | %<Deger proje="butce-borc" anahtar="faiz_vergi" ondalik={1}>18,7</Deger> |
+| Faiz gideri / toplam gelir | %<Deger proje="butce-borc" anahtar="faiz_gelir" ondalik={1}>16,0</Deger> |
+| Faiz gideri / GSYH | %<Deger proje="butce-borc" anahtar="faiz_gsyh" ondalik={2}>3,65</Deger> |
+| — iç borç faizi (12 aylık) | <Deger proje="butce-borc" anahtar="faiz_ic_12a" ondalik={2}>1,90</Deger> trl TL · pay %<Deger proje="butce-borc" anahtar="faiz_ic_pay" ondalik={1}>78,8</Deger> |
+| — dış borç faizi | <Deger proje="butce-borc" anahtar="faiz_dis_12a" ondalik={2}>0,27</Deger> trl TL · pay %<Deger proje="butce-borc" anahtar="faiz_dis_pay" ondalik={1}>11,2</Deger> |
+| — kira sertifikası | <Deger proje="butce-borc" anahtar="faiz_kira_12a" ondalik={2}>0,18</Deger> trl TL |
+| — iskonto ve KV nakit işlem | <Deger proje="butce-borc" anahtar="faiz_iskonto_12a" ondalik={2}>0,04</Deger> trl TL |
+
+**Neden payda vergi geliri.** Faizin GSYH'ye oranı uluslararası karşılaştırma için
+uygundur ama **ödeme kapasitesini** ölçmez: devlet GSYH'yi değil, vergiyi tahsil eder.
+Faiz/vergi oranı, borç servisinin vergi tabanını ne kadar yediğini doğrudan gösterir
+ve bu yüzden mali sürdürülebilirlik tartışmasının merkezindedir. İki oran birlikte
+çizilir çünkü aralarındaki makas (gelir − vergi) vergi dışı gelirlerin payını verir.
+
+**Dış borç faizi neden ayrı gösterilir.** Bu kalem **kur hareketine duyarlıdır**:
+aynı döviz kupon ödemesi, TL değer kaybettiğinde bütçede büyür. İç borç faiziyle
+toplanıp tek çizgi hâline getirilseydi, kur şoku sonrası faiz sıçraması "faiz oranları
+yükseldi" diye okunurdu — oysa oran değişmemiş, kur değişmiş olabilir.
+
+**Kalem başlangıçları veriden okunur.** Kira sertifikası kalemi 2013'te, türev ürün
+gideri 2008'de başlıyor. Öncesinde yığında yer almaması bir veri eksikliği değil,
+**kalemin var olmamasıdır**. Bu tarihler koda sabit gömülmez; serinin ilk dolu
+gözleminden türetilir. Sabit gömülseydi, HMB yeni bir enstrüman ihdas ettiğinde
+yığın sessizce eksik kalırdı.
+
+## Faiz yükünden ima edilen faize
+
+Faiz gideri bir akım, borç stoku bir stoktur. İkisinin oranı **stokun ortalama
+maliyetini** verir ve bu, piyasa faizinden tamamen farklı bir sayıdır:
+
+$$
+i^{\text{ima}}_t=\frac{\sum_{i=0}^{11}\texttt{GID152}_{t-i}}{\tfrac{1}{2}\big(S_t+S_{t-12}\big)}\times 100,
+\qquad
+r^{\text{ima}}_t=\frac{1+i^{\text{ima}}_t}{1+\pi_t}-1
+$$
+
+$S_t$ = toplam borç stoku. **Payda neden ortalama stok.** Yıl içinde büyüyen bir
+stokta uç noktalardan birini seçmek sistematik yan üretir: dönem sonu stoku kullanmak
+oranı aşağı, dönem başı stoku kullanmak yukarı çeker. İki ucun ortalaması bu yanı
+büyük ölçüde giderir.
+
+*<Deger proje="butce-borc" anahtar="ima_faiz_cumlesi" ondalik={0}>Stok üzerinden ima edilen ortalama nominal faiz %20,7; Fisher konvansiyonuyla reel karşılığı −%8,6. Basit çıkarma aynı veriden −%11,4 verirdi — 2,76 puan fark.</Deger>*
+
+<div class="not">
+  <span class="etiket">Basit çıkarma burada 2,76 puan yanıltıyor</span>
+  <Deger proje="butce-borc" anahtar="fisher_ima_faiz_notu" ondalik={0}>İma edilen reel faiz Fisher konvansiyonuyla hesaplanır: (1+i)/(1+π) − 1. Basit çıkarma (i − π) yüksek enflasyonda aynı veriden puanlarca farklı bir sayı üretir; bu depoda kullanılmaz.</Deger>
+  Çarpımsal sonuç{' '}
+  <Deger proje="butce-borc" anahtar="ima_faiz_reel" ondalik={1} isaret={true}>−8,6</Deger>%,
+  basit çıkarma{' '}
+  <Deger proje="butce-borc" anahtar="ima_faiz_reel_basit" ondalik={1} isaret={true}>−11,4</Deger>%;
+  fark <Deger proje="butce-borc" anahtar="fisher_ima_faiz_fark_pp" ondalik={2}>2,76</Deger>
+  puan. Enflasyon %30 mertebesindeyken iki tanım arasındaki uçurum, "borç ne hızla
+  eriyor" sorusunun cevabını üçte bir oranında değiştirir.
+</div>
+
+**Bu sayı bir piyasa faizi DEĞİLDİR ve öyle okunmamalıdır.** İma edilen faiz
+%<Deger proje="butce-borc" anahtar="ima_faiz_nominal" ondalik={1}>20,7</Deger> iken
+piyasada yeni ihraç edilen kâğıdın faizi bunun çok üzerinde olabilir. Üç sebep:
+(i) stokun büyük kısmı geçmişte, daha düşük faizle ihraç edilmiş kâğıtlardan oluşur;
+(ii) iskontolu kâğıtlarda faiz gideri nakit ödendiğinde değil, itfada muhasebeleşir;
+(iii) döviz cinsi borçta kupon oranı düşüktür ama kur farkı faiz olarak değil, stok
+değerlemesi olarak görünür. Yeni ihraç faizi için
+<a href="/projeler/hazine-ihrac/">Hazine İhraç Takibi</a> sayfasına bakın.
+
+**Reel ima edilen faizin negatif olması ne demek.** Stok, enflasyondan daha yavaş
+faiz ödüyor — yani reel olarak eriyor. Bu, kamu borcunun GSYH'ye oranını düşüren güçlü
+bir mekanizmadır (finansal baskı / *financial repression* literatürünün konusu). Ama
+**geçicidir**: stok yenilendikçe eski düşük kuponlu kâğıtlar yerini bugünün faizine
+bırakır. Reel ima edilen faizin negatifliğine bakıp "borç sürdürülebilir" demek, borcun
+**ortalama vadesini** hesaba katmayan bir okumadır — ve o vade EVDS'te yayımlanmıyor
+(aşağıda).
+
+## Şekil 07 — Merkezi yönetim borç stoku
+
+<GrafikEmbed
+  src="/projeler/butce-borc/07_borc_stoku.html"
+  baslik="İç borç + dış borcun TL karşılığı (yığılmış) ve brüt / net stokun GSYH'ye oranı"
+  no="07"
+  yukseklik={1087}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** İç borç: `TP.KB.A09` (iç borç stoku toplamı, **bin TL**), kırılımı `A01`
+devlet tahvili, `A05` hazine bonosu. Dış borç: `TP.BRUTDBORCLU.G4` (brüt dış borcun
+merkezi yönetim bacağı, **milyon ABD doları**, üç aylık). Kur: `TP.DK.USD.A.YTL`.
+
+**Birleşik stok EVDS'te YOKTUR** — türetilir:
+
+$$
+S_t=\underbrace{\texttt{A09}_t\cdot 10^{-9}}_{\text{bin TL}\to\text{trl TL}}
+\;+\;\underbrace{\texttt{G4}_t\cdot 10^{3}\cdot e_t\cdot 10^{-9}}_{\text{mn USD}\to\text{bin TL}\to\text{trl TL}}
+$$
+
+$e_t$ = **ay sonu** USD/TRY. Stok büyüklüğü ay sonu kuruyla değerlenir; ortalama kur
+akım kalemleri içindir. Bu koşuda stokun değerleme kuru
+<Deger proje="butce-borc" anahtar="senaryo_kur" ondalik={4}>46,5551</Deger>
+(<Deger proje="butce-borc" anahtar="senaryo_cipa_ay" ondalik={0}>2026-06</Deger> ay
+sonu) ve dış bacak
+<Deger proje="butce-borc" anahtar="dis_borc_mlrusd" ondalik={1}>93,2</Deger>
+milyar USD × kur =
+<Deger proje="butce-borc" anahtar="dis_borc_trl" ondalik={2}>4,34</Deger> trilyon TL.
+
+<div class="not">
+  <span class="etiket">Vintaj: en güncel kur, stokun kuru DEĞİLDİR</span>
+  <code>ozet.json</code> ayrıca en güncel ay sonu kurunu da taşır
+  (<Deger proje="butce-borc" anahtar="kur_ay" ondalik={4}>47,3274</Deger>) ve bu, stokun
+  değerlendiği kurdan <strong>bir ay ileridedir</strong>: kur günlük, borç stoku aylık
+  yayımlanıyor. İkisini karıştırıp güncel kurla eski stoku çarpmak, hiç yapılmamış bir
+  değerleme üretir — ne stok o tarihe aittir ne kur. Sayfada stok hep <em>kendi ayının</em>
+  kuruyla değerlenir; güncel kur yalnız senaryo tablosunun başlangıç noktasında kullanılır.
+</div>
+
+**Mertebe kıyası kodda belgelidir.** <Deger proje="butce-borc" anahtar="dis_borc_musd" ondalik={0}>93.222</Deger>
+milyon USD × 10³ × ~46 TL ≈ 4,3 × 10⁹ bin TL = 4,3 trilyon TL; iç borç
+<Deger proje="butce-borc" anahtar="ic_borc_trl" ondalik={2}>9,01</Deger> trilyon TL;
+toplam <Deger proje="butce-borc" anahtar="toplam_borc_trl" ondalik={2}>13,35</Deger>
+trilyon TL; 4 çeyreklik GSYH
+<Deger proje="butce-borc" anahtar="gsyh_yil_trl" ondalik={1}>67,5</Deger> trilyon TL →
+yaklaşık %19. Türkiye için bilinen bant %15–35; **mertebe tutuyor**. Bu kıyas kodda
+yorum olarak duruyor çünkü bin katlık bir ölçek hatası, sonucu hâlâ "trilyon"
+mertebesinde bırakır ve gözle yakalanmaz. İkinci bir kontrol: iç borç stoku ile
+haftalık DİBS yazılı değer toplamı
+(<Deger proje="butce-borc" anahtar="dibs_toplam_trl" ondalik={2}>9,45</Deger> trilyon TL,
+farklı bir veri grubundan, **milyon TL** biriminde) aynı mertebeyi vermeli — veriyor;
+ayrışsa hat durur.
+
+**Dış bacak ÜÇ AYLIK ve basamak olarak taşınır.** Çeyrek içindeki aylar aynı değeri
+alır, ama **son yayımlanan çeyreğin ötesine uzatılmaz**. Bu yüzden birleşik seri
+<Deger proje="butce-borc" anahtar="stok_son_ay" ondalik={0}>2026-06</Deger> ayında biter;
+iç borç serisi devam etse bile toplam üretilmez. Uzatmak, kur hareketinin stok üzerindeki
+etkisini eski bir döviz miktarına uygulayıp "yeni" bir sayı yaratmak olurdu.
+
+**İki panel iki farklı yerde biter.** Üst panel aylık (çıpa
+<Deger proje="butce-borc" anahtar="stok_son_ay" ondalik={0}>2026-06</Deger>), alt panel
+GSYH ile aynı çeyrekte (çıpa
+<Deger proje="butce-borc" anahtar="oran_ceyregi" ondalik={0}>2026-Ç1</Deger>). Bu bir
+hizalama hatası değil, **yayım gecikmesinin görünür hâlidir** ve kapatılmadı.
+
+**Net stok = brüt stok − Hazine nakit varlığı.** Nakit varlık finansal hesaplardan
+(`ZP5`, VF.2 para ve mevduat) gelir ve üç aylıktır; net oran bu yüzden yalnız alt
+panelde vardır. Detayı Şekil 13'te.
+
+## Şekil 08 — Borç stokunun para kompozisyonu
+
+<GrafikEmbed
+  src="/projeler/butce-borc/08_tl_doviz.html"
+  baslik="Borç stokunun TL ve döviz bacakları · eurobond stokunun para birimi kırılımı (piyasa değeri payları)"
+  no="08"
+  yukseklik={1087}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Üst panel: yukarıdaki türetilmiş stok. Alt panel: `TP.EBONDVADE.C5/C6/C7.ST`
+(eurobond stokunun USD / EUR / JPY kırılımı) ve `TP.EBONDVADE.C8.ST` (piyasa değeri
+toplamı), **milyon ABD doları**, haftalık.
+
+$$
+\text{döviz payı}_t=\frac{\text{dış borç}_t\cdot e_t}{S_t}\times 100
+$$
+
+Çıpa günü: TL bacağı %<Deger proje="butce-borc" anahtar="tl_pay" ondalik={1}>67,5</Deger>,
+döviz bacağı %<Deger proje="butce-borc" anahtar="doviz_pay" ondalik={1}>32,5</Deger>.
+Eurobond para kırılımı: USD
+%<Deger proje="butce-borc" anahtar="pay_eb_usd" ondalik={1}>91,7</Deger> · EUR
+%<Deger proje="butce-borc" anahtar="pay_eb_eur" ondalik={1}>8,2</Deger> · JPY
+%<Deger proje="butce-borc" anahtar="pay_eb_jpy" ondalik={1}>0,1</Deger>.
+
+<div class="not">
+  <span class="etiket">Bu iki pay bir ÜST ve bir ALT sınırdır</span>
+  <Deger proje="butce-borc" anahtar="doviz_payi_notu" ondalik={0}>Döviz payı YALNIZ dış borç üzerinden verilir. Döviz cinsi YURT İÇİ ihraçlar iç borç stokunun içinde kalır ve EVDS'te ayrıştırılamaz.</Deger>
+  Yani "TL bacağı" bir <strong>üst sınır</strong>, "döviz bacağı" bir <strong>alt
+  sınırdır</strong>. Bu, sayfanın en dürüst kabul etmek zorunda olduğu boşluktur.
+</div>
+
+**Reddedilen bir tahmin.** Döviz cinsi yurt içi ihraçların stokunu finansman
+akımlarından (`GEN52/53/54` döviz cinsi tahvil satış ve ödeme kalemleri) kümüle ederek
+tahmin etmek denendi ve **reddedildi**: yöntem kur farkı revalüasyonunu yok saydığı
+için iç borcun yalnız ~%1,2'sini veriyor, gerçek pay bunun çok üstünde. Yanlış bir
+tahminle boşluğu doldurmak, boşluğu ilan etmekten kötüdür — çünkü okur artık bir sayı
+görür ve ona güvenir.
+
+**Alt panel PİYASA değeri üzerindendir.** Eurobond para birimi tablosunun toplamı
+(`C8`) **piyasa değeridir** ve yazılı değer toplamından küçüktür:
+<Deger proje="butce-borc" anahtar="eb_pd_mlrusd" ondalik={2}>100,00</Deger> milyar USD'ye
+karşı <Deger proje="butce-borc" anahtar="eb_toplam_mlrusd" ondalik={2}>100,71</Deger>
+milyar USD.
+<Deger proje="butce-borc" anahtar="eb_toplam_notu" ondalik={0}>İkisi birbirinin yerine kullanılamaz.</Deger>
+Paylar bu yüzden **her zaman kendi tablosunun toplamına** bölünür; kırılımı bir
+tablodan, paydayı diğerinden almak sessiz bir hata üretir.
+
+## Şekil 09 — Kur duyarlılığı: stok şok altında
+
+<GrafikEmbed
+  src="/projeler/butce-borc/09_kur_duyarlilik.html"
+  baslik="USD/TRY şoku altında borç stoku — paralel ve yalnız USD senaryoları, senaryo tablosuyla"
+  no="09"
+  yukseklik={1149}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Kurgu.** Şok yalnız **dış bacağa** uygulanır; iç borç stoku TL cinsidir ve kurdan
+doğrudan etkilenmez. İki senaryo ayrı ayrı çizilir:
+
+$$
+S^{\text{paralel}}(\delta)=S^{\text{iç}}+S^{\text{dış}}\cdot(1+\delta),
+\qquad
+S^{\text{USD}}(\delta)=S^{\text{iç}}+S^{\text{dış}}\big(1+\delta\,w_{\text{USD}}\big)
+$$
+
+**Paralel** senaryoda TL bütün dövizlere karşı aynı oranda değer kaybeder. **Yalnız
+USD** senaryosunda EUR/TRY ve JPY/TRY sabit kalır; şok yalnız dolar ağırlığı kadar
+geçer. Ağırlıklar eurobond tablosundan alınır: USD
+%<Deger proje="butce-borc" anahtar="agirlik_usd" ondalik={1}>91,7</Deger> · EUR
+%<Deger proje="butce-borc" anahtar="agirlik_eur" ondalik={1}>8,2</Deger> · JPY
+%<Deger proje="butce-borc" anahtar="agirlik_jpy" ondalik={1}>0,1</Deger>.
+
+Çıpa: <Deger proje="butce-borc" anahtar="senaryo_cipa_ay" ondalik={0}>2026-06</Deger>,
+kur <Deger proje="butce-borc" anahtar="senaryo_kur" ondalik={4}>46,5551</Deger>, stok
+<Deger proje="butce-borc" anahtar="senaryo_stok_trl" ondalik={2}>13,35</Deger> trilyon TL.
+
+| Şok | USD/TRY | Stok · paralel (trl TL) | Değişim (%) | Stok · yalnız USD | Stok/GSYH (%) |
+| --- | --- | --- | --- | --- | --- |
+| −%10 | <Deger proje="butce-borc" anahtar="sok_eksi10_kur" ondalik={2}>41,90</Deger> | <Deger proje="butce-borc" anahtar="sok_eksi10_stok_trl" ondalik={2}>12,92</Deger> | <Deger proje="butce-borc" anahtar="sok_eksi10_degisim" ondalik={1} isaret={true}>−3,2</Deger> | <Deger proje="butce-borc" anahtar="sok_eksi10_stok_yalniz_usd_trl" ondalik={2}>12,96</Deger> | <Deger proje="butce-borc" anahtar="sok_eksi10_stok_gsyh" ondalik={1}>18,2</Deger> |
+| −%5 | <Deger proje="butce-borc" anahtar="sok_eksi5_kur" ondalik={2}>44,23</Deger> | <Deger proje="butce-borc" anahtar="sok_eksi5_stok_trl" ondalik={2}>13,14</Deger> | <Deger proje="butce-borc" anahtar="sok_eksi5_degisim" ondalik={1} isaret={true}>−1,6</Deger> | <Deger proje="butce-borc" anahtar="sok_eksi5_stok_yalniz_usd_trl" ondalik={2}>13,15</Deger> | <Deger proje="butce-borc" anahtar="sok_eksi5_stok_gsyh" ondalik={1}>18,5</Deger> |
+| 0 | <Deger proje="butce-borc" anahtar="sok_0_kur" ondalik={2}>46,56</Deger> | <Deger proje="butce-borc" anahtar="sok_0_stok_trl" ondalik={2}>13,35</Deger> | <Deger proje="butce-borc" anahtar="sok_0_degisim" ondalik={1}>0,0</Deger> | <Deger proje="butce-borc" anahtar="sok_0_stok_yalniz_usd_trl" ondalik={2}>13,35</Deger> | <Deger proje="butce-borc" anahtar="sok_0_stok_gsyh" ondalik={1}>18,7</Deger> |
+| +%5 | <Deger proje="butce-borc" anahtar="sok_arti5_kur" ondalik={2}>48,88</Deger> | <Deger proje="butce-borc" anahtar="sok_arti5_stok_trl" ondalik={2}>13,57</Deger> | <Deger proje="butce-borc" anahtar="sok_arti5_degisim" ondalik={1} isaret={true}>+1,6</Deger> | <Deger proje="butce-borc" anahtar="sok_arti5_stok_yalniz_usd_trl" ondalik={2}>13,55</Deger> | <Deger proje="butce-borc" anahtar="sok_arti5_stok_gsyh" ondalik={1}>19,0</Deger> |
+| +%10 | <Deger proje="butce-borc" anahtar="sok_arti10_kur" ondalik={2}>51,21</Deger> | **<Deger proje="butce-borc" anahtar="sok_arti10_stok_trl" ondalik={2}>13,79</Deger>** | **<Deger proje="butce-borc" anahtar="sok_arti10_degisim" ondalik={1} isaret={true}>+3,2</Deger>** | <Deger proje="butce-borc" anahtar="sok_arti10_stok_yalniz_usd_trl" ondalik={2}>13,75</Deger> | <Deger proje="butce-borc" anahtar="sok_arti10_stok_gsyh" ondalik={1}>19,3</Deger> |
+| +%20 | <Deger proje="butce-borc" anahtar="sok_arti20_kur" ondalik={2}>55,87</Deger> | <Deger proje="butce-borc" anahtar="sok_arti20_stok_trl" ondalik={2}>14,22</Deger> | <Deger proje="butce-borc" anahtar="sok_arti20_degisim" ondalik={1} isaret={true}>+6,5</Deger> | <Deger proje="butce-borc" anahtar="sok_arti20_stok_yalniz_usd_trl" ondalik={2}>14,15</Deger> | <Deger proje="butce-borc" anahtar="sok_arti20_stok_gsyh" ondalik={1}>19,9</Deger> |
+| +%30 | <Deger proje="butce-borc" anahtar="sok_arti30_kur" ondalik={2}>60,52</Deger> | <Deger proje="butce-borc" anahtar="sok_arti30_stok_trl" ondalik={2}>14,66</Deger> | <Deger proje="butce-borc" anahtar="sok_arti30_degisim" ondalik={1} isaret={true}>+9,7</Deger> | <Deger proje="butce-borc" anahtar="sok_arti30_stok_yalniz_usd_trl" ondalik={2}>14,55</Deger> | <Deger proje="butce-borc" anahtar="sok_arti30_stok_gsyh" ondalik={1}>20,5</Deger> |
+
+*<Deger proje="butce-borc" anahtar="kur_cumlesi" ondalik={0}>USD/TRY'de %10'luk bir değer kaybı stoku 13,79 trilyon TL'ye taşır (%3,2); stok/GSYH oranı yaklaşık 0,6 puan yükselir.</Deger>*
+
+**Doğrusallık bir tesadüf değil, tanımın sonucudur.** Şok yalnız dış bacağa
+uygulandığı için stokun kura duyarlılığı sabittir: elastikiyet = döviz payı =
+%<Deger proje="butce-borc" anahtar="doviz_pay" ondalik={1}>32,5</Deger>. Nitekim %10'luk
+şok stoku %<Deger proje="butce-borc" anahtar="sok_arti10_degisim" ondalik={1}>3,2</Deger>
+büyütüyor — 0,325 × 10. Bu, tablonun kendi iç tutarlılık denetimidir; sayı bu çarpımı
+vermiyorsa döviz payı ile senaryo motoru ayrışmış demektir.
+
+**İki senaryonun makası dar ve bunun sebebi ağırlıktır.** USD ağırlığı
+%<Deger proje="butce-borc" anahtar="agirlik_usd" ondalik={1}>91,7</Deger> olduğu için
+"yalnız USD" senaryosu paralel senaryonun yaklaşık onda dokuzu kadar etki üretir.
+Ağırlık daha dengeli olsaydı iki eğri belirgin ayrışırdı; makasın darlığı, portföyün
+tek para birimine yığıldığının görsel ifadesidir.
+
+<div class="not">
+  <span class="etiket">Senaryonun iki açık varsayımı</span>
+  <Deger proje="butce-borc" anahtar="senaryo_notu" ondalik={0}>Para birimi ağırlıkları eurobond tablosundan alınıp dış borç stokunun tamamına VEKİL olarak uygulanmıştır; dış borcun kredi bacağının para kompozisyonu EVDS'te yayımlanmıyor. GSYH sabit varsayılmıştır — oran ÜST SINIR okunmalıdır.</Deger>
+  İkinci varsayım özellikle önemlidir: gerçek bir kur şokunda nominal GSYH de büyür
+  (fiyatlar üzerinden), dolayısıyla oranın gerçek artışı tablodakinden <em>küçük</em>
+  olur. Tablo bu yüzden bir tahmin değil, <strong>üst sınır</strong> okunmalıdır.
+</div>
+
+## Şekil 10 — Vade yapısı: kısa vade payı
+
+<GrafikEmbed
+  src="/projeler/butce-borc/10_vade_yapisi.html"
+  baslik="DİBS ve eurobond stokunda kalan vadesi 1 yıldan kısa olanın payı — piyasa değeri tabloları üzerinden"
+  no="10"
+  yukseklik={1061}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** `TP.DIBSVADE.C3/C4.ST` (kalan vadesi kısa / uzun, **milyon TL**),
+`TP.DIBSVADE.C1/C2.ST` (orijinal vade kırılımı), `TP.EBONDVADE.C3/C4.ST` (eurobond,
+milyon USD). Haftalık, Cuma.
+
+$$
+\text{kısa vade payı}_t=\frac{V^{\text{kısa}}_t}{V^{\text{kısa}}_t+V^{\text{uzun}}_t}\times 100
+$$
+
+*<Deger proje="butce-borc" anahtar="vade_cumlesi" ondalik={0}>DİBS stokunda kalan vadesi bir yıldan kısa olanların payı %24,2; eurobondda aynı oran %11,3.</Deger>*
+Referans olarak orijinal vadesi kısa olanların payı
+%<Deger proje="butce-borc" anahtar="pay_dibs_ov_kisa" ondalik={1}>9,4</Deger>.
+
+<div class="not">
+  <span class="etiket">Ortalama vade EVDS'te yok — bu bir VEKİL</span>
+  <Deger proje="butce-borc" anahtar="vade_notu" ondalik={0}>Ortalama vade EVDS'te YOK. Kısa vade payı (kalan vadesi 1 yıldan az olanın toplama oranı) VEKİL göstergedir ve öyle etiketlenir. Vade ve para birimi tabloları PİYASA değeri üzerindendir.</Deger>
+  Vekilin sınırı açıktır: kısa vade payı <em>yeniden fiyatlama riskinin</em> bir
+  ölçüsüdür ama süreyi (duration) vermez. İki portföy aynı kısa vade payına sahip olup
+  tamamen farklı ortalama vadelere sahip olabilir.
+</div>
+
+**Kalan vade ile orijinal vade arasındaki fark bilgidir.** Kalan vade payı
+(%<Deger proje="butce-borc" anahtar="pay_dibs_kv_kisa" ondalik={1}>24,2</Deger>)
+orijinal vade payının
+(%<Deger proje="butce-borc" anahtar="pay_dibs_ov_kisa" ondalik={1}>9,4</Deger>)
+belirgin üzerindedir. Bu, stokun büyük bölümünün **uzun ihraç edilip zamanla kısaldığı**
+anlamına gelir — normal bir borç portföyünün doğal hâli. İki oranın makası daralırsa
+Hazine kısa vadeli ihraca kaymış demektir; bu, ihale tarafından bağımsız bir sinyaldir.
+
+**Birim ve taban tuzağı.** Vade tabloları **yazılı (nominal) değil piyasa değeri**
+üzerindendir. DİBS'te piyasa/yazılı değer oranı
+<Deger proje="butce-borc" anahtar="dibs_piyasa_yazili_oran" ondalik={3}>1,215</Deger>×
+(piyasa değerli toplam
+<Deger proje="butce-borc" anahtar="dibs_pd_trl" ondalik={2}>11,49</Deger> trilyon TL,
+yazılı değerli toplam
+<Deger proje="butce-borc" anahtar="dibs_toplam_trl" ondalik={2}>9,45</Deger> trilyon TL).
+Kısa vade tutarını yazılı stoka bölmek yaklaşık **%20'lik sessiz bir hata** üretir ve
+oran hâlâ makul görünür. Pay, her zaman **kendi tablosunun** toplamına bölünür.
+
+Eurobond tarafında aynı ayrım: yazılı değer
+<Deger proje="butce-borc" anahtar="eb_toplam_mlrusd" ondalik={2}>100,71</Deger> milyar USD,
+piyasa değeri <Deger proje="butce-borc" anahtar="eb_pd_mlrusd" ondalik={2}>100,00</Deger>
+milyar USD.
+
+## Şekil 11 — DİBS sahiplik kompozisyonu
+
+<GrafikEmbed
+  src="/projeler/butce-borc/11_dibs_sahiplik.html"
+  baslik="DİBS stokunu elinde tutan sektörler (yazılı değer payları) ve yurt dışı yerleşiklerin payı"
+  no="11"
+  yukseklik={1061}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** `TP.DIBSYAZDEG.ST` (toplam, **milyon TL**), `S121` TCMB, `S122` bankalar,
+`S1234` yatırım fonları, `S2` yurt dışı yerleşikler, `S1` yurt içi yerleşikler toplamı.
+
+$$
+\text{diğer yurt içi}_t=\texttt{S1}_t-\texttt{S121}_t-\texttt{S122}_t-\texttt{S1234}_t
+$$
+
+*<Deger proje="butce-borc" anahtar="sahiplik_cumlesi" ondalik={0}>DİBS stokunda bankaların payı %51,5, yurt dışı yerleşiklerin payı %9,0, TCMB'nin payı %4,7.</Deger>*
+
+| Sektör | Pay (%) |
+| --- | --- |
+| Bankalar | <Deger proje="butce-borc" anahtar="pay_dibs_bankalar" ondalik={1}>51,5</Deger> |
+| Diğer yurt içi yerleşikler (**artık**) | <Deger proje="butce-borc" anahtar="pay_dibs_diger_yurtici" ondalik={1}>27,8</Deger> |
+| Yurt dışı yerleşikler | <Deger proje="butce-borc" anahtar="pay_dibs_yurtdisi" ondalik={1}>9,0</Deger> |
+| Yatırım fonları | <Deger proje="butce-borc" anahtar="pay_dibs_fonlar" ondalik={1}>7,1</Deger> |
+| TCMB | <Deger proje="butce-borc" anahtar="pay_dibs_tcmb" ondalik={1}>4,7</Deger> |
+
+<div class="not">
+  <span class="etiket">Bu tablo İHRAÇÇIYI değil, TUTANI gösterir</span>
+  <Deger proje="butce-borc" anahtar="sahiplik_notu" ondalik={0}>Sektör kırılımı İHRAÇÇI değil senedi ELİNDE TUTAN taraftır. Yurt dışı yerleşik payı ForeignHoldings hattıyla çakışır; burada yalnız borç stoku bağlamında verilir.</Deger>
+  İhraççı zaten genel yönetimdir; sorulan soru "kim borçlandı" değil, "kim finanse
+  ediyor"dur.
+</div>
+
+**Bankaların payının yüksekliği bir kırılganlık ölçüsüdür.** Stokun yarısından
+fazlasını bankacılık sistemi taşıyorsa, kamu borcu ile banka bilançosu arasında güçlü
+bir bağ vardır (*sovereign–bank nexus*): faiz şoku bankaların menkul kıymet
+portföyünde değerleme kaybı yaratır, o da sermaye yeterliliğine ve kredi arzına
+vurur. TCMB payı ise para politikası bağlamında okunur.
+
+**Yurt dışı yerleşik payı ayrı bir panelde çizilir** çünkü seviyeden çok **yönü**
+önemlidir: bu pay, dışarıdan gelen portföy akımının stoktaki izidir ve TL'nin risk
+priminin en hızlı tepki veren bileşenlerinden biridir. Akım okuması için
+<a href="/projeler/yabanci-pozisyon/">Yabancı Pozisyonu</a> sayfası.
+
+**Paylar YAZILI değer tablosundan alınır**, Şekil 10'un piyasa değerli tablosundan
+değil. İki tabloyu karıştırmak, bu sayfanın en kolay üretilen hatası olurdu; her
+tablonun payı kendi toplamına bölünür.
+
+## Şekil 12 — İç borç çevirme oranı ve net borçlanma
+
+<GrafikEmbed
+  src="/projeler/butce-borc/12_cevirme_orani.html"
+  baslik="12 aylık birikimli iç borç çevirme oranı (anapara ve anapara + faiz) ve aylık net iç / dış borçlanma"
+  no="12"
+  yukseklik={1139}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Genel bütçe finansman tablosu: satış bacağı `GEN47` (TL bono) + `GEN50`
+(TL tahvil) + `GEN53` (döviz tahvil) + `GEN63` (döviz bono); itfa bacağı aynı
+kalemlerin ödeme karşılıkları (`GEN48`, `GEN51`, `GEN54`, `GEN64`). Net borçlanma
+`GEN41`, iç `GEN45`, dış `GEN42`.
+
+$$
+\text{çevirme}_t=\frac{\sum_{i=0}^{11}\text{satış}_{t-i}}{\sum_{i=0}^{11}\lvert\text{itfa}_{t-i}\rvert}\times 100,
+\qquad
+\text{çevirme}^{\text{faiz}}_t=\frac{\sum\text{satış}}{\sum\lvert\text{itfa}\rvert+\sum\texttt{GID153}}\times 100
+$$
+
+*<Deger proje="butce-borc" anahtar="cevirme_cumlesi" ondalik={0}>12 aylık iç borç çevirme oranı %182; iç borç faizi paydaya eklendiğinde %102. Son beş yıl bandı %113–%593.</Deger>*
+
+| Ölçü | Değer |
+| --- | --- |
+| Çevirme oranı — anapara | %<Deger proje="butce-borc" anahtar="cevirme" ondalik={0}>182</Deger> |
+| Çevirme oranı — anapara + iç borç faizi | %<Deger proje="butce-borc" anahtar="cevirme_faiz" ondalik={0}>102</Deger> |
+| Son 5 yıl bandı | %<Deger proje="butce-borc" anahtar="cevirme_bant_min" ondalik={0}>113</Deger> – %<Deger proje="butce-borc" anahtar="cevirme_bant_max" ondalik={0}>593</Deger> |
+| 12 aylık satış | <Deger proje="butce-borc" anahtar="ic_satis_12a" ondalik={2}>4,40</Deger> trl TL |
+| 12 aylık itfa | <Deger proje="butce-borc" anahtar="ic_odeme_12a" ondalik={2}>2,41</Deger> trl TL |
+| Son ay net iç borçlanma | <Deger proje="butce-borc" anahtar="ic_borclanma_net_ay" ondalik={1} isaret={true}>+99,1</Deger> milyar TL |
+| Son ay net dış borçlanma | <Deger proje="butce-borc" anahtar="dis_borclanma_net_ay" ondalik={1} isaret={true}>−108,6</Deger> milyar TL |
+
+<div class="not">
+  <span class="etiket">Bu oran, ihale karşılama oranı DEĞİLDİR</span>
+  <Deger proje="butce-borc" anahtar="cevirme_notu" ondalik={0}>İç borç ÇEVİRME oranı finansman tablosundan (satış/ödeme) hesaplanır ve Hazine İhraç hattındaki İHALE bazlı karşılama oranıyla AYNI ŞEY DEĞİLDİR. 12 aylık birikimli zorunlu: itfasız aylarda payda sıfıra yaklaşır ve aylık oran patlar.</Deger>
+  İki oran farklı soruları yanıtlar: çevirme oranı "itfanın kaç katı borçlanıldı",
+  karşılama oranı "ihaleye gelen teklif satılan miktarın kaç katıydı". Birincisi maliye
+  tarafının, ikincisi piyasa talebinin ölçüsüdür. Karşılama için
+  <a href="/projeler/hazine-ihrac/">Hazine İhraç Takibi</a>.
+</div>
+
+**Neden iki tanım birlikte çizilir.** "Çevirme oranı" terimi hem anapara hem
+anapara + faiz tanımı için kullanılıyor ve iki sayı çok farklı çıkıyor: bu koşuda
+%<Deger proje="butce-borc" anahtar="cevirme" ondalik={0}>182</Deger>'ye karşı
+%<Deger proje="butce-borc" anahtar="cevirme_faiz" ondalik={0}>102</Deger>. Tek bir
+tanım seçilip diğeri gizlenseydi, sayfa başka bir kaynakla karşılaştırıldığında
+"yanlış" görünürdü. İkisi de çiziliyor, hangisinin ne olduğu yazılıyor.
+
+**Okuma.** %100'ün üzeri, Hazine'nin itfa ettiğinden fazlasını ihraç ettiği — yani iç
+borç stokunun nominal olarak büyüdüğü anlamına gelir. Faiz dahil tanımın %100 civarında
+olması ise şunu söyler: yeni borçlanmanın neredeyse tamamı **eski borcun anaparasını
+ve faizini** ödemeye gidiyor; net yeni kaynak yaratımı sınırlı.
+
+**12 aylık birikimli ZORUNLUDUR.** İtfası olmayan aylarda payda sıfıra yaklaşır ve
+aylık oran patlar. Ölçülen 5 yıllık bant zaten
+%<Deger proje="butce-borc" anahtar="cevirme_bant_min" ondalik={0}>113</Deger>–%<Deger proje="butce-borc" anahtar="cevirme_bant_max" ondalik={0}>593</Deger>
+gibi geniş; aylık hesapta bu bant binlere çıkardı. Oran mertebe bandının dışına
+çıkarsa uyarı düşer.
+
+**Alt panelde iki bar YIĞILIDIR, yan yana değil.** Net iç ve net dış borçlanma
+toplandığında toplam net borçlanmayı (`GEN41`) verir — bunlar bir toplamın
+bileşenleridir. Yan yana çizilseydi ikisi rakip büyüklükler gibi okunurdu. Bu koşuda
+iç bacak pozitif
+(<Deger proje="butce-borc" anahtar="ic_borclanma_net_ay" ondalik={1} isaret={true}>+99,1</Deger>
+milyar TL), dış bacak negatif
+(<Deger proje="butce-borc" anahtar="dis_borclanma_net_ay" ondalik={1} isaret={true}>−108,6</Deger>
+milyar TL): dış borç net olarak ödeniyor, iç borç net olarak artıyor — bir **kompozisyon
+kayması**, seviye değişimi değil.
+
+**Döviz cinsi bono kalemi 2019'da başlar.** Öncesinde kalem yoktur ve `min_count=1`
+ile boş bırakılır; sıfır sayılsaydı toplam yine doğru çıkardı ama serinin **hiç
+olmadığı** dönemle **sıfır olduğu** dönem ayırt edilemezdi.
+
+## Stok ayrıştırması: Δstok nereden geliyor?
+
+Bir yıl içinde borç stokundaki değişim üç bileşene ayrılır ve **kapatılmaz**:
+
+$$
+\Delta S_t=\underbrace{\sum_{i=0}^{11}\texttt{GEN41}_{t-i}}_{\text{net borçlanma}}
+\;+\;\underbrace{D_{t-12}\big(e_t-e_{t-12}\big)}_{\text{kur farkı}}
+\;+\;\underbrace{\varepsilon_t}_{\text{ARTIK}}
+$$
+
+$D$ = döviz cinsi (dış) borç miktarı, $e$ = USD/TRY. Çıpa dönemi
+<Deger proje="butce-borc" anahtar="ayr_donem" ondalik={0}>Haziran 2026</Deger>:
+
+| Bileşen | Trilyon TL |
+| --- | --- |
+| Δ stok (12 aylık) | <Deger proje="butce-borc" anahtar="ayr_d_stok" ondalik={2}>3,49</Deger> |
+| — net borçlanma | <Deger proje="butce-borc" anahtar="ayr_net_borclanma" ondalik={2}>2,24</Deger> |
+| — kur farkı | <Deger proje="butce-borc" anahtar="ayr_kur_farki" ondalik={2}>0,56</Deger> |
+| — **artık** | <Deger proje="butce-borc" anahtar="ayr_artik" ondalik={2}>0,69</Deger> (Δ stokun %<Deger proje="butce-borc" anahtar="ayr_artik_pay" ondalik={1}>19,8</Deger>'i) |
+
+**Okuma:** stok artışının yaklaşık üçte ikisi net borçlanmadan, altıda biri kur
+farkından geliyor. Yani "borç patladı" cümlesi bu dönemde ağırlıklı olarak gerçek
+borçlanmayı anlatıyor, kur revalüasyonunu değil — ama kur bacağı da yok sayılabilecek
+kadar küçük değil.
+
+<div class="not">
+  <span class="etiket">Artık kapatılmaz</span>
+  <Deger proje="butce-borc" anahtar="ayr_notu" ondalik={0}>ARTIK; genel bütçe (GEN41) ile merkezi yönetim stoku arasındaki kapsam farkını, dış borcun üç aylık adımlanmasını, nakit dışı ihracı ve değerleme etkilerini içerir. Toplamı kapatmak için düzeltme YAPILMAZ.</Deger>
+  Artığa bir kalibrasyon sabiti verip toplamı sıfırlamak, ölçüm hatasını modele gömmek
+  olurdu: sonraki koşuda kapsam gerçekten değiştiğinde sabit hatayı yutar ve hiçbir uyarı
+  düşmez. Artığın payı bir eşiği aşarsa <strong>uyarı düşer</strong>; bu koşuda pay
+  %<Deger proje="butce-borc" anahtar="ayr_artik_pay" ondalik={1}>19,8</Deger>.
+</div>
+
+## Şekil 13 — Net borç göstergeleri (finansal hesaplar)
+
+<GrafikEmbed
+  src="/projeler/butce-borc/13_net_borc.html"
+  baslik="Merkezi yönetimin finansal yükümlülükleri, varlıkları ve net finansal değeri · Hazine nakit varlığı ile brüt ve net borç stoku"
+  no="13"
+  yukseklik={1085}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** HMB finansal hesaplar, üç aylık, **bin TL**:
+`ZP45` toplam yükümlülük (F.0), `ZP31` borçlanma senetleri (F.3), `ZP34` krediler (F.4),
+`ZP23` toplam finansal varlık (VF.0), `ZP1` net finansal değer (BF.9), `ZP5` para ve
+mevduat (VF.2 — Hazine nakit varlığı).
+
+$$
+\text{BF.9}=\text{VF.0}-\text{F.0},\qquad
+\text{net stok}=S^{\text{brüt}}-\text{nakit varlık}
+$$
+
+Çıpa <Deger proje="butce-borc" anahtar="oran_ceyregi" ondalik={0}>2026-Ç1</Deger>:
+
+| Kalem | Trilyon TL |
+| --- | --- |
+| Toplam yükümlülük (F.0) | <Deger proje="butce-borc" anahtar="yukum_toplam_trl" ondalik={2}>17,85</Deger> |
+| — borçlanma senetleri (F.3) | <Deger proje="butce-borc" anahtar="borc_senedi_trl" ondalik={2}>14,36</Deger> |
+| — krediler (F.4) | <Deger proje="butce-borc" anahtar="krediler_trl" ondalik={2}>1,25</Deger> |
+| Toplam finansal varlık (VF.0) | <Deger proje="butce-borc" anahtar="varlik_toplam_trl" ondalik={2}>11,87</Deger> |
+| — para ve mevduat (VF.2, Hazine nakit varlığı) | <Deger proje="butce-borc" anahtar="nakit_trl" ondalik={2}>2,75</Deger> |
+| **Net finansal değer (BF.9)** | **<Deger proje="butce-borc" anahtar="net_fin_deger_trl" ondalik={2}>−5,97</Deger>** |
+| Brüt borç stoku (aynı çeyrek) | <Deger proje="butce-borc" anahtar="stok_ceyrek_trl" ondalik={2}>12,66</Deger> |
+| Net borç stoku (nakit düşülmüş) | <Deger proje="butce-borc" anahtar="net_stok_trl" ondalik={2}>9,91</Deger> |
+
+**"Brüt − net" ayrı bir seri olarak çizilmez.** Tanım gereği nakit varlığa eşittir;
+ayrı çizilseydi iki çizgi birebir üst üste biner ve panel bilgi taşımazdı. Onun yerine
+iki stok düzeyi ile nakit varlık **birlikte** gösteriliyor: net stok eğrisinin brüt
+eğriden ayrılması, Hazine'nin nakit tamponunu büyüttüğü dönemleri işaret eder.
+
+**Net finansal değerin negatif olması beklenir.** Devletin finansal varlıkları
+yükümlülüklerinden küçüktür; BF.9, "net borç" kavramının finansal hesaplar
+karşılığıdır. Bu koşuda
+<Deger proje="butce-borc" anahtar="net_fin_deger_trl" ondalik={2}>−5,97</Deger>
+trilyon TL, GSYH'ye oran olarak
+%<Deger proje="butce-borc" anahtar="net_fin_deger_gsyh" ondalik={2}>−8,85</Deger>.
+Dikkat: bu **yalnız finansal** varlıkları sayar; kamunun reel varlıkları (arazi, bina,
+altyapı, iştirak) buraya girmez, dolayısıyla "devletin net serveti" değildir.
+
+**Bu panel hattın en gecikmeli ailesidir** (yaklaşık iki çeyrek) ve aylık serilerden
+erken biter. Aynı sebeple, buradaki brüt stok
+(<Deger proje="butce-borc" anahtar="stok_ceyrek_trl" ondalik={2}>12,66</Deger> trilyon TL,
+<Deger proje="butce-borc" anahtar="oran_ceyregi" ondalik={0}>2026-Ç1</Deger>) ile Şekil
+07'deki aylık stok
+(<Deger proje="butce-borc" anahtar="toplam_borc_trl" ondalik={2}>13,35</Deger> trilyon TL,
+<Deger proje="butce-borc" anahtar="stok_son_ay" ondalik={0}>2026-06</Deger>) **aynı sayı
+değildir ve olmamalıdır** — iki farklı çeyreğe aittir.
+
+### Bağlam: brüt dış borç hiyerarşisi
+
+Merkezi yönetimin dış borcu, ülkenin toplam dış borcunun bir dilimidir. Çıpa
+<Deger proje="butce-borc" anahtar="oran_ceyregi" ondalik={0}>2026-Ç1</Deger>:
+
+| Borçlu | Milyar USD |
+| --- | --- |
+| Toplam brüt dış borç | <Deger proje="butce-borc" anahtar="db_toplam_mlrusd" ondalik={1}>520,9</Deger> |
+| — özel sektör | <Deger proje="butce-borc" anahtar="db_ozel_mlrusd" ondalik={1}>305,0</Deger> |
+| — merkezi yönetim | <Deger proje="butce-borc" anahtar="db_my_mlrusd" ondalik={1}>89,8</Deger> |
+| — — kısa vadeli | <Deger proje="butce-borc" anahtar="db_my_kisa_mlrusd" ondalik={1}>1,5</Deger> |
+| — — uzun vadeli | <Deger proje="butce-borc" anahtar="db_my_uzun_mlrusd" ondalik={1}>88,2</Deger> |
+| — TCMB | <Deger proje="butce-borc" anahtar="db_tcmb_mlrusd" ondalik={1}>24,3</Deger> |
+
+Merkezi yönetimin dış borcu toplam dış borcun beşte birinden azdır ve neredeyse tamamı
+**uzun vadelidir** — kısa vadeli bacak
+<Deger proje="butce-borc" anahtar="db_my_kisa_mlrusd" ondalik={1}>1,5</Deger> milyar USD.
+Bu, kamu tarafının dış borç çevirme riskinin özel sektöre kıyasla düşük olduğu anlamına
+gelir; Türkiye'de dış finansman stresi tarihsel olarak **özel sektör** bacağından gelmiştir.
+Hiyerarşi (merkezi yönetim ≤ genel hükümet ≤ kamu ≤ toplam) her koşuda sınanır.
+
+## Doğrulama ve sessiz bayatlama denetimi
+
+Bir veri hattının en sinsi hatası çökmek değil, **koşup ilerlememektir**. Denetimler
+üç sınıfa ayrılır ve sıralama denetimin *ne yaptığına* göredir.
+
+### Hattı DURDURANLAR
+
+| Sınav | Ne sorar | Sonuç |
+| --- | --- | --- |
+| **Birim sözleşmesi** — EVDS veri grubu kataloğundaki birim ↔ kodda yazılı birim | bin TL / milyon TL / milyon USD karışmış mı? | <Deger proje="butce-borc" anahtar="birim_denetim_gecen" ondalik={0}>15</Deger>/<Deger proje="butce-borc" anahtar="birim_denetim_sayisi" ondalik={0}>15</Deger> uyuşuyor |
+| `GID001 = GID002 + GID152` | gider ağacının kökü tutuyor mu? | geçti |
+| `GEN41 = GEN42 + GEN45` | finansman tablosunun kökü | geçti |
+| `GEN42 = GEN43 + GEN44` | dış borçlanma bacağı | geçti |
+| DİBS `S1 + S2 = ST` | sahiplik kırılımı toplamı | geçti |
+| **Birim mertebesi**: iç borç (bin TL) ≈ DİBS yazılı (milyon TL) | ölçek çarpanı doğru mu? | geçti |
+| Herhangi bir figür üretilemezse | — | siteye kopyalama yapılmaz |
+
+Toplam <Deger proje="butce-borc" anahtar="kimlik_gecen" ondalik={0}>8</Deger>/<Deger proje="butce-borc" anahtar="kimlik_sayisi" ondalik={0}>8</Deger>
+kimlik sınavı geçti.
+
+**Birim sözleşmesi neden durdurucu.** Bu hatta 1000 katlık hata **gözle
+yakalanmaz**: bin TL ile milyon TL karıştırıldığında iki seri de "trilyon"
+mertebesinde görünmeye devam eder ve grafiğin şekli değişmez. Kodda beklenen birim
+yazılıdır ama **doğrulayıcı değildir**; doğrulayıcı EVDS'in `datagroups` yanıtıdır.
+İkisi ayrışırsa hat durur, grafik üretmez.
+
+### BANTLI doğrulama — özdeşlik beklenmez
+
+<Deger proje="butce-borc" anahtar="dogrulama_cumlesi" ondalik={0}>3/3 bağımsız doğrulama geçti.</Deger>
+
+| Sınav | Beklenti | Ölçülen |
+| --- | --- | --- |
+| DİBS + eurobond yazılı toplamı ↔ finansal hesaplar F.3 | bant −%20…+%5 | son çeyrek %<Deger proje="butce-borc" anahtar="f3_fark" ondalik={1} isaret={true}>−8,2</Deger> · son 6 çeyrek %<Deger proje="butce-borc" anahtar="f3_bant_min" ondalik={1} isaret={true}>−11,8</Deger>…%<Deger proje="butce-borc" anahtar="f3_bant_max" ondalik={1} isaret={true}>−7,3</Deger> |
+| Dış borç hiyerarşisi (MY ≤ genel hükümet ≤ kamu ≤ toplam) | ihlal yok | geçti |
+| Eurobond USD + EUR + JPY = piyasa değeri toplamı | artık payı %2'nin altında | geçti |
+
+**Birinci satır neden "geçti" sayılıyor, hâlbuki fark %8.** Çünkü **özdeşlik
+beklenmiyor**: finansal hesaplar piyasa değerlidir ve kapsamı biraz daha geniştir
+(genel yönetim ↔ merkezi yönetim farkı, kira sertifikaları vb.). Beklenen şey farkın
+**istikrarlı bir bantta** kalmasıdır. Bandın dışına çıkması, iki kaynaktan birinin
+tanımının değiştiğini haber verir. Farkı sıfıra zorlayan bir düzeltme **yapılmaz** —
+yapılsaydı tanım değişimi sessizce yutulurdu.
+
+**Kapsam farkı da bir doğrulamadır.** Merkezi yönetim dengesi ile genel bütçe dengesi
+son 24 ayda %<Deger proje="butce-borc" anahtar="kapsam_farki" ondalik={1}>5,9</Deger>
+ayrışıyor. Sıfır beklenmiyor; eşiği aşarsa "kalem eşlemesi değişmiş olabilir" uyarısı
+düşer.
+
+### GÖRÜNÜR UYARI düşürenler
+
+**Tazelik, aile bazlı ve duvar saati referanslı** (eşikler yukarıda). **Kur serisi
+muaftır**, çünkü gecikmesi negatif olabilir: TCMB ertesi günün kurunu bir gün önce
+ilan eder.
+
+**Yapısal sıfır ile ölü seri ayrıştırılır.** İç borç konsolide kalemi, hazine avansı,
+döviz cinsi bono kalemleri son iki yılda **tam sıfır** basıyor. Bu "veri gelmiyor"
+değil, "araç kullanılmıyor" demektir ve seri **yapısal sıfır** olarak etiketlenir.
+Ayrımı yapmayan bir hat, sıfır basan bir seriyi ölü sanıp uyarı yağdırır; ya da
+tersine, gerçekten düşmüş bir seriyi "zaten sıfırdı" diye geçer.
+
+**Bu koşuda:**
+<Deger proje="butce-borc" anahtar="uyari_cumlesi" ondalik={0}>Bu koşuda uyarı düşmedi.</Deger>{' '}
+<Deger proje="butce-borc" anahtar="uyari_metni" ondalik={0}>Bu koşuda uyarı yok.</Deger>{' '}
+Tazelik durumu:
+<Deger proje="butce-borc" anahtar="bayat_cumlesi" ondalik={0}>Veri taze: altı yayım ailesinin de gecikmesi kendi toleransı içinde, tazelik uyarısı yok.</Deger>
+
+**Veri katmanının uyarıları hesap katmanına DEVREDİLİR.** Tazelik alarmları, "eski
+önbelleğe düşüldü" düşüşü, ölü seri ve düşen demet uyarıları veri katmanında basılır
+ve bir durum dosyasına yazılır — ama o dosya siteye kopyalanmaz. Hesap katmanı bu
+listeyi koşum başında devralmasaydı uyarılar sayfada tek bir görünür iz bırakmazdı:
+kaynak durur, hat yeşil biter, tarih ilerlemez, sayfa hiçbir şey söylemez. Devir iki
+kaynaktan birden yapılır, böylece katmanlar ayrı koşulmuş olsa bile uyarı kaybolmaz.
+
+Uyarıların tam listesi her koşuda
+[`uyarilar.json`](/projeler/butce-borc/uyarilar.json) dosyasına yazılır; sayfadaki
+canlı değerlerin kaynağı ise [`ozet.json`](/projeler/butce-borc/ozet.json).
+
+### EVDS3 erişiminin kendi tuzakları
+
+Veri `https://evds3.tcmb.gov.tr/igmevdsms-dis/` ucundan çekilir; eski `evds2` servisi
+**ölüdür** ve anahtar URL'de değil, istek **başlığında** taşınır.
+
+1. **Tek istek yaklaşık 1000 satırla sınırlıdır ve EVDS aralığın SONUNDAN geriye
+   doldurur.** Fazlasını uyarı vermeden kırpar. Bu hatta yalnız günlük kur serisi bu
+   sınırı aşıyor (2006'dan bugüne ≈ 5.200 iş günü) ve **yıllık parçalara** bölünerek
+   çekiliyor; aylık (2003→ ≈ 280 satır), haftalık (2020→ ≈ 310) ve üç aylık (2003→ ≈ 95)
+   aileler sınırın altında kaldığı için parçalanmıyor. Parçalama gereksiz yere
+   uygulanırsa istek sayısı katlanır; hiç uygulanmazsa serinin **başı** sessizce kırpılır.
+2. **Satır sınırı seri sayısına bağlı değildir.** Tek istekte altı seri çekmek satır
+   sayısını değiştirmez; seriler altılı demetler hâlinde çekilir. Bir demette bozuk kod
+   varsa EVDS **bütün isteği** reddeder — o zaman seriler tek tek denenir ve düşen seri
+   adıyla raporlanır.
+3. **Önbellek seri bazında ve TTL'lidir** (seri verisi 12 saat, birim/ad katalogu 168
+   saat). Demet bileşimi değiştiğinde önbellek geçersizleşmesin diye seri bazında
+   tutulur. Ağ düşerse eski önbelleğe düşülür ama **sessiz kalınmaz**: kaç saat eski
+   olduğu yazılır, uyarı hesap katmanınca devralınır ve koşu kutusunda görünür.
+
+## EVDS'te olmayanlar
+
+Bir sayfanın dürüstlüğü, gösterdiği kadar **göstermediğini ilan etmesiyle** de ölçülür.
+
+<div class="not">
+  <span class="etiket">Uydurma vekille doldurulmayanlar</span>
+  <Deger proje="butce-borc" anahtar="eksik_veri_notu" ondalik={0}>Merkezi yönetim borç stokunun SABİT / DEĞİŞKEN / TÜFE'ye endeksli kırılımı ve ORTALAMA VADESİ EVDS'te YOK (675 veri grubu tarandı). Bu üç kalem sayfada uydurma vekille doldurulmaz.</Deger>
+</div>
+
+Eksikliklerin sonucu somuttur:
+
+- **Ortalama vade yok** → süre (duration) ve yeniden fiyatlama riski hesaplanamıyor;
+  yerine kısa vade payı **vekil** olarak kullanılıyor ve öyle etiketleniyor (Şekil 10).
+- **Sabit / değişken / TÜFE'ye endeksli kırılım yok** → borç stokunun faiz şokuna ve
+  enflasyon şokuna duyarlılığı ayrıştırılamıyor. İma edilen faiz (yukarıda) bu boşluğun
+  yalnız kısmi bir ikamesidir: ortalama maliyeti verir, bileşimi vermez.
+- **Döviz cinsi yurt içi ihraç ayrıştırılamıyor** → döviz payı bir **alt sınırdır**
+  (Şekil 08).
+- **Dış borcun kredi bacağının para kompozisyonu yok** → kur senaryosunda eurobond
+  ağırlıkları tüm dış borca vekil olarak uygulanıyor (Şekil 09).
+
+## Sınırlar ve yorum notları
+
+Hiçbiri bir kalibrasyon sabitiyle kapatılmamıştır; kapatmak, ölçüm hatasını modele
+gömmek olurdu.
+
+- **Bütçe akımı ile borç stoku arasında özdeşlik yoktur.** Δstok ayrıştırmasının artığı
+  bu koşuda Δ stokun %<Deger proje="butce-borc" anahtar="ayr_artik_pay" ondalik={1}>19,8</Deger>'i;
+  içinde kapsam farkı, dış borcun üç aylık adımlanması, nakit dışı ihraç ve değerleme
+  etkileri var. Kapatılmadı, ölçüldü.
+- **Oranlar en son ortak çeyrekte biter.** Bu, sayfanın en sık yanlış okunacak
+  özelliğidir: GSYH oranları
+  <Deger proje="butce-borc" anahtar="oran_ceyregi" ondalik={0}>2026-Ç1</Deger>'e,
+  akım serileri <Deger proje="butce-borc" anahtar="ay_kisa" ondalik={0}>06.2026</Deger>'ya
+  aittir. Aynı cümlede kullanılamazlar.
+- **İma edilen faiz bir piyasa faizi değildir.** Stokun ortalama maliyetidir; yeni
+  ihraç faizi bunun çok üzerinde olabilir. Reel ima edilen faizin negatifliği
+  (%<Deger proje="butce-borc" anahtar="ima_faiz_reel" ondalik={1}>−8,6</Deger>) stok
+  yenilendikçe kaybolur.
+- **Döviz payı bir alt sınırdır.** Döviz cinsi yurt içi ihraçlar iç borç stokunun içinde
+  görünmez kalıyor. Kur duyarlılığı bu yüzden **eksik ölçülüyor** — gerçek duyarlılık
+  tablodakinden yüksektir.
+- **Kur senaryosunda GSYH sabit varsayıldı.** Gerçek bir kur şokunda nominal GSYH de
+  büyür; stok/GSYH sütunu bu yüzden **üst sınır** okunmalıdır.
+- **Kısa vade payı ortalama vadenin yerini tutmaz.** Aynı kısa vade payına sahip iki
+  portföyün ortalama vadesi tamamen farklı olabilir.
+- **Vade ve para birimi tabloları piyasa değerlidir**, sahiplik tablosu yazılı değerli.
+  DİBS'te iki toplam arasındaki oran
+  <Deger proje="butce-borc" anahtar="dibs_piyasa_yazili_oran" ondalik={3}>1,215</Deger>×;
+  payı yanlış tabana bölmek yaklaşık %20'lik sessiz hata üretir.
+- **Sahiplik tablosu senedi TUTANI gösterir, ihraççıyı değil.** Yurt dışı yerleşik payı
+  <a href="/projeler/yabanci-pozisyon/">Yabancı Pozisyonu</a> hattıyla çakışır; burada
+  yalnız borç stoku bağlamında verilir.
+- **Çevirme oranı ihale karşılama oranı değildir.** İki oran farklı kaynaklardan, farklı
+  soruları yanıtlar. İhale tarafı için
+  <a href="/projeler/hazine-ihrac/">Hazine İhraç Takibi</a>.
+- **Kapsam farkı ilan edilir, kapatılmaz.** Merkezi yönetim ile genel bütçe arasındaki
+  %<Deger proje="butce-borc" anahtar="kapsam_farki" ondalik={1}>5,9</Deger>'luk fark
+  bir hata değil, tanım farkıdır (özel bütçeli idareler + düzenleyici kurumlar).
+- **Alt kalem kırılımları kullanılmadı.** EVDS'in gider tablosundaki pek çok alt kalem
+  2023 sonunda kesiliyor ve toplamı üst kalemi tutmuyor; yalnız üst düzey kalemler
+  çizildi.
+- **Hiçbir seride mevsimsel arındırma yapılmadı.** Bütçe akımı şiddetle mevsimseldir;
+  arındırma yerine **12 aylık birikimli** okuma tercih edildi. Tek bir ayın dengesini
+  rejim değişimi diye okumayın.
+- **Reel dönüşüm TÜFE ile yapıldı**, GSYH deflatörüyle değil. TÜFE aylık ve zamanında
+  gelir; GSYH deflatörü üç aylık ve iki çeyrek gecikmelidir. Tercih tazeliğe verildi;
+  kamu harcamalarının sepeti tüketici sepetinden farklıdır ve bu bir yaklaşım hatasıdır.
+- **Artık kalemler (diğer vergiler, diğer giderler, diğer yurt içi yerleşikler) açık
+  hesaplanır**, gizlenmez — ama içerikleri ayrıştırılamaz. Bir artık kalemdeki büyük
+  hareket, bileşenlerinden hangisinin oynadığını söylemez.
+
+## Kaynaklar
+
+- T.C. Hazine ve Maliye Bakanlığı, *Merkezi Yönetim Bütçe Gerçekleşmeleri* — aylık
+  gelir (`TP.KB.GEL*`), gider (`TP.KB.GID*`) ve genel bütçe finansman (`TP.KB.GEN*`)
+  tabloları.
+- T.C. Hazine ve Maliye Bakanlığı, *İç Borç Stoku* (`TP.KB.A*`) ve *Kamu Finansmanı*
+  istatistikleri.
+- TCMB, *Brüt Dış Borç Stoku* (`TP.BRUTDBORCLU.*`) — borçlu bazında üç aylık kırılım.
+- TÜİK, *Dönemsel Gayrisafi Yurt İçi Hasıla* (cari fiyatlarla, `TP.GSYIH20.BY.B1GQ`)
+  ve *Tüketici Fiyat Endeksi* (`TP.TUKFIY2025.GENEL`).
+- T.C. Hazine ve Maliye Bakanlığı, *Finansal Hesaplar — Merkezi Yönetim*
+  (`TP.FINHESTNKS7101311.*`): F.0, F.3, F.4, VF.0, VF.2, BF.9 kalemleri.
+- TCMB / Takasbank / MKK, *Menkul Kıymet İstatistikleri* — DİBS yazılı ve piyasa değeri
+  (`TP.DIBSYAZDEG.*`, `TP.DIBSPIYDEG.*`), vade kırılımı (`TP.DIBSVADE.*`), eurobond
+  (`TP.EBONDYAZDEG.*`, `TP.EBONDPIYDEG.*`, `TP.EBONDVADE.*`).
+- TCMB, *Döviz Kurları* (`TP.DK.USD.A.YTL`, `TP.DK.EUR.A.YTL`).
+- Eurostat / OECD, *Government Finance Statistics* metodoloji notları — F.0 / VF.0 /
+  BF.9 kalem tanımları ve genel yönetim ↔ merkezi yönetim kapsam ayrımı.

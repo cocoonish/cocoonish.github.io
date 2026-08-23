@@ -1,0 +1,1275 @@
+---
+title: 'Ödemeler Dengesi ve Dış Finansman'
+description: 'Türkiye ödemeler dengesinin trader gözüyle okunuşu: manşet ve çekirdek cari denge, altın–enerji ayrıştırması, cari denge/GSYH birim zinciri, finans hesabının kapı kapı kırılımı, finansmanın vade kalitesi, uzun vadeli dış borç çevirme oranı, net hata ve noksan, kimlik şelalesi, brüt dış finansman ihtiyacı ve haftalık ödeme takvimi.'
+pubDate: 2026-08-23
+updatedDate: 2026-08-23
+tags: ['ödemeler dengesi', 'cari denge', 'dış finansman', 'bpm6', 'çevirme oranı', 'eurobond', 'rezerv', 'tcmb']
+durum: 'aktif'
+kaynak: 'TCMB EVDS3 — ödemeler dengesi analitik sunum (bie_odana6) ve ayrıntılı sunum (bie_odeayrsunum6), altın ve enerji hariç cari işlemler (bie_hariccariacik), dış borç çevirme oranları (bie_oderoll), yurt dışı borçlanma senetleri (bie_odeydiebs), haftalık dış borç ödemeleri (bie_dbafod), TÜİK GSYH ve TCMB kur serisi'
+guncelleme: 'aylık (ödemeler dengesi, ~6–8 hafta gecikmeli) + haftalık (dış borç ödeme takvimi, çarşamba) + üç aylık (GSYH paydası)'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+import KosuKutusu from '../../components/KosuKutusu.astro';
+
+Bir gelişmekte olan piyasa kurunu, faizini ve kredi risk primini fiyatlayan
+herkesin er ya da geç indiği tek bir tablo vardır: **ödemeler dengesi**. Sebebi
+basit. Kur bir varlık fiyatıdır, ama arkasındaki akım tablosu bir **muhasebe
+kimliğidir** ve kimlikler tartışmaya kapalıdır. Ülke dışarıya net borçlanıyorsa
+o borcu birileri veriyordur; vermeyi bıraktığı anda denklemin kapanması için ya
+cari açığın küçülmesi, ya rezervin erimesi, ya da kurun düzeltmesi gerekir.
+Sıralamayı piyasa seçer; **kimliğin kapanacağını** ise seçmez.
+
+Bu sayfa o kimliği tek tek söker. İki soruya ayrı ayrı bakar:
+
+1. **Ne kadar dış kaynağa ihtiyaç var?** — cari denge, çekirdeği, alt kalemleri,
+   GSYH'ye oranı ve üstüne binen anapara geri ödemeleri.
+2. **O kaynak hangi kapıdan, hangi vadeyle geliyor?** — finans hesabının
+   kırılımı, finansmanın vade kalitesi, dış borç çevirme oranı, tahvil piyasası
+   erişimi ve haftalık ödeme takvimi.
+
+Ayrımı ciddiye almak gerekir, çünkü piyasa çoğu zaman **birinci soruya bakıp
+ikinciyi ıskalar**. Cari açığın daralması iyi bir haberdir; ama aynı dönemde
+uzun vadeli kredi çevirme oranı 100'ün altına düşmüşse, ülkenin dışarıdan
+çekmesi gereken brüt tutar daralmamış, sadece bileşimi değişmiş olabilir. Cari
+denge **net** bir kavramdır, finansman ihtiyacı ise **brüttür**; ikisini aynı
+sayı sanmak bu hattaki en pahalı okuma hatasıdır.
+
+<div class="not gezinme">
+  <span class="etiket">Bu sayfa nereye bağlanır</span>
+  Buradaki rezerv akımı (ödemeler dengesi tarafındaki <em>akım</em> tanım) ile
+  <a href="/projeler/tcmb-net-rezerv/">TCMB Net Rezerv Takibi</a> sayfasındaki
+  <em>stok</em> tanımı aynı büyüklük değildir; ilişkileri bu sayfada ölçülüp
+  raporlanır. Cari dengenin kur tarafındaki karşılığı
+  <a href="/projeler/try-reer/">Reel Efektif Döviz Kuru</a> ve
+  <a href="/projeler/usdtry-deval/">USD/TRY Trend Kanalları</a>; finansmanın
+  yerli bacağı <a href="/projeler/kredi-parasal/">Kredi ve Parasal
+  Büyüklükler</a>, TL fiyatı ise <a href="/projeler/fonlama-likidite/">TCMB
+  Fonlama ve Likidite</a>. Hazine'nin iç borçlanma bacağı
+  <a href="/projeler/hazine-ihrac/">Hazine İhraç Takibi</a>, yabancının tahvil
+  ve hisse pozisyonu <a href="/projeler/yabanci-pozisyon/">Yabancı Pozisyon</a>
+  sayfasındadır. 1994, 2001, 2018 ve 2023 dönemeçlerinin ödemeler dengesi
+  anatomisi için <a href="/arastirma/turkiye-piyasa-tarihi/">Türkiye Piyasa
+  Tarihi</a>; buradaki akımların bir pozisyona nasıl çevrildiği için
+  <a href="/arastirma/risk-ve-hedge/">Risk ve Hedge</a>.
+</div>
+
+## Güncel okuma
+
+**Çıpalar.** Bu sayfada **tek bir tarih yoktur**; dört ayrı yayım ritmi yan yana
+durur ve her sayı kendi çıpasından okunur:
+
+| Aile | Çıpa | Yayımdan bu yana |
+| --- | --- | --- |
+| Ödemeler dengesi (aylık) | <Deger proje="odemeler-dengesi" anahtar="ay" ondalik={0}>Haziran 2026</Deger> · <Deger proje="odemeler-dengesi" anahtar="ay_kisa" ondalik={0}>30.06.2026</Deger> | <Deger proje="odemeler-dengesi" anahtar="yayim_gecikme_gun" ondalik={0}>54</Deger> gün |
+| Cari denge / GSYH (üç aylık) | <Deger proje="odemeler-dengesi" anahtar="ceyrek" ondalik={0}>2026-Ç1</Deger> · <Deger proje="odemeler-dengesi" anahtar="ceyrek_kisa" ondalik={0}>31.03.2026</Deger> | <Deger proje="odemeler-dengesi" anahtar="ceyrek_gecikme_gun" ondalik={0}>145</Deger> gün |
+| Dış borç ödeme takvimi (haftalık) | <Deger proje="odemeler-dengesi" anahtar="hafta" ondalik={0}>19 Ağustos 2026</Deger> | <Deger proje="odemeler-dengesi" anahtar="hafta_gecikme_gun" ondalik={0}>4</Deger> gün |
+| USD/TRY (günlük, yalnız GSYH paydası için) | <Deger proje="odemeler-dengesi" anahtar="kur_gun" ondalik={0}>21 Ağustos 2026</Deger> | <Deger proje="odemeler-dengesi" anahtar="kur_gecikme_gun" ondalik={0}>2</Deger> gün |
+
+Koşum tarihi <Deger proje="odemeler-dengesi" anahtar="kosum_tarihi" ondalik={0}>23.08.2026</Deger>.
+Tek cümleyle:
+*<Deger proje="odemeler-dengesi" anahtar="donem_cumlesi" ondalik={0}>Ödemeler dengesi Haziran 2026 verisiyle, cari denge/GSYH oranı 2026-Ç1 çeyreğiyle, haftalık dış borç ödeme takvimi 19 Ağustos 2026 ile günceldir.</Deger>*
+
+<KosuKutusu proje="odemeler-dengesi" sayi={0}>
+  Bu koşuda uyarı yok.
+</KosuKutusu>
+
+Kutu **bu koşunun** durumunu taşır. Bir yayın durduğunda, ağ düşüp eski
+önbelleğe inildiğinde ya da bir kimlik denetimi bozulduğunda kutu kırmızıya
+döner ve başlığı **BAYAT VERİ** olur. Tazelik eşikleri sayfanın kendi
+toleranslarından okunur: aylık aile
+<Deger proje="odemeler-dengesi" anahtar="bayat_tolerans_ay" ondalik={0}>85</Deger>
+gün, üç aylık aile
+<Deger proje="odemeler-dengesi" anahtar="bayat_tolerans_ceyrek" ondalik={0}>165</Deger>
+gün, haftalık aile
+<Deger proje="odemeler-dengesi" anahtar="bayat_tolerans_hafta" ondalik={0}>12</Deger>
+gün, günlük kur
+<Deger proje="odemeler-dengesi" anahtar="bayat_tolerans_gun" ondalik={0}>5</Deger>
+gün. Eşikler yayım takviminden türetildi; iki yerde ayrı eşik tutulmaz.
+
+### Cari taraf
+
+| Ölçü (12 aylık birikimli) | Değer | Birim |
+| --- | --- | --- |
+| **Manşet cari denge** | **<Deger proje="odemeler-dengesi" anahtar="cari12_mia" ondalik={1} isaret={true}>−38,9</Deger>** | milyar USD |
+| **Çekirdek cari denge** (altın ve enerji hariç) | **<Deger proje="odemeler-dengesi" anahtar="cekirdek12_mia" ondalik={1} isaret={true}>+28,9</Deger>** | milyar USD |
+| Makas (manşet − çekirdek) | <Deger proje="odemeler-dengesi" anahtar="makas12_mia" ondalik={1} isaret={true}>−67,8</Deger> | milyar USD |
+| Altın dengesi (net) | <Deger proje="odemeler-dengesi" anahtar="altin_net12_mia" ondalik={1} isaret={true}>−18,1</Deger> | milyar USD |
+| Enerji dengesi (net) | <Deger proje="odemeler-dengesi" anahtar="enerji_net12_mia" ondalik={1} isaret={true}>−49,8</Deger> | milyar USD |
+| Mal dengesi | <Deger proje="odemeler-dengesi" anahtar="mal12_mia" ondalik={1} isaret={true}>−76,5</Deger> | milyar USD |
+| Hizmet dengesi (ağırlıklı olarak turizm) | <Deger proje="odemeler-dengesi" anahtar="hizmet12_mia" ondalik={1} isaret={true}>+63,7</Deger> | milyar USD |
+| Birincil gelir dengesi (faiz, kâr, ücret) | <Deger proje="odemeler-dengesi" anahtar="birincil12_mia" ondalik={1} isaret={true}>−24,2</Deger> | milyar USD |
+| İkincil gelir dengesi (transferler) | <Deger proje="odemeler-dengesi" anahtar="ikincil12_mia" ondalik={1} isaret={true}>−2,0</Deger> | milyar USD |
+| İhracat (mal) | <Deger proje="odemeler-dengesi" anahtar="ihracat12_mia" ondalik={1}>272,8</Deger> | milyar USD |
+| İthalat (mal) | <Deger proje="odemeler-dengesi" anahtar="ithalat12_mia" ondalik={1}>349,3</Deger> | milyar USD |
+| Cari denge / GSYH (kendi çeyreğinde) | <Deger proje="odemeler-dengesi" anahtar="cari_gsyh" ondalik={2} isaret={true}>−2,44</Deger> | % |
+| Çekirdek cari denge / GSYH | <Deger proje="odemeler-dengesi" anahtar="cekirdek_gsyh" ondalik={2} isaret={true}>+1,62</Deger> | % |
+
+En güncel **tek ay** gözleminde cari denge
+<Deger proje="odemeler-dengesi" anahtar="cari_ay_mia" ondalik={1} isaret={true}>−4,2</Deger>
+milyar USD, çekirdeği ise
+<Deger proje="odemeler-dengesi" anahtar="cekirdek_ay_mia" ondalik={1} isaret={true}>+1,5</Deger>
+milyar USD. Aylık sayı **mevsimsel ve gürültülüdür**; bu sayfa başrolü 12 aylık
+birikimli seriye verir ve aylık gözlemi yalnız çubuk olarak arkada tutar.
+
+### Finansman tarafı
+
+| Ölçü (12 aylık birikimli) | Değer | Birim |
+| --- | --- | --- |
+| **Net finansman girişi** (rezerv hariç, giriş işaretiyle) | **<Deger proje="odemeler-dengesi" anahtar="fin_giris12_mia" ondalik={1} isaret={true}>+32,4</Deger>** | milyar USD |
+| Brüt yükümlülük oluşumu (yabancının getirdiği brüt akım) | <Deger proje="odemeler-dengesi" anahtar="brut_yukumluluk12_mia" ondalik={1}>66,7</Deger> | milyar USD |
+| Yerleşiklerin dış varlık edinimi (çıkan brüt akım) | <Deger proje="odemeler-dengesi" anahtar="yerlesik_varlik12_mia" ondalik={1}>34,3</Deger> | milyar USD |
+| Net doğrudan yatırım girişi | <Deger proje="odemeler-dengesi" anahtar="dyy_giris12_mia" ondalik={1} isaret={true}>+0,3</Deger> | milyar USD |
+| Net portföy girişi | <Deger proje="odemeler-dengesi" anahtar="portfoy_giris12_mia" ondalik={1} isaret={true}>+6,4</Deger> | milyar USD |
+| Net diğer yatırım girişi (kredi, mevduat, ticari kredi) | <Deger proje="odemeler-dengesi" anahtar="diger_giris12_mia" ondalik={1} isaret={true}>+31,0</Deger> | milyar USD |
+| Net finansal türev | <Deger proje="odemeler-dengesi" anahtar="turev_giris12_mia" ondalik={1} isaret={true}>−5,3</Deger> | milyar USD |
+| **Rezerv değişimi** (+ = rezerv artışı) | **<Deger proje="odemeler-dengesi" anahtar="rezerv_akim12_mia" ondalik={1} isaret={true}>−27,2</Deger>** | milyar USD |
+| Net hata ve noksan | <Deger proje="odemeler-dengesi" anahtar="nhn12_mia" ondalik={1} isaret={true}>−20,4</Deger> | milyar USD |
+| Sermaye hesabı | <Deger proje="odemeler-dengesi" anahtar="sermaye_hesabi12_mia" ondalik={1} isaret={true}>−0,2</Deger> | milyar USD |
+| **Kaliteli finansman** (net DYY + özel sektör net UV kredi) | **<Deger proje="odemeler-dengesi" anahtar="kaliteli12_mia" ondalik={1} isaret={true}>+42,7</Deger>** | milyar USD |
+| Sıcak para (portföy + KV kredi + mevduat yükümlülüğü) | <Deger proje="odemeler-dengesi" anahtar="sicak_para12_mia" ondalik={1} isaret={true}>+27,8</Deger> | milyar USD |
+| **Brüt dış finansman ihtiyacı** | **<Deger proje="odemeler-dengesi" anahtar="ihtiyac12_mia" ondalik={1}>125,7</Deger>** | milyar USD |
+| Uzun vadeli çevirme oranı — bankalar | <Deger proje="odemeler-dengesi" anahtar="roll_bnk" ondalik={1}>151,3</Deger> | % |
+| Uzun vadeli çevirme oranı — reel sektör | <Deger proje="odemeler-dengesi" anahtar="roll_dgr" ondalik={1}>231,4</Deger> | % |
+
+### Bir cümlelik okuma
+
+Manşet cari açık son 12 aylık dilimde
+<Deger proje="odemeler-dengesi" anahtar="cari12_mia" ondalik={1}>−38,9</Deger>
+milyar USD; ama bu açığın **tamamı ve fazlası** iki kalemden geliyor. Altın ve
+enerji hariç bırakıldığında ülke
+<Deger proje="odemeler-dengesi" anahtar="cekirdek12_mia" ondalik={1}>28,9</Deger>
+milyar USD **fazla** veriyor.
+*<Deger proje="odemeler-dengesi" anahtar="cari_cumlesi" ondalik={0}>12 aylık birikimli cari açık; altın ve enerji hariç çekirdek cari denge fazla. Aradaki makas iki kalemin toplam faturasıdır.</Deger>*
+
+Finansman tarafında ise net giriş
+<Deger proje="odemeler-dengesi" anahtar="fin_giris12_mia" ondalik={1}>32,4</Deger>
+milyar USD ile cari açığın altında kalıyor; aradaki farkı net hata ve noksan
+(<Deger proje="odemeler-dengesi" anahtar="nhn12_mia" ondalik={1}>−20,4</Deger>
+milyar USD) ve rezerv
+(<Deger proje="odemeler-dengesi" anahtar="rezerv_yon" ondalik={0}>azaldı</Deger>)
+kapatıyor. Yani kimlik kapanıyor, ama **rezerv bacağı üzerinden** kapanıyor. Bu
+tek cümle, kur ve CDS fiyatlamasının başladığı yerdir.
+
+Brüt dış finansman ihtiyacı ise
+<Deger proje="odemeler-dengesi" anahtar="ihtiyac12_mia" ondalik={1}>125,7</Deger>
+milyar USD — cari açığın **üç katından fazla**. İhtiyacın yalnız
+%<Deger proje="odemeler-dengesi" anahtar="ihtiyacta_cari_acik_payi" ondalik={1}>30,9</Deger>'u
+cari açıktan geliyor; kalanı vadesi gelen uzun vadeli anaparadır. "Cari açık
+kapandı, dış kırılganlık bitti" cümlesinin neden yanlış olduğu tam olarak
+budur.
+
+## Ödemeler dengesi kimliği: sayfanın omurgası
+
+### Kimliğin kendisi
+
+Ödemeler dengesi bir tahmin değil, **çift kayıtlı bir muhasebe sistemidir**.
+Her akımın iki bacağı vardır ve toplamları tanım gereği sıfırdır:
+
+$$
+\underbrace{CA}_{\text{cari işlemler}}+\underbrace{KA}_{\text{sermaye hesabı}}+\underbrace{NHN}_{\text{net hata ve noksan}}=\underbrace{FA}_{\text{finans hesabı (rezerv hariç)}}+\underbrace{\Delta R}_{\text{rezerv varlıklar}}
+$$
+
+Bu sayfa kimliği **giriş işaretiyle** yeniden yazar, çünkü trader "sermaye
+girdi mi çıktı mı" diye düşünür, "net varlık edinimi eksi net yükümlülük
+oluşumu" diye değil:
+
+$$
+-CA \;=\; \underbrace{F}_{\text{net finansman girişi}} \;+\; KA \;+\; NHN \;-\; \Delta R
+$$
+
+Sol taraf **finansman ihtiyacıdır** (cari açık pozitif bir sayı olarak), sağ
+taraf ise **nasıl karşılandığıdır**. Rezervin eksi işaretle girmesi bir
+işaret hatası değil, bir tanımdır: rezerv **artışı** bir finansman kaynağı
+değildir, gelen kaynağın rezervde biriken kısmıdır.
+
+<div class="not">
+  <span class="etiket">Bu kimlik bu hatta bir denetimdir, bir varsayım değil</span>
+  Kimlik her koşuda ayın kendisinde sınanır ve sapma eşiği aşarsa hat DURUR —
+  eski grafiğin üstüne taze metin yazılmaz.{' '}
+  <Deger proje="odemeler-dengesi" anahtar="kimlik_cumlesi" ondalik={0}>Bu koşuda 21 kimlik sınandı, 21 tanesi geçti.</Deger>{' '}
+  Ana kimlik <Deger proje="odemeler-dengesi" anahtar="kimlik_bop_n" ondalik={0}>431</Deger>{' '}
+  ayda sınandı, en büyük sapma{' '}
+  <Deger proje="odemeler-dengesi" anahtar="kimlik_bop_maks_sapma" ondalik={2}>0,00</Deger>{' '}
+  milyon USD.
+</div>
+
+### İşaret rejimi: BPM6 tuzağı
+
+IMF'nin altıncı el kitabı (BPM6) finans hesabını şöyle tanımlar: **net varlık
+edinimi eksi net yükümlülük oluşumu.** Bunun doğrudan sonucu, sezgiye ters bir
+işaret rejimidir: **pozitif finans hesabı sermaye ÇIKIŞI demektir.** Beşinci el
+kitabında (BPM5) işaret tersti; eski grafiklerle yeni serileri yan yana koyan
+bir okur, hiçbir uyarı almadan seriyi ters okur.
+
+<div class="not">
+  <span class="etiket">İşaret tek yerde çevrilir</span>
+  <Deger proje="odemeler-dengesi" anahtar="isaret_notu" ondalik={0}>BPM6: finans hesabı = net varlık edinimi − net yükümlülük oluşumu; POZİTİF = sermaye ÇIKIŞI. Giriş gösterimi için işaret metrik katmanında TEK YERDE çevrilir. Rezerv akımı POZİTİF = rezerv ARTIŞI (stokla sınandı).</Deger>{' '}
+  Grafik katmanı kolonları olduğu gibi çizer; orada bir daha çevrilse seri iki
+  kez çevrilir ve <em>sessizce</em> ters yöne bakardı — hiçbir hata mesajı
+  düşmeden.
+</div>
+
+Rezerv akımının işareti ayrıca **stokla sınanır**: akım serisi ile rezerv
+stokunun aylık değişimi arasındaki korelasyon
+<Deger proje="odemeler-dengesi" anahtar="rezerv_korelasyon" ondalik={3}>0,914</Deger>
+ve iki serinin aynı yönde hareket etme oranı
+%<Deger proje="odemeler-dengesi" anahtar="rezerv_ayni_yon" ondalik={1}>85,4</Deger>
+(n = <Deger proje="odemeler-dengesi" anahtar="rezerv_isaret_n" ondalik={0}>198</Deger>
+ay). Eşitlik beklenmez — stok **değerleme etkisi** taşır, akım taşımaz — ama
+**yön** beklenir; yön tutmasaydı işaret çevirmesi yanlış olurdu.
+
+### Hangi finans hesabı? İki sunum, iki farklı sayı
+
+TCMB ödemeler dengesini iki ayrı tabloda yayımlar ve **ikisinin "finans
+hesabı" satırı aynı şey değildir.**
+
+<div class="not">
+  <span class="etiket">Bu hattın en pahalı tuzağı</span>
+  <Deger proje="odemeler-dengesi" anahtar="tanim_notu" ondalik={0}>Bu hat finans hesabı olarak ANALİTİK sunumun REZERV HARİÇ kalemini kullanır. Ayrıntılı sunumun ilgili kalemi rezervi İÇERİR; köprü iki kalemi birbirine bağlar ve ikisi aynı grafikte "finans hesabı" diye yan yana konulamaz.</Deger>
+</div>
+
+Analitik sunumdaki `TP.ODANA6.Q13`, rezerv varlıkları **dışarıda bırakır**.
+Ayrıntılı sunumdaki `TP.ODEAYRSUNUM6.Q101` ise rezervi **içerir**. Köprü
+tanımlıdır ve bu hatta sınanır:
+
+$$
+\texttt{Q101} \;=\; \texttt{Q13} \;+\; \texttt{Q33}
+$$
+
+Köprü <Deger proje="odemeler-dengesi" anahtar="kopru_n" ondalik={0}>422</Deger>
+ayda sınandı; en büyük sapma
+<Deger proje="odemeler-dengesi" anahtar="kopru_maks_sapma" ondalik={2}>0,00</Deger>
+milyon USD. İki kalemi aynı etiketle çizen bir grafik, en güncel çeyrekte
+onlarca milyar dolarlık **sahte bir sapma** üretirdi — ve seriler ayrı ayrı
+"doğru" olduğu için hiçbir denetim uyarmazdı.
+
+### Ölü seri, tanı serisi ve rezerv kimliği
+
+Bir seri **bugün** sıfır basıyor diye tarihçede de sıfır değildir. Bu ayrımı
+kaçırmak, veri katmanında sessizce yanlış bir eleme yapar:
+
+<div class="not">
+  <span class="etiket">Ölçüldü, keşif notu düzeltildi</span>
+  <Deger proje="odemeler-dengesi" anahtar="tani_seri_notu" ondalik={0}>IMF kredileri ve ödemeler dengesi finansmanı bugün sıfır, ama rezerv kimliği ancak onlarla kapanıyor. Metriğe ve grafiğe GİRMEZLER.</Deger>{' '}
+  Buna karşılık gerçekten elenen bir seri de var:{' '}
+  <Deger proje="odemeler-dengesi" anahtar="olu_seri_notu" ondalik={0}>diğer yatırım varlık — Merkez Bankası kalemi son 60 ayın tamamında 0; üst kalem zaten içeriyor.</Deger>
+</div>
+
+Rezerv tarafındaki kimlik şöyledir ve IMF bacakları sıfırken bile **tanı
+amaçlı** çekilir:
+
+$$
+\underbrace{\texttt{Q33}}_{\text{rezerv varlıklar}}=\underbrace{\texttt{Q34}}_{\text{resmi rezervler}}+\underbrace{\texttt{Q35}}_{\text{IMF kredileri}}+\underbrace{\texttt{Q36}}_{\text{ÖD finansmanı}}
+$$
+
+"Q33 = Q204" eşitliği yalnız IMF bacakları sıfırken doğrudur; tam tarihçede
+2001 krizi aylarında iki seri ayrışır. Bir kod başka bir kodun yerine
+konulduğunda tarihçenin ortasında oluşan bu tür kırıklar, en güncel gözlemde
+görünmedikleri için en geç fark edilen hatalardır.
+
+### 12 aylık birikimli okuma neden zorunlu
+
+Aylık ödemeler dengesi hem **mevsimseldir** (turizm gelirleri yaza yığılır,
+enerji ithalatı kışa) hem de tek aylık altın hareketleriyle sıçrar. Bu sayfadaki
+neredeyse her seri bu yüzden 12 aya toplanır:
+
+$$
+X^{12}_t=\sum_{k=0}^{11}x_{t-k}
+$$
+
+Kritik ayrıntı: **eksik ay varsa toplam hesaplanmaz.** 11 aylık bir toplamı 12
+aylık diye göstermek, serinin başında sistematik olarak küçük bir açık uydurur
+— ve o uydurma, seri güncellendikçe kendiliğinden kaybolduğu için asla
+sorgulanmaz.
+
+## Şekil 01 — Manşet ve çekirdek cari denge
+
+<GrafikEmbed
+  src="/projeler/odemeler-dengesi/01_cari_manset_cekirdek.html"
+  baslik="Aylık ve 12 aylık birikimli manşet cari denge, altın ve enerji hariç çekirdek cari denge, ve aradaki makas"
+  no="01"
+  yukseklik={1087}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** EVDS3, aylık, milyon USD. Manşet cari denge `TP.ODANA6.Q01` (analitik
+sunum); çekirdek cari denge `TP.HARICCARIACIK.K10` — TCMB'nin *altın ve enerji
+hariç cari işlemler* tanımı. Altın dengesi `TP.HARICCARIACIK.K4`, enerji
+dengesi `K7`.
+
+**Formül.** Üst panelde aylık seri çubuk, 12 aylık birikimli seriler çizgi
+olarak durur. Alt panel makası çizer:
+
+$$
+\text{MAKAS}^{12}_t \;=\; CA^{12}_t-\text{ÇEKİRDEK}^{12}_t \;=\; \text{ALTIN}^{12}_t+\text{ENERJİ}^{12}_t
+$$
+
+**Dönüşümler.** Metrik katmanı milyon USD üretir; grafik katmanı yalnız kendi
+içinde ve tek bir yerde milyara böler. Eksende "milyar USD" yazıyorsa dönüşüm
+o tek yerden geçmiştir.
+
+**Varsayımlar.** Çekirdek seri TCMB'nin tanımıdır, bu çalışmanın türetmesi
+değildir; "altın" parasal olmayan altın, "enerji" ise gümrük tarife
+cetvelinin 27. faslıdır. Tanımı kabul etmeyen okur, ayrıştırmayı Şekil 02'de
+kalem kalem görür.
+
+**Tuzaklar.** (i) Çekirdek seri TÜİK dış ticaret istatistiklerinden beslenir;
+TÜİK revizyonu buraya da yansır ve manşetle **aynı anda** revize olmayabilir.
+(ii) Çekirdek seri 1996'da başlar, manşet 1975'te — iki seriyi aynı panelde tam
+tarihçeyle çizmek çekirdek tarafında sahte bir "sıfır dönem" üretirdi; bu
+yüzden panel çekirdeğin ilk tam 12 aylık toplamından başlar.
+
+**Kimlik denetimi.** Manşet = çekirdek + altın + enerji eşitliği
+<Deger proje="odemeler-dengesi" anahtar="kimlik_cekirdek_n" ondalik={0}>355</Deger>
+ayda sınandı; en büyük sapma
+<Deger proje="odemeler-dengesi" anahtar="kimlik_cekirdek_maks_sapma" ondalik={2}>0,10</Deger>
+milyon USD (yuvarlama artığı).
+
+## Çekirdek cari denge: neden bakılır, ne zaman yanıltır
+
+Manşet cari denge iki tür bilgiyi aynı sayıda toplar: ülkenin **rekabet
+gücünden** doğan yapısal denge ile, kontrol edilemeyen **fiyat şoklarından**
+doğan geçici denge. Enerji ithalatı fiyat esnekliği düşük bir kalemdir; ham
+petrol iki katına çıktığında ithalat faturası artar, ama bu ülkenin
+ihracatçısının bir gecede rekabet gücünü kaybettiği anlamına gelmez.
+
+Altın ise bambaşka bir hayvandır. Türkiye'de altın ithalatı zaman zaman bir
+**tasarruf aracı talebine** ya da bir **arbitraj/kaçınma akımına** dönüşür ve
+cari açığa on milyarlarca dolarlık, bir yıl içinde açılıp kapanan bir kalem
+ekler. Bu akımı "rekabet gücü kaybı" diye okumak yanlış olur; sermaye
+hareketinin gümrükten geçen hâli demek daha doğrudur.
+
+<div class="not">
+  <span class="etiket">Çekirdek her zaman "daha doğru" değildir</span>
+  Çekirdek cari denge <strong>ödenmesi gereken faturayı küçültmez.</strong>
+  Enerji ithalatının dövizi de ödenir, altınınki de. Çekirdek, açığın
+  <em>kaynağını</em> ayırt etmek için vardır; finansman ihtiyacını ölçmek için
+  değil. Finansman ihtiyacı hesabında (Şekil 11) daima MANŞET kullanılır.
+</div>
+
+Bu koşuda ayrıştırmanın verdiği tablo çarpıcı: altın hariç bırakıldığında cari
+denge
+<Deger proje="odemeler-dengesi" anahtar="altin_haric12_mia" ondalik={1} isaret={true}>−20,8</Deger>
+milyar USD, enerji hariç bırakıldığında
+<Deger proje="odemeler-dengesi" anahtar="enerji_haric12_mia" ondalik={1} isaret={true}>+10,9</Deger>
+milyar USD. İkisi birden hariç tutulduğunda
+<Deger proje="odemeler-dengesi" anahtar="cekirdek12_mia" ondalik={1} isaret={true}>+28,9</Deger>
+milyar USD fazla kalır. Aradaki makas —
+<Deger proje="odemeler-dengesi" anahtar="makas12_mia" ondalik={1}>−67,8</Deger>
+milyar USD — **tek başına bir ülkenin cari açığı büyüklüğündedir.**
+
+## Şekil 02 — Altın ve enerji ayrıştırması
+
+<GrafikEmbed
+  src="/projeler/odemeler-dengesi/02_altin_enerji_ayristirma.html"
+  baslik="Köprü: çekirdek + altın net + enerji net = manşet cari denge; altta ayrıştırmanın kaynağı olan aylık altın ve enerji dengesi"
+  no="02"
+  yukseklik={1189}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Altın net `TP.HARICCARIACIK.K4` (= `K2` altın ihracatı − `K3` altın
+ithalatı); enerji net `K7` (= `K5` − `K6`); çekirdek `K10`; manşet
+`TP.ODANA6.Q01`.
+
+**Formül.** Üst panel bir **yığındır, üç ayrı seri değil**. Yığının toplamı
+manşete birebir eşittir:
+
+$$
+CA^{12}_t=\text{ÇEKİRDEK}^{12}_t+\text{ALTIN}^{12}_t+\text{ENERJİ}^{12}_t
+$$
+
+Kırmızı çizgi yığının toplamıdır; çizgi ile yığının tepesi ayrışırsa bu bir
+veri değil **hesap** hatasıdır ve kimlik denetimi hattı durdurur.
+
+**Dönüşümler.** Üst panel 12 aylık birikimli, alt panel ham aylık. Üst panelde
+çubuk yoğunluğu okunabilirliği bozmasın diye seri gerektiğinde seyreltilerek
+örneklenir; seyreltme oranı grafiğin altyazısında yazar — gizli bir sunum
+kararı bırakılmaz.
+
+**Varsayımlar.** "Altın" parasal olmayan altındır: merkez bankası rezerv altını
+bu kalemde değil, rezerv varlıklarda durur. Bu ayrım önemlidir, çünkü TCMB'nin
+rezerv altını arttığında cari denge etkilenmez.
+
+**Tuzaklar.** (i) 12 aylık toplam, altın ithalatındaki **tek aylık
+sıçramaları** yumuşatır ve olayın kendisini görünmez kılar — alt panel tam da
+bunun için var. (ii) Altın kalemi hem ihracat hem ithalat bacağı taşır; net
+sayı, iki bacağın da büyüdüğü bir dönemde küçük görünebilir. Brüt akımın
+büyüklüğü kur baskısı açısından nettten farklı bir bilgidir.
+
+## Şekil 03 — Cari dengenin alt kalemleri
+
+<GrafikEmbed
+  src="/projeler/odemeler-dengesi/03_cari_alt_kalemler.html"
+  baslik="Mal, hizmet, birincil ve ikincil gelir dengesi (12 aylık birikimli, yığılmış) ve mal dengesinin iki bacağı"
+  no="03"
+  yukseklik={1137}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Mal dengesi `TP.ODANA6.Q04`; hizmet dengesi `Q05` − `Q06`; birincil
+gelir dengesi `Q08` − `Q09`; ikincil gelir dengesi `Q11`; ihracat `Q02`,
+ithalat `Q03`.
+
+**Formül.** Cari denge dört kalemin toplamıdır ve bu bir ayrıştırmadır:
+
+$$
+CA_t=\underbrace{(X_t-M_t)}_{\text{mal}}+\underbrace{(S^{gel}_t-S^{gid}_t)}_{\text{hizmet}}+\underbrace{(Y^{gel}_t-Y^{gid}_t)}_{\text{birincil gelir}}+\underbrace{T_t}_{\text{ikincil gelir}}
+$$
+
+Kimlik <Deger proje="odemeler-dengesi" anahtar="kimlik_alt_kalem_n" ondalik={0}>404</Deger>
+ayda sınandı, en büyük sapma
+<Deger proje="odemeler-dengesi" anahtar="kimlik_alt_kalem_maks_sapma" ondalik={2}>0,00</Deger>
+milyon USD. Mal dengesi = ihracat − ithalat eşitliği de ayrıca sınanır.
+
+**Dönüşümler.** Hepsi 12 aylık birikimli. Alt panelde ihracat ve ithalat
+**düzey** olarak çizilir; hizmet dengesi kıyas için kesikli olarak aynı
+eksende durur.
+
+**Varsayımlar ve okuma.** Dört kalem **farklı sürücülere** bağlıdır ve aynı
+grafikte olmaları kıyas içindir, toplama kolaylığı için değil:
+
+- **Mal dengesi** kur, iç talep, enerji fiyatı ve dış talep tarafından
+  belirlenir. En oynak kalemdir.
+- **Hizmet dengesi** Türkiye'de büyük ölçüde **turizmdir** ve mal açığının
+  önemli bir kısmını karşılar. Güçlü mevsimsellik taşır; yıllık toplamdan
+  bakılmalıdır.
+- **Birincil gelir dengesi**, dış borç stokunun ve yabancı doğrudan yatırım
+  stokunun **faiz ve kâr faturasıdır**. Bu kalem yapısal olarak negatiftir ve
+  borç stoku ile küresel faiz arttıkça büyür. Cari açık kapansa bile bu kalem
+  kendi kendine düzelmez — dış borç stoku azalmadan azalmaz.
+- **İkincil gelir dengesi** işçi gelirleri ve resmî transferlerdir; Türkiye
+  için görece küçüktür.
+
+**Tuzaklar.** (i) "Cari açık daraldı" cümlesi, mal açığının daraldığı anlamına
+gelmez; turizm sezonunun güçlü geçtiği bir yılda hizmet fazlası mal açığını
+maskeleyebilir. (ii) Birincil gelir açığının büyümesi **iyi bir haberin
+gölgesi** olabilir: yabancı doğrudan yatırım stoku büyüdükçe kâr transferi de
+büyür.
+
+## Şekil 04 — Cari denge / GSYH ve paydanın kendisi
+
+<GrafikEmbed
+  src="/projeler/odemeler-dengesi/04_cari_gsyh.html"
+  baslik="Cari denge / GSYH oranı ve altında paydanın kendisi: 4 çeyreklik GSYH, çeyrek ortalama kur ile nokta kur karşılaştırmalı"
+  no="04"
+  yukseklik={1139}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Cari denge TCMB EVDS3 (aylık, **milyon USD**); GSYH TÜİK
+`TP.GSYIH20.BY.B1GQ` (üç aylık, **bin TL**); kur `TP.DK.USD.A.YTL` (günlük, TL).
+
+**Bu şekil bir birim dersi.** Üç farklı birim ve üç farklı frekans yan yana
+geliyor; bu tür bir hesap, 1000× hatanın klasik doğduğu yerdir. Zincir tek bir
+yerde kurulur ve kodda yorumla belgelenir:
+
+$$
+\text{GSYH}^{\text{mn USD}}_q=\frac{\text{GSYH}^{\text{bin TL}}_q/1000}{\overline{\text{USDTRY}}_q}
+$$
+
+$$
+\left(\frac{CA}{\text{GSYH}}\right)_q=\frac{CA^{12}_q}{\sum_{j=0}^{3}\text{GSYH}^{\text{mn USD}}_{q-j}}\times 100
+$$
+
+**Dönüşümler.** bin TL → `/1000` → milyon TL → `/` çeyrek **ortalama** USDTRY →
+milyon USD. Sonra 4 çeyreklik toplam alınır; bu **yıllık** GSYH'dir. 12 aylık
+birikimli cari denge, çeyrek sonuna hizalanır (aylık seri ay başına çapalıdır).
+
+**Neden ortalama kur, nokta kur değil.** GSYH bir **akım** büyüklüğüdür: çeyrek
+boyunca üretilmiştir. Çeyrek sonu kuruyla bölmek, çeyrek içi kur hareketinin
+tamamını üretimin tamamına uygulamak demektir. Fark ölçülüyor ve alt panelde
+iki sürüm yan yana duruyor: bu koşuda nokta kurla hesaplanan GSYH, ortalama
+kurla hesaplanandan
+%<Deger proje="odemeler-dengesi" anahtar="nokta_kur_farki_yuzde" ondalik={1} isaret={true}>−2,0</Deger>
+farklı. Çeyrek ortalama kur
+<Deger proje="odemeler-dengesi" anahtar="usdtry_ceyrek_ort" ondalik={2}>43,59</Deger>,
+çeyrek sonu kuru
+<Deger proje="odemeler-dengesi" anahtar="usdtry_ceyrek_son" ondalik={2}>44,38</Deger>.
+
+**Mertebe denetimi — durdurucu.** Hesaplanan 4 çeyreklik GSYH
+<Deger proje="odemeler-dengesi" anahtar="gsyh4_trilyon_usd" ondalik={3}>1,634</Deger>
+trilyon USD. Bu değer 1–2 trilyon USD bandının dışına çıkarsa hat **durur**:
+birim zincirinin bozulduğu (bin TL ile milyon TL'nin karıştığı) yer tam olarak
+burada yakalanır. Mertebe denetimi olmayan bir hatta 1000× hata, grafiği
+düzleştirdiği için gözle bile fark edilmez.
+
+**Frekans/gecikme uyumsuzluğu — sessiz bayatlamanın klasiği.** Ödemeler
+dengesi aylık ve yaklaşık iki ay gecikmeli; GSYH üç aylık ve yaklaşık beş ay
+gecikmeli. Oran **GSYH'nin son çeyreğinde durur.**
+
+<div class="not">
+  <span class="etiket">Oranı "son ayın sayısı" diye sunmak sessiz bayatlamadır</span>
+  <Deger proje="odemeler-dengesi" anahtar="oran_donem_cumlesi" ondalik={0}>Cari denge/GSYH oranı kendi çeyreğine aittir; aylık cari denge ondan aylarca ilerdedir.</Deger>{' '}
+  Aradaki mesafe bu koşuda{' '}
+  <Deger proje="odemeler-dengesi" anahtar="oran_gecikmesi_ay" ondalik={1}>3,0</Deger>{' '}
+  ay ve sayfada ayrı bir çıpa olarak taşınıyor.
+</div>
+
+**Tarihsel bant.** Oranın tarihçesi
+%<Deger proje="odemeler-dengesi" anahtar="cari_gsyh_min" ondalik={2}>−8,81</Deger>
+(<Deger proje="odemeler-dengesi" anahtar="cari_gsyh_min_donem" ondalik={0}>2011-Ç4</Deger>)
+ile
+%<Deger proje="odemeler-dengesi" anahtar="cari_gsyh_maks" ondalik={2}>2,69</Deger>
+(<Deger proje="odemeler-dengesi" anahtar="cari_gsyh_maks_donem" ondalik={0}>2019-Ç3</Deger>)
+arasında. Bu bant, "cari açık/GSYH kaç olursa kriz olur" sorusuna değil, "bu
+ülkede bu oran hangi aralıkta gezindi" sorusuna cevap verir. Eşik uydurulmaz.
+
+**Tuzaklar.** (i) Paydanın kendisi **dolar cinsindendir** ve TL reel olarak
+değer kaybettiğinde payda küçülür — oran, cari denge hiç değişmese bile
+kötüleşir. Alt panelin varlık sebebi budur: paydayı görmeden oranı okumayın.
+(ii) TÜİK GSYH revizyonları geriye dönük ve bazen büyüktür; oranın tarihçesi
+her revizyonda yeniden çizilir.
+
+## Finansman tarafı: parayı kim, hangi kapıdan getiriyor
+
+Cari açık bir **fatura**, finans hesabı ise **kimin ödediğidir**. Bu bölümün
+kurucu sorusu şudur: gelen para *ne kadar hızlı geri gidebilir?*
+
+Finans hesabı BPM6'da dört ana kaleme ayrılır ve bu sayfa hepsini **giriş
+işaretiyle** taşır:
+
+- **Doğrudan yatırım (DYY).** Bir şirketin sermayesine, yönetim kontrolü
+  amacıyla girmek. En yavaş çıkan paradır: fabrika bir gecede satılmaz.
+- **Portföy yatırımı.** Hisse senedi ve borç senedi. Likit, günlük fiyatlanır,
+  bir haftada tersine dönebilir.
+- **Diğer yatırım.** Krediler, mevduat, ticari krediler. Vadeye göre çok farklı
+  davranır: bir sendikasyon kredisi ile bir gecelik yurt dışı mevduatı aynı
+  kalemin içindedir.
+- **Finansal türevler.** Net akım olarak küçük görünür ama işaret bilgisi
+  taşır; bu kalem 2014'te başlar — öncesinde **yoktur**, sıfır değil.
+
+## Şekil 05 — Finans hesabı kırılımı
+
+<GrafikEmbed
+  src="/projeler/odemeler-dengesi/05_finans_hesabi_kirilim.html"
+  baslik="Finans hesabının kapı kapı kırılımı, giriş işaretiyle ve rezerv hariç: 12 aylık birikimli ve aylık hâli"
+  no="05"
+  yukseklik={1291}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Finans hesabı `TP.ODANA6.Q13` (analitik sunum, **rezerv hariç**).
+Kalem bazında yükümlülük bacakları: DYY `Q15`, portföy `Q17` (hisse `Q18`, borç
+senedi `Q19`), diğer yatırım `Q25`, türevler `Q38`. Varlık bacakları: `Q14`,
+`Q16`, `Q20`, `Q37`. Mevduat ve kredi kırılımı ayrıntılı sunumdan:
+`TP.ODEAYRSUNUM6.Q143` ve `Q157`. Rezerv `Q33`.
+
+**Formül.** Net giriş, iki brüt bacağın farkıdır:
+
+$$
+F_t=\underbrace{\big(\text{DYY}^{y}_t+\text{PORT}^{y}_t+\text{TÜREV}^{y}_t+\text{DİĞER}^{y}_t\big)}_{\text{brüt yükümlülük oluşumu}}-\underbrace{\big(\text{DYY}^{v}_t+\text{PORT}^{v}_t+\text{TÜREV}^{v}_t+\text{DİĞER}^{v}_t\big)}_{\text{yerleşiklerin dış varlık edinimi}}
+$$
+
+Kimlik <Deger proje="odemeler-dengesi" anahtar="kimlik_isaret_n" ondalik={0}>431</Deger>
+ayda sınandı; en büyük sapma
+<Deger proje="odemeler-dengesi" anahtar="kimlik_isaret_maks_sapma" ondalik={2}>0,00</Deger>
+milyon USD.
+
+**Neden brüt bacaklar ayrı çizilir.** Net giriş sıfır olabilir; bu, "hiçbir şey
+olmadı" demek değildir. Yabancı
+<Deger proje="odemeler-dengesi" anahtar="brut_yukumluluk12_mia" ondalik={1}>66,7</Deger>
+milyar USD getirirken yerleşik
+<Deger proje="odemeler-dengesi" anahtar="yerlesik_varlik12_mia" ondalik={1}>34,3</Deger>
+milyar USD dışarı çıkarıyorsa, net rakamın altında iki ayrı davranış vardır ve
+ikisi farklı şoklara tepki verir. Yerleşiğin dış varlık edinimi, çoğu kez
+**yurt içi güven göstergesi** olarak okunur; yabancının brüt akımı ise küresel
+risk iştahına bağlıdır.
+
+**Yığındaki "diğer" kutusu uydurma değildir.** Portföy yükümlülüğünün hisse ve
+borç senedi dışındaki artığı (yatırım fonu payları) ve diğer yatırım
+yükümlülüğünün mevduat ile kredi dışındaki artığı (ticari krediler, SDR) ayrı
+kalemler olarak **türetilir**, böylece yığının toplamı brüt yükümlülüğe birebir
+oturur. Bir yığın grafikte kutuların toplamı çizgiye eşit değilse, o grafik
+okuru sessizce yanıltır.
+
+**Rezerv neden yığında değil.** Analitik sunumda rezerv varlıklar finans
+hesabının **içinde değildir**. Grafikte ayrı, kesikli bir çizgi olarak durur ve
+etiketinde "bu kırılıma dâhil değil" yazar. Bu koşuda 12 aylık rezerv akımı
+<Deger proje="odemeler-dengesi" anahtar="rezerv_akim12_mia" ondalik={1} isaret={true}>−27,2</Deger>
+milyar USD.
+
+**Bu koşudaki okuma.** Net girişin
+<Deger proje="odemeler-dengesi" anahtar="fin_giris12_mia" ondalik={1}>32,4</Deger>
+milyar USD'lik toplamı içinde net doğrudan yatırım yalnızca
+<Deger proje="odemeler-dengesi" anahtar="dyy_giris12_mia" ondalik={1}>0,3</Deger>
+milyar USD. Oysa yabancının **brüt** doğrudan yatırım girişi
+<Deger proje="odemeler-dengesi" anahtar="yuk_dyy12_mia" ondalik={1}>11,0</Deger>
+milyar USD — arada yerleşiklerin yurt dışı doğrudan yatırımı duruyor. Net
+sayıya bakıp "yabancı DYY durdu" demek, iki farklı olguyu tek sayıda
+karıştırmak olurdu.
+
+**Tuzaklar.** (i) Portföy borç senedi kalemi (`Q19`,
+<Deger proje="odemeler-dengesi" anahtar="yuk_port_borc12_mia" ondalik={1}>19,8</Deger>
+milyar USD) hem yurt içi tahvil alımını hem yurt dışı eurobond ihracını içerir;
+ikisi tamamen farklı risklerdir. (ii) Mevduat yükümlülüğü
+(<Deger proje="odemeler-dengesi" anahtar="yuk_mevduat12_mia" ondalik={1} isaret={true}>−1,4</Deger>
+milyar USD) yurt dışı bankaların Türkiye'deki mevduatıdır ve bir hafta içinde
+dönebilir. (iii) Türev kaleminin 2014 öncesi yokluğu bir veri eksikliği değil,
+**tanım genişlemesidir**.
+
+## Şekil 06 — Finansmanın kalitesi: kaliteli finansman ve sıcak para
+
+<GrafikEmbed
+  src="/projeler/odemeler-dengesi/06_kaliteli_finansman.html"
+  baslik="Kaliteli finansman (net DYY + özel sektör net uzun vadeli kredisi), sıcak para ve kalite payı — payda eşiğin altındayken oran boş bırakılır"
+  no="06"
+  yukseklik={1657}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Net DYY = `Q15` − `Q14`; özel sektör net uzun vadeli kredi =
+(`TP.ODEAYRSUNUM6.Q169` − `Q170`) + (`Q182` − `Q183`); sıcak para yükümlülük
+bacağından: portföy `Q17` bileşenleri, kısa vadeli kredi `Q167` + `Q180`,
+mevduat `Q143`.
+
+**Formüller.**
+
+$$
+\text{KALİTELİ}_t=\underbrace{(\text{DYY}^{y}_t-\text{DYY}^{v}_t)}_{\text{net doğrudan yatırım}}+\underbrace{\sum_{s}\big(\text{UVK}^{kul}_{s,t}-\text{UVK}^{öde}_{s,t}\big)}_{\text{özel sektör net uzun vadeli kredi}}
+$$
+
+$$
+\text{SICAK}_t=\text{PORTFÖY}^{y}_t+\text{KVKREDİ}^{y}_t+\text{MEVDUAT}^{y}_t
+$$
+
+**"Kalite" bir değer yargısı değildir.**
+
+<div class="not">
+  <span class="etiket">Tanım açıkça yazılır</span>
+  <Deger proje="odemeler-dengesi" anahtar="kalite_notu" ondalik={0}>"Kaliteli finansman" bir değer yargısı değil VADE ölçüsüdür: net doğrudan yatırım girişi + özel sektörün net uzun vadeli kredi kullanımı. Oranların paydası küçüldüğünde oran patladığı için DÜZEY başroldür; oran payda eşiğin altındayken boş bırakılır.</Deger>
+</div>
+
+Ölçtüğü şey **geri çağrılabilirliktir**: doğrudan yatırım ve uzun vadeli kredi,
+portföy ve mevduattan yavaş çıkar. Tanıma katılmayan okur bileşenleri üstteki
+iki panelde ayrı ayrı görür — bu, tanımın tartışmaya açık bırakılmasıdır, gizli
+bir varsayım değil.
+
+**Sıcak para neden yükümlülük bacağından.** Soru "yabancı ne kadar hızlı
+çıkabilir" olduğu için yalnızca yabancının getirdiği brüt akım sayılır.
+Yerleşiğin dış varlık edinimi başka bir sorunun cevabıdır ve buraya
+karıştırılmaz.
+
+**Oran neden ikincil.** Kalite payı iki paydayla hesaplanır: brüt yükümlülük
+oluşumu ve cari açık. İkisi de tek başına kırılgandır — payda sıfıra
+yaklaştığında oran tavana fırlar ve okur bunu "finansman kalitesi patladı" diye
+okur. Oysa değişen paydadır. Bu yüzden:
+
+$$
+r_t=\begin{cases}\dfrac{\text{KALİTELİ}^{12}_t}{d_t}\times 100, & |d_t|\ge \bar d\\[6pt] \text{tanımsız (grafikte boşluk)}, & |d_t|<\bar d\end{cases}
+$$
+
+Eşik
+<Deger proje="odemeler-dengesi" anahtar="payda_esik_mia" ondalik={0}>10</Deger>
+milyar USD (mutlak, 12 aylık birikimli). Eşik yüzünden boş bırakılan ay sayısı
+ölçülüp raporlanıyor: brüt paydada
+<Deger proje="odemeler-dengesi" anahtar="kalite_bos_ay_brut" ondalik={0}>118</Deger>
+ay, cari açık paydasında
+<Deger proje="odemeler-dengesi" anahtar="kalite_bos_ay_acik" ondalik={0}>160</Deger>
+ay. Grafikteki boşluklar bu yüzden vardır ve gerekçeleri altyazıda durur.
+
+**Bu koşudaki okuma.**
+*<Deger proje="odemeler-dengesi" anahtar="kalite_cumlesi" ondalik={0}>Son 12 ayda kaliteli finansmanın neredeyse tamamı özel sektörün net uzun vadeli kredisinden geliyor; net doğrudan yatırımın payı ihmal edilebilir düzeyde.</Deger>*
+Kalite payı brüt yükümlülüğe göre
+%<Deger proje="odemeler-dengesi" anahtar="kalite_pay_brut" ondalik={1}>64,0</Deger>
+(2010 sonrası medyan
+%<Deger proje="odemeler-dengesi" anahtar="kalite_pay_brut_medyan" ondalik={1}>33,2</Deger>),
+cari açığı karşılama oranı
+%<Deger proje="odemeler-dengesi" anahtar="kalite_pay_acik" ondalik={1}>109,7</Deger>
+(medyan
+%<Deger proje="odemeler-dengesi" anahtar="kalite_pay_acik_medyan" ondalik={1}>36,2</Deger>).
+
+Bu tablonun trader açısından anlamı şudur: **kalite oranı yüksek ama bileşimi
+tek bacaklı.** Kaliteli finansmanın neredeyse tamamı uzun vadeli kredi; net
+doğrudan yatırım fiilen sıfır. Uzun vadeli kredi bir sendikasyon piyasasına
+bağlıdır ve o piyasa kapanabilir — fabrika yatırımı gibi "içeride kilitli"
+değildir. Kalite ölçüsü vade üzerinden kurulduğu için bu ayrımı yakalamaz;
+ayrımı **bileşen panellerinden** okumak gerekir.
+
+**Tuzaklar.** (i) Kalite oranının %100'ü aşması, cari açığın tamamının uzun
+vadeli parayla finanse edildiği anlamına gelir — ama aynı dönemde rezerv
+eriyorsa, kimliğin başka bir yerinde bir sızıntı vardır (bkz. net hata ve
+noksan). (ii) Oranların medyanı 2010 sonrası penceredendir; daha uzun bir
+pencere farklı bir referans verir.
+
+## Şekil 07 — Uzun vadeli dış borç çevirme oranı: iki tanım yan yana
+
+<GrafikEmbed
+  src="/projeler/odemeler-dengesi/07_rollover.html"
+  baslik="Bankalar ve reel sektör için uzun vadeli çevirme oranı (bu çalışmanın türetmesi) ile TCMB'nin kısa+uzun vadeyi kapsayan kendi oranı"
+  no="07"
+  yukseklik={1213}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Türetilen oran ayrıntılı sunumun bacaklarından: bankalar
+`TP.ODEAYRSUNUM6.Q169` (uzun vadeli kredi kullanımı) ve `Q170` (geri ödeme);
+reel sektör `Q182` ve `Q183`. TCMB'nin kendi oranları `bie_oderoll`
+(`TP.ODEROLL.K1` bankalar, `K2` diğer sektörler; `K3`/`K4` tahvil dâhil
+sürümler) ve **yüzde** olarak yayımlanır.
+
+**Formül.**
+
+$$
+\text{ROLL}^{UV}_{s,t}=\frac{\sum_{k=0}^{11}\text{kullanım}_{s,t-k}}{\sum_{k=0}^{11}\text{ödeme}_{s,t-k}}\times 100
+$$
+
+**Neden 12 aylık toplamlardan, aylık oranların ortalamasından değil.** Aylık
+geri ödeme bacağı bazı aylarda çok küçüktür; aylık oran hesaplanırsa çizgi
+tavana fırlar ve o tek ay bütün ortalamayı yönetir. Pay ve payda **ayrı ayrı**
+12 aya toplanır, sonra bölünür. Payda 500 milyon USD'nin altındaysa oran boş
+bırakılır: böyle bir paydada "çevirme oranı" bir orandan çok bölme kazasıdır.
+
+**İki tanım aynı seri değildir — ve bu bir hata değildir.**
+
+<div class="not">
+  <span class="etiket">Kapsam farkı, veri hatası değil</span>
+  <Deger proje="odemeler-dengesi" anahtar="roll_kapsam_notu" ondalik={0}>TCMB'nin çevirme oranı kısa+uzun vadeyi kapsar; burada türetilen oran YALNIZ uzun vadeli krediyi ölçer. Fark kapsam farkıdır, veri hatası değildir.</Deger>{' '}
+  Ölçülen ortalama mutlak fark bankada{' '}
+  <Deger proje="odemeler-dengesi" anahtar="roll_bnk_kapsam_farki" ondalik={1}>68,5</Deger>{' '}
+  puan, reel sektörde{' '}
+  <Deger proje="odemeler-dengesi" anahtar="roll_dgr_kapsam_farki" ondalik={1}>17,1</Deger>{' '}
+  puan (n = <Deger proje="odemeler-dengesi" anahtar="roll_kiyas_n" ondalik={0}>241</Deger> ay).
+  Bu bir <strong>kıyastır, doğrulama değildir</strong>: eşit çıkmaları
+  beklenmez, aynı seri gibi sunulmaları yanlış olurdu.
+</div>
+
+**Bu koşudaki okuma.**
+*<Deger proje="odemeler-dengesi" anahtar="roll_cumlesi" ondalik={0}>Uzun vadeli dış borç çevirme oranı bankalarda ve reel sektörde 100'ün belirgin üzerinde; TCMB'nin kısa+uzun vadeyi kapsayan kendi oranı daha düşük ve fark kapsam farkıdır.</Deger>*
+Bankalarda
+%<Deger proje="odemeler-dengesi" anahtar="roll_bnk" ondalik={1}>151,3</Deger>
+(TCMB
+%<Deger proje="odemeler-dengesi" anahtar="roll_bnk_tcmb" ondalik={1}>114,4</Deger>),
+reel sektörde
+%<Deger proje="odemeler-dengesi" anahtar="roll_dgr" ondalik={1}>231,4</Deger>
+(TCMB
+%<Deger proje="odemeler-dengesi" anahtar="roll_dgr_tcmb" ondalik={1}>163,6</Deger>).
+
+**Tarihsel bant (2010 sonrası,
+<Deger proje="odemeler-dengesi" anahtar="roll_ay_sayisi" ondalik={0}>198</Deger>
+ay).** Bankalarda
+%<Deger proje="odemeler-dengesi" anahtar="roll_bnk_min" ondalik={1}>61,5</Deger>
+ile
+%<Deger proje="odemeler-dengesi" anahtar="roll_bnk_maks" ondalik={1}>345,0</Deger>
+arası, medyan
+%<Deger proje="odemeler-dengesi" anahtar="roll_bnk_medyan" ondalik={1}>112,7</Deger>;
+oran
+<Deger proje="odemeler-dengesi" anahtar="roll_bnk_100_alti_ay" ondalik={0}>72</Deger>
+ayda 100'ün altında kaldı. Reel sektörde bant
+%<Deger proje="odemeler-dengesi" anahtar="roll_dgr_min" ondalik={1}>62,1</Deger>
+–
+%<Deger proje="odemeler-dengesi" anahtar="roll_dgr_maks" ondalik={1}>231,4</Deger>,
+medyan
+%<Deger proje="odemeler-dengesi" anahtar="roll_dgr_medyan" ondalik={1}>116,7</Deger>,
+100 altı ay sayısı
+<Deger proje="odemeler-dengesi" anahtar="roll_dgr_100_alti_ay" ondalik={0}>51</Deger>.
+
+**Okuma kuralı.** %100 çizgisi kritiktir: üstü, borcun tamamının çevrilip
+üstüne yeni borçlanıldığı; altı, sektörün **net geri ödeme** yaptığı anlamına
+gelir. Net geri ödeme, ülkeden döviz çıkışıdır ve cari denge iyileşse bile kur
+üzerinde baskı yaratır. 2018–19 döneminde tam olarak bu olmuştu: cari açık
+kapanırken çevirme oranı 100'ün altına düştü ve "kapanan cari açık" kuru
+rahatlatmadı.
+
+**Tuzaklar.** (i) Çevirme oranı bir **oran**dır; sektörün borç stoku
+küçülürken oran yükselebilir. Düzeyi Şekil 08'den okuyun. (ii) TCMB'nin oranı
+tahvil dâhil ve hariç iki sürümde yayımlanır; grafikte üçü de var ama üçünü
+tek bir "çevirme oranı" diye anmak yanlış olur.
+
+## Şekil 08 — Çevirme oranının bacakları
+
+<GrafikEmbed
+  src="/projeler/odemeler-dengesi/08_rollover_bacaklar.html"
+  baslik="Bankalar ve reel sektör için uzun vadeli kredi kullanımı ve geri ödemesi (12 aylık toplam) ile net bakiye"
+  no="08"
+  yukseklik={1113}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Banka bacakları `Q169` (kullanım, oranın **payı**) ve `Q170` (geri
+ödeme, oranın **paydası**); reel sektör `Q182` ve `Q183`. Hepsi 12 aylık
+toplam, milyon USD → milyar USD.
+
+**Formül.** Altın çubuklar net bakiyedir:
+
+$$
+\text{NET}^{UV}_{s,t}=\sum_{k=0}^{11}\text{kullanım}_{s,t-k}-\sum_{k=0}^{11}\text{ödeme}_{s,t-k}
+$$
+
+**Bu şekil olmadan çevirme oranı okunamaz.** Oran yükselirken **kullanımın mı
+arttığı** yoksa **geri ödemenin mi düştüğü**, ancak bacaklar ayrı çizilince
+görülür. İkisi tamamen farklı hikâyelerdir:
+
+- Kullanım artıyorsa: sektörün dış borçlanma **iştahı** ve piyasa **erişimi**
+  var. Genişleyici, ama dış borç stokunu büyütür.
+- Geri ödeme düşüyorsa: vade yapısı seyrelmiş, o yıl ödenecek anapara azalmış.
+  Oran "iyileşir" ama bu bir erişim iyileşmesi değildir — takvim etkisidir.
+
+**Kimlik denetimi.** Ayrıntılı sunumun net uzun vadeli kredi kalemi (`Q168`
+bankalar, `Q181` reel sektör) kullanım eksi geri ödemeye birebir eşit olmalıdır
+ve öyle çıkıyor — bacakların aynı tablodan geldiğinin kanıtı budur.
+
+**Varsayımlar ve tuzaklar.** (i) Genel hükümetin uzun vadeli kredi bacağı bu
+şekilde çizilmez ama finansman ihtiyacı hesabına (Şekil 11) **girer**; kamu ile
+özel sektörün çevirme davranışı farklı olduğu için oran yalnız özel sektör için
+türetilir. (ii) Bu bacaklar **kredidir**; tahvil (eurobond) portföy
+yükümlülüğüdür ve Şekil 12'de ayrı durur. Krediyle tahvili toplayıp tek bir
+"dış borçlanma" serisi yapmak, iki farklı piyasanın erişim koşullarını
+karıştırır.
+
+## Şekil 09 — Net hata ve noksan
+
+<GrafikEmbed
+  src="/projeler/odemeler-dengesi/09_net_hata_noksan.html"
+  baslik="Net hata ve noksan: aylık, 12 aylık birikimli, 12 aylık standart sapma ve büyüklük ölçüleri"
+  no="09"
+  yukseklik={1139}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** `TP.ODANA6.Q31` (analitik sunum). Ayrıntılı sunumdaki `Q210` ile
+birebir aynıdır; bu da kimlik olarak sınanır.
+
+**Formüller.** Büyüklük iki ölçüyle raporlanır:
+
+$$
+\text{NHN oranı}_t=\frac{\left|NHN^{12}_t\right|}{\left|CA^{12}_t\right|}\times 100
+$$
+
+$$
+p_t=\frac{100}{35}\sum_{k=1}^{35}\mathbf{1}\big(|NHN_{t-k}|<|NHN_t|\big)
+$$
+
+İkincisi bir **yüzdelik dilimdir**: "bu ay olağandışı mı" sorusuna sabit bir
+eşik uydurmadan, son 36 ayın kendi dağılımıyla cevap verir. %100'e yakın bir
+değer, son üç yılın en büyük mutlak sapması demektir.
+
+**NHN nedir.** Ödemeler dengesi kimliğinin kapanması için gereken **artıktır**.
+Kaydedilmemiş akımları, ölçüm hatalarını ve zamanlama farklarını birlikte
+taşır. Kaynağı bu grafikten **çıkarılamaz** — bu sayfa NHN'yi ölçer,
+yorumlamaz.
+
+**Neden yine de bakılır.** Çünkü büyüklüğü bir şey söyler. NHN 12 aylık
+birikimli olarak cari dengenin yarısı kadar bir mertebeye ulaştıysa, ödemeler
+dengesinin **kaydedilmiş** kısmından çıkarılan her sonuç o kadar zayıflar. Bu
+koşuda 12 aylık NHN
+<Deger proje="odemeler-dengesi" anahtar="nhn12_mia" ondalik={1} isaret={true}>−20,4</Deger>
+milyar USD ve |NHN| / |cari denge| oranı
+%<Deger proje="odemeler-dengesi" anahtar="nhn_oran" ondalik={1}>52,6</Deger>.
+Tarihçe
+<Deger proje="odemeler-dengesi" anahtar="nhn12_min_mia" ondalik={1}>−21,3</Deger>
+milyar USD
+(<Deger proje="odemeler-dengesi" anahtar="nhn12_min_donem" ondalik={0}>Mayıs 2020</Deger>)
+ile
+<Deger proje="odemeler-dengesi" anahtar="nhn12_maks_mia" ondalik={1}>27,0</Deger>
+milyar USD
+(<Deger proje="odemeler-dengesi" anahtar="nhn12_maks_donem" ondalik={0}>Mart 2023</Deger>)
+arasında; mevcut değer tüm tarihçenin
+%<Deger proje="odemeler-dengesi" anahtar="nhn_yuzdelik_tarihce" ondalik={1}>0,2</Deger>
+yüzdelik diliminde — yani **tarihçenin en negatif ucuna** yakın. Aylık serinin
+12 aylık standart sapması
+<Deger proje="odemeler-dengesi" anahtar="nhn_std12_mia" ondalik={1}>3,0</Deger>
+milyar USD; en güncel aylık gözlemin 36 aylık yüzdelik dilimi ise
+%<Deger proje="odemeler-dengesi" anahtar="nhn_yuzdelik36" ondalik={1}>2,9</Deger>
+— yani **o ayın kendisi** olağandışı değil; olağandışı olan, birikimli
+toplamın nereye vardığıdır.
+
+**Tuzaklar.** (i) NHN'yi "kayıt dışı sermaye çıkışı" diye okumak yaygın ama
+kanıtsız bir yorumdur; kalem zamanlama farklarını da taşır ve revizyonlarla
+büyük ölçüde değişir. (ii) İşareti kalıcı olarak tek yöne yerleşmiş bir NHN,
+kaydedilmemiş bir **sistematik** akıma işaret eder; ama hangi akım olduğu bu
+seriden bilinmez. (iii) NHN, kimliğin kapanması için türetildiğinden diğer tüm
+kalemlerin revizyonunu üstüne toplar — en çok revize olan kalemdir.
+
+## Şekil 10 — Ödemeler dengesi kimliği: şelale
+
+<GrafikEmbed
+  src="/projeler/odemeler-dengesi/10_odemeler_dengesi_kimligi.html"
+  baslik="Kimliğin giriş işaretiyle yazılmış hâli, son 12 ay ve bir önceki 12 ay için şelale grafiği"
+  no="10"
+  yukseklik={1175}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Beş kalem: cari denge `Q01`, sermaye hesabı `Q12`, net hata ve noksan
+`Q31`, net finansman girişi (rezerv hariç) `−Q13`, rezerv değişimi `Q33`. Hepsi
+12 aylık birikimli.
+
+**Formül.** Şelale, kimliğin giriş işaretiyle yazılmış hâlidir ve toplam
+çubuğu **sıfır olmak zorundadır**:
+
+$$
+CA^{12}+KA^{12}+NHN^{12}+F^{12}-\Delta R^{12}=0
+$$
+
+Toplam çubuğunun sıfırdan sapması bir veri değil, bir **hesap** hatası olurdu.
+Kimlik <Deger proje="odemeler-dengesi" anahtar="kimlik_bop_n" ondalik={0}>431</Deger>
+ayda sınandı; en büyük sapma
+<Deger proje="odemeler-dengesi" anahtar="kimlik_bop_maks_sapma" ondalik={2}>0,00</Deger>
+milyon USD.
+
+**Rezerv neden eksi işaretle giriyor.** Rezerv **artışı** bir finansman kaynağı
+değildir; gelen kaynağın rezervde biriken kısmıdır. Kimlikte bu yüzden
+diğer kalemlerden düşülür. Tersi de doğrudur: rezerv **azalışı** kimlikte
+pozitif bir katkı gibi görünür, çünkü fiilen bir finansman kaynağı olarak
+kullanılmıştır — ve bu, sürdürülemez olanıdır.
+
+**İki panel neden var.** Alt panel bir önceki 12 aylık dilimdir. Şelale tek
+başına bir fotoğraftır; iki fotoğrafı alt alta koymak, hangi kalemin hangi
+yönde değiştiğini tek bakışta gösterir. Bir ülkenin dış dengesinde önemli olan
+seviye değil, **kompozisyonun kayma yönüdür**.
+
+**Tuzaklar.** (i) Şelale sıralaması bir nedensellik sırası değildir; kalemler
+eşanlı belirlenir. (ii) 12 aylık birikimli şelale, dönem içindeki tek aylık
+şokları görünmez kılar — Şekil 05'in alt paneli bu boşluğu doldurur.
+
+## Şekil 11 — Brüt dış finansman ihtiyacı ve nasıl karşılandığı
+
+<GrafikEmbed
+  src="/projeler/odemeler-dengesi/11_finansman_ihtiyaci.html"
+  baslik="Brüt dış finansman ihtiyacı (cari açık + uzun vadeli anapara) ve kimlikten birebir türetilen karşılanma bileşenleri"
+  no="11"
+  yukseklik={1339}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Anapara geri ödemeleri: banka `Q170` + reel sektör `Q183` + genel
+hükümet `Q178` + uzun vadeli tahvil `TP.ODEYDIEBS.A21`. Brüt kullanım: `Q169` +
+`Q182` + `Q177` + `TP.ODEYDIEBS.A11`.
+
+**Formül.** İhtiyaç, manşet sunumda cari **açık** (fazla varsa sıfır) artı uzun
+vadeli anaparadır:
+
+$$
+\text{İHTİYAÇ}^{12}_t=\max\!\big(-CA^{12}_t,\,0\big)+\text{ANAPARA}^{12}_t
+$$
+
+Karşılanma tarafı ise **kimlikten türetilir, tahmin edilmez**. Ödemeler dengesi
+kimliğine uzun vadeli anapara **iki tarafa da** eklenirse:
+
+$$
+\text{KAYNAK}^{12}_t=\underbrace{\text{KULLANIM}^{12}_t}_{\text{UV brüt}}+\underbrace{\big(F^{12}_t-\text{UVNET}^{12}_t\big)}_{\text{diğer net giriş}}+KA^{12}_t+NHN^{12}_t-\Delta R^{12}_t
+$$
+
+ve iki taraf birebir kapanır. Kimlik
+<Deger proje="odemeler-dengesi" anahtar="kimlik_ihtiyac_n" ondalik={0}>404</Deger>
+ayda sınandı; en büyük sapma
+<Deger proje="odemeler-dengesi" anahtar="kimlik_ihtiyac_maks_sapma" ondalik={2}>0,00</Deger>
+milyon USD.
+
+**Eurobond neden hem ihtiyaçta hem kaynakta.** Tahvil bir kredi değil, **portföy
+yükümlülüğüdür**. Anapara ödemesini ihtiyaca yazıp ihracını kaynağa yazmamak
+tabloyu bir bacak kadar şişirirdi — bu, dış finansman ihtiyacı hesaplarında en
+sık yapılan hatadır.
+
+**İki ihtiyaç tanımı neden ayrışıyor.** Üst paneldeki tanım cari **fazla**
+dönemlerinde cari kalemi sıfırlar (fazla bir ihtiyaç değildir); alt paneldeki
+kimlik sürümü fazlayı eksi işaretle taşır. İki çizgi bu yüzden yalnızca fazla
+dönemlerinde ayrışır ve bu ayrışma bir hata değil, iki farklı sorunun iki farklı
+cevabıdır.
+
+**Bu koşudaki okuma.**
+*<Deger proje="odemeler-dengesi" anahtar="ihtiyac_cumlesi" ondalik={0}>Brüt dış finansman ihtiyacının büyük kısmı cari açıktan değil, uzun vadeli anapara geri ödemesinden geliyor.</Deger>*
+İhtiyaç
+<Deger proje="odemeler-dengesi" anahtar="ihtiyac12_mia" ondalik={1}>125,7</Deger>
+milyar USD; bunun
+<Deger proje="odemeler-dengesi" anahtar="cari_acik12_mia" ondalik={1}>38,9</Deger>
+milyar USD'si cari açık
+(%<Deger proje="odemeler-dengesi" anahtar="ihtiyacta_cari_acik_payi" ondalik={1}>30,9</Deger>),
+<Deger proje="odemeler-dengesi" anahtar="uv_anapara12_mia" ondalik={1}>86,8</Deger>
+milyar USD'si uzun vadeli anapara. Buna karşılık uzun vadeli brüt kullanım
+<Deger proje="odemeler-dengesi" anahtar="uv_kullanim12_mia" ondalik={1}>157,9</Deger>
+milyar USD ve net
+<Deger proje="odemeler-dengesi" anahtar="uv_net12_mia" ondalik={1} isaret={true}>+71,1</Deger>
+milyar USD — yani uzun vadeli bacak yalnız çevrilmiyor, üstüne yeni borçlanma
+da yapılıyor.
+
+**Trader için anlamı.** Brüt ihtiyaç, ülkenin **her yıl piyasaya geri gitmek
+zorunda olduğu tutardır.** Kur şoku ya da küresel risk iştahının kapanması
+durumunda tehlikede olan sayı cari açık değil, işte bu sayıdır. Rezervin bu
+sayıya oranı (dış finansman ihtiyacı karşılama oranı), derecelendirme
+kuruluşlarının en çok baktığı metriklerden biridir; rezerv tarafı için
+<a href="/projeler/tcmb-net-rezerv/">TCMB Net Rezerv Takibi</a> sayfasına bakın.
+
+**Tuzaklar.** (i) Bu hesap **kısa vadeli borcu içermez**: kısa vadeli borç
+tanım gereği bir yıl içinde döner ve genellikle otomatik çevrilir; dâhil
+edilirse ihtiyaç birkaç yüz milyar dolara çıkar ve mertebe anlamını yitirir.
+(ii) Anapara ödemeleri **gerçekleşmiş** akımlardır, ileriye dönük bir takvim
+değildir; vadesi gelecek borcun takvimi için TCMB'nin ayrı yayımladığı dış borç
+ödeme projeksiyonlarına bakmak gerekir.
+
+## Şekil 12 — Piyasa erişimi ve ödeme takvimi
+
+<GrafikEmbed
+  src="/projeler/odemeler-dengesi/12_eurobond_ve_odeme_takvimi.html"
+  baslik="Eurobond ihracı ve anapara ödemesi (aylık ve 12 aylık) ile haftalık dış borç ödeme takvimi — sayfanın en taze verisi"
+  no="12"
+  yukseklik={1503}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Eurobond akımı `bie_odeydiebs`: toplam ihraç `TP.ODEYDIEBS.A1`, uzun
+vadeli ihraç `A11`, sektör kırılımları `A112` (genel hükümet), `A113`
+(bankalar), `A114` (diğer sektörler); geri ödeme `A2`, uzun vadeli `A21`.
+Haftalık ödeme takvimi `bie_dbafod`: toplam `TP.D1TOP`, Hazine `TP.D2HAZ`,
+diğer `TP.D3DIG`, TCMB `TP.D4TCMB` — **çarşamba** frekansı, milyon USD.
+
+**Formül.** Net piyasa erişimi:
+
+$$
+\text{NET}^{EB,12}_t=\sum_{k=0}^{11}\text{ihraç}_{t-k}-\sum_{k=0}^{11}\text{ödeme}_{t-k}
+$$
+
+**Panellerin dönemi farklıdır ve bilerek öyle bırakıldı.** Aylık ödemeler
+dengesi yaklaşık iki ay gecikmeli, haftalık borç ödeme takvimi birkaç günlük.
+Üçünü aynı eksene zorlamak, **taze veriyi bayat verinin hızına düşürürdü**.
+Haftalık panel bu sayfanın en taze bacağıdır ve kendi çıpasıyla etiketlenir.
+
+**Seyrek seri uyarısı.** Eurobond sektör kırılımları, ihraç **olmayan** ayda
+boş gelir — sıfır değil. Grafikte o aylarda çubuk yoktur. Toplam ve net hesabı
+kırılımlardan değil, toplam serilerden (`A1`/`A2`) kurulur; kırılımları
+toplayıp toplam üretmek, boş ayları sıfır kabul etmek anlamına gelirdi.
+
+**Bu koşudaki okuma.** Son 12 aylık dilimde tahvil ihracı
+<Deger proje="odemeler-dengesi" anahtar="eb_kullanim12_mia" ondalik={1}>57,9</Deger>
+milyar USD, geri ödeme
+<Deger proje="odemeler-dengesi" anahtar="eb_odeme12_mia" ondalik={1}>34,7</Deger>
+milyar USD, net piyasa erişimi
+<Deger proje="odemeler-dengesi" anahtar="eb_net12_mia" ondalik={1} isaret={true}>+23,2</Deger>
+milyar USD. Haftalık bacakta en güncel gözlemde toplam ödeme
+<Deger proje="odemeler-dengesi" anahtar="hafta_odeme_mn" ondalik={1}>718,3</Deger>
+milyon USD (Hazine
+<Deger proje="odemeler-dengesi" anahtar="hafta_odeme_hazine_mn" ondalik={1}>708,2</Deger>,
+diğer
+<Deger proje="odemeler-dengesi" anahtar="hafta_odeme_diger_mn" ondalik={1}>8,4</Deger>,
+TCMB
+<Deger proje="odemeler-dengesi" anahtar="hafta_odeme_tcmb_mn" ondalik={1}>1,7</Deger>);
+son dört haftalık toplam
+<Deger proje="odemeler-dengesi" anahtar="hafta_odeme_4h_mn" ondalik={0}>1.127</Deger>
+milyon USD, son 52 hafta
+<Deger proje="odemeler-dengesi" anahtar="hafta_odeme_52h_mia" ondalik={1}>39,3</Deger>
+milyar USD.
+
+**Neden haftalık takvim bu sayfada.** Aylık ödemeler dengesi bir **geçmiş
+raporudur**; haftalık ödeme takvimi ise piyasanın önündeki döviz talebinin
+takvimidir. Büyük bir Hazine eurobond itfası olan hafta, spot ve forward
+piyasada gözle görülür bir akım yaratır. Bu iki bacağın aynı sayfada olması,
+"veri geldi mi" sorusu ile "bu hafta ne olacak" sorusunu ayırmak içindir.
+
+**Tuzaklar.** (i) Haftalık seri **ödemeleri** gösterir, ihraçları değil; net
+bir tablo vermez. (ii) Seri 2012 sonundan başlar; daha eski karşılaştırma
+mümkün değildir. (iii) Eurobond ihracı ile Şekil 05'teki portföy borç senedi
+kalemi örtüşür ama aynı değildir: ikincisi yurt içi tahvil alımını da içerir.
+
+## Trader için okuma kuralları
+
+Bu sayfadaki serilerin bir pozisyona nasıl çevrileceği üzerine, kalıcı
+kurallar:
+
+1. **Net değil, brüt bakın.** Cari açık daralırken brüt finansman ihtiyacı
+   sabit kalabilir. Kur riskinin ölçüsü brüttür.
+2. **Kompozisyon seviyeden önemlidir.** Aynı büyüklükteki bir cari açık, uzun
+   vadeli kredi ile finanse edildiğinde bir, sıcak parayla finanse edildiğinde
+   başka bir riski taşır. Kalite payını (Şekil 06) seviyeyle birlikte okuyun.
+3. **Çevirme oranı bir stres göstergesidir, bir büyüme göstergesi değil.**
+   100'ün altına düşüşün başladığı ay, kur baskısının başladığı aydan genellikle
+   öncedir. Bacakları (Şekil 08) görmeden oranı yorumlamayın.
+4. **Rezerv bacağı kimliğin kapanış valfidir.** Cari açık finansmanla
+   karşılanmıyorsa fark rezervden gider; rezerv de sınırlıysa kalan tek
+   değişken kurdur. Kimlik şelalesi (Şekil 10) bu sıralamayı görünür kılar.
+5. **Net hata ve noksanı büyükse, diğer bütün çıkarımlarınızı iskonto edin.**
+   |NHN|/|CA| oranı yükseldikçe kaydedilmiş kalemlerden yapılan çıkarımların
+   güvenilirliği düşer.
+6. **Çekirdek cari dengeyi politika değerlendirmesinde kullanın, finansman
+   hesabında kullanmayın.** Fatura manşetten ödenir.
+7. **Revizyonu bir olay olarak izleyin.** Ödemeler dengesi son 3–12 ayı rutin
+   olarak revize eder; bir "sürpriz" verinin yarısı, önceki ayın revizyonundan
+   gelebilir.
+8. **Tarihleri karıştırmayın.** Bu sayfada dört ayrı çıpa var. Üç aylık orana
+   bakıp aylık akım hakkında cümle kurmak, en ucuz üretilen hatadır.
+
+## Denetim katmanı: bu sayfa nasıl yanlış olmaktan korunuyor
+
+Ödemeler dengesi, kimlikler üzerine kurulu olduğu için **kendi kendini
+sınayabilen** ender veri kümelerinden biridir. Bu hat o imkânı sonuna kadar
+kullanır: her koşuda
+<Deger proje="odemeler-dengesi" anahtar="kimlik_toplam" ondalik={0}>21</Deger>
+denetim çalışır ve bu koşuda
+<Deger proje="odemeler-dengesi" anahtar="kimlik_gecen" ondalik={0}>21</Deger>
+tanesi geçti.
+
+### Durdurucu denetimler
+
+Aşağıdakilerden biri düşerse hat **durur** ve yayına hiçbir şey gitmez — eski
+grafiğin üstüne taze bir tarih yazılmaz:
+
+- **Ana kimlik.** −CA = net finansman girişi + sermaye hesabı + NHN − rezerv.
+- **İşaret kimliği.** Net giriş = brüt yükümlülük − yerleşik varlık edinimi.
+- **Yığın kimliği.** Yükümlülük kalemlerinin toplamı = brüt yükümlülük oluşumu
+  (Şekil 05'teki yığının toplamı çizgiye eşit olmalı).
+- **Sunum köprüsü.** Ayrıntılı sunumun rezerv dâhil finans hesabı = analitik
+  sunumun rezerv hariç kalemi + rezerv varlıklar;
+  <Deger proje="odemeler-dengesi" anahtar="kopru_n" ondalik={0}>422</Deger> ayda
+  sınandı.
+- **Çekirdek köprüsü.** Manşet = çekirdek + altın + enerji.
+- **Alt kalem kimliği.** CA = mal + hizmet + birincil + ikincil.
+- **Finansman ihtiyacı kimliği.** İhtiyaç = kaynak.
+- **GSYH mertebe denetimi.** 4 çeyreklik GSYH 1–2 trilyon USD bandının dışına
+  çıkarsa birim zinciri bozulmuştur.
+
+### Durdurucu olmayan ölçümler
+
+Bunlar hattı durdurmaz ama sayfada **görünür** kalır, çünkü gizlendiklerinde
+sessiz bayatlama üretirler:
+
+- **Kıyas: türetilen çevirme oranı ile TCMB'nin ODEROLL serisi.** Fark
+  <Deger proje="odemeler-dengesi" anahtar="roll_kiyas_fark" ondalik={1}>68,5</Deger>
+  puan ve bu bir **kapsam** farkıdır.
+- **İşaret sınaması: rezerv akımı ile rezerv stoku.** Korelasyon
+  <Deger proje="odemeler-dengesi" anahtar="rezerv_korelasyon" ondalik={3}>0,914</Deger>.
+- **Mal dengesi = ihracat − ithalat** ve **banka net UV kredi = kullanım −
+  ödeme** tutarlılıkları.
+
+### Bu koşunun kapsamı
+
+Aylık ailede
+<Deger proje="odemeler-dengesi" anahtar="seri_sayisi_aylik" ondalik={0}>91</Deger>
+seri,
+<Deger proje="odemeler-dengesi" anahtar="gozlem_aylik" ondalik={0}>552</Deger>
+aylık gözlem; haftalık ailede
+<Deger proje="odemeler-dengesi" anahtar="seri_sayisi_haftalik" ondalik={0}>4</Deger>
+seri. Tazelik durumu:
+*<Deger proje="odemeler-dengesi" anahtar="bayat_cumlesi" ondalik={0}>Veri taze: dört yayım ritminin dördü de kendi toleransı içinde, tazelik uyarısı yok.</Deger>*
+Uyarı durumu:
+*<Deger proje="odemeler-dengesi" anahtar="uyari_cumlesi" ondalik={0}>Bu koşuda uyarı düşmedi.</Deger>*
+<Deger proje="odemeler-dengesi" anahtar="uyari_metni" ondalik={0}>Bu koşuda uyarı yok.</Deger>
+
+Tam liste her koşuda
+[`uyarilar.json`](/projeler/odemeler-dengesi/uyarilar.json) dosyasına yazılır;
+sayfadaki canlı değerlerin kaynağı ise
+[`ozet.json`](/projeler/odemeler-dengesi/ozet.json).
+
+### Revizyon politikası
+
+<div class="not">
+  <span class="etiket">Yayımlanmış bir sayının değişmesi NORMALDİR</span>
+  <Deger proje="odemeler-dengesi" anahtar="revizyon_notu" ondalik={0}>Ödemeler dengesi TCMB'nin revizyon politikasına tabidir: son 3–12 ay rutin olarak, yıllık revizyonlarda daha geriye dönük değişir. Çekirdek cari denge TÜİK dış ticaret istatistiklerinden beslenir ve TÜİK revizyonu buraya da yansır.</Deger>
+</div>
+
+Bu, sayfadaki sayıların **canlı** olmasının sebebidir: metin sabit, sayı
+`ozet.json`'dan gelir. Revizyon geldiğinde cümlelerin yeniden yazılması
+gerekmez — cümleler sayıdan bağımsız kurulmuştur.
+
+## EVDS3 erişiminin kendi tuzakları
+
+Bu hattın verisi `https://evds3.tcmb.gov.tr/igmevdsms-dis/` ucundan çekilir;
+eski `evds2` servisi **kapalıdır** ve anahtar URL'de değil, istek
+**başlığında** taşınır. Üç tuzak doğrudan sessiz bayatlama üretir:
+
+1. **Yanıt yaklaşık 1000 satırda kırpılır ve aralığın SONUNDAN doldurulur.**
+   Fazlası uyarı vermeden atılır; kaybolan, serinin **başıdır**. Ödemeler
+   dengesinin aylık ailesi
+   <Deger proje="odemeler-dengesi" anahtar="gozlem_aylik" ondalik={0}>552</Deger>
+   gözlemle sınırın altında kaldığı için tek parça gider — ama GSYH paydasını
+   dolara çeviren **günlük kur serisi** 1990'ların ortasından bugüne binlerce iş
+   günüdür ve tek istekte çekilseydi yalnız son birkaç yılı dönerdi. Hat bu
+   yüzden günlük serileri 366 günlük, haftalık serileri 900 haftalık parçalar
+   hâlinde çeker; ayrıca dönen satır sayısı sınıra dayandığında **görünür bir
+   kırpma riski uyarısı** düşer — sessizce kabul edilmez.
+2. **Satır sınırı seri sayısına bağlı değildir.** Tek istekte altı seri çekmek
+   satır sayısını değiştirmez; seriler demetler hâlinde çekilir. Bir demette
+   bozuk kod varsa EVDS **bütün isteği** reddeder — o zaman seriler tek tek
+   denenir ve düşen seri adıyla raporlanır.
+3. **`LAST_UPDATED` bir tazelik ölçüsü değildir.** Metaveri kaydı, serinin son
+   gözlemiyle ilgisiz bir tarihe işaret edebilir; bu hatta ölçüldü ve birden
+   fazla veri grubunda tutarsız çıktı. Tazelik yalnız **son dolu gözlemden**
+   okunur.
+
+**Birim denetimi metaveriden yapılır.** Her veri grubunun birimi EVDS
+metaverisinden okunur ve beklenen değerle karşılaştırılır: ödemeler dengesi
+serileri **milyon USD**, çevirme oranları **yüzde**, GSYH **bin TL**, kur
+**TL**. Metaveri saparsa tanım ya da birim değişmiş demektir ve uyarı düşer.
+Farklı birimli serileri toplayan tek yer GSYH dönüşümüdür ve orada zincir
+yorumla belgelidir.
+
+**Önbellek TTL'lidir ve dönem değişince geçersizleşir.** Ağ düşerse eski
+önbelleğe düşülür ama **sessiz kalınmaz**: kaç gün eski olduğu yazılır, uyarı
+hesap katmanınca devralınıp `uyarilar.json`'a yazılır ve sayfanın başındaki
+koşu kutusunda görünür. Bu devir kritiktir — devralınmasaydı kaynak durduğunda
+hat yeşil biter, tarih ilerlemez ve sayfa hiçbir şey söylemezdi.
+
+## Sınırlar ve yorum notları
+
+Hiçbiri bir kalibrasyon sabitiyle kapatılmamıştır; kapatmak, ölçüm hatasını
+modele gömmek olurdu.
+
+- **Cari denge/GSYH oranı aylık akımdan geridedir.** Aradaki mesafe bu koşuda
+  <Deger proje="odemeler-dengesi" anahtar="oran_gecikmesi_ay" ondalik={1}>3,0</Deger>
+  ay. Oranı ekstrapolasyonla ileri taşımak mümkündü; yapılmadı, çünkü
+  ekstrapolasyon bir ölçüm değildir.
+- **"Kaliteli finansman" tanımı vade üzerinden kuruludur.** Uzun vadeli kredinin
+  bir sendikasyon piyasasına bağımlı olması, doğrudan yatırımın fiziki sermayeye
+  gömülü olmasından farklı bir risktir; tanım bu ayrımı yakalamaz. Bileşenler
+  bu yüzden ayrı panellerde durur.
+- **Sıcak para tanımı yükümlülük bacağındadır.** Yerleşiklerin dış varlık
+  edinimi dâhil edilmedi; "yabancı ne kadar hızlı çıkabilir" sorusu ile "yerleşik
+  ne kadar dışarı çıktı" sorusu ayrı tutuldu.
+- **Çevirme oranı yalnız uzun vadeli krediyi kapsar.** Kısa vadeli borç ve
+  tahvil bacağı dışarıdadır; TCMB'nin kendi oranıyla arasındaki
+  <Deger proje="odemeler-dengesi" anahtar="roll_bnk_kapsam_farki" ondalik={1}>68,5</Deger>
+  puanlık fark bundandır ve **düzeltilmedi, raporlandı**.
+- **Brüt dış finansman ihtiyacı kısa vadeli borcu içermez.** Kısa vadeli borç
+  tanım gereği yıl içinde döner; dâhil edilseydi mertebe anlamını yitirirdi.
+  Bu, standart bir tanım tercihidir ama tek tanım değildir.
+- **Net hata ve noksan yorumlanmaz.** Büyüklüğü ölçülür, kaynağı hakkında bu
+  sayfadan çıkarım yapılamaz.
+- **Rezerv akımı ile rezerv stoku aynı büyüklük değildir.** Stok değerleme
+  etkisi taşır (altın fiyatı, çapraz kurlar); akım taşımaz. İkisi arasında
+  beklenen şey eşitlik değil, **yön** birliğidir ve yön
+  %<Deger proje="odemeler-dengesi" anahtar="rezerv_ayni_yon" ondalik={1}>85,4</Deger>
+  oranında tutuyor.
+- **Hiçbir seride mevsimsel arındırma yapılmadı.** Bunun yerine 12 aylık
+  birikimli toplam kullanıldı; birikimli toplam mevsimselliği tanım gereği
+  giderir ama **12 ay gecikmeli tepki verir**. Bir dönüm noktası, birikimli
+  seride aylık seriden geç görünür — aylık çubuklar bu yüzden arkada durur.
+- **Reel getiri hesabı bu sayfada yayımlanmaz.**
+  <Deger proje="odemeler-dengesi" anahtar="fisher_not" ondalik={0}>Depo kuralı: reel getiri Fisher ile hesaplanır, basit çıkarmayla değil. Bu hat USD cinsi akım büyüklükleriyle çalışır ve şu an bir reel faiz serisi yayımlamaz.</Deger>
+- **Eurobond serisi 2010'da, haftalık takvim 2012 sonunda, çevirme oranı
+  2006'da başlar.** Daha geriye giden karşılaştırmalar bu kalemler için mümkün
+  değildir; boşluklar interpolasyonla kapatılmadı.
+- **Finansal türevler kalemi 2014'te başlar.** Öncesinde kalem **yoktur**,
+  sıfır değildir; toplama girerken sıfır kabul edilir ve bu bir tanım
+  genişlemesidir, veri eksikliği değil.
+
+## Kaynaklar
+
+- IMF, *Balance of Payments and International Investment Position Manual*
+  (BPM6) — hesap tanımları, işaret konvansiyonu, rezerv varlıkların sınıfı.
+- TCMB, *Ödemeler Dengesi İstatistikleri — Yöntemsel Açıklama* ve
+  *Ödemeler Dengesi Raporu* (analitik ve ayrıntılı sunum tanımları).
+- TCMB EVDS3, *Ödemeler Dengesi — Analitik Sunum* (`bie_odana6`) ve
+  *Ayrıntılı Sunum* (`bie_odeayrsunum6`).
+- TCMB EVDS3, *Altın ve Enerji Hariç Cari İşlemler Hesabı*
+  (`bie_hariccariacik`).
+- TCMB EVDS3, *Uzun Vadeli Dış Borç Çevirme Oranları* (`bie_oderoll`).
+- TCMB EVDS3, *Yurt Dışında İhraç Edilen Borçlanma Senetleri*
+  (`bie_odeydiebs`).
+- TCMB, *Dış Borç Ödemeleri (Haftalık)* (`bie_dbafod`).
+- TÜİK, *Dönemsel Gayrisafi Yurt İçi Hasıla* — üretim yöntemiyle, cari
+  fiyatlarla (`TP.GSYIH20.BY.B1GQ`).
+- TÜİK, *Dış Ticaret İstatistikleri* — çekirdek cari denge serisinin altında
+  yatan fasıl bazlı ihracat/ithalat verisi.

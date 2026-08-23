@@ -1,0 +1,291 @@
+---
+/**
+ * Günlük bültenin gövdesi. Veri, bulten/uret.py'nin yazdığı JSON'dan gelir
+ * (site/src/data/bulten/YYYY-MM-DD.json) ve DERLEME sırasında okunur — sayfada
+ * istemci tarafı veri çekme yoktur, bülten statik ve arşivlenebilir.
+ *
+ * Bölüm sırası bilinçli: önce sayılar (gösterge şeridi), sonra eşiği aşan olaylar,
+ * sonra takvim, en sonda haber. Sabah üç saniyede bakan biri ilk iki bölümden
+ * gerekli her şeyi almalı.
+ */
+interface Props {
+  b: any;
+}
+const { b } = Astro.props;
+
+const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not', bilgi: 'kayıt' };
+---
+
+<article class="bulten">
+  <header class="ust">
+    <p class="etiket kicker">Günlük bülten</p>
+    <h1>{b.tr_tarih} <span class="gun">{b.gun}</span></h1>
+    {b.haftalik && <p class="haftalik-rozet">Haftaya bakış — takvim kapsamı bu bültende geniş tutuldu</p>}
+    <p class="alt">
+      Sayılar veri hatlarının en son koşusundan; her satırın yanında hangi veri
+      sürümünden geldiği yazılıdır. Eşikler <code>bulten/ayar.py</code> içinde.
+    </p>
+  </header>
+
+  {b.yorum && (
+    <section class="yorum">
+      <p class="etiket">Günün okuması</p>
+      <div set:html={b.yorum} />
+    </section>
+  )}
+
+  <section class="gosterge-serit">
+    {b.gostergeler.map((g: any) => (
+      <div class="gosterge">
+        <span class="g-ad">{g.ad}</span>
+        <span class="g-deger">
+          {g.metin}<span class="g-birim">{g.birim}</span>
+        </span>
+        <span class:list={['g-fark', { arti: (g.fark ?? 0) > 0, eksi: (g.fark ?? 0) < 0 }]}>
+          {g.fark_metin ? `${g.fark_metin} ${g.birim}` : '—'}
+        </span>
+        <span class="g-tarih">{g.veri_tarihi}</span>
+      </div>
+    ))}
+  </section>
+
+  {b.one_cikanlar.length > 0 && (
+    <section class="blok">
+      <h2>Öne çıkanlar</h2>
+      <ul class="olay-liste onemli">
+        {b.one_cikanlar.map((o: any) => (
+          <li>
+            <span class="metin">{o.metin}</span>
+            {o.aciklama && <span class="dipnot">{o.aciklama}</span>}
+            <span class="kaynak-not">{o.hat} · veri {o.tarih}{o.onceki_tarih ? ` (kıyas: ${o.onceki_tarih})` : ''}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+
+  {b.kritik_takvim && b.kritik_takvim.length > 0 && (
+    <section class="blok kritik-blok">
+      <h2>Kritik takvim — önümüzdeki {b.kritik_takvim[b.kritik_takvim.length - 1].kalan_gun} gün</h2>
+      <p class="alt-not">
+        Yalnız birinci derece kayıtlar, önem sırasına göre değil TARİH sırasına göre.
+        Beklenti satırında “anket” piyasanın (TCMB Piyasa Katılımcıları Anketi),
+        “model” bu deponun kendi hesabının beklentisidir.
+      </p>
+      <ol class="kritik">
+        {b.kritik_takvim.map((k: any) => (
+          <li>
+            <span class="k-sayac">{k.kalan_gun === 0 ? 'bugün' : `+${k.kalan_gun} gün`}</span>
+            <span class="k-govde">
+              <span class="k-olay">{k.olay}</span>
+              <span class="k-zaman">{k.tr_tarih} {k.gun}{k.saat ? ` · ${k.saat}` : ''} · {k.ulke}</span>
+              {k.beklenti && <span class="k-beklenti">{k.beklenti}</span>}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
+
+  {b.gruplar.length > 0 && (
+    <section class="blok">
+      <h2>Hat hat değişim</h2>
+      {b.gruplar.map((g: any) => (
+        <div class="grup">
+          <h3>{g.baslik}</h3>
+          <ul class="olay-liste">
+            {g.olaylar.map((o: any) => (
+              <li class:list={[o.seviye]}>
+                <span class="metin">{o.metin}</span>
+                {o.aciklama && <span class="dipnot">{o.aciklama}</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+  )}
+
+  <section class="blok">
+    <h2>Takvim</h2>
+    {b.takvim.map((t: any) => (
+      <div class="takvim-blok">
+        <h3>{t.baslik} <span class="adet">{t.kayitlar.length}</span></h3>
+        {t.kayitlar.length === 0 ? (
+          <p class="bos">Bu aralıkta izlenen ölçütlerde kayıt yok.</p>
+        ) : (
+          <table class="takvim">
+            <tbody>
+              {t.kayitlar.map((k: any) => (
+                <tr class:list={[{ kritik: k.onem === 1 }]}>
+                  <td class="t-tarih">{k.tr_tarih}<span class="t-gun">{k.gun}</span></td>
+                  <td class="t-saat">{k.saat || '—'}</td>
+                  <td class="t-ulke">{k.ulke}</td>
+                  <td class="t-olay">
+                    {k.olay}
+                    {k.kesinlik !== 'kesin' && <span class="damga">{k.kesinlik}</span>}
+                    {k.beklenti && <span class="beklenti">{k.beklenti}</span>}
+                    {k.not_ && <span class="dipnot">{k.not_}</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    ))}
+  </section>
+
+  {(b.haberler.kurum.length > 0 || b.haberler.haber.length > 0) && (
+    <section class="blok">
+      <h2>Kaynak taraması</h2>
+      {b.haberler.kurum.length > 0 && (
+        <>
+          <h3>Kurum duyuruları</h3>
+          <ul class="haber-liste kurum">
+            {b.haberler.kurum.map((h: any) => (
+              <li>
+                <a href={h.baglanti} target="_blank" rel="noopener">{h.baslik}</a>
+                <span class="kaynak-not">{h.kaynak}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {b.haberler.haber.length > 0 && (
+        <>
+          <h3>Başlıklar</h3>
+          <ul class="haber-liste">
+            {b.haberler.haber.map((h: any) => (
+              <li>
+                <a href={h.baglanti} target="_blank" rel="noopener">{h.baslik}</a>
+                <span class="kaynak-not">{h.kaynak}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {b.haberler.okunamayan.length > 0 && (
+        <p class="uyari">Okunamayan kaynak: {b.haberler.okunamayan.join(', ')}</p>
+      )}
+    </section>
+  )}
+
+  {b.veri_gunlugu.length > 0 && (
+    <section class="blok">
+      <h2>Veri günlüğü</h2>
+      <ul class="olay-liste kucuk">
+        {b.veri_gunlugu.map((o: any) => (
+          <li class:list={[o.seviye]}>
+            <span class="metin">{o.metin}</span>
+            {o.aciklama && <span class="dipnot">{o.aciklama}</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <footer class="kunye">
+    <p>
+      Üretim: {b.olusturma.replace('T', ' ')} · kural tabanlı çekirdek
+      (<code>bulten/</code>) {b.yorum_zamani ? `· yorum: ${b.yorum_zamani.replace('T', ' ')}` : '· yorum katmanı çalışmadı'}
+    </p>
+    <p class="feragat">
+      Bülten yatırım tavsiyesi değildir. Sayılar kamuya açık kaynaklardan otomatik
+      derlenir; eşik aşımı bir yorum değil, bir ölçüm bildirimidir.
+    </p>
+  </footer>
+</article>
+
+<style>
+  .bulten { max-width: 74ch; }
+  .ust { padding: 2.4rem 0 1.4rem; }
+  .kicker { color: var(--claret); margin: 0 0 0.6rem; }
+  .ust h1 { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 2.8rem); margin: 0 0 0.5rem; }
+  .gun { font-size: 0.5em; color: var(--ink-70); font-variant: small-caps; letter-spacing: 0.05em; }
+  .alt { color: var(--ink-70); max-width: 58ch; }
+
+  .yorum {
+    border-left: 3px solid var(--claret);
+    padding: 0.9rem 0 0.9rem 1.1rem;
+    margin: 1.6rem 0 2rem;
+    background: color-mix(in srgb, var(--claret) 4%, transparent);
+  }
+  .yorum .etiket { color: var(--claret); margin: 0 0 0.4rem; }
+
+  .gosterge-serit {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+    gap: 0.1rem;
+    border: 1px solid var(--ink-30);
+    background: var(--ink-30);
+    margin: 1.8rem 0 2.4rem;
+  }
+  .gosterge { background: var(--paper); padding: 0.7rem 0.8rem; display: grid; gap: 0.15rem; }
+  .g-ad { font-size: 0.72rem; color: var(--ink-70); line-height: 1.25; }
+  .g-deger { font-family: var(--font-mono); font-size: 1.22rem; font-weight: 500; }
+  .g-birim { font-size: 0.6em; color: var(--ink-70); margin-left: 0.2em; }
+  .g-fark { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-70); }
+  .g-fark.arti { color: #0f766e; }
+  .g-fark.eksi { color: var(--claret); }
+  .g-tarih { font-family: var(--font-mono); font-size: 0.66rem; color: var(--ink-30); }
+
+  .blok { margin: 2.6rem 0; }
+  .blok h2 {
+    font-family: var(--font-display); font-size: 1.35rem; margin: 0 0 0.9rem;
+    padding-bottom: 0.35rem; border-bottom: 2px solid var(--ink);
+  }
+  .blok h3 { font-size: 0.95rem; margin: 1.3rem 0 0.5rem; color: var(--ink-70); font-variant: small-caps; letter-spacing: 0.06em; }
+  .adet { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-30); }
+
+  .olay-liste { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.7rem; }
+  .olay-liste li { display: grid; gap: 0.15rem; padding-left: 0.9rem; border-left: 2px solid var(--ink-30); }
+  .olay-liste.onemli li { border-left-color: var(--claret); }
+  .olay-liste li.dikkat { border-left-color: #b45309; }
+  .olay-liste .metin { line-height: 1.45; }
+  .olay-liste.kucuk .metin { font-size: 0.86rem; color: var(--ink-70); }
+  .dipnot { font-size: 0.78rem; color: var(--ink-70); font-style: italic; }
+  .kaynak-not { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-30); }
+
+  table.takvim { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+  table.takvim td { padding: 0.42rem 0.5rem 0.42rem 0; border-bottom: 1px solid var(--ink-30); vertical-align: top; }
+  tr.kritik .t-olay { font-weight: 600; }
+  tr.kritik td { background: color-mix(in srgb, var(--claret) 4%, transparent); }
+  .t-tarih { white-space: nowrap; font-family: var(--font-mono); font-size: 0.78rem; }
+  .t-gun { display: block; color: var(--ink-30); font-size: 0.7rem; }
+  .t-saat { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-70); white-space: nowrap; }
+  .t-ulke { font-family: var(--font-mono); font-size: 0.7rem; color: var(--claret); }
+  .t-olay { line-height: 1.35; }
+  .beklenti, .damga { display: block; font-size: 0.74rem; color: var(--ink-70); }
+  .damga { font-family: var(--font-mono); color: #b45309; }
+  .bos { color: var(--ink-70); font-size: 0.87rem; font-style: italic; }
+
+  .haber-liste { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; }
+  .haber-liste li { display: grid; gap: 0.1rem; }
+  .haber-liste a { text-decoration: none; border-bottom: 1px solid var(--ink-30); }
+  .haber-liste.kurum a { font-weight: 600; }
+  .uyari { font-size: 0.8rem; color: #b45309; margin-top: 0.8rem; }
+
+
+  .haftalik-rozet {
+    display: inline-block; font-family: var(--font-mono); font-size: 0.72rem;
+    color: var(--claret); border: 1px solid var(--claret); padding: 0.15rem 0.5rem;
+    margin: 0 0 0.6rem;
+  }
+  .kritik-blok .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 0.9rem; }
+  ol.kritik { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; }
+  ol.kritik li { display: grid; grid-template-columns: 5.4rem 1fr; gap: 0.7rem; align-items: baseline; }
+  .k-sayac {
+    font-family: var(--font-mono); font-size: 0.78rem; color: var(--claret);
+    text-align: right; white-space: nowrap;
+  }
+  .k-govde { display: grid; gap: 0.1rem; }
+  .k-olay { font-weight: 600; line-height: 1.35; }
+  .k-zaman { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-70); }
+  .k-beklenti { font-size: 0.79rem; color: var(--ink-70); }
+
+  .kunye { border-top: 1px solid var(--ink-30); padding-top: 0.9rem; margin-top: 2.6rem; }
+  .kunye p { font-size: 0.76rem; color: var(--ink-70); margin: 0 0 0.35rem; }
+  .feragat { font-style: italic; }
+</style>
