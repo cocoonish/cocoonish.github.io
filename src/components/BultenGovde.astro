@@ -67,6 +67,103 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
     ))}
   </section>
 
+
+  {b.piyasa && b.piyasa.gruplar && b.piyasa.gruplar.length > 0 && (
+    <section class="blok piyasa">
+      <h2>Piyasa fotoğrafı</h2>
+      <p class="alt-not">
+        Son kapanışlar ve değişimler. Fiyatlarda yüzde, tahvil getirilerinde baz puan.
+        Piyasanın kapalı olduğu günlerde “1 gün” son iki işlem gününün farkıdır; her
+        satırın tarihi kendi hücresinde yazar.
+      </p>
+
+      {b.piyasa.tr_faizleri && b.piyasa.tr_faizleri.length > 0 && (
+        <div class="p-grup">
+          <h3>Türk lirası faizleri ve DİBS eğrisi</h3>
+          <table class="p-tablo tl">
+            <tbody>
+              {b.piyasa.tr_faizleri.map((t: any) => (
+                <tr>
+                  <td class="p-ad">{t.ad}{t.aciklama && <span class="p-not">{t.aciklama}</span>}</td>
+                  <td class="p-son">{t.deger.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span class="p-birim">{t.birim}</span></td>
+                  <td class="p-tarih">{t.tarih}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {b.piyasa.gruplar.map((g: any) => (
+        <div class="p-grup">
+          <h3>{g.baslik}</h3>
+          <div class="p-kaydir">
+            <table class="p-tablo">
+              <thead>
+                <tr>
+                  <th>enstrüman</th><th class="sag">son</th><th class="sag">1 gün</th>
+                  <th class="sag">1 hafta</th><th class="sag">1 ay</th><th class="sag">yılbaşından</th>
+                  <th class="sag">52h aralık</th>
+                </tr>
+              </thead>
+              <tbody>
+                {g.satirlar.map((r: any) => (
+                  <tr>
+                    <td class="p-ad">
+                      {r.ad}
+                      {r.not && <span class="p-not">{r.not}</span>}
+                      <span class="p-tarih-ic">{r.tarih}</span>
+                    </td>
+                    <td class="sag p-son">
+                      {r.son.toLocaleString('tr-TR', { minimumFractionDigits: r.ondalik, maximumFractionDigits: r.ondalik })}
+                      {r.birim && <span class="p-birim">{r.birim}</span>}
+                    </td>
+                    {['d1', 'h1', 'a1', 'ybb'].map((alan) => (
+                      <td class:list={['sag', 'p-degisim', { arti: (r[alan] ?? 0) > 0, eksi: (r[alan] ?? 0) < 0 }]}>
+                        {r[alan] === null || r[alan] === undefined
+                          ? '—'
+                          : `${r[alan] > 0 ? '+' : ''}${r[alan].toLocaleString('tr-TR')}${r.degisim_birim}`}
+                      </td>
+                    ))}
+                    <td class="sag p-aralik">
+                      {r.yil_konum !== null && r.yil_konum !== undefined ? `%${r.yil_konum}` : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+
+      {b.piyasa.turetilmis && b.piyasa.turetilmis.length > 0 && (
+        <div class="p-grup">
+          <h3>Türev büyüklükler — eğri eğimleri, rafineri marjları, oranlar</h3>
+          <table class="p-tablo">
+            <tbody>
+              {b.piyasa.turetilmis.map((t: any) => (
+                <tr>
+                  <td class="p-ad">{t.ad}<span class="p-not">{t.aciklama}</span></td>
+                  <td class="sag p-son">{t.deger.toLocaleString('tr-TR')}<span class="p-birim">{t.birim}</span></td>
+                  <td class:list={['sag', 'p-degisim', { arti: (t.d1 ?? 0) > 0, eksi: (t.d1 ?? 0) < 0 }]}>
+                    {t.d1 === null || t.d1 === undefined ? '—' : `${t.d1 > 0 ? '+' : ''}${t.d1.toLocaleString('tr-TR')}`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {b.piyasa.kaynak_yok && b.piyasa.kaynak_yok.length > 0 && (
+        <p class="uyari">
+          Otomatik kaynağı olmayan, elle takip edilmesi gereken büyüklükler:
+          {' '}{b.piyasa.kaynak_yok.join('; ')}.
+        </p>
+      )}
+    </section>
+  )}
+
   {b.one_cikanlar.length > 0 && (
     <section class="blok">
       <h2>Öne çıkanlar</h2>
@@ -178,6 +275,14 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
             ))}
           </ul>
         </div>
+      ))}
+      {b.gundem_yazi_bolumleri && b.gundem_yazi_bolumleri.map((bol: any) => (
+        b.gundem && b.gundem[bol.id] ? (
+          <div class="gundem-bolum yazi-bolum">
+            <h3>{bol.baslik}</h3>
+            <div class="gundem-metin" set:html={b.gundem[bol.id]} />
+          </div>
+        ) : null
       ))}
       {b.haberler.okunamayan.length > 0 && (
         <p class="uyari">Okunamayan kaynak: {b.haberler.okunamayan.join(', ')}</p>
@@ -316,7 +421,39 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
   }
   .gundem-metin { margin: 0 0 0.7rem; line-height: 1.6; }
   .gundem-metin p { margin: 0 0 0.6rem; }
+  .yazi-bolum h3 { color: var(--ink); }
   .h-ozet { display: block; font-size: 0.82rem; color: var(--ink-70); line-height: 1.45; }
+
+
+  .piyasa .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1.1rem; }
+  .p-grup { margin: 1.4rem 0; }
+  .p-grup h3 {
+    font-size: 0.88rem; color: var(--claret); font-variant: small-caps;
+    letter-spacing: 0.07em; margin: 0 0 0.4rem;
+  }
+  .p-kaydir { overflow-x: auto; }
+  table.p-tablo { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+  table.p-tablo th {
+    text-align: left; font-weight: 500; font-size: 0.7rem; color: var(--ink-70);
+    text-transform: uppercase; letter-spacing: 0.05em; padding: 0 0.5rem 0.3rem 0;
+    border-bottom: 1px solid var(--ink);
+  }
+  table.p-tablo th.sag, table.p-tablo td.sag { text-align: right; }
+  table.p-tablo td {
+    padding: 0.34rem 0.5rem 0.34rem 0; border-bottom: 1px solid var(--ink-30);
+    vertical-align: top; white-space: nowrap;
+  }
+  .p-ad { white-space: normal; min-width: 12rem; }
+  .p-not { display: block; font-size: 0.7rem; color: var(--ink-70); font-style: italic; white-space: normal; }
+  .p-tarih-ic, .p-tarih { font-family: var(--font-mono); font-size: 0.66rem; color: var(--ink-30); }
+  .p-tarih-ic { display: block; }
+  .p-son { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .p-birim { font-size: 0.68em; color: var(--ink-70); margin-left: 0.25em; }
+  .p-degisim { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-70); }
+  .p-degisim.arti { color: #0f766e; }
+  .p-degisim.eksi { color: var(--claret); }
+  .p-aralik { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-30); }
+  table.p-tablo.tl td:first-child { min-width: 16rem; }
 
   .kunye { border-top: 1px solid var(--ink-30); padding-top: 0.9rem; margin-top: 2.6rem; }
   .kunye p { font-size: 0.76rem; color: var(--ink-70); margin: 0 0 0.35rem; }

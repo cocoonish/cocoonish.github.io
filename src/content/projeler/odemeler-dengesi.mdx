@@ -730,7 +730,7 @@ $$
 Eşik
 <Deger proje="odemeler-dengesi" anahtar="payda_esik_mia" ondalik={0}>10</Deger>
 milyar USD (mutlak, 12 aylık birikimli). Eşik yüzünden boş bırakılan ay sayısı
-ölçülüp raporlanıyor: brüt paydada
+ölçülüp raporlanıyor: yükümlülük paydasında
 <Deger proje="odemeler-dengesi" anahtar="kalite_bos_ay_brut" ondalik={0}>118</Deger>
 ay, cari açık paydasında
 <Deger proje="odemeler-dengesi" anahtar="kalite_bos_ay_acik" ondalik={0}>160</Deger>
@@ -774,8 +774,11 @@ ayrımı **bileşen panellerinden** okumak gerekir.
 **Tuzaklar.** (i) Kalite oranının %100'ü aşması, cari açığın tamamının uzun
 vadeli parayla finanse edildiği anlamına gelir — ama aynı dönemde rezerv
 eriyorsa, kimliğin başka bir yerinde bir sızıntı vardır (bkz. net hata ve
-noksan). (ii) Oranların medyanı 2010 sonrası penceredendir; daha uzun bir
-pencere farklı bir referans verir.
+noksan). (ii) Yükümlülük paydasının medyanı **2014 sonrası** penceredendir,
+çünkü finansal türev kalemi 2014-01'de eklendi ve payda tanımı orada kırıldı;
+cari açık paydasının medyanı 2010 sonrasıdır. Daha uzun bir pencere farklı bir
+referans verir. (iii) Türev bacağı negatifken payda küçülür ve oran yukarı
+sapar — bu yüzden grafikte türevsiz sürüm de çizilir.
 
 ## Şekil 07 — Uzun vadeli dış borç çevirme oranı: iki tanım yan yana
 
@@ -954,13 +957,18 @@ milyar USD
 (<Deger proje="odemeler-dengesi" anahtar="nhn12_maks_donem" ondalik={0}>Mart 2023</Deger>)
 arasında; mevcut değer tüm tarihçenin
 %<Deger proje="odemeler-dengesi" anahtar="nhn_yuzdelik_tarihce" ondalik={1}>0,2</Deger>
-yüzdelik diliminde — yani **tarihçenin en negatif ucuna** yakın. Aylık serinin
+yüzdelik diliminde — yani
+**<Deger proje="odemeler-dengesi" anahtar="nhn_konum_cumlesi" ondalik={0}>tarihçenin en negatif ucuna yakın</Deger>**.
+Aylık serinin
 12 aylık standart sapması
 <Deger proje="odemeler-dengesi" anahtar="nhn_std12_mia" ondalik={1}>3,0</Deger>
 milyar USD; en güncel aylık gözlemin 36 aylık yüzdelik dilimi ise
 %<Deger proje="odemeler-dengesi" anahtar="nhn_yuzdelik36" ondalik={1}>2,9</Deger>
-— yani **o ayın kendisi** olağandışı değil; olağandışı olan, birikimli
-toplamın nereye vardığıdır.
+— yani
+**<Deger proje="odemeler-dengesi" anahtar="nhn_ay_cumlesi" ondalik={0}>o ayın kendisi olağandışı değil</Deger>**;
+asıl mesele birikimli toplamın nereye vardığıdır. Bu iki hüküm ölçülen
+yüzdelik dilimden **kodda** seçilir: dilim değişirse cümle de değişir, MDX'e
+dokunulmaz.
 
 **Tuzaklar.** (i) NHN'yi "kayıt dışı sermaye çıkışı" diye okumak yaygın ama
 kanıtsız bir yorumdur; kalem zamanlama farklarını da taşır ve revizyonlarla
@@ -1041,11 +1049,43 @@ $$
 \text{KAYNAK}^{12}_t=\underbrace{\text{KULLANIM}^{12}_t}_{\text{UV brüt}}+\underbrace{\big(F^{12}_t-\text{UVNET}^{12}_t\big)}_{\text{diğer net giriş}}+KA^{12}_t+NHN^{12}_t-\Delta R^{12}_t
 $$
 
-ve iki taraf birebir kapanır. Kimlik
-<Deger proje="odemeler-dengesi" anahtar="kimlik_ihtiyac_n" ondalik={0}>404</Deger>
-ayda sınandı; en büyük sapma
-<Deger proje="odemeler-dengesi" anahtar="kimlik_ihtiyac_maks_sapma" ondalik={2}>0,00</Deger>
-milyon USD.
+ve iki taraf birebir kapanır.
+
+<div class="not">
+  <span class="etiket">Bu kapanma bir denetim DEĞİLDİR — tautolojidir</span>
+  "Diğer net finansman girişi" bizzat <em>net giriş eksi uzun vadeli net</em>
+  diye tanımlıdır. Yerine koyunca kaynak tarafında <em>uzun vadeli kullanım</em>
+  ve <em>anapara</em> **sadeleşir** ve geriye ana ödemeler dengesi kimliğinin
+  kendisi kalır. Yani iki tarafın sıfır sapmayla kapanması,
+  anapara bacakları hakkında hiçbir şey söylemez: bacaklar kasten bozulup
+  <Deger proje="odemeler-dengesi" anahtar="uv_anapara12_mia" ondalik={1}>86,8</Deger>
+  milyar USD'lik anapara dört katına çıkarıldığında da sapma 0,00 çıkıyor
+  (denendi). Kayıt `uyarilar.json`'da `"tautoloji": true` diye işaretlenir ve
+  denetim sayısına girmez.
+</div>
+
+**Anaparanın gerçek denetimi bağımsız bir kaynakladır.** Uzun vadeli anaparanın
+12 aylık toplamı, TCMB'nin **haftalık** dış borç ödeme takviminin 52 haftalık
+toplamına oranlanır. Kapsamlar farklı olduğu için eşitlik değil **mertebe**
+sınanır: bu koşuda oran
+<Deger proje="odemeler-dengesi" anahtar="uv_hafta_oran" ondalik={2}>2,23</Deger>,
+bant <Deger proje="odemeler-dengesi" anahtar="uv_hafta_bant_alt" ondalik={1}>1,0</Deger>–<Deger proje="odemeler-dengesi" anahtar="uv_hafta_bant_ust" ondalik={1}>8,0</Deger>.
+Bir bacak şişer ya da düşerse oran bandın dışına çıkar. Ayrıca altı anapara ve
+kullanım bacağının son 24 aydaki boş oranı ölçülür; biri sessizce düşerse hat
+DURUR.
+
+**Anaparanın bileşenleri.** Okur toplamı elle doğrulayabilsin diye bacaklar
+ayrı ayrı yayımlanır: bankalar
+<Deger proje="odemeler-dengesi" anahtar="anapara_bnk12_mia" ondalik={1}>36,9</Deger>
++ reel sektör
+<Deger proje="odemeler-dengesi" anahtar="anapara_dgr12_mia" ondalik={1}>17,8</Deger>
++ genel hükümet
+<Deger proje="odemeler-dengesi" anahtar="anapara_gh12_mia" ondalik={1}>2,8</Deger>
++ eurobond (yalnız uzun vadeli, `A21`)
+<Deger proje="odemeler-dengesi" anahtar="eb_odeme_uv12_mia" ondalik={1}>29,3</Deger>
+=
+<Deger proje="odemeler-dengesi" anahtar="uv_anapara12_mia" ondalik={1}>86,8</Deger>
+milyar USD.
 
 **Eurobond neden hem ihtiyaçta hem kaynakta.** Tahvil bir kredi değil, **portföy
 yükümlülüğüdür**. Anapara ödemesini ihtiyaca yazıp ihracını kaynağa yazmamak
@@ -1071,8 +1111,9 @@ milyar USD'si uzun vadeli anapara. Buna karşılık uzun vadeli brüt kullanım
 <Deger proje="odemeler-dengesi" anahtar="uv_kullanim12_mia" ondalik={1}>157,9</Deger>
 milyar USD ve net
 <Deger proje="odemeler-dengesi" anahtar="uv_net12_mia" ondalik={1} isaret={true}>+71,1</Deger>
-milyar USD — yani uzun vadeli bacak yalnız çevrilmiyor, üstüne yeni borçlanma
-da yapılıyor.
+milyar USD (<Deger proje="odemeler-dengesi" anahtar="uv_net_yon" ondalik={0}>net yeni borçlanma</Deger>)
+— yani
+<Deger proje="odemeler-dengesi" anahtar="uv_net_cumlesi" ondalik={0}>uzun vadeli bacak yalnız çevrilmiyor, üstüne yeni borçlanma da yapılıyor</Deger>.
 
 **Trader için anlamı.** Brüt ihtiyaç, ülkenin **her yıl piyasaya geri gitmek
 zorunda olduğu tutardır.** Kur şoku ya da küresel risk iştahının kapanması
@@ -1116,10 +1157,14 @@ dengesi yaklaşık iki ay gecikmeli, haftalık borç ödeme takvimi birkaç gün
 Üçünü aynı eksene zorlamak, **taze veriyi bayat verinin hızına düşürürdü**.
 Haftalık panel bu sayfanın en taze bacağıdır ve kendi çıpasıyla etiketlenir.
 
-**Seyrek seri uyarısı.** Eurobond sektör kırılımları, ihraç **olmayan** ayda
-boş gelir — sıfır değil. Grafikte o aylarda çubuk yoktur. Toplam ve net hesabı
-kırılımlardan değil, toplam serilerden (`A1`/`A2`) kurulur; kırılımları
-toplayıp toplam üretmek, boş ayları sıfır kabul etmek anlamına gelirdi.
+**Seyrek seri uyarısı.** Eurobond serileri — hem toplam hem sektör kırılımı —
+ihraç ya da itfa **olmayan** ayda boş gelir; sıfır değil, hücre yok. **Aylık**
+panelde o aylarda çubuk yoktur (boş bırakmak dürüsttür). **12 aylık birikimli**
+hesapta ise boş ay **sıfır akım** sayılır: aksi hâlde pencereye düşen tek bir
+boş ay bütün 12 aylık toplamı silerdi. Bu, sayfanın tamamında tek bir kuraldır
+— Şekil 11'in anapara bacağı da aynı işlemi kullanır, bu yüzden oradaki yığın
+kendi toplam çizgisine birebir oturur. Toplam ve net hesabı kırılımlardan
+değil, toplam serilerden (`A1`/`A2`) kurulur.
 
 **Bu koşudaki okuma.** Son 12 aylık dilimde tahvil ihracı
 <Deger proje="odemeler-dengesi" anahtar="eb_kullanim12_mia" ondalik={1}>57,9</Deger>
@@ -1127,7 +1172,29 @@ milyar USD, geri ödeme
 <Deger proje="odemeler-dengesi" anahtar="eb_odeme12_mia" ondalik={1}>34,7</Deger>
 milyar USD, net piyasa erişimi
 <Deger proje="odemeler-dengesi" anahtar="eb_net12_mia" ondalik={1} isaret={true}>+23,2</Deger>
-milyar USD. Haftalık bacakta en güncel gözlemde toplam ödeme
+milyar USD.
+
+<div class="not">
+  <span class="etiket">Bu sayılar Şekil 11'inkiyle aynı etiketi taşır ama aynı küme DEĞİLDİR</span>
+  Buradaki
+  <Deger proje="odemeler-dengesi" anahtar="eb_kullanim12_mia" ondalik={1}>57,9</Deger>
+  /
+  <Deger proje="odemeler-dengesi" anahtar="eb_odeme12_mia" ondalik={1}>34,7</Deger>
+  milyar USD `A1`/`A2` **toplamıdır**, yani **kısa vade dâhil**. Şekil 11'in
+  anapara ve brüt kullanım bacağına yalnız **uzun vadeli** sürüm (`A11`/`A21`)
+  girer:
+  <Deger proje="odemeler-dengesi" anahtar="eb_kullanim_uv12_mia" ondalik={1}>55,7</Deger>
+  ve
+  <Deger proje="odemeler-dengesi" anahtar="eb_odeme_uv12_mia" ondalik={1}>29,3</Deger>
+  milyar USD. Şekil 11'deki
+  <Deger proje="odemeler-dengesi" anahtar="uv_anapara12_mia" ondalik={1}>86,8</Deger>
+  milyar USD'lik anaparayı buradaki geri ödeme rakamıyla toplamaya çalışan okur
+  tutturamaz; fark bir sapma değil **kapsam** farkıdır. (Aynı kural sayfanın
+  `Q13`↔`Q101` ve ODEROLL kutularında da işliyor: iki farklı kapsamı tek
+  etiketle çizmek sahte sapma üretir.)
+</div>
+
+Haftalık bacakta en güncel gözlemde toplam ödeme
 <Deger proje="odemeler-dengesi" anahtar="hafta_odeme_mn" ondalik={1}>718,3</Deger>
 milyon USD (Hazine
 <Deger proje="odemeler-dengesi" anahtar="hafta_odeme_hazine_mn" ondalik={1}>708,2</Deger>,
@@ -1184,10 +1251,22 @@ kurallar:
 Ödemeler dengesi, kimlikler üzerine kurulu olduğu için **kendi kendini
 sınayabilen** ender veri kümelerinden biridir. Bu hat o imkânı sonuna kadar
 kullanır: her koşuda
-<Deger proje="odemeler-dengesi" anahtar="kimlik_toplam" ondalik={0}>21</Deger>
+<Deger proje="odemeler-dengesi" anahtar="kimlik_toplam" ondalik={0}>29</Deger>
 denetim çalışır ve bu koşuda
-<Deger proje="odemeler-dengesi" anahtar="kimlik_gecen" ondalik={0}>21</Deger>
-tanesi geçti.
+<Deger proje="odemeler-dengesi" anahtar="kimlik_gecen" ondalik={0}>29</Deger>
+tanesi geçti. Ayrıca
+<Deger proje="odemeler-dengesi" anahtar="kimlik_tautoloji" ondalik={0}>2</Deger>
+kayıt **tautoloji** olduğu için sayıya girmez (aşağıda).
+
+<div class="not">
+  <span class="etiket">Sayı ile yayımlanan dosya aynı kümedir</span>
+  Buradaki sayı, [`uyarilar.json`](/projeler/odemeler-dengesi/uyarilar.json)
+  dosyasına yazılan **iki** doğrulama sözlüğünden (`dogrulama` = metrik
+  katmanı, `dogrulama_veri` = veri katmanı) doğrudan sayılır; tautoloji
+  işaretli kayıtlar düşülür. Yani okur listeyi açıp tek tek sayabilir. Daha
+  önce sayım 21 diyor ama dosya yalnız 11 kayıt taşıyordu; sayfa artık
+  yayımlamadığı hiçbir denetimi saymıyor.
+</div>
 
 ### Durdurucu denetimler
 
@@ -1195,24 +1274,38 @@ Aşağıdakilerden biri düşerse hat **durur** ve yayına hiçbir şey gitmez �
 grafiğin üstüne taze bir tarih yazılmaz:
 
 - **Ana kimlik.** −CA = net finansman girişi + sermaye hesabı + NHN − rezerv.
-- **İşaret kimliği.** Net giriş = brüt yükümlülük − yerleşik varlık edinimi.
-- **Yığın kimliği.** Yükümlülük kalemlerinin toplamı = brüt yükümlülük oluşumu
-  (Şekil 05'teki yığının toplamı çizgiye eşit olmalı).
+- **İşaret kimliği.** Net giriş = yükümlülük oluşumu (net) − yerleşik varlık
+  edinimi.
+- **Bacak yoklaması — Şekil 05.** Yığının sekiz kutusundan hiçbiri son 24 ayda
+  boşa düşmemeli. (Yığın **toplamının** çizgiye eşitliği burada sayılmaz:
+  artık kalem tanım gereği farkı yutar, bkz. tautoloji notu.)
+- **Bacak yoklaması — Şekil 11.** Altı anapara ve brüt kullanım bacağının
+  hiçbiri son 24 ayda boşa düşmemeli.
 - **Sunum köprüsü.** Ayrıntılı sunumun rezerv dâhil finans hesabı = analitik
   sunumun rezerv hariç kalemi + rezerv varlıklar;
   <Deger proje="odemeler-dengesi" anahtar="kopru_n" ondalik={0}>422</Deger> ayda
   sınandı.
 - **Çekirdek köprüsü.** Manşet = çekirdek + altın + enerji.
 - **Alt kalem kimliği.** CA = mal + hizmet + birincil + ikincil.
-- **Finansman ihtiyacı kimliği.** İhtiyaç = kaynak.
 - **GSYH mertebe denetimi.** 4 çeyreklik GSYH 1–2 trilyon USD bandının dışına
   çıkarsa birim zinciri bozulmuştur.
+- **Yığın–çizgi denetimi (grafik katmanı).** Yığılmış her panelde çubukların
+  toplamı ile toplam çizgisi arasındaki en büyük fark ölçülür; eşiği aşarsa
+  figür yayımlanmaz (`cikti/yigin_denetimi.json`).
 
-### Durdurucu olmayan ölçümler
+### Sayılan ama durdurucu olmayan ölçümler
 
 Bunlar hattı durdurmaz ama sayfada **görünür** kalır, çünkü gizlendiklerinde
 sessiz bayatlama üretirler:
 
+- **Artık bandı.** Analitik sunumun `Q25`'i ile ayrıntılı sunumun
+  `Q143+Q157+Q184+Q203` toplamı arasındaki artık, brüt cironun %
+  <Deger proje="odemeler-dengesi" anahtar="artik_son_yuzde" ondalik={2}>2,66</Deger>'si
+  (bant %<Deger proje="odemeler-dengesi" anahtar="artik_esik_yuzde" ondalik={0}>35</Deger>).
+- **Mertebe kıyası.** Uzun vadeli anapara (12 aylık) ÷ haftalık dış borç
+  ödemesi (52 haftalık) =
+  <Deger proje="odemeler-dengesi" anahtar="uv_hafta_oran" ondalik={2}>2,23</Deger>;
+  bant <Deger proje="odemeler-dengesi" anahtar="uv_hafta_bant_alt" ondalik={1}>1,0</Deger>–<Deger proje="odemeler-dengesi" anahtar="uv_hafta_bant_ust" ondalik={1}>8,0</Deger>.
 - **Kıyas: türetilen çevirme oranı ile TCMB'nin ODEROLL serisi.** Fark
   <Deger proje="odemeler-dengesi" anahtar="roll_kiyas_fark" ondalik={1}>68,5</Deger>
   puan ve bu bir **kapsam** farkıdır.
@@ -1220,6 +1313,24 @@ sessiz bayatlama üretirler:
   <Deger proje="odemeler-dengesi" anahtar="rezerv_korelasyon" ondalik={3}>0,914</Deger>.
 - **Mal dengesi = ihracat − ithalat** ve **banka net UV kredi = kullanım −
   ödeme** tutarlılıkları.
+- **Veri katmanının kimlikleri.** Ödemeler dengesi kimliği, iki sunum köprüsü,
+  rezerv varlıklar kimliği, çekirdek/altın/enerji köprüleri ve üç sektörün
+  uzun vadeli kredi bacağı — hepsi `dogrulama_veri` altında kayıt kayıt
+  yayımlanır.
+
+### Sayılmayan kayıtlar: tautolojiler
+
+İki kayıt `"tautoloji": true` diye işaretlidir ve **denetim sayısına girmez**,
+çünkü sol tarafları sağ taraflarından türetilmiştir; sapmaları tanım gereği
+sıfırdır ve girdiler bozulsa da sıfır kalır:
+
+- **Şekil 05'in yığın toplamı.** Artık kutular "toplam eksi bilinenler" diye
+  tanımlı; bir alt kalem 100 katına çıksa bile toplam değişmez (denendi).
+  Yerine artık bandı ve bacak yoklaması kondu.
+- **Şekil 11'in alt paneli.** "Diğer net finansman girişi" tanımı gereği uzun
+  vadeli kullanım ve anaparayı sadeleştirir; anapara dört katına çıkarıldığında
+  da sapma 0,00 çıkıyor (denendi). Yerine haftalık takvimle mertebe kıyası ve
+  bacak yoklaması kondu.
 
 ### Bu koşunun kapsamı
 
@@ -1236,9 +1347,11 @@ Uyarı durumu:
 <Deger proje="odemeler-dengesi" anahtar="uyari_metni" ondalik={0}>Bu koşuda uyarı yok.</Deger>
 
 Tam liste her koşuda
-[`uyarilar.json`](/projeler/odemeler-dengesi/uyarilar.json) dosyasına yazılır;
-sayfadaki canlı değerlerin kaynağı ise
-[makine okunur veri özeti](/projeler/odemeler-dengesi/ozet.json).
+[`uyarilar.json`](/projeler/odemeler-dengesi/uyarilar.json) dosyasına yazılır —
+uyarılar `uyarilar`, metrik katmanının denetimleri `dogrulama`, veri
+katmanınınkiler `dogrulama_veri` altında; yukarıdaki denetim sayısı bu iki
+sözlükten (tautolojiler düşülerek) sayılır. Sayfadaki canlı değerlerin kaynağı
+ise [makine okunur veri özeti](/projeler/odemeler-dengesi/ozet.json).
 
 ### Revizyon politikası
 

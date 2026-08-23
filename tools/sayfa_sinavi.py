@@ -34,6 +34,8 @@ HATLAR = [
     ("fonlama-likidite", "Aktarılacak Projeler/Fonlama"),
     ("enflasyon", "Aktarılacak Projeler/Enflasyon"),
     ("odemeler-dengesi", "Aktarılacak Projeler/OdemelerDengesi"),
+    ("butce-borc", "Aktarılacak Projeler/Butce"),
+    ("dibs-verim-egrisi", "Aktarılacak Projeler/DIBS"),
 ]
 
 # (2) için: yalnız GERÇEKTEN oynak sayılar taranır. Tarih/oran metinleri, tek
