@@ -83,8 +83,12 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
           <table class="p-tablo tl">
             <tbody>
               {b.piyasa.tr_faizleri.map((t: any) => (
-                <tr>
-                  <td class="p-ad">{t.ad}{t.aciklama && <span class="p-not">{t.aciklama}</span>}</td>
+                <tr class:list={[{ gecersiz: t.gecerli === false }]}>
+                  <td class="p-ad">
+                    {t.ad}
+                    {t.gecerli === false && <span class="p-bayrak">güncel değil</span>}
+                    {t.aciklama && <span class="p-not">{t.aciklama}</span>}
+                  </td>
                   <td class="p-son">{t.deger.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span class="p-birim">{t.birim}</span></td>
                   <td class="p-tarih">{t.tarih}</td>
                 </tr>
@@ -454,6 +458,11 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
   .p-degisim.eksi { color: var(--claret); }
   .p-aralik { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-30); }
   table.p-tablo.tl td:first-child { min-width: 16rem; }
+  tr.gecersiz .p-son { color: var(--ink-70); }
+  .p-bayrak {
+    display: inline-block; margin-left: 0.4rem; font-family: var(--font-mono);
+    font-size: 0.62rem; color: #b45309; border: 1px solid #b45309; padding: 0 0.28rem;
+  }
 
   .kunye { border-top: 1px solid var(--ink-30); padding-top: 0.9rem; margin-top: 2.6rem; }
   .kunye p { font-size: 0.76rem; color: var(--ink-70); margin: 0 0 0.35rem; }
