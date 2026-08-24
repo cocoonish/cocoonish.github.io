@@ -53,12 +53,13 @@ export const GRUPLAR: DersGrubu[] = [
     no: '03',
     baslik: 'Teknik analiz & fiyat aksiyonu',
     aciklama:
-      'Doğrudan grafik üstünde çalışan çerçeveler: piyasa yapısı ve likidite (SMC), ' +
-      'Fibonacci geometrisi ve XABCD katalogları (harmonik). Kural ve katalog metinleri ' +
+      'Doğrudan grafik üstünde çalışan çerçeveler: göstergesiz bar bar okuma (Brooks fiyat ' +
+      'hareketi), piyasa yapısı ve likidite (SMC), Fibonacci geometrisi ve XABCD katalogları ' +
+      '(harmonik). Kural ve katalog metinleri ' +
       'takvimden bağımsızdır; tarihli sayı yalnız gerçek-veri vakalarında ve çıpa ' +
-      'ibaresiyle geçer. Her ikisi de kanıt tartışmasıyla kapanır.',
-    slugSirasi: ['smc-teknik-analiz', 'harmonik-patternler'],
-    etiketler: ['teknik-analiz', 'smc', 'ict', 'harmonik', 'fibonacci', 'fiyat-aksiyonu'],
+      'ibaresiyle geçer. Üçü de kanıt tartışmasıyla kapanır.',
+    slugSirasi: ['fiyat-hareketi-brooks', 'smc-teknik-analiz', 'harmonik-patternler'],
+    etiketler: ['teknik-analiz', 'smc', 'ict', 'harmonik', 'fibonacci', 'fiyat-aksiyonu', 'brooks', 'price-action'],
   },
   {
     id: 'olcum-rv',
