@@ -14,6 +14,36 @@ interface Props {
 const { b } = Astro.props;
 
 const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not', bilgi: 'kayıt' };
+
+// Takvim eskiden iki kez yazılıyordu: "Kritik takvim" birinci derece verilerin
+// geri sayımı, "Takvim" ise haftalara bölünmüş tam liste — aynı olay iki
+// bölümde birden görünüyordu. Artık tek bölüm: önce geri sayım, sonra tam
+// listenin GERİ KALANI. Eşleştirme olay adı + tarih üzerinden yapılır.
+const kritikler = b.kritik_takvim ?? [];
+const kritikAnahtar = new Set(kritikler.map((k: any) => `${k.olay}|${k.tr_tarih}`));
+const takvimGruplari = (b.takvim ?? [])
+  .map((t: any) => ({
+    ...t,
+    kayitlar: t.kayitlar.filter((k: any) => !kritikAnahtar.has(`${k.olay}|${k.tr_tarih}`)),
+  }))
+  .filter((t: any) => t.kayitlar.length > 0);
+const takvimVar = kritikler.length > 0 || takvimGruplari.length > 0;
+
+// İçindekiler: yalnız GERÇEKTEN basılan bölümler listelenir. Koşulları
+// bölümlerin kendi koşullarıyla birebir aynı tutmak şart — yoksa boşa çıkan
+// bir bağlantı okuru hiçbir yere götürmez.
+const bolumler = [
+  b.yorum && { id: 'yorum', ad: b.haftalik ? 'Haftanın yorumu' : 'Günün yorumu' },
+  b.ozet && (b.ozet.ne_oldu || b.ozet.ne_bekleniyor) &&
+    { id: 'ozet', ad: b.haftalik ? 'Geçen hafta / önümüzdeki hafta' : 'Ne oldu / ne bekleniyor' },
+  b.one_cikanlar?.length > 0 && { id: 'one-cikanlar', ad: 'Öne çıkanlar' },
+  takvimVar && { id: 'takvim', ad: 'Takvim' },
+  b.gruplar?.length > 0 && { id: 'hat-hat', ad: 'Hat hat değişim' },
+  b.temalar?.temalar?.length > 0 && { id: 'temalar', ad: 'İzlenen temalar' },
+  b.haberler?.bolumler?.length > 0 && { id: 'gundem', ad: 'Gündem' },
+  b.veri_gunlugu?.length > 0 && { id: 'veri-gunlugu', ad: 'Veri günlüğü' },
+  b.piyasa?.gruplar?.length > 0 && { id: 'piyasa', ad: 'Piyasa fotoğrafı' },
+].filter(Boolean) as { id: string; ad: string }[];
 ---
 
 <article class="bulten">
@@ -28,15 +58,26 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
     </p>
   </header>
 
+  {bolumler.length > 2 && (
+    <nav class="icindekiler" aria-label="Bülten bölümleri">
+      <p class="ic-baslik">İçindekiler</p>
+      <ol>
+        {bolumler.map((x) => (
+          <li><a href={`#${x.id}`}>{x.ad}</a></li>
+        ))}
+      </ol>
+    </nav>
+  )}
+
   {b.yorum && (
-    <section class="yorum">
+    <section class="yorum" id="yorum">
       <p class="etiket">{b.haftalik ? 'Haftanın okuması' : 'Günün okuması'}</p>
       <div set:html={b.yorum} />
     </section>
   )}
 
   {b.ozet && (b.ozet.ne_oldu || b.ozet.ne_bekleniyor) && (
-    <section class="ozet">
+    <section class="ozet" id="ozet">
       {b.ozet.ne_oldu && (
         <div class="ozet-parca">
           <h2>{b.haftalik ? 'Geçen hafta ne oldu' : 'Ne oldu'}</h2>
@@ -68,8 +109,230 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
   </section>
 
 
+  {b.one_cikanlar.length > 0 && (
+    <section class="blok" id="one-cikanlar">
+      <h2>Öne çıkanlar</h2>
+      <ul class="olay-liste onemli">
+        {b.one_cikanlar.map((o: any) => (
+          <li>
+            <span class="metin">{o.metin}</span>
+            {o.aciklama && <span class="dipnot">{o.aciklama}</span>}
+            <span class="kaynak-not">{o.hat} · veri {o.tarih}{o.onceki_tarih ? ` (kıyas: ${o.onceki_tarih})` : ''}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+
+  {takvimVar && (
+    <section class="blok kritik-blok" id="takvim">
+      <h2>Takvim</h2>
+      <p class="alt-not">
+        Önce birinci derece veriler geri sayımla, sonra izlenen diğer kayıtlar hafta
+        hafta. Beklenti satırında “anket” piyasanın beklentisidir (TCMB Piyasa
+        Katılımcıları Anketi); “model”, bu sitedeki hesabın kendi tahminidir.
+      </p>
+
+      {kritikler.length > 0 && (
+        <ol class="kritik">
+          {kritikler.map((k: any) => (
+            <li>
+              <span class="k-sayac">{k.kalan_gun === 0 ? 'bugün' : `+${k.kalan_gun} gün`}</span>
+              <span class="k-govde">
+                <span class="k-olay">{k.olay}</span>
+                <span class="k-zaman">{k.tr_tarih} {k.gun}{k.saat ? ` · ${k.saat}` : ''} · {k.ulke}</span>
+                {k.beklenti && <span class="k-beklenti">{k.beklenti}</span>}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {takvimGruplari.map((t: any) => (
+        <div class="takvim-blok">
+          <h3>{t.baslik} <span class="adet">{t.kayitlar.length}</span></h3>
+          <table class="takvim">
+            <tbody>
+              {t.kayitlar.map((k: any) => (
+                <tr class:list={[{ kritik: k.onem === 1 }]}>
+                  <td class="t-tarih">{k.tr_tarih}<span class="t-gun">{k.gun}</span></td>
+                  <td class="t-saat">{k.saat || '—'}</td>
+                  <td class="t-ulke">{k.ulke}</td>
+                  <td class="t-olay">
+                    {k.olay}
+                    {k.kesinlik !== 'kesin' && <span class="damga">tarih kesinleşmedi</span>}
+                    {k.beklenti && <span class="beklenti">{k.beklenti}</span>}
+                    {k.not_ && <span class="dipnot">{k.not_}</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </section>
+  )}
+
+  {b.gruplar.length > 0 && (
+    <section class="blok" id="hat-hat">
+      <h2>Hat hat değişim</h2>
+      {b.gruplar.map((g: any) => (
+        <div class="grup">
+          <h3>{g.baslik}</h3>
+          <ul class="olay-liste">
+            {g.olaylar.map((o: any) => (
+              <li class:list={[o.seviye]}>
+                <span class="metin">{o.metin}</span>
+                {o.aciklama && <span class="dipnot">{o.aciklama}</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+  )}
+
+  {b.temalar && b.temalar.temalar && b.temalar.temalar.length > 0 && (
+    <section class="blok temalar" id="temalar">
+      <h2>İzlenen temalar</h2>
+      <p class="alt-not">
+        Haftalarca süren ve birden çok varlığı aynı anda hareket ettiren anlatılar.
+        Her temanın altında onu doğrulayacak ve çürütecek işaretler, izlenecek tek
+        gösterge ve o temaya bağlı varlıkların güncel hareketi var.
+      </p>
+      {b.temalar.temalar.map((t: any) => (
+        <div class:list={['tema', t.durum]}>
+          <h3>
+            {t.ad}
+            <span class="tema-durum">{t.durum}</span>
+          </h3>
+          {t.gelisme && (
+            <div class="tema-gelisme">
+              <span class="etiket">Bu bültende</span>
+              <div set:html={t.gelisme} />
+            </div>
+          )}
+          <p class="tema-tez"><strong>Tez.</strong> {t.tez}</p>
+          {t.son_gozlem && <p class="tema-gozlem"><strong>Son durum.</strong> {t.son_gozlem}</p>}
+          {t.olculer && t.olculer.length > 0 && (
+            <div class="p-kaydir">
+              <table class="p-tablo">
+                <tbody>
+                  {t.olculer.map((r: any) => (
+                    <tr>
+                      <td class="p-ad">{r.ad}</td>
+                      <td class="sag p-son">{r.son?.toLocaleString('tr-TR')}<span class="p-birim">{r.birim}</span></td>
+                      {['h1', 'ybb'].map((alan) => (
+                        <td class:list={['sag', 'p-degisim', { arti: (r[alan] ?? 0) > 0, eksi: (r[alan] ?? 0) < 0 }]}>
+                          {r[alan] === null || r[alan] === undefined
+                            ? '—'
+                            : `${r[alan] > 0 ? '+' : ''}${r[alan].toLocaleString('tr-TR')}${r.degisim_birim}`}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p class="tema-sutun">sütunlar: son · 1 hafta · yılbaşından</p>
+            </div>
+          )}
+          <div class="tema-isaret">
+            {t.dogrulayan && t.dogrulayan.length > 0 && (
+              <div>
+                <span class="isaret-baslik">Doğrularsa</span>
+                <ul>{t.dogrulayan.map((x: string) => <li>{x}</li>)}</ul>
+              </div>
+            )}
+            {t.curuten && t.curuten.length > 0 && (
+              <div>
+                <span class="isaret-baslik">Çürütürse</span>
+                <ul>{t.curuten.map((x: string) => <li>{x}</li>)}</ul>
+              </div>
+            )}
+          </div>
+          {t.izlenecek_gosterge && (
+            <p class="tema-gosterge">İzlenecek tek gösterge: <strong>{t.izlenecek_gosterge}</strong></p>
+          )}
+        </div>
+      ))}
+    </section>
+  )}
+
+  {b.haberler.bolumler && b.haberler.bolumler.length > 0 && (
+    <section class="blok gundem" id="gundem">
+      <h2>Gündem</h2>
+      <p class="alt-not">
+        Dün ve bu sabah öne çıkanlar: Türkiye ve global taraf, makro ve politika
+        ayrımıyla. Her bölümün altında haberin geldiği kaynaklar listelenir.
+      </p>
+      {b.haberler.bolumler.map((bol: any) => (
+        <div class:list={['gundem-bolum', { kilit: bol.id === 'kilit' }]}>
+          <h3>{bol.baslik}</h3>
+          {bol.id === 'kilit' && (
+            <p class="kilit-not">
+              Piyasayı fiilen hareket ettiren gelişmeler: konu ağırlığı, kaynak itibarı
+              ve kaç yayının haberi taşıdığı birlikte değerlendirilerek seçildi.
+            </p>
+          )}
+          {b.gundem && b.gundem[bol.id] && (
+            <div class="gundem-metin" set:html={b.gundem[bol.id]} />
+          )}
+          <ul class="haber-liste">
+            {bol.maddeler.map((m: any) => (
+              <li>
+                <a href={m.baglanti} target="_blank" rel="noopener">{m.baslik}</a>
+                {m.ozet && <span class="h-ozet">{m.ozet}</span>}
+                <span class="kaynak-not">
+                  {m.kaynak}
+                  {bol.id === 'kilit' && m.kaynak_sayisi > 1 && ` · ${m.kaynak_sayisi} yayın taşıdı`}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      {b.gundem_yazi_bolumleri && b.gundem_yazi_bolumleri.map((bol: any) => (
+        b.gundem && b.gundem[bol.id] ? (
+          <div class="gundem-bolum yazi-bolum">
+            <h3>{bol.baslik}</h3>
+            <div class="gundem-metin" set:html={b.gundem[bol.id]} />
+          </div>
+        ) : null
+      ))}
+      {b.haberler.okunamayan.length > 0 && (
+        <p class="uyari">Okunamayan kaynak: {b.haberler.okunamayan.join(', ')}</p>
+      )}
+    </section>
+  )}
+
+  {b.veri_gunlugu.length > 0 && (
+    <section class="blok" id="veri-gunlugu">
+      <h2>Veri günlüğü</h2>
+      <ul class="olay-liste kucuk">
+        {b.veri_gunlugu.map((o: any) => (
+          <li class:list={[o.seviye]}>
+            <span class="metin">{o.metin}</span>
+            {o.aciklama && <span class="dipnot">{o.aciklama}</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <footer class="kunye">
+    <p>
+      Hazırlanma: {b.olusturma.replace('T', ' ').slice(0, 16)}
+      {b.yorum_zamani ? ` · okuma notu: ${b.yorum_zamani.replace('T', ' ').slice(0, 16)}` : ''}
+    </p>
+    <p class="feragat">
+      Bülten yatırım tavsiyesi değildir. Sayılar kamuya açık kaynaklardan otomatik
+      derlenir; bir büyüklüğün burada yer alması, önceden belirlenmiş bir değişim
+      sınırını aştığı anlamına gelir — yorum değil, ölçüm bildirimidir.
+    </p>
+  </footer>
   {b.piyasa && b.piyasa.gruplar && b.piyasa.gruplar.length > 0 && (
-    <section class="blok piyasa">
+    <section class="blok piyasa" id="piyasa">
       <h2>Piyasa fotoğrafı</h2>
       <p class="alt-not">
         Son kapanışlar ve değişimler. Fiyatlarda yüzde, tahvil getirilerinde baz puan.
@@ -167,234 +430,6 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
       )}
     </section>
   )}
-
-  {b.one_cikanlar.length > 0 && (
-    <section class="blok">
-      <h2>Öne çıkanlar</h2>
-      <ul class="olay-liste onemli">
-        {b.one_cikanlar.map((o: any) => (
-          <li>
-            <span class="metin">{o.metin}</span>
-            {o.aciklama && <span class="dipnot">{o.aciklama}</span>}
-            <span class="kaynak-not">{o.hat} · veri {o.tarih}{o.onceki_tarih ? ` (kıyas: ${o.onceki_tarih})` : ''}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )}
-
-
-  {b.kritik_takvim && b.kritik_takvim.length > 0 && (
-    <section class="blok kritik-blok">
-      <h2>Kritik takvim — önümüzdeki {b.kritik_takvim[b.kritik_takvim.length - 1].kalan_gun} gün</h2>
-      <p class="alt-not">
-        Yalnız birinci derece veriler, tarih sırasıyla. Beklenti satırında “anket”
-        piyasanın beklentisidir (TCMB Piyasa Katılımcıları Anketi); “model”, bu sitedeki
-        hesabın kendi tahminidir.
-      </p>
-      <ol class="kritik">
-        {b.kritik_takvim.map((k: any) => (
-          <li>
-            <span class="k-sayac">{k.kalan_gun === 0 ? 'bugün' : `+${k.kalan_gun} gün`}</span>
-            <span class="k-govde">
-              <span class="k-olay">{k.olay}</span>
-              <span class="k-zaman">{k.tr_tarih} {k.gun}{k.saat ? ` · ${k.saat}` : ''} · {k.ulke}</span>
-              {k.beklenti && <span class="k-beklenti">{k.beklenti}</span>}
-            </span>
-          </li>
-        ))}
-      </ol>
-    </section>
-  )}
-
-  {b.gruplar.length > 0 && (
-    <section class="blok">
-      <h2>Hat hat değişim</h2>
-      {b.gruplar.map((g: any) => (
-        <div class="grup">
-          <h3>{g.baslik}</h3>
-          <ul class="olay-liste">
-            {g.olaylar.map((o: any) => (
-              <li class:list={[o.seviye]}>
-                <span class="metin">{o.metin}</span>
-                {o.aciklama && <span class="dipnot">{o.aciklama}</span>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </section>
-  )}
-
-  <section class="blok">
-    <h2>Takvim</h2>
-    {b.takvim.map((t: any) => (
-      <div class="takvim-blok">
-        <h3>{t.baslik} <span class="adet">{t.kayitlar.length}</span></h3>
-        {t.kayitlar.length === 0 ? (
-          <p class="bos">Bu aralıkta izlenen ölçütlerde kayıt yok.</p>
-        ) : (
-          <table class="takvim">
-            <tbody>
-              {t.kayitlar.map((k: any) => (
-                <tr class:list={[{ kritik: k.onem === 1 }]}>
-                  <td class="t-tarih">{k.tr_tarih}<span class="t-gun">{k.gun}</span></td>
-                  <td class="t-saat">{k.saat || '—'}</td>
-                  <td class="t-ulke">{k.ulke}</td>
-                  <td class="t-olay">
-                    {k.olay}
-                    {k.kesinlik !== 'kesin' && <span class="damga">tarih kesinleşmedi</span>}
-                    {k.beklenti && <span class="beklenti">{k.beklenti}</span>}
-                    {k.not_ && <span class="dipnot">{k.not_}</span>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    ))}
-  </section>
-
-
-  {b.temalar && b.temalar.temalar && b.temalar.temalar.length > 0 && (
-    <section class="blok temalar">
-      <h2>İzlenen temalar</h2>
-      <p class="alt-not">
-        Haftalarca süren ve birden çok varlığı aynı anda hareket ettiren anlatılar.
-        Her temanın altında onu doğrulayacak ve çürütecek işaretler, izlenecek tek
-        gösterge ve o temaya bağlı varlıkların güncel hareketi var.
-      </p>
-      {b.temalar.temalar.map((t: any) => (
-        <div class:list={['tema', t.durum]}>
-          <h3>
-            {t.ad}
-            <span class="tema-durum">{t.durum}</span>
-          </h3>
-          {t.gelisme && (
-            <div class="tema-gelisme">
-              <span class="etiket">Bu bültende</span>
-              <div set:html={t.gelisme} />
-            </div>
-          )}
-          <p class="tema-tez"><strong>Tez.</strong> {t.tez}</p>
-          {t.son_gozlem && <p class="tema-gozlem"><strong>Son durum.</strong> {t.son_gozlem}</p>}
-          {t.olculer && t.olculer.length > 0 && (
-            <div class="p-kaydir">
-              <table class="p-tablo">
-                <tbody>
-                  {t.olculer.map((r: any) => (
-                    <tr>
-                      <td class="p-ad">{r.ad}</td>
-                      <td class="sag p-son">{r.son?.toLocaleString('tr-TR')}<span class="p-birim">{r.birim}</span></td>
-                      {['h1', 'ybb'].map((alan) => (
-                        <td class:list={['sag', 'p-degisim', { arti: (r[alan] ?? 0) > 0, eksi: (r[alan] ?? 0) < 0 }]}>
-                          {r[alan] === null || r[alan] === undefined
-                            ? '—'
-                            : `${r[alan] > 0 ? '+' : ''}${r[alan].toLocaleString('tr-TR')}${r.degisim_birim}`}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p class="tema-sutun">sütunlar: son · 1 hafta · yılbaşından</p>
-            </div>
-          )}
-          <div class="tema-isaret">
-            {t.dogrulayan && t.dogrulayan.length > 0 && (
-              <div>
-                <span class="isaret-baslik">Doğrularsa</span>
-                <ul>{t.dogrulayan.map((x: string) => <li>{x}</li>)}</ul>
-              </div>
-            )}
-            {t.curuten && t.curuten.length > 0 && (
-              <div>
-                <span class="isaret-baslik">Çürütürse</span>
-                <ul>{t.curuten.map((x: string) => <li>{x}</li>)}</ul>
-              </div>
-            )}
-          </div>
-          {t.izlenecek_gosterge && (
-            <p class="tema-gosterge">İzlenecek tek gösterge: <strong>{t.izlenecek_gosterge}</strong></p>
-          )}
-        </div>
-      ))}
-    </section>
-  )}
-
-  {b.haberler.bolumler && b.haberler.bolumler.length > 0 && (
-    <section class="blok gundem">
-      <h2>Gündem</h2>
-      <p class="alt-not">
-        Dün ve bu sabah öne çıkanlar: Türkiye ve global taraf, makro ve politika
-        ayrımıyla. Her bölümün altında haberin geldiği kaynaklar listelenir.
-      </p>
-      {b.haberler.bolumler.map((bol: any) => (
-        <div class:list={['gundem-bolum', { kilit: bol.id === 'kilit' }]}>
-          <h3>{bol.baslik}</h3>
-          {bol.id === 'kilit' && (
-            <p class="kilit-not">
-              Piyasayı fiilen hareket ettiren gelişmeler: konu ağırlığı, kaynak itibarı
-              ve kaç yayının haberi taşıdığı birlikte değerlendirilerek seçildi.
-            </p>
-          )}
-          {b.gundem && b.gundem[bol.id] && (
-            <div class="gundem-metin" set:html={b.gundem[bol.id]} />
-          )}
-          <ul class="haber-liste">
-            {bol.maddeler.map((m: any) => (
-              <li>
-                <a href={m.baglanti} target="_blank" rel="noopener">{m.baslik}</a>
-                {m.ozet && <span class="h-ozet">{m.ozet}</span>}
-                <span class="kaynak-not">
-                  {m.kaynak}
-                  {bol.id === 'kilit' && m.kaynak_sayisi > 1 && ` · ${m.kaynak_sayisi} yayın taşıdı`}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-      {b.gundem_yazi_bolumleri && b.gundem_yazi_bolumleri.map((bol: any) => (
-        b.gundem && b.gundem[bol.id] ? (
-          <div class="gundem-bolum yazi-bolum">
-            <h3>{bol.baslik}</h3>
-            <div class="gundem-metin" set:html={b.gundem[bol.id]} />
-          </div>
-        ) : null
-      ))}
-      {b.haberler.okunamayan.length > 0 && (
-        <p class="uyari">Okunamayan kaynak: {b.haberler.okunamayan.join(', ')}</p>
-      )}
-    </section>
-  )}
-
-  {b.veri_gunlugu.length > 0 && (
-    <section class="blok">
-      <h2>Veri günlüğü</h2>
-      <ul class="olay-liste kucuk">
-        {b.veri_gunlugu.map((o: any) => (
-          <li class:list={[o.seviye]}>
-            <span class="metin">{o.metin}</span>
-            {o.aciklama && <span class="dipnot">{o.aciklama}</span>}
-          </li>
-        ))}
-      </ul>
-    </section>
-  )}
-
-  <footer class="kunye">
-    <p>
-      Hazırlanma: {b.olusturma.replace('T', ' ').slice(0, 16)}
-      {b.yorum_zamani ? ` · okuma notu: ${b.yorum_zamani.replace('T', ' ').slice(0, 16)}` : ''}
-    </p>
-    <p class="feragat">
-      Bülten yatırım tavsiyesi değildir. Sayılar kamuya açık kaynaklardan otomatik
-      derlenir; bir büyüklüğün burada yer alması, önceden belirlenmiş bir değişim
-      sınırını aştığı anlamına gelir — yorum değil, ölçüm bildirimidir.
-    </p>
-  </footer>
 </article>
 
 <style>
@@ -577,4 +612,42 @@ const seviyeAd: Record<string, string> = { onemli: 'öne çıkan', dikkat: 'not'
   .kunye { border-top: 1px solid var(--ink-30); padding-top: 0.9rem; margin-top: 2.6rem; }
   .kunye p { font-size: 0.76rem; color: var(--ink-70); margin: 0 0 0.35rem; }
   .feragat { font-style: italic; }
+</style>
+
+<style>
+  /* İçindekiler: bülten uzun ve okur çoğu sabah tek bir bölümü arıyor.
+     Bağlantılar yalnız GERÇEKTEN basılan bölümleri gösterir. */
+  .icindekiler {
+    border: 1px solid var(--ink-30);
+    border-left: 3px solid var(--claret);
+    padding: 0.9rem 1.1rem 1rem;
+    margin: 1.8rem 0 0;
+    background: color-mix(in srgb, var(--paper) 92%, var(--ink) 8%);
+  }
+  .ic-baslik {
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--ink-60); margin: 0 0 0.55rem;
+  }
+  .icindekiler ol {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-wrap: wrap; gap: 0.35rem 1.1rem;
+  }
+  .icindekiler li { counter-increment: ic; }
+  .icindekiler li::before {
+    content: counter(ic) ". ";
+    font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-60);
+  }
+  .icindekiler { counter-reset: ic; }
+  .icindekiler a {
+    font-family: var(--font-mono); font-size: 0.82rem;
+    text-decoration: none; border-bottom: 1px solid var(--ink-30);
+  }
+  .icindekiler a:hover { border-bottom-color: var(--claret); color: var(--claret); }
+
+  /* Çıpayla gelince başlık sayfa üstüne yapışmasın. */
+  .bulten section[id] { scroll-margin-top: 1.5rem; }
+
+  @media (max-width: 620px) {
+    .icindekiler ol { flex-direction: column; gap: 0.3rem; }
+  }
 </style>
