@@ -1,0 +1,187 @@
+---
+title: 'TÜFEX ve başabaş enflasyon'
+description: 'TÜFEye endeksli tahvilin mekaniği ve başabaş enflasyonun ayrıştırılması: piyasanın fiyatladığı enflasyon, anketin beklediği ve aradaki risk primi.'
+pubDate: 2026-08-26
+tags: ['TÜFEX', 'enflasyon', 'başabaş', 'DİBS', 'reel faiz']
+durum: 'aktif'
+kaynak: 'DİBS hattının kesit ve metrik serileri; Enflasyon hattının aylık TÜFE serisi'
+guncelleme: 'DİBS ve Enflasyon hatları tazelendikçe'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+
+Nominal bir DİBS ile TÜFE'ye endeksli bir DİBS (TÜFEX) arasındaki getiri farkı,
+piyasanın **fiyatladığı** enflasyondur — başabaş (breakeven) enflasyon. Bu sayı
+her gün, gerçek parayla, işlem gören fiyatlardan oluşur; ankete verilmiş bir
+cevap değildir. Bu sayfa o sayının nasıl oluştuğunu, neyi ölçüp neyi
+**ölçmediğini** ve anketle arasındaki makasın nasıl okunacağını anlatır.
+
+Bugünkü manşet: piyasa 5 yıllık ortalama enflasyonu
+%<Deger proje="tufex-basabas" anahtar="basabas_5y" ondalik={2}>30,72</Deger>
+fiyatlıyor; anketin aynı ufka eşlenmiş ortalaması
+%<Deger proje="tufex-basabas" anahtar="anket_5y" ondalik={2}>16,31</Deger>.
+Aradaki <Deger proje="tufex-basabas" anahtar="prim_5y" ondalik={2}>14,41</Deger>
+puan, bu sayfanın ana konusudur.
+
+<div class="not gezinme">
+<span class="etiket">Bu sayfa nereye bağlanır</span>
+
+Başabaş ve reel eğrinin kesitten nasıl kurulduğu (interpolasyon, hangi kâğıtlar)
+[dibs-verim-egrisi](/projeler/dibs-verim-egrisi) sayfasının Şekil 06'sında;
+anketin kendisi ve yıl sonu beklentileri [enflasyon](/projeler/enflasyon)
+sayfasında; reel faizin politika tarafı [fonlama-likidite](/projeler/fonlama-likidite)
+sayfasında. Taşıma perspektifi için [TL taşıma defteri](/projeler/tl-tasima).
+</div>
+
+## Güncel okuma
+
+Veri tarihi: <Deger proje="tufex-basabas" anahtar="_tarih" ondalik={0}>25.08.2026</Deger>.
+
+| Vade | Başabaş (piyasa) | Anket (eşlenmiş ufuk) | Prim | Reel getiri |
+|---|---|---|---|---|
+| 1y | <Deger proje="tufex-basabas" anahtar="basabas_1y" ondalik={2}>27,36</Deger> | <Deger proje="tufex-basabas" anahtar="anket_1y" ondalik={2}>23,69</Deger> | <Deger proje="tufex-basabas" anahtar="prim_1y" ondalik={2}>3,67</Deger> | <Deger proje="tufex-basabas" anahtar="reel_1y" ondalik={2}>9,78</Deger> |
+| 2y | <Deger proje="tufex-basabas" anahtar="basabas_2y" ondalik={2}>29,19</Deger> | <Deger proje="tufex-basabas" anahtar="anket_2y" ondalik={2}>20,83</Deger> | <Deger proje="tufex-basabas" anahtar="prim_2y" ondalik={2}>8,36</Deger> | <Deger proje="tufex-basabas" anahtar="reel_2y" ondalik={2}>8,18</Deger> |
+| 3y | <Deger proje="tufex-basabas" anahtar="basabas_3y" ondalik={2}>33,53</Deger> | <Deger proje="tufex-basabas" anahtar="anket_3y" ondalik={2}>19,09</Deger> | <Deger proje="tufex-basabas" anahtar="prim_3y" ondalik={2}>14,08</Deger> | <Deger proje="tufex-basabas" anahtar="reel_3y" ondalik={2}>5,05</Deger> |
+| 5y | <Deger proje="tufex-basabas" anahtar="basabas_5y" ondalik={2}>30,72</Deger> | <Deger proje="tufex-basabas" anahtar="anket_5y" ondalik={2}>16,31</Deger> | <Deger proje="tufex-basabas" anahtar="prim_5y" ondalik={2}>14,41</Deger> | <Deger proje="tufex-basabas" anahtar="reel_5y" ondalik={2}>3,57</Deger> |
+| 7y | <Deger proje="tufex-basabas" anahtar="basabas_7y" ondalik={2}>27,68</Deger> | <Deger proje="tufex-basabas" anahtar="anket_7y" ondalik={2}>14,81</Deger> | <Deger proje="tufex-basabas" anahtar="prim_7y" ondalik={2}>12,88</Deger> | <Deger proje="tufex-basabas" anahtar="reel_7y" ondalik={2}>3,82</Deger> |
+
+### Bir cümlelik okuma
+
+Kısa uçta piyasa ile anket birbirine yakın ve prim mütevazı; üç yıldan sonra
+makas 12–14 puana açılıyor — piyasa, anketin orta vadeli dezenflasyon
+patikasına **tazminatsız** inanmıyor ve bu güvensizliğin fiyatı reel getiriden
+okunuyor.
+
+## Teori — enstrümanın mekaniği
+
+**Endeksleme.** TÜFEX'in anaparası TÜFE ile büyür: her kupon ve itfa,
+anaparanın **endeks katsayısıyla** çarpılmış hâli üzerinden ödenir. Katsayı
+günlük hesaplanır ve iki ay önceki TÜFE'ye bağlıdır:
+
+$$
+EK_t = \frac{REF_t}{REF_{ihraç}}, \qquad
+REF_t = TUFE_{m-3} + \frac{g-1}{G}\bigl(TUFE_{m-2} - TUFE_{m-3}\bigr)
+$$
+
+Burada $m$ ödeme ayı, $g$ ayın günü, $G$ aydaki gün sayısıdır: ay içinde iki
+endeks arasında doğrusal geçilir. **Gecikme dersi:** bugünkü TÜFEX, bugünkü
+enflasyonu değil **2-3 ay önceki** enflasyonu tahakkuk ettirir. Enflasyonun
+kırıldığı aylarda kâğıt bir süre daha eski hızla "kazanır" (ya da tersine),
+ve kısa vadeli TÜFEX taşıması bu yüzden manşet TÜFE'den sapar.
+
+**Başabaş.** Aynı vadede nominal getiri $y_N$ ve TÜFEX reel getirisi $y_R$
+ise, Fisher kimliğinden
+
+$$
+1 + BE = \frac{1+y_N}{1+y_R} \;\;\Rightarrow\;\; BE \approx y_N - y_R
+$$
+
+Gerçekleşen ortalama enflasyon $BE$'ye eşit çıkarsa iki kâğıt aynı getiriyi
+bırakır; üstüne çıkarsa TÜFEX kazanır. Bu yüzden başabaş, "piyasanın enflasyon
+tahmini" diye okunur — ama bu okuma **eksiktir**:
+
+$$
+BE = \underbrace{\mathbb{E}[\pi]}_{\text{beklenti}}
+   + \underbrace{RP_\pi}_{\text{enflasyon risk primi}}
+   + \underbrace{LP}_{\text{likidite primi}}
+$$
+
+Enflasyonu üstlenen tarafın istediği tazminat ($RP_\pi$) başabaşı beklentinin
+**üstüne** iter; TÜFEX'in nominale göre daha az likit olması ($LP$) reel
+getiriyi yukarı, dolayısıyla başabaşı **aşağı** iter. İkisi ayrı ayrı
+gözlenmez; bu sayfa toplamlarını, anketin eşlenmiş ufkuna karşı ölçer.
+
+**Anketi ufka eşleme.** Anket 12 ay ve 24 ay sonrası ile 5 yıl sonrası için
+nokta beklenti verir; başabaş ise vadeye kadar **ortalama** enflasyonu fiyatlar.
+Elmayla armudu kıyaslamamak için anket patikası vade boyunca ortalanır
+(`pka_ort_*` kolonları — [DİBS hattında](/projeler/dibs-verim-egrisi)
+üretilir): 12 aya kadar 12a beklentisi, sonrasında 24a, sonrasında 5y
+beklentisi geçerli sayılıp vade boyunca ağırlıklı ortalama alınır. Prim
+kolonları $prim_v = BE_v - \overline{PKA}_v$ farkıdır.
+
+## Şekil 01 — Piyasa ile anketin makası
+
+<GrafikEmbed src="/projeler/tufex-basabas/basabas_anket.html" baslik="Başabaş ve eşlenmiş anket beklentisi" no="01" />
+
+### Bu şekil nasıl hesaplanıyor?
+
+Kırmızı seriler başabaş (2y düz, 7y noktalı), yeşiller anketin aynı ufka
+eşlenmiş ortalaması. İki serinin **birlikte** hareket ettiği dönemler piyasanın
+anketi izlediği dönemlerdir; makasın açıldığı dönemler, piyasanın anket
+patikasına prim istediği dönemler. Serilerin başlangıcı vadeye göre değişir
+(2y başabaş 2022 başından, 1y ve 5y 2023 başından) — kesitte o vadeyi kuracak
+TÜFEX kâğıdı her zaman yoktur ve seri uydurulmaz, kesilir.
+
+## Şekil 02 — Risk priminin vade yapısı ve tarihçesi
+
+<GrafikEmbed src="/projeler/tufex-basabas/prim_kesit.html" baslik="Bugünkü prim kesiti" no="02a" yukseklik={420} />
+<GrafikEmbed src="/projeler/tufex-basabas/prim_tarihce.html" baslik="Primin tarihçesi" no="02b" />
+
+### Bu şekil nasıl hesaplanıyor?
+
+Prim, yukarıdaki tanımla `be_v − pka_ort_v`. Bugünkü kesit
+(1y <Deger proje="tufex-basabas" anahtar="prim_1y" ondalik={2}>3,67</Deger> →
+5y <Deger proje="tufex-basabas" anahtar="prim_5y" ondalik={2}>14,41</Deger>)
+**yükselen** bir vade yapısı çiziyor ve bu yapının kendisi bir bilgidir: piyasa
+kısa vadede ankete yakın, uzun vadede uzak. İki okuma mümkündür ve ikisi de
+kısmen doğrudur — ya piyasa anketin orta vadeli iyimserliğine inanmıyor
+(beklenti farkı), ya da uzun vadeli enflasyon belirsizliğinin tazminatı yüksek
+(gerçek prim). Ayrım için tarihçeye bakılır: prim **dezenflasyon güveni
+arttıkça** daralır; daralmadan süren bir yüksek prim, güvensizliğin fiyatıdır.
+
+## Şekil 03 — Reel getiriler
+
+<GrafikEmbed src="/projeler/tufex-basabas/reel_tarihce.html" baslik="TÜFEX reel getirileri" no="03" />
+
+### Bu şekil nasıl hesaplanıyor?
+
+TÜFEX kesitinden kurulan reel getiriler (`r1y`, `r2y`, `r7y`). Kısa reel
+getirinin (<Deger proje="tufex-basabas" anahtar="reel_1y" ondalik={2}>9,78</Deger>)
+uzunlardan (7y <Deger proje="tufex-basabas" anahtar="reel_7y" ondalik={2}>3,82</Deger>)
+belirgin yüksek olması, nominal eğrinin tersliğinin reel tarafta da geçerli
+olduğunu söyler: sıkılık bugün yüksek, kalıcı fiyatlanmıyor. Reel getirinin
+**pozitif ve yüksek** olduğu dönemler, TÜFEX'in "enflasyon koruması" işlevini
+tazminat **alarak** sağladığı dönemlerdir; 2021-22'deki negatif bölge ise
+korumanın bedelle satıldığı rejimdi.
+
+## Şekil 04 — Mevsimsellik: kısa başabaşın takvim tuzağı
+
+<GrafikEmbed src="/projeler/tufex-basabas/mevsim.html" baslik="Aylık TÜFE'nin takvim deseni" no="04" yukseklik={460} />
+
+### Bu şekil nasıl hesaplanıyor?
+
+Enflasyon hattının aylık serisinden, her ay için **ham eksi mevsimsellikten
+arındırılmış** aylık TÜFE farkının son
+<Deger proje="tufex-basabas" anahtar="mevsim_yil" ondalik={0}>10</Deger> yıllık
+ortalaması (çubuklar) ve saçılımı (kollar). Ocak
++<Deger proje="tufex-basabas" anahtar="mevsim_ocak" ondalik={2}>1,29</Deger>
+puanla açık ara en pahalı aydır — yönetilen fiyat ve asgari ücret ayarlamaları;
+haziran ve aralık en ucuzları. Ders şu: **bir yıldan kısa ufuklu** başabaş
+okumaları ve TÜFEX taşıması, kalan ayların mevsimsel toplamına göre
+düzeltilmeden yorumlanamaz. Ocak'ı kapsayan kısa bir pencere "yüksek enflasyon
+fiyatlıyor" görünür; bunun bir kısmı haber değil, takvimdir. Uzun vadeli
+başabaşta aylar tam yıl sayısına tamamlandığı için desen kendiliğinden düşer.
+
+## Sınırlar ve yorum notları
+
+- **Prim, beklenti farkı ile gerçek risk priminin toplamıdır** ve bu sayfa
+  ikisini ayrıştırmaz; ayrıştırma model ister ve model varsayımı fiyat değil
+  tahmindir. Ölçülen neyse o gösterilir.
+- **Anket, piyasanın beklentisi için kusurlu bir vekildir**: katılımcı sayısı
+  sınırlıdır (son ankette
+  <Deger proje="tufex-basabas" anahtar="pka_12a" ondalik={2}>23,69</Deger>'luk
+  12a medyanı 63 katılımcıdan) ve anket cevabı pozisyonla desteklenmez.
+- **TÜFEX kesiti nominalden seyrektir**: bazı vadeler bazı dönemlerde
+  kurulamaz ve seriler kesiktir; kesikler grafikte olduğu gibi bırakılır.
+- **Endeks gecikmesi kasıtlı olarak reel getiriden düzeltilmez**: kesitin
+  reel getirisi, kâğıdın gerçekte tahakkuk ettireceği 2-3 ay gecikmeli
+  endekslemeyi zaten içerir.
+
+## Kaynaklar
+
+- DİBS kesiti, başabaş/reel/prim kolonları — [dibs-verim-egrisi](/projeler/dibs-verim-egrisi)
+  hattının `metrik.csv` üretimi
+- Aylık TÜFE (ham ve mevsimsellikten arındırılmış) — [enflasyon](/projeler/enflasyon)
+  hattının `metrik.csv` üretimi
+- TCMB Piyasa Katılımcıları Anketi (enflasyon hattı üzerinden)
