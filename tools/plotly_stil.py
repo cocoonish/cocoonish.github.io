@@ -278,6 +278,20 @@ def isle(yol: Path) -> str:
     return ("stillendi" if yeni_mi else "güncellendi (v3)") + ek
 
 
+def cdn_kalanlari(dosyalar) -> list[str]:
+    """Hâlâ dış CDN'e bağlı dosyalar. Bu liste BOŞ olmalı.
+
+    Neden ayrı bir sayım: yerellestir() barındırmadığımız bir sürüme
+    rastlayınca dosyaya dokunmuyor — doğru davranış, ama dosya "değişmedi"
+    diye rapor edilince bu sessizce kayboluyordu. 26.08'de 237 ders grafiği
+    tam böyle gözden kaçtı: proje grafikleri yerelleşti, dersler CDN'de kaldı
+    ve koşu bunu hiç söylemedi. Sessiz kalan bağımlılık, olmayan bağımlılık
+    değildir.
+    """
+    return [str(y) for y in dosyalar
+            if "cdn.plot.ly" in y.read_text(encoding="utf-8", errors="ignore")]
+
+
 def main():
     argv = sys.argv[1:]
     # --hepsi ESKİDEN yalnız public/projeler altını tarıyordu; ders grafikleri
@@ -296,6 +310,16 @@ def main():
         dosyalar = [Path(a) for a in argv]
     for d in dosyalar:
         print(f"{d.name:36s} {isle(d)}")
+
+    kalan = cdn_kalanlari(dosyalar)
+    print(f"\n  {len(dosyalar)} dosya · dış CDN'e bağlı kalan: {len(kalan)}")
+    if kalan:
+        for y in kalan[:8]:
+            print(f"    ! {y}")
+        if len(kalan) > 8:
+            print(f"    … ve {len(kalan) - 8} dosya daha")
+        print("    Eksik sürümü site/public/js/ altına koyun; araç kendiliğinden "
+              "yerelleştirir.")
 
 
 if __name__ == "__main__":
