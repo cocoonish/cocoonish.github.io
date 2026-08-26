@@ -1,0 +1,140 @@
+---
+/**
+ * Rejim şeridi — "neredeyiz" sorusunun dokuz satırlık cevabı.
+ *
+ * Gösterge şeridi seviyeyi verir; bu şerit seviyelerin BİRLİKTE ne anlama
+ * geldiğini. Her satır iki ölçülen büyüklüğün farkıdır ve hesabı yanında
+ * yazar; etiketler bulten/rejim.py içinde açıkça yazılmış eşiklerden gelir.
+ *
+ * Biçim kararı: kutu değil CETVEL. Kart, gölge, yuvarlak köşe yok — ince
+ * çizgi, boşluk ve tipografik hiyerarşi. Sebebi sadece estetik değil:
+ * kutulu bir pano "gösterge tablosu" gibi okunur ve okuru sayıları
+ * taramaya iter; cetvel hâli yukarıdan aşağı OKUNUR ve satırlar arasındaki
+ * gerilim görünür kalır — sayfanın asıl anlattığı şey o gerilim.
+ */
+import type { RejimSatiri } from '../lib/anaSayfa';
+import { sayi } from '../lib/anaSayfa';
+
+interface Props {
+  satirlar: RejimSatiri[];
+  /** Manşette anılan satırlar — şeritte de işaretlenir. */
+  vurgu?: string[];
+}
+const { satirlar, vurgu = [] } = Astro.props;
+
+const bicim = (s: RejimSatiri) => {
+  if (s.deger === null) return '—';
+  if (s.birim === '%') return `%${sayi(s.deger, 1)}`;
+  if (s.birim === 'puan') return sayi(s.deger, s.ad.includes('eğim') ? 2 : 1, true);
+  return sayi(s.deger, 1);
+};
+---
+
+<ul class="rejim-serit">
+  {
+    satirlar.map((s) => (
+      <li class:list={['rj-satir', vurgu.includes(s.ad) && 'rj-vurgulu']}>
+        <span class="rj-ad">{s.ad}</span>
+        <span class="rj-deger">
+          {bicim(s)}
+          {s.birim !== '%' && s.deger !== null && <span class="rj-birim">{s.birim}</span>}
+        </span>
+        <span class="rj-etiket">{s.etiket}</span>
+        <span class="rj-hesap">{s.hesap}</span>
+        {s.konum && <span class="rj-konum">{s.konum}</span>}
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .rejim-serit {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--ink-30);
+  }
+  .rj-satir {
+    display: grid;
+    grid-template-columns: minmax(0, 15rem) 7.5rem 9rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0 1.2rem;
+    padding: 0.62rem 0;
+    border-bottom: 1px dotted var(--ink-15);
+  }
+  /* Manşette anılan iki satır: sol kenarda bordo bir işaret. Okur manşetin
+     hangi satırlardan kurulduğunu aramak zorunda kalmasın. */
+  .rj-satir.rj-vurgulu {
+    position: relative;
+  }
+  .rj-satir.rj-vurgulu::before {
+    content: '';
+    position: absolute;
+    left: -0.85rem;
+    top: 0.75rem;
+    width: 3px;
+    height: 1.05rem;
+    background: var(--claret);
+  }
+
+  .rj-ad {
+    font-family: var(--font-body);
+    font-size: 0.98rem;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+  .rj-deger {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 1.02rem;
+    font-weight: 500;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .rj-birim {
+    font-size: 0.66rem;
+    color: var(--ink-50);
+    margin-left: 0.3rem;
+    letter-spacing: 0.04em;
+  }
+  .rj-etiket {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--claret);
+    line-height: 1.3;
+  }
+  .rj-hesap {
+    font-family: var(--font-body);
+    font-size: 0.84rem;
+    line-height: 1.4;
+    color: var(--ink-50);
+  }
+  .rj-konum {
+    grid-column: 4;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--ink-50);
+    letter-spacing: 0.03em;
+  }
+
+  /* Dar ekranda ızgara ikiye iner: ad + değer üstte, etiket ve hesap altta.
+     Dört sütunu 380 pikselde sıkıştırmak sayıları okunmaz yapıyor. */
+  @media (max-width: 760px) {
+    .rj-satir {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.15rem 0.8rem;
+      padding: 0.7rem 0;
+    }
+    .rj-etiket {
+      grid-column: 1;
+    }
+    .rj-hesap {
+      grid-column: 1 / -1;
+    }
+    .rj-konum {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
