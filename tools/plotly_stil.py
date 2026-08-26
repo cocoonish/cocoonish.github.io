@@ -190,20 +190,27 @@ def cdnlestir(metin: str) -> tuple[str, bool]:
 
 
 def isle(yol: Path) -> str:
-    metin = yol.read_text(encoding="utf-8", errors="ignore")
-    if "plotly" not in metin.lower():
+    ham = yol.read_text(encoding="utf-8", errors="ignore")
+    if "plotly" not in ham.lower():
         return "atlandı (plotly değil)"
-    metin, kucultuldu = cdnlestir(metin)
+    metin, kucultuldu = cdnlestir(ham)
     yeni_mi = ISARET not in metin
-    # eski enjeksiyon bloğunu sök (işaretten bloğun son </script>'ine kadar)
+    # Eski enjeksiyon bloğunu sök. ÖNDEKİ boşluk da regex'e dahil: EV_STILI
+    # satır başı bir \n ile başlıyor ve söküm işaretten başladığı için o \n
+    # her koşuda birikip kalıyordu — bir --hepsi koşusu 367 dosyada yalnız
+    # boş satırdan oluşan bir fark üretiyordu. CI her veri koşusunda --hepsi
+    # çağırdığından bu, her zamanlanmış commit'e gürültü olarak binecekti.
     if not yeni_mi:
         metin = re.sub(
-            re.escape(ISARET) + r"[\s\S]*?</script>\s*", "", metin, count=1
+            r"\s*" + re.escape(ISARET) + r"[\s\S]*?</script>\s*", "\n", metin, count=1
         )
     if "</body>" in metin:
         metin = metin.replace("</body>", EV_STILI + "\n</body>", 1)
     else:
         metin += EV_STILI
+    # Değişmeyen dosya yeniden yazılmaz: mtime oynamaz, git temiz kalır.
+    if metin == ham:
+        return "değişmedi"
     yol.write_text(metin, encoding="utf-8")
     ek = " + cdn'e küçültüldü" if kucultuldu else ""
     return ("stillendi" if yeni_mi else "güncellendi (v3)") + ek
