@@ -1,0 +1,268 @@
+---
+title: 'TL taşıma defteri'
+description: 'TL carry tradeinin ölçülen hâli: faiz eksi kur hızı makası, hedgesiz taşımanın gerçekleşen endeksi, nakit ile tahvil taşımasının çelişkisi ve konvansiyon tuzakları.'
+pubDate: 2026-08-26
+tags: ['carry', 'TLREF', 'kur', 'DİBS', 'faiz']
+durum: 'aktif'
+kaynak: 'Fonlama ve DİBS hatlarının depo serileri (EVDS kökenli)'
+guncelleme: 'Fonlama/DİBS hatları tazelendikçe, hafta içi günlük'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+import OisCarryHesaplayici from '../../components/OisCarryHesaplayici.astro';
+import ForwardDv01Hesaplayici from '../../components/ForwardDv01Hesaplayici.astro';
+
+Türkiye piyasasında sorulan neredeyse her soru, sonunda tek bir soruya indirgenir:
+**TL taşımak kaç para ediyor?** Faiz kurun aşınmasını karşılıyor mu, ne kadar
+payla karşılıyor, o pay hangi hızla değişiyor. Bu sayfa o sorunun ölçülen
+hâlidir: ileriye bakan makas, geriye bakan gerçekleşme ve ikisinin arasında
+duran bütün metodoloji tuzakları.
+
+Bu hattın kendi veri kaynağı yoktur ve bu bilinçli bir karardır: kur, faiz ve
+DİBS serileri [fonlama](/projeler/fonlama-likidite) ile
+[DİBS](/projeler/dibs-verim-egrisi) hatlarının depoya yazdığı günlük CSV'lerden
+okunur. Böylece bu sayfadaki TLREF, fonlama sayfasındaki TLREF'ten farklı
+olamaz — aynı sayı, aynı seriden gelir.
+
+<div class="not gezinme">
+<span class="etiket">Bu sayfa nereye bağlanır</span>
+
+Fonlama rejimi ve TLREF'in oluşumu [fonlama-likidite](/projeler/fonlama-likidite)
+sayfasında; DİBS getirileri, forward oranları ve taşıma kolonlarının üretimi
+[dibs-verim-egrisi](/projeler/dibs-verim-egrisi) sayfasında; kur hızının
+(devalüasyon) tanımı [usdtry-deval](/projeler/usdtry-deval) sayfasında.
+Taşımanın türev bacağı — TLREF swaplarında pay/receive, carry &amp; roll ayrışması,
+DV01 bütçesi — [trade pratiği](/arastirma/trade-pratigi) dersinde;
+forward'ın DV01'i ve hedge mekaniği [risk ve hedge](/arastirma/risk-ve-hedge)
+dersinde anlatılır. Bu sayfa o iki dersin VERİ ayağıdır.
+</div>
+
+## Güncel okuma
+
+Veri tarihi: <Deger proje="tl-tasima" anahtar="_tarih" ondalik={0}>25.08.2026</Deger>.
+Kur serisi TCMB gösterge kuru olduğu için bülten panosundaki canlı kur ölçümünden
+bir gün geride kalabilir; farkın sebebi aşağıda "Sınırlar" bölümünde.
+
+| Büyüklük | Değer | Okuma |
+|---|---|---|
+| Politika − 1a deval hızı | <Deger proje="tl-tasima" anahtar="makas_politika_d1a" ondalik={1} isaret={true}>+12,5</Deger> puan | pozitifse nakit taşıma brüt kârlı |
+| TLREF (bileşik) − 3a deval hızı | <Deger proje="tl-tasima" anahtar="makas_tlref_b_d3a" ondalik={1} isaret={true}>+26,4</Deger> puan | gerçekleşen fonlamayla aynı soru |
+| 2y DİBS taşıması (TLREF bileşik) | <Deger proje="tl-tasima" anahtar="carry_2y_tlref" ondalik={2} isaret={true}>−8,47</Deger> puan | negatifse tahvili gecelikten fonlamak zararlı |
+| Aynı taşıma, basit faizle (yanlış) | <Deger proje="tl-tasima" anahtar="carry_2y_tlref_basit" ondalik={2} isaret={true}>+0,61</Deger> puan | konvansiyon hatasının bedeli: işaret bile ters |
+| Carry endeksi (USD bazlı, 100 = <Deger proje="tl-tasima" anahtar="endeks_bas" ondalik={0}>28.12.2018</Deger>) | <Deger proje="tl-tasima" anahtar="endeks" ondalik={1}>81,3</Deger> | hedge'siz taşımanın gerçekleşen hâli |
+| Endeksin son 1 yıllık getirisi (USD) | <Deger proje="tl-tasima" anahtar="getiri_1y" ondalik={1} isaret={true}>+26,6</Deger>% | bugünkü rejimin gerçekleşmesi |
+| Zirveden uzaklık | <Deger proje="tl-tasima" anahtar="zirveden" ondalik={1} isaret={true}>−28,0</Deger>% | 2020 zirvesi hâlâ görülmedi |
+
+### Bir cümlelik okuma
+
+Nakit taşıma tarihsel ölçekte bile geniş bir makasla kârlı, tahvil taşıması
+zararlı ve eğri ters — piyasa bu bileşimin süreceğine değil, faiz patikasının
+hızla ineceğine fiyat veriyor; bu sayfanın işi o iddianın her bacağını her gün
+yeniden ölçmek.
+
+## Teori — taşımanın anatomisi
+
+**Taşıma (carry)**, pozisyonu bir gün tutmanın, fiyat hiç değişmezse bırakacağı
+getiridir. Hedge'siz TL taşımada iki bacak vardır: TL faizinin tahakkuku ve
+kurun aşınması. Bir yıllık ufukta beklenen getiri kabaca
+
+$$
+r_{taşıma} \approx r_{TL} - \underbrace{\frac{\Delta S}{S}}_{\text{deval hızı}}
+$$
+
+**Kapsanmamış faiz paritesi (UIP)** bu farkın sıfır olmasını bekler: yüksek
+faiz, beklenen değer kaybını telafi eder, fazlası kalmaz. Carry trade tam
+olarak UIP'nin sistematik ihlaline oynanan pozisyondur — ve Türkiye bu ihlalin
+iki yönünü de yaşamıştır: makasın açık kaldığı uzun dönemler ve makasın tek
+haftada silindiği çöküşler.
+
+**Kapsanmış parite (CIP)** ise arbitrajla bağlanır: forward kuru
+
+$$
+F = S \cdot \frac{DF_{USD}}{DF_{TRY}}
+$$
+
+kimliğinden gelir ve hedge'li taşımanın getirisi (teoride) iki para biriminin
+faiz farkına kilitlenir. Pratikte bu kimlikten sapma — **çapraz kur swap
+bazı** — offshore TL fonlamasının fiyatıdır ve bu depoda henüz ölçülemiyor
+(aşağıda "Kapsam dışı").
+
+**Konvansiyon dersi — bu sayfanın en önemli uyarısı.** TLREF, AOFM ve politika
+faizi **basit yıllık** ilan edilir; DİBS getirileri **bileşiktir**. Gecelik bir
+faizi bir yıl boyunca her gün yeniden yatırmanın gerçek getirisi
+
+$$
+r_{bileşik} = \left(1 + \frac{r_{basit}}{365}\right)^{365} - 1
+$$
+
+olur; %<Deger proje="tl-tasima" anahtar="tlref" ondalik={2}>39,86</Deger>
+basit TLREF, bileşikte %<Deger proje="tl-tasima" anahtar="tlref_b" ondalik={2}>48,94</Deger>
+demektir — dokuz puan fark. İki konvansiyonu karıştırarak hesaplanan taşıma
+yalnız yanlış olmakla kalmaz, **işareti bile ters çevirebilir**: bugünkü
+kesitte 2y DİBS taşıması bileşikle
+<Deger proje="tl-tasima" anahtar="carry_2y_tlref" ondalik={2} isaret={true}>−8,47</Deger>,
+basitle <Deger proje="tl-tasima" anahtar="carry_2y_tlref_basit" ondalik={2} isaret={true}>+0,61</Deger>
+puan. Basit hesap "taşıma sıfıra yakın, zararsız" der; doğru hesap "tahvili
+gecelikten fonlamak yılda sekiz puandan fazla yakar" der. Şekil 04 bu farkın
+tarihçesini gösterir.
+
+## Şekil 01 — İleriye bakan taşıma makası
+
+<GrafikEmbed src="/projeler/tl-tasima/makas.html" baslik="TL taşıma makası — faiz eksi kur hızı" no="01" />
+
+### Bu şekil nasıl hesaplanıyor?
+
+İki seri çizilir. Birincisi bültenin rejim panosuyla aynı tanımdır:
+`politika − d1a`, yani ilan edilmiş politika faizi eksi kurun **1 aylık (21 iş
+günü) ACT/365 yıllıklandırılmış** değişim hızı. İkincisi gerçekleşen fonlamayla
+aynı soruyu sorar: `TLREF_bileşik − d3a`. Deval hızı
+
+$$
+d_n = \left[\left(\frac{S_t}{S_{t-n}}\right)^{365/g} - 1\right]\times 100
+$$
+
+formülüyle, $g$ iki gözlem arasındaki gerçek takvim günü olacak şekilde
+hesaplanır — [usdtry-deval](/projeler/usdtry-deval) hattıyla aynı tanım.
+Politika faizi adım fonksiyonu olduğu için karar günleri arasında ileri
+taşınır; TLREF taşınmaz, çünkü her gün yeniden gerçekleşen bir ölçümdür.
+Makasın sıfırın altına indiği bölgeler, faizin kur hızını karşılamadığı —
+taşımanın öldüğü — dönemlerdir.
+
+## Şekil 02 — Gerçekleşen taşıma: carry endeksi
+
+<GrafikEmbed src="/projeler/tl-tasima/endeks.html" baslik="Hedge'siz TL taşımanın gerçekleşen endeksi" no="02" yukseklik={620} />
+
+### Bu şekil nasıl hesaplanıyor?
+
+Kurgu bir cümledir: **1 dolar bozdur, TL'yi her gün TLREF'te değerlendir, her
+gün dolara çevirip bak.** Endeks
+
+$$
+E_t = 100 \cdot \frac{S_0}{S_t}\prod_{i\le t}\Bigl(1 + r^{TLREF}_{i-1}\cdot\frac{g_i}{365}\Bigr)
+$$
+
+ile kurulur; $g_i$ gözlemler arası takvim günüdür (hafta sonu tahakkuku cuma
+faiziyle işler — TLREF'in kendi konvansiyonu). Seri TLREF'in başladığı
+<Deger proje="tl-tasima" anahtar="endeks_bas" ondalik={0}>28.12.2018</Deger>'den
+başlar; öncesini vekil faizle uzatmak endeksin "gerçekleşme" iddiasını bozacağı
+için uzatılmaz. Alt panel zirveden düşüştür.
+
+Endeksin bugünkü değeri <Deger proje="tl-tasima" anahtar="endeks" ondalik={1}>81,3</Deger>:
+yani 2019 başından beri kesintisiz hedge'siz taşıma, dolara karşı hâlâ
+**kayıptadır** ve 2020 zirvesinin
+<Deger proje="tl-tasima" anahtar="zirveden" ondalik={1} isaret={true}>−28,0</Deger>%
+altındadır. Aynı endeksin son bir yıllık getirisi ise
+<Deger proje="tl-tasima" anahtar="getiri_1y" ondalik={1} isaret={true}>+26,6</Deger>%
+— iki sayı birlikte, carry trade'in asıl karakterini anlatır: **uzun sakin
+dönemlerde biriktirir, kısa çöküşlerde topluca geri verir.** Ölçülen en kötü
+1 aylık pencereler bu çöküşlerin tarihleridir: Nisan 2020 (−9,2), Mart 2021
+(−11,0), **Aralık 2021 (−36,1)**, Haziran 2022 (−11,4), Haziran 2023 (−22,1).
+
+Bir uyarı: son üç yılın günlük getirilerinden hesaplanan Sharpe oranı
+<Deger proje="tl-tasima" anahtar="sharpe_3y" ondalik={2}>5,92</Deger> gibi
+olağandışı yüksek çıkar. Bu bir başarı ölçüsü değil, **rejim ölçüsüdür**:
+yönetilen kur rejiminde günlük oynaklık bastırılır, payda küçülür ve Sharpe
+şişer. Kuyruk riskini — yukarıdaki beş pencereyi — Sharpe ölçmez; bu yüzden
+sayfada ikisi yan yana durur.
+
+## Şekil 03 — Aynı paranın iki taşıması: nakit ve tahvil
+
+<GrafikEmbed src="/projeler/tl-tasima/nakit_tahvil.html" baslik="Nakit taşıma ile 2y DİBS taşıması" no="03" />
+
+### Bu şekil nasıl hesaplanıyor?
+
+Kırmızı seri nakit taşıma makasıdır (`TLREF_bileşik − d1a`). Yeşil seri
+[DİBS hattının](/projeler/dibs-verim-egrisi) hazır kolonu `carry_2y_tlref`:
+2 yıllık DİBS getirisinin, tahvili gecelikten fonlamanın bileşik maliyetinden
+farkı. İkisi **aynı anda zıt işarette olabilir** ve bugün tam öyledir: nakit
+taşıma çift haneli kârlı, tahvil taşıması
+<Deger proje="tl-tasima" anahtar="carry_2y_tlref" ondalik={2} isaret={true}>−8,47</Deger>
+puanla zararlı.
+
+Çelişki görünüştedir; mekanizması üç adımda açılır. **(1)** Nakit taşımanın
+faizi bugünün gecelik faizidir; tahvilin getirisi ise iki yıllık patikanın
+ortalamasının fiyatıdır. **(2)** Eğri tersken (bugün 2y −9y eğimi negatif)
+piyasa, gecelik faizin bugünkü seviyede kalmayacağını, hızla ineceğini
+fiyatlar: 1y1y forward
+%<Deger proje="tl-tasima" anahtar="f_1y1y" ondalik={2}>39,69</Deger>, 2y spot
+%<Deger proje="tl-tasima" anahtar="n2y" ondalik={2}>39,75</Deger>. **(3)** O
+yüzden tahvil taşıması negatiftir: tahvil tutan, bugün cebinden negatif taşıma
+öder ve karşılığında **faizlerin gerçekten inmesi hâlinde** sermaye kazancı
+alır. Tahvil taşıması bir kehanet bedelidir; nakit taşıma bugünün rantıdır.
+Rejim değiştiğinde önce hangisinin döneceği, bu sayfanın günlük sorusudur.
+
+## Şekil 04 — Konvansiyon farkının tarihçesi
+
+<GrafikEmbed src="/projeler/tl-tasima/konvansiyon.html" baslik="Bileşik ve basit konvansiyonla 2y taşıma" no="04" />
+
+### Bu şekil nasıl hesaplanıyor?
+
+İki seri aynı büyüklüğün iki hesabıdır: `n2y − TLREF_bileşik` (doğru) ve
+`n2y − TLREF_basit` (yanlış). Fark tam olarak
+$r_{bileşik}-r_{basit}$ kadardır ve faiz seviyesi yükseldikçe büyür — %10
+faizde yarım puanken %40 faizde dokuz puandır. Yüksek faiz rejiminde
+konvansiyon hatası artık yuvarlama hatası değil, **karar değiştiren** hatadır.
+Bu kolonlar DİBS hattında üretilir ve oradaki metodoloji notunda ayrıca
+belgelidir.
+
+## Hesap araçları
+
+Taşımanın türev bacağı için iki araç bu sitede zaten çalışıyor; ikisi de kendi
+dersinin içinde türetilmiştir, burada işlem masası düzeninde yan yana duruyor.
+
+**TLREF OIS carry &amp; roll.** Ters eğride receiver'ın fixing carry'si de
+rolldown'u da negatiftir — pozisyon, beklediği indirim gelmezse her gün
+kanar. Aracın varsayılan örneği: 500 mn TL, 1y receive %35,25'ten, TLREF
+%39,95'te → üç aylık toplam taşıma **−9,0 mn TL** ve başabaş için 9m
+kotasyonunun %33,50'ye inmesi gerekir. Formül seti ve vaka analizi
+[trade pratiği](/arastirma/trade-pratigi) dersindedir.
+
+<OisCarryHesaplayici />
+
+**USD/TRY forward DV01 ve carry.** Forward'ın iki bacağı iki ayrı faize
+duyarlıdır ve duyarlılık $-\tau\,DF^2$ ile ölçeklenir; %38 TL faizinde tek
+iskonto faktörü kullanmak DV01'i ~%3-4 yanlış ölçer. Aynı araç forward'ın
+taşımasını (spot−kontrat farkının günlük eriyişi) ve eşleşen vadeli TLREF OIS
+hedge nosyonelini de verir. Türetme [risk ve hedge](/arastirma/risk-ve-hedge)
+dersindedir.
+
+<ForwardDv01Hesaplayici />
+
+## Kapsam dışı — bu sayfanın ölçmediği şey
+
+Hedge'li taşımanın gerçek fiyatı, **piyasada işlem gören USD/TRY forward
+puanından** okunur; forward'ın ima ettiği TL faizi ile onshore TLREF'in farkı
+(çapraz kur swap bazı) offshore TL fonlamasının fiyatıdır ve TL pozisyonlarının
+çözülmesi tipik olarak önce orada görünür. Bu depoda o seri **yok**: forward
+kotasyonları tezgâh üstü ve ticari kaynaklarda. Bu yüzden sayfadaki her şey
+hedge'siz taşımadır; buradaki forward hesapları CIP kimliğiyle kurulan
+**sentetik** forward'lardır ve baz sıfır varsayımı taşır. Bu boşluk günlük
+bültenin "kapsam dışı" bölümünde de aynı sözlerle ilan edilir; bir kaynak
+bağlanırsa önce oraya, sonra buraya gelecek.
+
+## Sınırlar ve yorum notları
+
+- **Kur serisi TCMB gösterge kurudur** ve T+1 valörle öğlen sabitlenir; bülten
+  panosundaki kur ise piyasa verisinden canlı ölçülür. İki sayfanın "1 aylık
+  deval hızı" bu yüzden hem tarih hem seviye olarak küçük farklar gösterebilir.
+  Fark bir hata değil, iki ayrı sorunun cevabıdır: resmî kurla ölçülen rejim
+  ve piyasa kuruyla ölçülen an.
+- **Endeks vergi, komisyon ve bid-ask içermez.** Gerçek bir taşıma hesabında
+  stopaj ve dönüşüm maliyeti getiriyi aşağı çeker; endeks üst sınırdır.
+- **TLREF 28.12.2018'de başlar.** 2018 Ağustos çöküşü endekste yoktur; "en
+  kötü ay" listesi bu yüzden 2020 ile açılır. Seriyi vekil faizle geriye
+  uzatmak bilinçli olarak reddedilmiştir.
+- **AOFM bacağı şu an manşet ölçü değildir**: APİ fonlaması eşiğin altına
+  indiği için DİBS hattı AOFM'yi geçersiz işaretliyor; taşıma kıyasları TLREF
+  üzerinden okunmalıdır.
+
+## Kaynaklar
+
+- TCMB EVDS — gösterge kur (`TP.DK.USD.A.YTL`), TLREF, AOFM, politika faizi ve
+  koridor serileri ([fonlama hattı](/projeler/fonlama-likidite) üzerinden)
+- DİBS kesit ve taşıma kolonları — [dibs-verim-egrisi](/projeler/dibs-verim-egrisi)
+  hattının `metrik.csv` üretimi
+- TLREF OIS mekaniği ve carry &amp; roll formülleri — masa rehberi;
+  [trade pratiği](/arastirma/trade-pratigi) dersine porte edildi
+- Forward DV01 türetmesi — [risk ve hedge](/arastirma/risk-ve-hedge) dersi
