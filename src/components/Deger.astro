@@ -23,8 +23,15 @@ interface Props {
   ondalik?: number;
   /** true ise pozitif sayının önüne "+" konur (günlük değişim gibi işaretli büyüklükler) */
   isaret?: boolean;
+  /**
+   * Bu anahtarın saati hattın saatinden kaç GÜN geride kalınca değer "bayat"
+   * işaretlenir. Öntanımlı 45: aylık bir seri bile en kötü ~35 gün geride
+   * kalır, yani meşru bir yayım ritmi bu eşiğe DEĞMEZ. Eşiği aşan boşluk
+   * "bu seri artık yenilenmiyor" demektir ve okur bunu görmelidir.
+   */
+  bayatGun?: number;
 }
-const { proje, anahtar, ondalik = 1, isaret = false } = Astro.props;
+const { proje, anahtar, ondalik = 1, isaret = false, bayatGun = 45 } = Astro.props;
 ---
 
 <span
@@ -32,7 +39,8 @@ const { proje, anahtar, ondalik = 1, isaret = false } = Astro.props;
   data-proje={proje}
   data-anahtar={anahtar}
   data-ondalik={ondalik}
-  data-isaret={isaret ? '1' : undefined}><slot>…</slot></span><script>
+  data-isaret={isaret ? '1' : undefined}
+  data-bayat-gun={bayatGun}><slot>…</slot></span><script>
   // Sayfa başına tek sefer: span'ları projeye göre grupla, ozet.json'ları çek, doldur.
   const alanlar = [...document.querySelectorAll('span.canli-deger')] as HTMLElement[];
   const projeler = [...new Set(alanlar.map((a) => a.dataset.proje!))];
@@ -51,6 +59,29 @@ const { proje, anahtar, ondalik = 1, isaret = false } = Astro.props;
     return String(v);
   };
 
+  /** "GG.AA.YYYY" ya da ISO kabul eder; ayrıştıramazsa null döner (uydurmaz). */
+  const ayristir = (t: unknown): Date | null => {
+    if (typeof t !== 'string') return null;
+    const nokta = t.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (nokta) return new Date(+nokta[3], +nokta[2] - 1, +nokta[1]);
+    const iso = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+    return null;
+  };
+  /**
+   * Tarih taşıyan ama TAZELİK saati OLMAYAN anahtarlar. `kum_zirve_tarih`
+   * "o zirve ne zaman yaşandı" der; donuk olması normaldir, bayat değildir.
+   * Aynı ayrım ölçüm katmanında da var (bkz. bulten/ayar.py TARIHSEL_ISARET) —
+   * iki liste birlikte güncellenmeli.
+   */
+  const TARIHSEL = /(^|_)(maks|min|zirve|dip|cipa|bas|baslangic|en_derin|enbuyuk|encok|cokus|rekor|referans)(_|$)/;
+
+  const gunFarki = (kendi: unknown, hat: unknown): number | null => {
+    const a = ayristir(kendi), b = ayristir(hat);
+    if (!a || !b) return null;
+    return Math.round((b.getTime() - a.getTime()) / 86400000);
+  };
+
   projeler.forEach(async (proje) => {
     try {
       const r = await fetch(`/projeler/${proje}/ozet.json`, { cache: 'no-cache' });
@@ -59,10 +90,28 @@ const { proje, anahtar, ondalik = 1, isaret = false } = Astro.props;
       alanlar
         .filter((a) => a.dataset.proje === proje)
         .forEach((a) => {
-          const v = ozet[a.dataset.anahtar!];
+          const anahtar = a.dataset.anahtar!;
+          const v = ozet[anahtar];
           if (v === undefined || v === null) return;
           a.textContent = bicimle(v, parseInt(a.dataset.ondalik || '1'), a.dataset.isaret === '1');
-          if (ozet._tarih) a.title = `canlı değer · veri: ${ozet._tarih}`;
+
+          // ANAHTAR BAŞINA SAAT. Bir ozet.json tek bir yayım ritmi taşımaz:
+          // aynı dosyada günlük ve daha seyrek seriler yan yana durur. Eskiden
+          // her değerin ipucunda hattın _tarih'i yazıyordu — 12.06'da donmuş
+          // bir satır "veri: 25.08" diye etiketleniyordu, yani ölçülmemiş bir
+          // şey ölçülmüş gibi görünüyordu. Sıra: <anahtar>_tarih → _tarih.
+          const kendi = ozet[`${anahtar}_tarih`];
+          const hat = ozet._tarih;
+          const tarih = kendi || hat;
+          if (tarih) {
+            a.title = `canlı değer · veri: ${tarih}`;
+            const g = TARIHSEL.test(anahtar) ? null : gunFarki(tarih, hat);
+            if (g !== null && g > parseInt(a.dataset.bayatGun || '45')) {
+              a.classList.add('bayat');
+              a.title = `canlı değer · veri: ${tarih} — hattın son tarihi ${hat}, `
+                      + `bu seri ${g} gündür yenilenmedi`;
+            }
+          }
           a.classList.add('yuklendi');
         });
     } catch {
@@ -77,5 +126,19 @@ const { proje, anahtar, ondalik = 1, isaret = false } = Astro.props;
   }
   .canli-deger.yuklendi {
     border-bottom-color: color-mix(in srgb, var(--teal) 55%, transparent);
+  }
+  /* Hattın saatinin çok gerisinde kalmış seri: okur sayının ne kadar eski
+     olduğunu ÜSTÜNE GELMEDEN de görsün. İşaret küçük, satır yüksekliğini
+     bozmaz; anlamı ipucunda yazılı. */
+  .canli-deger.bayat {
+    border-bottom-style: dashed;
+    border-bottom-color: color-mix(in srgb, var(--claret) 60%, transparent);
+  }
+  .canli-deger.bayat::after {
+    content: '°';
+    font-size: 0.75em;
+    vertical-align: super;
+    line-height: 0;
+    color: var(--claret);
   }
 </style>
