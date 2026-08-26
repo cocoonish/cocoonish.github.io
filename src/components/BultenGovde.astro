@@ -8,6 +8,9 @@
  * sonra takvim, en sonda haber. Sabah üç saniyede bakan biri ilk iki bölümden
  * gerekli her şeyi almalı.
  */
+import EgriGrafik from './EgriGrafik.astro';
+import SigmaSerit from './SigmaSerit.astro';
+
 interface Props {
   b: any;
 }
@@ -36,10 +39,16 @@ const bolumler = [
   b.yorum && { id: 'yorum', ad: b.haftalik ? 'Haftanın yorumu' : 'Günün yorumu' },
   b.ozet && (b.ozet.ne_oldu || b.ozet.ne_bekleniyor) &&
     { id: 'ozet', ad: b.haftalik ? 'Geçen hafta / önümüzdeki hafta' : 'Ne oldu / ne bekleniyor' },
+  b.rejim?.length > 0 && { id: 'rejim', ad: 'Rejim panosu' },
+  b.piyasa?.en_cok_hareket?.sigma?.length > 0 &&
+    { id: 'olagandisi', ad: 'Günün olağandışı hareketleri' },
   b.one_cikanlar?.length > 0 && { id: 'one-cikanlar', ad: 'Öne çıkanlar' },
+  b.sonuclar?.length > 0 && { id: 'sonuclar', ad: 'Ne bekleniyordu, ne geldi' },
   takvimVar && { id: 'takvim', ad: 'Takvim' },
   b.gruplar?.length > 0 && { id: 'hat-hat', ad: 'Hat hat değişim' },
   b.temalar?.temalar?.length > 0 && { id: 'temalar', ad: 'İzlenen temalar' },
+  (b.izleme?.acik?.length > 0 || b.izleme?.kapanan?.length > 0) &&
+    { id: 'soz-defteri', ad: 'Söz defteri' },
   b.haberler?.bolumler?.length > 0 && { id: 'gundem', ad: 'Gündem' },
   b.veri_gunlugu?.length > 0 && { id: 'veri-gunlugu', ad: 'Veri günlüğü' },
   b.piyasa?.gruplar?.length > 0 && { id: 'piyasa', ad: 'Piyasa fotoğrafı' },
@@ -109,6 +118,70 @@ const bolumler = [
   </section>
 
 
+  {b.rejim?.length > 0 && (
+    <section class="blok rejim" id="rejim">
+      <h2>Rejim panosu</h2>
+      <p class="alt-not">
+        Gösterge şeridi seviyeyi verir; bu pano seviyelerin birlikte ne anlama
+        geldiğini. Her satır iki ölçülen büyüklüğün farkıdır ve hesabı yanında
+        yazar. Etiketler açıkça yazılmış bir eşikten gelir — okur katılmadığı yerde
+        kendi çizgisini çekebilsin diye eşik de görünür.
+      </p>
+      <ul class="rejim-liste">
+        {b.rejim.map((r: any) => (
+          <li>
+            <div class="rejim-ust">
+              <span class="rejim-ad">{r.ad}</span>
+              <span class="rejim-deger">
+                {r.deger === null ? '—' : `${r.deger > 0 && r.birim === 'puan' ? '+' : ''}${r.deger.toLocaleString('tr-TR')}`}
+                <span class="rejim-birim">{r.birim}</span>
+              </span>
+              {r.etiket && <span class="rejim-etiket">{r.etiket}</span>}
+            </div>
+            <p class="rejim-hesap">{r.hesap}</p>
+            {r.konum && <p class="rejim-konum">{r.konum}</p>}
+            {r.aciklama && <p class="rejim-aciklama">{r.aciklama}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  {b.piyasa.en_cok_hareket?.sigma?.length > 0 && (
+    <section class="blok sigma-blok" id="olagandisi">
+        <h2>Günün olağandışı hareketleri</h2>
+        <p class="alt-not">
+          Hareketin büyüklüğü ile olağandışılığı ayrı şeylerdir. Aşağıdaki sıralama
+          günlük hareketi her enstrümanın kendi son yirmi günlük oynaklığına bölerek
+          kurulur: σ, o enstrüman için normal bir günün ölçüsüdür. Böylece baz puanla
+          yüzde aynı ölçekte kıyaslanır ve yüzdesi küçük ama kendi normaline göre
+          büyük hareketler görünür olur.
+        </p>
+        <SigmaSerit hareketler={b.piyasa.en_cok_hareket.sigma} />
+        <div class="p-kaydir">
+          <table class="p-tablo">
+            <thead>
+              <tr><th>enstrüman</th><th class="sag">1 gün</th><th class="sag">günlük σ</th><th class="sag">kaç σ</th></tr>
+            </thead>
+            <tbody>
+              {b.piyasa.en_cok_hareket.sigma.map((x: any) => (
+                <tr>
+                  <td class="p-ad">{x.ad}</td>
+                  <td class:list={['sag', 'p-degisim', { arti: x.deger > 0, eksi: x.deger < 0 }]}>
+                    {`${x.deger > 0 ? '+' : ''}${x.deger.toLocaleString('tr-TR')}${x.birim}`}
+                  </td>
+                  <td class="sag p-son">{x.oynaklik?.toLocaleString('tr-TR')}{x.birim}</td>
+                  <td class:list={['sag', 'p-sigma', { olagandisi: Math.abs(x.sigma) >= 2 }]}>
+                    {`${x.sigma > 0 ? '+' : ''}${x.sigma.toLocaleString('tr-TR')}σ`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+    </section>
+  )}
+
   {b.one_cikanlar.length > 0 && (
     <section class="blok" id="one-cikanlar">
       <h2>Öne çıkanlar</h2>
@@ -124,6 +197,61 @@ const bolumler = [
     </section>
   )}
 
+
+  {b.sonuclar?.length > 0 && (
+    <section class="blok sonuclar" id="sonuclar">
+      <h2>Ne bekleniyordu, ne geldi</h2>
+      <p class="alt-not">
+        Vakti geçmiş takvim olayları. Beklenti sütunu o gün yayımladığımız
+        beklentidir — sonradan güncellenmiş bir anket değil. Sürpriz yalnız sayısal
+        bir beklenti varsa hesaplanır; serbest metin beklenti sayıya çevrilmez.
+        Piyasa tepkisinin penceresi olayın yaşına göre seçilir ve hücrede yazar.
+      </p>
+      <ul class="sonuc-liste">
+        {b.sonuclar.map((x: any) => (
+          <li>
+            <div class="sonuc-ust">
+              <span class="sonuc-olay">{x.olay}</span>
+              <span class="kaynak-not">{x.tarih}{x.yas_gun > 0 ? ` · ${x.yas_gun} gün önce` : ' · bugün'}</span>
+            </div>
+            {x.beklenti && <p class="sonuc-beklenti"><strong>Bekleniyordu.</strong> {x.beklenti}</p>}
+            {x.durum === 'geldi' ? (
+              <p class="sonuc-geldi">
+                <strong>Geldi.</strong> {x.ad}: <span class="sonuc-sayi">{x.gerceklesme?.toLocaleString('tr-TR')}{x.birim && ` ${x.birim}`}</span>
+                {x.onceki !== null && x.onceki !== undefined && ` (önceki ${x.onceki.toLocaleString('tr-TR')})`}
+                {x.surpriz !== null && x.surpriz !== undefined && (
+                  <span class:list={['sonuc-surpriz', { arti: x.surpriz > 0, eksi: x.surpriz < 0 }]}>
+                    {` sürpriz ${x.surpriz > 0 ? '+' : ''}${x.surpriz.toLocaleString('tr-TR')}`}
+                  </span>
+                )}
+                <span class="kaynak-not"> · veri {x.veri_tarihi}</span>
+              </p>
+            ) : (
+              <p class="sonuc-bekliyor">
+                <strong>Henüz yok.</strong> {x.durum}
+                {x.veri_tarihi && ` — elimizdeki son veri ${x.veri_tarihi}`}
+              </p>
+            )}
+            {x.tepki?.kalemler?.length > 0 && (
+              <p class="sonuc-tepki">
+                <strong>Piyasa ({x.tepki.pencere}).</strong>{' '}
+                {x.tepki.kalemler.map((t: any, i: number) => (
+                  <>
+                    {i > 0 && ' · '}
+                    {t.ad}{' '}
+                    <span class:list={['sonuc-hareket', { arti: t.deger > 0, eksi: t.deger < 0 }]}>
+                      {`${t.deger > 0 ? '+' : ''}${t.deger.toLocaleString('tr-TR')}${t.birim}`}
+                    </span>
+                    {t.sigma !== null && t.sigma !== undefined && ` (${t.sigma > 0 ? '+' : ''}${t.sigma.toLocaleString('tr-TR')}σ)`}
+                  </>
+                ))}
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
 
   {takvimVar && (
     <section class="blok kritik-blok" id="takvim">
@@ -259,6 +387,73 @@ const bolumler = [
     </section>
   )}
 
+  {(b.izleme?.acik?.length > 0 || b.izleme?.kapanan?.length > 0) && (
+    <section class="blok soz" id="soz-defteri">
+      <h2>
+        Söz defteri
+        <span class="adet">
+          {b.izleme.karne.acik} açık · {b.izleme.karne.kapandi} kapandı
+          {b.izleme.karne.vadesi_gecmis > 0 && ` · ${b.izleme.karne.vadesi_gecmis} vadesi geçti`}
+        </span>
+      </h2>
+      <p class="alt-not">
+        Bültenin verdiği sözlerin kaydı. "Şunu izleyeceğiz", "yarın belli olacak",
+        "sebebi anlaşılmıyor" dendiği an buraya bir kayıt düşer ve vadesi geldiğinde
+        hesabı verilir. Bir sabah notunun değeri, bir gün önce ne dediğinin
+        hatırlanabilmesindedir.
+        {b.izleme.karne.isabet_orani !== null && b.izleme.karne.isabet_orani !== undefined
+          ? ` Notlanan ${b.izleme.karne.notlanan} kayıtta isabet: %${b.izleme.karne.isabet_orani}.`
+          : ' Kapanan kayıtlar henüz tuttu/tutmadı diye notlanmadığı için isabet oranı verilmiyor.'}
+      </p>
+
+      {b.izleme.acik.length > 0 && (
+        <>
+          <h3>Açık sözler</h3>
+          <ul class="soz-liste">
+            {b.izleme.acik.map((k: any) => (
+              <li class:list={{ gecikti: k.gun_kalan !== null && k.gun_kalan < 0 }}>
+                <span class="soz-vade">
+                  {k.gun_kalan === null
+                    ? 'vadesiz'
+                    : k.gun_kalan < 0
+                      ? `${-k.gun_kalan} gün gecikti`
+                      : k.gun_kalan === 0
+                        ? 'bugün'
+                        : `${k.gun_kalan} gün`}
+                </span>
+                <span class="soz-govde">
+                  <strong class="soz-konu">{k.konu}</strong>
+                  {k.soz && <span class="soz-metin">{k.soz}</span>}
+                  {k.ne_bakilacak && <span class="soz-bakis">Ne bakılacak: {k.ne_bakilacak}</span>}
+                  <span class="kaynak-not">açılış {k.acilis}{k.vade ? ` · vade ${k.vade}` : ''}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {b.izleme.kapanan.length > 0 && (
+        <>
+          <h3>Yakın zamanda kapananlar</h3>
+          <ul class="soz-liste kapanan">
+            {b.izleme.kapanan.map((k: any) => (
+              <li>
+                <span class="soz-vade">{k.isabet || 'kapandı'}</span>
+                <span class="soz-govde">
+                  <strong class="soz-konu">{k.konu}</strong>
+                  {k.soz && <span class="soz-metin">Ne demiştik: {k.soz}</span>}
+                  {k.sonuc && <span class="soz-sonuc">Ne oldu: {k.sonuc}</span>}
+                  <span class="kaynak-not">açılış {k.acilis}{k.vade ? ` · vade ${k.vade}` : ''}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+  )}
+
   {b.haberler.bolumler && b.haberler.bolumler.length > 0 && (
     <section class="blok gundem" id="gundem">
       <h2>Gündem</h2>
@@ -343,6 +538,7 @@ const bolumler = [
       {b.piyasa.tr_faizleri && b.piyasa.tr_faizleri.length > 0 && (
         <div class="p-grup">
           <h3>Türk lirası faizleri ve DİBS eğrisi</h3>
+          {b.grafikler?.egri && <EgriGrafik egri={b.grafikler.egri} />}
           <table class="p-tablo tl">
             <tbody>
               {b.piyasa.tr_faizleri.map((t: any) => (
@@ -370,7 +566,7 @@ const bolumler = [
                 <tr>
                   <th>enstrüman</th><th class="sag">son</th><th class="sag">1 gün</th>
                   <th class="sag">1 hafta</th><th class="sag">1 ay</th><th class="sag">yılbaşından</th>
-                  <th class="sag">52h aralık</th>
+                  <th class="sag">52h aralık</th><th class="sag">1 gün σ</th>
                 </tr>
               </thead>
               <tbody>
@@ -394,6 +590,11 @@ const bolumler = [
                     ))}
                     <td class="sag p-aralik">
                       {r.yil_konum !== null && r.yil_konum !== undefined ? `%${r.yil_konum}` : '—'}
+                    </td>
+                    <td class:list={['sag', 'p-sigma', { olagandisi: Math.abs(r.d1_sigma ?? 0) >= 2 }]}>
+                      {r.d1_sigma === null || r.d1_sigma === undefined
+                        ? '—'
+                        : `${r.d1_sigma > 0 ? '+' : ''}${r.d1_sigma.toLocaleString('tr-TR')}σ`}
                     </td>
                   </tr>
                 ))}
@@ -423,10 +624,26 @@ const bolumler = [
       )}
 
       {b.piyasa.kaynak_yok && b.piyasa.kaynak_yok.length > 0 && (
-        <p class="uyari">
-          Otomatik kaynağı olmayan, elle takip edilmesi gereken büyüklükler:
-          {' '}{b.piyasa.kaynak_yok.join('; ')}.
-        </p>
+        <div class="p-grup kapsam">
+          <h3>Kapsam dışı — bu bültenin ölçmediği büyüklükler</h3>
+          <p class="alt-not">
+            Bir fotoğrafın neyi göstermediğini söylemek, gösterdiği kadar önemlidir.
+            Aşağıdakiler izlenmeye değer ama otomatik kaynağı bağlanmamış büyüklükler;
+            bültendeki hiçbir yorum bunlara dayanmaz.
+          </p>
+          <ul class="kapsam-liste">
+            {b.piyasa.kaynak_yok.map((k: any) => (
+              typeof k === 'string' ? <li><strong>{k}</strong></li> : (
+                <li>
+                  <strong>{k.ad}</strong>
+                  {k.neden && <span class="kapsam-neden">{k.neden}</span>}
+                  {k.aday && <span class="kapsam-aday"><em>Aday kaynak.</em> {k.aday}</span>}
+                  {k.engel && <span class="kapsam-engel"><em>Engel.</em> {k.engel}</span>}
+                </li>
+              )
+            ))}
+          </ul>
+        </div>
       )}
     </section>
   )}
@@ -514,6 +731,47 @@ const bolumler = [
     color: var(--claret); border: 1px solid var(--claret); padding: 0.15rem 0.5rem;
     margin: 0 0 0.6rem;
   }
+  .kapsam .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.2rem 0 0.8rem; max-width: 62ch; }
+  .kapsam-liste { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.85rem; }
+  .kapsam-liste li {
+    display: grid; gap: 0.15rem; padding-left: 0.9rem;
+    border-left: 2px solid #b45309;
+  }
+  .kapsam-neden, .kapsam-aday, .kapsam-engel {
+    font-size: 0.83rem; color: var(--ink-70); line-height: 1.5;
+  }
+
+  .rejim .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1rem; max-width: 62ch; }
+  .rejim-liste { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; }
+  .rejim-liste li { padding-left: 0.9rem; border-left: 2px solid var(--ink-30); display: grid; gap: 0.1rem; }
+  .rejim-ust { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.6rem; }
+  .rejim-ad { font-weight: 600; }
+  .rejim-deger { font-family: var(--font-mono); font-size: 1.05rem; font-weight: 500; }
+  .rejim-birim { font-size: 0.62em; color: var(--ink-70); margin-left: 0.25em; }
+  .rejim-etiket {
+    font-family: var(--font-mono); font-size: 0.64rem; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--claret); border: 1px solid var(--ink-30);
+    padding: 0.02rem 0.36rem;
+  }
+  .rejim-hesap { margin: 0; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-50); line-height: 1.45; }
+  .rejim-konum { margin: 0; font-size: 0.8rem; color: var(--ink-70); }
+  .rejim-aciklama { margin: 0.1rem 0 0; font-size: 0.83rem; color: var(--ink-70); line-height: 1.5; }
+
+  .sonuclar .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1rem; max-width: 62ch; }
+  .sonuc-liste { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.1rem; }
+  .sonuc-liste li { padding-left: 0.9rem; border-left: 2px solid var(--ink-30); display: grid; gap: 0.18rem; }
+  .sonuc-ust { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; }
+  .sonuc-olay { font-weight: 600; line-height: 1.35; }
+  .sonuc-beklenti, .sonuc-geldi, .sonuc-bekliyor, .sonuc-tepki {
+    margin: 0; font-size: 0.86rem; line-height: 1.5; color: var(--ink-70);
+  }
+  .sonuc-geldi { color: var(--ink); }
+  .sonuc-sayi { font-family: var(--font-mono); font-weight: 600; }
+  .sonuc-surpriz, .sonuc-hareket { font-family: var(--font-mono); font-size: 0.95em; }
+  .sonuc-surpriz.arti, .sonuc-hareket.arti { color: #0f766e; }
+  .sonuc-surpriz.eksi, .sonuc-hareket.eksi { color: var(--claret); }
+  .sonuc-bekliyor { font-style: italic; }
+
   .kritik-blok .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 0.9rem; }
   ol.kritik { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; }
   ol.kritik li { display: grid; grid-template-columns: 5.4rem 1fr; gap: 0.7rem; align-items: baseline; }
@@ -526,6 +784,29 @@ const bolumler = [
   .k-zaman { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-70); }
   .k-beklenti { font-size: 0.79rem; color: var(--ink-70); }
 
+
+  .soz .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1.1rem; max-width: 62ch; }
+  .soz-liste { list-style: none; padding: 0; margin: 0 0 0.4rem; display: grid; gap: 0.9rem; }
+  .soz-liste li {
+    display: grid; grid-template-columns: 7.5rem 1fr; gap: 0.7rem;
+    padding-left: 0.9rem; border-left: 2px solid var(--ink-30);
+  }
+  .soz-liste li.gecikti { border-left-color: #b45309; }
+  .soz-liste.kapanan li { border-left-color: #0f766e; }
+  .soz-vade {
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-70);
+    text-align: right; padding-top: 0.15rem; white-space: nowrap;
+  }
+  .soz-liste li.gecikti .soz-vade { color: #b45309; }
+  .soz-liste.kapanan .soz-vade { color: #0f766e; }
+  .soz-govde { display: grid; gap: 0.2rem; }
+  .soz-konu { line-height: 1.35; }
+  .soz-metin, .soz-sonuc, .soz-bakis { font-size: 0.84rem; color: var(--ink-70); line-height: 1.5; }
+  .soz-bakis { font-style: italic; }
+  @media (max-width: 640px) {
+    .soz-liste li { grid-template-columns: 1fr; gap: 0.25rem; }
+    .soz-vade { text-align: left; }
+  }
 
   .gundem .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1.1rem; }
   .gundem-bolum { margin: 1.5rem 0; }
@@ -549,6 +830,9 @@ const bolumler = [
 
 
   .piyasa .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1.1rem; }
+  .sigma-blok .alt-not { margin: -0.2rem 0 0.7rem; max-width: 64ch; }
+  .p-sigma { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-30); white-space: nowrap; }
+  .p-sigma.olagandisi { color: var(--claret); font-weight: 600; }
   .p-grup { margin: 1.4rem 0; }
   .p-grup h3 {
     font-size: 0.88rem; color: var(--claret); font-variant: small-caps;

@@ -1,0 +1,116 @@
+---
+/**
+ * DİBS spot getiri eğrisi — satır içi SVG, kütüphanesiz, istemci kodu yok.
+ *
+ * Neden Plotly değil: gömülü plotly.js tek grafikte 4,6 MB'a çıkıyor. Bülten
+ * sabah üç saniyede bakılan bir sayfa; proje sayfalarındaki etkileşimli
+ * grafiklerin ağırlığını kaldırmaz ve etkileşime de ihtiyacı yok.
+ *
+ * Renk kararı: sitenin kendi paleti (bordo/çamurcun) körlük ayrımı ölçüsünde
+ * sınır bandında (ΔE 7,9 deutan). Marka paletini bozmak yerine kimlik ikincil
+ * kodlamaya bağlandı — her seri sağ ucunda DOĞRUDAN etiketli ve kıyas serisi
+ * kesik çizgi. Böylece hangi çizginin hangisi olduğu renkten bağımsız okunur.
+ * Sayısal karşılığı aynı sayfadaki TL faiz tablosunda zaten duruyor.
+ */
+interface Props {
+  egri: any;
+}
+const { egri } = Astro.props;
+
+const G = { sol: 34, sag: 78, ust: 14, alt: 26 };
+const W = 640, H = 210;
+const ic = { g: W - G.sol - G.sag, y: H - G.ust - G.alt };
+
+const seriler = (egri?.seriler ?? []).filter((s: any) => s.deger?.some((x: any) => x !== null));
+const tumDeger: number[] = seriler.flatMap((s: any) => s.deger.filter((x: any) => x !== null));
+const enAz = Math.min(...tumDeger), enCok = Math.max(...tumDeger);
+const pay = Math.max((enCok - enAz) * 0.12, 0.4);
+const y0 = enAz - pay, y1 = enCok + pay;
+
+const n = egri?.etiketler?.length ?? 0;
+const px = (i: number) => G.sol + (n > 1 ? (i / (n - 1)) * ic.g : ic.g / 2);
+const py = (v: number) => G.ust + (1 - (v - y0) / (y1 - y0)) * ic.y;
+
+// Izgara: okunur ama geri planda. Tam sayı adımlar, 4-5 çizgi.
+const adim = (y1 - y0) / 4 > 3 ? 5 : (y1 - y0) / 4 > 1.2 ? 2 : 1;
+const izgara: number[] = [];
+for (let v = Math.ceil(y0 / adim) * adim; v <= y1; v += adim) izgara.push(Math.round(v * 10) / 10);
+
+const renk = ['var(--claret)', 'var(--teal)', 'var(--gold)'];
+const yol = (d: (number | null)[]) =>
+  d.map((v, i) => (v === null ? null : `${i === 0 || d[i - 1] === null ? 'M' : 'L'}${px(i).toFixed(1)} ${py(v).toFixed(1)}`))
+    .filter(Boolean).join(' ');
+const sonNokta = (d: (number | null)[]) => {
+  for (let i = d.length - 1; i >= 0; i--) if (d[i] !== null) return { i, v: d[i] as number };
+  return null;
+};
+---
+
+{seriler.length > 0 && (
+  <figure class="egri-figur">
+    <figcaption>
+      DİBS spot getiri eğrisi
+      <span class="egri-alt">
+        {seriler.map((s: any, i: number) => (
+          <span class="egri-lejant">
+            <svg width="18" height="8" aria-hidden="true">
+              <line x1="0" y1="4" x2="18" y2="4" stroke={renk[i % renk.length]}
+                    stroke-width="2" stroke-dasharray={i === 0 ? undefined : '5 3'} />
+            </svg>
+            {s.ad} ({s.tarih})
+          </span>
+        ))}
+      </span>
+    </figcaption>
+    <svg viewBox={`0 0 ${W} ${H}`} class="egri-svg" role="img"
+         aria-label={`DİBS spot getiri eğrisi, ${seriler.map((s: any) => `${s.ad} ${s.tarih}`).join(' ve ')}`}>
+      {izgara.map((v) => (
+        <>
+          <line x1={G.sol} y1={py(v)} x2={W - G.sag} y2={py(v)} class="egri-izgara" />
+          <text x={G.sol - 7} y={py(v) + 3.5} class="egri-eksen sag-hiza">{v.toLocaleString('tr-TR')}</text>
+        </>
+      ))}
+      {egri.etiketler.map((e: string, i: number) => (
+        <text x={px(i)} y={H - 8} class="egri-eksen orta-hiza">{e}</text>
+      ))}
+      {seriler.map((s: any, i: number) => (
+        <>
+          <path d={yol(s.deger)} fill="none" stroke={renk[i % renk.length]} stroke-width="2"
+                stroke-dasharray={i === 0 ? undefined : '5 3'}
+                stroke-linejoin="round" stroke-linecap="round" />
+          {s.deger.map((v: number | null, j: number) => (
+            v === null ? null : (
+              <circle cx={px(j)} cy={py(v)} r="4" fill={renk[i % renk.length]}
+                      stroke="var(--paper)" stroke-width="2">
+                <title>{`${s.ad} · ${egri.etiketler[j]} · %${v.toLocaleString('tr-TR')}`}</title>
+              </circle>
+            )
+          ))}
+          {(() => {
+            const p = sonNokta(s.deger);
+            return p ? (
+              <text x={px(p.i) + 10} y={py(p.v) + 3.5} class="egri-etiket"
+                    fill={renk[i % renk.length]}>{s.ad}</text>
+            ) : null;
+          })()}
+        </>
+      ))}
+    </svg>
+  </figure>
+)}
+
+<style>
+  .egri-figur { margin: 0 0 1.4rem; }
+  .egri-figur figcaption {
+    font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-70);
+    text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.4rem;
+  }
+  .egri-alt { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-top: 0.3rem; text-transform: none; letter-spacing: 0; }
+  .egri-lejant { display: inline-flex; align-items: center; gap: 0.32rem; }
+  .egri-svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .egri-izgara { stroke: var(--ink-15); stroke-width: 1; }
+  .egri-eksen { font-family: var(--font-mono); font-size: 10px; fill: var(--ink-50); }
+  .egri-etiket { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; }
+  .sag-hiza { text-anchor: end; }
+  .orta-hiza { text-anchor: middle; }
+</style>
