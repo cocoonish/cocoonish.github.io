@@ -1,0 +1,135 @@
+---
+title: 'Reel sektörün döviz pozisyonu'
+description: 'Finansal kesim dışındaki firmaların döviz varlık ve yükümlülükleri: net açık pozisyon, kısa vadeli kırılganlık ve 2018 mekanizmasının izlediği büyüklük.'
+pubDate: 2026-08-26
+tags: ['döviz pozisyonu', 'reel sektör', 'kur riski', 'dış denge']
+durum: 'taslak'
+kaynak: 'TCMB, Finansal Kesim Dışındaki Firmaların Döviz Varlık ve Yükümlülükleri (EVDS bie_fdvy, aylık)'
+guncelleme: 'Aylık; hat ilk EVDS koşusunu bekliyor'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+
+Bir kur şokunun ekonomiye nereden gireceğini bilmek istiyorsanız bakılacak yer
+bankalar değil, **firmalardır**. Türk bankacılık sistemi düzenleme gereği açık
+pozisyon taşıyamaz; kur riskinin asıl taşıyıcısı, geliri liraya endeksli ama
+borcu dövize yazılmış reel sektördür. 2018'in mekanizması buydu: kur yükseldi
+→ firmaların döviz borcunun TL karşılığı şişti → bilanço bozuldu → yatırım ve
+istihdam kısıldı → bankaya sorunlu kredi olarak döndü. Kanal bugün de aynı
+yerde durur; değişen tek şey pozisyonun büyüklüğüdür — ve bu sayfa tam olarak
+onu ölçmek için var.
+
+<div class="not gezinme">
+<span class="etiket">Bu sayfa nereye bağlanır</span>
+
+Dış dengenin akım tarafı [ödemeler dengesi](/projeler/odemeler-dengesi)
+sayfasında; rezervin miktarı ve kalitesi
+[tcmb-net-rezerv](/projeler/tcmb-net-rezerv) sayfasında; firmaların TL
+borçlanma koşulları [kredi-parasal](/projeler/kredi-parasal) ve
+[makroihtiyati](/projeler/makroihtiyati) sayfalarında. Bu sayfa o üçünün
+kapattığı halkayı tamamlar: dış yükümlülüğün **kimin** bilançosunda durduğu.
+</div>
+
+<div class="not">
+<span class="etiket">Hazırlanıyor</span>
+
+Bu hat kuruldu ama **ilk veri çekimini henüz yapmadı**: kaynak TCMB EVDS'in
+aylık `bie_fdvy` veri grubu ve çekim, ağ erişimi olan zamanlanmış koşuda
+gerçekleşecek. Bu sitenin kuruluş ilkesi gereği ölçülmemiş sayı basılmaz — o
+yüzden aşağıdaki tablo ve grafikler ilk başarılı koşuya kadar boş/yer tutucu
+kalır ve sayfa "Hazırlanıyor" rozeti taşır. Seri kodları bile koda gömülmedi:
+hat, grubun seri listesini her koşuda EVDS'ten çekip AD kalıbıyla eşler;
+TCMB bir adı değiştirirse sessizce yanlış kolon okumak yerine açık hata verir.
+</div>
+
+## Güncel okuma
+
+Veri tarihi: <Deger proje="reel-sektor-fx" anahtar="_tarih" ondalik={0}>—</Deger>
+
+| Büyüklük | Değer | Okuma |
+|---|---|---|
+| Net döviz pozisyonu | <Deger proje="reel-sektor-fx" anahtar="net_pozisyon" ondalik={1}>—</Deger> mlr USD | negatifse firmalar net borçlu |
+| Net pozisyonun 12 aylık değişimi | <Deger proje="reel-sektor-fx" anahtar="net_pozisyon_d12a" ondalik={1}>—</Deger> mlr USD | açık büyüyor mu kapanıyor mu |
+| Kısa vadeli net pozisyon | <Deger proje="reel-sektor-fx" anahtar="kv_net" ondalik={1}>—</Deger> mlr USD | 12 ay içindeki yeniden finansman |
+| Döviz varlıkları / yükümlülükleri | <Deger proje="reel-sektor-fx" anahtar="varlik_toplam" ondalik={1}>—</Deger> / <Deger proje="reel-sektor-fx" anahtar="yukumluluk_toplam" ondalik={1}>—</Deger> mlr USD | |
+| Net açık / brüt rezerv | <Deger proje="reel-sektor-fx" anahtar="acik_rezerv_orani" ondalik={1}>—</Deger>% | sistemin tampon oranı |
+
+## Teori — neden bu büyüklük
+
+**Bilanço kanalı.** Kur riskinin makro etkisi, riskin *kimde* durduğuna
+bağlıdır. Hanehalkı net döviz **alacaklısıdır** (DTH); kur şoku hanehalkını
+zenginleştirir. Kamu ve bankalar düzenlemeyle sınırlandırılmıştır. Geriye
+kalan reel sektör, tarihsel olarak net döviz **borçlusudur** — ve borçlunun
+bilançosunda kur şoku, servet transferinden fazlasıdır: teminat değerini
+düşürür, kredi limitini daraltır, yatırımı erteler. Literatürdeki adıyla
+*balance sheet channel*; 2018'de Türkiye'de ders kitabı netliğinde işledi.
+
+**Ölçünün yapısı.** TCMB serisi firmaların döviz varlıklarını (mevduat,
+ihracat alacakları, yurt dışı yatırımlar) ve yükümlülüklerini (yurt içi ve
+yurt dışı krediler, ithalat borçları) aylık toplar. İki türev sayı önemlidir:
+
+$$
+NP = V - Y, \qquad NP_{KV} = V_{12ay} - Y_{12ay}
+$$
+
+Toplam net pozisyon ($NP$) şokun **servet** etkisini, kısa vadeli net
+pozisyon ($NP_{KV}$) ise **likidite** etkisini ölçer: önümüzdeki on iki ayda
+çevrilmesi gereken net borç. Kriz dinamiğinde ikincisi önden koşar —
+yeniden finansman kapanmadan servet kaybı realize olmaz.
+
+**Ölçek.** Mutlak sayı tek başına az şey söyler; kırılganlık, açığın sistemin
+tamponuna oranıdır. Bu sayfa net açığı
+[brüt rezerve](/projeler/tcmb-net-rezerv) oranlar — 2018'e giden yıllarda bu
+oran yükseliyordu ve o yükseliş, krizin öncü göstergelerinden biriydi.
+
+## Şekil 01 — Net pozisyon
+
+<GrafikEmbed src="/projeler/reel-sektor-fx/pozisyon.html" baslik="Net döviz pozisyonu ve kısa vadeli net" no="01" />
+
+### Bu şekil nasıl hesaplanıyor?
+
+Toplam net pozisyon ve kısa vadeli net pozisyon, milyar USD. Kaynak serinin
+birimi milyon USD'dir; bu hat 1.000'e böler. İki serinin makası vade
+dönüşümünün ölçüsüdür: toplam açık sabitken kısa vadeli açığın büyümesi,
+firmaların borcu kısaya yığdığını — kırılganlığın vade tarafından arttığını —
+söyler.
+
+## Şekil 02 — Varlık ve yükümlülük bileşimi
+
+<GrafikEmbed src="/projeler/reel-sektor-fx/bilesim.html" baslik="Döviz varlıkları ve yükümlülükleri" no="02" />
+
+### Bu şekil nasıl hesaplanıyor?
+
+İki toplamın tarihçesi. Net pozisyondaki bir düzelme iki yoldan gelebilir ve
+ikisi aynı şey değildir: varlık birikimi (firmalar döviz tutuyor — çoğu zaman
+dolarizasyonun öbür yüzü) ya da yükümlülük azaltımı (borç geri ödeniyor /
+çevrilemiyor). Hangisinin sürdüğü bu şekilden okunur.
+
+## Şekil 03 — Kısa vade
+
+<GrafikEmbed src="/projeler/reel-sektor-fx/kisa_vade.html" baslik="Kısa vadeli varlık ve yükümlülükler" no="03" />
+
+### Bu şekil nasıl hesaplanıyor?
+
+On iki ay içinde vadesi dolan varlık ve yükümlülükler. Yükümlülük çizgisinin
+varlığın üstünde açıldığı dönemler, yeniden finansman ihtiyacının firmaların
+kendi döviz likiditesini aştığı — sistemin rezerv tamponuna yaslandığı —
+dönemlerdir.
+
+## Sınırlar ve yorum notları
+
+- **Seri firmaların KUR RİSKİNİ tam ölçmez**: doğal hedge (ihracat geliri)
+  bilançoda görünmez; ihracatçı bir firmanın açık pozisyonu, iç talebe çalışan
+  bir firmanınkiyle aynı riski taşımaz. TCMB'nin metaverisi kapsam
+  ayrıntılarını verir.
+- **Aylık ve gecikmelidir**: yayın, referans ayın yaklaşık iki ay ardından
+  gelir. Kriz anında bu seri eşzamanlı gösterge değil, teyit göstergesidir.
+- **Türev pozisyonlar kapsam dışıdır**: firmaların forward/opsiyonla taşıdığı
+  koruma bilanço verisinde görünmez.
+
+## Kaynaklar
+
+- TCMB EVDS, "Finansal Kesim Dışındaki Firmaların Döviz Varlık ve
+  Yükümlülükleri" (veri grubu `bie_fdvy`, aylık, Aralık 2002'den beri)
+- Rezerv tamponu — [tcmb-net-rezerv](/projeler/tcmb-net-rezerv) hattı
