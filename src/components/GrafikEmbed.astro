@@ -5,14 +5,22 @@
  * güncelleme akışı yeni HTML'i aynı yola kopyalayınca grafik de yenilenir.
  * Kopyalama sonrası ev stili: python3 site/tools/plotly_stil.py --hepsi
  */
+import { cerceveYuksekligi } from '../lib/grafikOlcu';
+
 interface Props {
   src: string; // ör. /projeler/tcmb-net-rezerv/grafik.html
   baslik: string;
   no?: string; // ör. "01"
+  /**
+   * Açıkça verilirse KAZANIR. Verilmezse figürün kendi ilan ettiği yükseklik
+   * kullanılır — sabit 540px, kendi yüksekliğini yazan figürleri alttan
+   * kırpıyordu ve bunu hiçbir şey ölçmüyordu (bkz. lib/grafikOlcu.ts).
+   */
   yukseklik?: number;
 }
 
-const { src, baslik, no, yukseklik = 540 } = Astro.props;
+const { src, baslik, no, yukseklik } = Astro.props;
+const cerceveYuk = cerceveYuksekligi(src, yukseklik);
 ---
 
 <figure class="grafik">
@@ -21,7 +29,7 @@ const { src, baslik, no, yukseklik = 540 } = Astro.props;
     <span class="grafik-baslik">{baslik}</span>
     <a class="etiket tam-ekran" href={src} target="_blank" rel="noopener">Tam ekran ↗</a>
   </figcaption>
-  <div class="cerceve" style={`height:${yukseklik}px`}>
+  <div class="cerceve" style={`height:${cerceveYuk}px`}>
     <div class="yukleniyor etiket">Grafik yükleniyor…</div>
     <iframe
       src={src}

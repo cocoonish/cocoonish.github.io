@@ -3,9 +3,9 @@ title: 'Reel sektörün döviz pozisyonu'
 description: 'Finansal kesim dışındaki firmaların döviz varlık ve yükümlülükleri: net açık pozisyon, kısa vadeli kırılganlık ve 2018 mekanizmasının izlediği büyüklük.'
 pubDate: 2026-08-26
 tags: ['döviz pozisyonu', 'reel sektör', 'kur riski', 'dış denge']
-durum: 'taslak'
+durum: 'aktif'
 kaynak: 'TCMB, Finansal Kesim Dışındaki Firmaların Döviz Varlık ve Yükümlülükleri (EVDS bie_fdvy, aylık)'
-guncelleme: 'Aylık; hat ilk EVDS koşusunu bekliyor'
+guncelleme: 'Aylık (TCMB, ~2 ay gecikmeli)'
 ---
 
 import GrafikEmbed from '../../components/GrafikEmbed.astro';
@@ -32,28 +32,52 @@ kapattığı halkayı tamamlar: dış yükümlülüğün **kimin** bilançosunda
 </div>
 
 <div class="not">
-<span class="etiket">Hazırlanıyor</span>
+<span class="etiket">Eşlemenin doğruluğu ölçülüyor</span>
 
-Bu hat kuruldu ama **ilk veri çekimini henüz yapmadı**: kaynak TCMB EVDS'in
-aylık `bie_fdvy` veri grubu ve çekim, ağ erişimi olan zamanlanmış koşuda
-gerçekleşecek. Bu sitenin kuruluş ilkesi gereği ölçülmemiş sayı basılmaz — o
-yüzden aşağıdaki tablo ve grafikler ilk başarılı koşuya kadar boş/yer tutucu
-kalır ve sayfa "Hazırlanıyor" rozeti taşır. Seri kodları bile koda gömülmedi:
-hat, grubun seri listesini her koşuda EVDS'ten çekip AD kalıbıyla eşler;
-TCMB bir adı değiştirirse sessizce yanlış kolon okumak yerine açık hata verir.
+Seri kodları koda gömülü değil: hat, `bie_fdvy` grubunun seri listesini her
+koşuda EVDS'ten çekip **ad kalıbıyla** eşler. Ad kalıbı bir gün başka bir
+seriyi yakalarsa sessizce yanlış büyüklük okunurdu — düşen bir hattan çok daha
+kötüsü. Bu yüzden eşleme varsayılmıyor, **ölçülüyor**: tablonun kendi içinde
+iki muhasebe kimliği var ve doğru eşlemede farkları yuvarlama dışında sıfır
+olmalı.
+
+$$
+\text{A.Varlıklar} - \text{B.Yükümlülükler} = \text{C.Net Döviz Pozisyonu},
+\qquad
+\text{D.KV Varlıklar} - \text{E.KV Yükümlülükler} = \text{F.KV Net}
+$$
+
+283 aylık gözlemin tamamında maksimum sapma **1 milyon dolar** — yani
+yuvarlama. Eşik 5 milyon; aşılırsa hat durur ve sayfa yanlış kolonla
+üretilmez.
 </div>
 
 ## Güncel okuma
 
-Veri tarihi: <Deger proje="reel-sektor-fx" anahtar="_tarih" ondalik={0}>—</Deger>
+Veri tarihi: <Deger proje="reel-sektor-fx" anahtar="_tarih" ondalik={0}>06.2026</Deger>
 
 | Büyüklük | Değer | Okuma |
 |---|---|---|
-| Net döviz pozisyonu | <Deger proje="reel-sektor-fx" anahtar="net_pozisyon" ondalik={1}>—</Deger> mlr USD | negatifse firmalar net borçlu |
-| Net pozisyonun 12 aylık değişimi | <Deger proje="reel-sektor-fx" anahtar="net_pozisyon_d12a" ondalik={1}>—</Deger> mlr USD | açık büyüyor mu kapanıyor mu |
-| Kısa vadeli net pozisyon | <Deger proje="reel-sektor-fx" anahtar="kv_net" ondalik={1}>—</Deger> mlr USD | 12 ay içindeki yeniden finansman |
-| Döviz varlıkları / yükümlülükleri | <Deger proje="reel-sektor-fx" anahtar="varlik_toplam" ondalik={1}>—</Deger> / <Deger proje="reel-sektor-fx" anahtar="yukumluluk_toplam" ondalik={1}>—</Deger> mlr USD | |
-| Net açık / brüt rezerv | <Deger proje="reel-sektor-fx" anahtar="acik_rezerv_orani" ondalik={1}>—</Deger>% | sistemin tampon oranı |
+| Net döviz pozisyonu | <Deger proje="reel-sektor-fx" anahtar="net_pozisyon" ondalik={1}>−205,8</Deger> mlr USD | negatifse firmalar net borçlu |
+| Net pozisyonun 12 aylık değişimi | <Deger proje="reel-sektor-fx" anahtar="net_pozisyon_d12a" ondalik={1}>−20,2</Deger> mlr USD | açık büyüyor mu kapanıyor mu |
+| Kısa vadeli net pozisyon | <Deger proje="reel-sektor-fx" anahtar="kv_net" ondalik={1}>+6,6</Deger> mlr USD | 12 ay içindeki yeniden finansman |
+| Döviz varlıkları / yükümlülükleri | <Deger proje="reel-sektor-fx" anahtar="varlik_toplam" ondalik={1}>188,1</Deger> / <Deger proje="reel-sektor-fx" anahtar="yukumluluk_toplam" ondalik={1}>393,9</Deger> mlr USD | |
+| Net açık / brüt rezerv | <Deger proje="reel-sektor-fx" anahtar="acik_rezerv_orani" ondalik={1}>111,9</Deger>% | sistemin tampon oranı |
+
+### Bir cümlelik okuma
+
+**Açık, 2018 zirvesine geri döndü.** Net döviz pozisyonu Mart 2018'de
+−207,9 milyar dolarla rekor kırmış, ardından beş yılda üçte birine kadar
+kapanmıştı (Aralık 2023: −70,6 milyar). Son iki buçuk yılda bu kapanmanın
+**tamamı geri alındı** — bugünkü seviye 2018 rekorunun iki milyar doları
+içinde ve brüt rezervin yüzde yüzünü aşıyor.
+
+Ama iki okuma ayrı tutulmalı. **Servet** tarafı 2018'deki kadar açık;
+**likidite** tarafı değil: kısa vadeli net pozisyon artık pozitif, yani
+önümüzdeki on iki ayda çevrilmesi gereken net borç yok. 2018'in yıkıcı
+mekanizması servet kaybından değil, yeniden finansmanın kapanmasından
+geçmişti. Bugünkü tablo aynı büyüklükte bir servet açığını çok daha uzun bir
+vade yapısıyla taşıyor — kırılganlık aynı yerde değil.
 
 ## Teori — neden bu büyüklük
 

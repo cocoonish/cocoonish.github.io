@@ -185,8 +185,67 @@ def cdnlestir(metin: str) -> tuple[str, bool]:
     # version:"..." deseni Python paket sürümünü yakalayabilir — kullanma.
     surum_m = BANNER.search(govde)
     surum = surum_m.group(1) if surum_m else "3.3.0"
-    etiket = f'<script src="https://cdn.plot.ly/plotly-{surum}.min.js" charset="utf-8"></script>'
-    return metin[:en_buyuk[0]] + etiket + metin[en_buyuk[1]:], True
+    return metin[:en_buyuk[0]] + kutuphane_etiketi(surum) + metin[en_buyuk[1]:], True
+
+
+# Kütüphane siteden servis edilir, CDN'den değil.
+#
+# Neden: 78 grafiğin tamamı `cdn.plot.ly` üzerinden plotly.js çekiyordu ve
+# grafiğin görünmesi ÜÇÜNCÜ BİR TARAFIN erişilebilirliğine bağlıydı. Bir
+# araştırma sitesinin en pahalı içeriği grafikleridir; onları kendi
+# sunmadığımız sürece "sayfa açıldı ama grafikler yok" hâli bizim elimizde
+# değil. Üstelik sürüm sürüklenmesi de sessiz: paket 7.0.0'a çıkınca üretilen
+# yeni dosyalar plotly.js 4.0.0 isterken depoda 3.3.0 isteyen eski dosyalar
+# kalmıştı — iki ayrı dış bağımlılık.
+#
+# Maliyet tek dosya: ~4,3 MB (gzip ile ~1,2 MB), 78 grafiğin ORTAĞI. Gömülü
+# alternatif her grafiğe ayrı ayrı 4,6 MB bindiriyordu.
+JS_DIZIN = Path(__file__).resolve().parent.parent / "public" / "js"
+CDN_ETIKET = re.compile(
+    r'<script[^>]*src="https://cdn\.plot\.ly/plotly-(\d+\.\d+\.\d+)\.min\.js"[^>]*>\s*</script>')
+
+
+def kutuphane_etiketi(surum: str) -> str:
+    """Sürüm depoda varsa yerel yolu, yoksa (dürüstçe) CDN'i verir."""
+    if (JS_DIZIN / f"plotly-{surum}.min.js").exists():
+        return f'<script src="/js/plotly-{surum}.min.js" charset="utf-8"></script>'
+    return f'<script src="https://cdn.plot.ly/plotly-{surum}.min.js" charset="utf-8"></script>'
+
+
+# Yerel dosyaya işaret eden ama ESKİ CDN dosyasının SRI özetini taşıyan etiket.
+# Bu kombinasyon sessiz değil, GÜRÜLTÜLÜ bir kusurdur ve tam da öyle olmalıdır:
+# tarayıcı özeti tutmayan betiği çalıştırmaz, "Plotly is not defined" der ve
+# grafik hiç çizilmez. 26.08'de iki dosya böyle kaldı — src'yi değiştirip
+# integrity'yi bırakan kaba bir düzeltme yüzünden. Alt bütünlük denetimi aynı
+# kaynaktan servis edilen bir dosya için zaten anlamsız; sökülür.
+YEREL_BOZUK = re.compile(
+    r'<script([^>]*src="/js/plotly-[\d.]+\.min\.js"[^>]*)>\s*</script>')
+
+
+def _etiket_temizle(m) -> str:
+    nitelik = re.sub(r'\s+(integrity|crossorigin)="[^"]*"', "", m.group(1))
+    return f"<script{nitelik}></script>"
+
+
+def yerellestir(metin: str) -> tuple[str, str]:
+    """Zaten CDN'e çevrilmiş dosyaları yerel kütüphaneye taşır.
+
+    Depoda önceki koşulardan kalma yüzlerce dosya CDN etiketiyle duruyor;
+    bunları yeniden üretmek yerine etiketleri burada çevriliyor. Depoda
+    olmayan bir sürüme rastlanırsa DOKUNULMAZ ve durum döndürülür — yanlış
+    sürümü zorlamak, dış bağımlılıktan daha kötü bir kusur olurdu.
+    """
+    m = CDN_ETIKET.search(metin)
+    if not m:
+        # CDN etiketi yok ama yerel etikette bayat SRI özeti kalmış olabilir.
+        temiz = YEREL_BOZUK.sub(_etiket_temizle, metin)
+        return (temiz, "bayat SRI özeti söküldü") if temiz != metin else (metin, "")
+    surum = m.group(1)
+    if not (JS_DIZIN / f"plotly-{surum}.min.js").exists():
+        return metin, f"cdn kaldı (plotly-{surum} depoda yok)"
+    # count=1 DEĞİL: bir dosyada birden fazla etiket olabilir ve geride kalan
+    # biri hem dış bağımlılık hem de sürüm karışıklığı demektir.
+    return CDN_ETIKET.sub(kutuphane_etiketi(surum), metin), f"yerelleştirildi ({surum})"
 
 
 def isle(yol: Path) -> str:
@@ -194,6 +253,7 @@ def isle(yol: Path) -> str:
     if "plotly" not in ham.lower():
         return "atlandı (plotly değil)"
     metin, kucultuldu = cdnlestir(ham)
+    metin, yerel_durum = yerellestir(metin)
     yeni_mi = ISARET not in metin
     # Eski enjeksiyon bloğunu sök. ÖNDEKİ boşluk da regex'e dahil: EV_STILI
     # satır başı bir \n ile başlıyor ve söküm işaretten başladığı için o \n
@@ -213,6 +273,8 @@ def isle(yol: Path) -> str:
         return "değişmedi"
     yol.write_text(metin, encoding="utf-8")
     ek = " + cdn'e küçültüldü" if kucultuldu else ""
+    if yerel_durum:
+        ek += " + " + yerel_durum
     return ("stillendi" if yeni_mi else "güncellendi (v3)") + ek
 
 
