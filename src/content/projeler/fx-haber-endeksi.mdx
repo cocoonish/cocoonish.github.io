@@ -282,13 +282,27 @@ kümesinin sürdüğüne bakın — tek kaynaklı tekrar zinciri mi, geniş taba
   koşulmadığı sürece o tarihte donar ve rejim etiketi eskimiş bir korelasyon yapısını
   yansıtmaya başlar. Şekil 06'nın başlığındaki "veri sonu" damgasıyla karşılaştırın.
 
-  Pratikte bu, **aynı sayfada iki tarih** görmek demektir ve ikisi de doğrudur:
-  tarihçe grafiğinin (Şekil 02) son noktası endeksin veri ucunda durur — koşuya
-  giren en yeni haberin günü — rejim ve korelasyon panelleri ise son *tam* haftada
-  biter, yani en fazla altı gün geride. 26.08 Çarşamba koşan bir hatta tarihçe
-  26.08'i, rejim paneli 23.08 Pazar'ı gösterir. Sayfadaki her sayı kendi tarihini
-  taşır: bir büyüklüğün üzerine gelin, ipucunda o büyüklüğün — hattın değil —
-  saati yazar.
+  Pratikte bu, **aynı sayfada iki tarih** görmek demektir ve ikisi de doğrudur.
+  Sebebi şu: sayfayı **iki ayrı haber toplama** besliyor ve makaleleri
+  birbirlerine geçmez.
+
+  1. **Canlı akış** (Google News RSS) — koşu anından geriye 7 gün. Her koşuda
+     yeniden çekilir, FinBERT ile puanlanır, Şekil 01 ve Şekil 02'yi kurar.
+     Dünkü haber buradadır.
+  2. **Haftalık arşiv** (52 haftalık geçmiş önbelleği) — hafta hafta, Pazartesi
+     00:00'dan Pazar 23:59'a. Rejim, korelasyon, fiyat-endeks ve saçılım
+     panellerini bu kurar. Yalnız **kapanmış** haftalar girer.
+
+  Yani "dünkü habere neden puan verilmiyor?" sorusunun cevabı: veriliyor —
+  ama canlı akışta. Arşive giremez, çünkü dünün haftası daha kapanmadı; kapanınca
+  ilk koşuda topluca girer. Bu bir gecikme değil **kıyaslanabilirlik** kararıdır:
+  yarım haftanın (4 günlük) endeksi, tam haftanınkiyle aynı eksende
+  gösterilemez.
+
+  Arşiv koşusu **Pazartesi** sabahı işler; panellerin ucu koşunun ertesinde bir
+  gün, haftanın sonuna doğru yedi gün geride olur. Sayfadaki her sayı kendi
+  tarihini taşır: bir büyüklüğün üzerine gelin, ipucunda o büyüklüğün — hattın
+  değil — saati yazar.
 - **Kalibrasyon tarihi ile veri tarihi ayrıdır.** Endeksler <Deger proje="fx-haber-endeksi" anahtar="opt_kalibrasyon" ondalik={1}>22.07.2026</Deger> kalibrasyonunun
   parametreleriyle kuruluyor, veri ise <Deger proje="fx-haber-endeksi" anahtar="veri_sonu" ondalik={1}>16.08.2026</Deger>'ya kadar. Bu bilinçli: parametreler
   her veri tazelemesinde yeniden aranırsa tarihçedeki her nokta farklı bir modelden
