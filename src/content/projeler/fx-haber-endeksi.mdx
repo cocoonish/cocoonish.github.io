@@ -2,11 +2,11 @@
 title: 'FX Haber-Duyarlılık Endeksi'
 description: 'FinBERT ile skorlanan haber akışından 15 varlıklık duyarlılık endeksi: kullanım kılavuzu, rejim dedektörü, fiyat karşılaştırması, korelasyon analizi ve manşet akışı.'
 pubDate: 2026-07-15
-updatedDate: 2026-08-18
+updatedDate: 2026-08-27
 tags: ['fx', 'sentiment', 'nlp']
 durum: 'aktif'
 kaynak: 'GDELT + Google News RSS + piyasa verisi'
-guncelleme: 'günlük — her koşuda grafikler otomatik yenilenir'
+guncelleme: 'Şekil 01-02 hafta içi her sabah; rejim/korelasyon panelleri pazartesi (kapanan hafta)'
 ---
 
 import GrafikEmbed from '../../components/GrafikEmbed.astro';
@@ -299,10 +299,20 @@ kümesinin sürdüğüne bakın — tek kaynaklı tekrar zinciri mi, geniş taba
   yarım haftanın (4 günlük) endeksi, tam haftanınkiyle aynı eksende
   gösterilemez.
 
-  Arşiv koşusu **Pazartesi** sabahı işler; panellerin ucu koşunun ertesinde bir
-  gün, haftanın sonuna doğru yedi gün geride olur. Sayfadaki her sayı kendi
-  tarihini taşır: bir büyüklüğün üzerine gelin, ipucunda o büyüklüğün — hattın
-  değil — saati yazar.
+  İki toplamanın koşu ritmi de ayrıdır. **Canlı akış hafta içi her sabah
+  04:53'te** çekilir — bülten ölçümünden 90 dakika önce, ki günün okuması
+  bültene taze girsin. **Arşiv koşusu pazartesi 11:37'de** işler; panellerin
+  ucu o koşunun ertesinde bir gün, haftanın sonuna doğru yedi gün geride olur.
+  Yani Şekil 01-02 her iş günü ilerler, alttaki paneller haftada bir. Sayfadaki
+  her sayı kendi tarihini taşır: bir büyüklüğün üzerine gelin, ipucunda o
+  büyüklüğün — hattın değil — saati yazar.
+
+  Günün okumasında olağandışı bir şey varsa **bülten onu kendisi bildirir**:
+  ölçüm katmanı en olağandışı üç hareketi sıralar, bülteninin "Haber tonu"
+  bölümüne basar ve denetim o hareketler metinde anılmadan bülteni yayına
+  bırakmaz. Sıralama eşikle değil büyüklükle yapılır — sabit eşik ölçüldü ve
+  işlemedi: snapshot'tan snapshot'a on beş varlığın dokuz-on ikisi kategori
+  değiştiriyor, yani eşik her gün on sahte olay üretirdi.
 - **Kalibrasyon tarihi ile veri tarihi ayrıdır.** Endeksler <Deger proje="fx-haber-endeksi" anahtar="opt_kalibrasyon" ondalik={1}>22.07.2026</Deger> kalibrasyonunun
   parametreleriyle kuruluyor, veri ise <Deger proje="fx-haber-endeksi" anahtar="veri_sonu" ondalik={1}>16.08.2026</Deger>'ya kadar. Bu bilinçli: parametreler
   her veri tazelemesinde yeniden aranırsa tarihçedeki her nokta farklı bir modelden
