@@ -81,6 +81,15 @@ EV_STILI = """
     }
     var mevcut = gd.layout.title && gd.layout.title.text ? gd.layout.title.text : null;
     var guncelle = {
+      // SABİT GENİŞLİK SİLİNİR. Bazı hatlar figüre `layout.width` yazıyor
+      // (yabancı pozisyon 1400, REDK regresyonu 1500/750). Plotly sabit
+      // genişlik varken `autosize`ı YOK SAYAR: SVG o pikselde çizilir ve dar
+      // bir kapsayıcıda sağ tarafı kırpılır — kümülatif akım grafiği sayfada
+      // 2023'ten sonrasını göstermiyordu. CSS'teki `width: 100%` bunu
+      // düzeltmez, çünkü SVG'nin kendi ölçüsü layout'tan gelir. null vermek
+      // ölçüyü kapsayıcıya devreder; çok panelli figürler zaten yukarıdaki
+      // min-genişlik kuralıyla korunuyor.
+      width: null,
       autosize: true,
       'font.family': "-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
       'font.size': 12.5,
