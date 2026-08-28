@@ -1,11 +1,12 @@
 ---
 title: 'TCMB APİ Portföyü: İkinci Alım Turu, Kalan Kapasite ve Ölçülen Fiyat Etkisi'
-description: '20 Ağustos 2026 doğrudan alım ihalesinin sökümü: 3 Nisan''dan beri ilk alım, dört kıymette 5 milyar TL. 2026 çerçevesinin üç çıpası (450 milyar nominal hedef, 255 milyar alım planı, bilanço oranı) haftalık stok verisiyle birebir kapatılıyor: 262,3 → 441,9 milyar TL, brüt 202,4 milyar alım, 22,8 milyar itfa. Kalan kapasite 52,6 milyar TL. Alımların DİBS eğrisine etkisi, hareket her tenorun kendi 52 haftalık oynaklığına bölünerek ölçülüyor: turun en büyük haftası (+77,6 milyar) hiçbir tenorda bir standart sapmayı aşmıyor ve alım haftaları ile alımsız haftalar arasındaki fark ±0,24 standart sapmanın içinde kalıyor. Sebebi oransal: haftalık 5-10 milyar liralık alım, 9.453 milyar liralık DİBS stokunun binde birinden az. Bilanço oranı %2,17''den %3,83''e çıkıp %3,30''a indi; oranı sabit tutmak bile yılda 158,8 milyar TL alım gerektiriyor.'
+description: 'TCMB''nin ağustos alım turunun sökümü — ve turun sanıldığından büyük olduğunun belgelenmesi: 20 Ağustos ihalesi tek değildi. 21 Ağustos''ta ikinci, 27 Ağustos''ta üçüncü, 28 Ağustos sabahı dördüncü 5 milyarlık tur geldi — ritim perşembe–cuma çifti, haftada 10 milyar. İlk iki alım analitik bilançonun GÜNLÜK "Menkul Kıymetler" kaleminde valör günü izleriyle kesinleşmiş durumda (+4,98 ve +5,01 milyar); aynı seri 2026 turunun tamamını gün gün açıyor: ocak–şubatta kotasyonla sessiz alım, martta günde 17–22 milyara hızlanma, nisanda bitiş, ağustosta yeniden başlama. Portföy ilan edilen turlarla ~461,9 milyar TL''ye, nisan zirvesinin belirgin üzerine gidiyor; 2026 planının kalan kapasitesi 32,6 milyar, tamamlanma %87 — bu tempoda kapasite eylül ortasında dolar. Alımların DİBS eğrisine ölçülebilir etkisi hâlâ yok: yeni alım haftası da dahil hiçbir alım haftası hiçbir tenorda bir standart sapmayı aşmıyor, alım–alımsız hafta farkı ±0,22σ içinde. Bilanço-oranı serisi bu sürümde haftalık vaziyet toplamına sabitlendi ve ilk sürümün oranları adlarıyla düzeltildi.'
 pubDate: 2026-08-27
-tags: ['tcmb', 'api', 'doğrudan alım', 'dibs', 'likidite', 'bilanço', 'eğri', 'portföy']
+updatedDate: 2026-08-28
+tags: ['tcmb', 'api', 'doğrudan alım', 'dibs', 'likidite', 'bilanço', 'eğri', 'portföy', 'analitik bilanço']
 durum: 'aktif'
-kaynak: 'TCMB 2026 Para Politikası Metni ve doğrudan alım ihale duyuruları; TCMB Analitik Bilanço (EVDS, TP.AB.*); HMB haftalık DİBS yatırımcı dağılımı; TCMB DİBS verim eğrisi (bu sitenin DİBS hattı); QNB ekonomistlerinin bilanço-oranı çalışması (basına yansıyan hâliyle)'
-ozet: 'Merkez bankası nisanda hedefine değip durdu, ağustosta yeniden başladı. Bu yazı ne kadar aldığını, ne kadar alacağını ve alımların fiyata gerçekten ne yaptığını haftalık stok verisiyle ölçüyor — alımların eğri üzerindeki izi, eğrinin kendi gürültüsünün içinde kayboluyor.'
+kaynak: 'TCMB 2026 Para Politikası Metni ve doğrudan alım ihale duyuruları; TCMB Analitik Bilanço günlük serileri (EVDS, TP.AB.A051 — çekim betiği ve ham veri depoda: Research/analiz-tcmb-api/); TCMB Haftalık Vaziyet (EVDS, TP.BL009/BL055); HMB haftalık DİBS yatırımcı dağılımı; TCMB DİBS verim eğrisi (bu sitenin DİBS hattı); TCMB Enflasyon Raporu 2026-I (kotasyon alımları); QNB ekonomistlerinin bilanço-oranı çalışması (basına yansıyan hâliyle)'
+ozet: 'Merkez bankası nisanda hedefine değip durdu, ağustosta yeniden başladı — ve ilk bakışta görünenden çok daha hızlı: dokuz günde dört tur, 20 milyar TL, yerleşik bir perşembe–cuma ritmi. Bu yazı alımları artık gün gün izliyor, ne kadar alacağını hesaplıyor ve alımların fiyata gerçekten ne yaptığını ölçüyor — iz, eğrinin kendi gürültüsünün içinde kaybolmaya devam ediyor.'
 seviye: 'orta'
 onkosul: []
 ---
@@ -13,15 +14,26 @@ onkosul: []
 Bir varlık alım programının ne kadar "genişlemeci" olduğu, duyurunun tonundan
 değil iki orandan okunur: portföyün **bilançoya** oranı ve alımın **net borçlanmaya**
 oranı. Türkiye Cumhuriyet Merkez Bankası 20 Ağustos 2026'da dört kıymette toplam
-5 milyar liralık doğrudan alım ihalesi açtı — 3 Nisan'dan bu yana ilk. Manşet
-"tahvil alımı yeniden başladı" diye çıktı. Bu yazının tezi, manşetin ölçüyle
-uyuşmadığıdır: **alım yeniden başlamadı, hiç bitmemiş bir planın kalan kısmı
-işliyor** — ve bugüne kadarki alımların DİBS eğrisine ölçülebilir etkisi bir
-istisna dışında yoktur.
+5 milyar liralık doğrudan alım ihalesi açtı — 3 Nisan'dan bu yana ilk ihale.
+Manşet "tahvil alımı yeniden başladı" diye çıktı ve orada kaldı. Kalmaması
+gerekiyordu: **ertesi gün, 21 Ağustos Cuma, aynı yapıda ikinci bir 5 milyarlık
+tur daha yapıldı** ve haber akışına neredeyse hiç yansımadı — sonraki hafta da
+ritim bozulmadı: **27 Ağustos Perşembe üçüncü, 28 Ağustos Cuma sabahı dördüncü
+5 milyarlık tur** ilan edildi. Dokuz günde dört tur, 20 milyar; yerleşik bir
+perşembe–cuma kalıbı. Bu yazının tezi iki katmanlı: alım yeniden başlamadı,
+**hiç bitmemiş bir planın kalan kısmı işliyor** — ve artık belli bir takvimle;
+bugüne kadarki alımların DİBS eğrisine ölçülebilir etkisi ise yoktur.
 
-Yazının çıpası **27 Ağustos 2026** kapanışıdır. Portföy verisi HMB'nin haftalık
-yatırımcı dağılımından, bilanço TCMB analitik bilançosundan, eğri bu sitenin
-DİBS hattından okunmuştur; hepsi depoda duruyor ve her sayı yeniden üretilebilir.
+Yazının çıpası **28 Ağustos 2026**'dır; ilk sürüm 27 Ağustos çıpasıyla
+yayımlanmıştı ve bu sürüm onu genişletiyor: 21, 27 ve 28 Ağustos turları
+eklendi, alımlar analitik bilançonun günlük serisiyle **gün çözünürlüğünde**
+izlenir hâle geldi, ve bilanço-oranı serisi yeniden üretilebilir bir paydaya
+sabitlenip düzeltildi. Veri uçları: analitik bilanço 26.08 (27.08 14:30
+yayımı), HMB yatırımcı dağılımı 21.08 haftası, DİBS eğrisi 27.08 kapanışı,
+ihale duyuruları 28.08 sabahı. Son iki turun bilanço izleri henüz
+yayımlanmadı (28.08 valörü pazartesi, 31.08 valörü salı yayımında görünür);
+yazıda "kesinleşen" ile "ilan edilen" bu yüzden ayrı etiketlenir. Ham veri ve
+çekim betiği depoda duruyor; her sayı yeniden üretilebilir.
 
 <div class="not gezinme">
   <span class="etiket">Bu yazı nereye bağlanır</span>
@@ -34,9 +46,12 @@ DİBS hattından okunmuştur; hepsi depoda duruyor ve her sayı yeniden üretile
   <a href="/projeler/hazine-ihrac/">Hazine İhraç</a> sayfalarında.
 </div>
 
-## 1. Ne açıklandı, ne yapıldı
+## 1. Ne açıklandı, ne yapıldı — iki gün, iki tur
 
-20 Ağustos 2026 ihalesi dört kıymete dağıtıldı:
+### 1.1 Perşembe: 20 Ağustos ihalesi
+
+20 Ağustos 2026 ihalesi dört kıymete dağıtıldı (ihale no 3675–3678, valör
+21.08, yalnız piyasa yapıcı bankalar):
 
 | ISIN | itfa | tutar (mn TL) | kalan vade (yıl) |
 |---|---|---:|---:|
@@ -53,27 +68,149 @@ tipik dağılımı değildir — likidite için kısa kıymet alınır. Vade ter
 portföyün **itfa profilini uzatma** amacına işaret ediyor: 2026'da itfa olacak
 67,7 milyar liralık kısmın yerine 2029–2034 vadeli kıymet konuyor.
 
-## 2. Portföy ne kadar genişledi — haftalık stoktan
+### 1.2 Cuma: manşetlere girmeyen ikinci tur
+
+Ertesi gün, **21 Ağustos Cuma**, TCMB yine dörder ihaleyle toplam **5 milyar
+liralık** ikinci bir doğrudan alım turu yaptı; basına yansıyan sınırlı
+haberlerde dağılımın yine ağırlıkla uzun vadeli kıymetlerde olduğu geçiyor.
+Bu turun ISIN dökümü erişebildiğimiz kaynaklarda yayımlanmadı (TCMB'nin
+"İhale ile Gerçekleştirilen Doğrudan Alım İşlemleri Verileri" sayfası künyeyi
+tutar); ama turun **kendisi** basın özetine muhtaç değil, çünkü izi birincil
+veride duruyor: analitik bilançonun günlük "Menkul Kıymetler" kalemi cuma
+işleminin valöründe, **24 Ağustos Pazartesi, +5.005 milyon TL** sıçrıyor
+(bkz. Bölüm 2). Perşembe ihalesinin 5.000 nominali de valörü 21.08'de
+**+4.980 milyon** olarak aynı seride görünüyor.
+
+İki günün toplamı: **sekiz ihale, 10 milyar TL** — nisandan beri süren
+sessizliğin ardından tek günlük bir jest değil, bir **tempo**.
+
+### 1.3 Üçüncü ve dördüncü tur: tempo, ritme dönüşüyor
+
+Sonraki hafta kalıbın tesadüf olmadığını gösterdi: **27 Ağustos Perşembe**
+TCMB 5 milyarlık üçüncü doğrudan alım turunu açtı (valör 28.08), **28 Ağustos
+Cuma sabahı** da aynı kalıpta dördüncü turu ilan etti (5 milyar, valör 31.08
+Pazartesi). Yani ritim artık okunabilir: **perşembe ve cuma, günde 5 milyar,
+haftada 10.** Bu iki turun ISIN dökümü de, ilk ikisi gibi, ancak TCMB'nin
+işlem verisi sayfasından okunabiliyor; bilanço izleri ise valörleri gereği
+önümüzdeki haftanın başındaki yayımlarda düşecek — 28.08 valörü pazartesi
+14:30 yayımında, 31.08 valörü salı yayımında. Bu yazının tablolarında ilk iki
+tur "kesinleşen" (bilanço izli), son iki tur "ilan edilen" olarak ayrılır;
+2026 turunda bugüne dek ilan edilip tam karşılanmayan ihale yok.
+
+Dört turun toplamı: dokuz günde **20 milyar TL** — ocak–şubat kotasyon
+evresinin haftalık temposunun (7–10 milyar) ihale kanalında yeniden kurulmuş
+hâli.
+
+Bağlam için: aynı günlerde TCMB, marttan beri kapalı tuttuğu bir hafta vadeli
+repo ihalelerini de yeniden açtı (ilk ihale 24.08, politika faizinden).
+Bankaların lira ihtiyacının adresi o penceredir; doğrudan alımın vade
+dağılımının buna rağmen uzun uçta kalması, alımların likidite operasyonu değil
+portföy planı olduğu okumasını güçlendiriyor.
+
+## 2. Alımların günlük izi — analitik bilançodan
+
+Bu bölüm yazının ilk sürümünde yoktu ve ilk sürümün en büyük kısıtını
+kaldırıyor. Portföyü HMB'nin **haftalık** yatırımcı dağılımından okuyorduk:
+o seri alımın haftasını söyler, gününü söylemez, üstelik bir hafta gecikir —
+cuma turunu ilk sürümün gözden kaçırmasının teknik sebebi tam olarak buydu.
+Oysa TCMB analitik bilançosu **her iş günü** yayımlanır ve doğrudan alımlar
+"İç Varlıklar → Hazine Borçları → **Menkul Kıymetler**" kaleminde (EVDS serisi
+`TP.AB.A051`) valör günü, alış değeriyle kayda geçer.
+
+İki seri arasındaki ölçü farkı bilinerek okunmalı: HMB serisi **nominal**,
+bilanço kalemi **alış değeri** tutar. 21 Ağustos itibarıyla nominal stok 446,9
+milyar iken bilanço kaydı 422,9 milyardır — iskontolu alınan kıymetler
+nominalin altında kayda girer. Ayrıca kalemde alım dışı oynamalar da vardır:
+ay sonlarında TÜFE endeksli kıymetlerin anapara güncellemesi kalemi yukarı
+(ör. 30.06: +19,5 milyar; 31.07: +3,9 milyar), kupon/amortisman kayıtları ve
+itfalar aşağı oynatır. Bu gürültünün içinde **alım valörleri yanıltmaz**:
+izole, ihale tutarı büyüklüğünde, tek günlük sıçramalardır.
+
+### 2.1 Ağustos, gün gün
+
+| valör | Δ (mn TL, alış değeri) | ne oldu |
+|---|---:|---|
+| 12.08 | −8.150 | itfa (nominal karşılığı: 14.08 haftasında −5.888) |
+| 19.08 | −1.541 | kupon/amortisman düzeltmesi (nominal karşılığı yok) |
+| **21.08** | **+4.980** | **perşembe ihalesinin valörü** (5.000 nominal) |
+| **24.08** | **+5.005** | **cuma turunun valörü** (~5.000 nominal) |
+| 25.08 | 0 | işlem yok |
+| 26.08 | −438 | küçük düzeltme; veri ucu |
+
+26 Ağustos'a kadar yerleşen başka alım yok; yani 24–25 Ağustos'ta (pazartesi,
+salı) işlem yapılmadı — ara günler boş, alım günleri perşembe–cuma. Üçüncü ve
+dördüncü turların valörleri (28.08 ve 31.08) bu tablonun veri ucundan sonra:
+izleri pazartesi ve salı 14:30 yayımlarında **+~5'er milyarlık iki sıçrama**
+olarak düşmeli. Düşmezse ya da farklı tutarda düşerse, ilan ile gerçekleşme
+ayrışmış demektir ve bu satırlar ona göre düzeltilir — ölçülmemişi ölçülmüş
+gibi yazmıyoruz; ilan edilen turlar tablolarda ayrı etiketlenir.
+
+### 2.2 2026 turunun günlük filmi
+
+Aynı seri geriye doğru okununca, ilk sürümün haftalık tablosunun içindeki
+**üç ayrı rejim** gün çözünürlüğünde ortaya çıkıyor:
+
+**Ocak–şubat: sessiz, düzenli, ihalesiz.** Alımlar iki-üç iş gününde bir
+~4–5,5 milyarlık dilimlerle yerleşiyor (05.01 +5,4 · 09.01 +4,5 · 12.01 +4,8 ·
+16.01 +4,9 · 19.01 +5,4 · 23.01 +3,8 · 26.01 +3,6 · 02.02 +5,4 · 06.02 +4,9 ·
+09.02 +5,4 · 13.02 +5,4 · 16.02 +4,9 · 20.02 +5,3 · 23.02 +5,3 …). Bu dönemde
+ihale duyurusu yok, çünkü alımlar ağırlıkla **kotasyon yöntemiyle**
+yapılıyordu: TCMB, Enflasyon Raporu 2026-I'de kotasyonla yapılan doğrudan
+alımların 9 Şubat itibarıyla **48,9 milyar TL**'ye ulaştığını yazdı — HMB
+serisinden aynı tarihe kadar okunan nominal alım toplamı (~49 milyar) ile
+örtüşüyor; yani bu evrenin alımları fiilen tamamen kotasyondu. "20 Ağustos,
+3 Nisan'dan beri İLK İHALE" cümlesinin çözümü de budur: ihale kanalı turun
+tamamı değil, yalnız mart–nisan evresiydi.
+
+**Mart: hızlanma.** 27.02'de +9,4 ile kırılan tempo, 3–9 Mart'ta art arda beş
+iş günü **günde 17–22 milyara** çıkıyor (03.03 +17,2 · 04.03 +19,6 · 05.03
++21,1 · 06.03 +19,4 · 09.03 +22,0), 11.03'te +12,1 ile yavaşlıyor. İlk
+sürümde "turun en büyük haftası" dediğimiz +77,6 milyarlık hafta, meğer beş
+günlük kesintisiz bir alım dizisinin haftalık toplamıymış. Ay sonuna doğru
+tempo günde ~4 milyara iniyor (25–30.03), nisanın ilk haftasında sürüyor ve
+**son valör 6 Nisan** (+4,1) ile bitiyor — ilk sürümün ihale duyurularından
+çıkardığı "son ihale 3 Nisan" ile birebir tutarlı (3 Nisan işleminin valörü).
+
+**Nisan ortası–ağustos ortası: hiçbir şey.** Dört buçuk ay boyunca seride tek
+bir alım izi yok; kalemi yalnız itfalar, kuponlar ve ay sonu endeksleme
+düzeltmeleri oynatıyor. Sonra 21 ve 24 Ağustos valörlü iki iz — yeni tur.
+
+Bu filmin analitik değeri şu: ocak temposu (haftada 7–10 milyar) ile ağustos
+temposu (iki haftadır haftada 10 milyar) **aynı ölçektedir**. Ağustos yeniden
+başlangıcı, mart hızlanmasının değil ocak rutininin devamı gibi kurgulanmış —
+tek farkla: o zaman kanal kotasyondu ve alımlar sessizdi, şimdi kanal ihale ve
+takvim (perşembe–cuma, 5'er milyar) önceden okunabiliyor.
+
+## 3. Portföy ne kadar genişledi — haftalık stoktan
 
 Merkez bankasının DİBS stoku, Hazine'nin haftalık yatırımcı dağılımında ayrı bir
-satırdır ve **her cuma** yayımlanır. Bu, alım programını dışarıdan izlemenin en
-temiz yoludur: ihale duyuruları tek tek takip edilmese bile stok ne olduğunu
-söyler.
+satırdır ve **her cuma** damgasıyla yayımlanır. Nominal ölçünün otoritesi
+budur; günlük bilanço izi zamanlama verir, nominal toplamı bu seri verir.
 
-| tarih | stok (mlr TL) | DİBS stokundaki pay | bilanço oranı |
+| tarih | stok (mlr TL) | DİBS stokundaki pay | bilanço oranı* |
 |---|---:|---:|---:|
-| 26.12.2025 | 262,3 | %3,18 | %2,17 |
-| 02.01.2026 | 262,3 | %3,19 | %2,19 |
-| 06.03.2026 | 379,6 | %4,30 | %2,93 |
-| 10.04.2026 | **450,6** | **%5,05** | **%3,83** |
-| 14.08.2026 | 441,9 | %4,67 | %3,30 |
+| 26.12.2025 | 262,3 | %3,18 | %2,11 |
+| 02.01.2026 | 262,3 | %3,19 | %2,08 |
+| 06.03.2026 | 379,6 | %4,30 | %2,76 |
+| 10.04.2026 | 450,6 | %5,05 | %3,52 |
+| 14.08.2026 | 441,9 | %4,67 | %3,20 |
+| **21.08.2026** | **446,9** | **%4,64** | **%3,17** |
 
-Üç kolon üç ayrı soruya cevap veriyor ve **üçü aynı yöne bakmıyor**. Nominal stok
-nisandan beri düşüyor (450,6 → 441,9). DİBS stokundaki pay daha hızlı düşüyor
-(%5,05 → %4,67), çünkü Hazine ihraç etmeye devam ediyor ve payda büyüyor.
-Bilanço oranı ise en hızlı düşen (%3,83 → %3,30), çünkü TCMB bilançosu aynı
-dönemde 11,8 trilyondan 13,4 trilyona çıktı. **Merkez bankası hiçbir şey
-yapmadan "genişlemeci"likten uzaklaştı.**
+<small>* Bilanço oranının paydası bu sürümde haftalık vaziyet toplam aktifine
+(TP.BL055) sabitlendi; ilk sürümdeki oran serisi düzeltildi — bkz. 6.1'deki
+düzeltme notu.</small>
+
+Üç kolon üç ayrı soruya cevap veriyor ve **üçü aynı yöne bakmıyor**. Nominal
+stok 21.08 haftasında perşembe ihalesiyle 446,9'a çıktı; sonrası tabloya
+henüz girmedi ama patika belli: cuma turunun 24.08 valörüyle stok **451,9
+milyar TL'ye çıkıp nisan zirvesini (450,6) geçti — yeni zirve**; üçüncü turun
+bugünkü (28.08) valörüyle ~456,9'a, pazartesi yerleşecek dördüncü turla
+~461,9'a gider. DİBS
+stokundaki pay buna rağmen düşük kalıyor (%4,64), çünkü Hazine ihraç etmeye
+devam ediyor ve payda büyüyor. Bilanço oranı da zirvesinin belirgin altında
+(%3,17'ye karşı nisanda %3,52), çünkü TCMB bilançosu büyümeye devam ediyor.
+**Nominal zirve yenilenirken iki göreli ölçünün de zirveden uzak olması**,
+bu yazının "genişleme değil idame" okumasının tablodaki karşılığıdır.
 
 ### 2026 turunun haftalık dökümü
 
@@ -83,7 +220,7 @@ itfadır. 2026'nın tamamı:
 | hafta | stok (mn TL) | Δ | ne oldu |
 |---|---:|---:|---|
 | 02.01 | 262.300 | — | üç aydır sabit |
-| 09.01 | 271.260 | +8.960 | **tur başlıyor** |
+| 09.01 | 271.260 | +8.960 | **tur başlıyor** (kotasyonla) |
 | 16.01 | 280.200 | +8.940 | |
 | 23.01 | 288.760 | +8.560 | |
 | 30.01 | 296.156 | +7.396 | |
@@ -91,67 +228,89 @@ itfadır. 2026'nın tamamı:
 | 13.02 | 303.679 | −2.477 | itfa |
 | 20.02 | 292.086 | −11.593 | itfa |
 | 27.02 | 302.086 | +10.000 | |
-| 06.03 | 379.647 | **+77.561** | **turun en büyük haftası** |
+| 06.03 | 379.647 | **+77.561** | **beş günde 17–22'şer milyar** |
 | 13.03 | 416.565 | +36.918 | |
 | 20.03 | 416.565 | 0 | |
 | 27.03 | 427.875 | +11.310 | |
-| 03.04 | 446.585 | +18.710 | son ihale |
+| 03.04 | 446.585 | +18.710 | son ihaleler |
 | 10.04 | 450.585 | +4.000 | **hedefe değdi** |
 | 17.04 → 07.08 | 450.485 → 447.750 | −2.835 | yalnız itfa, alım yok |
-| 14.08 | 441.862 | −5.888 | itfa |
+| 14.08 | 441.862 | −5.888 | itfa (valör 12.08) |
+| **21.08** | **446.862** | **+5.000** | **perşembe ihalesi; yeni tur** |
+| (28.08) | (~456.862) | (+10.000) | 2. ve 3. turlar (valör 24.08 + 28.08) — resmî satır önümüzdeki hafta |
+| (04.09) | (~461.862) | (+5.000) | 4. tur (valör 31.08); ilan edilen tutarla |
 
 Ocak–nisan arası haftalık ritim iki farklı rejim gösteriyor. Ocakta haftalık
 7–10 milyar liralık düzenli alım var — "dengeli ve öngörülebilir" çerçevesine
 uyan bir tempo. Martta tempo kırılıyor: iki haftada 114,5 milyar lira, yani
-ocak temposunun altı katı. Bu, takvimin değil bir kararın izi.
+ocak temposunun altı katı. Bu, takvimin değil bir kararın izi. Ağustos
+yeniden başlangıcı ise ocak temposuna dönüyor: haftada ~10 milyar.
 
-Toplamlar:
+Toplamlar, 21.08 itibarıyla:
 
 $$
-\underbrace{262{,}3}_{\text{yıl başı}} + \underbrace{202{,}4}_{\text{brüt alım}} - \underbrace{22{,}8}_{\text{itfa}} = \underbrace{441{,}9}_{\text{14.08 stoku}}
+\underbrace{262{,}3}_{\text{yıl başı}} + \underbrace{207{,}4}_{\text{brüt alım}} - \underbrace{22{,}8}_{\text{itfa}} = \underbrace{446{,}9}_{\text{21.08 stoku}}
 $$
 
-## 3. Ne kadar daha alacak — üç çıpa da aynı yeri gösteriyor
+Sonraki üç turla birlikte brüt alım **222,4 milyara** gider: bunun 212,4'ü
+bilanço izinde kesinleşmiş (2. turun 24.08 valörü dahil), son iki turun 10
+milyarı ilan edilmiş durumda ve resmî serilere önümüzdeki haftanın başında
+düşer.
+
+## 4. Ne kadar daha alacak — üç çıpa da aynı yeri gösteriyor
 
 2026 Para Politikası Metni yıl için üç sayı veriyor: portföyün yıl sonu nominal
 hedefi **450 milyar TL**, bu seviyeye ulaşmak için planlanan alım **255 milyar
 TL**, yıl içinde itfa olacak kısım **67,7 milyar TL**. Üçü tutarlı:
 262,3 + 255,0 − 67,7 = 449,6 ≈ 450.
 
-Gerçekleşme 14 Ağustos itibarıyla:
+Gerçekleşme, ilan edilen dört tur dahil (212,4'ü bilanço izinde kesin, son
+iki turun 10 milyarı ilan):
 
 | kalem | plan | gerçekleşen | kalan | tamamlanma |
 |---|---:|---:|---:|---:|
-| Brüt alım | 255,0 | 202,4 | **52,6** | %79 |
+| Brüt alım | 255,0 | 222,4 | **32,6** | %87 |
 | İtfa | 67,7 | 22,8 | 44,9 | %34 |
-| Net | +187,3 | +179,6 | +7,7 | %96 |
+| Net | +187,3 | +199,6 | −12,3 | %107 |
 
-Yıl sonu projeksiyonu: 441,9 + 52,6 − 44,9 = **449,6 milyar TL** — hedefin
-tam üzerinde. **Yani 20 Ağustos ihalesi yeni bir tur değil, kalan 52,6 milyar
-liralık kapasitenin ilk dilimidir.**
+Yıl sonu projeksiyonu: 461,9 + 32,6 − 44,9 = **449,6 milyar TL** — hedefin
+tam üzerinde. **Yani ağustos ihaleleri yeni bir tur değil, kalan 32,6 milyar
+liralık kapasitenin işlenmesidir.** Net kalemin %100'ü geçmesi çelişki değil,
+sıralama etkisidir: yılın kalan itfaları (44,9) henüz düşmedi; stok bugün
+hedefin üzerinden, yıl sonuna itfalarla hedefe iner.
 
-Öngörülebilirlik burada somut: ihale başına 5 milyar lira ve yıl sonuna
-dört buçuk ay kalmışken, kalan kapasite **yaklaşık on ihale** demektir — ayda
-iki ilâ üç. Doğrudan alım kıymetleri, alım yapılacak ayın ilk iş günü saat
-10.00'da ilan ediliyor; yani takvim de, tutar da, sıklık da önceden okunabilir.
-Bir yatırımcı için buradaki bilgi "TCMB tahvil alıyor" değil, **"ayda ~12 milyar
-liralık, ağırlıkla 3–8 yıl vadeli, önceden ilan edilen bir alıcı var"**dır.
+İlk sürüm burada "ihale başına 5 milyar, ayda iki-üç ihale, yıl sonuna yayılan
+~on ihale" diye bir tempo öngörmüştü. **Bu öngörü bir günde eskidi** ve
+düzeltilmesi gerekiyor: TCMB dokuz günde dört turla 20 milyar aldı/ilan etti
+ve ritmi perşembe–cuma çiftine oturttu. Bu tempo — haftada 10 milyar, ocak
+rutiniyle aynı ölçekte — korunursa kalan 32,6 milyar **üç-dört haftada, yani
+eylül ortasında** biter; yıl sonuna yayılmaz. Tempo tek başına hedef aşımı
+anlamına gelmez (bkz. bölüm 8'in düzeltilmiş ölçütü): planın erken
+tamamlanması ile hedefin üzerine çıkılması ayrı olaylardır ve ikisini ayıran
+şey, kapasite dolduğunda alımların durup durmadığıdır.
 
-## 4. Fiyata ne oldu — ölçüm, izlenim değil
+Öngörülebilirlik tarafı yerli yerinde: doğrudan alım kıymetleri, alım
+yapılacak ayın ilk iş günü saat 10.00'da ilan ediliyor; takvim de, tutar da
+önceden okunabilir. Bir yatırımcı için buradaki bilgi "TCMB tahvil alıyor"
+değil, **"perşembe–cuma günleri 5'er milyar alan, ağırlıkla 3–8 yıl vadede
+duran, önceden ilan edilen ve eylül ortasında kapasitesi dolacak bir alıcı
+var"**dır.
 
-Bu bölümün cevabı kısa: **alımların DİBS eğrisine ölçülebilir bir etkisi yok.**
-Uzun olan, bu sonuca nasıl varıldığı — çünkü ham baz puanlara bakan bir okuma
-tam tersini söylüyor.
+## 5. Fiyata ne oldu — ölçüm, izlenim değil
 
-### 4.1 Ham bakış yanıltıyor
+Bu bölümün cevabı kısa: **alımların DİBS eğrisine ölçülebilir bir etkisi yok —
+yeni alım haftası dahil.** Uzun olan, bu sonuca nasıl varıldığı — çünkü ham
+baz puanlara bakan bir okuma tam tersini söylüyor.
+
+### 5.1 Ham bakış yanıltıyor
 
 Alım günlerinin çevresindeki eğri hareketine baz puan olarak bakıldığında büyük
 sayılar çıkıyor. En çarpıcısı 6 Mart 2026: dokuz yıllık getiri tek günde
 **143 baz puan** düştü, iki yıllık 98 baz puan. Aynı hafta portföye 77,6 milyar
 lira girmişti. Nedensellik kendini dayatıyor gibi görünüyor.
 
-Görünmüyor. TL eğrisi %27–38 bandında işlem görüyor ve bu seviyelerde **günlük
-oynaklığı 32–43 baz puan**. 143 baz puanlık bir gün, aynı haftanın içinde
+Görünmüyor. TL eğrisi %27–40 bandında işlem görüyor ve bu seviyelerde **günlük
+oynaklığı 36–43 baz puan**. 143 baz puanlık bir gün, aynı haftanın içinde
 kayboluyor:
 
 | gün | 9 yıllık (%) | günlük Δ (bp) |
@@ -165,46 +324,58 @@ kayboluyor:
 
 Düşüş üç iş gününde fazlasıyla geri alındı. Tek bir günün hareketini alıma
 bağlamak, o günün öncesindeki +51 ve +68'i ve sonrasındaki +35 ve +70'i
-görmezden gelmek demek.
+görmezden gelmek demek. Üstelik bölüm 2'nin günlük izi artık şunu da
+söylüyor: o hafta alım **beş günün beşinde de** vardı — düşen tek gün ile
+alım günleri örtüşmüyor bile.
 
-### 4.2 Doğru hizalama: hafta hafta
+### 5.2 Doğru hizalama: hafta hafta
 
 Portföy verisi **haftalıktır** (cuma damgalı). Günlük bir eğri hareketini
-haftalık bir stok değişimine bağlamak, hangi gün alım yapıldığını bilmediğimiz
-hâlde bir gün seçmek anlamına gelir. Doğru eşleştirme, aynı haftanın eğri
-değişimini aynı haftanın stok değişimiyle karşılaştırmaktır. Hareket, tenorun
-kendi 52 haftalık oynaklığına bölünerek standart sapma cinsinden okunur.
+haftalık bir stok değişimine bağlamak yerine, aynı haftanın eğri değişimi aynı
+haftanın stok değişimiyle karşılaştırılır. Hareket, tenorun kendi 52 haftalık
+oynaklığına bölünerek standart sapma cinsinden okunur. (Tablo bu sürümde 27.08
+kapanışına kadarki eğri verisiyle baştan hesaplandı; eski satırlarda ±0,1σ'lık
+yuvarlama kaymaları olabilir.)
 
 | hafta | Δ stok (mn TL) | 2y | 3y | 5y | 7y | 9y |
 |---|---:|---:|---:|---:|---:|---:|
 | 09.01 | +8.960 | −0,2 | −0,3 | −0,2 | +0,1 | +0,6 |
-| 23.01 | +8.560 | −1,5 | −1,2 | −0,2 | +0,3 | +0,2 |
-| 06.02 | +10.000 | +0,1 | +0,5 | +1,3 | +1,2 | +0,8 |
+| 23.01 | +8.560 | −1,5 | −1,2 | −0,3 | +0,3 | +0,2 |
+| 06.02 | +10.000 | +0,1 | +0,5 | +1,2 | +1,2 | +0,8 |
 | **06.03** | **+77.561** | **+0,4** | **+0,3** | **+0,8** | **+0,7** | **−0,4** |
-| 13.03 | +36.918 | +2,0 | +2,5 | +1,7 | +1,2 | +1,5 |
-| 27.03 | +11.310 | +2,4 | +3,1 | +2,6 | +1,7 | +0,8 |
-| 03.04 | +18.710 | −0,7 | −1,2 | −0,9 | −1,2 | −1,9 |
+| 13.03 | +36.918 | +1,9 | +2,4 | +1,7 | +1,2 | +1,5 |
+| 27.03 | +11.310 | +2,5 | +2,9 | +2,5 | +1,7 | +0,8 |
+| 03.04 | +18.710 | −0,7 | −1,2 | −0,9 | −1,2 | −1,8 |
 | 10.04 | +4.000 | −2,1 | −2,0 | −1,5 | −1,1 | −1,0 |
+| **21.08** | **+5.000** | **−0,3** | **−0,2** | **−0,8** | **−0,5** | **+0,9** |
 
-Turun **en büyük haftası hiçbir tenorda bir standart sapmayı aşmıyor.** İki
-standart sapmayı aşan iki hafta var (13 ve 27 Mart) ve ikisinde de getiriler
-**yükseldi** — alımın ima edeceğinin tersi yönde. 10 Nisan haftası getirileri
-düşürdü ama o haftanın alımı turun en küçüğüydü (4 milyar).
+Turun **en büyük haftası hiçbir tenorda bir standart sapmayı aşmıyor** — ve
+**yeni turun ilk haftası da aşmıyor**: 21.08 haftasında beş yıllık −0,8σ,
+dokuz yıllık +0,9σ, işaretler yine karışık. Bir standart sapmayı aşan
+haftalar var (13 ve 27 Mart) ve ikisinde de getiriler **yükseldi** — alımın
+ima edeceğinin tersi yönde. 10 Nisan haftası getirileri düşürdü ama o haftanın
+alımı turun en küçüğüydü (4 milyar).
 
-### 4.3 Toplu test
+İçinde bulunduğumuz hafta (24–28.08; 2. ve 3. turların 10 milyarı bu haftaya
+yerleşti) tabloda **bilerek yok**: hafta bu yazı yazılırken kapanmamıştı ve
+kapanmamış bir seansı ölçmüyoruz. Perşembe kapanışına kadarki kısmî hareket
+(2y −0,9σ, 3y −1,1σ) yön fikri verir ama ölçüm sayılmaz; kapanmış hâli bir
+sonraki güncellemenin işidir.
 
-Tek tek haftalara bakmak seçmece olur. 2026'nın tamamında alım yapılan haftalar
-ile yapılmayan haftaların ortalama eğri hareketi:
+### 5.3 Toplu test
+
+Tek tek haftalara bakmak seçmece olur. 2026'da (21.08 dahil) alım yapılan 12
+hafta ile alımsız 22 haftanın ortalama eğri hareketi:
 
 | tenor | alım haftaları | alımsız haftalar | fark |
 |---|---:|---:|---:|
-| 2 yıl | +0,03σ | +0,19σ | −0,15σ |
-| 3 yıl | +0,20σ | +0,21σ | −0,01σ |
-| 5 yıl | +0,40σ | +0,18σ | +0,22σ |
-| 7 yıl | +0,31σ | +0,22σ | +0,09σ |
-| 9 yıl | +0,06σ | +0,30σ | −0,24σ |
+| 2 yıl | +0,01σ | +0,15σ | −0,14σ |
+| 3 yıl | +0,15σ | +0,13σ | +0,01σ |
+| 5 yıl | +0,29σ | +0,08σ | +0,22σ |
+| 7 yıl | +0,24σ | +0,11σ | +0,13σ |
+| 9 yıl | +0,14σ | +0,17σ | −0,03σ |
 
-Farklar ±0,24 standart sapmanın içinde ve **işaretleri tenordan tenora
+Farklar ±0,22 standart sapmanın içinde ve **işaretleri tenordan tenora
 tutarsız**. İki yıllıkta alım haftaları daha az yükselmiş, beş yıllıkta daha
 çok. Bir mekanizma olsaydı işaret aynı yöne bakardı.
 
@@ -216,27 +387,29 @@ tutarsız**. İki yıllıkta alım haftaları daha az yükselmiş, beş yıllık
   bir stok verisine bağlamak, alımın hangi gün yapıldığını bilmeden bir gün
   seçmektir ve seçilen gün haftanın en büyük hareketi olduğunda bulgu
   kendiliğinden çıkar. Haftalık hizalama aynı olayı +0,4σ'ya indiriyor.
+  Günlük bilanço izi (bölüm 2) artık alım günlerini veriyor; o izle bile
+  6 Mart'ı seçmek mümkün değil, çünkü o hafta beş günün beşi alım günüydü.
 </div>
 
-### 4.4 Neden etkisi yok — büyüklük
+### 5.4 Neden etkisi yok — büyüklük
 
-Cevap oransal. 14 Ağustos itibarıyla toplam DİBS stoku **9.453 milyar TL**.
-Haftalık 5–10 milyar liralık bir alım, stokun **binde 0,5–1'i** demektir.
-20 Ağustos'un 5 milyar lirası ise binde 0,53. Bu büyüklükteki bir alıcının
-fiyatı kalıcı olarak oynatması beklenmez; eğriyi hareket ettiren şey politika
-faizi beklentisi, enflasyon patikası ve fonlama maliyetidir.
+Cevap oransal. 21 Ağustos itibarıyla toplam DİBS stoku **9.620,6 milyar TL**.
+Haftada 10 milyar liralık yeni tempo bile stokun **binde 1'i** demektir; tek
+bir 5 milyarlık ihale binde 0,5. Bu büyüklükteki bir alıcının fiyatı kalıcı
+olarak oynatması beklenmez; eğriyi hareket ettiren şey politika faizi
+beklentisi, enflasyon patikası ve fonlama maliyetidir.
 
 Karşılaştırma faydalı: [ABD Hazinesi'nin geri alım
 programı](/analiz/hazine-geri-alim/) da operasyon başına 4 milyar dolarla
 piyasa büyüklüğüne göre küçüktür ve orada da duyuru günü hareketi iki günde
 sönmüştü. İki programın ortak dersi aynı: **bu araçlar seviye aracı değildir.**
 
-## 5. Genişlemeci mi — iki oran, iki cevap
+## 6. Genişlemeci mi — iki oran, iki cevap
 
 "Merkez bankası tahvil alıyor" cümlesi tek başına bir şey söylemez. Alımın
 parasal genişleme sayılıp sayılmayacağı iki orana bakar.
 
-### 5.1 Bilanço oranı
+### 6.1 Bilanço oranı
 
 QNB ekonomistlerinin basına yansıyan çalışması, APİ portföyünün QE aracı olarak
 kullanılmadığı **2015–2019** döneminde portföyün haftalık bilanço oranının
@@ -245,100 +418,143 @@ likidite amaçlı sayılacağını, bunun ötesinin genişlemeci algılanabilece
 söylüyor. Aynı çalışma 2026 için üst sınırı **261 milyar TL** olarak veriyor ve
 bunun Hazine'nin yıllık borçlanmasının %5'ine denk geldiğini belirtiyor.
 
-Bu çıpayı kendi verimle sınadım ve **tutuyor**:
+Oranı kendi verimizle izliyoruz — payda, TCMB haftalık vaziyetinin toplam
+aktifi (nominal stokla aynı cuma damgası):
 
 | tarih | bilanço oranı | çerçeveye göre |
 |---|---:|---|
-| 26.12.2025 | %2,17 | 2015–19 ortalamasının tam üzerinde |
-| 06.03.2026 | %2,93 | "likidite amaçlı" sınırında |
-| 10.04.2026 | %3,83 | sınırın belirgin üzerinde |
-| 14.08.2026 | %3,30 | sınırın üzerinde, düşüyor |
+| 26.12.2025 | %2,11 | 2015–19 ortalamasının hemen altında |
+| 06.03.2026 | %2,76 | "likidite amaçlı" bandın içinde |
+| 10.04.2026 | %3,52 | sınırın belirgin üzerinde — zirve |
+| 14.08.2026 | %3,20 | sınırın üzerinde, düşüyor |
+| **21.08.2026** | **%3,17** | **alımlara rağmen düşüş sürüyor** |
 
-2025 sonundaki %2,17, çalışmanın tarihsel çıpası olan %2,2 ile birebir örtüşüyor
-— bu, çıpanın kendi verimde de doğrulandığı anlamına geliyor.
+<div class="not">
+  <span class="etiket">Düzeltme — ilk sürümün oranları yeniden üretilemedi</span>
+  İlk sürüm bu tabloyu %2,17 · %2,93 · %3,83 · %3,30 olarak vermiş ve 2025
+  sonunun QNB çıpasıyla "birebir örtüştüğünü" yazmıştı. Güncelleme için payda
+  serisi uçtan uca yeniden çekildiğinde o oranlar ne analitik bilanço toplamıyla
+  ne haftalık vaziyet toplamıyla yeniden üretilebildi; hangi payda ile
+  hesaplandıkları kayıtlı değildi. Yeniden üretilemeyen sayı bu sitede
+  düzeltilir: seri, ham verisi depoda duran vaziyet toplam aktifine (TP.BL055)
+  sabitlendi ve dört oran da adlarıyla değişti (%2,17→%2,11 · %2,93→%2,76 ·
+  %3,83→%3,52 · %3,30→%3,20). Aynı paydayı kullanan 6.2'deki idame hesabı da
+  değişti (158,8→117,6 milyar TL/yıl). Nitel sonuçların hiçbiri etkilenmedi:
+  zirve yine nisanda, seviye yine eşiğin üzerinde, yön yine aşağı; "2025 sonu
+  çıpayla birebir örtüşüyor" iddiası ise "çıpanın hemen altında" olarak
+  yumuşadı.
+</div>
 
-Portföy nisanda %3,83'e çıkarak eşiği açıkça aştı. Bugün %3,30'da ve **düşüyor**;
-ama düşüşün sebebi merkez bankasının bir şey yapması değil, **paydanın
-büyümesi**: TCMB bilançosu son on iki ayda 10.316 milyar liradan 13.889 milyar
-liraya, yani **%34,6** genişledi.
+Portföy nisanda %3,52 ile eşiği açıkça aştı. Bugün %3,17'de (21.08 ölçümü) ve
+**yeni turun alımlarına rağmen düşüyor**; sebep merkez bankasının bir şey yapması
+değil, **paydanın büyümesi**: vaziyet toplamı son on iki ayda 11.170 milyar
+liradan 14.106 milyar liraya, yani **%26,3** genişledi. Nisan zirvesinin bir
+bölümü de aynı mekanizmanın tersiydi: mart–nisan döneminde bilanço küçülürken
+(13.757 → 12.788) pay büyüyordu — oran iki uçtan birden sıkışmıştı.
 
-### 5.2 Paydanın büyümesi alım kapasitesi yaratır
+### 6.2 Paydanın büyümesi alım kapasitesi yaratır
 
-Bu, analizin en az sezgisel ama en operasyonel sonucudur. Bilanço %34,6 hızla
+Bu, analizin en az sezgisel ama en operasyonel sonucudur. Bilanço %26,3 hızla
 büyürken, oranı **sabit tutmak** bile alım gerektirir:
 
 $$
 \text{gereken net alım} = \text{bilanço} \times \text{büyüme} \times \text{hedef oran}
-= 13.889 \times 0{,}346 \times 0{,}033 \approx 158{,}8\ \text{mlr TL/yıl}
+= 14.106 \times 0{,}263 \times 0{,}0317 \approx 117{,}6\ \text{mlr TL/yıl}
 $$
 
-Yani merkez bankası önümüzdeki on iki ayda **158,8 milyar lira alsa bile
-portföyün bilanço içindeki ağırlığı artmaz.** 2026'da kalan 52,6 milyar liralık
-kapasite bu ölçeğin üçte biri kadardır ve oranı %3,30'dan aşağı çekmeye devam
+Yani merkez bankası önümüzdeki on iki ayda **117,6 milyar lira alsa bile
+portföyün bilanço içindeki ağırlığı artmaz.** 2026'da kalan 32,6 milyar liralık
+kapasite bu ölçeğin çeyreği kadardır ve oranı %3,17'den aşağı çekmeye devam
 eder.
 
 Bu, "TCMB tahvil alımına başladı, genişleme geliyor" okumasının neden yanlış
 olduğunu gösteriyor: **bu tempodaki bir alım, enflasyonist bir bilanço
 genişlemesi değil, mevcut oranın erimesini yavaşlatan bir idame alımıdır.**
+Haftada 10 milyarlık ağustos temposu yıllıklandırılsa bile (~520 milyar
+"olsaydı" senaryosu) plan 32,6'da kesiyor; tempo ile hacmi karıştırmamak
+gerekiyor.
 
-### 5.3 DİBS stokundaki pay
+### 6.3 DİBS stokundaki pay
 
 Üçüncü ölçü, merkez bankasının piyasadaki ağırlığı. Pay nisanda %5,05 ile
-zirve yaptı, bugün %4,67. Hazine ihraç etmeye devam ettiği için payda büyüyor:
-toplam DİBS stoku 26.12.2025'te 8.255 milyar liradan 14.08.2026'da 9.453 milyar
-liraya çıktı (%14,5). **Merkez bankası nisandan beri hiç almadığı hâlde payı
-0,38 puan geriledi.**
+zirve yaptı, bugün %4,64. Hazine ihraç etmeye devam ettiği için payda büyüyor:
+toplam DİBS stoku 26.12.2025'te 8.255 milyar liradan 21.08.2026'da 9.620,6
+milyar liraya çıktı (%16,5). **Merkez bankası nominal stokta yeni zirveye
+çıktığı hâlde piyasa payı nisan zirvesinden 0,41 puan aşağıdadır.**
 
-## 6. Bu analizin sınırları
+## 7. Bu analizin sınırları
 
 Sayıların hangi soruya cevap veremediği, verdikleri kadar önemli.
 
-**Stok verisi haftalıktır, ihale günlük.** Portföy Hazine'nin cuma damgalı
-yatırımcı dağılımından okunuyor. Bir haftanın içinde hangi gün ne kadar alındığı
-buradan çıkmaz; 4.2'deki hizalama tartışması bunun sonucudur. İhale bazlı
-inceleme için TCMB'nin doğrudan alım işlemleri veri setine inmek gerekir.
+**Nominal seri haftalık; günlük iz alış değeri.** İlk sürümün "stok haftalık,
+ihale günlük — arası görünmez" kısıtı, analitik bilançonun günlük Menkul
+Kıymetler kalemiyle büyük ölçüde kalktı: alım valörleri artık gün gün
+görünüyor. Ama günlük seri **nominal değildir** — alış değeri tutar, ay sonu
+TÜFEX endeksleme güncellemeleri ve kupon/amortisman kayıtlarıyla oynar. Bu
+yazıda günlük seri zamanlama ve varlık/yokluk kanıtı için, nominal toplamlar
+için HMB haftalık serisi kullanıldı; iki seriyi karıştırmadık.
+
+**Kanal ayrımı (ihale/kotasyon) tutar bazında doğrulanamadı.** TCMB iki kanalın
+işlem dökümünü iki ayrı sayfada yayımlar; bu çalışma ortamının ağ erişimi o
+sayfalara kapalı. Ocak–şubatın kotasyon, mart–nisanın ağırlıkla ihale olduğu
+okuması Enflasyon Raporu 2026-I'in 9 Şubat itibarıyla verdiği 48,9 milyarlık
+kotasyon toplamına ve "3 Nisan'dan beri ilk ihale" ifadesine dayanıyor;
+işlem işlem döküm buradan çıkarılamaz. 20 Ağustos sonrasındaki üç turun
+(21.08, 27.08, 28.08) ISIN dağılımları da aynı sebeple bu yazıda yok; son iki
+turun gerçekleşme tutarı ilan üzerinden yazıldı ve bilanço izleri düştüğünde
+doğrulanacak.
 
 **Stok nominal, piyasa değeri değil.** Yatırımcı dağılımı nominal tutar
 yayımlar. Portföyün piyasa değeri, getiriler %27–40 bandındayken nominalin
-belirgin altındadır ve bu yazıdaki oranlar (bilanço oranı dahil) nominal
-üzerinden hesaplanmıştır. Piyasa değeri üzerinden bakıldığında oranlar daha
-düşük çıkar; çıpa olarak alınan %2,2 de aynı yöntemle hesaplandığı için
-kıyaslama tutarlıdır, ama seviye okurken bu akılda tutulmalıdır.
+belirgin altındadır ve bu yazıdaki oranlar nominal üzerinden hesaplanmıştır.
+Çıpa olarak alınan %2,2 de aynı yöntemle hesaplandığı için kıyaslama
+tutarlıdır, ama seviye okurken bu akılda tutulmalıdır.
 
-**Alım–itfa ayrıştırması yaklaşıktır.** Haftalık stok farkının pozitif kısmına
-"alım", negatif kısmına "itfa" dendi. Aynı hafta hem alım hem itfa olduğunda
-ikisi netleşir ve brüt alım olduğundan küçük görünür. Yani 202,4 milyarlık brüt
-alım bir **alt sınırdır**; plandaki 255 milyara göre tamamlanma oranı %79'dan
-yüksek olabilir.
+**Alım–itfa ayrıştırması haftalık seride yaklaşıktır.** Aynı hafta hem alım hem
+itfa olduğunda ikisi netleşir ve brüt alım olduğundan küçük görünür. Yani
+brüt alımın ölçülen kısmı (212,4 milyar) bir **alt sınırdır**; tamamlanma
+oranı %87'den yüksek olabilir. (Günlük iz bu belirsizliği daraltıyor ama alış
+değeri cinsinden olduğu için tam kapatamıyor.)
 
 **261 milyar TL üst sınırı TCMB'nin kendi kuralı değildir.** Bir aracı kurum
 ekonomistlerinin, basına yansıdığı kadarıyla, tarihsel bir orandan türettiği
-tahmindir. Bu yazıda çıpanın kendisi (2015–19 oranı) doğrulandı; üst sınırın
-kendisi doğrulanmadı ve TCMB böyle bir taahhüt açıklamadı.
+tahmindir. TCMB böyle bir taahhüt açıklamadı.
 
 **Fiyat etkisinin yokluğu, "etki yok" demek değildir.** Ölçüm, bu büyüklükteki
 alımların bu oynaklıktaki bir eğride **tespit edilebilir bir iz bırakmadığını**
 söylüyor. Alım olmasaydı getiriler daha yüksek olur muydu sorusu, karşıolgusal
 bir soru ve bu veriyle cevaplanamaz.
 
-## 7. Ne izlenecek
+## 8. Ne izlenecek
 
-Kalan dört buçuk ayda üç şey bu analizi ya doğrulayacak ya çürütecek:
+Kalan aylarda üç şey bu analizi ya doğrulayacak ya çürütecek. İlk sürümün
+tempo ölçütü yanlış kurgulanmıştı ve burada düzeltiliyor: "ayda 20 milyarı
+aşan tempo tezi çürütür" demiştik; tempo daha ilk haftada 10 milyara çıktı ama
+bu, tezi çürütmez — hızlı tempo planın **erken bitmesi** demektir, hedefin
+**aşılması** demek değildir. Doğru ölçüt tempo değil, kapasite dolduğunda ne
+olduğudur.
 
-1. **İhale sıklığı ve tutarı.** Tez: yıl sonuna kadar toplam ~52,6 milyar lira,
-   ayda iki-üç ihale, ihale başına ~5 milyar. Aylık ilan ayın ilk iş günü saat
-   10.00'da geliyor; sapma buradan hemen görülür. Ayda 20 milyar lirayı aşan
-   bir tempo, yıl sonu hedefinin üzerine çıkılacağı anlamına gelir ve tezi
-   çürütür.
+1. **Kapasite dolduğunda alımların durup durmadığı.** Kalan 32,6 milyar,
+   yerleşen perşembe–cuma ritminde (haftada 10 milyar) **eylül ortasında**
+   biter. Tez: brüt alım 255'e ulaştığında ihale/kotasyon akışı durur ve stok
+   itfalarla 450'ye yakınsar. Alımlar 255'in belirgin üzerine taşarsa (yıl
+   sonu stoku 450'yi kalıcı aşarsa) "plan işliyor" okuması çöker, program
+   büyütülmüş demektir. Ritmin kendisi de sinyaldir: perşembe–cuma çifti bir
+   hafta boş geçerse, kapasite yönetimi başlamış demektir.
 
-2. **Vade tercihi.** 20 Ağustos alımının ağırlıklı kalan vadesi 6,04 yıl ve
-   %60'ı yedi yıl üzerinde. Sonraki ihaleler kısa uca kayarsa gerekçe likidite
-   yönetimine döner; uzun uçta kalırsa itfa profilini uzatma amacı doğrulanır.
+2. **Vade tercihi.** 20 Ağustos ihalesinin ağırlıklı kalan vadesi 6,04 yıl,
+   %60'ı yedi yıl üzerinde; 21.08 turu için de basına yansıyan tarif "ağırlıkla
+   uzun vade". Sonraki ihaleler kısa uca kayarsa gerekçe likidite yönetimine
+   döner; uzun uçta kalırsa itfa profilini uzatma amacı doğrulanır. (Likidite
+   ihtiyacının asıl adresi olan haftalık repo penceresi zaten yeniden açık.)
 
-3. **Bilanço oranı.** Bugün %3,30. Yıl sonunda ~%3'ün altına inerse, alımlara
-   rağmen normalleşme sürüyor demektir. Oran yükselirse, alım temposu bilanço
-   büyümesini aşmış ve 5.2'deki "idame alımı" yorumu geçersiz olmuş olur.
+3. **Bilanço oranı.** Bugün %3,17 (vaziyet paydasıyla). Yıl sonunda ~%3'ün
+   altına inerse, alımlara rağmen normalleşme sürüyor demektir. Oran
+   yükselirse, alım temposu bilanço büyümesini aşmış ve 6.2'deki "idame
+   alımı" yorumu geçersiz olmuş olur.
 
-Bu üç ölçütün ikisi bu sitede canlı izleniyor: portföy stoku ve DİBS payı
-haftalık olarak [Bütçe &amp; Borç Stoku](/projeler/butce-borc/), eğri hareketi
-günlük olarak [DİBS Verim Eğrisi](/projeler/dibs-verim-egrisi/) sayfasında.
+İzleme araçları: alım valörleri **her iş günü 14:30'ta** yayımlanan analitik
+bilançonun Menkul Kıymetler kaleminden (EVDS `TP.AB.A051`; çekim betiği
+depoda), nominal stok ve DİBS payı haftalık olarak [Bütçe &amp; Borç
+Stoku](/projeler/butce-borc/), eğri hareketi günlük olarak [DİBS Verim
+Eğrisi](/projeler/dibs-verim-egrisi/) sayfasında.
