@@ -1,0 +1,173 @@
+---
+/**
+ * Haftalık teknik analiz bülteninin gövdesi.
+ *
+ * Ölçülen katman teknik/olc.py'den gelir (göstergeler, seviyeler, grafikler);
+ * yorum katmanı bir Claude oturumunca yazılır ve teknik/yaz.py kapısından
+ * geçer — andığı her sayı ölçümde birebir vardır. Sayfa bu iş bölümünü okura
+ * açıkça söyler.
+ */
+import GrafikEmbed from './GrafikEmbed.astro';
+
+interface Props {
+  b: any;
+}
+const { b } = Astro.props;
+
+const sayi = (x: number | null, ondalik = 2) =>
+  x === null || x === undefined
+    ? '—'
+    : x.toLocaleString('tr-TR', {
+        minimumFractionDigits: Math.min(ondalik, 4),
+        maximumFractionDigits: Math.min(Math.max(ondalik, 2), 4),
+      });
+
+const isaretli = (x: number | null, birim: string) =>
+  x === null || x === undefined
+    ? '—'
+    : `${x > 0 ? '+' : ''}${x.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}${birim}`;
+
+const tarihTr = (t: string | null) =>
+  t ? new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(t)) : '—';
+---
+
+<article class="teknik">
+  <header class="kunye">
+    <h1>Haftalık Teknik Analiz</h1>
+    <p class="etiket satir">
+      <span>{b.tr_tarih}</span>
+      <span>veri ucu: {tarihTr(b.veri_ucu)} kapanışı</span>
+      <span>6 enstrüman</span>
+    </p>
+    <p class="metodoloji">
+      Göstergeler, seviyeler ve grafikler deterministik ölçümden gelir
+      (kapanmış barlar; pivot bölgeleri, regresyon kanalı, RSI/MACD/ATR).
+      Yorum ve senaryolar yapay zekâ tarafından bu ölçümün üzerine yazılır;
+      yorumda anılan her sayının ölçümde karşılığı vardır. Bu sayfa analizdir,
+      yatırım tavsiyesi değildir.
+    </p>
+  </header>
+
+  {b.giris && <div class="giris" set:html={b.giris} />}
+
+  {
+    b.enstrumanlar.map((e: any, i: number) => (
+      <section class="enstruman">
+        <div class="baslik">
+          <h2>{e.ad}</h2>
+          <span class="son">
+            {sayi(e.son, e.ondalik)}
+            {e.birim && <small> {e.birim}</small>}
+            <small class="bar-tarih"> · {tarihTr(e.bar_tarihi)}</small>
+          </span>
+        </div>
+
+        <div class="sarici">
+          <table class="olcum">
+            <tbody>
+              <tr>
+                <th>Değişim</th>
+                <td>1h {isaretli(e.degisim.h1, e.tip === 'getiri' ? ' bp' : '%')}</td>
+                <td>1a {isaretli(e.degisim.a1, e.tip === 'getiri' ? ' bp' : '%')}</td>
+                <td>3a {isaretli(e.degisim.a3, e.tip === 'getiri' ? ' bp' : '%')}</td>
+                <td>YBB {isaretli(e.degisim.ybb, e.tip === 'getiri' ? ' bp' : '%')}</td>
+              </tr>
+              <tr>
+                <th>Momentum</th>
+                <td>RSI g {sayi(e.momentum.rsi14_g, 1)}</td>
+                <td>RSI h {sayi(e.momentum.rsi14_h, 1)}</td>
+                <td colspan="2">MACD hist {sayi(e.momentum.macd_hist, e.ondalik + 1)}</td>
+              </tr>
+              <tr>
+                <th>Ortalamalar</th>
+                <td>SMA50 {sayi(e.hareketli.g50, e.ondalik)}</td>
+                <td>SMA200 {sayi(e.hareketli.g200, e.ondalik)}</td>
+                <td>h10 {sayi(e.hareketli.h10, e.ondalik)}</td>
+                <td>h40 {sayi(e.hareketli.h40, e.ondalik)}</td>
+              </tr>
+              <tr>
+                <th>Aralık / kanal</th>
+                <td>52h {sayi(e.aralik52.dusuk, e.ondalik)}–{sayi(e.aralik52.yuksek, e.ondalik)}</td>
+                <td>konum %{sayi(e.aralik52.konum_pct, 0)}</td>
+                <td>ATR14 {sayi(e.oynaklik.atr14, e.ondalik)}</td>
+                <td>kanal %{e.kanal ? sayi(e.kanal.konum_pct, 0) : '—'}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="seviyeler sarici">
+          <table>
+            <thead>
+              <tr><th>Dirençler</th><th>Destekler</th><th>Fibonacci (52h)</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  {e.seviyeler.direnc.length
+                    ? e.seviyeler.direnc.map((s: any) => (
+                        <div>{sayi(s.seviye, e.ondalik)} <small>({s.dokunus}×, son {tarihTr(s.son_dokunus)})</small></div>
+                      ))
+                    : '—'}
+                </td>
+                <td>
+                  {e.seviyeler.destek.length
+                    ? e.seviyeler.destek.map((s: any) => (
+                        <div>{sayi(s.seviye, e.ondalik)} <small>({s.dokunus}×, son {tarihTr(s.son_dokunus)})</small></div>
+                      ))
+                    : '—'}
+                </td>
+                <td>
+                  <div>%38,2 → {sayi(e.seviyeler.fib.s382, e.ondalik)}</div>
+                  <div>%50 → {sayi(e.seviyeler.fib.s500, e.ondalik)}</div>
+                  <div>%61,8 → {sayi(e.seviyeler.fib.s618, e.ondalik)}</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <GrafikEmbed
+          src={e.grafikler.gunluk}
+          baslik={`${e.ad} — günlük mum, SMA50/200, regresyon kanalı, pivot seviyeleri, RSI, MACD`}
+          no={String(i * 2 + 1).padStart(2, '0')}
+        />
+        <GrafikEmbed
+          src={e.grafikler.haftalik}
+          baslik={`${e.ad} — haftalık mum, 10/40 haftalık ortalama, haftalık RSI`}
+          no={String(i * 2 + 2).padStart(2, '0')}
+        />
+
+        {e.yorum && <div class="yorum" set:html={e.yorum} />}
+      </section>
+    ))
+  }
+</article>
+
+<style>
+  .teknik { max-width: 72rem; }
+  .kunye h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    margin: 0 0 0.4rem;
+  }
+  .kunye .satir { display: flex; gap: 1.2rem; flex-wrap: wrap; }
+  .metodoloji {
+    font-size: 0.88rem; color: var(--ink-70, #555);
+    border-left: 3px solid var(--claret, #7a1f2b);
+    padding-left: 0.8rem; max-width: 46rem;
+  }
+  .giris { font-size: 1.02rem; max-width: 46rem; margin: 1.4rem 0 2rem; }
+  .enstruman { border-top: 1px solid var(--ink-30, #bbb); padding-top: 1.4rem; margin-top: 2.2rem; }
+  .baslik { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .baslik h2 { font-family: var(--font-serif); margin: 0; }
+  .son { font-family: var(--font-mono); font-size: 1.25rem; }
+  .son .bar-tarih { color: var(--ink-70, #666); font-size: 0.75rem; }
+  .sarici { overflow-x: auto; margin: 0.9rem 0; }
+  table { border-collapse: collapse; font-family: var(--font-mono); font-size: 0.82rem; min-width: 34rem; }
+  th, td { text-align: left; padding: 0.3rem 0.9rem 0.3rem 0; vertical-align: top; white-space: nowrap; }
+  .olcum th { color: var(--ink-70, #666); font-weight: 500; }
+  .seviyeler thead th { border-bottom: 1px solid var(--ink-30, #bbb); }
+  .seviyeler small { color: var(--ink-70, #777); }
+  .yorum { max-width: 46rem; margin: 1.2rem 0 0.6rem; }
+</style>

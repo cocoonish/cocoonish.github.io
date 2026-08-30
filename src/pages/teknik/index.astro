@@ -1,0 +1,42 @@
+---
+import Base from '../../layouts/Base.astro';
+import TeknikGovde from '../../components/TeknikGovde.astro';
+
+// YAYIN KAPISI: yalnız YAZILMIŞ teknik bültenler siteye çıkar. Ölçüm koşusu
+// yorum alanları boş bir iskelet bırakır; giriş + altı yorumun tamamı
+// teknik/yaz.py kapısından geçince yazili=true olur ve sayfa yayımlanır.
+const dosyalar = import.meta.glob('../../data/teknik/*.json', { eager: true });
+const bultenler = Object.entries(dosyalar)
+  .map(([yol, m]: [string, any]) => ({
+    tarih: yol.split('/').pop()!.replace('.json', ''),
+    b: (m as any).default ?? m,
+  }))
+  .filter((x) => x.b?.yazili)
+  .sort((a, b) => (a.tarih < b.tarih ? 1 : -1));
+
+const son = bultenler[0];
+---
+
+<Base
+  title="Haftalık Teknik Analiz"
+  description="ABD 2Y/10Y, DXY, EUR/USD, USD/CHF ve BIST 100 için ölçüme dayalı haftalık teknik analiz."
+>
+  {
+    son ? (
+      <>
+        <p class="geri etiket"><a href="/teknik/arsiv/">arşiv →</a></p>
+        <TeknikGovde b={son.b} />
+      </>
+    ) : (
+      <div class="bos">
+        <h1>Haftalık Teknik Analiz</h1>
+        <p>İlk sayı hazırlanıyor. Ölçüm katmanı kuruldu; yorum katmanı yazılınca bülten burada yayımlanacak.</p>
+      </div>
+    )
+  }
+</Base>
+
+<style>
+  .geri { margin: 1.6rem 0 0; font-family: var(--font-mono); font-size: 0.82rem; }
+  .bos { max-width: 44rem; margin: 3rem 0; }
+</style>

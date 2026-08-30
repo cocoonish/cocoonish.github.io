@@ -1,0 +1,49 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const dosyalar = import.meta.glob('../../data/teknik/*.json', { eager: true });
+// Arşiv de yalnız yazılmış sayıları listeler (bkz. yayın kapısı).
+const hepsi = Object.entries(dosyalar)
+  .filter(([, m]: [string, any]) => ((m as any).default ?? m)?.yazili)
+  .map(([yol, m]: [string, any]) => {
+    const b: any = (m as any).default ?? m;
+    return {
+      tarih: yol.split('/').pop()!.replace('.json', ''),
+      trTarih: b.tr_tarih ?? yol.split('/').pop()!.replace('.json', ''),
+      veriUcu: b.veri_ucu ?? '',
+    };
+  })
+  .sort((a, b) => (a.tarih < b.tarih ? 1 : -1));
+---
+
+<Base title="Teknik Analiz Arşivi" description="Haftalık teknik analiz bültenlerinin arşivi.">
+  <div class="arsiv">
+    <h1>Teknik Analiz Arşivi</h1>
+    <p class="etiket"><a href="/teknik/">güncel sayı ←</a></p>
+    {
+      hepsi.length ? (
+        <ul>
+          {hepsi.map((k) => (
+            <li>
+              <a href={`/teknik/${k.tarih}/`}>{k.trTarih}</a>
+              <span class="etiket">veri ucu {k.veriUcu}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>Henüz yayımlanmış sayı yok.</p>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .arsiv { max-width: 44rem; }
+  .arsiv h1 { font-family: var(--font-serif); }
+  ul { list-style: none; padding: 0; }
+  li {
+    display: flex; justify-content: space-between; gap: 1rem;
+    border-bottom: 1px solid var(--ink-30, #ccc); padding: 0.55rem 0;
+    font-family: var(--font-mono); font-size: 0.9rem;
+  }
+</style>

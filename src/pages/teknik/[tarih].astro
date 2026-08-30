@@ -1,0 +1,50 @@
+---
+import Base from '../../layouts/Base.astro';
+import TeknikGovde from '../../components/TeknikGovde.astro';
+
+export async function getStaticPaths() {
+  const dosyalar = import.meta.glob('../../data/teknik/*.json', { eager: true });
+  // Yalnız YAZILMIŞ sayıların sayfası üretilir; yarım taslak siteye çıkmaz.
+  const sirali = Object.entries(dosyalar)
+    .map(([yol, m]: [string, any]) => ({
+      tarih: yol.split('/').pop()!.replace('.json', ''),
+      b: (m as any).default ?? m,
+    }))
+    .filter((x) => x.b?.yazili)
+    .sort((a, b) => (a.tarih < b.tarih ? -1 : 1));
+  return sirali.map((x, i) => ({
+    params: { tarih: x.tarih },
+    props: {
+      b: x.b,
+      onceki: i > 0 ? sirali[i - 1] : null,
+      sonraki: i < sirali.length - 1 ? sirali[i + 1] : null,
+    },
+  }));
+}
+
+const { b, onceki, sonraki } = Astro.props;
+---
+
+<Base title={`Teknik Analiz — ${b.tr_tarih ?? b.tarih}`} description={`${b.tr_tarih ?? b.tarih} haftalık teknik analiz bülteni.`}>
+  <p class="geri etiket">
+    <a href="/teknik/">güncel sayı</a> · <a href="/teknik/arsiv/">arşiv</a>
+  </p>
+  <TeknikGovde b={b} />
+  <nav class="gezinme">
+    {onceki ? (
+      <a href={`/teknik/${onceki.tarih}/`}>← {onceki.b.tr_tarih ?? onceki.tarih}</a>
+    ) : <span />}
+    {sonraki ? (
+      <a href={`/teknik/${sonraki.tarih}/`}>{sonraki.b.tr_tarih ?? sonraki.tarih} →</a>
+    ) : <span />}
+  </nav>
+</Base>
+
+<style>
+  .geri { margin: 1.6rem 0 0; font-family: var(--font-mono); font-size: 0.82rem; }
+  .gezinme {
+    display: flex; justify-content: space-between; gap: 1rem;
+    border-top: 1px solid var(--ink-30); margin-top: 2rem; padding-top: 0.9rem;
+    font-family: var(--font-mono); font-size: 0.82rem;
+  }
+</style>
