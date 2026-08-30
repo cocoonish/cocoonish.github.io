@@ -72,6 +72,13 @@ export interface AnaSayfaVerisi {
   hatSayisi: number;
   rejim: RejimSatiri[];
   sigma: SigmaSatiri[];
+  /**
+   * σ listesinin kıyas penceresi: 'gunluk' | 'haftalik'. Ana sayfa başlığı ve
+   * oynaklık etiketi buna bakar. Sabit "günlük" yazan eski sürüm, pazar
+   * haftaya bakış bülteni yayımlandığında ana sayfada haftalık oynaklıkları
+   * "20g oynaklık" diye etiketliyordu (30.08.2026).
+   */
+  sigmaKip: string;
   manset: { metin: string; parcalar: RejimSatiri[] } | null;
 }
 
@@ -280,6 +287,7 @@ export function sonBulten(): AnaSayfaVerisi {
     hatSayisi: 0,
     rejim: [],
     sigma: [],
+    sigmaKip: 'gunluk',
     manset: null,
   };
   let dosyalar: string[] = [];
@@ -313,6 +321,7 @@ export function sonBulten(): AnaSayfaVerisi {
     hatSayisi: Object.keys(HAT_MANSET).length,
     rejim,
     sigma,
+    sigmaKip: b?.piyasa?.en_cok_hareket?.sigma_kip ?? 'gunluk',
     manset: mansetKur(rejim),
   };
 }

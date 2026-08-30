@@ -39,6 +39,15 @@ const vurgu = b.manset?.parcalar.map((r) => r.ad) ?? [];
 // σ eşiği: bültenin yazı katmanına verdiği eşikle aynı. Ana sayfada yalnız
 // gerçekten olağandışı olanlar görünür, sıralamanın tamamı değil.
 const olagandisi = b.sigma.filter((s) => Math.abs(s.sigma) >= 1.3).slice(0, 5);
+// Olağandışılığın penceresi son bültenin kipini izler: hafta içi gün, pazar
+// haftaya bakış yayımlandığında HAFTA. Başlık ve oynaklık etiketi sabit
+// "günlük" yazıyordu ve pazar günü haftalık oynaklıkları "20g" diye
+// etiketliyordu (30.08.2026).
+const sigmaHaftalik = b.sigmaKip === 'haftalik';
+const sigmaBaslik = sigmaHaftalik
+  ? 'Haftanın olağandışı hareketleri'
+  : 'Günün olağandışı hareketleri';
+const oynaklikEtiketi = sigmaHaftalik ? '20h oynaklık' : '20g oynaklık';
 const olcumSaati = b.olusturma ? b.olusturma.slice(11, 16) : '';
 
 /**
@@ -114,15 +123,16 @@ const yuzdeliYaz = (v: number, birim: string) =>
       <section>
         <div class="bolum-baslik yuksel" style="--d: 80ms">
           <span class="no">02</span>
-          <h2>Günün olağandışı hareketleri</h2>
+          <h2>{sigmaBaslik}</h2>
           <a class="tumu" href={b.bultenHref}>
             Tümü →
           </a>
         </div>
         <p class="bolum-giris yuksel" style="--d: 100ms">
-          Hareketler kendi oynaklıklarına bölünerek sıralanır: bir varlığın günlük
-          değişimi, son 20 günün standart sapmasının kaç katı? Yüzdesi küçük bir hareket
-          olağandışı, büyük bir hareket sıradan olabilir — ham yüzde bunu söylemez.
+          Hareketler kendi oynaklıklarına bölünerek sıralanır: bir varlığın
+          {sigmaHaftalik ? ' haftalık değişimi, son 20 haftanın' : ' günlük değişimi, son 20 günün'}
+          standart sapmasının kaç katı? Yüzdesi küçük bir hareket olağandışı, büyük bir
+          hareket sıradan olabilir — ham yüzde bunu söylemez.
         </p>
         <ul class="sg-liste yuksel" style="--d: 140ms">
           {olagandisi.map((s) => (
@@ -133,7 +143,7 @@ const yuzdeliYaz = (v: number, birim: string) =>
                 {s.birim === 'bp' && <span class="sg-birim">bp</span>}
               </span>
               <span class="sg-sigma">{sayi(s.sigma, 1, true)}σ</span>
-              <span class="sg-oynaklik">20g oynaklık {sayi(s.oynaklik, 2)}</span>
+              <span class="sg-oynaklik">{oynaklikEtiketi} {sayi(s.oynaklik, 2)}</span>
             </li>
           ))}
         </ul>

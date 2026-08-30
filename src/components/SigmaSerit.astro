@@ -1,9 +1,13 @@
 ---
 /**
- * Günün hareketleri, kendi oynaklığına göre — ıraksayan yatay çubuk.
+ * Hareketler, kendi oynaklığına göre — ıraksayan yatay çubuk.
  *
- * Ölçü z-skoru: günlük hareket / son yirmi günün standart sapması. Birimsiz
- * olduğu için baz puanla yüzde aynı çubukta kıyaslanabiliyor.
+ * Ölçü z-skoru: hareket / aynı pencerenin standart sapması. Birimsiz olduğu
+ * için baz puanla yüzde aynı çubukta kıyaslanabiliyor.
+ *
+ * PENCERE SABİT DEĞİL. Günlük bültende gün, haftaya bakışta HAFTA. Başlık bir
+ * zamanlar "günlük değişim / 20 günlük standart sapma" diye sabit yazıyordu ve
+ * haftalık bültende haftalık σ'yı günlük diye etiketliyordu (30.08.2026).
  *
  * Kutupluluk üç ayrı işaretle taşınıyor — çubuğun yönü, sayının işareti ve
  * renk — yani hiçbir okur için yalnız renge bağlı değil. Nötr orta eksen gri.
@@ -11,8 +15,13 @@
 interface Props {
   hareketler: any[];
   esik?: number;
+  /** 'gunluk' | 'haftalik' — ölçüm katmanının bildirdiği kıyas penceresi. */
+  kip?: string;
 }
-const { hareketler = [], esik = 2 } = Astro.props;
+const { hareketler = [], esik = 2, kip = 'gunluk' } = Astro.props;
+const haftalik = kip === 'haftalik';
+const pencereAd = haftalik ? 'haftalık' : 'günlük';
+const tabanAd = haftalik ? '20 haftalık' : '20 günlük';
 
 const veri = hareketler.filter((x: any) => typeof x?.sigma === 'number');
 const enCok = Math.max(1.5, ...veri.map((x: any) => Math.abs(x.sigma)));
@@ -26,10 +35,10 @@ const uzunluk = (z: number) => (Math.abs(z) / enCok) * (yariGenislik - 6);
 {veri.length > 0 && (
   <figure class="sigma-figur">
     <figcaption>
-      Hareketin olağandışılığı — günlük değişim / 20 günlük standart sapma
+      Hareketin olağandışılığı — {pencereAd} değişim / {tabanAd} standart sapma
     </figcaption>
     <svg viewBox={`0 0 ${W} ${H}`} class="sigma-svg" role="img"
-         aria-label="Enstrümanların günlük hareketinin standart sapma cinsinden büyüklüğü">
+         aria-label={`Enstrümanların ${pencereAd} hareketinin standart sapma cinsinden büyüklüğü`}>
       {[-esik, esik].map((z) => (
         <line x1={merkez + Math.sign(z) * uzunluk(z)} y1="4"
               x2={merkez + Math.sign(z) * uzunluk(z)} y2={H - 18} class="sigma-esik" />
