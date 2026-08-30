@@ -35,21 +35,31 @@ const takvimVar = kritikler.length > 0 || takvimGruplari.length > 0;
 // İçindekiler: yalnız GERÇEKTEN basılan bölümler listelenir. Koşulları
 // bölümlerin kendi koşullarıyla birebir aynı tutmak şart — yoksa boşa çıkan
 // bir bağlantı okuru hiçbir yere götürmez.
+// Olağandışılık bölümünün penceresi bültenin kipini izler: günlük bültende gün,
+// haftaya bakışta HAFTA. Ölçüm katmanı hangi pencereyi kullandığını
+// `en_cok_hareket.sigma_kip` ile söylüyor; başlık ve sütun adları ondan türetilir.
+// (Eski sürüm haftalık bültende de "Günün olağandışı hareketleri" yazıyor ve
+// haftalık σ'yı "günlük σ" diye etiketliyordu.)
+const sigmaHaftalik = b.piyasa?.en_cok_hareket?.sigma_kip === 'haftalik';
+const sigmaBaslik = sigmaHaftalik
+  ? 'Haftanın olağandışı hareketleri'
+  : 'Günün olağandışı hareketleri';
+
 const bolumler = [
   b.yorum && { id: 'yorum', ad: b.haftalik ? 'Haftanın yorumu' : 'Günün yorumu' },
   b.ozet && (b.ozet.ne_oldu || b.ozet.ne_bekleniyor) &&
     { id: 'ozet', ad: b.haftalik ? 'Geçen hafta / önümüzdeki hafta' : 'Ne oldu / ne bekleniyor' },
   b.rejim?.length > 0 && { id: 'rejim', ad: 'Rejim panosu' },
   b.piyasa?.en_cok_hareket?.sigma?.length > 0 &&
-    { id: 'olagandisi', ad: 'Günün olağandışı hareketleri' },
+    { id: 'olagandisi', ad: sigmaBaslik },
   b.one_cikanlar?.length > 0 && { id: 'one-cikanlar', ad: 'Öne çıkanlar' },
   b.sonuclar?.length > 0 && { id: 'sonuclar', ad: 'Ne bekleniyordu, ne geldi' },
   takvimVar && { id: 'takvim', ad: 'Takvim' },
   b.gruplar?.length > 0 && { id: 'hat-hat', ad: 'Hat hat değişim' },
-  b.temalar?.temalar?.length > 0 && { id: 'temalar', ad: 'İzlenen temalar' },
   (b.izleme?.acik?.length > 0 || b.izleme?.kapanan?.length > 0) &&
     { id: 'soz-defteri', ad: 'Söz defteri' },
   b.haberler?.bolumler?.length > 0 && { id: 'gundem', ad: 'Gündem' },
+  b.temalar?.temalar?.length > 0 && { id: 'temalar', ad: 'İzlenen temalar' },
   b.veri_gunlugu?.length > 0 && { id: 'veri-gunlugu', ad: 'Veri günlüğü' },
   b.piyasa?.gruplar?.length > 0 && { id: 'piyasa', ad: 'Piyasa fotoğrafı' },
 ].filter(Boolean) as { id: string; ad: string }[];
@@ -152,19 +162,20 @@ const bolumler = [
 
   {b.piyasa.en_cok_hareket?.sigma?.length > 0 && (
     <section class="blok sigma-blok" id="olagandisi">
-        <h2>Günün olağandışı hareketleri</h2>
+        <h2>{sigmaBaslik}</h2>
         <p class="alt-not">
           Hareketin büyüklüğü ile olağandışılığı ayrı şeylerdir. Aşağıdaki sıralama
-          günlük hareketi her enstrümanın kendi son yirmi günlük oynaklığına bölerek
-          kurulur: σ, o enstrüman için normal bir günün ölçüsüdür. Böylece baz puanla
-          yüzde aynı ölçekte kıyaslanır ve yüzdesi küçük ama kendi normaline göre
-          büyük hareketler görünür olur.
+          {sigmaHaftalik
+            ? ' haftalık hareketi her enstrümanın kendi son yirmi haftalık oynaklığına bölerek kurulur: σ, o enstrüman için normal bir haftanın ölçüsüdür.'
+            : ' günlük hareketi her enstrümanın kendi son yirmi günlük oynaklığına bölerek kurulur: σ, o enstrüman için normal bir günün ölçüsüdür.'}
+          Böylece baz puanla yüzde aynı ölçekte kıyaslanır ve yüzdesi küçük ama kendi
+          normaline göre büyük hareketler görünür olur.
         </p>
         <SigmaSerit hareketler={b.piyasa.en_cok_hareket.sigma} />
         <div class="p-kaydir">
           <table class="p-tablo">
             <thead>
-              <tr><th>enstrüman</th><th class="sag">1 gün</th><th class="sag">günlük σ</th><th class="sag">kaç σ</th></tr>
+              <tr><th>enstrüman</th><th class="sag">{sigmaHaftalik ? '1 hafta' : '1 gün'}</th><th class="sag">{sigmaHaftalik ? 'haftalık σ' : 'günlük σ'}</th><th class="sag">kaç σ</th></tr>
             </thead>
             <tbody>
               {b.piyasa.en_cok_hareket.sigma.map((x: any) => (
@@ -324,72 +335,6 @@ const bolumler = [
     </section>
   )}
 
-  {b.temalar && b.temalar.temalar && b.temalar.temalar.length > 0 && (
-    <section class="blok temalar" id="temalar">
-      <h2>İzlenen temalar</h2>
-      <p class="alt-not">
-        Haftalarca süren ve birden çok varlığı aynı anda hareket ettiren anlatılar.
-        Her temanın altında onu doğrulayacak ve çürütecek işaretler, izlenecek tek
-        gösterge ve o temaya bağlı varlıkların güncel hareketi var.
-      </p>
-      {b.temalar.temalar.map((t: any) => (
-        <div class:list={['tema', t.durum]}>
-          <h3>
-            {t.ad}
-            <span class="tema-durum">{t.durum}</span>
-          </h3>
-          {t.gelisme && (
-            <div class="tema-gelisme">
-              <span class="etiket">Bu bültende</span>
-              <div set:html={t.gelisme} />
-            </div>
-          )}
-          <p class="tema-tez"><strong>Tez.</strong> {t.tez}</p>
-          {t.son_gozlem && <p class="tema-gozlem"><strong>Son durum.</strong> {t.son_gozlem}</p>}
-          {t.olculer && t.olculer.length > 0 && (
-            <div class="p-kaydir">
-              <table class="p-tablo">
-                <tbody>
-                  {t.olculer.map((r: any) => (
-                    <tr>
-                      <td class="p-ad">{r.ad}</td>
-                      <td class="sag p-son">{r.son?.toLocaleString('tr-TR')}<span class="p-birim">{r.birim}</span></td>
-                      {['h1', 'ybb'].map((alan) => (
-                        <td class:list={['sag', 'p-degisim', { arti: (r[alan] ?? 0) > 0, eksi: (r[alan] ?? 0) < 0 }]}>
-                          {r[alan] === null || r[alan] === undefined
-                            ? '—'
-                            : `${r[alan] > 0 ? '+' : ''}${r[alan].toLocaleString('tr-TR')}${r.degisim_birim}`}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p class="tema-sutun">sütunlar: son · 1 hafta · yılbaşından</p>
-            </div>
-          )}
-          <div class="tema-isaret">
-            {t.dogrulayan && t.dogrulayan.length > 0 && (
-              <div>
-                <span class="isaret-baslik">Doğrularsa</span>
-                <ul>{t.dogrulayan.map((x: string) => <li>{x}</li>)}</ul>
-              </div>
-            )}
-            {t.curuten && t.curuten.length > 0 && (
-              <div>
-                <span class="isaret-baslik">Çürütürse</span>
-                <ul>{t.curuten.map((x: string) => <li>{x}</li>)}</ul>
-              </div>
-            )}
-          </div>
-          {t.izlenecek_gosterge && (
-            <p class="tema-gosterge">İzlenecek tek gösterge: <strong>{t.izlenecek_gosterge}</strong></p>
-          )}
-        </div>
-      ))}
-    </section>
-  )}
-
   {(b.izleme?.acik?.length > 0 || b.izleme?.kapanan?.length > 0) && (
     <section class="blok soz" id="soz-defteri">
       <h2>
@@ -501,6 +446,72 @@ const bolumler = [
       {b.haberler.okunamayan.length > 0 && (
         <p class="uyari">Okunamayan kaynak: {b.haberler.okunamayan.join(', ')}</p>
       )}
+    </section>
+  )}
+
+  {b.temalar && b.temalar.temalar && b.temalar.temalar.length > 0 && (
+    <section class="blok temalar" id="temalar">
+      <h2>İzlenen temalar</h2>
+      <p class="alt-not">
+        Haftalarca süren ve birden çok varlığı aynı anda hareket ettiren anlatılar.
+        Her temanın altında onu doğrulayacak ve çürütecek işaretler, izlenecek tek
+        gösterge ve o temaya bağlı varlıkların güncel hareketi var.
+      </p>
+      {b.temalar.temalar.map((t: any) => (
+        <div class:list={['tema', t.durum]}>
+          <h3>
+            {t.ad}
+            <span class="tema-durum">{t.durum}</span>
+          </h3>
+          {t.gelisme && (
+            <div class="tema-gelisme">
+              <span class="etiket">Bu bültende</span>
+              <div set:html={t.gelisme} />
+            </div>
+          )}
+          <p class="tema-tez"><strong>Tez.</strong> {t.tez}</p>
+          {t.son_gozlem && <p class="tema-gozlem"><strong>Son durum.</strong> {t.son_gozlem}</p>}
+          {t.olculer && t.olculer.length > 0 && (
+            <div class="p-kaydir">
+              <table class="p-tablo">
+                <tbody>
+                  {t.olculer.map((r: any) => (
+                    <tr>
+                      <td class="p-ad">{r.ad}</td>
+                      <td class="sag p-son">{r.son?.toLocaleString('tr-TR')}<span class="p-birim">{r.birim}</span></td>
+                      {['h1', 'ybb'].map((alan) => (
+                        <td class:list={['sag', 'p-degisim', { arti: (r[alan] ?? 0) > 0, eksi: (r[alan] ?? 0) < 0 }]}>
+                          {r[alan] === null || r[alan] === undefined
+                            ? '—'
+                            : `${r[alan] > 0 ? '+' : ''}${r[alan].toLocaleString('tr-TR')}${r.degisim_birim}`}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p class="tema-sutun">sütunlar: son · 1 hafta · yılbaşından</p>
+            </div>
+          )}
+          <div class="tema-isaret">
+            {t.dogrulayan && t.dogrulayan.length > 0 && (
+              <div>
+                <span class="isaret-baslik">Doğrularsa</span>
+                <ul>{t.dogrulayan.map((x: string) => <li>{x}</li>)}</ul>
+              </div>
+            )}
+            {t.curuten && t.curuten.length > 0 && (
+              <div>
+                <span class="isaret-baslik">Çürütürse</span>
+                <ul>{t.curuten.map((x: string) => <li>{x}</li>)}</ul>
+              </div>
+            )}
+          </div>
+          {t.izlenecek_gosterge && (
+            <p class="tema-gosterge">İzlenecek tek gösterge: <strong>{t.izlenecek_gosterge}</strong></p>
+          )}
+        </div>
+      ))}
     </section>
   )}
 
