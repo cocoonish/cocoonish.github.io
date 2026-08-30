@@ -5,6 +5,16 @@ name: Yayınla (GitHub Pages)
 on:
   push:
     branches: [main]
+  # YEDEK DERLEMELER (pazar akşamı). 30.08.2026'da bir içerik push'unun
+  # derlemesi düştü (şema geçişi); sonraki push kendini onardı ama pazar
+  # akşamı İÇERİK SEYREK — haftalık bülten + teknik analiz yazıldıktan sonra
+  # başka push gelmeyebilir ve düşen tek derleme siteyi ertesi sabaha kadar
+  # eski bırakır. Bu koşular en son main'i yeniden derler; içerik aynıysa
+  # aynı siteyi yayınlar, maliyeti yok. Saatler rutinin (17:45 TR) işini
+  # bitirmesinden sonraya konuldu.
+  schedule:
+    - cron: '35 15 * * 0'   # 18:35 İstanbul
+    - cron: '5 17 * * 0'    # 20:05 İstanbul
   workflow_dispatch: {}
 
 permissions:
