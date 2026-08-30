@@ -76,13 +76,16 @@ const kisaZaman = (t: string | null) => (t ? (t.length > 10 ? t.slice(5, 16).rep
           </span>
         </div>
 
+        {/* Şema toleransı: 30.08 dağıtımında eski (tek dilimli) yazılmış JSON
+            ile yeni bileşen çakıştı ve BÜTÜN site derlemesi düştü. Alan
+            eksikse satır atlanır; bir sayının yokluğu siteyi indiremez. */}
         <p class="degisim etiket">
-          1h {isaretli(e.degisim.h1, e.tip === 'getiri' ? ' bp' : '%')} · 1a{' '}
-          {isaretli(e.degisim.a1, e.tip === 'getiri' ? ' bp' : '%')} · 3a{' '}
-          {isaretli(e.degisim.a3, e.tip === 'getiri' ? ' bp' : '%')} · YBB{' '}
-          {isaretli(e.degisim.ybb, e.tip === 'getiri' ? ' bp' : '%')} · 52h aralık{' '}
-          {sayi(e.aralik52.dusuk, e.ondalik)}–{sayi(e.aralik52.yuksek, e.ondalik)} (konum %
-          {sayi(e.aralik52.konum_pct, 0)})
+          1h {isaretli(e.degisim?.h1, e.tip === 'getiri' ? ' bp' : '%')} · 1a{' '}
+          {isaretli(e.degisim?.a1, e.tip === 'getiri' ? ' bp' : '%')} · 3a{' '}
+          {isaretli(e.degisim?.a3, e.tip === 'getiri' ? ' bp' : '%')} · YBB{' '}
+          {isaretli(e.degisim?.ybb, e.tip === 'getiri' ? ' bp' : '%')} · 52h aralık{' '}
+          {sayi(e.aralik52?.dusuk, e.ondalik)}–{sayi(e.aralik52?.yuksek, e.ondalik)} (konum %
+          {sayi(e.aralik52?.konum_pct, 0)})
         </p>
 
         <div class="sarici">
@@ -165,9 +168,9 @@ const kisaZaman = (t: string | null) => (t ? (t.length > 10 ? t.slice(5, 16).rep
                   );
                 })}
                 <td>
-                  <div>%38,2 → {sayi(e.fib.s382, e.ondalik)}</div>
-                  <div>%50 → {sayi(e.fib.s500, e.ondalik)}</div>
-                  <div>%61,8 → {sayi(e.fib.s618, e.ondalik)}</div>
+                  <div>%38,2 → {sayi(e.fib?.s382, e.ondalik)}</div>
+                  <div>%50 → {sayi(e.fib?.s500, e.ondalik)}</div>
+                  <div>%61,8 → {sayi(e.fib?.s618, e.ondalik)}</div>
                 </td>
               </tr>
             </tbody>
