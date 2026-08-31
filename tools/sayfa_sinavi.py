@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import pathlib
 import re
+import subprocess
 import sys
 
 KOK = pathlib.Path(__file__).resolve().parents[2]
@@ -210,6 +211,28 @@ def main() -> int:
         if yanyana:
             bulgu(slug, f"{slug}: YAN YANA PANEL: " + ", ".join(yanyana))
         print(f"  (5) panel düzeni: yan yana {len(yanyana)}")
+
+    # (6) KaTeX — FORMÜLLER AYRIŞTIRILIYOR MU?
+    # rehype-katex bir formülü ayrıştıramadığında derlemeyi DÜŞÜRMEZ; hatayı
+    # sayfaya kırmızı ham LaTeX olarak basar ve `npm run build` yeşil biter.
+    # 31.08.2026'da `\textbf{%3,3}` yazıldı — LaTeX'te % yorum karakteri olduğu
+    # için süslü parantez yutuldu ve dört formül sayfada ham metin olarak
+    # yayımlandı. Kusuru derleme değil OKUR gördü. Denetim buraya kondu ki
+    # sınavı koşturan herkes aynı soruyu sorsun.
+    print("\n▶ KaTeX")
+    kt = KOK / "site/tools/katex_sinavi.mjs"
+    if not kt.exists():
+        print("  – katex_sinavi.mjs yok, atlandı")
+    else:
+        r = subprocess.run(["node", str(kt)], cwd=str(KOK / "site"),
+                           capture_output=True, text=True)
+        cikti = [x for x in r.stdout.splitlines() if x.strip()]
+        for satir in cikti[:14]:
+            print("  " + satir)
+        if r.returncode != 0:
+            hata.append("KaTeX: formül ayrıştırılamadı (ayrıntı yukarıda)")
+        elif r.returncode != 0 or not cikti:
+            print("  – node/katex yok, atlandı")
 
     print()
     if hata:
