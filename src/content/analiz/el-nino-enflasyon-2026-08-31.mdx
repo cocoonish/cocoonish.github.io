@@ -536,7 +536,8 @@ Yukarıdaki ölçümler zinciri kurmaya yetiyor:
 2. **Küresel fiyattan ABD gıda TÜFE'sine geçiş
    <Deger proje="el-nino" anahtar="gecis_abd_beta" ondalik={3}>0,093</Deger>.** Yani dünya
    reel gıda emtia fiyatında 9 puanlık bir El Niño şoku, ABD gıda enflasyonuna ~0,8 puan
-   ekler.
+   ekler. (Bu katsayı gıda TÜFE'sinin KENDİSİ üzerinden ölçüldüğü için, Türkiye
+   zincirinde gereken $1/(1-\beta_2)$ düzeltmesi burada gerekmez.)
 3. **ABD gıda ağırlığı ~%13,5, manşete geçiş katsayısı
    <Deger proje="el-nino" anahtar="abd_gecis_beta" ondalik={3}>0,319</Deger>.** 0,8 puanlık
    gıda enflasyonu, manşette ~0,26 puan eder.
@@ -614,29 +615,41 @@ Aşağıdaki üç senaryo bir **tahmin değildir**. Ölçtüğümüz katsayılar
 "şu olursa şu kadar eder" demektir; her satırdaki varsayım açıkça yazılıdır ve varsayım
 tutmazsa sonuç da tutmaz.
 
-Zincir şudur:
+Zincir kurulurken **bir tuzağa dikkat etmek gerekiyor** ve biz ilk denemede ona
+düştük. Türkiye tarafında ölçtüğümüz $\beta_{1}$ katsayısı **göreceli** gıda enflasyonu
+(gıda − manşet) üzerinden kuruldu; ABD tarafındaki karşılığı ise gıda TÜFE'sinin
+**kendisi** üzerinden. İkisini aynı formülde kullanmak Türkiye zincirini sistematik
+olarak eksik hesaplar. Doğru dönüşüm şudur: küresel şok gıdayı $x$ kadar yükseltiyorsa
+manşet $\beta_{2}x$ kadar yükselir, dolayısıyla göreceli fark $(1-\beta_{2})x$ olur ve
 
 $$
-\Delta\pi^{\text{manşet, TR}} \;\approx\; s \times \beta_{1} \times \beta_{2}
+\Delta\pi^{\text{gıda, TR}} = \frac{s\,\beta_{1}}{1-\beta_{2}},
+\qquad
+\Delta\pi^{\text{manşet, TR}} = \frac{s\,\beta_{1}\,\beta_{2}}{1-\beta_{2}}
 $$
 
 Burada $s$ küresel reel gıda emtia enflasyonundaki puan cinsinden şok,
-$\beta_{1}$ küresel fiyattan Türkiye iç gıda fiyatına geçiş
+$\beta_{1}$ küresel fiyattan Türkiye'nin göreceli gıda enflasyonuna geçiş
 (<Deger proje="el-nino" anahtar="gecis_tr_beta" ondalik={3}>0,092</Deger>,
 <Deger proje="el-nino" anahtar="gecis_tr_gecikme" ondalik={0}>12</Deger> ay gecikmeli) ve
-$\beta_{2}$ gıdadan manşete geçiş
+$\beta_{2}$ gıdadan manşete gözlenen geçiş
 (<Deger proje="el-nino" anahtar="gecis_beta" ondalik={3}>0,541</Deger>).
 
-| senaryo | varsayım | küresel reel gıda şoku | TR iç gıda etkisi | TR manşet etkisi |
-|---|---|---:|---:|---:|
-| **Dar şok** | Yalnız tropik kalıcı ürünler yükselir; toplu gıda endeksi hemen hemen sabit kalır (2015–16 örüntüsü) | +2 puan | +0,2 puan | **+0,1 puan** |
-| **Literatür ortası** | Güçlü epizotlar için yazının verdiği büyüklük gerçekleşir | +9 puan | +0,8 puan | **+0,45 puan** |
-| **Geniş şok** | Tropik ürünlere ek olarak tahıl ve şeker de kısıtlanır, ihracat yasakları döner | +20 puan | +1,8 puan | **+1,0 puan** |
+| senaryo | varsayım | küresel reel gıda şoku | TR gıda enflasyonu | TR manşet (gözlenen β ile) | TR manşet (sepet ağırlığıyla) |
+|---|---|---:|---:|---:|---:|
+| **Dar şok** | Yalnız tropik kalıcı ürünler yükselir; toplu gıda endeksi hemen hemen sabit kalır | +2 puan | +0,4 puan | **+0,2 puan** | +0,1 puan |
+| **Literatür ortası** | Güçlü epizotlar için yazının verdiği büyüklük gerçekleşir | +9 puan | +1,8 puan | **+1,0 puan** | +0,3 puan |
+| **Geniş şok** | Tropik ürünlere ek olarak tahıl ve şeker de kısıtlanır, ihracat yasakları döner | +20 puan | +4,0 puan | **+2,2 puan** | +0,6 puan |
 
-Üç senaryonun da manşete katkısı **bir puanın altında** kalıyor ve bu, yazının en çok
-şaşırtan sayısıdır. Sebebi zincirin ikinci halkasıdır: küresel emtia fiyatının onda
-birinden azı tüketici gıda fiyatına geçiyor. Türkiye'nin yüksek gıda ağırlığı ve yüksek
-geçiş katsayısı, bu seyrelmeyi telafi etmiyor.
+Son iki sütun bandın genişliğini gösteriyor ve ikisi de savunulabilir. Gözlenen geçiş
+katsayısı ($\beta_2 = 0{,}541$) gıda şoklarının lokanta, nakliye ve ambalaj gibi
+kalemlere sızmasını da içerir; sepetteki nominal ağırlık (%24,44) yalnız doğrudan
+katkıyı sayar. **Gerçek büyüklüğün bu iki sütun arasında bir yerde olmasını bekleriz** —
+literatür ortası senaryoda kabaca 0,3 ile 1,0 puan arasında.
+
+Bu, ilk hesabımızın iki katı. Farkın tamamı yukarıdaki $1/(1-\beta_{2})$ çarpanından
+geliyor ve düzeltmeyi burada açıkça yazıyoruz, çünkü bir sayının nasıl düzeldiği en az
+kendisi kadar bilgi taşır.
 
 **Bu hesabın üç zayıflığını yazıyoruz.** (1) β katsayıları doğrusal ve simetrik varsayıldı;
 büyük şoklarda geçiş daha yüksek olabilir. (2) Kur etkileşimi yok: şok TL'nin değer
@@ -668,9 +681,10 @@ karşılığı <Deger proje="el-nino" anahtar="abd_cekirdek_beta" ondalik={3}>0,
 Bunların pratik sonucu şudur: **El Niño bir indirim patikasını başlatmaz ya da durdurmaz,
 ama gecikmiş bir indirim patikasının 2027 sonundaki hızını sınırlayabilir.** Kurul'un
 bugünkü kararlarında yeri yok; 2027 patikasının risk senaryolarında var. Senaryo
-bandındaki en kötü hâlde bile manşete katkı bir puanın altında kaldığı için, bunu bir
-"faiz indirimi durdurucusu" gibi sunmak abartı olur; ama bir puanlık ek enflasyon,
-dezenflasyonun yavaşladığı bir dönemde politika alanını gözle görülür biçimde daraltır.
+bandında literatür ortası hâlde manşete katkı 0,3–1,0 puan, geniş şokta 0,6–2,2 puan
+aralığında. Bunu bir "faiz indirimi durdurucusu" gibi sunmak abartı olur; ama bandın üst
+yarısı, dezenflasyonun yavaşladığı bir dönemde politika alanını gözle görülür biçimde
+daraltacak büyüklüktedir.
 
 Büyüme tarafında etki daha dolaylı ve iki yönlü: gıda fiyatı artışı reel harcanabilir
 geliri aşındırıp tüketimi kısar (daraltıcı), ama tarımsal gelirleri artırır (genişletici).
