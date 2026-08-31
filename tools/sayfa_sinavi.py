@@ -29,14 +29,38 @@ import sys
 KOK = pathlib.Path(__file__).resolve().parents[2]
 
 # (sayfa slug'ı, proje klasörü)
-HATLAR = [
-    ("kredi-parasal", "Aktarılacak Projeler/Kredi"),
-    ("fonlama-likidite", "Aktarılacak Projeler/Fonlama"),
-    ("enflasyon", "Aktarılacak Projeler/Enflasyon"),
-    ("odemeler-dengesi", "Aktarılacak Projeler/OdemelerDengesi"),
-    ("butce-borc", "Aktarılacak Projeler/Butce"),
-    ("dibs-verim-egrisi", "Aktarılacak Projeler/DIBS"),
-]
+# HAT LİSTESİ ELLE TUTULMAZ, guncelle.py'nin kendi kütüğünden TÜRETİLİR.
+# Elle tutulan liste altı hat taşıyordu ve sınav geri kalanını hiç görmüyordu:
+# hazine-ihrac sayfasında <Deger> ile çağrılan on altı anahtar ozet.json'da
+# YOKTU, yani noktalı çizgiyle "canlı" görünen o sayılar aylardır statik
+# yedeklerinde donmuştu — ve sınav bunu bulmak için yazılmış olmasına rağmen
+# o sayfaya hiç bakmıyordu. Yeni bir hat eklendiğinde de aynı boşluk
+# tekrarlanırdı. Kaynak tek: hattın kendisi.
+def _hatlar() -> list[tuple[str, str]]:
+    # Modül sys.path'ten NORMAL import edilir. spec_from_file_location ile
+    # yüklemek dataclass çözümlemesini kırıyor: dataclasses tip adlarını
+    # sys.modules[cls.__module__] üzerinden arıyor ve sentetik adla yüklenen
+    # modül orada olmadığı için AttributeError veriyor.
+    import sys
+    if str(KOK) not in sys.path:
+        sys.path.insert(0, str(KOK))
+    import guncelle
+    return [(h.slug, h.klasor) for h in guncelle.HATLAR]
+
+
+HATLAR = _hatlar()
+
+# KURAL 1 (anahtar varlığı) HER hatta koşar: ölçütü tek ve kesin — sayfada
+# çağrılan anahtar ozet.json'da ya vardır ya yoktur, yorum payı sıfırdır.
+#
+# Kural 2–5 yalnız aşağıdaki hatlarda DÜŞÜRÜR. Sebebi dürüstçe şu: bu ölçütler
+# o altı hattın çıktı düzenine göre yazıldı ve liste genişletilince altı hatta
+# birden YANLIŞ ALARM verdiler (ör. dosya kümesi ölçütü, çıktısını farklı adla
+# kopyalayan hatlarda hepsini "farklı" sayıyor). Yanlış alarmla düşen bir
+# denetim, kapatılan bir denetimdir. Ölçütler o hatlar için de düzeltilene
+# kadar orada BİLGİ olarak basılır, kapı olmaz.
+TAM_SINAV = {"kredi-parasal", "fonlama-likidite", "enflasyon",
+             "odemeler-dengesi", "butce-borc", "dibs-verim-egrisi"}
 
 # (2) için: yalnız GERÇEKTEN oynak sayılar taranır. Tarih/oran metinleri, tek
 # haneli sayımlar ve yöntemsel sabitler taramaya girmez — yoksa "13 haftalık"
@@ -71,6 +95,13 @@ MUAF_KALIP = re.compile(r"\{/\*\s*sinav-muaf:\s*([A-Za-z0-9_]+)")
 
 def main() -> int:
     hata: list[str] = []
+
+    def bulgu(slug: str, mesaj: str) -> None:
+        """Kural 2–5 bulgusu: TAM_SINAV'daki hatta kapı, diğerlerinde bilgi."""
+        if slug in TAM_SINAV:
+            hata.append(mesaj)
+        else:
+            print(f"  (bilgi, kapı değil) {mesaj}")
     for slug, klasor in HATLAR:
         proje = KOK / klasor
         mp = KOK / "site/src/content/projeler" / f"{slug}.mdx"
@@ -112,7 +143,7 @@ def main() -> int:
                     ciplak.append(f"{k}={metin}")
                     break
         if ciplak:
-            hata.append(f"{slug}: ÇIPLAK OYNAK SAYI (kural 5): "
+            bulgu(slug, f"{slug}: ÇIPLAK OYNAK SAYI (kural 5): "
                         + ", ".join(sorted(set(ciplak))))
         print(f"  (2) çıplak oynak sayı: {len(set(ciplak))}"
               + (f" · muaf: {sorted(muaf)}" if muaf else ""))
@@ -150,20 +181,20 @@ def main() -> int:
                 elif int(m.group(1)) != h:
                     sapan.append(f"{dosya}: MDX {m.group(1)} ≠ üretim {h}")
             if sapan:
-                hata.append(f"{slug}: yükseklik sapması → " + " · ".join(sapan))
+                bulgu(slug, f"{slug}: yükseklik sapması → " + " · ".join(sapan))
             print(f"  (3) yükseklik: {len(y)} figür · sapma {len(sapan)}")
 
         # (4) dosya kümesi + ev stili
         uret = {p.name for p in (proje / "cikti").glob("*.html")}
         site = {p.name for p in (KOK / "site/public/projeler" / slug).glob("*.html")}
         if uret != site:
-            hata.append(f"{slug}: üretim ile site dosya kümesi farklı: "
+            bulgu(slug, f"{slug}: üretim ile site dosya kümesi farklı: "
                         f"{sorted(uret ^ site)}")
         stilsiz = [n for n in sorted(site)
                    if "tto-ev-stili" not in (KOK / "site/public/projeler" / slug / n)
                    .read_text(encoding="utf-8", errors="ignore")]
         if stilsiz:
-            hata.append(f"{slug}: ev stili bloğu YOK: {stilsiz}")
+            bulgu(slug, f"{slug}: ev stili bloğu YOK: {stilsiz}")
         print(f"  (4) dosya kümesi: üretim {len(uret)} · site {len(site)} · "
               f"ev stilsiz {len(stilsiz)}")
 
@@ -177,7 +208,7 @@ def main() -> int:
             if len(sol) > 1:
                 yanyana.append(f"{n} (sol uçlar {sorted(sol)})")
         if yanyana:
-            hata.append(f"{slug}: YAN YANA PANEL: " + ", ".join(yanyana))
+            bulgu(slug, f"{slug}: YAN YANA PANEL: " + ", ".join(yanyana))
         print(f"  (5) panel düzeni: yan yana {len(yanyana)}")
 
     print()
