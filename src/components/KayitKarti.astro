@@ -7,11 +7,27 @@ interface Props {
   tags?: string[];
   durum?: 'aktif' | 'taslak' | 'arsiv';
   guncelleme?: string;
+  pubDate?: Date;
+  updatedDate?: Date;
   gecikme?: number; // giriş animasyonu sırası (ms)
 }
 
-const { href, sira, title, description, tags = [], durum, guncelleme, gecikme = 0 } = Astro.props;
+const { href, sira, title, description, tags = [], durum, guncelleme,
+        pubDate, updatedDate, gecikme = 0 } = Astro.props;
 const siraNo = `No ${String(sira).padStart(2, '0')}`;
+
+// TARİH KARTTA DURUR. Kart tarihi hiç basmıyordu: aynı konunun iki yazısı
+// (bir sonraki çeyreğin büyüme analizi, bir sonraki ihalenin sökümü) listede
+// birbirinden ayırt edilemiyordu. Çözüm başlığa tarih yazmak DEĞİL — o, kartın
+// eksiğini her yazının başlığında tek tek onarmak olurdu.
+const bicimle = (d?: Date) =>
+  d instanceof Date && !isNaN(d.valueOf())
+    ? d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+const yayim = bicimle(pubDate);
+const guncel = bicimle(updatedDate);
+// Güncelleme yayımla aynı günse ikinci kez yazma.
+const guncelGoster = guncel && guncel !== yayim ? guncel : null;
 ---
 
 <article class="kayit yuksel" style={`--d: ${gecikme}ms`}>
@@ -20,10 +36,14 @@ const siraNo = `No ${String(sira).padStart(2, '0')}`;
     {durum === 'taslak' && <span class="rozet rozet--taslak">Hazırlanıyor</span>}
     {durum === 'aktif' && <span class="rozet rozet--aktif">Canlı</span>}
     {durum === 'arsiv' && <span class="rozet rozet--arsiv">Arşiv</span>}
+    {yayim && (
+      <time class="tarih" datetime={pubDate?.toISOString().slice(0, 10)}>{yayim}</time>
+    )}
   </div>
   <h3><a href={href}>{title}</a></h3>
   <p>{description}</p>
   <div class="alt">
+    {guncelGoster && <span>güncellendi {guncelGoster}</span>}
     {guncelleme && <span>↻ {guncelleme}</span>}
     {tags.map((t) => <span>#{t}</span>)}
   </div>
