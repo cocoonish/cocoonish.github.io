@@ -1,0 +1,293 @@
+---
+title: 'Büyüme — GSYH kırılımları, enflasyon ve faiz alanı'
+description: 'Büyümenin manşetinin altına inen bir pano: üç ayrı arındırmanın hangi soruyu cevapladığı, zincirlenmiş hacim endeksleri toplanamadığı için katkı hesabının nasıl kurulduğu, harcama ve üretim kırılımları, hanehalkı tüketiminin dayanıklılık ayrımı, ve yavaşlamanın enflasyon patikasına ve faiz indirimine ne kadar alan açtığı.'
+pubDate: 2026-08-31
+updatedDate: 2026-08-31
+tags: ['büyüme', 'gsyh', 'ulusal hesaplar', 'enflasyon', 'faiz', 'tüik']
+durum: 'aktif'
+kaynak: 'TCMB EVDS3 — TÜİK ulusal hesapları: harcama yöntemiyle zincirlenmiş hacim endeksleri (arındırılmamış, takvim arındırılmış, mevsim ve takvim arındırılmış), cari fiyatlarla harcama ve üretim serileri, üretim yöntemiyle A10 iktisadi faaliyet kolları, hanehalkı tüketiminin dayanıklılık kırılımı'
+guncelleme: 'üç aylık; TÜİK yayımı çeyrek bitiminden ~60 gün sonra, EVDS aynası birkaç gün daha gecikebiliyor'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+
+Büyüme verisi Türkiye'de neredeyse her zaman tek bir sayıya indirgenir: "ekonomi yüzde
+şu kadar büyüdü". O sayı doğru olabilir ve yine de hiçbir şey anlatmayabilir. Çünkü
+manşet oran, birbirinden çok farklı üç şeyin toplamıdır — hanehalkının ne kadar
+harcadığı, firmaların ne kadar yatırım yaptığı ve dış dünyayla aramızdaki dengenin ne
+yönde değiştiği — ve bu üçü aynı anda ters yönlere gidebilir. Bu sayfa manşetin altına
+iner: kırılımı ölçer, kırılımın nasıl ölçüldüğünü adım adım anlatır, sonra da asıl
+sorunun peşine düşer — **yavaşlama enflasyon patikasına ve faiz indirimine ne kadar
+alan açıyor?**
+
+<div class="not">
+  <span class="etiket">Ölçebildiğimiz son çeyrek</span>
+  Bu sayfadaki bütün kırılımlar ve grafikler <Deger proje="buyume" anahtar="_ceyrek" ondalik={0}>2026Q1</Deger>
+  çeyreğine aittir. TÜİK 2026 ikinci çeyreğini 31 Ağustos 2026 saat 10:00'da yayımladı —
+  yıllık <b>%2,3</b>, mevsim ve takvim etkilerinden arındırılmış çeyreklik <b>%1,1</b> —
+  ancak bu sayfanın beslendiği TCMB EVDS aynası o çeyreği henüz taşımıyor. Sayfadaki
+  oynak sayılar veriye bağlı yazıldığı için, ayna güncellenip hattımız koştuğunda metin
+  ve dört grafiğin tamamı elle dokunulmadan yeni çeyreğe geçer. Manşet oran dışarıdan
+  alınmış tek büyüklüktür ve kaynağı burada yazılıdır; geri kalan her sayı bizim
+  ölçümümüzdür.
+</div>
+
+## Önce cetveli seçmek: üç arındırma, üç ayrı soru
+
+Ulusal hesaplarda "büyüme" tek bir seri değildir. TÜİK aynı GSYH'yi üç ayrı biçimde
+yayımlar ve hangisini seçtiğiniz hangi soruyu sorduğunuza bağlıdır. Karıştırmak,
+bu sayfayı kurarken bizim de bir kez düştüğümüz hatadır.
+
+**Arındırılmamış zincirlenmiş hacim.** Manşet yıllık oran buradan gelir. Aynı çeyreği
+bir yıl öncesiyle kıyasladığınız için mevsim zaten iki tarafta da vardır ve kendini
+götürür. Ölçtüğümüz manşet <Deger proje="buyume" anahtar="buyume_yillik" ondalik={2}>2,48</Deger>%
+— yayımlanan orandan ayırt edilemez, ki bu hattın doğrulamasıdır.
+
+**Takvim arındırılmış.** Bayramların hangi çeyreğe düştüğü, artık yıl, iş günü sayısı:
+bunlar bir çeyreği yapay olarak şişirip diğerini söndürür. Harcama bileşenlerini
+kıyaslarken bu gürültü bileşenden bileşene farklı vurur, o yüzden **kırılım hesabı bu
+seriden kurulur**. Bu serinin kendi yıllık büyümesi
+<Deger proje="buyume" anahtar="ayristirma_tabani" ondalik={2}>2,57</Deger>%'tir;
+manşetle arasındaki <Deger proje="buyume" anahtar="ayarlama_farki" ondalik={2} isaret={true}>0,09</Deger>
+puanlık fark bir tutarsızlık değil, takvim arındırmasının kendisidir.
+
+**Mevsim ve takvim arındırılmış.** Çeyreklik değişim **yalnızca** bu seriden alınır.
+Arındırılmamış seriden çeyreklik değişim almak, mevsimi büyüme sanmaktır: Türkiye'de
+üçüncü çeyrek turizmle her yıl şişer, birinci çeyrek her yıl söner. Ölçtüğümüz
+çeyreklik oran <Deger proje="buyume" anahtar="buyume_ceyreklik" ondalik={2}>0,13</Deger>%.
+
+Yıllık oran "bir yıl önceye göre neredeyiz" der ve geçmişin ağırlığını taşır; çeyreklik
+oran "şu an hızlanıyor muyuz yavaşlıyor muyuz" der ve dönüş noktalarını önce gösterir.
+Bir yavaşlamanın erken kanıtı hep çeyreklikte belirir.
+
+<GrafikEmbed src="/projeler/buyume/01-buyume-patikasi.html" baslik="Büyüme patikası — yıllık ve çeyreklik" no="01" />
+
+**Bu şekil nasıl hesaplanıyor.** Kırmızı çizgi, takvim etkisinden arındırılmış
+zincirlenmiş hacim endeksinin dört çeyrek öncesine oranıdır: $g_t = (X_t / X_{t-4} - 1)
+\times 100$. Altın çubuklar mevsim **ve** takvim arındırılmış endeksin bir önceki
+çeyreğe oranıdır: $q_t = (Y_t / Y_{t-1} - 1) \times 100$. İki seri bilerek farklı
+kaynaklardan gelir; aynı seriden ikisini birden türetmek yukarıdaki ayrımı bozardı.
+Endeksler 2009=100 tabanlıdır, ama oranlar taban seçiminden bağımsızdır.
+
+## Katkı hesabı: neden basit toplama işlemi değil
+
+Sezgi şunu söyler: GSYH tüketim, yatırım, kamu ve net ihracatın toplamıdır; öyleyse
+büyümeye katkıları da toplarım. **Zincirlenmiş hacim endekslerinde bu yanlıştır.**
+
+Zincirleme yönteminde her yıl bir önceki yılın fiyatlarıyla değerlenir ve seriler
+birbirine bağlanır. Bu, fiyat yapısı hızla değişen bir ekonomide hacmi doğru ölçmenin
+en iyi yoludur — ama bir bedeli vardır: **toplanabilirlik kaybolur.** Bileşenlerin
+zincirlenmiş hacim endeksleri toplandığında toplam GSYH'nin zincirlenmiş hacim
+endeksini vermez. Aradaki fark "zincirleme tutarsızlığı" diye bilinir ve gerçektir,
+hata değildir.
+
+O yüzden katkı şöyle kurulur:
+
+$$
+\text{katkı}_i(t) \;=\; s_i \cdot w_i(t-4) \cdot g_i(t)
+$$
+
+Burada $g_i(t)$ bileşenin **reel** yıllık büyümesi (takvim arındırılmış hacim
+endeksinden), $w_i(t-4)$ bileşenin **bir yıl önceki cari fiyatlı** GSYH içindeki payı,
+$s_i$ ise kimlikteki işarettir. Ağırlığın cari fiyattan gelmesinin sebebi şudur: bir
+bileşenin büyümesinin toplama ne kadar dokunacağı, o bileşenin ekonomideki
+**büyüklüğüne** bağlıdır ve büyüklük ancak parasal değerle ölçülür. Ağırlık dönemi
+olarak bir yıl öncesi seçilir çünkü karşılaştırdığımız dönem odur.
+
+İşaret meselesi kimlikten gelir:
+
+$$
+\text{GSYH} = C + G + Y + \Delta S + \text{İhracat} - \text{İthalat}
+$$
+
+İthalat kimlikte **eksi** girer. Bu, "ithalat kötüdür" demek değildir; ithalat zaten
+tüketim ve yatırım kalemlerinin içinde sayılmıştır, çifte saymayı önlemek için
+çıkarılır. Pratik sonucu şudur: **ithalat daraldığında büyümeye katkısı artı olur.**
+Bu, ekonomi güçlendiği için değil, çoğu zaman iç talep zayıfladığı için olur — ve
+büyümeye "olumlu" görünen bu katkı aslında zayıflığın kendisidir.
+
+### Sayısal örnek: hanehalkı tüketimi
+
+Teoriyi bu çeyreğin gerçek sayılarıyla yürütelim. Hanehalkı tüketiminin reel yıllık
+büyümesi <Deger proje="buyume" anahtar="k_p311_buyume" ondalik={2}>5,24</Deger>%,
+bir yıl önceki cari fiyatlı GSYH payı ise
+<Deger proje="buyume" anahtar="k_p311_agirlik" ondalik={1}>56,4</Deger>%. İşareti artı.
+Öyleyse:
+
+$$
+\text{katkı} = +1 \times 0{,}564 \times 5{,}24 = \mathbf{2{,}96}\ \text{puan}
+$$
+
+Ölçtüğümüz katkı <Deger proje="buyume" anahtar="k_p311_katki" ondalik={2}>2,96</Deger>
+puan. Yani tek başına hanehalkı tüketimi, ayrıştırma tabanının
+(<Deger proje="buyume" anahtar="ayristirma_tabani" ondalik={2}>2,57</Deger>%)
+tamamından fazlasını açıklıyor — geri kalan bileşenler net olarak **eksiye** çalışıyor.
+
+### Artık: gizlenmeyen kalıntı
+
+Katkıların toplamı <Deger proje="buyume" anahtar="katki_toplami" ondalik={2}>1,51</Deger>
+puan, ayrıştırma tabanı ise
+<Deger proje="buyume" anahtar="ayristirma_tabani" ondalik={2}>2,57</Deger>%. Aradaki
+<Deger proje="buyume" anahtar="artik" ondalik={2} isaret={true}>1,06</Deger> puanlık
+fark **artık**tır ve iki şeyi taşır: **stok değişimi** (TÜİK bu kalem için zincirlenmiş
+hacim endeksi yayımlamıyor, dolayısıyla katkısını ayrı ölçemiyoruz) ve **zincirleme
+tutarsızlığı**.
+
+Bu artığı bileşenlere dağıtmak, tabloyu güzelleştirir ve ölçmediğimiz bir şeyi
+ölçmüş gibi gösterir. Bu sayfa onu ayrı bir çubuk olarak çizer. Artığın büyüklüğü
+başlı başına bilgidir: stok birikimi güçlü bir çeyrekte artık büyür, ve bu çeyrekte
+büyüktür — yani üretilip satılmayan mal birikmiş olabilir, ki bu talep zayıflığının
+klasik işaretidir.
+
+<GrafikEmbed src="/projeler/buyume/02-katkilar.html" baslik="Yıllık büyümeye katkılar" no="02" />
+
+**Bu şekil nasıl hesaplanıyor.** Her çubuk yukarıdaki formülün çıktısıdır; ağırlıklar
+<Deger proje="buyume" anahtar="agirlik_donemi" ondalik={0}>2025Q1</Deger> çeyreğinin
+cari fiyatlı paylarından, büyümeler takvim arındırılmış hacim endeksinden gelir. Gri
+çubuk artıktır. Noktalı çizgi ayrıştırma tabanıdır: çubukların toplamı o çizgiye
+oturmalıdır ve ayrışma varsa okur aynı figürde görür.
+
+## Kırılım ne söylüyor
+
+Rakamlar tek bir hikâyeye çıkıyor ve manşetin anlattığından farklı.
+
+**İç talep hâlâ ayakta.** Hanehalkı tüketimi
+<Deger proje="buyume" anahtar="k_p311_buyume" ondalik={2}>5,24</Deger>% büyüyerek
++<Deger proje="buyume" anahtar="k_p311_katki" ondalik={2}>2,96</Deger> puan katkı
+veriyor. Devlet tüketimi <Deger proje="buyume" anahtar="k_p32_buyume" ondalik={2}>2,63</Deger>%
+ile +<Deger proje="buyume" anahtar="k_p32_katki" ondalik={2}>0,41</Deger> puan, sabit
+sermaye yatırımı <Deger proje="buyume" anahtar="k_p51g_buyume" ondalik={2}>3,03</Deger>%
+ile +<Deger proje="buyume" anahtar="k_p51g_katki" ondalik={2}>0,92</Deger> puan ekliyor.
+Üçü toplandığında büyüme dört puanın üzerinde olurdu.
+
+**Dış talep onu geri alıyor.** İhracat
+<Deger proje="buyume" anahtar="k_p6_buyume" ondalik={2}>-12,72</Deger>% ile sert
+daralmış ve tek başına <Deger proje="buyume" anahtar="k_p6_katki" ondalik={2}>-3,22</Deger>
+puan çekmiş. İthalat da <Deger proje="buyume" anahtar="k_p7_buyume" ondalik={2}>-1,58</Deger>%
+gerilediği için kimlikteki eksi işaretiyle
++<Deger proje="buyume" anahtar="k_p7_katki" ondalik={2}>0,43</Deger> puan **eklemiş** —
+ama yukarıda anlattığımız sebeple bu iyi haber değil, iç talebin ithal girdi tarafının
+da soğuduğunun işareti.
+
+Buradaki gerilim, para politikası açısından sayfanın en önemli cümlesidir: **sıkı
+duruşun kestiği şey iç talep değil, dış rekabet gücü olmuş görünüyor.** Reel efektif
+kurun beş yıllık ortalamasının belirgin üzerinde durduğu bir rejimde bu beklenmedik
+değildir; dezenflasyon güçlü reel TL üzerinden yürütüldüğünde faturayı önce ihracatçı
+öder.
+
+<GrafikEmbed src="/projeler/buyume/03-sektorler.html" baslik="Sektör büyümesi" no="03" />
+
+**Bu şekil nasıl hesaplanıyor.** Üretim yöntemiyle, iktisadi faaliyet kollarına (A10)
+göre zincirlenmiş hacim endekslerinin yıllık değişimi. Yanlarındaki pay, aynı sektörün
+bir yıl önceki **cari fiyatlı** GSYH içindeki ağırlığıdır — büyüme oranı küçük ama
+ağırlığı büyük bir sektör, hızlı büyüyen küçük bir sektörden daha çok iş yapar.
+İmalat, sanayinin **içinde** yer alır; iki satır ayrı gösterilir ama toplama iki kez
+girmez.
+
+Sektör tarafı harcama tarafını doğruluyor: **sanayi**
+<Deger proje="buyume" anahtar="s_bte_buyume" ondalik={2}>-0,75</Deger>% ile daralmada
+ve içindeki **imalat** <Deger proje="buyume" anahtar="s_c_buyume" ondalik={2}>-1,43</Deger>%
+ile daha da kötü — ihracatın daraldığı bir çeyrekte beklenen budur. Büyümeyi taşıyan
+taraf hizmetler: ticaret-ulaştırma-konaklama
+<Deger proje="buyume" anahtar="s_gti_buyume" ondalik={2}>3,70</Deger>% ve
+<Deger proje="buyume" anahtar="s_gti_agirlik" ondalik={1}>23,5</Deger>%'lik ağırlığıyla
+en büyük tek katkı kaynağı; bilgi ve iletişim
+<Deger proje="buyume" anahtar="s_j_buyume" ondalik={2}>9,50</Deger>% ile en hızlısı ama
+ağırlığı yalnız <Deger proje="buyume" anahtar="s_j_agirlik" ondalik={1}>2,4</Deger>%.
+
+Bu, dezenflasyon açısından rahatsız edici bir bileşimdir: **daralan taraf mal üreten,
+büyüyen taraf hizmet üreten sektörler.** Hizmet enflasyonu Türkiye'de manşetin en
+yapışkan bileşenidir ve talebi oradan gelmeye devam ediyorsa, hizmet fiyatlarının
+inmesi mal fiyatlarından daha uzun sürer.
+
+<GrafikEmbed src="/projeler/buyume/04-dayaniklilik.html" baslik="Hanehalkı tüketimi, dayanıklılık türüne göre" no="04" />
+
+**Bu şekil nasıl hesaplanıyor — ve neden dikkatli okunmalı.** TÜİK hanehalkı tüketiminin
+dayanıklılık kırılımını **yalnızca cari fiyatlarla** yayımlıyor. Buradaki oranlar
+bu yüzden **nominaldir**: enflasyondan arındırılmamıştır ve reel büyüme değildir. Aynı
+dönemde yıllık TÜFE otuz puanın üzerinde olduğuna göre, bu kalemlerin çoğu reel olarak
+daralıyor olabilir. Grafik yine de bilgi taşır, çünkü kalemler **birbirine göre**
+okunabilir.
+
+Dayanıklı mal nominal <Deger proje="buyume" anahtar="d_p311_buyume" ondalik={2}>27,24</Deger>%
+artmış; hizmetler <Deger proje="buyume" anahtar="d_p314_buyume" ondalik={2}>47,82</Deger>%.
+Aradaki yirmi puanı aşan makas tam da faiz kanalının çalıştığı yerdir: **dayanıklı mal
+kredili alınır, hizmet alınmaz.** Yüksek faiz önce dayanıklı malı keser, hizmet talebine
+en son dokunur. Hizmetlerin tüketim içindeki payı
+<Deger proje="buyume" anahtar="d_p314_pay" ondalik={1}>51,3</Deger>% olduğuna göre,
+sıkı para politikasının doğrudan ulaşamadığı bir taban tüketimin yarısını oluşturuyor.
+
+## Enflasyona ne kadar alan açıyor
+
+Büyüme yavaşlaması enflasyona kendiliğinden dokunmaz; **kanalla** dokunur. O kanalın
+Türkiye'deki gecikmesini bu sitede ayrıca ölçüyoruz: kredi büyümesi ile manşet enflasyon
+arasındaki çapraz korelasyon en güçlü değerini **12 ay gecikmeyle** veriyor (0,41),
+eşanlı ilişki ise yalnızca 0,21. Yani bugünkü talep zayıflığının fiyatlara yansıması
+esas olarak bir yıl sonrasının meselesidir.
+
+Bunun üç pratik sonucu var.
+
+**Birincisi, bu çeyreğin enflasyona etkisi 2027'ye yazılır.** Önümüzdeki aylarda
+açıklanacak TÜFE rakamlarını belirleyen şey, bugünkü büyüme değil, bir yıl önceki
+kredi ve talep ivmesidir. Büyüme verisi yaklaşan enflasyon rakamını değiştirmez;
+onun **okunuşunu** değiştirir.
+
+**İkincisi, bileşim gecikmeyi uzatıyor.** Yukarıda ölçtüğümüz gibi daralma mal
+tarafında, canlılık hizmet tarafında. Hizmet enflasyonu ücret ve kira gibi yapışkan
+girdilere bağlıdır ve talep soğumasına mal fiyatlarından çok daha yavaş tepki verir.
+Aynı büyüklükte bir yavaşlama, mal ağırlıklı olsaydı dezenflasyona daha hızlı
+dönerdi.
+
+**Üçüncüsü, artığın kendisi bir sinyal.** Katkı hesabında ölçtüğümüz
+<Deger proje="buyume" anahtar="artik" ondalik={2} isaret={true}>1,06</Deger> puanlık
+artığın önemli bir bölümü stok değişimidir. Stok birikimi, üretilip satılamayan malı
+gösterir ve genellikle **fiyat indirimi baskısının öncüsüdür**. Mal tarafında
+dezenflasyonun sürmesini bekletecek şey bu değil, hızlandıracak şey budur.
+
+Toplarsak: veri, dezenflasyon patikasının **mal tarafında ilerlediğini, hizmet
+tarafında ilerlemediğini** söylüyor. Manşet enflasyonun inişi devam edebilir ama
+çekirdeğin yapışkan yarısı için bu çeyrek yeterli kanıt üretmiyor.
+
+## Faiz indirimine ne kadar alan açıyor
+
+Aynı soruyu para politikası tarafında sormak için üç büyüklüğe bakmak gerekir: duruş ne
+kadar sıkı, piyasa ne fiyatlıyor, ve dışarıdan bir kısıt var mı.
+
+**Duruş ölçülebilir biçimde sıkı.** Rejim panomuzda ileriye dönük reel politika faizi
+13 puanın, TL taşıma makası 16 puanın üzerinde ve **reel kredi büyümesi eksi** — yani
+kredi stoku enflasyona göre küçülüyor. Büyüme verisi bu tabloya "sıkılık işliyor"
+diyen en somut kanıtı ekliyor: iç talebin faize duyarlı kalemleri kesilmiş, sanayi
+daralmış.
+
+**Ama piyasa sonucuna inanmıyor.** İki yıllık tahvil getirisi ile aynı vadedeki
+enflasyon beklentisi arasındaki fark — enflasyon risk primi — 8 puanın üzerinde
+duruyor. Bu, piyasanın politikanın sıkı olduğunu inkâr etmesi değil; **sıkılığın
+hedeflenen enflasyona ulaşacağına bedelsiz güvenmemesidir.** İkisi aynı anda doğru
+olabilir ve şu anda öyledir.
+
+**Dışarıdan kısıt yok.** Cari denge GSYH'nin yaklaşık %2,4'ü kadar açık veriyor ama
+çekirdek denge fazlada; bütçe açığı da GSYH'nin %2,3'ü civarında. Yani bir indirim
+kararını dış finansman ya da maliye tarafı zorlamıyor. Kısıt tek yerde: **beklentilerde.**
+
+Bizim okumamız şu: büyüme verisi kademeli indirim patikasını **destekliyor ama tek
+başına yetmiyor.** Yetmemesinin sebebi yukarıdaki bileşim — talebin soğuyan yarısı
+zaten faize duyarlı olan, soğumayan yarısı ise politikanın en zor ulaştığı hizmet
+tarafı. İzlenecek şey manşet büyüme değil, **hanehalkı tüketiminin ve özellikle
+hizmet kaleminin** kırılıp kırılmadığıdır; talebin gerçekten soğuduğunun ilk kanıtı
+orada görünür.
+
+## Ne ölçmedik
+
+Bu bölüm, sayfanın ölçmediği şeyleri saymak için var; ölçülmemiş bir şeyi ölçülmüş
+gibi göstermemek bu sitenin kuralıdır.
+
+- **Çıktı açığı ölçmüyoruz.** "Potansiyel büyüme" bir model çıktısıdır ve seçilen
+  filtreye göre puanlarca oynar. Sayfada geçen "yavaş" ve "hızlı" nitelemeleri
+  ölçülmüş bir potansiyele değil, kendi tarihçesine göredir.
+- **Stok katkısını ayrı ölçemiyoruz.** Kaynak seri yayımlanmıyor; artığın içinde
+  duruyor ve bu açıkça yazılı.
+- **Dayanıklılık kırılımı nominaldir.** Reel karşılığını üretmek için kalem bazlı
+  deflatör gerekir; elimizde yok, uydurmuyoruz.
+- **Manşet Ç2 oranı dışarıdan alınmıştır.** Kendi hattımız EVDS aynasına bağlıdır ve
+  ayna güncellendiğinde sayfa kendiliğinden tazelenecektir.
