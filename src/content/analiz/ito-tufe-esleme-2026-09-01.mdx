@@ -4,7 +4,7 @@ description: 'İTO''nun İstanbul endeksi TÜİK''ten birkaç gün önce çıkı
 pubDate: 2026-09-01
 tags: ['enflasyon', 'tüfe', 'ito', 'nowcast', 'öncü gösterge', 'sürpriz', 'anket', 'istatistik']
 durum: 'aktif'
-kaynak: 'TCMB EVDS: İTO İstanbul Ücretliler Geçinme Endeksi (TP.FG.IST1.23) ve TÜFE Türkiye geneli (TP.TUKFIY2025.GENEL), Ocak 2024 – Temmuz 2026 aylık endeks seviyeleri (serinin EVDS''teki başlangıcı budur; 01.09.2026 keşif koşusu 154 veri grubunu ve TP.FG.IST kod uzayını tarayarak daha uzun bir kardeş seri olmadığını ölçtü); TCMB Piyasa Katılımcıları Anketi cari ay TÜFE beklentisi (TP.PKAUO.S01.A.U). Bütün ölçümler bu sitenin Enflasyon hattında (veri.py → metrik.py → grafik.py → ozet_uret.py) yeniden koşuluyor; sayfadaki oynak sayıların hiçbiri elle yazılmadı.'
+kaynak: 'TCMB EVDS: İTO İstanbul Tüketici Fiyat İndeksi, 2023=100 (TP.FG.IST1.23) — serinin kimliği EVDS''ten OKUNAMIYOR (hiçbir uç seri adı vermiyor) ve SAYIYLA pinlendi: hesapladığımız aylık değişimlerin 30''u da İTO''nun kendi yayımıyla 0,01 puan içinde tutuyor, manşet agregaları (Ağustos 2026 yıllık %34,96 · yıl sonuna göre %23,58) tam olarak yeniden üretiliyor; karşılaştırma her koşuda tekrarlanır ve TÜFE Türkiye geneli (TP.TUKFIY2025.GENEL), Ocak 2024 – Temmuz 2026 aylık endeks seviyeleri (serinin EVDS''teki başlangıcı budur; 01.09.2026 keşif koşusu 154 veri grubunu ve TP.FG.IST kod uzayını tarayarak daha uzun bir kardeş seri olmadığını ölçtü); TCMB Piyasa Katılımcıları Anketi cari ay TÜFE beklentisi (TP.PKAUO.S01.A.U). Bütün ölçümler bu sitenin Enflasyon hattında (veri.py → metrik.py → grafik.py → ozet_uret.py) yeniden koşuluyor; sayfadaki oynak sayıların hiçbiri elle yazılmadı.'
 ozet: 'İTO öncü gösterge değil, aynı ayın ikinci ölçümü. Karşılaştırma EVDS''in verdiği tüm örneklemde (30 ay) kuruldu; 2023 ve öncesi için İTO verisi EVDS''te yok ve bu ölçülerek saptandı. Rejim yıllarını kestirimden çıkaran kural koda kondu, veri gelince kendiliğinden devreye girer. İTO''nun asıl bilgi taşıdığı yer seviye değil SÜRPRİZ: ankete göre sapması, TÜFE''nin ankete göre sapmasının yarısını öngörüyor.'
 seviye: 'orta'
 onkosul: []
@@ -166,12 +166,44 @@ iki seri "aynı şeyin iki ölçümü" değil.
 Anketi'nden gelen ulusal tüketim paylarıyla ağırlıklandırılıyor; fiyatlar 26 istatistikî
 bölgede toplanıyor; yayım ertesi ayın 3'ünde saat 10.00'da.
 
-**İTO endeksi**, İstanbul Ticaret Odası'nın İstanbul için hesapladığı geçinme endeksi.
-Coğrafya tek şehir, sepet farklı bir harcama yapısından türetiliyor, fiyat toplama takvimi
-TÜİK'inkiyle aynı değil. EVDS'te `TP.FG.IST1.23` koduyla duruyor ve **Ocak 2024'te
-başlıyor** — bu yazının örneklem sınırını belirleyen şey de bu. (Aynı ayda başlayan
-ikinci bir İTO serisi daha var, `TP.FG.IST2.23`; bu yazı onu kullanmıyor, Bölüm 13'e
-bakın.)
+**İTO endeksi**, İstanbul Ticaret Odası'nın **İstanbul Tüketici Fiyat İndeksi**'dir
+(baz **2023=100**). Coğrafya tek şehir, sepet farklı bir harcama yapısından türetiliyor,
+fiyat toplama takvimi TÜİK'inkiyle aynı değil. EVDS'te `TP.FG.IST1.23` koduyla duruyor
+ve seviye endeksi **Ocak 2024'te başlıyor**.
+
+Adı karıştırmamak gerekiyor: İTO ayrıca bir **Ücretliler Geçinme İndeksi** ve bir
+**Toptan Eşya Fiyat İndeksi** yayımlıyor — bunlar bu yazının konusu olan endeks
+**değil**. (EVDS'te aynı pencerede duran ikinci seri `TP.FG.IST2.23` muhtemelen
+onlardan biri; bu yazı onu kullanmıyor, Bölüm 13'e bakın.)
+
+<div class="kutu">
+
+**Serinin kimliği ADLA değil SAYIYLA doğrulandı — çünkü EVDS adı vermiyor.** Bu
+sayfadaki her şey `TP.FG.IST1.23`'ün İTO'nun İstanbul TÜFE'si olduğu varsayımına
+dayanıyordu ve o varsayım kaynağa hiç sorulmamıştı. Soruldu: EVDS'in **erişilebilir
+hiçbir ucu bu kodun adını vermiyor** — veri yanıtında ad alanı yok, `datagroups` uçları
+404 dönüyor, `serieList` boş geliyor, 154 kategorinin hiçbirinin başlığında İTO geçmiyor.
+
+Kimlik bu yüzden sayıyla pinlendi. EVDS'in seviye endeksinden hesapladığımız aylık
+değişimler, İTO'nun kendi yayımladığı oranlarla ay ay karşılaştırıldı:
+
+| Ölçü | Sonuç |
+|---|---|
+| Karşılaştırılan ay | <Deger proje="enflasyon" anahtar="itp_k_ortak" ondalik={0}>30</Deger> |
+| En büyük sapma | <Deger proje="enflasyon" anahtar="itp_k_maks_sapma" ondalik={4}>0,0071</Deger> puan |
+| Ortalama sapma | <Deger proje="enflasyon" anahtar="itp_k_ort_sapma" ondalik={4}>0,0029</Deger> puan |
+| Eşiği (<Deger proje="enflasyon" anahtar="itp_k_esik" ondalik={2}>0,02</Deger> puan) aşan ay | <Deger proje="enflasyon" anahtar="itp_k_sapan" ondalik={0}>0</Deger> |
+
+Sapmanın tamamı yuvarlamadan: İTO iki ondalık yayımlıyor, biz seviye endeksinden
+hesaplıyoruz. Üstüne İTO'nun manşet kutusundaki iki agrega da **tam olarak** yeniden
+üretildi: Ağustos 2026 için yıllık %34,96 ve bir önceki yıl sonuna göre %23,58 —
+ikisi de virgülüne kadar tutuyor.
+
+Karşılaştırma **her koşuda tekrarlanıyor** (`ito_yayim.json` + `metrik._ito_seri`). Kod
+bir gün başka bir seriye çevrilirse ya da EVDS içeriği değişirse hat uyarı üretir. Bir
+kod adının ne olduğu, adına bakarak değil sayısı tutarak bilinir.
+
+</div>
 
 Ortak olan tek şey belirleyici: **ikisi de aynı ayı ölçüyor**. Aynı kur hareketine, aynı
 yönetilen fiyat ayarlamasına, aynı asgari ücret zammına, aynı okul dönemi başlangıcına
@@ -203,9 +235,9 @@ bilmek gerekiyor. Bu yazıdaki bütün ölçümler
 üzerinde kuruldu — yani iki buçuk yıl. Daha geriye gitmiyor ve bunun sebebi bizim
 tercihimiz değil.
 
-**EVDS'te İTO serisi Ocak 2024'ten önce yok.** Bu cümleyi tahminle değil ölçümle
-kuruyoruz, çünkü "bulamadım" ile "yok" birbirine benziyor ve ikisini ayırmayan bir
-arama her zaman "yok" der. Bir keşif koşusu şunları ölçtü:
+**İTO serisi Ocak 2024'ten önce yok.** Bu cümleyi tahminle değil ölçümle kuruyoruz,
+çünkü "bulamadım" ile "yok" birbirine benziyor ve ikisini ayırmayan bir arama her zaman
+"yok" der. Bir keşif koşusu şunları ölçtü:
 
 - EVDS'in **veri grubu kataloğu** indirildi: **154 grup**. Adında *İTO*, *İstanbul*,
   *geçinme*, *ücretliler* ya da *ticaret odası* geçen grup sayısı: **sıfır**. Yani
@@ -216,9 +248,18 @@ arama her zaman "yok" der. Bir keşif koşusu şunları ölçtü:
   başlıyor: `TP.FG.IST1.23` (n=31, 2024-01 → 2026-07) ve `TP.FG.IST2.23`
   (n=31, aynı aralık). Kalan bütün kodlar HTTP 400 veriyor: öyle bir seri yok.
 
-Sonuç: **2023 ve öncesi için İTO verisi bu kaynaktan gelmiyor.** İTO'nun kendi yayın
-arşivi çok daha geriye uzanıyor ama depodaki koşucular o siteye erişemiyor; oradan
-veri almak ayrı bir hat kurmayı gerektirir ve bu yazının kapsamı dışında.
+Sonuç: **2023 ve öncesi için İTO verisi EVDS'ten gelmiyor.** Ve sebebi endeksin
+kendisinde: bu seri **2023=100** bazlı, yani 2023 baz yılı ve İTO'nun yayımladığı aylık
+değişim tablosu da **2024 Ocak'ta başlıyor**. 2023'ün aylık değişimleri eski bazın
+altında kaldı.
+
+**Bir ay geri kazanıldı.** EVDS'in seviye endeksi Ocak 2024'te başladığı için o ayın
+değişimi hesaplanamıyordu (Aralık 2023 seviyesi yok). İTO onu kendi yayımında veriyor
+(%7,57) ve hat artık o sayıyı oradan alıyor — kaynağı işaretlenerek. Aynı mekanizma,
+EVDS'e birkaç gün geç düşen son ayı da dolduruyor. Bu koşuda doldurulan aylar:
+<Deger proje="enflasyon" anahtar="itp_k_dolduruldu">2024-01, 2026-08</Deger>.
+Örneklem böylece <Deger proje="enflasyon" anahtar="itp_n_tam" ondalik={0}>31</Deger> aya
+çıkıyor.
 
 <div class="kutu">
 
@@ -338,9 +379,9 @@ $$\text{TÜFE}_t = \alpha + \beta \cdot \text{İTO}_t + \varepsilon_t$$
 <Deger proje="enflasyon" anahtar="itp_n" ondalik={0}>30</Deger> aylık ortak örneklemde
 tahmin:
 
-$$\hat\alpha = 0{,}032 \quad (\text{s.h. } 0{,}283), \qquad \hat\beta = 0{,}873 \quad (\text{s.h. } 0{,}092)$$
+$$\hat\alpha = 0{,}020 \quad (\text{s.h. } 0{,}239), \qquad \hat\beta = 0{,}878 \quad (\text{s.h. } 0{,}072)$$
 
-$$R^2 = 0{,}764, \qquad \hat\sigma_\varepsilon = 0{,}559 \text{ puan}$$
+$$R^2 = 0{,}837, \qquad \hat\sigma_\varepsilon = 0{,}549 \text{ puan}$$
 
 {/* sinav-muaf: itp_egim — formül bloğu; katsayıların canlı hâli hemen aşağıdaki paragrafta <Deger> ile basılıyor */}
 
@@ -351,11 +392,11 @@ Katsayıların canlı hâli: sabit <Deger proje="enflasyon" anahtar="itp_sabit" 
 R² = <Deger proje="enflasyon" anahtar="itp_r2" ondalik={3}>0,764</Deger>, artık standart
 sapması <Deger proje="enflasyon" anahtar="itp_se_artik" ondalik={3}>0,559</Deger> puan.
 
-Şimdi asıl soru. Eğim 0,873 çıktı — 1'den küçük. Bunu olduğu gibi kullanmak, "İTO ne kadar
+Şimdi asıl soru. Eğim 0,878 çıktı — 1'den küçük. Bunu olduğu gibi kullanmak, "İTO ne kadar
 yüksek gelirse TÜFE'nin ona göre o kadar geride kalacağı" gibi bir yapı varsaymak demek.
 Peki bu yapı veride var mı, yoksa 30 gözlemin gürültüsü mü?
 
-$$t_{\beta=1} = \frac{\hat\beta - 1}{\text{s.h.}(\hat\beta)} = \frac{0{,}873 - 1}{0{,}092} = -1{,}38$$
+$$t_{\beta=1} = \frac{\hat\beta - 1}{\text{s.h.}(\hat\beta)} = \frac{0{,}878 - 1}{0{,}072} = -1{,}70$$
 
 Karşılık gelen p değeri
 <Deger proje="enflasyon" anahtar="itp_p_bir" ondalik={4}>0,1782</Deger>. Yani **eğim 1'den
@@ -460,9 +501,11 @@ eklenir:
 
 $$\text{s.h.}_{\text{öngörü}} = \sqrt{\hat\sigma^2\left(1 + x_0'(X'X)^{-1}x_0\right)}$$
 
-Bizim durumumuzda $\hat\sigma = 0{,}559$ puan ve terimlerin içinde baskın olan da bu.
-Aralığın yarı genişliği yaklaşık **1,17 puan** çıkıyor — yani "İTO %2,50 geldi, TÜFE %2,22
-gelir" cümlesinin ardında %1,05 ile %3,38 arasında bir bant var.
+Bizim durumumuzda $\hat\sigma \approx 0{,}55$ puan ve terimlerin içinde baskın olan da bu.
+Aralığın yarı genişliği yaklaşık **1,15 puan** çıkıyor — yani "İTO %2,50 geldi, TÜFE
+%<Deger proje="enflasyon" anahtar="itp_es25" ondalik={2}>2,21</Deger> gelir" cümlesinin ardında
+%<Deger proje="enflasyon" anahtar="itp_es25_alt" ondalik={2}>1,07</Deger> ile
+%<Deger proje="enflasyon" anahtar="itp_es25_ust" ondalik={2}>3,36</Deger> arasında bir bant var.
 
 </div>
 
@@ -650,9 +693,9 @@ tesadüf olasılığı on binde iki.
 **Sayısal örnek.** Diyelim ki bir ay için anket medyanı %1,90, İTO ise %2,60 geldi. İTO'nun
 ankete göre sapması +0,70 puan. Ölçülen geçiş:
 
-$$\widehat{\text{sürpriz}} = -0{,}138 + 0{,}547 \times 0{,}70 = +0{,}25 \text{ puan}$$
+$$\widehat{\text{sürpriz}} = -0{,}142 + 0{,}572 \times 0{,}70 = +0{,}26 \text{ puan}$$
 
-Yani TÜFE beklentisi %1,90 değil yaklaşık **%2,15** olmalı. Dikkat: İTO'nun sapmasının
+Yani TÜFE beklentisi %1,90 değil yaklaşık **%2,16** olmalı. Dikkat: İTO'nun sapmasının
 tamamı değil, **yarısından biraz fazlası** geçiyor. Kalan kısım İstanbul'a özgü — sepet
 farkı, coğrafya, toplama takvimi. İTO'nun sapmasını birebir TÜFE'ye taşımak, sürprizi
 sistematik olarak **iki katı** büyütmek demektir.
@@ -666,14 +709,16 @@ varyanstaki payına doğru çeker:
 
 $$\lambda = \frac{\sigma^2_{\text{ortak}}}{\sigma^2_{\text{ortak}} + \sigma^2_{\text{İstanbul}}}$$
 
-Ölçülen λ = 0,547, yani İTO sapmasının varyansının kabaca yarısı Türkiye geneliyle
-paylaşılan bilgi. R² = 0,40 da aynı şeyi başka yerden söylüyor.
+Ölçülen λ = <Deger proje="enflasyon" anahtar="itp_s_egim" ondalik={3}>0,572</Deger>, yani
+İTO sapmasının varyansının kabaca yarısı Türkiye geneliyle paylaşılan bilgi.
+R² = <Deger proje="enflasyon" anahtar="itp_s_r2" ondalik={2}>0,47</Deger> da aynı şeyi başka
+yerden söylüyor.
 
 </div>
 
-**İşaret bilgisi ne kadar değerli?** Uyum %70; sapma 0,25 puanı aştığında %74. Yazı tura
+**İşaret bilgisi ne kadar değerli?** Uyum %<Deger proje="enflasyon" anahtar="itp_s_uyum" ondalik={0}>71</Deger>; sapma 0,25 puanı aştığında %<Deger proje="enflasyon" anahtar="itp_s_uyum25" ondalik={0}>75</Deger>. Yazı tura
 değil, ama kesinlik de değil. Dört ayın üçünde yön doğru, birinde yanlış. Bir pozisyon
-büyüklüğü bu orana göre ölçeklenmeli — %74'lük bir isabet, tam kelly ile değil onun küçük
+büyüklüğü bu orana göre ölçeklenmeli — %75'lik bir isabet, tam kelly ile değil onun küçük
 bir kesriyle çalışılan bir sinyaldir.
 
 ---
@@ -894,11 +939,13 @@ diye işaretlenen hükümler yeniden sınanabilir. Rejim yıllarını dışlayan
 zaten hazır bekliyor.
 
 **İkinci İTO serisi kullanılmadı.** Keşif koşusu `TP.FG.IST1.23` yanında aynı aralıkta
-duran `TP.FG.IST2.23`'ü de buldu (n=31, 2024-01 → 2026-07, 134,02 → 312,99). Seviyeleri
-farklı, yani farklı bir endeks. Hangisinin hangi tanım olduğu EVDS grup kataloğundan
-okunamıyor (154 grubun hiçbirinin adında İTO geçmiyor) ve tanımını bilmediğimiz bir
-seriyi ölçüme sokmak, ölçtüğümüz şeyi bilmemek demek. İkisinin karşılaştırılması ayrı
-bir iş.
+duran `TP.FG.IST2.23`'ü de buldu (n=31, 2024-01 → 2026-07; Temmuz 2026'da 12 aylık
+%37,57, aylık %1,30 — yani belirgin biçimde farklı bir endeks). Kullandığımız serinin
+İstanbul **Tüketici Fiyat İndeksi** olduğu sayıyla doğrulandı (Bölüm 0); ikincisinin ne
+olduğu doğrulanmadı. İTO ayrıca bir **Ücretliler Geçinme İndeksi** ve bir **Toptan Eşya
+Fiyat İndeksi** yayımlıyor — `TP.FG.IST2.23` muhtemelen onlardan biri, ama "muhtemelen"
+ölçüm değildir. Aynı yöntemle (İTO'nun kendi yayımıyla ay ay kıyas) o da pinlenebilir;
+bu ayrı bir iş.
 
 **Alt kalem kırılımı yok.** "İstanbul'da kira ağırlığı yüksek olduğu için fark artı"
 hipotezi test edilmedi; EVDS'te İTO'nun TÜFE ile karşılaştırılabilir alt endeksleri
@@ -931,6 +978,7 @@ MDX'e dokunulmadan tazelenir; sayfanın hiçbir yerinde elle yazılmış oynak s
 | Sürpriz geçişi λ | 0,55 sabit kalıyor mu, yoksa örneklem büyüdükçe kayıyor mu | Her koşuda yeniden tahmin ediliyor; 0,4–0,7 bandı dışına çıkarsa yeniden yazılmalı |
 | Kural sıralamasının dayanıklılığı | Bugün duyarlı; örneklem 40–45 aya ulaşınca netleşebilir | `itp_siralama_metin` anahtarı "aynı kural iki pencerede de kazanıyor" demeye başlarsa |
 | Takvim ayı profilinin gözlem sayısı | Her ay 5–6 gözleme ulaşınca mevsimsellik yeniden sınanabilir | Şekil 03 üst panelindeki n etiketleri |
+| Kimlik doğrulaması | Seri adı EVDS'ten okunamıyor; kimlik her koşuda İTO'nun yayımıyla kıyaslanarak pinleniyor | `itp_k_sapan` sıfırdan büyürse hat uyarı üretir ve sayfadaki İTO iddiaları askıya alınmalı |
 | İTO'nun 2023 ve öncesi | Örneklem iki katına çıkarsa bugün "duyarlı" diye işaretlenen hükümler yeniden sınanabilir | EVDS geçmişi geriye tamamlarsa `itp_n_tam` büyür; rejim yılı dışlaması kendiliğinden devreye girer |
 | İTO'nun EVDS'e giriş gecikmesi | Yayım günü ile EVDS'te görünmesi arasında birkaç gün var | Hattın koşum kütüğünde İTO serisinin son ayı, TÜFE'ninkinden geride kalıyorsa |
 
