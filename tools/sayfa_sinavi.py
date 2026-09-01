@@ -351,31 +351,20 @@ def main() -> int:
     # ÖLÇÜT NEDEN GEREKLİ: bu dil bir kez temizlendi ve temizlik yalnız
     # hatırlandığı sürece sürer. Kural araca konmazsa bir sonraki yazıda
     # geri gelir.
-    print("\n▶ Yapım günlüğü dili (okura değil kendine anlatan cümleler)")
-    YASAK = [
-        r"(?:yazının|sayfanın|hattın|bu sayfanın|bu yazının)\s+(?:ilk|önceki|eski)\s+"
-        r"(?:sürüm|hâl|hali|halinde)",
-        r"ilk\s+sürümde", r"önceki\s+sürümde", r"eski\s+kod",
-        r"bu\s+koşuda\s+düzeltildi", r"düzeltildi\s*[—-]", r"kod\s+hatasıydı",
-        r"biz\s+ilk\s+denemede", r"hatayı\s+yaptı",
-        r"\bozet\.json\b", r"\bozet_uret\.py\b", r"\bmetrik\.py\b",
-        r"\bveri\.py\b", r"\bgrafik\.py\b", r"\bMDX\b",
-    ]
-    # MUAFİYET: ozet.json'a verilen "makine okunur veri özeti" bağlantısı
-    # okura sunulan bir KAYNAKTIR, yapım günlüğü değil.
-    MUAF = re.compile(r"makine okunur veri özeti\]\([^)]*ozet\.json\)")
-    bulgu = []
-    for yol in sorted((KOK / "site/src/content").rglob("*.mdx")):
-        metin = MUAF.sub("", yol.read_text(encoding="utf-8"))
-        for kal in YASAK:
-            for m in re.finditer(kal, metin, re.IGNORECASE):
-                sat = metin[:m.start()].count("\n") + 1
-                bulgu.append(f"{yol.relative_to(KOK / 'site/src/content')}:{sat}: "
-                             f"{m.group(0)!r}")
-    for b_ in bulgu:
-        hata.append("yapım günlüğü dili — " + b_)
-    print(f"  {len(list((KOK / 'site/src/content').rglob('*.mdx')))} sayfa "
-          f"tarandı · bulgu {len(bulgu)}")
+    print("\n▶ Okur dili (okura değil kendine anlatan cümleler)")
+    # KALIP LİSTESİ BURADA DEĞİL. Aynı kural bülten ve tweet katmanlarında da
+    # uygulanıyor; üç ayrı liste bir gün sessizce ayrışırdı ve hangisinin neyi
+    # gördüğü kimsenin aklında kalmazdı. Tek tanım: ortak/okur_dili.py.
+    sys.path.insert(0, str(KOK / "ortak"))
+    import okur_dili
+    icerik = sorted((KOK / "site/src/content").rglob("*.mdx"))
+    bulgu = 0
+    for yol in icerik:
+        for aile, esl, sat in okur_dili.tara(yol.read_text(encoding="utf-8")):
+            hata.append(f"{aile} — {yol.relative_to(KOK / 'site/src/content')}"
+                        f":{sat}: {esl!r}")
+            bulgu += 1
+    print(f"  {len(icerik)} sayfa tarandı · bulgu {bulgu}")
 
     print()
     if hata:
