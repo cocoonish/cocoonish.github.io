@@ -22,12 +22,26 @@ interface Props {
 const { b, kayit } = Astro.props;
 
 const xGonderi = xTeknik(b.tarih);
+// Zaman dilimleri veriden: bir enstrümanın dilimi kaynakta yoksa künye onu
+// "üç dilim" diye saymaz; ölçülemeyen dilim sayısı ayrıca yazılır.
+const DILIM_AD: Record<string, string> = { s1: '1 saatlik', s4: '4 saatlik', gun: 'günlük' };
+const dilimSayac: Record<string, number> = {};
+let dilimEksik = 0;
+for (const e of b.enstrumanlar ?? []) {
+  for (const [kod, m] of Object.entries<any>(e.dilimler ?? {})) {
+    if (m && !m.eksik) dilimSayac[kod] = (dilimSayac[kod] ?? 0) + 1;
+    else dilimEksik += 1;
+  }
+}
+const dilimAdlari = Object.keys(DILIM_AD).filter((k) => dilimSayac[k]).map((k) => DILIM_AD[k]).join(' · ') || '—';
+
 const kunye = [
   kayit ? { deger: `No ${kayit.sayiNo}`, etiket: 'Sayı', vurgu: true } : null,
   { deger: istanbulSaat(b.olcum_zamani), etiket: 'Ölçüm', alt: istanbulSaat(b.olcum_zamani, 'tam').replace(/ \d{2}:\d{2}$/, '') },
   b.veri_ucu ? { deger: tarihUzun(b.veri_ucu), etiket: 'Veri ucu', alt: 'son kapanmış seans' } : null,
   { deger: String((b.enstrumanlar ?? []).length), etiket: 'Enstrüman' },
-  { deger: '1 saatlik · 4 saatlik · günlük', etiket: 'Zaman dilimi' },
+  { deger: dilimAdlari, etiket: 'Zaman dilimi', alt: dilimEksik ? `${dilimEksik} dilim ölçülemedi` : undefined },
+  { deger: 'İstanbul', etiket: 'Saat dilimi', alt: 'bar kapanışları' },
   b.yorum_zamani ? { deger: istanbulSaat(b.yorum_zamani), etiket: 'Yorum', alt: istanbulSaat(b.yorum_zamani, 'tam').replace(/ \d{2}:\d{2}$/, '') } : null,
   b.duzeltmeler?.length ? { deger: String(b.duzeltmeler.length), etiket: 'Düzeltme', href: '#duzeltmeler', vurgu: true } : null,
   xGonderi ? { deger: 'X gönderisi ↗', etiket: 'Paylaşım', href: xGonderi.url } : null,
@@ -122,7 +136,7 @@ const kisaZaman = (t: string | null) => {
           {isaretli(e.degisim?.ybb, e.tip === 'getiri' ? 'bp' : '%')} · 52 haftalık aralık{' '}
           {sayi(e.aralik52?.dusuk, e.ondalik)}–{sayi(e.aralik52?.yuksek, e.ondalik)}
           {e.aralik52?.konum_pct !== undefined && e.aralik52?.konum_pct !== null && ` (konum ${yuzde(e.aralik52.konum_pct, 0)})`}
-          {e.haftalik?.h10 && ` · haftalık: 10h ${sayi(e.haftalik.h10, e.ondalik)} · 40h ${sayi(e.haftalik.h40, e.ondalik)} · RSI ${sayi(e.haftalik.rsi14, 1)}`}
+          {e.haftalik?.h10 && ` · haftalık ortalamalar: 10 haftalık ${sayi(e.haftalik.h10, e.ondalik)} · 40 haftalık ${sayi(e.haftalik.h40, e.ondalik)} · haftalık RSI ${sayi(e.haftalik.rsi14, 1)}`}
         </p>
 
         <div class="tablo-sar">

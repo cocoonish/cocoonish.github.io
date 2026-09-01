@@ -12,7 +12,7 @@ export async function getStaticPaths() {
   /** Slug'ın tarihsiz kökü — seri anahtarı (analiz/YAZIM.md). */
   const seriKoku = (id: string) => id.replace(/-\d{4}-\d{2}-\d{2}$/, '');
   const analizler = (await getCollection('analiz')).sort(
-    (a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf(),   // eskiden yeniye
+    (a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf() || a.id.localeCompare(b.id),   // eskiden yeniye; aynı gün: kimlik
   );
   const basliklar = new Map(analizler.map((a) => [a.id, a.data.title]));
   const ozet = (a: (typeof analizler)[number]) => ({

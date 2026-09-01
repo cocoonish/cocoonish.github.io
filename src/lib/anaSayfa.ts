@@ -161,7 +161,7 @@ const KARSI_SIRA = [
 function birimYaz(s: RejimSatiri): string {
   if (s.deger === null) return '';
   if (s.birim === '%') return yuzde(s.deger, 1);
-  if (s.birim === 'puan') return `${sayi(s.deger, 1, true)} puan`;
+  if (s.birim === 'puan') return `${sayi(s.deger, s.ad.includes('eğim') ? 2 : 1, true)} puan`;
   return `${sayi(s.deger, 1)} ${s.birim}`;
 }
 

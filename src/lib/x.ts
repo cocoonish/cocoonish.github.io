@@ -11,14 +11,17 @@
    ───────────────────────────────────────────────────────────── */
 import defter from '../data/tweet/defter.json';
 
-interface Kayit { idler?: string[]; zaman?: string; not?: string }
+// Ayna bir PROJEKSİYONDUR (gonder._ayna): yalnız kök gönderinin kimliği ve
+// zamanı. İç notlar, "gönderiliyor" işaretleri ve kimliksiz tohum kayıtları
+// buraya hiç yazılmaz — public depoya çıkan dosya budur.
+interface Kayit { id: string; zaman?: string }
 
 const D = defter as Record<string, Kayit>;
 
 /** Anahtarın X gönderisi (kök tweet) — yoksa null. */
 export function xBagi(anahtar: string): { url: string; zaman: string } | null {
   const k = D[anahtar];
-  const id = k?.idler?.[0];
+  const id = k?.id;
   if (!id) return null;
   return { url: `https://x.com/i/status/${id}`, zaman: k?.zaman ?? '' };
 }

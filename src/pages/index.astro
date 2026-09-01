@@ -21,7 +21,7 @@ import { SEVIYE_ETIKET } from '../lib/dersGruplari';
 import { sonBulten, sayi } from '../lib/anaSayfa';
 import { kartlar as analizKartlari } from '../lib/analizListesi';
 import { istanbulSaat, degisim } from '../lib/bicim';
-import { bultenler } from '../lib/yayinlar';
+import { bultenler, teknikler } from '../lib/yayinlar';
 
 const sirala = <T extends { data: { pubDate: Date; durum: string } }>(liste: T[]) =>
   liste
@@ -58,6 +58,7 @@ const olcumSaati = istanbulSaat(b.olusturma);
 // Yazılmış son sayının numarası (ölçülen katman yazıdan bağımsızdır; numara
 // yalnız yazılmış sayılar arasında sayılır, o yüzden ayrı okunur).
 const sonYazili = bultenler()[0];
+const sonTeknik = teknikler()[0];
 const sayiNo = sonYazili && sonYazili.tarih === b.tarih ? sonYazili.sayiNo : null;
 
 // Yüzde ÖNDE, bp ARKADA — kural lib/bicim'de tek yerde.
@@ -90,6 +91,9 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
               ? (b.bultenHaftalik ? 'Haftaya bakış →' : 'Günün bülteni →')
               : (b.bultenTrTarih ? `Son yazılmış sayı · ${b.bultenTrTarih} →` : 'Bülten →')}
           </a>
+          {sonTeknik && (
+            <a class="ana-bulten-bag" href={sonTeknik.href}>Haftalık teknik analiz · No {sonTeknik.sayiNo} →</a>
+          )}
         </p>
       </section>
     ) : (

@@ -23,7 +23,18 @@ interface Props {
   /** Hat slug'ı → okura görünen ad (proje sayfası başlığı). */
   hatAd?: Record<string, string>;
 }
-const { b, kayit, hatAd = {} } = Astro.props;
+const { b: ham, kayit, hatAd = {} } = Astro.props;
+// ŞEMA TEK YERDE TOPARLANIR: eksik bir liste bütün /bulten/* sayfalarını ve ana
+// sayfayı düşürüp sitenin tamamının yayınını durdururdu. Yokluk boş listedir;
+// bölüm başlıkları zaten 'liste doluysa' koşuluyla basılır.
+const b: any = {
+  gostergeler: [], rejim: [], one_cikanlar: [], sonuclar: [], gruplar: [], veri_gunlugu: [],
+  ...(ham ?? {}),
+  piyasa: { gruplar: [], turetilmis: [], tr_faizleri: [], ...(ham?.piyasa ?? {}),
+            en_cok_hareket: { sigma: [], ...(ham?.piyasa?.en_cok_hareket ?? {}) } },
+  haberler: { bolumler: [], okunamayan: [], ...(ham?.haberler ?? {}) },
+  izleme: { acik: [], kapanan: [], karne: {}, ...(ham?.izleme ?? {}) },
+};
 const ad = (slug: string) => hatAd[slug] ?? slug;
 const tz = (t: unknown) => (typeof t === 'string' ? tarihYaz(t) : '');
 // Kipe bağlı etiketler tek yerde: günlük ve haftaya bakış farklı sözcükler kullanır.
@@ -41,6 +52,16 @@ const isaretli = (v: number | null | undefined, ondalik?: number): string =>
 /** Birimli değişim: "%" ise yuzde önde, değilse "sayı birim". */
 const degisimli = (v: number | null | undefined, birim: string | null | undefined, ondalik?: number): string =>
   v === null || v === undefined || typeof v !== 'number' ? '—' : degisim(v, birim ?? '', ondalik ?? ondalikSay(v));
+/** Ölçüm katmanının yazdığı hazır metin: eski sayılarda ASCII tire kalmış olabilir. */
+const eksiDuzelt = (s: unknown): string => String(s ?? '').replace(/(^|[\s(])-(?=\d)/g, '$1−');
+/** Gösterge farkı: "%" birimde işaret önde, yüzde sayının önünde ("+%4,2"); bp arkada. */
+const gostergeFark = (fark: unknown, birim: unknown): string => {
+  const f = eksiDuzelt(fark);
+  const bir = String(birim ?? '').trim();
+  if (!f) return '—';
+  if (bir === '%') return f.replace(/^([+−]?)/, '$1%');
+  return bir ? `${f} ${bir}` : f;
+};
 /** Birimli seviye (işaretsiz): "%1,20" ya da "6,5 bp". */
 const birimli = (v: number | null | undefined, birim: string | null | undefined, ondalik?: number): string => {
   if (v === null || v === undefined || typeof v !== 'number') return '—';
@@ -95,10 +116,11 @@ const sigmaBaslik = sigmaHaftalik
   : 'Günün olağandışı hareketleri';
 
 const bolumler = [
-  b.yorum && { id: 'yorum', ad: b.haftalik ? 'Haftanın yorumu' : 'Günün yorumu' },
+  b.yorum && { id: 'yorum', ad: b.haftalik ? 'Haftanın okuması' : 'Günün okuması' },
   b.duzeltmeler?.length > 0 && { id: 'duzeltmeler', ad: 'Düzeltmeler' },
   b.ozet && (b.ozet.ne_oldu || b.ozet.ne_bekleniyor) &&
     { id: 'ozet', ad: b.haftalik ? 'Geçen hafta / önümüzdeki hafta' : 'Ne oldu / ne bekleniyor' },
+  b.gostergeler?.length > 0 && { id: 'gostergeler', ad: 'Gösterge şeridi' },
   b.rejim?.length > 0 && { id: 'rejim', ad: 'Rejim panosu' },
   b.piyasa?.en_cok_hareket?.sigma?.length > 0 &&
     { id: 'olagandisi', ad: sigmaBaslik },
@@ -191,15 +213,17 @@ const bolumler = [
     </section>
   )}
 
-  <section class="gosterge-serit">
+  <section class="gosterge-serit" id="gostergeler" aria-label="Gösterge şeridi">
     {b.gostergeler.map((g: any) => (
       <div class="gosterge">
         <span class="g-ad">{g.ad}</span>
         <span class="g-deger">
-          {g.metin}<span class="g-birim">{g.birim}</span>
+          {String(g.birim ?? '').trim() === '%'
+            ? <>{'%'}{eksiDuzelt(g.metin)}</>
+            : <>{eksiDuzelt(g.metin)}<span class="g-birim">{g.birim}</span></>}
         </span>
         <span class:list={['g-fark', { arti: (g.fark ?? 0) > 0, eksi: (g.fark ?? 0) < 0 }]}>
-          {g.fark_metin ? `${g.fark_metin} ${g.birim}` : '—'}
+          {gostergeFark(g.fark_metin, g.birim)}
         </span>
         <span class="g-tarih">
           {tz(g.veri_tarihi)}
@@ -225,8 +249,11 @@ const bolumler = [
             <div class="rejim-ust">
               <span class="rejim-ad">{r.ad}</span>
               <span class="rejim-deger">
-                {r.deger === null ? '—' : (r.birim === 'puan' ? isaretli(r.deger) : tr(r.deger))}
-                <span class="rejim-birim">{r.birim}</span>
+                {r.deger === null ? '—'
+                  : r.birim === 'puan' ? sayi(r.deger, String(r.ad).includes('eğim') ? 2 : 1, true)
+                  : r.birim === '%' ? yuzde(r.deger, 1)
+                  : sayi(r.deger, 1)}
+                {r.birim !== '%' && <span class="rejim-birim">{r.birim}</span>}
               </span>
               {r.etiket && <span class="rejim-etiket">{r.etiket}</span>}
             </div>
@@ -312,7 +339,7 @@ const bolumler = [
           <li>
             <div class="sonuc-ust">
               <span class="sonuc-olay">{x.olay}</span>
-              <span class="kaynak-not">{x.tarih}{x.yas_gun > 0 ? ` · ${x.yas_gun} gün önce` : ' · bugün'}</span>
+              <span class="kaynak-not">{tz(x.tarih)}{x.yas_gun > 0 ? ` · ${x.yas_gun} gün önce` : ' · bugün'}</span>
             </div>
             {x.beklenti && <p class="sonuc-beklenti"><strong>Bekleniyordu.</strong> {x.beklenti}</p>}
             {x.durum === 'geldi' ? (
@@ -463,7 +490,7 @@ const bolumler = [
                   <strong class="soz-konu">{k.konu}</strong>
                   {k.soz && <span class="soz-metin">{k.soz}</span>}
                   {k.ne_bakilacak && <span class="soz-bakis">Ne bakılacak: {k.ne_bakilacak}</span>}
-                  <span class="kaynak-not">açılış {k.acilis}{k.vade ? ` · vade ${k.vade}` : ''}</span>
+                  <span class="kaynak-not">açılış {tz(k.acilis)}{k.vade ? ` · vade ${tz(k.vade)}` : ''}</span>
                 </span>
               </li>
             ))}
@@ -482,7 +509,7 @@ const bolumler = [
                   <strong class="soz-konu">{k.konu}</strong>
                   {k.soz && <span class="soz-metin">Ne demiştik: {k.soz}</span>}
                   {k.sonuc && <span class="soz-sonuc">Ne oldu: {k.sonuc}</span>}
-                  <span class="kaynak-not">açılış {k.acilis}{k.vade ? ` · vade ${k.vade}` : ''}</span>
+                  <span class="kaynak-not">açılış {tz(k.acilis)}{k.vade ? ` · vade ${tz(k.vade)}` : ''}</span>
                 </span>
               </li>
             ))}
@@ -679,7 +706,7 @@ const bolumler = [
                     <td class="p-ad">
                       {r.ad}
                       {r.not && <span class="p-not">{r.not}</span>}
-                      <span class="p-tarih-ic">{r.tarih}</span>
+                      <span class="p-tarih-ic">{tz(r.tarih)}</span>
                     </td>
                     <td class="sag p-son">
                       {tr(r.son, r.ondalik)}
