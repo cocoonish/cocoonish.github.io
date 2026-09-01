@@ -13,28 +13,49 @@
  *
  * Statik yedek (JSON yüklenemezse) slot içeriğinde durur.
  */
+import fs from 'node:fs';
+import path from 'node:path';
+import { tarihYaz } from '../lib/bicim';
+
 interface Props {
   proje: string;
-  /** Statik yedek: son bilinen uyarı sayısı */
+  /** Statik yedek: son bilinen uyarı sayısı (dosya okunamazsa). */
   sayi?: number;
 }
 const { proje, sayi = 0 } = Astro.props;
+
+// İlk değerler DERLEME anında dosyadan: JS kapalı okur da bu koşunun
+// durumunu görür; elle yazılan yedek yalnız dosya yokken kalır.
+let o: Record<string, any> | null = null;
+try {
+  o = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'projeler', proje, 'ozet.json'), 'utf-8'));
+} catch {
+  o = null;
+}
+const bayat = o?.bayat === true;
+const baslik = bayat
+  ? 'BAYAT VERİ — bu koşuda sayılar ilerlemedi'
+  : o?._tarih ? `Bu koşunun durumu · veri ${tarihYaz(String(o._tarih))}` : 'Bu koşunun durumu';
+const tazelik = o?.bayat_cumlesi ?? '';
+const cumle = o?.uyari_cumlesi ?? `Bu koşuda ${sayi} uyarı düştü:`;
+const metin: string | null = typeof o?.uyari_metni === 'string' ? o.uyari_metni : null;
 ---
 
-<div class="not kosu" data-kosu-proje={proje}>
-  <span class="etiket" data-kosu-baslik>Bu koşunun durumu</span>
-  <p class="kosu-tazelik" data-kosu-tazelik>Tazelik bilgisi yükleniyor…</p>
+<div class:list={['not', 'kosu', { bayat }]} data-kosu-proje={proje}>
+  <span class="etiket" data-kosu-baslik>{baslik}</span>
+  {tazelik && <p class="kosu-tazelik" data-kosu-tazelik>{tazelik}</p>}
   <!-- div, p DEĞİL: MDX slot içeriğini kendi <p>'sine sarar; <p> içinde <p>
        geçersizdir ve tarayıcı dış paragrafı erkenden kapatır. -->
   <div class="kosu-uyari">
-    <strong data-kosu-cumle>Bu koşuda {sayi} uyarı düştü:</strong>{' '}
-    <span data-kosu-metin><slot /></span>
+    <strong data-kosu-cumle>{cumle}</strong>{' '}
+    <span data-kosu-metin>{metin ?? <slot />}</span>
   </div>
   <p class="kosu-kaynak">
-    Tam liste: <a href={`/projeler/${proje}/uyarilar.json`}>uyarilar.json</a> ·
-    sayfadaki canlı değerler: <a href={`/projeler/${proje}/ozet.json`}>ozet.json</a>
+    <a href={`/projeler/${proje}/uyarilar.json`}>Uyarı listesi</a> ·
+    <a href={`/projeler/${proje}/ozet.json`}>sayfadaki canlı değerler</a>
   </p>
 </div><script>
+  import { tarihYaz } from '../lib/bicim';
   const kutular = [...document.querySelectorAll('[data-kosu-proje]')] as HTMLElement[];
   kutular.forEach(async (kutu) => {
     const proje = kutu.dataset.kosuProje!;
@@ -53,7 +74,7 @@ const { proje, sayi = 0 } = Astro.props;
         kutu.classList.add('bayat');
         if (baslik) baslik.textContent = 'BAYAT VERİ — bu koşuda sayılar ilerlemedi';
       } else if (baslik && o._tarih) {
-        baslik.textContent = `Bu koşunun durumu · veri ${o._tarih}`;
+        baslik.textContent = `Bu koşunun durumu · veri ${tarihYaz(String(o._tarih))}`;
       }
     } catch {
       /* statik yedek kalır */

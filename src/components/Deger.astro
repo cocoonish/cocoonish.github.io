@@ -41,23 +41,14 @@ const { proje, anahtar, ondalik = 1, isaret = false, bayatGun = 45 } = Astro.pro
   data-ondalik={ondalik}
   data-isaret={isaret ? '1' : undefined}
   data-bayat-gun={bayatGun}><slot>…</slot></span><script>
+  import { sayi } from '../lib/bicim';
   // Sayfa başına tek sefer: span'ları projeye göre grupla, ozet.json'ları çek, doldur.
   const alanlar = [...document.querySelectorAll('span.canli-deger')] as HTMLElement[];
   const projeler = [...new Set(alanlar.map((a) => a.dataset.proje!))];
 
-  const bicimle = (v: unknown, ondalik: number, isaret: boolean) => {
-    if (typeof v === 'number') {
-      // Intl tr-TR ASCII tire üretir; sayfa tipografisi eksi işareti (U+2212) kullanır.
-      const m = v
-        .toLocaleString('tr-TR', {
-          minimumFractionDigits: ondalik,
-          maximumFractionDigits: ondalik,
-        })
-        .replace('-', '−');
-      return isaret && v > 0 ? '+' + m : m;
-    }
-    return String(v);
-  };
+  // Sayı yazımı tek yerden (lib/bicim): eksi U+2212, ondalık virgül.
+  const bicimle = (v: unknown, ondalik: number, isaret: boolean) =>
+    typeof v === 'number' ? sayi(v, ondalik, isaret) : String(v);
 
   /** "GG.AA.YYYY" ya da ISO kabul eder; ayrıştıramazsa null döner (uydurmaz). */
   const ayristir = (t: unknown): Date | null => {
@@ -105,11 +96,13 @@ const { proje, anahtar, ondalik = 1, isaret = false, bayatGun = 45 } = Astro.pro
           const tarih = kendi || hat;
           if (tarih) {
             a.title = `canlı değer · veri: ${tarih}`;
+            a.setAttribute('aria-label', `${a.textContent} (canlı değer, veri ${tarih})`);
             const g = TARIHSEL.test(anahtar) ? null : gunFarki(tarih, hat);
             if (g !== null && g > parseInt(a.dataset.bayatGun || '45')) {
               a.classList.add('bayat');
               a.title = `canlı değer · veri: ${tarih} — hattın son tarihi ${hat}, `
                       + `bu seri ${g} gündür yenilenmedi`;
+              a.setAttribute('aria-label', `${a.textContent} (veri ${tarih}, ${g} gündür yenilenmedi)`);
             }
           }
           a.classList.add('yuklendi');

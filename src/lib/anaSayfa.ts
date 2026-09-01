@@ -17,6 +17,8 @@
    ───────────────────────────────────────────────────────────── */
 import fs from 'node:fs';
 import path from 'node:path';
+import { sayi, yuzde, tariheCevir, tarihYaz, gunFarki } from './bicim';
+export { sayi, tarihYaz };
 
 const KOK = path.resolve(process.cwd());
 const BULTEN_DIZIN = path.join(KOK, 'src', 'data', 'bulten');
@@ -68,6 +70,10 @@ export interface AnaSayfaVerisi {
   gun: string;
   olusturma: string;
   bultenHref: string;
+  /** Bağın gittiği yazılmış sayı bugünün ölçümüne mi ait? */
+  bultenYazili: boolean;
+  bultenHaftalik: boolean;
+  bultenTrTarih: string;
   enstruman: number;
   hatSayisi: number;
   rejim: RejimSatiri[];
@@ -82,15 +88,7 @@ export interface AnaSayfaVerisi {
   manset: { metin: string; parcalar: RejimSatiri[] } | null;
 }
 
-// ── Sayı biçimi ─────────────────────────────────────────────
-// Intl tr-TR ASCII tire üretir; sayfa tipografisi eksi işaretini (U+2212)
-// kullanıyor. Tabloda ikisi karışırsa hizalama gözle fark edilir bozulur.
-export function sayi(v: number, ondalik = 1, isaret = false): string {
-  const m = v
-    .toLocaleString('tr-TR', { minimumFractionDigits: ondalik, maximumFractionDigits: ondalik })
-    .replace('-', '−');
-  return isaret && v > 0 ? `+${m}` : m;
-}
+// Sayı ve tarih biçimi lib/bicim.ts'te — burada yalnız yeniden dışa aktarılır.
 
 function oku<T>(yol: string): T | null {
   try {
@@ -100,18 +98,6 @@ function oku<T>(yol: string): T | null {
   }
 }
 
-/** "GG.AA.YYYY", "AA.YYYY" ya da ISO → Date. Ayrıştıramazsa null (uydurmaz). */
-function tariheCevir(t: unknown): Date | null {
-  if (typeof t !== 'string') return null;
-  const s = t.trim();
-  let m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-  if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
-  m = s.match(/^(\d{2})\.(\d{4})$/); // aylık seri: ayın son gününe demirlenir
-  if (m) return new Date(+m[2], +m[1], 0);
-  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
-  return null;
-}
 
 // ── Manşet ──────────────────────────────────────────────────
 //
@@ -174,24 +160,11 @@ const KARSI_SIRA = [
 /** Değer + birim: "+13,3 puan", "%29,5", "104,6 endeks". */
 function birimYaz(s: RejimSatiri): string {
   if (s.deger === null) return '';
-  if (s.birim === '%') return `%${sayi(Math.abs(s.deger), 1)}`;
+  if (s.birim === '%') return yuzde(s.deger, 1);
   if (s.birim === 'puan') return `${sayi(s.deger, 1, true)} puan`;
   return `${sayi(s.deger, 1)} ${s.birim}`;
 }
 
-/**
- * Tarihi tabloda tek biçimde gösterir. Hatlar tarihlerini farklı
- * yazıyor — "26.08.2026", "06.2026", "2026-08-18 18:54 UTC" — ve bunlar
- * yan yana gelince sütun okunmaz oluyor. Ayrıştırılamayan biçim OLDUĞU
- * GİBİ bırakılır: uydurulmuş bir tarih, çirkin bir tarihten kötüdür.
- */
-export function tarihYaz(t: string): string {
-  if (!t) return '';
-  if (/^\d{2}\.\d{2}\.\d{4}$/.test(t) || /^\d{2}\.\d{4}$/.test(t)) return t;
-  const m = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[3]}.${m[2]}.${m[1]}`;
-  return t;
-}
 
 function mansetKur(rejim: RejimSatiri[]): AnaSayfaVerisi['manset'] {
   const bul = (ad: string) => rejim.find((r) => r.ad === ad && r.deger !== null && r.etiket);
@@ -251,6 +224,22 @@ const HAT_MANSET: Record<
   'yiyecek-hizmetleri-marj': { anahtar: 'oran_ev_yemekleri', olcu: 'Ev yemekleri / gıda oranı', birim: '×', ondalik: 2 },
 };
 
+/** Manşet tanımı (anahtar, hane, işaret, tarih alanı) — istemci tazelemesi aynı kuralı uygular. */
+export function hatMansetTanimi(slug: string) {
+  return HAT_MANSET[slug] ?? null;
+}
+
+/** Hattın en son koştuğu/ilerlediği an: kosum_tarihi → _tarih (meta veri saati). */
+export function projeSaati(slug: string): Date | null {
+  const d = oku<Record<string, unknown>>(path.join(PROJE_DIZIN, slug, 'ozet.json'));
+  if (!d) return null;
+  for (const k of ['kosum_tarihi', '_tarih']) {
+    const t = tariheCevir(d[k]);
+    if (t) return t;
+  }
+  return null;
+}
+
 /** Bir hattın manşet büyüklüğünü ve o büyüklüğün KENDİ tarihini okur. */
 export function hatManseti(slug: string): Pick<HatSatiri, 'deger' | 'olcu' | 'birim' | 'tarih' | 'yas'> {
   const bos = { deger: null, olcu: '', birim: '', tarih: '', yas: null };
@@ -270,7 +259,7 @@ export function hatManseti(slug: string): Pick<HatSatiri, 'deger' | 'olcu' | 'bi
     (typeof d[`${t.anahtar}_tarih`] === 'string' ? (d[`${t.anahtar}_tarih`] as string) : '') ||
     (typeof d._tarih === 'string' ? d._tarih : '');
   const g = tariheCevir(tarih);
-  const yas = g ? Math.round((Date.now() - g.getTime()) / 86400000) : null;
+  const yas = g ? gunFarki(g) : null;
   return { deger: sayi(v, t.ondalik, t.isaret ?? false), olcu: t.olcu, birim: t.birim, tarih: tarihYaz(tarih), yas };
 }
 
@@ -283,6 +272,9 @@ export function sonBulten(): AnaSayfaVerisi {
     gun: '',
     olusturma: '',
     bultenHref: '/bulten/',
+    bultenYazili: false,
+    bultenHaftalik: false,
+    bultenTrTarih: '',
     enstruman: 0,
     hatSayisi: 0,
     rejim: [],
@@ -302,6 +294,14 @@ export function sonBulten(): AnaSayfaVerisi {
   if (!dosyalar.length) return bos;
   const b = oku<Record<string, any>>(path.join(BULTEN_DIZIN, dosyalar[dosyalar.length - 1]));
   if (!b) return bos;
+  // YAYIN KAPISI ana sayfada da geçerli: ölçülen katman en yeni dosyadan gelir
+  // (yazı olmasa da doğru), ama "Günün bülteni →" bağı yalnız YAZILMIŞ bir sayıya
+  // gider — aksi hâlde henüz üretilmemiş bir sayfaya bağ verilirdi.
+  let yazili: Record<string, any> | null = null;
+  for (let i = dosyalar.length - 1; i >= 0; i--) {
+    const aday = oku<Record<string, any>>(path.join(BULTEN_DIZIN, dosyalar[i]));
+    if (aday?.gundem_kaynagi === 'yazili') { yazili = aday; break; }
+  }
 
   const rejim: RejimSatiri[] = Array.isArray(b.rejim) ? b.rejim : [];
   const sigma: SigmaSatiri[] = b?.piyasa?.en_cok_hareket?.sigma ?? [];
@@ -316,7 +316,10 @@ export function sonBulten(): AnaSayfaVerisi {
     trTarih: b.tr_tarih ?? '',
     gun: b.gun ?? '',
     olusturma: b.olusturma ?? '',
-    bultenHref: b.tarih ? `/bulten/${b.tarih}/` : '/bulten/',
+    bultenHref: yazili?.tarih ? `/bulten/${yazili.tarih}/` : '/bulten/',
+    bultenYazili: !!(yazili && yazili.tarih === b.tarih),
+    bultenHaftalik: !!yazili?.haftalik,
+    bultenTrTarih: yazili?.tr_tarih ?? '',
     enstruman,
     hatSayisi: Object.keys(HAT_MANSET).length,
     rejim,

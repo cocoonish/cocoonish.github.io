@@ -1,14 +1,15 @@
 ---
 import Base from '../layouts/Base.astro';
+import { kicker } from '../lib/bolumler';
 ---
 
-<Base title="Arama" description="Projeler ve araştırma notları içinde tam metin arama.">
+<Base title="Arama" dizinleme={false} description="Bülten, teknik analiz, analiz yazıları, projeler ve dersler içinde tam metin arama.">
   <header class="liste-baslik yuksel">
-    <p class="etiket kicker">04 — Bölüm</p>
+    <p class="etiket kicker">{kicker('/arama/')}</p>
     <h1>Arama</h1>
     <p class="alt">
-      Başlık, etiket ve metinlerde arar: <em>bootstrap</em>, <em>rezerv</em>,
-      <em>MPC</em>, <em>REDK</em>, <em>swaption</em>…
+      Bülten sayıları, teknik analiz, analiz yazıları, projeler ve derslerde başlık, etiket
+      ve metin araması: <em>bootstrap</em>, <em>rezerv</em>, <em>MPC</em>, <em>REDK</em>, <em>swaption</em>…
     </p>
   </header>
 
@@ -37,6 +38,10 @@ import Base from '../layouts/Base.astro';
     govde: string;
   };
 
+  // Tür etiketleri: başlık gezinmesiyle aynı sözcükler.
+  const TUR_AD: Record<string, string> = {
+    proje: 'Proje', arastirma: 'Ders', analiz: 'Analiz', bulten: 'Bülten', teknik: 'Teknik',
+  };
   const girdi = document.getElementById('arama-girdi') as HTMLInputElement;
   const durum = document.getElementById('arama-durum')!;
   const sonucKap = document.getElementById('arama-sonuc')!;
@@ -109,7 +114,7 @@ import Base from '../layouts/Base.astro';
         ({ k }, i) => `
       <article class="sonuc yuksel" style="--d:${i * 40}ms">
         <div class="ust">
-          <span class="etiket tur ${k.tur}">${k.tur === 'proje' ? 'Proje' : 'Araştırma'}</span>
+          <span class="etiket tur ${k.tur}">${TUR_AD[k.tur] ?? 'Ders'}</span>
           ${k.tags.map((t: string) => `<span class="etiket tag">#${kacis(t)}</span>`).join('')}
         </div>
         <h3><a href="${k.url}">${kacis(k.title)}</a></h3>

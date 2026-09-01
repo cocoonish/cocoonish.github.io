@@ -38,7 +38,21 @@ const arastirma = defineCollection({
 // olayı mekanizmasına, tarihsel emsaline ve fiyat etkisine kadar açar.
 const analiz = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/analiz' }),
-  schema: ortakSema,
+  schema: ortakSema.extend({
+    /** VERİ ÇIPASI: yazının hangi güne kadar veri kullandığı (künyede 'Veri' hücresi).
+     *  Yayın günüyle aynı olmak zorunda değil; ödemeler dengesi 6–8 hafta gecikir. */
+    veriTarihi: z.coerce.date().optional(),
+    /** Yayımlanmış bir sayının düzeltme kaydı — bültenle aynı sözleşme; /duzeltmeler/ toplar. */
+    duzeltmeler: z
+      .array(z.object({
+        tarih: z.string(),
+        alan: z.string(),
+        eski: z.string(),
+        yeni: z.string(),
+        sebep: z.string().optional(),
+      }))
+      .default([]),
+  }),
 });
 
 export const collections = { projeler, arastirma, analiz };

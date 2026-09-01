@@ -1,6 +1,9 @@
 ---
 import Base from './Base.astro';
 import DersKunyesi from '../components/DersKunyesi.astro';
+import VeriDurumu from '../components/VeriDurumu.astro';
+import { xAnaliz } from '../lib/x';
+import { tarihUzun } from '../lib/bicim';
 import type { DersOlcum } from '../lib/ders';
 
 interface Props {
@@ -20,6 +23,18 @@ interface Props {
   grupAdi?: string;
   grupHref?: string;
   onkosullar?: { href: string; title: string }[];
+  /** Proje sayfalarında hattın slug'ı — veri durumu şeridi bundan okur. */
+  slug?: string;
+  /** Kart için yazılmış tek cümlelik tez; varsa lede o olur, açıklama 'Kapsam' paragrafına iner. */
+  ozet?: string;
+  /** Yazının veri çıpası: hangi güne kadar veri kullanıldı. */
+  veriTarihi?: Date;
+  /** Yayımlanmış sayının düzeltme kaydı (analiz şeması). */
+  duzeltmeler?: { tarih: string; alan: string; eski: string; yeni: string; sebep?: string }[];
+  /** Sayfaya özgü bağlantı önizleme görseli (site köküne göreli). */
+  resim?: string;
+  /** Proje panosunda verinin son ilerlediği an — meta veri saati (metin tarihi künyede kalır). */
+  veriZamani?: Date | null;
 }
 
 const {
@@ -37,45 +52,72 @@ const {
   grupAdi,
   grupHref,
   onkosullar = [],
+  slug,
+  ozet,
+  veriTarihi,
+  duzeltmeler = [],
+  resim,
+  veriZamani = null,
 } = Astro.props;
 
 // 'ders' etiketi bütün derslerde var; ayırt etmediği için künye satırında gösterilmez.
+// Kicker'da en çok DÖRT etiket: on etiketli bir yazının kicker'ı iki satıra
+// taşıyor ve başlığın önünü kapatıyordu. Kalanı yazının sonunda listelenir.
 const gorunenEtiketler = tags.filter((t) => t !== 'ders');
+const kickerEtiketler = gorunenEtiketler.slice(0, 4);
 
-// Künye kicker'ında görünen tür adı. Yeni koleksiyon eklenirse buraya da eklenmeli.
+// Künye kicker'ında görünen tür adı — başlık gezinmesiyle aynı sözcük ('Dersler').
 const TUR_ETIKET: Record<string, string> = {
   proje: 'Proje',
-  arastirma: 'Araştırma',
+  arastirma: 'Ders',
   analiz: 'Analiz',
 };
 
-const tarih = (d: Date) =>
-  new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+// Lede: yazarın tek cümlelik tezi varsa o; yoksa açıklama. Tez varsa uzun
+// açıklama künyenin altında 'Kapsam' paragrafı olarak normal boyutta kalır —
+// 1.200 karakterlik italik bir lede okunmuyordu.
+const lede = ozet || description;
+const kapsam = ozet && description && description !== ozet ? description : null;
+
+// Analiz yayın günü X'te de çıkar; gönderi kimliği defterin aynasından okunur.
+const xGonderi = tur === 'analiz' && slug ? xAnaliz(slug) : null;
 ---
 
-<Base title={title} description={description}>
+<Base
+  title={title}
+  description={description}
+  tur="article"
+  yayinTarihi={pubDate}
+  guncellemeTarihi={veriZamani && veriZamani > (updatedDate ?? pubDate) ? veriZamani : (updatedDate ?? pubDate)}
+  resim={resim}
+>
   <article>
     <header class="makale-baslik yuksel">
       <p class="kicker etiket">
-        {TUR_ETIKET[tur] ?? 'Araştırma'}
+        {TUR_ETIKET[tur] ?? 'Ders'}
         {grupAdi && (
           <>
             {' · '}
             {grupHref ? <a href={grupHref}>{grupAdi}</a> : grupAdi}
           </>
         )}
-        {gorunenEtiketler.length > 0 && ` · ${gorunenEtiketler.join(' · ')}`}
+        {kickerEtiketler.length > 0 && ` · ${kickerEtiketler.join(' · ')}`}
       </p>
       <h1>{title}</h1>
-      <p class="ozet">{description}</p>
+      <p class="ozet">{lede}</p>
       <div class="makale-meta">
-        <span><b>Yayın</b> {tarih(pubDate)}</span>
-        {updatedDate && <span><b>Güncelleme</b> {tarih(updatedDate)}</span>}
-        {guncelleme && <span><b>Veri</b> {guncelleme}</span>}
-        {kaynak && <span><b>Kaynak</b> {kaynak}</span>}
+        <span><b>Yayın</b> {tarihUzun(pubDate)}</span>
+        {updatedDate && <span><b>Güncelleme</b> {tarihUzun(updatedDate)}</span>}
+        {veriTarihi && <span><b>Veri</b> {tarihUzun(veriTarihi)} kapanışına kadar</span>}
+        {guncelleme && <span><b>Ritim</b> {guncelleme}</span>}
         {durum === 'taslak' && <span class="rozet rozet--taslak">Hazırlanıyor</span>}
+        {duzeltmeler.length > 0 && <span><b>Düzeltme</b> <a href="#duzeltmeler">{duzeltmeler.length} kayıt</a></span>}
+        {xGonderi && <span><b>Paylaşım</b> <a href={xGonderi.url} rel="noopener">X gönderisi ↗</a></span>}
       </div>
+      {kaynak && <p class="kaynak-satiri"><span class="etiket">Kaynak</span> {kaynak}</p>}
+      {kapsam && <p class="kapsam-satiri"><span class="etiket">Kapsam</span> {kapsam}</p>}
       {olcum && <DersKunyesi olcum={olcum} seviye={seviye} guncellendi={updatedDate ?? pubDate} />}
+      {tur === 'proje' && slug && <VeriDurumu proje={slug} ritim={guncelleme} />}
       {
         onkosullar.length > 0 && (
           <p class="onkosul-satiri">
@@ -94,9 +136,33 @@ const tarih = (d: Date) =>
       <span class="etiket ic-baslik">İçindekiler</span>
       <ol id="icindekiler-liste"></ol>
     </nav>
+    {duzeltmeler.length > 0 && (
+      <section class="duzeltmeler-kutu" id="duzeltmeler">
+        <span class="etiket">Düzeltmeler</span>
+        <ul>
+          {duzeltmeler.map((d) => (
+            <li>
+              <span class="d-tarih">{tarihUzun(d.tarih)}</span>
+              <span class="d-govde">
+                <strong>{d.alan}</strong>
+                <span class="d-degerler">yayımlanan <s>{d.eski}</s> yerine <b>{d.yeni}</b></span>
+                {d.sebep && <span class="d-sebep">{d.sebep}</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
     <div class="prose yuksel" style="--d: 120ms">
       <slot />
     </div>
+    {gorunenEtiketler.length > kickerEtiketler.length && (
+      <p class="etiket-listesi">
+        <span class="etiket">Etiketler</span>
+        {gorunenEtiketler.map((t) => <span class="etiket-oge">{t}</span>)}
+      </p>
+    )}
+    <slot name="son" />
   </article>
 </Base>
 
@@ -132,6 +198,47 @@ const tarih = (d: Date) =>
 </script>
 
 <style>
+  /* Kaynak ve kapsam: mono BÜYÜK HARF künyeye değil, normal harfli iki
+     satıra — 600 karakterlik kaynak künyesi büyük harfle okunmuyordu. */
+  .kaynak-satiri,
+  .kapsam-satiri {
+    max-width: var(--olcu);
+    margin: 0.7rem auto 0;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--ink-70);
+  }
+  .kaynak-satiri .etiket,
+  .kapsam-satiri .etiket {
+    color: var(--claret);
+    margin-right: 0.5rem;
+  }
+  .duzeltmeler-kutu {
+    max-width: var(--olcu);
+    margin: 1.6rem auto 0;
+    border: 1px solid var(--ink-30);
+    border-left: 3px solid var(--claret);
+    background: var(--paper-2);
+    padding: 0.9rem 1.2rem 1rem;
+  }
+  .duzeltmeler-kutu > .etiket { color: var(--claret); display: block; margin-bottom: 0.5rem; }
+  .duzeltmeler-kutu ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+  .duzeltmeler-kutu li { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 0.2rem 1rem; align-items: baseline; }
+  .d-tarih { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-50); }
+  .d-govde { display: grid; gap: 0.15rem; }
+  .d-degerler { font-family: var(--font-mono); font-size: 0.9rem; }
+  .d-degerler s { color: var(--ink-50); }
+  .d-degerler b { color: var(--claret); }
+  .d-sebep { font-size: 0.88rem; color: var(--ink-70); line-height: 1.45; }
+  .etiket-listesi {
+    max-width: var(--olcu);
+    margin: 0 auto 2rem;
+    display: flex; flex-wrap: wrap; gap: 0.4rem 0.6rem; align-items: baseline;
+    font-size: 0.86rem; color: var(--ink-70);
+  }
+  .etiket-listesi > .etiket { color: var(--claret); margin-right: 0.3rem; }
+  .etiket-oge { border: 1px solid var(--ink-15); border-radius: 2px; padding: 0.05rem 0.45rem; }
+  @media (max-width: 640px) { .duzeltmeler-kutu li { grid-template-columns: 1fr; } }
   .onkosul-satiri {
     max-width: var(--olcu);
     margin: 0.8rem auto 0;

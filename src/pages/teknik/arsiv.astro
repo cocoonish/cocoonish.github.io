@@ -1,49 +1,61 @@
 ---
 import Base from '../../layouts/Base.astro';
+import { teknikler } from '../../lib/yayinlar';
+import { AYLAR_TR, tarihUzun } from '../../lib/bicim';
 
-const dosyalar = import.meta.glob('../../data/teknik/*.json', { eager: true });
-// Arşiv de yalnız yazılmış sayıları listeler (bkz. yayın kapısı).
-const hepsi = Object.entries(dosyalar)
-  .filter(([, m]: [string, any]) => ((m as any).default ?? m)?.yazili)
-  .map(([yol, m]: [string, any]) => {
-    const b: any = (m as any).default ?? m;
-    return {
-      tarih: yol.split('/').pop()!.replace('.json', ''),
-      trTarih: b.tr_tarih ?? yol.split('/').pop()!.replace('.json', ''),
-      veriUcu: b.veri_ucu ?? '',
-    };
-  })
-  .sort((a, b) => (a.tarih < b.tarih ? 1 : -1));
+const hepsi = teknikler();
+const aylar: { ad: string; kayitlar: typeof hepsi }[] = [];
+for (const k of hepsi) {
+  const [y, a] = k.tarih.split('-');
+  const ad = `${AYLAR_TR[Number(a) - 1]} ${y}`;
+  const son = aylar[aylar.length - 1];
+  if (son && son.ad === ad) son.kayitlar.push(k);
+  else aylar.push({ ad, kayitlar: [k] });
+}
 ---
 
-<Base title="Teknik Analiz Arşivi" description="Haftalık teknik analiz bültenlerinin arşivi.">
-  <div class="arsiv">
-    <h1>Teknik Analiz Arşivi</h1>
-    <p class="etiket"><a href="/teknik/">güncel sayı ←</a></p>
-    {
-      hepsi.length ? (
+<Base title="Teknik analiz arşivi" description="Haftalık teknik analiz sayılarının tamamı, aya göre.">
+  <header class="ust">
+    <p class="etiket kicker">Arşiv</p>
+    <h1>Teknik analiz arşivi</h1>
+    <p class="alt">Yayımlanmış bütün sayılar; her pazar akşamı bir sayı. Toplam {hepsi.length} sayı.</p>
+    <p class="don"><a href="/teknik/">← güncel sayı</a> · <a href="/teknik/rss.xml">RSS</a></p>
+  </header>
+  {hepsi.length ? (
+    aylar.map((ay) => (
+      <section class="ay">
+        <h2>{ay.ad} <span class="adet">{ay.kayitlar.length} sayı</span></h2>
         <ul>
-          {hepsi.map((k) => (
+          {ay.kayitlar.map((k) => (
             <li>
-              <a href={`/teknik/${k.tarih}/`}>{k.trTarih}</a>
-              <span class="etiket">veri ucu {k.veriUcu}</span>
+              <a href={k.href}><span class="a-no">No {k.sayiNo}</span><span class="a-tarih">{k.trTarih}</span></a>
+              <span class="a-veri">veri ucu {k.veriUcu ? tarihUzun(k.veriUcu) : '—'}</span>
+              <span class="a-ozet">{k.aciklama}</span>
             </li>
           ))}
         </ul>
-      ) : (
-        <p>Henüz yayımlanmış sayı yok.</p>
-      )
-    }
-  </div>
+      </section>
+    ))
+  ) : (
+    <p class="bos">Henüz yayımlanmış sayı yok.</p>
+  )}
 </Base>
 
 <style>
-  .arsiv { max-width: 44rem; }
-  .arsiv h1 { font-family: var(--font-serif); }
-  ul { list-style: none; padding: 0; }
-  li {
-    display: flex; justify-content: space-between; gap: 1rem;
-    border-bottom: 1px solid var(--ink-30, #ccc); padding: 0.55rem 0;
-    font-family: var(--font-mono); font-size: 0.9rem;
-  }
+  .ust { padding: 2.4rem 0 1.6rem; max-width: 56ch; }
+  .kicker { color: var(--claret); margin: 0 0 0.6rem; }
+  h1 { font-family: var(--font-display); font-size: clamp(1.8rem, 3.4vw, 2.4rem); margin: 0 0 0.6rem; }
+  .alt { color: var(--ink-70); }
+  .don { font-family: var(--font-mono); font-size: 0.82rem; margin-top: 0.9rem; }
+  .ay { margin: 2rem 0; }
+  .ay h2 { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 0.7rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--ink-30); }
+  .adet { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-50); margin-left: 0.5rem; }
+  .ay ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.7rem; }
+  .ay li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.15rem 0.9rem; align-items: baseline; }
+  .ay li a { text-decoration: none; }
+  .a-no { font-family: var(--font-mono); font-size: 0.7rem; color: var(--claret); margin-right: 0.4rem; }
+  .a-tarih { font-family: var(--font-mono); font-size: 0.9rem; }
+  .a-veri { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-50); }
+  .a-ozet { font-size: 0.8rem; color: var(--ink-70); line-height: 1.45; grid-column: 1 / -1; }
+  .bos { color: var(--ink-70); font-style: italic; }
 </style>

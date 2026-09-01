@@ -13,7 +13,7 @@
  * gerilim görünür kalır — sayfanın asıl anlattığı şey o gerilim.
  */
 import type { RejimSatiri } from '../lib/anaSayfa';
-import { sayi } from '../lib/anaSayfa';
+import { sayi, yuzde } from '../lib/bicim';
 
 interface Props {
   satirlar: RejimSatiri[];
@@ -24,7 +24,7 @@ const { satirlar, vurgu = [] } = Astro.props;
 
 const bicim = (s: RejimSatiri) => {
   if (s.deger === null) return '—';
-  if (s.birim === '%') return `%${sayi(s.deger, 1)}`;
+  if (s.birim === '%') return yuzde(s.deger, 1);
   if (s.birim === 'puan') return sayi(s.deger, s.ad.includes('eğim') ? 2 : 1, true);
   return sayi(s.deger, 1);
 };

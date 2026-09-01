@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+import { BOLUMLER } from '../lib/bolumler';
+import { bultenler } from '../lib/yayinlar';
+
+const son = bultenler()[0];
+---
+
+<Base title="Sayfa bulunamadı" dizinleme={false} description="Aradığınız sayfa bu adreste değil.">
+  <section class="yok yuksel">
+    <p class="etiket kicker">404</p>
+    <h1>Bu adreste bir sayfa yok.</h1>
+    <p class="alt">
+      Bağlantı eskimiş ya da adres yanlış yazılmış olabilir. Aşağıdaki bölümlerden
+      birine geçebilir ya da <a href="/arama/">arama</a> yapabilirsiniz.
+      {son && (
+        <> Günün bülteni: <a href={son.href}>{son.trTarih}</a>.</>
+      )}
+    </p>
+    <ul class="bolumler">
+      {BOLUMLER.filter((b) => b.href !== '/arama/').map((b) => (
+        <li>
+          <a href={b.href}>
+            <span class="no">{b.no}</span>
+            <span class="ad">{b.ad}</span>
+            <span class="acik">{b.aciklama}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .yok { padding: 3rem 0 2rem; max-width: 60ch; }
+  .kicker { color: var(--claret); margin: 0 0 0.8rem; }
+  h1 {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 72;
+    font-size: clamp(1.9rem, 4.4vw, 2.8rem);
+    font-weight: 540;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 0 0 0.8rem;
+  }
+  .alt { color: var(--ink-70); line-height: 1.6; }
+  .bolumler { list-style: none; margin: 2rem 0 0; padding: 0; border-top: 1px solid var(--ink); }
+  .bolumler li { border-bottom: 1px dotted var(--ink-15); }
+  .bolumler a {
+    display: grid; grid-template-columns: 2.4rem 9rem minmax(0, 1fr);
+    gap: 0 1rem; align-items: baseline; padding: 0.7rem 0; text-decoration: none;
+  }
+  .no { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; color: var(--claret); }
+  .ad { font-family: var(--font-display); font-size: 1.05rem; font-weight: 580; }
+  .acik { font-size: 0.9rem; color: var(--ink-70); line-height: 1.45; }
+  @media (max-width: 640px) {
+    .bolumler a { grid-template-columns: 2.4rem minmax(0, 1fr); }
+    .acik { grid-column: 2; }
+  }
+</style>

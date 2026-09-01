@@ -1,4 +1,12 @@
 ---
+/**
+ * Sayfa iskeleti — her sayfanın başlığı, kimliği ve bağlantı önizlemesi burada kurulur.
+ *
+ * Bir bağlantı X'te, Telegram'da ya da LinkedIn'de paylaşıldığında görünen kart
+ * (başlık, açıklama, görsel) ve arama motorlarının sayfayı anlaması için gereken
+ * kimlik (kanonik adres, yayın tarihi, yapısal veri) tek yerden, buradan çıkar.
+ * Sayfalar yalnız ne olduklarını söyler: başlık, açıklama, tür, tarih, bölüm.
+ */
 import '@fontsource-variable/fraunces';
 import '@fontsource-variable/fraunces/wght-italic.css';
 import '@fontsource-variable/newsreader';
@@ -12,14 +20,96 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { BESLEMELER, bolumBul } from '../lib/bolumler';
+import { ozetle } from '../lib/bicim';
 
 interface Props {
   title?: string;
   description?: string;
+  /** 'article': yayın tarihi taşıyan bir yazı (bülten, teknik, analiz, proje, ders). */
+  tur?: 'website' | 'article';
+  yayinTarihi?: Date | string | null;
+  guncellemeTarihi?: Date | string | null;
+  /** Bağlantı önizleme görseli (site köküne göreli). Verilmezse bölümün kartı. */
+  resim?: string;
+  /** Sayfaya özel ek yapısal veri (JSON-LD nesnesi). */
+  yapisalVeri?: Record<string, unknown> | null;
+  /** Arama motorlarına kapalı sayfalar (404, arama sonucu). */
+  dizinleme?: boolean;
 }
 
-const { title, description = SITE_DESCRIPTION } = Astro.props;
+const {
+  title,
+  description = SITE_DESCRIPTION,
+  tur = 'website',
+  yayinTarihi = null,
+  guncellemeTarihi = null,
+  resim,
+  yapisalVeri = null,
+  dizinleme = true,
+} = Astro.props;
+
 const tamBaslik = title ? `${title} — ${SITE_TITLE}` : `${SITE_TITLE} — Türkiye makro & piyasa araştırmaları`;
+// Meta ve kart açıklaması EN ÇOK ~200 karakter: bağlantı önizlemeleri ve arama
+// motorları fazlasını keser; 1.200 karakterlik bir açıklama karta sığmaz.
+// Sayfadaki lede tam metni göstermeye devam eder; kırpma yalnız meta için.
+const metaAciklama = ozetle(description, 200);
+// Yayın adresi TEK yerde: astro.config.mjs `site`. Yedek adres yok — yoksa
+// derleme düşer; sessizce yanlış bir kanonik adres basmaktan iyidir.
+const kok = Astro.site;
+if (!kok) throw new Error('astro.config.mjs: `site` tanımsız — kanonik adres kurulamaz');
+const kanonik = new URL(Astro.url.pathname, kok).toString();
+
+// Bölüme göre varsayılan kart: /bulten/ → bulten.png, /teknik/ → teknik.png …
+const bolum = bolumBul(Astro.url.pathname);
+const KART: Record<string, string> = { '/bulten/': 'bulten', '/teknik/': 'teknik', '/analiz/': 'analiz' };
+const kartAdi = bolum && KART[bolum.href] ? KART[bolum.href] : 'genel';
+const gorsel = new URL(resim ?? `/og/${kartAdi}.png`, kok).toString();
+
+const iso = (d: Date | string | null | undefined) => {
+  if (!d) return null;
+  const t = d instanceof Date ? d : new Date(d);
+  return isNaN(t.valueOf()) ? null : t.toISOString();
+};
+const yayinIso = iso(yayinTarihi);
+const guncelIso = iso(guncellemeTarihi) ?? yayinIso;
+
+// Yapısal veri: site kimliği her sayfada; yazı sayfalarında ayrıca makale.
+const yayinci = {
+  '@type': 'Organization',
+  name: SITE_TITLE,
+  url: kok.toString(),
+  logo: { '@type': 'ImageObject', url: new URL('/og/genel.png', kok).toString() },
+};
+const yapisal: Record<string, unknown>[] = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_TITLE,
+    url: kok.toString(),
+    description: SITE_DESCRIPTION,
+    inLanguage: 'tr',
+    publisher: yayinci,
+  },
+];
+if (tur === 'article') {
+  yapisal.push({
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: title ?? SITE_TITLE,
+    description: metaAciklama,
+    url: kanonik,
+    mainEntityOfPage: kanonik,
+    image: [gorsel],
+    inLanguage: 'tr',
+    ...(yayinIso ? { datePublished: yayinIso } : {}),
+    ...(guncelIso ? { dateModified: guncelIso } : {}),
+    author: yayinci,
+    publisher: yayinci,
+    ...(bolum ? { articleSection: bolum.ad } : {}),
+  });
+}
+if (yapisalVeri) yapisal.push({ '@context': 'https://schema.org', ...yapisalVeri });
 ---
 
 <!doctype html>
@@ -28,17 +118,42 @@ const tamBaslik = title ? `${title} — ${SITE_TITLE}` : `${SITE_TITLE} — Tür
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{tamBaslik}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={metaAciklama} />
     <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#f5f0e6" />
+    {!dizinleme && <meta name="robots" content="noindex, follow" />}
+    <link rel="canonical" href={kanonik} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="sitemap" href="/sitemap-index.xml" />
-    <meta property="og:title" content={tamBaslik} />
-    <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    {BESLEMELER.map((f) => (
+      <link rel="alternate" type="application/rss+xml" title={f.ad} href={f.href} />
+    ))}
+
+    <meta property="og:type" content={tur} />
+    <meta property="og:site_name" content={SITE_TITLE} />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:title" content={title ?? SITE_TITLE} />
+    <meta property="og:description" content={metaAciklama} />
+    <meta property="og:url" content={kanonik} />
+    <meta property="og:image" content={gorsel} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${SITE_TITLE} — ${bolum?.ad ?? 'Türkiye makro & piyasa araştırmaları'}`} />
+    {tur === 'article' && yayinIso && <meta property="article:published_time" content={yayinIso} />}
+    {tur === 'article' && guncelIso && <meta property="article:modified_time" content={guncelIso} />}
+    {tur === 'article' && bolum && <meta property="article:section" content={bolum.ad} />}
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title ?? SITE_TITLE} />
+    <meta name="twitter:description" content={metaAciklama} />
+    <meta name="twitter:image" content={gorsel} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(yapisal.length === 1 ? yapisal[0] : yapisal)} />
   </head>
   <body>
+    <a class="atla" href="#icerik">İçeriğe geç</a>
     <Header />
-    <main class="sarici">
+    <main class="sarici" id="icerik" tabindex="-1">
       <slot />
     </main>
     <Footer />

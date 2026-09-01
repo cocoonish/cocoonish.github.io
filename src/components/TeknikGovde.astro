@@ -8,11 +8,37 @@
  * her sayı ölçümde birebir vardır.
  */
 import GrafikEmbed from './GrafikEmbed.astro';
+import Kunye from './Kunye.astro';
+import { istanbulSaat, tarihUzun, sayi as bicimSayi, degisim, yuzde } from '../lib/bicim';
+import type { TeknikKaydi } from '../lib/yayinlar';
+import { xTeknik } from '../lib/x';
+import { FERAGAT } from '../consts';
 
 interface Props {
   b: any;
+  /** Sayı numarası ve ölçüm kimliği — lib/yayinlar.ts kaydı. */
+  kayit?: TeknikKaydi;
 }
-const { b } = Astro.props;
+const { b, kayit } = Astro.props;
+
+const xGonderi = xTeknik(b.tarih);
+const kunye = [
+  kayit ? { deger: `No ${kayit.sayiNo}`, etiket: 'Sayı', vurgu: true } : null,
+  { deger: istanbulSaat(b.olcum_zamani), etiket: 'Ölçüm', alt: istanbulSaat(b.olcum_zamani, 'tam').replace(/ \d{2}:\d{2}$/, '') },
+  b.veri_ucu ? { deger: tarihUzun(b.veri_ucu), etiket: 'Veri ucu', alt: 'son kapanmış seans' } : null,
+  { deger: String((b.enstrumanlar ?? []).length), etiket: 'Enstrüman' },
+  { deger: '1 saatlik · 4 saatlik · günlük', etiket: 'Zaman dilimi' },
+  b.yorum_zamani ? { deger: istanbulSaat(b.yorum_zamani), etiket: 'Yorum', alt: istanbulSaat(b.yorum_zamani, 'tam').replace(/ \d{2}:\d{2}$/, '') } : null,
+  b.duzeltmeler?.length ? { deger: String(b.duzeltmeler.length), etiket: 'Düzeltme', href: '#duzeltmeler', vurgu: true } : null,
+  xGonderi ? { deger: 'X gönderisi ↗', etiket: 'Paylaşım', href: xGonderi.url } : null,
+].filter(Boolean) as any[];
+
+// Şekil numaraları boşluksuz: eksik dilimin grafiği numara tüketmez.
+const grafikNo = new Map<string, string>();
+let sayac = 0;
+for (const e of b.enstrumanlar ?? [])
+  for (const d of ['s1', 's4', 'gun'])
+    if (e.grafikler?.[d]) grafikNo.set(`${e.slug}:${d}`, String(++sayac).padStart(2, '0'));
 
 const DILIMLER = [
   { kod: 's1', ad: '1 saatlik' },
@@ -20,37 +46,29 @@ const DILIMLER = [
   { kod: 'gun', ad: 'Günlük' },
 ];
 
-const sayi = (x: number | null, ondalik = 2) =>
-  x === null || x === undefined
-    ? '—'
-    : x.toLocaleString('tr-TR', {
-        minimumFractionDigits: Math.min(ondalik, 4),
-        maximumFractionDigits: Math.min(Math.max(ondalik, 2), 4),
-      });
+// Sayı ve tarih biçimi lib/bicim'den: eksi U+2212, yüzde önde, İstanbul saati.
+const sayi = (x: number | null | undefined, ondalik = 2) =>
+  x === null || x === undefined ? '—' : bicimSayi(x, Math.min(Math.max(ondalik, 0), 4));
 
-const isaretli = (x: number | null, birim: string) =>
-  x === null || x === undefined
-    ? '—'
-    : `${x > 0 ? '+' : ''}${x.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}${birim}`;
+const isaretli = (x: number | null | undefined, birim: string) =>
+  x === null || x === undefined ? '—' : degisim(x, birim.trim(), 2);
 
-const tarihTr = (t: string | null) =>
-  t
-    ? new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }).format(
-        new Date(t.length > 10 ? t + 'Z' : t)
-      ) + (t.length > 10 ? ` ${t.slice(11, 16)} UTC` : '')
-    : '—';
+const tarihTr = (t: string | null) => (t ? tarihUzun(t) : '—');
 
-const kisaZaman = (t: string | null) => (t ? (t.length > 10 ? t.slice(5, 16).replace('T', ' ') : t.slice(5)) : '—');
+// Bar zamanı İstanbul saatiyle: "28 Ağu 21:20"; günlük barlarda yalnız gün.
+const kisaZaman = (t: string | null) => {
+  if (!t) return '—';
+  if (t.length <= 10) return new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(t + 'T00:00:00Z'));
+  const d = new Date(/(Z|[+-]\d{2}:\d{2})$/.test(t) ? t : t + 'Z');
+  return new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' }).format(d);
+};
 ---
 
 <article class="teknik">
   <header class="kunye">
-    <h1>Haftalık Teknik Analiz</h1>
-    <p class="etiket satir">
-      <span>{b.tr_tarih}</span>
-      <span>veri ucu: {tarihTr(b.veri_ucu)} kapanışı</span>
-      <span>6 enstrüman · 1S / 4S / G</span>
-    </p>
+    <p class="etiket kicker">Haftalık teknik analiz{kayit && <span class="kicker-sayi"> · Sayı {kayit.sayiNo}</span>}</p>
+    <h1>{b.tr_tarih}</h1>
+    <Kunye hucreler={kunye} genis etiket="Sayı künyesi" />
     <p class="metodoloji">
       Her enstrüman üç zaman diliminde (1 saatlik, 4 saatlik, günlük) ayrı ayrı
       ölçülür: göstergeler, pivot destek/direnç bölgeleri, regresyon kanalı ve
@@ -61,6 +79,24 @@ const kisaZaman = (t: string | null) => (t ? (t.length > 10 ? t.slice(5, 16).rep
       vardır. Bu sayfa analizdir, yatırım tavsiyesi değildir.
     </p>
   </header>
+
+  {b.duzeltmeler?.length > 0 && (
+    <section class="duzeltmeler" id="duzeltmeler">
+      <h2>Düzeltmeler</h2>
+      <ul class="duzeltme-liste">
+        {b.duzeltmeler.map((d: any) => (
+          <li>
+            <span class="d-tarih">{tarihUzun(d.tarih)}</span>
+            <span class="d-govde">
+              <strong>{d.alan}</strong>
+              <span class="d-degerler">yayımlanan <s>{d.eski}</s> yerine <b>{d.yeni}</b></span>
+              {d.sebep && <span class="d-sebep">{d.sebep}</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
 
   {b.giris && <div class="giris" set:html={b.giris} />}
 
@@ -80,26 +116,30 @@ const kisaZaman = (t: string | null) => (t ? (t.length > 10 ? t.slice(5, 16).rep
             ile yeni bileşen çakıştı ve BÜTÜN site derlemesi düştü. Alan
             eksikse satır atlanır; bir sayının yokluğu siteyi indiremez. */}
         <p class="degisim etiket">
-          1h {isaretli(e.degisim?.h1, e.tip === 'getiri' ? ' bp' : '%')} · 1a{' '}
-          {isaretli(e.degisim?.a1, e.tip === 'getiri' ? ' bp' : '%')} · 3a{' '}
-          {isaretli(e.degisim?.a3, e.tip === 'getiri' ? ' bp' : '%')} · YBB{' '}
-          {isaretli(e.degisim?.ybb, e.tip === 'getiri' ? ' bp' : '%')} · 52h aralık{' '}
-          {sayi(e.aralik52?.dusuk, e.ondalik)}–{sayi(e.aralik52?.yuksek, e.ondalik)} (konum %
-          {sayi(e.aralik52?.konum_pct, 0)})
+          1 hafta {isaretli(e.degisim?.h1, e.tip === 'getiri' ? 'bp' : '%')} · 1 ay{' '}
+          {isaretli(e.degisim?.a1, e.tip === 'getiri' ? 'bp' : '%')} · 3 ay{' '}
+          {isaretli(e.degisim?.a3, e.tip === 'getiri' ? 'bp' : '%')} · yılbaşından{' '}
+          {isaretli(e.degisim?.ybb, e.tip === 'getiri' ? 'bp' : '%')} · 52 haftalık aralık{' '}
+          {sayi(e.aralik52?.dusuk, e.ondalik)}–{sayi(e.aralik52?.yuksek, e.ondalik)}
+          {e.aralik52?.konum_pct !== undefined && e.aralik52?.konum_pct !== null && ` (konum ${yuzde(e.aralik52.konum_pct, 0)})`}
+          {e.haftalik?.h10 && ` · haftalık: 10h ${sayi(e.haftalik.h10, e.ondalik)} · 40h ${sayi(e.haftalik.h40, e.ondalik)} · RSI ${sayi(e.haftalik.rsi14, 1)}`}
         </p>
 
-        <div class="sarici">
+        <div class="tablo-sar">
           <table class="olcum">
+            <caption class="gorunmez">{e.ad} — üç zaman diliminde göstergeler, oynaklık, kanal ve yapı</caption>
             <thead>
               <tr>
-                <th>Dilim</th>
-                <th>Son</th>
-                <th>RSI</th>
-                <th>MACD hist</th>
-                <th>SMA50</th>
-                <th>SMA200</th>
-                <th>Kanal</th>
-                <th>Yapı</th>
+                <th scope="col">Dilim</th>
+                <th scope="col">Son</th>
+                <th scope="col">RSI</th>
+                <th scope="col">MACD hist</th>
+                <th scope="col">SMA50</th>
+                <th scope="col">SMA200</th>
+                <th scope="col"><abbr title="14 barlık ortalama gerçek aralık, fiyata oranı">ATR14</abbr></th>
+                <th scope="col"><abbr title="Bollinger bandı alt–üst">Bant</abbr></th>
+                <th scope="col"><abbr title="Regresyon kanalı alt–üst ve fiyatın kanaldaki konumu">Kanal</abbr></th>
+                <th scope="col">Yapı</th>
               </tr>
             </thead>
             <tbody>
@@ -107,23 +147,33 @@ const kisaZaman = (t: string | null) => (t ? (t.length > 10 ? t.slice(5, 16).rep
                 const m = e.dilimler?.[d.kod];
                 return m && !m.eksik ? (
                   <tr>
-                    <th>{d.ad}<small class="alt-zaman">{kisaZaman(m.bar_zamani)}</small></th>
+                    <th scope="row">{d.ad}<small class="alt-zaman">{kisaZaman(m.bar_zamani)}</small></th>
                     <td>{sayi(m.son, e.ondalik)}</td>
-                    <td>{sayi(m.momentum.rsi14, 1)}</td>
-                    <td>{sayi(m.momentum.macd_hist, e.ondalik + 1)}</td>
-                    <td>{sayi(m.hareketli.g50, e.ondalik)}</td>
-                    <td>{sayi(m.hareketli.g200, e.ondalik)}</td>
-                    <td>{m.kanal ? `%${sayi(m.kanal.konum_pct, 0)}` : '—'}</td>
+                    <td>{sayi(m.momentum?.rsi14, 1)}</td>
+                    <td>{sayi(m.momentum?.macd_hist, e.ondalik + 1)}</td>
+                    <td>{sayi(m.hareketli?.g50, e.ondalik)}</td>
+                    <td>{sayi(m.hareketli?.g200, e.ondalik)}</td>
+                    <td>{m.oynaklik?.atr14_pct !== undefined ? yuzde(m.oynaklik.atr14_pct, 2) : '—'}</td>
+                    <td>{m.bant ? `${sayi(m.bant.alt, e.ondalik)}–${sayi(m.bant.ust, e.ondalik)}` : '—'}</td>
+                    <td>{m.kanal ? `${sayi(m.kanal.alt, e.ondalik)}–${sayi(m.kanal.ust, e.ondalik)} · ${yuzde(m.kanal.konum_pct, 0)}` : '—'}</td>
                     <td class="yapi">
-                      {m.yapi.karakter ?? '—'}
-                      {m.yapi.cift_tepe && ` · çift tepe ${sayi(m.yapi.cift_tepe.seviye, e.ondalik)}`}
-                      {m.yapi.cift_dip && ` · çift dip ${sayi(m.yapi.cift_dip.seviye, e.ondalik)}`}
+                      {m.yapi?.karakter ?? '—'}
+                      {m.yapi?.cift_tepe && ` · çift tepe ${sayi(m.yapi.cift_tepe.seviye, e.ondalik)}`}
+                      {m.yapi?.cift_dip && ` · çift dip ${sayi(m.yapi.cift_dip.seviye, e.ondalik)}`}
+                      {m.yapi?.sikisma && ' · sıkışma'}
+                      {(m.yapi?.tepeler?.length || m.yapi?.dipler?.length) ? (
+                        <small class="salinim">
+                          {m.yapi.tepeler?.slice(-2).map((t: any) => `tepe ${sayi(t.seviye, e.ondalik)} (${kisaZaman(t.zaman)})`).join(' · ')}
+                          {m.yapi.tepeler?.length && m.yapi.dipler?.length ? ' · ' : ''}
+                          {m.yapi.dipler?.slice(-2).map((t: any) => `dip ${sayi(t.seviye, e.ondalik)} (${kisaZaman(t.zaman)})`).join(' · ')}
+                        </small>
+                      ) : null}
                     </td>
                   </tr>
                 ) : (
                   <tr>
-                    <th>{d.ad}</th>
-                    <td colspan="7" class="eksik">{m?.eksik ?? 'ölçülmedi'}</td>
+                    <th scope="row">{d.ad}</th>
+                    <td colspan="9" class="eksik">{m?.eksik ?? 'ölçülmedi'}</td>
                   </tr>
                 );
               })}
@@ -131,14 +181,15 @@ const kisaZaman = (t: string | null) => (t ? (t.length > 10 ? t.slice(5, 16).rep
           </table>
         </div>
 
-        <div class="sarici">
+        <div class="tablo-sar">
           <table class="seviyeler">
+            <caption class="gorunmez">{e.ad} — dilim başına destek ve direnç bölgeleri (dokunuş sayısı ve son dokunuş) ile 52 haftalık Fibonacci seviyeleri</caption>
             <thead>
               <tr>
                 {DILIMLER.map((d) => (
-                  <th>{d.ad} seviyeler</th>
+                  <th scope="col">{d.ad} seviyeler</th>
                 ))}
-                <th>Fibonacci (52h)</th>
+                <th scope="col">Fibonacci (52 hafta)</th>
               </tr>
             </thead>
             <tbody>
@@ -150,14 +201,16 @@ const kisaZaman = (t: string | null) => (t ? (t.length > 10 ? t.slice(5, 16).rep
                       {m && !m.eksik ? (
                         <>
                           {m.seviyeler.direnc.map((s: any) => (
-                            <div class="direnc">
-                              {sayi(s.seviye, e.ondalik)} <small>({s.dokunus}×)</small>
+                            <div class="direnc" title={s.son_dokunus ? `son dokunuş ${kisaZaman(s.son_dokunus)}` : undefined}>
+                              <span class="yon" aria-hidden="true">▲</span><span class="gorunmez">direnç </span>
+                              {sayi(s.seviye, e.ondalik)} <small>({s.dokunus}×{s.son_dokunus ? ` · ${kisaZaman(s.son_dokunus)}` : ''})</small>
                             </div>
                           ))}
-                          <div class="simdi">◈ {sayi(m.son, e.ondalik)}</div>
+                          <div class="simdi"><span aria-label="son kapanış">◈</span> {sayi(m.son, e.ondalik)}</div>
                           {m.seviyeler.destek.map((s: any) => (
-                            <div class="destek">
-                              {sayi(s.seviye, e.ondalik)} <small>({s.dokunus}×)</small>
+                            <div class="destek" title={s.son_dokunus ? `son dokunuş ${kisaZaman(s.son_dokunus)}` : undefined}>
+                              <span class="yon" aria-hidden="true">▼</span><span class="gorunmez">destek </span>
+                              {sayi(s.seviye, e.ondalik)} <small>({s.dokunus}×{s.son_dokunus ? ` · ${kisaZaman(s.son_dokunus)}` : ''})</small>
                             </div>
                           ))}
                         </>
@@ -183,49 +236,79 @@ const kisaZaman = (t: string | null) => (t ? (t.length > 10 ? t.slice(5, 16).rep
               <GrafikEmbed
                 src={e.grafikler[d.kod]}
                 baslik={`${e.ad} — ${d.ad.toLowerCase()} mum, SMA50/200, regresyon kanalı, pivot seviyeleri, RSI, MACD`}
-                no={String(i * 3 + j + 1).padStart(2, '0')}
+                no={grafikNo.get(`${e.slug}:${d.kod}`) ?? String(i * 3 + j + 1).padStart(2, '0')}
               />
             )
         )}
 
-        {e.yorum && <div class="yorum" set:html={e.yorum} />}
+        {/* Başlık hiyerarşisi: sayfa h1 → enstrüman h2 → yorum bölümleri h3.
+            Yazı katmanı rehber gereği <h4> yazar; burada bir düzey yükseltilir. */}
+        {e.yorum && <div class="yorum" set:html={String(e.yorum).replace(/<(\/?)h4>/g, '<$1h3>')} />}
       </section>
     ))
   }
+  <footer class="altbilgi">
+    <p>
+      Ölçüm {istanbulSaat(b.olcum_zamani, 'tam')} İstanbul
+      {b.yorum_zamani && ` · yorum ${istanbulSaat(b.yorum_zamani, 'tam')}`}
+      {kayit && ` · Sayı ${kayit.sayiNo}`}
+      {b.enstrumanlar?.length && ` · kaynak: kamuya açık kapanış verileri (${b.enstrumanlar.map((e: any) => e.kod).join(', ')})`}
+    </p>
+    <p class="feragat">{FERAGAT}</p>
+  </footer>
 </article>
 
 <style>
   .teknik { max-width: 72rem; }
+  .kunye { padding-top: 2.4rem; }
+  .kicker { color: var(--claret); margin: 0 0 0.6rem; }
+  .kicker-sayi { color: var(--ink-50); }
   .kunye h1 {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: clamp(1.9rem, 4vw, 2.6rem);
     margin: 0 0 0.4rem;
   }
-  .kunye .satir { display: flex; gap: 1.2rem; flex-wrap: wrap; }
   .metodoloji {
-    font-size: 0.88rem; color: var(--ink-70, #555);
-    border-left: 3px solid var(--claret, #7a1f2b);
+    margin-top: 1.2rem;
+    font-size: 0.88rem; color: var(--ink-70);
+    border-left: 3px solid var(--claret);
     padding-left: 0.8rem; max-width: 46rem;
   }
   .giris { font-size: 1.02rem; max-width: 46rem; margin: 1.4rem 0 2rem; }
-  .enstruman { border-top: 1px solid var(--ink-30, #bbb); padding-top: 1.4rem; margin-top: 2.2rem; }
+  .enstruman { border-top: 1px solid var(--ink-30); padding-top: 1.4rem; margin-top: 2.2rem; }
   .baslik { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-  .baslik h2 { font-family: var(--font-serif); margin: 0; }
+  .baslik h2 { font-family: var(--font-display); margin: 0; }
   .son { font-family: var(--font-mono); font-size: 1.25rem; }
-  .son .bar-tarih { color: var(--ink-70, #666); font-size: 0.75rem; }
+  .son .bar-tarih { color: var(--ink-70); font-size: 0.75rem; }
   .degisim { margin: 0.3rem 0 0.8rem; }
-  .sarici { overflow-x: auto; margin: 0.9rem 0; }
+  .tablo-sar { overflow-x: auto; margin: 0.9rem 0; }
   table { border-collapse: collapse; font-family: var(--font-mono); font-size: 0.8rem; min-width: 40rem; }
   th, td { text-align: left; padding: 0.32rem 0.85rem 0.32rem 0; vertical-align: top; white-space: nowrap; }
-  thead th { border-bottom: 1px solid var(--ink-30, #bbb); color: var(--ink-70, #666); font-weight: 500; }
+  thead th { border-bottom: 1px solid var(--ink-30); color: var(--ink-70); font-weight: 500; }
   .olcum tbody th { font-weight: 600; }
-  .alt-zaman { display: block; font-weight: 400; color: var(--ink-70, #888); font-size: 0.68rem; }
+  .alt-zaman { display: block; font-weight: 400; color: var(--ink-70); font-size: 0.68rem; }
   .yapi { white-space: normal; max-width: 16rem; }
-  .eksik { color: var(--ink-70, #888); font-style: italic; }
-  .seviyeler .direnc { color: var(--claret, #9d2235); }
-  .seviyeler .destek { color: #2d6a4f; }
-  .seviyeler .simdi { color: var(--ink-70, #555); border-top: 1px dotted var(--ink-30, #ccc); border-bottom: 1px dotted var(--ink-30, #ccc); margin: 0.15rem 0; }
-  .seviyeler small { color: var(--ink-70, #777); }
+  .eksik { color: var(--ink-70); font-style: italic; }
+  .seviyeler .direnc { color: var(--negatif); }
+  .seviyeler .destek { color: var(--pozitif); }
+  .seviyeler .yon { font-size: 0.7em; margin-right: 0.25rem; }
+  .seviyeler .simdi { color: var(--ink-70); border-top: 1px dotted var(--ink-30); border-bottom: 1px dotted var(--ink-30); margin: 0.15rem 0; }
+  .seviyeler small { color: var(--ink-70); }
   .yorum { max-width: 46rem; margin: 1.2rem 0 0.6rem; }
-  .yorum :global(h4) { font-family: var(--font-serif); margin: 1.1rem 0 0.3rem; }
+  .duzeltmeler { max-width: 46rem; margin: 1.2rem 0 1.6rem; border: 1px solid var(--ink-30); border-left: 3px solid var(--claret); background: var(--paper-2); padding: 0.8rem 1.1rem; }
+  .duzeltmeler h2 { font-family: var(--font-display); font-size: 1.05rem; margin: 0 0 0.6rem; }
+  .duzeltme-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+  .duzeltme-liste li { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 0.2rem 1rem; align-items: baseline; }
+  .d-tarih { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-50); }
+  .d-govde { display: grid; gap: 0.15rem; }
+  .d-degerler { font-family: var(--font-mono); font-size: 0.9rem; }
+  .d-degerler s { color: var(--ink-50); }
+  .d-degerler b { color: var(--claret); }
+  .d-sebep { font-size: 0.88rem; color: var(--ink-70); line-height: 1.45; }
+  .altbilgi { margin-top: 2.5rem; border-top: 1px solid var(--ink-30); padding-top: 0.8rem; font-size: 0.82rem; color: var(--ink-70); max-width: 60rem; }
+  .altbilgi .feragat { font-style: italic; color: var(--ink-50); }
+  .seviyeler .direnc, .seviyeler .destek { cursor: default; }
+  @media (max-width: 640px) { .duzeltme-liste li { grid-template-columns: 1fr; } }
+  .yorum :global(h3) { font-family: var(--font-display); font-size: 1.05rem; margin: 1.1rem 0 0.3rem; }
+  .salinim { display: block; color: var(--ink-70); font-size: 0.68rem; white-space: normal; }
 </style>

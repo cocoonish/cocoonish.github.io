@@ -1,62 +1,45 @@
 ---
 import Base from '../../layouts/Base.astro';
+import { bultenler } from '../../lib/yayinlar';
+import { AYLAR_TR } from '../../lib/bicim';
 
-const dosyalar = import.meta.glob('../../data/bulten/*.json', { eager: true });
-// Arşiv de yalnız yazılmış bültenleri listeler (bkz. yayın kapısı).
-const hepsi = Object.entries(dosyalar)
-  .filter(([, m]: [string, any]) => ((m as any).default ?? m)?.gundem_kaynagi === 'yazili')
-  .map(([yol, m]: [string, any]) => {
-    const b: any = (m as any).default ?? m;
-    return {
-      tarih: yol.split('/').pop()!.replace('.json', ''),
-      trTarih: b.tr_tarih ?? yol.split('/').pop()!.replace('.json', ''),
-      gun: b.gun ?? '',
-      haftalik: !!b.haftalik,
-      oneCikan: b.one_cikanlar?.length ?? 0,
-      not: b.notlar?.length ?? 0,
-      basliklar: (b.one_cikanlar ?? []).slice(0, 2).map((o: any) => o.baslik),
-    };
-  })
-  .sort((a, b) => (a.tarih < b.tarih ? 1 : -1));
-
-const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const hepsi = bultenler();          // yazılmış sayılar, en yenisi başta
 const aylar: { ad: string; kayitlar: typeof hepsi }[] = [];
 for (const k of hepsi) {
   const [y, a] = k.tarih.split('-');
-  const ad = `${AYLAR[Number(a) - 1]} ${y}`;
+  const ad = `${AYLAR_TR[Number(a) - 1]} ${y}`;
   const son = aylar[aylar.length - 1];
   if (son && son.ad === ad) son.kayitlar.push(k);
   else aylar.push({ ad, kayitlar: [k] });
 }
+const gunluk = hepsi.filter((k) => !k.haftalik).length;
+const haftalik = hepsi.length - gunluk;
 ---
 
-<Base title="Bülten arşivi" description="Geçmiş günlük ve haftalık makro bültenlerinin tamamı.">
+<Base title="Bülten arşivi" description="Yayımlanmış bütün günlük bültenler ve haftaya bakış sayıları, aya göre.">
   <header class="ust">
     <p class="etiket kicker">Arşiv</p>
     <h1>Bülten arşivi</h1>
     <p class="alt">
-      Yayımlanmış bütün bültenler. Hafta içi sabahları günlük, pazar akşamları
-      haftaya bakış. Toplam {hepsi.length} bülten.
+      Yayımlanmış bütün sayılar. Hafta içi sabahları günlük, pazar akşamları
+      haftaya bakış. Toplam {hepsi.length} sayı: {gunluk} günlük, {haftalik} haftaya bakış.
     </p>
-    <p class="don"><a href="/bulten/">← güncel bülten</a></p>
+    <p class="don"><a href="/bulten/">← güncel sayı</a> · <a href="/bulten/rss.xml">RSS</a></p>
   </header>
 
   {aylar.map((ay) => (
     <section class="ay">
-      <h2>{ay.ad}</h2>
+      <h2>{ay.ad} <span class="adet">{ay.kayitlar.length} sayı</span></h2>
       <ul>
         {ay.kayitlar.map((k) => (
           <li>
-            <a href={`/bulten/${k.tarih}/`}>
+            <a href={k.href}>
+              <span class="a-no">No {k.sayiNo}</span>
               <span class="a-tarih">{k.trTarih}</span>
               <span class="a-gun">{k.gun}</span>
             </a>
             {k.haftalik && <span class="rozet">haftaya bakış</span>}
-            <span class="a-ozet">
-              {k.oneCikan > 0 ? `${k.oneCikan} öne çıkan` : 'öne çıkan yok'}
-              {k.not > 0 ? ` · ${k.not} not` : ''}
-              {k.basliklar.length > 0 ? ` — ${k.basliklar.join(', ')}` : ''}
-            </span>
+            <span class="a-ozet">{k.aciklama}</span>
           </li>
         ))}
       </ul>
@@ -75,13 +58,17 @@ for (const k of hepsi) {
     font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 0.7rem;
     padding-bottom: 0.3rem; border-bottom: 1px solid var(--ink-30);
   }
-  .ay ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; }
-  .ay li { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: baseline; }
+  .adet { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-50); margin-left: 0.5rem; }
+  .ay ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.7rem; }
+  .ay li { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 0.15rem 0.7rem; align-items: baseline; }
+  .ay li a { text-decoration: none; }
+  .a-no { font-family: var(--font-mono); font-size: 0.7rem; color: var(--claret); margin-right: 0.4rem; }
   .a-tarih { font-family: var(--font-mono); font-size: 0.9rem; }
   .a-gun { font-size: 0.76rem; color: var(--ink-30); margin-left: 0.4rem; }
   .rozet {
     font-family: var(--font-mono); font-size: 0.66rem; color: var(--claret);
     border: 1px solid var(--claret); padding: 0.05rem 0.35rem;
   }
-  .a-ozet { font-size: 0.78rem; color: var(--ink-70); flex: 1 1 18rem; }
+  .a-ozet { font-size: 0.8rem; color: var(--ink-70); line-height: 1.45; grid-column: 1 / -1; }
+  @media (max-width: 640px) { .ay li { grid-template-columns: auto minmax(0, 1fr); } }
 </style>

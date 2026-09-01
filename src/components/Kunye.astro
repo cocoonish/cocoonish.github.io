@@ -1,0 +1,92 @@
+---
+/**
+ * Künye şeridi — bir yayının ölçülen kimliği, tek bakışta.
+ *
+ * Ders sayfalarındaki DersKunyesi ile aynı görsel dil; fark şu ki hücreler
+ * çağıran tarafından verilir. Bülten (sayı no, ölçüm saati, enstrüman ve
+ * haber sayısı), teknik analiz (sayı no, veri ucu, enstrüman) ve analiz
+ * yazıları (yayın, güncelleme, veri) aynı şeridi kullanır — yayınlar
+ * arasında kimlik bilgisi aynı yerde, aynı biçimde durur.
+ *
+ * Bütün hücreler VERİDEN gelir; elle yazılan bir sayı bu şeride girmez.
+ */
+export interface Hucre {
+  deger: string;
+  etiket: string;
+  alt?: string;
+  /** Vurgu: hücre bordo etiketli değil, değer bordo. */
+  vurgu?: boolean;
+  href?: string;
+}
+interface Props {
+  hucreler: Hucre[];
+  /** Ölçüye sığsın (varsayılan) ya da kapsayıcının genişliğinde. */
+  genis?: boolean;
+  etiket?: string;
+}
+const { hucreler, genis = false, etiket = 'Künye' } = Astro.props;
+const dolu = hucreler.filter((h) => h && h.deger);
+---
+
+{dolu.length > 0 && (
+  <div class:list={['kunye', { genis }]} aria-label={etiket}>
+    {dolu.map((h) => (
+      <div class="hucre">
+        {h.href ? (
+          <a class:list={['deger', { vurgu: h.vurgu }]} href={h.href}>{h.deger}</a>
+        ) : (
+          <span class:list={['deger', { vurgu: h.vurgu }]}>{h.deger}</span>
+        )}
+        <span class="etiket k-etiket">{h.etiket}</span>
+        {h.alt && <span class="alt">{h.alt}</span>}
+      </div>
+    ))}
+  </div>
+)}
+
+<style>
+  .kunye {
+    max-width: var(--olcu);
+    margin: 1.2rem auto 0;
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+    border: 1px solid var(--ink-30);
+    border-left: 3px solid var(--claret);
+    background: var(--paper-2);
+  }
+  .kunye.genis { max-width: none; margin-left: 0; margin-right: 0; }
+  .hucre {
+    flex: 1 1 7.2rem;
+    padding: 0.7rem 0.9rem 0.75rem;
+    border-right: 1px solid var(--ink-15);
+    border-bottom: 1px solid var(--ink-15);
+    margin: 0 -1px -1px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+  }
+  .deger {
+    font-family: var(--font-mono);
+    font-size: 1.02rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  a.deger:hover { color: var(--claret); }
+  .deger.vurgu { color: var(--claret); }
+  .k-etiket { color: var(--claret); font-size: 0.625rem; }
+  .alt {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    line-height: 1.3;
+    color: var(--ink-50);
+  }
+  @media (max-width: 640px) {
+    .hucre { flex-basis: 6.2rem; padding: 0.55rem 0.7rem 0.6rem; }
+  }
+</style>

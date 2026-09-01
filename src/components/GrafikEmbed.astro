@@ -5,12 +5,23 @@
  * güncelleme akışı yeni HTML'i aynı yola kopyalayınca grafik de yenilenir.
  * Kopyalama sonrası ev stili: python3 site/tools/plotly_stil.py --hepsi
  */
+import fs from 'node:fs';
+import path from 'node:path';
 import { cerceveYuksekligi } from '../lib/grafikOlcu';
+import { tarihYaz } from '../lib/bicim';
 
 interface Props {
   src: string; // ör. /projeler/tcmb-net-rezerv/grafik.html
   baslik: string;
   no?: string; // ör. "01"
+  /**
+   * Şeklin serisinin tarih anahtarı (ör. "ak_tarih"). Verilmezse hattın
+   * `_tarih`i. Aynı panoda bacaklar farklı saatte olabilir; şeklin altında
+   * kendi serisinin günü yazsın — "her sayı kendi tarihini taşır".
+   */
+  tarihAnahtari?: string;
+  /** Kısa kaynak adı, altyazıda ("TCMB EVDS"). */
+  kaynak?: string;
   /**
    * Açıkça verilirse KAZANIR. Verilmezse figürün kendi ilan ettiği yükseklik
    * kullanılır — sabit 540px, kendi yüksekliğini yazan figürleri alttan
@@ -19,14 +30,33 @@ interface Props {
   yukseklik?: number;
 }
 
-const { src, baslik, no, yukseklik } = Astro.props;
+const { src, baslik, no, yukseklik, tarihAnahtari, kaynak } = Astro.props;
 const cerceveYuk = cerceveYuksekligi(src, yukseklik);
+
+// Proje şekli ise veri tarihi derleme anında hattın özetinden okunur.
+// Uydurma yok: özet ya da tarih yoksa altyazıda tarih satırı hiç çıkmaz.
+let veriTarihi = '';
+const proje = src.match(/^\/projeler\/([^/]+)\//)?.[1];
+if (proje) {
+  try {
+    const o = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'projeler', proje, 'ozet.json'), 'utf-8'));
+    const ham = (tarihAnahtari && typeof o[tarihAnahtari] === 'string' ? o[tarihAnahtari] : '') || (typeof o._tarih === 'string' ? o._tarih : '');
+    veriTarihi = ham ? tarihYaz(ham) : '';
+  } catch {
+    veriTarihi = '';
+  }
+}
 ---
 
 <figure class="grafik">
   <figcaption>
     <span class="etiket grafik-no">{no ? `Şekil ${no}` : 'Şekil'}</span>
     <span class="grafik-baslik">{baslik}</span>
+    {(veriTarihi || kaynak) && (
+      <span class="etiket grafik-veri">
+        {veriTarihi && `veri ${veriTarihi}`}{veriTarihi && kaynak && ' · '}{kaynak}
+      </span>
+    )}
     <a class="etiket tam-ekran" href={src} target="_blank" rel="noopener">Tam ekran ↗</a>
   </figcaption>
   <div class="cerceve" style={`height:${cerceveYuk}px`}>
@@ -48,8 +78,9 @@ const cerceveYuk = cerceveYuksekligi(src, yukseklik);
   }
   figcaption {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.9rem;
+    gap: 0.4rem 0.9rem;
     padding: 0.55rem 0.9rem;
     border-bottom: 1px solid var(--ink-15);
     background: var(--paper-2);
@@ -64,6 +95,13 @@ const cerceveYuk = cerceveYuksekligi(src, yukseklik);
     font-size: 0.95rem;
     color: var(--ink-70);
   }
+  .grafik-veri {
+    margin-left: auto;
+    white-space: nowrap;
+    color: var(--ink-50);
+    font-variant-numeric: tabular-nums;
+  }
+  .grafik-veri + .tam-ekran { margin-left: 0; }
   .tam-ekran {
     margin-left: auto;
     white-space: nowrap;

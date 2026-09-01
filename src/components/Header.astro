@@ -1,50 +1,82 @@
 ---
+/**
+ * Masthead — marka, tarih satırı ve bölüm gezinmesi.
+ *
+ * Gezinme listesi lib/bolumler.ts'ten gelir: başlıktaki numaralar, liste
+ * sayfalarının kicker'ları ve alt bilgi aynı kaynağı okur, ayrışamaz.
+ *
+ * Tarih satırı iki şey söyler ve ikisi de DOĞRU olmak zorunda: bugünün tarihi
+ * ve son bültenin tarihi. Eskiden tek bir "bugün" vardı ve DERLEME anında
+ * yazılıyordu — site birkaç gün derlenmese sayfa eski bir günü "bugün" diye
+ * gösterirdi. Şimdi bugünün tarihi sayfa açılınca okurun saatinden yazılır;
+ * son bülten tarihi ise derleme anında dosyadan okunur ve zaten bir olgu.
+ */
 import { SITE_TITLE, SITE_TAGLINE } from '../consts';
+import { BOLUMLER } from '../lib/bolumler';
+import { bultenler, teknikler } from '../lib/yayinlar';
 
-const bugun = new Intl.DateTimeFormat('tr-TR', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  weekday: 'long',
-}).format(new Date());
 
 const yol = Astro.url.pathname;
-const linkler = [
-  { no: '01', ad: 'Bülten', href: '/bulten/' },
-  { no: '02', ad: 'Teknik', href: '/teknik/' },
-  { no: '03', ad: 'Analiz', href: '/analiz/' },
-  { no: '04', ad: 'Projeler', href: '/projeler/' },
-  { no: '05', ad: 'Dersler', href: '/arastirma/' },
-  { no: '06', ad: 'Hakkında', href: '/hakkinda/' },
-  { no: '07', ad: 'Arama', href: '/arama/' },
-];
+const linkler = BOLUMLER.filter((b) => b.gezinme);
+const son = bultenler()[0];
+const sonTeknik = teknikler()[0];
 ---
 
 <header class="masthead">
   <div class="sarici">
     <div class="dateline etiket">
-      <span>{bugun}</span>
+      <span data-bugun hidden></span>
       <span class="orta">İstanbul</span>
-      <span>Veri · Makro · Faiz</span>
+      {son ? (
+        <span class="son-yayinlar">
+          <a class="son-bulten" href={son.href}>
+            {son.haftalik ? 'Son haftaya bakış' : 'Son bülten'} · {son.trTarih}
+          </a>
+          {sonTeknik && (
+            <a class="son-bulten son-teknik" href={sonTeknik.href}>Son teknik · {sonTeknik.trTarih}</a>
+          )}
+        </span>
+      ) : (
+        <span>Veri · Makro · Faiz</span>
+      )}
     </div>
     <div class="baslik-satir">
-      <a href="/" class="marka">
+      <a href="/" class="marka" aria-label={`${SITE_TITLE} — ana sayfa`}>
         <span class="marka-ad">{SITE_TITLE}</span>
         <span class="marka-alt">{SITE_TAGLINE}</span>
       </a>
-      <nav>
+      <nav aria-label="Bölümler">
         {
-          linkler.map((l) => (
-            <a href={l.href} class:list={['nav-link', { aktif: yol.startsWith(l.href) }]}>
-              <span class="nav-no">{l.no}</span>
-              {l.ad}
-            </a>
-          ))
+          linkler.map((l) => {
+            const aktif = yol.startsWith(l.href);
+            return (
+              <a
+                href={l.href}
+                class:list={['nav-link', { aktif }]}
+                aria-current={aktif ? 'page' : undefined}
+              >
+                <span class="nav-no">{l.no}</span>
+                {l.ad}
+              </a>
+            );
+          })
         }
       </nav>
     </div>
   </div>
 </header>
+
+<script>
+  // Bugünün tarihi okurun saatinden — derleme gününden değil. Derlenmiş HTML
+  // günü taşımaz: birkaç gün derlenmemiş bir site eski günü "bugün" diye
+  // göstermesin; betik çalışmazsa satır boş kalır, yanlış kalmaz.
+  import { bugunUzun } from '../lib/bicim';
+  const el = document.querySelector<HTMLElement>('[data-bugun]');
+  if (el) {
+    el.textContent = bugunUzun();
+    el.hidden = false;
+  }
+</script>
 
 <style>
   .masthead {
@@ -60,6 +92,18 @@ const linkler = [
   }
   .dateline .orta {
     color: var(--claret);
+  }
+  .son-bulten {
+    text-decoration: none;
+    color: var(--ink-70);
+    white-space: nowrap;
+  }
+  .son-bulten:hover {
+    color: var(--claret);
+  }
+  .son-yayinlar { display: inline-flex; gap: 1.2rem; }
+  @media (max-width: 760px) {
+    .son-teknik { display: none; }
   }
   .baslik-satir {
     display: flex;
@@ -97,9 +141,19 @@ const linkler = [
     text-transform: uppercase;
     color: var(--ink-50);
   }
+  /* Dar ekranda gezinme taşmaz: yedi bağlantı tek satırda yana kaydırılır,
+     kaydırma çubuğu gizlidir, aktif bölüm bordo alt çizgiyle görünür kalır. */
   nav {
     display: flex;
     gap: 1.6rem;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+  nav::-webkit-scrollbar {
+    display: none;
   }
   .nav-link {
     font-family: var(--font-mono);
@@ -110,10 +164,16 @@ const linkler = [
     text-decoration: none;
     padding-bottom: 0.2rem;
     border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    flex: 0 0 auto;
   }
   .nav-link.aktif {
     border-bottom-color: var(--claret);
     color: var(--claret);
+  }
+  .nav-link:focus-visible {
+    outline: 2px solid var(--claret);
+    outline-offset: 3px;
   }
   .nav-no {
     color: var(--claret);
@@ -122,7 +182,17 @@ const linkler = [
     margin-right: 0.15rem;
   }
   @media (max-width: 640px) {
-    .dateline span:last-child {
+    .dateline {
+      flex-wrap: wrap;
+      gap: 0.2rem 0.9rem;
+    }
+    .dateline .orta {
+      display: none;
+    }
+    nav {
+      gap: 1.1rem;
+    }
+    .nav-no {
       display: none;
     }
   }

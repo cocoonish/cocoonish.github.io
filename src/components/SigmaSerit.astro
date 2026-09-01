@@ -12,6 +12,8 @@
  * Kutupluluk üç ayrı işaretle taşınıyor — çubuğun yönü, sayının işareti ve
  * renk — yani hiçbir okur için yalnız renge bağlı değil. Nötr orta eksen gri.
  */
+import { sayi } from '../lib/bicim';
+
 interface Props {
   hareketler: any[];
   esik?: number;
@@ -53,11 +55,11 @@ const uzunluk = (z: number) => (Math.abs(z) / enCok) * (yariGenislik - 6);
             <text x={AD - 12} y={y + BAR / 2 + 3.5} class="sigma-ad">{x.ad}</text>
             <rect x={negatif ? merkez - u : merkez} y={y} width={Math.max(u, 1)} height={BAR} rx="4"
                   fill={negatif ? 'var(--claret)' : 'var(--teal)'}>
-              <title>{`${x.ad}: ${x.deger > 0 ? '+' : ''}${x.deger}${x.birim} · ${x.sigma}σ (günlük σ ${x.oynaklik}${x.birim})`}</title>
+              <title>{`${x.ad}: ${sayi(x.deger, 2, true)}${x.birim} · ${sayi(x.sigma, 1, true)}σ (${pencereAd} σ ${sayi(x.oynaklik, 2)}${x.birim})`}</title>
             </rect>
             <text x={negatif ? merkez - u - 7 : merkez + u + 7} y={y + BAR / 2 + 3.5}
                   class:list={['sigma-deger', { sag: negatif }]}>
-              {`${x.sigma > 0 ? '+' : '−'}${Math.abs(x.sigma).toLocaleString('tr-TR')}σ`}
+              {`${sayi(x.sigma, 1, true)}σ`}
             </text>
           </>
         );

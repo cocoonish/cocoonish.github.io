@@ -1,42 +1,73 @@
 ---
 import Base from '../../layouts/Base.astro';
 import TeknikGovde from '../../components/TeknikGovde.astro';
+import { teknikler } from '../../lib/yayinlar';
 
-// YAYIN KAPISI: yalnız YAZILMIŞ teknik bültenler siteye çıkar. Ölçüm koşusu
-// yorum alanları boş bir iskelet bırakır; giriş + altı yorumun tamamı
-// teknik/yaz.py kapısından geçince yazili=true olur ve sayfa yayımlanır.
-const dosyalar = import.meta.glob('../../data/teknik/*.json', { eager: true });
-const bultenler = Object.entries(dosyalar)
-  .map(([yol, m]: [string, any]) => ({
-    tarih: yol.split('/').pop()!.replace('.json', ''),
-    b: (m as any).default ?? m,
-  }))
-  .filter((x) => x.b?.yazili)
-  .sort((a, b) => (a.tarih < b.tarih ? 1 : -1));
-
-const son = bultenler[0];
+// Yayın kapısı (yalnız YAZILMIŞ sayı) lib/yayinlar.ts'te, bir kez.
+const hepsi = teknikler();
+const son = hepsi[0];
+const arsiv = hepsi.slice(1, 8);
 ---
 
 <Base
-  title="Haftalık Teknik Analiz"
-  description="ABD 2Y/10Y, DXY, EUR/USD, USD/CHF ve BIST 100 için ölçüme dayalı haftalık teknik analiz."
+  title={son ? `Teknik analiz · Sayı ${son.sayiNo} · ${son.trTarih}` : 'Haftalık Teknik Analiz'}
+  description={son ? son.aciklama : 'ABD 2Y/10Y, DXY, EUR/USD, USD/CHF ve BIST 100 için ölçüme dayalı haftalık teknik analiz.'}
+  tur={son ? 'article' : 'website'}
+  yayinTarihi={son?.olcumZamani}
 >
   {
     son ? (
       <>
-        <p class="geri etiket"><a href="/teknik/arsiv/">arşiv →</a></p>
-        <TeknikGovde b={son.b} />
+        <nav class="teknik-nav" aria-label="Teknik analiz sayıları">
+          <span class="nav-etiket">Teknik</span>
+          <span class="nav-oge aktif">Son sayı <span class="nav-tarih">{son.trTarih}</span></span>
+          <a href="/teknik/rss.xml" class="nav-oge rss-link" title="RSS beslemesi">RSS</a>
+          <a href="/teknik/arsiv/" class="nav-oge">Tüm arşiv ({hepsi.length})</a>
+        </nav>
+        <TeknikGovde b={son.t} kayit={son} />
+        {arsiv.length > 0 && (
+          <section class="arsiv">
+            <h2>Önceki sayılar <a class="tumu" href="/teknik/arsiv/">tümü →</a></h2>
+            <ul>
+              {arsiv.map((x) => (
+                <li>
+                  <a href={x.href}><span class="no">No {x.sayiNo}</span> {x.trTarih}</a>
+                  <span class="ozet">{x.aciklama}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </>
     ) : (
       <div class="bos">
-        <h1>Haftalık Teknik Analiz</h1>
-        <p>İlk sayı hazırlanıyor. Ölçüm katmanı kuruldu; yorum katmanı yazılınca bülten burada yayımlanacak.</p>
+        <h1>Haftalık teknik analiz</h1>
+        <p>Bu haftanın sayısı henüz yayımlanmadı; pazar akşamı burada olacak.</p>
       </div>
     )
   }
 </Base>
 
 <style>
-  .geri { margin: 1.6rem 0 0; font-family: var(--font-mono); font-size: 0.82rem; }
+  .teknik-nav {
+    display: flex; flex-wrap: wrap; gap: 0.9rem; align-items: baseline;
+    border-bottom: 1px solid var(--ink-30); padding: 1.4rem 0 0.7rem; margin-bottom: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.78rem;
+  }
+  .nav-etiket { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-30); }
+  .nav-oge { text-decoration: none; border-bottom: 1px solid var(--ink-30); }
+  .nav-oge.aktif { border-bottom: 2px solid var(--claret); color: var(--claret); }
+  .nav-tarih { color: var(--ink-30); font-size: 0.9em; margin-left: 0.3em; }
+  .rss-link { margin-left: auto; font-size: 0.68rem; letter-spacing: 0.1em; }
+  .arsiv { margin: 3rem 0 1rem; border-top: 4px double var(--ink); padding-top: 1.2rem; }
+  .arsiv h2 { font-family: var(--font-display); font-size: 1.15rem; margin: 0 0 0.8rem; }
+  .arsiv .tumu { font-family: var(--font-mono); font-size: 0.72rem; margin-left: 0.6rem; }
+  .arsiv ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; }
+  .arsiv li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.2rem 0.9rem; align-items: baseline; }
+  .arsiv a { font-family: var(--font-mono); font-size: 0.88rem; text-decoration: none; }
+  .arsiv .no { color: var(--claret); font-size: 0.72rem; margin-right: 0.3rem; }
+  .ozet { font-size: 0.82rem; color: var(--ink-70); line-height: 1.45; }
   .bos { max-width: 44rem; margin: 3rem 0; }
+  .bos h1 { font-family: var(--font-display); }
+  @media (max-width: 640px) { .arsiv li { grid-template-columns: 1fr; } .rss-link { margin-left: 0; } }
 </style>

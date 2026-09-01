@@ -1,25 +1,44 @@
 ---
-import { SITE_TITLE } from '../consts';
+/**
+ * Alt bilgi — bölümler, beslemeler ve sorumluluk notu.
+ * Bölüm listesi lib/bolumler.ts'ten; başlıkla aynı kaynak.
+ */
+import { SITE_TITLE, FERAGAT } from '../consts';
+import { BOLUMLER, BESLEMELER } from '../lib/bolumler';
 const yil = new Date().getFullYear();
+const yayinlar = BOLUMLER.filter((b) => ['/bulten/', '/teknik/', '/analiz/'].includes(b.href));
+const kaynaklar = BOLUMLER.filter((b) => ['/projeler/', '/arastirma/', '/arama/'].includes(b.href));
 ---
 
 <footer>
   <div class="sarici ic">
-    <div>
+    <div class="marka-blok">
       <span class="etiket marka">{SITE_TITLE}</span>
       <p class="aciklama">
-        Buradaki içerik kişisel araştırma amaçlıdır; yatırım tavsiyesi değildir.
+        Türkiye makro ve piyasa araştırmaları. Her sayı ölçülen katmandan gelir ve kendi
+        tarihini taşır; yorum ölçümün üstüne yazılır, altına değil.
       </p>
+      <p class="sorumluluk">{FERAGAT}</p>
     </div>
     <div class="kolon etiket">
-      <a href="/projeler/">Projeler</a>
-      <a href="/arastirma/">Dersler</a>
+      <span class="kolon-baslik">Yayınlar</span>
+      {yayinlar.map((b) => <a href={b.href}>{b.ad}</a>)}
+      <a href="/duzeltmeler/">Düzeltmeler</a>
+    </div>
+    <div class="kolon etiket">
+      <span class="kolon-baslik">Kaynaklar</span>
+      {kaynaklar.map((b) => <a href={b.href}>{b.ad}</a>)}
       <a href="/hakkinda/">Hakkında</a>
-      <a href="/arama/">Arama</a>
+    </div>
+    <div class="kolon etiket">
+      <span class="kolon-baslik">Besleme</span>
+      {BESLEMELER.map((f) => (
+        <a href={f.href} type="application/rss+xml">{f.ad.replace('TTO Trading — ', 'RSS · ')}</a>
+      ))}
     </div>
     <div class="kolon etiket sag">
-      <span>© {yil}</span>
-      <span>Markdown → Astro → Statik</span>
+      <span>© {yil} {SITE_TITLE}</span>
+      <span>İstanbul</span>
     </div>
   </div>
 </footer>
@@ -36,15 +55,25 @@ const yil = new Date().getFullYear();
     padding-top: 1.6rem;
     padding-bottom: 2.2rem;
   }
+  .marka-blok {
+    flex: 1 1 22rem;
+    max-width: 38ch;
+  }
   .marka {
     color: var(--claret);
   }
   .aciklama {
-    font-size: 0.88rem;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--ink-70);
+    margin: 0.5rem 0 0;
+  }
+  .sorumluluk {
+    font-size: 0.84rem;
     font-style: italic;
+    line-height: 1.5;
     color: var(--ink-50);
-    max-width: 34ch;
-    margin: 0.4rem 0 0;
+    margin: 0.6rem 0 0;
   }
   .kolon {
     display: flex;
@@ -52,12 +81,26 @@ const yil = new Date().getFullYear();
     gap: 0.5rem;
     color: var(--ink-70);
   }
+  .kolon-baslik {
+    color: var(--ink-50);
+    font-size: 0.6rem;
+    margin-bottom: 0.1rem;
+  }
   .kolon a {
     text-decoration: none;
+  }
+  .kolon a:hover {
+    color: var(--claret);
   }
   .sag {
     margin-left: auto;
     text-align: right;
     color: var(--ink-50);
+  }
+  @media (max-width: 640px) {
+    .sag {
+      margin-left: 0;
+      text-align: left;
+    }
   }
 </style>

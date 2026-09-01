@@ -1,0 +1,83 @@
+---
+/**
+ * Analiz gezinmesi — yazının sonunda: aynı serinin diğer yazıları ve
+ * kronolojik önceki/sonraki analiz.
+ *
+ * Seri, slug'ın tarihsiz kökünden türetilir (buyume-2026-08-31 → buyume):
+ * her çeyrek bir büyüme, her ay bir enflasyon yazısı gelir ve okur "geçen
+ * seferki ne demişti" sorusunu arşivi taramadan cevaplayabilmeli. Elle
+ * tutulan bir liste yoktur; yeni yazı slug kökünü koruduğu sürece seriye
+ * kendiliğinden girer (analiz/YAZIM.md).
+ */
+import { tarihUzun } from '../lib/bicim';
+
+export interface AnalizOzeti {
+  id: string;
+  title: string;
+  pubDate: Date;
+  ozet?: string;
+}
+interface Props {
+  seri: AnalizOzeti[];        // aynı serinin DİĞER yazıları (en yeni başta)
+  onceki: AnalizOzeti | null; // kronolojik önceki analiz (her konudan)
+  sonraki: AnalizOzeti | null;
+}
+const { seri, onceki, sonraki } = Astro.props;
+const href = (a: AnalizOzeti) => `/analiz/${a.id}/`;
+---
+
+<aside class="analiz-son">
+  {seri.length > 0 && (
+    <section class="seri">
+      <span class="etiket seri-etiket">Bu serinin diğer yazıları</span>
+      <ol>
+        {seri.map((a) => (
+          <li>
+            <a href={href(a)}>{a.title}</a>
+            <span class="tarih">{tarihUzun(a.pubDate)}</span>
+            {a.ozet && <span class="ozet">{a.ozet}</span>}
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
+  <nav class="gezinme" aria-label="Önceki ve sonraki analiz">
+    {onceki ? (
+      <a href={href(onceki)} rel="prev" class="onceki">
+        <span class="etiket">← Önceki analiz</span>
+        <span class="ad">{onceki.title}</span>
+      </a>
+    ) : <span />}
+    {sonraki ? (
+      <a href={href(sonraki)} rel="next" class="sonraki">
+        <span class="etiket">Sonraki analiz →</span>
+        <span class="ad">{sonraki.title}</span>
+      </a>
+    ) : <span />}
+  </nav>
+</aside>
+
+<style>
+  .analiz-son { max-width: var(--olcu); margin: 0 auto 3rem; }
+  .seri {
+    border: 1px solid var(--ink-30); border-left: 3px solid var(--claret);
+    background: var(--paper-2); padding: 0.9rem 1.2rem 1rem; margin-bottom: 1.6rem;
+  }
+  .seri-etiket { color: var(--claret); display: block; margin-bottom: 0.5rem; }
+  .seri ol { margin: 0; padding-left: 1.3rem; display: grid; gap: 0.55rem; }
+  .seri li::marker { font-family: var(--font-mono); font-size: 0.75rem; color: var(--claret); }
+  .seri a { font-family: var(--font-display); font-weight: 560; text-decoration: none; }
+  .seri a:hover { color: var(--claret); }
+  .tarih { display: block; font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-50); margin-top: 0.1rem; }
+  .ozet { display: block; font-size: 0.9rem; line-height: 1.5; color: var(--ink-70); margin-top: 0.2rem; }
+  .gezinme {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+    border-top: 1px solid var(--ink-30); padding-top: 1rem;
+  }
+  .gezinme a { text-decoration: none; display: grid; gap: 0.3rem; }
+  .gezinme .etiket { color: var(--ink-50); }
+  .gezinme .ad { font-family: var(--font-display); font-size: 1.02rem; font-weight: 560; line-height: 1.3; }
+  .gezinme a:hover .ad { color: var(--claret); }
+  .sonraki { text-align: right; }
+  @media (max-width: 640px) { .gezinme { grid-template-columns: 1fr; } .sonraki { text-align: left; } }
+</style>

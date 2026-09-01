@@ -1,0 +1,38 @@
+---
+/**
+ * Sayı gezinmesi — bülten ve teknik bülten sayı sayfalarının ORTAK iskeleti.
+ *
+ * İki kardeş yayın aynı satırı iki kez taşıyordu ve görünür biçimde ayrışmıştı
+ * (biri büyük harf, biri küçük). Tek bileşen: üstte "güncel sayı · arşiv · RSS"
+ * satırı, altta önceki/sonraki sayı. Sınıf adları AnalizGezinme ile aynı.
+ */
+interface Sayi { href: string; sayiNo: number; trTarih: string }
+interface Props {
+  /** 'ust' → geri satırı; 'alt' → önceki/sonraki. */
+  konum: 'ust' | 'alt';
+  bolumHref: string;
+  onceki?: Sayi | null;
+  sonraki?: Sayi | null;
+}
+const { konum, bolumHref, onceki = null, sonraki = null } = Astro.props;
+---
+
+{konum === 'ust' ? (
+  <p class="geri">
+    <a href={bolumHref}>güncel sayı</a> · <a href={`${bolumHref}arsiv/`}>arşiv</a> · <a href={`${bolumHref}rss.xml`}>RSS</a>
+  </p>
+) : (
+  <nav class="gezinme" aria-label="Önceki ve sonraki sayı">
+    {onceki ? <a href={onceki.href} class="onceki" rel="prev">← No {onceki.sayiNo} · {onceki.trTarih}</a> : <span />}
+    {sonraki ? <a href={sonraki.href} class="sonraki" rel="next">No {sonraki.sayiNo} · {sonraki.trTarih} →</a> : <span />}
+  </nav>
+)}
+
+<style>
+  .geri { margin: 1.6rem 0 0; font-family: var(--font-mono); font-size: 0.82rem; }
+  .gezinme {
+    display: flex; justify-content: space-between; gap: 1rem;
+    border-top: 1px solid var(--ink-30); margin-top: 2rem; padding-top: 0.9rem;
+    font-family: var(--font-mono); font-size: 0.82rem;
+  }
+</style>

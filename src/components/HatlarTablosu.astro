@@ -14,6 +14,7 @@
  * günlere aittir; burada gösterilen, tabloda yazan büyüklüğün tarihidir.
  */
 import { hatManseti } from '../lib/anaSayfa';
+import { yasMetni } from '../lib/bicim';
 
 interface Giris {
   slug: string;
@@ -35,12 +36,13 @@ const satirlar = hatlar
 
 <div class="ht-sarici">
   <table class="ht-tablo">
+    <caption class="gorunmez">Veri hatları: manşet büyüklüğü, değeri ve o değerin kendi tarihi</caption>
     <thead>
       <tr>
-        <th class="ht-hat">Hat</th>
-        <th class="ht-olcu">Manşet büyüklüğü</th>
-        <th class="ht-deger">Değer</th>
-        <th class="ht-tarih">Veri tarihi</th>
+        <th class="ht-hat" scope="col">Hat</th>
+        <th class="ht-olcu" scope="col">Manşet büyüklüğü</th>
+        <th class="ht-deger" scope="col">Değer</th>
+        <th class="ht-tarih" scope="col">Veri tarihi</th>
       </tr>
     </thead>
     <tbody>
@@ -58,9 +60,7 @@ const satirlar = hatlar
             </td>
             <td class="ht-tarih">
               {h.tarih || '—'}
-              {h.yas !== null && h.yas >= 0 && (
-                <span class="ht-yas">{h.yas === 0 ? 'bugün' : `${h.yas} gün`}</span>
-              )}
+              {yasMetni(h.yas) && <span class="ht-yas">{yasMetni(h.yas)}</span>}
             </td>
           </tr>
         ))
@@ -157,9 +157,12 @@ const satirlar = hatlar
     letter-spacing: 0.05em;
   }
 
-  @media (max-width: 700px) {
-    .ht-olcu {
-      display: none;
-    }
+  /* Telefonda üç sütun da kırılmaz olunca değer ekran dışına düşüyordu;
+     kaydırma son çare, önce hat adı kırılır ve tarih küçülür. */
+  @media (max-width: 640px) {
+    .ht-olcu { display: none; }
+    .ht-hat a { white-space: normal; }
+    .ht-deger { padding-right: 0.8rem; font-size: 0.92rem; }
+    .ht-tarih { font-size: 0.72rem; }
   }
 </style>

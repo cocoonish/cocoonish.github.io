@@ -1,0 +1,113 @@
+---
+/**
+ * Düzeltmeler — yayımlanmış bir sayının sonradan değiştiği her yer, tek listede.
+ *
+ * Okur eski sayıya göre karar vermiş olabilir; düzeltme bu yüzden metnin
+ * içinde kalır ("yayımlanan X yerine gerçek değer Y") ve burada bir kez daha,
+ * tarihiyle listelenir. Kaynak yayının kendi kaydıdır (bülten, teknik analiz, analiz): yazan taraf bir
+ * düzeltme yaptığında sayının hangi alanda, neden ve neye değiştiğini bültene
+ * yazar; bu sayfa o kayıtları toplar. Elle tutulan ikinci bir liste yoktur.
+ */
+import Base from '../layouts/Base.astro';
+import { bultenler, teknikler } from '../lib/yayinlar';
+import { getCollection } from 'astro:content';
+import { tarihUzun } from '../lib/bicim';
+
+interface Duzeltme {
+  tarih: string;      // düzeltmenin yapıldığı gün (YYYY-MM-DD)
+  alan: string;       // neyin düzeltildiği ("Brent günlük değişim, 28.08 kapanışı")
+  eski: string;       // yayımlanan değer
+  yeni: string;       // doğru değer
+  sebep?: string;     // tek cümle
+  kaynak: { href: string; ad: string };
+}
+
+const kayitlar: Duzeltme[] = [];
+for (const k of bultenler()) {
+  for (const d of (k.b.duzeltmeler ?? []) as any[]) {
+    if (!d || !d.alan) continue;
+    kayitlar.push({
+      tarih: d.tarih ?? k.tarih,
+      alan: String(d.alan),
+      eski: String(d.eski ?? ''),
+      yeni: String(d.yeni ?? ''),
+      sebep: d.sebep ? String(d.sebep) : undefined,
+      kaynak: { href: k.href, ad: `${k.haftalik ? 'Haftaya bakış' : 'Bülten'} · ${k.trTarih}` },
+    });
+  }
+}
+for (const k of teknikler()) {
+  for (const d of (k.t.duzeltmeler ?? []) as any[]) {
+    if (!d || !d.alan) continue;
+    kayitlar.push({
+      tarih: d.tarih ?? k.tarih, alan: String(d.alan), eski: String(d.eski ?? ''), yeni: String(d.yeni ?? ''),
+      sebep: d.sebep ? String(d.sebep) : undefined,
+      kaynak: { href: k.href, ad: `Teknik analiz · ${k.trTarih}` },
+    });
+  }
+}
+for (const a of await getCollection('analiz')) {
+  for (const d of ((a.data as any).duzeltmeler ?? []) as any[]) {
+    if (!d || !d.alan) continue;
+    kayitlar.push({
+      tarih: d.tarih, alan: String(d.alan), eski: String(d.eski ?? ''), yeni: String(d.yeni ?? ''),
+      sebep: d.sebep ? String(d.sebep) : undefined,
+      kaynak: { href: `/analiz/${a.id}/`, ad: `Analiz · ${a.data.title}` },
+    });
+  }
+}
+kayitlar.sort((a, b) => (a.tarih < b.tarih ? 1 : -1));
+---
+
+<Base title="Düzeltmeler" description="Yayımlanmış bir sayının sonradan düzeltildiği her kayıt: tarih, eski değer, yeni değer ve sebep.">
+  <header class="liste-baslik yuksel">
+    <p class="etiket kicker">Yayın ilkeleri</p>
+    <h1>Düzeltmeler</h1>
+    <p class="alt">
+      Bir sayı yayımlandıktan sonra yanlış olduğu anlaşılırsa sessizce değiştirilmez:
+      metnin içinde "yayımlanan X yerine gerçek değer Y" biçiminde düzeltilir ve burada
+      tarihiyle listelenir. Okur, okuduğu günkü sayıya göre karar vermiş olabilir;
+      düzeltmenin görünür olması o kararın hesabını verir.
+    </p>
+  </header>
+
+  {kayitlar.length === 0 ? (
+    <p class="bos">Şimdiye kadar kayıtlı bir düzeltme yok. Bu satır, düzeltme yapıldığı gün kendiliğinden değişir.</p>
+  ) : (
+    <div class="sarici-tablo">
+      <table class="duzeltmeler">
+        <thead>
+          <tr><th>Tarih</th><th>Ne düzeltildi</th><th>Yayımlanan</th><th>Doğrusu</th><th>Sebep</th><th>Yayın</th></tr>
+        </thead>
+        <tbody>
+          {kayitlar.map((d) => (
+            <tr>
+              <td class="mono">{tarihUzun(d.tarih)}</td>
+              <td>{d.alan}</td>
+              <td class="mono eski">{d.eski || '—'}</td>
+              <td class="mono yeni">{d.yeni || '—'}</td>
+              <td class="sebep">{d.sebep ?? ''}</td>
+              <td><a href={d.kaynak.href}>{d.kaynak.ad}</a></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</Base>
+
+<style>
+  .liste-baslik { padding: 3rem 0 2rem; max-width: 60ch; }
+  .kicker { color: var(--claret); margin: 0 0 0.8rem; }
+  h1 { font-family: var(--font-display); font-variation-settings: 'opsz' 72; font-size: clamp(2rem, 4.4vw, 3rem); font-weight: 540; letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 0.9rem; }
+  .alt { color: var(--ink-70); line-height: 1.6; margin: 0; }
+  .bos { color: var(--ink-70); font-style: italic; }
+  .sarici-tablo { overflow-x: auto; border-top: 1px solid var(--ink); }
+  .duzeltmeler { width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 46rem; }
+  thead th { font-family: var(--font-mono); font-size: 0.64rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-50); text-align: left; padding: 0.5rem 1rem 0.5rem 0; border-bottom: 1px solid var(--ink-30); }
+  tbody td { padding: 0.6rem 1rem 0.6rem 0; border-bottom: 1px dotted var(--ink-15); vertical-align: top; line-height: 1.45; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .eski { text-decoration: line-through; color: var(--ink-50); }
+  .yeni { color: var(--claret); font-weight: 600; }
+  .sebep { color: var(--ink-70); font-size: 0.88rem; }
+</style>
