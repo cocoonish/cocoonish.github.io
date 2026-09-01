@@ -1,0 +1,676 @@
+---
+title: '1 Eylül 2026 İTO ve TÜFE — İstanbul''ın Endeksinden Türkiye Enflasyonuna Ne Okunur'
+description: 'İTO''nun İstanbul endeksi TÜİK''ten birkaç gün önce çıkıyor ve piyasada "öncü gösterge" diye okunuyor. Bu yazı iki seriyi otuz aylık ortak örneklemde ölçüyor. Öncü değil: bir ay önceden korelasyon −0,015. Aynı ayın ikizi: eşzamanlı korelasyon 0,874, R² 0,764. İTO sistematik olarak yukarıda geliyor — son 24 ayda ortalama +0,39 puan, medyan +0,36, ayların %79''unda pozitif, t=4,30 (p=0,0003). Regresyon eğimi 0,873 ± 0,092 ve 1''den ayırt edilemiyor (p=0,18), yani ilişki "birebir artı sabit kaydırma". Koşullu eşleme tablosu ve hesap aracı: İTO şu geldiyse TÜFE nereye düşer, %95 öngörü aralığıyla. Altı kuralın örneklem DIŞI yarışı: takvim ayı düzeltmesi iki pencerede de en kötüsü (0,125 puan zarar), sıralama pencereye duyarlı, yani "en iyi kural" yok. Anket kıyası: İTO kuralı PKA nowcast''ini geçmiyor, eşli fark −0,093 puan (p=0,41). Asıl işe yarayan kanal sürpriz: İTO ankete göre 1 puan yukarıdaysa TÜFE ortalama 0,55 puan yukarıda geliyor (t=4,32, R²=0,40, işaret uyumu %70). Yıllık makas 10,32 puandan 3,44 puana indi.'
+pubDate: 2026-09-01
+tags: ['enflasyon', 'tüfe', 'ito', 'nowcast', 'öncü gösterge', 'sürpriz', 'anket', 'istatistik']
+durum: 'aktif'
+kaynak: 'TCMB EVDS: İTO İstanbul Ücretliler Geçinme Endeksi (TP.FG.IST1.23) ve TÜFE Türkiye geneli (TP.TUKFIY2025.GENEL), Ocak 2024 – Temmuz 2026 aylık endeks seviyeleri; TCMB Piyasa Katılımcıları Anketi cari ay TÜFE beklentisi (TP.PKAUO.S01.A.U). Bütün ölçümler bu sitenin Enflasyon hattında (veri.py → metrik.py → grafik.py → ozet_uret.py) yeniden koşuluyor; sayfadaki oynak sayıların hiçbiri elle yazılmadı.'
+ozet: 'İTO öncü gösterge değil, aynı ayın ikinci ölçümü. Sistematik olarak yukarıda geliyor ve farkın büyüklüğü ölçülebilir; ama farkı bir kurala çevirmenin getirisi, sanılanın çok altında. İTO''nun asıl bilgi taşıdığı yer seviye değil SÜRPRİZ: ankete göre sapması, TÜFE''nin ankete göre sapmasının yarısını öngörüyor.'
+seviye: 'orta'
+onkosul: []
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+import ItoHesaplayici from '../../components/ItoHesaplayici.astro';
+
+<div class="yonetici">
+  <span class="etiket">Yönetici özeti</span>
+
+  <p class="tez">İTO'nun İstanbul endeksi TÜİK'ten birkaç gün önce çıktığı için piyasada
+  <b>öncü gösterge</b> muamelesi görüyor. Ölçüm bunu desteklemiyor: bir ay önceki İTO ile
+  bugünkü TÜFE arasındaki korelasyon <b><Deger proje="enflasyon" anahtar="ito_r_onceden" ondalik={3} isaret={true}>−0,015</Deger></b>,
+  yani sıfır. İTO gelecek ayı değil, <b>aynı ayı</b> ölçüyor — ve onu iyi ölçüyor
+  (r = <Deger proje="enflasyon" anahtar="itp_r" ondalik={3}>0,874</Deger>).
+  Sistematik olarak da <b>yukarıda</b> geliyor. Ama farkı bir kurala çevirmenin
+  getirisi küçük: hangi kuralı kullanırsanız kullanın, tipik hata
+  <b>0,4–0,5 puan</b> bandında kalıyor. İTO'nun gerçekten bilgi taşıdığı yer seviye
+  değil, <b>ankete göre sapması</b>.</p>
+
+  <table>
+    <tbody>
+      <tr>
+        <td>İTO öncü mü</td>
+        <td><b>Hayır.</b> Bir ay önceden korelasyon
+        <Deger proje="enflasyon" anahtar="ito_r_onceden" ondalik={3} isaret={true}>−0,015</Deger>.
+        Eşzamanlı korelasyon <Deger proje="enflasyon" anahtar="itp_r" ondalik={3}>0,874</Deger>,
+        sıra korelasyonu <Deger proje="enflasyon" anahtar="itp_spearman" ondalik={3}>0,851</Deger>,
+        R² = <Deger proje="enflasyon" anahtar="itp_r2" ondalik={3}>0,764</Deger>. Doğru sözcük
+        "öncü" değil <b>nowcast</b>.</td>
+      </tr>
+      <tr>
+        <td>Fark ne kadar</td>
+        <td>Son <Deger proje="enflasyon" anahtar="itp_pencere" ondalik={0}>24</Deger> ayda
+        ortalama <b><Deger proje="enflasyon" anahtar="itp_ort" ondalik={2} isaret={true}>+0,39</Deger> puan</b>
+        (medyan <Deger proje="enflasyon" anahtar="itp_medyan" ondalik={2} isaret={true}>+0,36</Deger>),
+        standart sapma <Deger proje="enflasyon" anahtar="itp_std" ondalik={2}>0,44</Deger>.
+        İTO ayların %<Deger proje="enflasyon" anahtar="itp_ustte_pay" ondalik={0}>79</Deger>'unda
+        yukarıda. Sıfırdan farkı <b>tesadüf değil</b>: t =
+        <Deger proje="enflasyon" anahtar="itp_t" ondalik={2}>4,30</Deger>, p =
+        <Deger proje="enflasyon" anahtar="itp_p" ondalik={4}>0,0003</Deger>.</td>
+      </tr>
+      <tr>
+        <td>İlişkinin biçimi</td>
+        <td>TÜFE = <Deger proje="enflasyon" anahtar="itp_sabit" ondalik={3}>0,032</Deger> +
+        <Deger proje="enflasyon" anahtar="itp_egim" ondalik={3}>0,873</Deger> × İTO.
+        Eğimin standart hatası <Deger proje="enflasyon" anahtar="itp_se_egim" ondalik={3}>0,092</Deger>;
+        <b>1'den ayırt edilemiyor</b> (t = <Deger proje="enflasyon" anahtar="itp_t_bir" ondalik={2} isaret={true}>−1,38</Deger>,
+        p = <Deger proje="enflasyon" anahtar="itp_p_bir" ondalik={4}>0,1782</Deger>). Yani ilişki
+        <b>birebir geçiş + sabit kaydırma</b>.</td>
+      </tr>
+      <tr>
+        <td>İTO x geldiyse TÜFE ne</td>
+        <td>Nokta tahmin İTO'dan yaklaşık
+        <Deger proje="enflasyon" anahtar="itp_ort" ondalik={2}>0,39</Deger> puan aşağıda; ama
+        <b>%95 öngörü aralığı ±1,2 puan</b> genişliğinde. Örnek: İTO %2,50 gelirse TÜFE
+        beklentisi %<Deger proje="enflasyon" anahtar="itp_es25" ondalik={2}>2,22</Deger>,
+        aralık %<Deger proje="enflasyon" anahtar="itp_es25_alt" ondalik={2}>1,05</Deger> –
+        %<Deger proje="enflasyon" anahtar="itp_es25_ust" ondalik={2}>3,38</Deger>.</td>
+      </tr>
+      <tr>
+        <td>Hangi kural en iyisi</td>
+        <td><b>Belli değil ve bu bir bulgudur.</b> Altı kural örneklem DIŞI yarıştırıldı;
+        <Deger proje="enflasyon" anahtar="itp_siralama_metin">sıralama pencereye duyarlı — hiçbir kural için 'en iyisi budur' denemez</Deger>.
+        Tek dayanıklı sonuç olumsuz olanı: <b>takvim ayı düzeltmesi iki pencerede de en
+        kötüsü</b>, hatayı <Deger proje="enflasyon" anahtar="itp_takvimli_zarar" ondalik={3} isaret={true}>+0,125</Deger>
+        puan büyütüyor.</td>
+      </tr>
+      <tr>
+        <td>Anketten iyi mi</td>
+        <td><b>Hayır — eşit sayılır.</b> Aynı
+        <Deger proje="enflasyon" anahtar="itp_anket_n" ondalik={0}>18</Deger> ayda PKA cari ay
+        nowcast'inin ortalama mutlak hatası
+        <Deger proje="enflasyon" anahtar="itp_pka_mae" ondalik={3}>0,481</Deger> puan, İTO
+        kuralınınki <Deger proje="enflasyon" anahtar="itp_ito_mae" ondalik={3}>0,388</Deger>.
+        Eşli fark <Deger proje="enflasyon" anahtar="itp_esli" ondalik={3} isaret={true}>−0,093</Deger> puan,
+        p = <Deger proje="enflasyon" anahtar="itp_esli_p" ondalik={3}>0,414</Deger>:
+        <Deger proje="enflasyon" anahtar="itp_anket_hukum">aradaki fark istatistiksel olarak ayırt edilemiyor</Deger>.</td>
+      </tr>
+      <tr>
+        <td>Peki ne işe yarıyor</td>
+        <td><b>Sürpriz kanalı.</b> İTO ankete göre 1 puan yukarıdaysa TÜFE ortalama
+        <b><Deger proje="enflasyon" anahtar="itp_s_egim" ondalik={3}>0,547</Deger> puan</b>
+        yukarıda geliyor (t = <Deger proje="enflasyon" anahtar="itp_s_t" ondalik={2}>4,32</Deger>,
+        R² = <Deger proje="enflasyon" anahtar="itp_s_r2" ondalik={2}>0,40</Deger>). İşaret uyumu
+        %<Deger proje="enflasyon" anahtar="itp_s_uyum" ondalik={0}>70</Deger>; sapma 0,25 puanı
+        aşınca %<Deger proje="enflasyon" anahtar="itp_s_uyum25" ondalik={0}>74</Deger>.</td>
+      </tr>
+      <tr>
+        <td>Kanıtın gücü</td>
+        <td><b>Orta.</b> Ortak örneklem yalnız
+        <Deger proje="enflasyon" anahtar="itp_n" ondalik={0}>30</Deger> ay
+        (<Deger proje="enflasyon" anahtar="itp_ilk_ay">2024-02</Deger> –
+        <Deger proje="enflasyon" anahtar="itp_son_ay">2026-07</Deger>) — EVDS'te İTO serisi
+        Ocak 2024'te başlıyor. Ortalama fark ve sürpriz geçişi bu boyda bile net;
+        kural sıralaması ve takvim ayı profili <b>değil</b>.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <ul class="rakamlar">
+    <li><b><Deger proje="enflasyon" anahtar="itp_ort" ondalik={2} isaret={true}>+0,39</Deger> puan</b><span>ortalama fark (İTO − TÜFE), 24 ay</span></li>
+    <li><b>%<Deger proje="enflasyon" anahtar="itp_ustte_pay" ondalik={0}>79</Deger></b><span>İTO'nun yukarıda geldiği ay payı</span></li>
+    <li><b><Deger proje="enflasyon" anahtar="itp_egim" ondalik={3}>0,873</Deger></b><span>regresyon eğimi (1'den ayırt edilemiyor)</span></li>
+    <li><b><Deger proje="enflasyon" anahtar="itp_s_egim" ondalik={3}>0,547</Deger></b><span>sürprizden sürprize geçiş</span></li>
+    <li><b><Deger proje="enflasyon" anahtar="itp_mae_sabit" ondalik={3}>0,388</Deger> puan</b><span>sabit kaydırmanın örneklem dışı hatası</span></li>
+    <li><b><Deger proje="enflasyon" anahtar="itp_y_son" ondalik={2}>3,44</Deger> puan</b><span>yıllık makas (zirve <Deger proje="enflasyon" anahtar="itp_y_maks" ondalik={2}>10,32</Deger>)</span></li>
+  </ul>
+</div>
+
+Her ayın başında aynı sahne kuruluyor. İstanbul Ticaret Odası, İstanbul için hesapladığı
+geçinme endeksini TÜİK'in Türkiye geneli TÜFE'sinden birkaç gün önce açıklıyor; ekranlarda
+"öncü veri geldi" cümlesi dolaşıyor; herkes o sayıdan ertesi günün TÜFE'sini okumaya
+çalışıyor. Bu yazı o okumayı **ölçüyor**: iki seri arasındaki fark ay ay nasıl geliyor,
+farkın kendisi ne kadar düzenli, ve İTO'nun şu ya da bu gelmesinden TÜFE için ne
+çıkarılabilir.
+
+Cevabın üç katmanı var ve üçü de sezginin söylediğinden farklı. Birincisi, İTO **öncü
+gösterge değil**. İkincisi, İTO ile TÜFE arasındaki fark **gerçek ve sistematik** — ama onu
+bir tahmin kuralına çevirmenin getirisi, gösterişli R²'nin vaat ettiğinin çok altında.
+Üçüncüsü, İTO'nun gerçekten yeni bilgi taşıdığı yer sayının kendisi değil, **piyasanın
+beklediği sayıya göre nerede durduğu**.
+
+---
+
+## Bölüm 0 — İki endeks, iki sepet, tek ay
+
+Karşılaştırmaya girmeden önce neyi neyle karşılaştırdığımızı yazmak gerekiyor, çünkü bu
+iki seri "aynı şeyin iki ölçümü" değil.
+
+**TÜFE**, TÜİK'in Türkiye geneli tüketici fiyat endeksi. Sepet, Hanehalkı Bütçe
+Anketi'nden gelen ulusal tüketim paylarıyla ağırlıklandırılıyor; fiyatlar 26 istatistikî
+bölgede toplanıyor; yayım ertesi ayın 3'ünde saat 10.00'da.
+
+**İTO endeksi**, İstanbul Ticaret Odası'nın İstanbul için hesapladığı geçinme endeksi.
+Coğrafya tek şehir, sepet farklı bir harcama yapısından türetiliyor, fiyat toplama takvimi
+TÜİK'inkiyle aynı değil. EVDS'te `TP.FG.IST1.23` koduyla duruyor ve **Ocak 2024'te
+başlıyor** — bu yazının örneklem sınırını belirleyen şey de bu.
+
+Ortak olan tek şey belirleyici: **ikisi de aynı ayı ölçüyor**. Aynı kur hareketine, aynı
+yönetilen fiyat ayarlamasına, aynı asgari ücret zammına, aynı okul dönemi başlangıcına
+maruz kalıyorlar. İTO'yu değerli yapan şey İstanbul'un Türkiye'yi öncelemesi değil; aynı
+şoku birkaç gün önce raporlaması.
+
+<div class="kutu">
+
+**"Öncü gösterge" ifadesi neden yanlış.** Öncü gösterge, *gelecek* dönemin değerini
+öngören göstergedir. İTO'nun bir ay önceki okumasıyla bugünkü TÜFE arasındaki korelasyon
+<Deger proje="enflasyon" anahtar="ito_r_onceden" ondalik={3} isaret={true}>−0,015</Deger> —
+işaretiyle birlikte, sıfır. Aynı ayın okumasıyla korelasyon ise
+<Deger proje="enflasyon" anahtar="itp_r" ondalik={3}>0,874</Deger>. İTO geleceği değil,
+**henüz yayımlanmamış bugünü** söylüyor. İstatistikte bunun adı öncü gösterge değil
+*nowcast*: yayım gecikmesi yüzünden bilinmeyen ama zaten gerçekleşmiş bir büyüklüğün
+tahmini.
+
+</div>
+
+---
+
+## Bölüm 1 — Son iki yılın ay ay farkı
+
+<GrafikEmbed
+  src="/projeler/enflasyon/10_ito_tufe.html"
+  baslik="İTO ile TÜFE: aylık okuma, fark ve yıllık yakınsama"
+  no="01"
+  yukseklik={1349}
+/>
+
+Üst panel iki seriyi yan yana koyuyor. Gözle görülen şey ilişkinin sıkılığı: çubuklar
+neredeyse aynı ritimle iniyor çıkıyor. Orta panel farkı tek başına gösteriyor — asıl konu
+orada.
+
+Son <Deger proje="enflasyon" anahtar="itp_pencere" ondalik={0}>24</Deger> ayın ölçümü:
+
+| Ölçü | Değer |
+|---|---|
+| Ortalama fark (İTO − TÜFE) | <Deger proje="enflasyon" anahtar="itp_ort" ondalik={2} isaret={true}>+0,39</Deger> puan |
+| Medyan fark | <Deger proje="enflasyon" anahtar="itp_medyan" ondalik={2} isaret={true}>+0,36</Deger> puan |
+| Standart sapma | <Deger proje="enflasyon" anahtar="itp_std" ondalik={2}>0,44</Deger> puan |
+| Ortalama **mutlak** fark | <Deger proje="enflasyon" anahtar="itp_mutlak_ort" ondalik={2}>0,48</Deger> puan |
+| En düşük | <Deger proje="enflasyon" anahtar="itp_min" ondalik={2} isaret={true}>−0,44</Deger> puan (<Deger proje="enflasyon" anahtar="itp_min_ay">2026-04</Deger>) |
+| En yüksek | <Deger proje="enflasyon" anahtar="itp_maks" ondalik={2} isaret={true}>+1,39</Deger> puan (<Deger proje="enflasyon" anahtar="itp_maks_ay">2025-04</Deger>) |
+| İTO'nun yukarıda geldiği ay payı | %<Deger proje="enflasyon" anahtar="itp_ustte_pay" ondalik={0}>79</Deger> |
+| Sıfırdan farkın anlamlılığı | t = <Deger proje="enflasyon" anahtar="itp_t" ondalik={2}>4,30</Deger>, p = <Deger proje="enflasyon" anahtar="itp_p" ondalik={4}>0,0003</Deger> |
+
+Buradaki en önemli satır sonuncusu. Ortalama farkın **artı** olması tek başına bir şey
+söylemez; on üç ay artı, on bir ay eksi gelen bir seride de ortalama küçük bir artı
+çıkabilir. Sınamanın sorduğu şu: bu ortalama, farkların salınım genliğine kıyasla yeterince
+büyük mü? Cevap evet — t istatistiği <Deger proje="enflasyon" anahtar="itp_t" ondalik={2}>4,30</Deger>
+ve bu genlikte bir ortalamanın gerçek fark sıfırken tesadüfen çıkma olasılığı binde üç.
+
+Son on iki ayın kendisi:
+
+| Ay | İTO | TÜFE | Fark |
+|---|---|---|---|
+| Ağustos 2025 | %1,84 | %2,04 | −0,20 |
+| Eylül 2025 | %3,19 | %3,23 | −0,04 |
+| Ekim 2025 | %3,31 | %2,55 | +0,76 |
+| Kasım 2025 | %1,19 | %0,87 | +0,33 |
+| Aralık 2025 | %1,23 | %0,89 | +0,34 |
+| Ocak 2026 | %4,56 | %4,84 | −0,28 |
+| Şubat 2026 | %3,85 | %2,96 | +0,88 |
+| Mart 2026 | %2,97 | %1,94 | +1,03 |
+| Nisan 2026 | %3,74 | %4,18 | −0,44 |
+| Mayıs 2026 | %1,52 | %1,71 | −0,19 |
+| Haziran 2026 | %1,14 | %0,99 | +0,16 |
+| Temmuz 2026 | %2,06 | %1,78 | +0,28 |
+
+{/* sinav-muaf: itp_tablo — tablo satırları ito_profil.json'daki tabloyla aynı kaynaktan gelir; şekil 01 orta paneli canlı hâlini çizer */}
+
+Tablo, sabit bir kaydırma değil **bir dağılım** gösteriyor. Mart 2026'da fark +1,03 puandı,
+bir ay sonra −0,44. Ortalamayı tek bir aya uygulamak, ortalamanın etrafındaki bu genliği
+görmezden gelmek olur — Bölüm 4'teki öngörü aralığının bu kadar geniş çıkmasının sebebi de
+budur.
+
+---
+
+## Bölüm 2 — İlişkinin biçimi: eğim 1 mi?
+
+Farkı bir kurala çevirmenin iki yolu var. Biri **kaydırma**: TÜFE'yi İTO'dan sabit bir
+miktar çıkararak tahmin etmek. Diğeri **regresyon**: TÜFE'yi İTO'nun doğrusal fonksiyonu
+olarak yazmak.
+
+$$\text{TÜFE}_t = \alpha + \beta \cdot \text{İTO}_t + \varepsilon_t$$
+
+<Deger proje="enflasyon" anahtar="itp_n" ondalik={0}>30</Deger> aylık ortak örneklemde
+tahmin:
+
+$$\hat\alpha = 0{,}032 \quad (\text{s.h. } 0{,}283), \qquad
+\hat\beta = 0{,}873 \quad (\text{s.h. } 0{,}092)$$
+
+$$R^2 = 0{,}764, \qquad \hat\sigma_\varepsilon = 0{,}559 \text{ puan}$$
+
+{/* sinav-muaf: itp_egim — formül bloğu; katsayıların canlı hâli hemen aşağıdaki paragrafta <Deger> ile basılıyor */}
+
+Katsayıların canlı hâli: sabit <Deger proje="enflasyon" anahtar="itp_sabit" ondalik={3}>0,032</Deger>
+(s.h. <Deger proje="enflasyon" anahtar="itp_se_sabit" ondalik={3}>0,283</Deger>), eğim
+<Deger proje="enflasyon" anahtar="itp_egim" ondalik={3}>0,873</Deger>
+(s.h. <Deger proje="enflasyon" anahtar="itp_se_egim" ondalik={3}>0,092</Deger>),
+R² = <Deger proje="enflasyon" anahtar="itp_r2" ondalik={3}>0,764</Deger>, artık standart
+sapması <Deger proje="enflasyon" anahtar="itp_se_artik" ondalik={3}>0,559</Deger> puan.
+
+Şimdi asıl soru. Eğim 0,873 çıktı — 1'den küçük. Bunu olduğu gibi kullanmak, "İTO ne kadar
+yüksek gelirse TÜFE'nin ona göre o kadar geride kalacağı" gibi bir yapı varsaymak demek.
+Peki bu yapı veride var mı, yoksa 30 gözlemin gürültüsü mü?
+
+$$t_{\beta=1} = \frac{\hat\beta - 1}{\text{s.h.}(\hat\beta)}
+= \frac{0{,}873 - 1}{0{,}092} = -1{,}38$$
+
+Karşılık gelen p değeri
+<Deger proje="enflasyon" anahtar="itp_p_bir" ondalik={4}>0,1782</Deger>. Yani **eğim 1'den
+istatistiksel olarak ayırt edilemiyor**. Veri, "birebir geçiş artı sabit kaydırma"
+hipotezini reddetmiyor.
+
+<div class="kutu">
+
+**Bu neden önemli.** Eğim 1 kabul edildiğinde model şuna iner:
+
+$$\text{TÜFE}_t = \text{İTO}_t - k + \varepsilon_t$$
+
+Tahmin edilecek tek bir parametre kalır: ortalama fark $k$. Bir parametre, iki parametreden
+daha az örneklem gürültüsü taşır ve küçük örneklemde bu fark hissedilir. Bölüm 5'teki
+örneklem dışı yarışta sabit kaydırmanın regresyonu geçmesinin sebebi tam olarak budur —
+regresyon, veride olduğu gösterilemeyen bir eğimi tahmin etmeye çalışırken kendi hatasını
+büyütüyor.
+
+</div>
+
+İlişkinin gücünü doğrusallıktan bağımsız görmek için sıra korelasyonu da ölçüldü:
+Spearman ρ = <Deger proje="enflasyon" anahtar="itp_spearman" ondalik={3}>0,851</Deger>.
+Yani İTO'nun yüksek geldiği aylar TÜFE'nin de yüksek geldiği aylar; ilişki tek bir aykırı
+gözlemden gelmiyor.
+
+---
+
+## Bölüm 3 — Fark sabit mi, oransal mı?
+
+Enflasyon iki yılda gerilerken fark da daraldı. 12 aylık kayan ortalama fark
+<Deger proje="enflasyon" anahtar="itp_o_kayan_ilk" ondalik={3} isaret={true}>+0,337</Deger>
+puandan <Deger proje="enflasyon" anahtar="itp_o_kayan_maks" ondalik={3} isaret={true}>+0,631</Deger>
+puanlık zirveye çıktı ve son okumada
+<Deger proje="enflasyon" anahtar="itp_o_kayan_son" ondalik={3} isaret={true}>+0,219</Deger>
+puana indi. Bu, farkın **sabit bir puan** değil **sabit bir oran** olabileceğini
+düşündürüyor: İTO, TÜFE'nin yaklaşık
+<Deger proje="enflasyon" anahtar="itp_o_oran_medyan" ondalik={3}>0,840</Deger> katının
+tersi kadar üstünde geliyorsa, enflasyon düştükçe aradaki **puan** farkı da mekanik olarak
+küçülür.
+
+Sezgi ikna edici. Ölçelim:
+
+$$(\text{İTO}_t - \text{TÜFE}_t) = a + b \cdot \text{İTO}_t + u_t$$
+
+Tahmin: $b$ = <Deger proje="enflasyon" anahtar="itp_o_egim" ondalik={3}>0,127</Deger>
+(s.h. <Deger proje="enflasyon" anahtar="itp_o_se" ondalik={3}>0,092</Deger>),
+t = <Deger proje="enflasyon" anahtar="itp_o_t" ondalik={2}>1,38</Deger>,
+p = <Deger proje="enflasyon" anahtar="itp_o_p" ondalik={4}>0,1782</Deger>. Hüküm:
+<Deger proje="enflasyon" anahtar="itp_o_hukum">seviye bağımlılığı bu örneklemde istatistiksel olarak doğrulanamıyor</Deger>.
+
+Dikkatli okur bir şey fark etmiş olmalı: bu t istatistiği Bölüm 2'dekinin **aynısı**. Bu bir
+tesadüf değil, cebirsel bir özdeşlik. Fark $=$ İTO $-$ TÜFE olduğuna göre
+
+$$\text{fark}_t = \text{İTO}_t - (\alpha + \beta\,\text{İTO}_t) - \varepsilon_t
+= -\alpha + (1-\beta)\,\text{İTO}_t - \varepsilon_t$$
+
+yani $b = 1 - \beta$ ve $b$'nin sıfırdan farklı olup olmadığı sorusu, $\beta$'nın 1'den
+farklı olup olmadığı sorusunun ta kendisidir. "Eğim 1 mi?" ile "fark oransal mı?" **tek bir
+sınamadır** ve o sınama her iki yönde de reddedemiyor.
+
+Pratik sonuç: kayan ortalamanın daralması gerçek, ama bu daralmayı seviyeye bağlayan
+katsayı 30 gözlemde ayırt edilemiyor. Kural kurarken bunun karşılığı şudur — sabit kaydırma
+kullanılacaksa kaydırmanın kendisi **genişleyen pencereyle güncellenmeli**, koda gömülü bir
+"0,39" olarak durmamalı. Bu yazının ölçüm katmanı zaten böyle çalışıyor: her koşuda yeniden
+tahmin ediliyor.
+
+---
+
+## Bölüm 4 — Koşullu eşleme: İTO şu geldiyse TÜFE nereye düşer
+
+Asıl sorunun cevabı bu bölümde. Aşağıdaki tablo, her İTO okuması için TÜFE'nin nokta
+tahminini ve **%95 öngörü aralığını** veriyor.
+
+<GrafikEmbed
+  src="/projeler/enflasyon/11_ito_kural.html"
+  baslik="İTO okumasından TÜFE beklentisine: eşleme, kural yarışı, sürpriz kanalı"
+  no="02"
+  yukseklik={1349}
+/>
+
+| İTO aylık | TÜFE beklentisi | %95 alt | %95 üst |
+|---|---|---|---|
+| %1,00 | %<Deger proje="enflasyon" anahtar="itp_es10" ondalik={2}>0,91</Deger> | %<Deger proje="enflasyon" anahtar="itp_es10_alt" ondalik={2}>−0,31</Deger> | %<Deger proje="enflasyon" anahtar="itp_es10_ust" ondalik={2}>2,12</Deger> |
+| %1,50 | %<Deger proje="enflasyon" anahtar="itp_es15" ondalik={2}>1,34</Deger> | %<Deger proje="enflasyon" anahtar="itp_es15_alt" ondalik={2}>0,15</Deger> | %<Deger proje="enflasyon" anahtar="itp_es15_ust" ondalik={2}>2,53</Deger> |
+| %2,00 | %<Deger proje="enflasyon" anahtar="itp_es20" ondalik={2}>1,78</Deger> | %<Deger proje="enflasyon" anahtar="itp_es20_alt" ondalik={2}>0,60</Deger> | %<Deger proje="enflasyon" anahtar="itp_es20_ust" ondalik={2}>2,95</Deger> |
+| %2,50 | %<Deger proje="enflasyon" anahtar="itp_es25" ondalik={2}>2,22</Deger> | %<Deger proje="enflasyon" anahtar="itp_es25_alt" ondalik={2}>1,05</Deger> | %<Deger proje="enflasyon" anahtar="itp_es25_ust" ondalik={2}>3,38</Deger> |
+| %3,00 | %<Deger proje="enflasyon" anahtar="itp_es30" ondalik={2}>2,65</Deger> | %<Deger proje="enflasyon" anahtar="itp_es30_alt" ondalik={2}>1,49</Deger> | %<Deger proje="enflasyon" anahtar="itp_es30_ust" ondalik={2}>3,82</Deger> |
+| %3,50 | %<Deger proje="enflasyon" anahtar="itp_es35" ondalik={2}>3,09</Deger> | %<Deger proje="enflasyon" anahtar="itp_es35_alt" ondalik={2}>1,92</Deger> | %<Deger proje="enflasyon" anahtar="itp_es35_ust" ondalik={2}>4,26</Deger> |
+| %4,00 | %<Deger proje="enflasyon" anahtar="itp_es40" ondalik={2}>3,53</Deger> | %<Deger proje="enflasyon" anahtar="itp_es40_alt" ondalik={2}>2,34</Deger> | %<Deger proje="enflasyon" anahtar="itp_es40_ust" ondalik={2}>4,71</Deger> |
+| %4,50 | %<Deger proje="enflasyon" anahtar="itp_es45" ondalik={2}>3,96</Deger> | %<Deger proje="enflasyon" anahtar="itp_es45_alt" ondalik={2}>2,76</Deger> | %<Deger proje="enflasyon" anahtar="itp_es45_ust" ondalik={2}>5,16</Deger> |
+| %5,00 | %<Deger proje="enflasyon" anahtar="itp_es50" ondalik={2}>4,40</Deger> | %<Deger proje="enflasyon" anahtar="itp_es50_alt" ondalik={2}>3,17</Deger> | %<Deger proje="enflasyon" anahtar="itp_es50_ust" ondalik={2}>5,63</Deger> |
+
+<div class="kutu">
+
+**Güven aralığı değil, ÖNGÖRÜ aralığı.** İkisi karıştırıldığında bant üç kat dar çıkar ve
+okur olmayan bir kesinlik satın alır. Güven aralığı *koşullu ortalamanın* nerede olduğunu
+sorar ve yalnız katsayı belirsizliğini taşır:
+
+$$\text{s.h.}_{\text{ortalama}} = \sqrt{\hat\sigma^2 \, x_0'(X'X)^{-1}x_0}$$
+
+Öngörü aralığı ise *tek bir yeni ayın* nereye düşeceğini sorar; oraya artık varyansı da
+eklenir:
+
+$$\text{s.h.}_{\text{öngörü}} = \sqrt{\hat\sigma^2\left(1 + x_0'(X'X)^{-1}x_0\right)}$$
+
+Bizim durumumuzda $\hat\sigma = 0{,}559$ puan ve terimlerin içinde baskın olan da bu.
+Aralığın yarı genişliği yaklaşık **1,17 puan** çıkıyor — yani "İTO %2,50 geldi, TÜFE %2,22
+gelir" cümlesinin ardında %1,05 ile %3,38 arasında bir bant var.
+
+</div>
+
+Aracı kullanarak istediğiniz okumayı deneyebilirsiniz. İkinci alan isteğe bağlı: piyasa
+beklentisini de girerseniz Bölüm 8'de ölçülen sürpriz kanalı devreye girer.
+
+<ItoHesaplayici proje="enflasyon" />
+
+---
+
+## Bölüm 5 — Hangi kural? Örneklem dışı yarış
+
+Buraya kadarki her istatistik **örneklem içi**. R² 0,764 kulağa iyi geliyor ama aynı veriyle
+kurulup aynı veride ölçülen bir uyum, gelecekteki isabetin iyimser bir tahminidir. Doğru
+soru şu: *yarın hangi kuralı kullanayım?*
+
+Altı aday kural, **genişleyen pencereyle** yarıştırıldı. Her ay için kuralın bütün
+parametreleri yalnız o aya kadarki veriyle kuruldu; hiçbir kural kendi geleceğini görmedi.
+
+| Kural | Ne yapıyor |
+|---|---|
+| Naif | TÜFE = İTO |
+| Sabit kaydırma | TÜFE = İTO − (o güne kadarki **ortalama** fark) |
+| Medyan kaydırma | TÜFE = İTO − (o güne kadarki **medyan** fark) |
+| Oransal | TÜFE = İTO × (o güne kadarki medyan TÜFE/İTO oranı) |
+| Regresyon | TÜFE = â + b̂ × İTO, katsayılar o güne kadarki veriden |
+| Takvim ayı düzeltmeli | TÜFE = İTO − (aynı **takvim ayının** ortalama farkı) |
+
+Sonuç — <Deger proje="enflasyon" anahtar="itp_k_n" ondalik={0}>18</Deger> örneklem dışı ay
+(<Deger proje="enflasyon" anahtar="itp_k_ilk">2025-02</Deger> –
+<Deger proje="enflasyon" anahtar="itp_k_son">2026-07</Deger>):
+
+| Kural | MAE, puan | Dar pencerede MAE | Hata ≤ 0,5 puan |
+|---|---|---|---|
+| Oransal | <Deger proje="enflasyon" anahtar="itp_mae_oransal" ondalik={3}>0,379</Deger> | <Deger proje="enflasyon" anahtar="itp_maed_oransal" ondalik={3}>0,437</Deger> | %<Deger proje="enflasyon" anahtar="itp_is05_oransal" ondalik={0}>72</Deger> |
+| Sabit kaydırma | <Deger proje="enflasyon" anahtar="itp_mae_sabit" ondalik={3}>0,388</Deger> | <Deger proje="enflasyon" anahtar="itp_maed_sabit" ondalik={3}>0,416</Deger> | %<Deger proje="enflasyon" anahtar="itp_is05_sabit" ondalik={0}>61</Deger> |
+| Regresyon | <Deger proje="enflasyon" anahtar="itp_mae_regresyon" ondalik={3}>0,397</Deger> | <Deger proje="enflasyon" anahtar="itp_maed_regresyon" ondalik={3}>0,440</Deger> | %<Deger proje="enflasyon" anahtar="itp_is05_regresyon" ondalik={0}>78</Deger> |
+| Medyan kaydırma | <Deger proje="enflasyon" anahtar="itp_mae_medyan" ondalik={3}>0,426</Deger> | <Deger proje="enflasyon" anahtar="itp_maed_medyan" ondalik={3}>0,468</Deger> | %<Deger proje="enflasyon" anahtar="itp_is05_medyan" ondalik={0}>50</Deger> |
+| Naif (TÜFE = İTO) | <Deger proje="enflasyon" anahtar="itp_mae_naif" ondalik={3}>0,458</Deger> | <Deger proje="enflasyon" anahtar="itp_maed_naif" ondalik={3}>0,410</Deger> | %<Deger proje="enflasyon" anahtar="itp_is05_naif" ondalik={0}>67</Deger> |
+| **Takvim ayı düzeltmeli** | <Deger proje="enflasyon" anahtar="itp_mae_takvimli" ondalik={3}>0,504</Deger> | <Deger proje="enflasyon" anahtar="itp_maed_takvimli" ondalik={3}>0,590</Deger> | %<Deger proje="enflasyon" anahtar="itp_is05_takvimli" ondalik={0}>61</Deger> |
+
+Tablodan üç şey okunuyor.
+
+**Birincisi, kuralların hepsi birbirine yakın.** En iyisiyle en kötüsü arasındaki fark
+0,125 puan; naifle en iyisi arasındaki fark 0,08 puan. Ölçüm, "şu kuralı kullanırsanız
+tahmininiz belirgin biçimde iyileşir" demiyor.
+
+**İkincisi, sıralama dayanıklı değil.** Geniş pencerede
+<Deger proje="enflasyon" anahtar="itp_kazanan">oransal kural</Deger> önde; başlangıç
+penceresi 18 aya çekildiğinde öne
+<Deger proje="enflasyon" anahtar="itp_kazanan_dar">naif kural (TÜFE = İTO)</Deger> geçiyor.
+Ölçümün hükmü açık:
+<Deger proje="enflasyon" anahtar="itp_siralama_metin">sıralama pencereye duyarlı — hiçbir kural için 'en iyisi budur' denemez</Deger>.
+
+**Üçüncüsü — ve tek dayanıklı sonuç bu — takvim ayı düzeltmesi iki pencerede de sonuncu.**
+Hatayı en iyi kurala göre
+<Deger proje="enflasyon" anahtar="itp_takvimli_zarar" ondalik={3} isaret={true}>+0,125</Deger>
+puan **büyütüyor**. Bir sonraki bölüm bunun neden böyle olduğunu gösteriyor.
+
+---
+
+## Bölüm 6 — Takvim ayı: en ikna edici tablo, en kötü kural
+
+<GrafikEmbed
+  src="/projeler/enflasyon/12_ito_takvim.html"
+  baslik="Takvim ayına göre ortalama fark ve ilişkinin kararlılığı"
+  no="03"
+  yukseklik={985}
+/>
+
+Üst paneldeki tablo son derece ikna edici görünüyor. Mayıs tek eksi ay
+(−0,44 puan): İTO Mayıs'ta TÜFE'nin **altında** kalıyor. Nisan, Ekim, Kasım
+belirgin artı (+0,64 / +0,57 / +0,58). Sepet farkının mevsimsel bir izi varmış gibi
+duruyor — İstanbul'un kira ve hizmet ağırlığı, okul dönemi, turizm sezonu...
+
+Her çubuğun üstündeki sayıya bakın: **n = 2** ya da **n = 3**. Ocak için elimizde iki
+gözlem var. İki gözlemin ortalaması, "Ocak'ta fark tipik olarak +0,21'dir" cümlesini
+kuramaz; iki sayının ortalamasıdır, o kadar.
+
+Ve ölçüm bunu doğruluyor. Takvim ayı düzeltmesi örneklem dışı yarışta **iki pencerede de
+sonuncu** — çünkü her ay için tahmin ettiği ayrı bir parametre, o parametreyi tahmin
+edecek gözlemden fazla. İstatistikte bunun adı *aşırı uyum*: kural, geçmişteki gürültüyü
+yapı sanıp geleceğe taşıyor.
+
+<div class="kutu">
+
+**Bu bölümün asıl dersi tabloda değil, yöntemde.** Bir örüntü ne kadar anlamlı bir hikâye
+anlatıyorsa, onu örneklem dışı sınamadan kabul etme eğilimi o kadar güçlü olur. Mayıs'ın
+eksi çıkmasının bir açıklaması var; Nisan'ın artı çıkmasının da. Açıklamanın var olması,
+örüntünün gerçek olduğunu göstermez — üç gözlemden kurulmuş her örüntü için bir açıklama
+bulunabilir.
+
+Sınamanın maliyeti düşük, ödülü yüksekti: bu düzeltme koda girseydi, sitedeki her aylık
+tahmin sistematik olarak 0,125 puan daha kötü olacaktı ve kimse fark etmeyecekti.
+
+</div>
+
+Alt panel ilişkinin zaman içindeki kararlılığını gösteriyor: 12 aylık kayan pencerede
+korelasyon <Deger proje="enflasyon" anahtar="itp_o_kayan_r_min" ondalik={3}>0,794</Deger> –
+<Deger proje="enflasyon" anahtar="itp_o_kayan_r_maks" ondalik={3}>0,962</Deger> aralığında,
+eğim <Deger proje="enflasyon" anahtar="itp_o_kayan_egim_min" ondalik={3}>0,762</Deger> –
+<Deger proje="enflasyon" anahtar="itp_o_kayan_egim_maks" ondalik={3}>1,026</Deger>
+aralığında dolaşıyor ve 1'in etrafında duruyor. İlişki kopmuyor; kaydırmanın büyüklüğü
+oynuyor.
+
+---
+
+## Bölüm 7 — Anketten iyi mi? Doğru kıyas budur
+
+Buraya kadarki kıyas noktası naif kuraldı. Ama bir yatırımcı için naif kural anlamlı bir
+rakip değil — **fiyatlanan sayı** piyasa beklentisidir. TCMB'nin Piyasa Katılımcıları
+Anketi, ayın ilk yarısında yapılıyor ve o ayın aylık TÜFE'si için bir medyan/ortalama
+beklenti üretiyor. Gerçek soru şu: İTO'yu görmek, anketi görmeye kıyasla ne kazandırıyor?
+
+Aynı <Deger proje="enflasyon" anahtar="itp_anket_n" ondalik={0}>18</Deger> örneklem dışı
+ayda:
+
+| Tahmin kaynağı | MAE, puan |
+|---|---|
+| PKA cari ay beklentisi (anket) | <Deger proje="enflasyon" anahtar="itp_pka_mae" ondalik={3}>0,481</Deger> |
+| İTO + sabit kaydırma | <Deger proje="enflasyon" anahtar="itp_ito_mae" ondalik={3}>0,388</Deger> |
+| **Eşli fark** | <Deger proje="enflasyon" anahtar="itp_esli" ondalik={3} isaret={true}>−0,093</Deger> |
+
+Sayı İTO'nun lehine görünüyor. Ama 18 gözlemde bu farkın tesadüf olmadığını söyleyebilir
+miyiz? Eşli t sınaması:
+t = <Deger proje="enflasyon" anahtar="itp_esli_t" ondalik={2} isaret={true}>−0,84</Deger>,
+p = <Deger proje="enflasyon" anahtar="itp_esli_p" ondalik={3}>0,414</Deger>. Hüküm:
+<Deger proje="enflasyon" anahtar="itp_anket_hukum">aradaki fark istatistiksel olarak ayırt edilemiyor</Deger>.
+
+Yani "İTO piyasadan daha iyi tahmin ediyor" cümlesi bu veriyle **kurulamaz**. Kurulabilecek
+cümle şu: İTO tek başına, ayın ortasında toplanmış bir uzman anketiyle **aynı kalitede** bir
+nowcast veriyor — ve bunu tek bir sayıdan, ücretsiz, herkesin gözü önünde yapıyor.
+
+<div class="kutu">
+
+**İki tahmin aynı değil, çünkü aynı bilgiyi taşımıyorlar.** Anket ayın ilk yarısında
+yapılıyor; ayın ikinci yarısındaki kur hareketini, ay sonu zamlarını, gıda fiyatlarındaki
+son iki haftayı **görmüyor**. İTO ise ayın tamamını ölçüyor. İkisinin isabet olarak
+denk çıkması, İTO'nun taşıdığı ek bilginin İstanbul'a özgü gürültüyle dengelendiğini
+gösteriyor. Bir sonraki bölüm ikisini birleştirmenin doğru yolunu ölçüyor.
+
+</div>
+
+---
+
+## Bölüm 8 — Asıl kanal: sürpriz sürprizi öngörür mü?
+
+Piyasa fiyatları seviyeye değil **sürprize** tepki verir. Aylık TÜFE %2,20 gelmiş olması
+tek başına bir bilgi değildir; beklenti %1,90 iken %2,20 gelmesi bilgidir. O hâlde doğru
+soru şu:
+
+> İTO, ankete göre yukarıda geldiyse, TÜFE de ankete göre yukarıda mı gelir?
+
+Bu soru meşru, çünkü zaman sıralaması doğru: anket ayın ilk yarısında, İTO ayın sonunda
+oluşuyor. İTO gerçekten **yeni** bilgidir.
+
+$$(\text{TÜFE}_t - \text{Anket}_t) = c + \lambda \,(\text{İTO}_t - \text{Anket}_t) + \eta_t$$
+
+<Deger proje="enflasyon" anahtar="itp_s_n" ondalik={0}>30</Deger> aylık örneklemde tahmin:
+
+| Ölçü | Değer |
+|---|---|
+| Geçiş katsayısı λ | <Deger proje="enflasyon" anahtar="itp_s_egim" ondalik={3}>0,547</Deger> |
+| Standart hata | <Deger proje="enflasyon" anahtar="itp_s_se" ondalik={3}>0,127</Deger> |
+| t | <Deger proje="enflasyon" anahtar="itp_s_t" ondalik={2}>4,32</Deger> |
+| p | <Deger proje="enflasyon" anahtar="itp_s_p" ondalik={4}>0,0002</Deger> |
+| R² | <Deger proje="enflasyon" anahtar="itp_s_r2" ondalik={2}>0,40</Deger> |
+| Sabit c | <Deger proje="enflasyon" anahtar="itp_s_sabit" ondalik={3} isaret={true}>−0,138</Deger> |
+| İşaret uyumu | %<Deger proje="enflasyon" anahtar="itp_s_uyum" ondalik={0}>70</Deger> (binom p = <Deger proje="enflasyon" anahtar="itp_s_uyum_p" ondalik={4}>0,0428</Deger>) |
+| İşaret uyumu, sapma ≥ 0,25 puan | %<Deger proje="enflasyon" anahtar="itp_s_uyum25" ondalik={0}>74</Deger> (n = <Deger proje="enflasyon" anahtar="itp_s_n25" ondalik={0}>23</Deger>) |
+
+Bu, yazının en güçlü sonucu. Katsayı sıfırdan
+<Deger proje="enflasyon" anahtar="itp_s_t" ondalik={2}>4,32</Deger> standart hata uzakta ve
+tesadüf olasılığı on binde iki.
+
+**Sayısal örnek.** Diyelim ki bir ay için anket medyanı %1,90, İTO ise %2,60 geldi. İTO'nun
+ankete göre sapması +0,70 puan. Ölçülen geçiş:
+
+$$\widehat{\text{sürpriz}} = -0{,}138 + 0{,}547 \times 0{,}70 = +0{,}25 \text{ puan}$$
+
+Yani TÜFE beklentisi %1,90 değil yaklaşık **%2,15** olmalı. Dikkat: İTO'nun sapmasının
+tamamı değil, **yarısından biraz fazlası** geçiyor. Kalan kısım İstanbul'a özgü — sepet
+farkı, coğrafya, toplama takvimi. İTO'nun sapmasını birebir TÜFE'ye taşımak, sürprizi
+sistematik olarak **iki katı** büyütmek demektir.
+
+<div class="kutu">
+
+**λ neden 1 değil?** İTO'nun ankete göre sapması iki şeyin toplamı: (a) Türkiye genelini de
+ilgilendiren ortak şok, (b) İstanbul'a özgü ölçüm/sepet gürültüsü. TÜFE sürprizi yalnız
+(a)'yı içeriyor. Klasik ölçüm hatası cebiri, regresyon katsayısını ortak şokun toplam
+varyanstaki payına doğru çeker:
+
+$$\lambda = \frac{\sigma^2_{\text{ortak}}}{\sigma^2_{\text{ortak}} + \sigma^2_{\text{İstanbul}}}$$
+
+Ölçülen λ = 0,547, yani İTO sapmasının varyansının kabaca yarısı Türkiye geneliyle
+paylaşılan bilgi. R² = 0,40 da aynı şeyi başka yerden söylüyor.
+
+</div>
+
+**İşaret bilgisi ne kadar değerli?** Uyum %70; sapma 0,25 puanı aştığında %74. Yazı tura
+değil, ama kesinlik de değil. Dört ayın üçünde yön doğru, birinde yanlış. Bir pozisyon
+büyüklüğü bu orana göre ölçeklenmeli — %74'lük bir isabet, tam kelly ile değil onun küçük
+bir kesriyle çalışılan bir sinyaldir.
+
+---
+
+## Bölüm 9 — Yıllık makas: 10,3 puandan 3,4 puana
+
+Şekil 01'in alt paneli 12 aylık değişimleri gösteriyor. Makas
+<Deger proje="enflasyon" anahtar="itp_y_maks_ay">2025-05</Deger>'te
+<Deger proje="enflasyon" anahtar="itp_y_maks" ondalik={2}>10,32</Deger> puanla zirve yaptı;
+son okumada <Deger proje="enflasyon" anahtar="itp_y_son" ondalik={2}>3,44</Deger> puan
+(İTO %<Deger proje="enflasyon" anahtar="itp_y_son_ito" ondalik={2}>35,19</Deger>, TÜFE
+%<Deger proje="enflasyon" anahtar="itp_y_son_tufe" ondalik={2}>31,75</Deger>). Örneklem
+ortalaması <Deger proje="enflasyon" anahtar="itp_y_ort" ondalik={2}>6,84</Deger> puan.
+
+Bu daralmayı yorumlarken bir tuzağa düşmemek gerekiyor. Yıllık makas, **aylık farkların
+hareketli toplamıdır** — bağımsız bir kanıt değil, aynı verinin biriktirilmiş hâli.
+Yaklaşık olarak:
+
+$$\text{makas}^{(12)}_t \approx \sum_{s=0}^{11} \text{fark}_{t-s}$$
+
+Ortalama aylık fark 0,55'ten 0,22 puana inince, on iki ayın toplamı da mekanik olarak
+6,6 puandan 2,6 puana iner. Yani "İstanbul ile Türkiye arasındaki yıllık uçurum kapandı"
+cümlesi, "aylık fark daraldı" cümlesinden **ayrı bir bilgi taşımıyor**.
+
+Yine de bir okuma var: makasın daralması, İstanbul'un Türkiye'den daha hızlı bir
+disenflasyon yaşadığı anlamına geliyor. Kira ve hizmet ağırlığının İstanbul'da daha yüksek
+olduğu düşünülürse, hizmet enflasyonundaki yavaşlamanın İstanbul'da daha güçlü hissedilmesi
+tutarlı. Ama bu bir **hipotez**: iki endeksin alt kalem kırılımlarını karşılaştırmadan
+doğrulanamaz ve EVDS'te İTO'nun karşılaştırılabilir alt endeksleri yok. Bunu Bölüm 11'de
+"ölçmediklerimiz" arasına yazıyoruz.
+
+---
+
+## Bölüm 10 — Ay başında ne yapmalı: adım adım
+
+İTO açıklandığı sabah, TÜİK yayımına kadar geçen birkaç günde izlenecek sıra:
+
+1. **İTO'nun aylık değişimini alın.** Endeks seviyesinden hesaplayın, yayımlanan orandan
+   değil — iki ondalıkla yuvarlanmış oranlar zincirlendiğinde sapma birikir.
+2. **Nokta tahmini kurun.** Kaba kural: TÜFE ≈ İTO −
+   <Deger proje="enflasyon" anahtar="itp_ort" ondalik={2}>0,39</Deger>. Yukarıdaki araç
+   üç kuralı birden basıyor; üçü arasındaki fark 0,1 puanı geçmiyorsa hangisini
+   kullandığınız önemsizdir.
+3. **Aralığı yazın, tek sayıyı değil.** Öngörü aralığının yarı genişliği ~1,17 puan.
+   Tahmininizi "%2,2" diye değil "%1,1–%3,4, merkez %2,2" diye kurun.
+4. **Beklentiyi bulun ve sürpriz kanalını çalıştırın.** Asıl bilgi burada:
+   $\widehat{\text{sürpriz}} = -0{,}138 + 0{,}547 \times (\text{İTO} - \text{anket})$.
+   Sapma 0,25 puanın altındaysa işaret bilgisi zayıftır — pozisyon almayın.
+5. **Takvim ayına göre düzeltme YAPMAYIN.** Bölüm 6 bunun hatayı büyüttüğünü ölçüyor.
+6. **Yön hatasını fiyatlayın.** İşaret uyumu %70–74. Üç ayda bir yanılırsınız; pozisyon
+   büyüklüğü bunu kaldırmalı.
+
+---
+
+## Bölüm 11 — Ne ölçmedik
+
+Dürüstlük bölümü. Aşağıdakiler bu yazıda **yok** ve yokluğu sonuçların gücünü sınırlıyor.
+
+**Örneklem 30 ay.** EVDS'te İTO serisi Ocak 2024'te başlıyor. Ortalama fark ve sürpriz
+geçişi bu boyda bile net çıkıyor (t = 4,30 ve 4,32); kural sıralaması ve takvim ayı profili
+çıkmıyor. Yazının hükümlerini bu ayrım belirledi.
+
+**Alt kalem kırılımı yok.** "İstanbul'da kira ağırlığı yüksek olduğu için fark artı"
+hipotezi test edilmedi; EVDS'te İTO'nun TÜFE ile karşılaştırılabilir alt endeksleri
+bulunmuyor. Bölüm 9'daki yorum bu yüzden hipotez olarak etiketlendi.
+
+**Vintage/revizyon analizi yok.** İki kurum da yayımladıktan sonra revizyon yapabiliyor;
+bu ölçüm son sürümlerle yapıldı. Gerçek zamanlı bir tahminci ilk yayımlanan sayıyı görür,
+son sürümü değil. Depoda İTO için sürüm arşivi tutulmuyor.
+
+**Fiyat tepkisi ölçülmedi.** "İTO sürprizi tahvil/kur fiyatlarını o gün ne kadar
+oynatıyor" sorusu bu yazının kapsamı dışında. Sürpriz→sürpriz geçişi ölçüldü;
+sürpriz→fiyat geçişi ölçülmedi.
+
+**Anket, PKA'nın kendi ortalaması.** Basında dolaşan "piyasa beklentisi" farklı bir
+derlemeden gelebiliyor. Kıyas, EVDS'te ölçülebilen tek beklenti serisiyle yapıldı.
+
+**Bu koşuda ağustos ayı İTO okuması henüz EVDS'te yok.** Ölçüm penceresi
+<Deger proje="enflasyon" anahtar="itp_son_ay">2026-07</Deger> ayında bitiyor. EVDS seriyi
+aldığında sayfadaki her sayı — tablolar, katsayılar, aralıklar ve hesap aracı —
+MDX'e dokunulmadan tazelenir; sayfanın hiçbir yerinde elle yazılmış oynak sayı yok.
+
+---
+
+## Bölüm 12 — İzleme listesi
+
+| Ne | Neden | Nasıl anlaşılır |
+|---|---|---|
+| Ortalama farkın seyri | Kaydırma parametresi enflasyon düştükçe daralıyor olabilir | Şekil 03 alt panelindeki kayan ortalama fark eğrisi 0,2 puanın altına inerse sabit kaydırma neredeyse naif kurala yakınsar |
+| Eğimin 1'den ayrılması | Ayrılırsa ilişkinin biçimi değişmiş demektir | Şekil 03 alt panelinde eğim eğrisi 0,8'in altına ya da 1,2'nin üstüne yerleşirse |
+| Sürpriz geçişi λ | 0,55 sabit kalıyor mu, yoksa örneklem büyüdükçe kayıyor mu | Her koşuda yeniden tahmin ediliyor; 0,4–0,7 bandı dışına çıkarsa yeniden yazılmalı |
+| Kural sıralamasının dayanıklılığı | Bugün duyarlı; örneklem 40–45 aya ulaşınca netleşebilir | `itp_siralama_metin` anahtarı "aynı kural iki pencerede de kazanıyor" demeye başlarsa |
+| Takvim ayı profilinin gözlem sayısı | Her ay 5–6 gözleme ulaşınca mevsimsellik yeniden sınanabilir | Şekil 03 üst panelindeki n etiketleri |
+| İTO'nun EVDS'e giriş gecikmesi | Yayım günü ile EVDS'te görünmesi arasında birkaç gün var | Hattın koşum kütüğünde İTO serisinin son ayı, TÜFE'ninkinden geride kalıyorsa |
+
+---
+
+### Yöntem künyesi
+
+Bütün ölçümler bu sitenin Enflasyon hattında koşuluyor. Aylık değişimler **endeks
+seviyelerinden** hesaplanıyor, yayımlanan oranlardan değil. Regresyonlar sıradan en küçük
+kareler; standart hatalar klasik. Öngörü aralıkları t dağılımıyla, artık varyansı dahil
+edilerek kuruluyor. Örneklem dışı yarış genişleyen pencereyle, başlangıç penceresi
+<Deger proje="enflasyon" anahtar="itp_k_asgari" ondalik={0}>12</Deger> ay; dayanıklılık
+kontrolü için aynı yarış 18 aylık başlangıçla tekrarlanıyor. Eşli karşılaştırma tek
+örneklem t sınamasıyla, işaret uyumu binom sınamasıyla değerlendiriliyor. Kod:
+`Aktarılacak Projeler/Enflasyon/metrik.py` içindeki `ito_profil()`; çıktı
+`data/ito_profil.json`; sayfaya taşınan anahtarlar `ozet_uret.py` üzerinden
+`ozet.json`'a yazılıyor.

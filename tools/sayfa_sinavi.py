@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Sayfa ↔ hat sözleşmesi sınavı (CI'da koşturulabilir).
 
-Bu sınav, "hat koştu ama sayfa yalan söylüyor" sınıfı hataları yakalar. Beş
+Bu sınav, "hat koştu ama sayfa yalan söylüyor" sınıfı hataları yakalar. Yedi
 bölüm var; her biri düzenin bir kuralına karşılık gelir:
 
   (1) <Deger> anahtarları — MDX'te çağrılan her anahtar ozet.json'da var mı?
@@ -15,6 +15,9 @@ bölüm var; her biri düzenin bir kuralına karşılık gelir:
   (4) Dosya kümesi — üretimdeki figürler siteye birebir kopyalanmış mı ve
       hepsinde ev stili bloğu var mı?
   (5) Panel düzeni — paneller ALT ALTA mı? (yan yana panel yasak)
+  (6) KaTeX — her formül ayrıştırılabiliyor mu? (rehype-katex düşmez, ham basar)
+  (7) <Deger> anahtarları TÜM koleksiyonlarda — analiz ve araştırma
+      sayfaları da aynı sözleşmeyi kullanıyor; kural 1 onları görmüyordu.
 
 Koşum:  python3 site/tools/sayfa_sinavi.py
 Çıkış:  0 = geçti · 1 = en az bir sınav düştü
@@ -103,6 +106,7 @@ def main() -> int:
             hata.append(mesaj)
         else:
             print(f"  (bilgi, kapı değil) {mesaj}")
+    TUM_MDX = sorted((KOK / "site/src/content").rglob("*.mdx"))
     for slug, klasor in HATLAR:
         proje = KOK / klasor
         mp = KOK / "site/src/content/projeler" / f"{slug}.mdx"
@@ -170,17 +174,32 @@ def main() -> int:
               + ("" if not sapan_yedek else "  → " + ", ".join(sorted(set(sapan_yedek))[:6])))
 
         # (3) şekil yüksekliği
+        # BİR HATTIN FİGÜRÜ PROJE SAYFASINDA DURMAK ZORUNDA DEĞİL. İTO kanadının
+        # üç figürü Enflasyon hattı tarafından üretiliyor ama analiz yazısında
+        # gömülü; ölçüt yalnız projeler/<slug>.mdx'e baktığı için üçünü birden
+        # "MDX'te bulunamadı" diye düşürüyordu. Aranan şey figürün hangi
+        # dosyada olduğu değil, SİTEDE gömülü olduğu yerdeki yüksekliğin
+        # üretimdekiyle aynı olması. Arama bu yüzden bütün içerik ağacında.
         yj = proje / "cikti/yukseklikler.json"
         if yj.exists():
             y = json.loads(yj.read_text(encoding="utf-8"))
             sapan = []
             for dosya, h in y.items():
-                m = re.search(r'src="/projeler/' + re.escape(slug) + "/"
-                              + re.escape(dosya) + r'"[\s\S]{0,400}?yukseklik=\{(\d+)\}', mdx)
+                kalip = re.compile(r'src="/projeler/' + re.escape(slug) + "/"
+                                   + re.escape(dosya)
+                                   + r'"[\s\S]{0,400}?yukseklik=\{(\d+)\}')
+                m = kalip.search(mdx)
+                nerede = f"projeler/{slug}"
                 if not m:
-                    sapan.append(f"{dosya}: MDX'te bulunamadı")
+                    for baska in TUM_MDX:
+                        m = kalip.search(baska.read_text(encoding="utf-8"))
+                        if m:
+                            nerede = f"{baska.parent.name}/{baska.stem}"
+                            break
+                if not m:
+                    sapan.append(f"{dosya}: hiçbir sayfada gömülü değil")
                 elif int(m.group(1)) != h:
-                    sapan.append(f"{dosya}: MDX {m.group(1)} ≠ üretim {h}")
+                    sapan.append(f"{dosya}: {nerede}'de {m.group(1)} ≠ üretim {h}")
             if sapan:
                 bulgu(slug, f"{slug}: yükseklik sapması → " + " · ".join(sapan))
             print(f"  (3) yükseklik: {len(y)} figür · sapma {len(sapan)}")
@@ -219,6 +238,59 @@ def main() -> int:
     # için süslü parantez yutuldu ve dört formül sayfada ham metin olarak
     # yayımlandı. Kusuru derleme değil OKUR gördü. Denetim buraya kondu ki
     # sınavı koşturan herkes aynı soruyu sorsun.
+    # (7) <Deger> ANAHTARLARI — YALNIZ PROJE SAYFALARINDA DEĞİL, HER SAYFADA.
+    # Kural 1 yalnız site/src/content/projeler/<slug>.mdx'e bakıyordu. Ama
+    # <Deger> sözleşmesi koleksiyondan bağımsız: bileşen ozet.json'u
+    # /projeler/<proje>/ genel yolundan çekiyor ve analiz/araştırma sayfaları
+    # da onu kullanıyor. Büyüme yazısı projeler'den analiz'e taşındığı gün
+    # sınavın görüş alanından da çıkmıştı; borçlanma ve İTO yazıları hiç
+    # girmemişti. Donan bir sayının hangi klasörde durduğu okur için bir şey
+    # ifade etmiyor — denetim de ayırmamalı.
+    print("\n▶ Tüm sayfalarda <Deger> anahtarları")
+    # Tarayıcı /projeler/<slug>/ozet.json'u çeker; sınavın bakması gereken
+    # dosya da odur. Bazı hatların çalışma klasöründeki ozet.json .gitignore'da
+    # (Büyüme, El Niño) — proje klasörüne bakmak onları "bilinmeyen proje"
+    # sanıyordu. Önce SİTEDEKİ kopya, yoksa proje klasörü.
+    ozetler: dict[str, dict] = {}
+    ozet_yok: list[str] = []
+    for slug, klasor in HATLAR:
+        for oj in (KOK / "site/public/projeler" / slug / "ozet.json",
+                   KOK / klasor / "ozet.json"):
+            if oj.exists():
+                try:
+                    ozetler[slug] = json.loads(oj.read_text(encoding="utf-8"))
+                except Exception as ex:
+                    hata.append(f"{slug}: ozet.json okunamadı ({type(ex).__name__})")
+                break
+        else:
+            ozet_yok.append(slug)
+    if ozet_yok:
+        print(f"  (ozet.json bulunamayan hat: {', '.join(ozet_yok)})")
+    icerik = KOK / "site/src/content"
+    n_sayfa = n_kul = 0
+    for mdx_yol in sorted(icerik.rglob("*.mdx")):
+        # projeler/ zaten kural 1'de tam kapsamla sınandı; burada geri kalanlar.
+        if mdx_yol.parent.name == "projeler":
+            continue
+        metin = mdx_yol.read_text(encoding="utf-8")
+        kul = re.findall(r'<Deger\s+proje="([^"]+)"\s+anahtar="([^"]+)"', metin)
+        if not kul:
+            continue
+        n_sayfa += 1
+        n_kul += len(kul)
+        ad = f"{mdx_yol.parent.name}/{mdx_yol.stem}"
+        bilinmez = sorted({pr for pr, _ in kul if pr not in ozetler})
+        if [x for x in bilinmez if x not in ozet_yok]:
+            hata.append(f"{ad}: bilinmeyen proje niteliği: "
+                        f"{[x for x in bilinmez if x not in ozet_yok]}")
+        eksik = sorted({f"{pr}.{an}" for pr, an in kul
+                        if pr in ozetler and an not in ozetler[pr]})
+        if eksik:
+            hata.append(f"{ad}: ozet.json'da olmayan anahtar: {eksik}")
+        print(f"  {ad}: {len(kul)} kullanım · eksik {len(eksik)}"
+              + (f" · bilinmeyen proje {bilinmez}" if bilinmez else ""))
+    print(f"  toplam {n_sayfa} sayfa · {n_kul} <Deger> kullanımı")
+
     print("\n▶ KaTeX")
     kt = KOK / "site/tools/katex_sinavi.mjs"
     if not kt.exists():
