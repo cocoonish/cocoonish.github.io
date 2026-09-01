@@ -66,17 +66,13 @@ talep, vade, strateji revizyonları, ileriye dönük tahmin ve backtest.
 programın yumuşak uygulandığını, 1 üstü sıçramalar ek finansman ihtiyacını gösterir.
 
 <div class="not">
-  <span class="etiket">Model denetim notu — strateji hedefi ayrıştırıcısı (05.08.2026)</span>
-  Bu ortalama önceki sürümde <strong>%86,1</strong> yazıyordu; aradaki fark yeni veriden
-  değil, bir <em>ayrıştırıcı hatasının</em> düzeltilmesinden geliyor. Strateji PDF'lerindeki
-  sayılar koşulsuz olarak "Türkçe binlik ayracı" varsayımıyla okunuyordu
-  (<code>float(v.replace('.','').replace(',','.'))</code>); nokta ondalıklı yazılmış bir
-  değer bu yüzden <strong>10 kat şişiyordu</strong> — "25.4" → 254,0. Hata 2020-21
-  dönemindeki 8 ayı bozmuştu ve şişmiş hedefler ortalama gerçekleşmeyi aşağı çekiyordu.
-  Ayrıştırıcı biçim-duyarlı hale getirildi, bozuk kayıtlar sürüm damgasıyla geçersizleştirildi
-  ve hedeflerin <code>strategy_data</code>'ya girdiği <em>her</em> yola (PDF, CSV geri
-  tohumlama, önbellek) makullik kontrolü kondu — hatanın kendini geri tohumlayarak
-  yeniden üretmesi böylece kapatıldı.
+  <span class="etiket">Hedefler nereden okunuyor</span>
+  Aylık hedefler Hazine'nin yayımladığı <strong>iç borçlanma stratejisi</strong>
+  dokümanlarından okunuyor ve dokümanlar sayıları tek bir biçimde yazmıyor: kimi tabloda
+  ondalık ayracı virgül, kiminde nokta. Ayracı sabit varsaymak bir değeri on kat
+  şişirmeye yeter ("25.4" → 254,0) ve şişmiş tek bir hedef, o ayın gerçekleşme oranını
+  gerçek dışı biçimde aşağı çeker. Sayılar bu yüzden biçim-duyarlı okunuyor ve hedefin
+  girdiği her yolda (doküman, tablo, arşiv) makullik kontrolünden geçiyor.
 </div>
 
 <GrafikEmbed

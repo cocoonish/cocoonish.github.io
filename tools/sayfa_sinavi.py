@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Sayfa ↔ hat sözleşmesi sınavı (CI'da koşturulabilir).
 
-Bu sınav, "hat koştu ama sayfa yalan söylüyor" sınıfı hataları yakalar. Sekiz
+Bu sınav, "hat koştu ama sayfa yalan söylüyor" sınıfı hataları yakalar. Dokuz
 bölüm var; her biri düzenin bir kuralına karşılık gelir:
 
   (1) <Deger> anahtarları — MDX'te çağrılan her anahtar ozet.json'da var mı?
@@ -340,6 +340,42 @@ def main() -> int:
             hata.append(f"dist/{yol}: KaTeX hatası {a} · ham <Deger> {b} · "
                         f"çözülmemiş MDX yorumu {c} — sayfa ham metin basıyor")
         print(f"  {len(sayfa)} sayfa tarandı · kırık {len(kirik)}")
+
+    # ---------------------------------------------------------------- (9)
+    # YAPIM GÜNLÜĞÜ DİLİ. Sayfa okura yazılır, kendi yapımına değil.
+    # "Bu yazının ilk sürümünde şu hata vardı", "önceki sürümde şöyle
+    # yazıyordu", "kodda şu düzeltildi" gibi cümleler okurun kararını
+    # değiştirmiyor; bulguyu taşıyan cümle kalır, süreç anlatısı gitmelidir.
+    # Aynı sınıfa dosya/anahtar adları da girer: ozet.json, metrik.py,
+    # itp_* anahtarı — okurun elinde olmayan şeylerdir.
+    # ÖLÇÜT NEDEN GEREKLİ: bu dil bir kez temizlendi ve temizlik yalnız
+    # hatırlandığı sürece sürer. Kural araca konmazsa bir sonraki yazıda
+    # geri gelir.
+    print("\n▶ Yapım günlüğü dili (okura değil kendine anlatan cümleler)")
+    YASAK = [
+        r"(?:yazının|sayfanın|hattın|bu sayfanın|bu yazının)\s+(?:ilk|önceki|eski)\s+"
+        r"(?:sürüm|hâl|hali|halinde)",
+        r"ilk\s+sürümde", r"önceki\s+sürümde", r"eski\s+kod",
+        r"bu\s+koşuda\s+düzeltildi", r"düzeltildi\s*[—-]", r"kod\s+hatasıydı",
+        r"biz\s+ilk\s+denemede", r"hatayı\s+yaptı",
+        r"\bozet\.json\b", r"\bozet_uret\.py\b", r"\bmetrik\.py\b",
+        r"\bveri\.py\b", r"\bgrafik\.py\b", r"\bMDX\b",
+    ]
+    # MUAFİYET: ozet.json'a verilen "makine okunur veri özeti" bağlantısı
+    # okura sunulan bir KAYNAKTIR, yapım günlüğü değil.
+    MUAF = re.compile(r"makine okunur veri özeti\]\([^)]*ozet\.json\)")
+    bulgu = []
+    for yol in sorted((KOK / "site/src/content").rglob("*.mdx")):
+        metin = MUAF.sub("", yol.read_text(encoding="utf-8"))
+        for kal in YASAK:
+            for m in re.finditer(kal, metin, re.IGNORECASE):
+                sat = metin[:m.start()].count("\n") + 1
+                bulgu.append(f"{yol.relative_to(KOK / 'site/src/content')}:{sat}: "
+                             f"{m.group(0)!r}")
+    for b_ in bulgu:
+        hata.append("yapım günlüğü dili — " + b_)
+    print(f"  {len(list((KOK / 'site/src/content').rglob('*.mdx')))} sayfa "
+          f"tarandı · bulgu {len(bulgu)}")
 
     print()
     if hata:

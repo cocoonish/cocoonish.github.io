@@ -459,15 +459,14 @@ durur. Artık kalemi çizmeyip yığını %100'e tamamlamamak, okura kompozisyon
 gördüğü yanılgısını verirdi.
 
 <div class="not">
-  <span class="etiket">Artık kalemin sessiz 100'ü — bu koşuda düzeltildi</span>
-  Artık kalem <code>100 − Σ pay</code> ile hesaplanıyor. pandas'ın toplama
-  varsayılanı, bütün bileşenlerin NaN olduğu bir satırda toplamı <strong>0</strong>
-  sayar; artık da <strong>100</strong> çıkar. Sonuç: 12 aylık pencere dolmadan önceki
-  aylarda ve bütçesi <em>henüz yayımlanmamış</em> son ayda yığın "tamamı diğer
-  vergiler" gösteriyordu (ölçüldü: 48 satır), ve veri özeti o sahte 100'ü
-  son değer diye okuyordu. Kalem toplamı artık en az bir dolu bileşen istiyor; boş
-  satırda artık da boş kalıyor. Bu, hattın kendi ilkesinin ihlaliydi ve raporlanarak
-  giderildi.
+  <span class="etiket">Artık kalem boş aylarda ne gösterir</span>
+  Artık kalem <code>100 − Σ pay</code> ile hesaplanıyor ve bu tanımın bir kör noktası
+  var: bileşenlerin tamamı boşsa toplam sıfır, artık da <strong>100</strong> çıkar —
+  yani yığın "tamamı diğer vergiler" der. Bu, 12 aylık pencere dolmadan önceki aylar ve
+  bütçesi <em>henüz yayımlanmamış</em> son ay için geçerli. Kalem toplamı bu yüzden en az
+  bir dolu bileşen istiyor; hiçbiri yoksa artık da boş kalıyor ve o ay yığında
+  görünmüyor. Boş bir ayı %100 diye okumak, kompozisyon grafiğinde yapılabilecek en
+  sessiz hatadır.
 </div>
 
 **Paylar neden 12 aylık birikimliden alınır.** Aylık paylar mevsimsellikten okunamaz:
@@ -1178,10 +1177,9 @@ değildir ve olmamalıdır** — iki farklı çeyreğe aittir.
 Merkezi yönetimin dış borcu, ülkenin toplam dış borcunun bir dilimidir. Bu tablo
 GSYH'ye ihtiyaç duymaz, dolayısıyla **GSYH'nin çeyreğine kelepçelenmez**: çıpası brüt
 dış borcun kendi son yayımlanan çeyreğidir,
-<Deger proje="butce-borc" anahtar="db_ceyregi" ondalik={0}>2026-Ç2</Deger>. (Bir önceki
-sürümde tablo GSYH indeksine hizalanıyordu ve yayımlanmış çeyreği sessizce düşürüyordu;
-sonuç, aynı `TP.BRUTDBORCLU.G4` serisinin sayfanın iki yerinde iki farklı sayıyla
-geçmesiydi.)
+<Deger proje="butce-borc" anahtar="db_ceyregi" ondalik={0}>2026-Ç2</Deger>. Bu ayrım
+önemli: tablo GSYH'nin çeyreğine hizalansaydı, dış borcun yayımlanmış son çeyreği sessizce
+düşer ve aynı seri sayfanın iki yerinde iki farklı sayıyla görünürdü.
 
 | Borçlu | Milyar USD |
 | --- | --- |
@@ -1243,9 +1241,10 @@ yazılıdır ama **doğrulayıcı değildir**; doğrulayıcı EVDS'in `datagroup
 İç borcu (ihraç tabanı) brüt dış borçla (yerleşiklik tabanı) toplayan bir tanım, aynı
 çeyrekte finansal hesapların F.3+F.4 toplamından −%18,9 sapıyordu; araç tabanlı doğru
 tanım %<Deger proje="butce-borc" anahtar="f34_fark" ondalik={1} isaret={true}>−8,5</Deger>
-veriyor. Bu denetim o hatayı **ilk koşuda** düşürürdü — ve düşürmediği için hata
-sayfada aylarca durdu. Eşiğin durdurucu olması bilinçlidir: yanlış tanımlı bir stok
-yayına çıkmaktansa hat durur.
+veriyor. Aradaki fark, yanlış tanımın ne kadar sessiz olabildiğini gösteriyor: iki stok
+da "toplam borç" diye adlandırılıyor, ikisi de makul büyüklükte, ama biri finansal
+hesaplarla bağdaşmıyor. Eşiğin durdurucu olması bu yüzden bilinçli: yanlış tanımlı bir
+stok yayına çıkmaktansa sayfa o rakamı hiç basmıyor.
 
 **İkinci satır neden "geçti" sayılıyor, hâlbuki fark %<Deger proje="butce-borc" anahtar="f3_fark_mutlak" ondalik={1}>8,2</Deger>.** Çünkü **özdeşlik
 beklenmiyor**: finansal hesaplar piyasa değerlidir ve kapsamı biraz daha geniştir
