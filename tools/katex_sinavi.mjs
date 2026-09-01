@@ -81,11 +81,29 @@ function delimiterDuzeni(metin, kayma) {
   return kotu;
 }
 
+/** ÜÇÜNCÜ ÖLÇÜT — FORMÜLÜN İÇİNDE JSX OLMAZ.
+ *  `$$…<Deger …>…$$` yazmak her hâlükârda yanlıştır: math bloğunun içi METİN
+ *  olarak işlenir, bileşen ÇÖZÜLMEZ ve okur ham etiketi görür. Bugün bu kusur
+ *  yalnız TESADÜFEN yakalandı — `itp_b_sapma` içindeki alt çizgiler KaTeX'e
+ *  "double subscript" dedirtti. Alt çizgisiz bir anahtar olsaydı formül
+ *  sorunsuz ayrıştırılır, sayfada çöp basılır ve sınav yeşil biterdi.
+ *  Bir kusuru tesadüfen yakalayan ölçüt, o kusuru ölçmüyor demektir. */
+function jsxIcinde(formuller_) {
+  // KALIP DAR TUTULUR. İlk sürüm `/<\s*[A-Z]\w*[\s/>]/` idi ve matematikteki
+  // `0 < DF < 1` ifadesini JSX sandı. Yanlış alarm veren bir kapı, kapatılan
+  // kapıdır. Aranan şey bir BİLEŞEN KULLANIMIDIR: `<` hemen ardından büyük
+  // harfle başlayan ad (boşluk YOK) ve en az bir öznitelik. Depodaki her
+  // gerçek kullanım (<Deger proje="…" …>) bu kalıba uyuyor; `a < B` uymuyor.
+  return formuller_.filter((f) =>
+    /<[A-Z][A-Za-z0-9]*\s+[a-zA-Z-]+\s*=/.test(f.ic));
+}
+
 const hedefler = process.argv.slice(2);
 const dosyalar = (hedefler.length ? hedefler : [VARSAYILAN]).flatMap(mdxDosyalari);
 let toplam = 0;
 const bulgular = [];
 const duzenBulgu = [];
+const jsxBulgu = [];
 
 for (const d of dosyalar) {
   const ham = readFileSync(d, 'utf8');
@@ -93,7 +111,15 @@ for (const d of dosyalar) {
   for (const k of delimiterDuzeni(g, kayma)) {
     duzenBulgu.push({ dosya: relative(KOK, d), ...k });
   }
-  for (const f of formuller(g)) {
+  const fs_ = formuller(g);
+  for (const f of jsxIcinde(fs_)) {
+    const satir = kayma + g.slice(0, f.indis).split('\n').length;
+    jsxBulgu.push({
+      dosya: relative(KOK, d), satir,
+      formul: f.ic.trim().replace(/\s+/g, ' ').slice(0, 90),
+    });
+  }
+  for (const f of fs_) {
     toplam++;
     try {
       katex.renderToString(f.ic, { throwOnError: true, displayMode: f.tur === 'blok' });
@@ -109,8 +135,8 @@ for (const d of dosyalar) {
 }
 
 console.log(`KaTeX sınavı — ${dosyalar.length} dosya · ${toplam} formül`);
-if (!bulgular.length && !duzenBulgu.length) {
-  console.log('  ✓ hepsi ayrıştırıldı · $$ delimiter düzeni temiz');
+if (!bulgular.length && !duzenBulgu.length && !jsxBulgu.length) {
+  console.log('  ✓ hepsi ayrıştırıldı · $$ delimiter düzeni temiz · formül içinde JSX yok');
   process.exit(0);
 }
 for (const b of bulgular) {
@@ -123,7 +149,13 @@ for (const b of duzenBulgu) {
     `        çeviriyor. Bloğu TEK SATIRA indirin ya da \`$$\` işaretlerini\n` +
     `        kendi satırlarına alın.`);
 }
-const n = bulgular.length + duzenBulgu.length;
+for (const b of jsxBulgu) {
+  console.log(`  ✗ ${b.dosya}:${b.satir} (formül içinde JSX)\n      ${b.formul}\n` +
+    `      → Math bloğunun içi METİN olarak işlenir; bileşen çözülmez ve okur\n` +
+    `        ham etiketi görür. Formülü SEMBOLİK yazın, canlı sayıyı hemen\n` +
+    `        altındaki düz metne alın.`);
+}
+const n = bulgular.length + duzenBulgu.length + jsxBulgu.length;
 console.log(`\nKATEX SINAVI DÜŞTÜ (${bulgular.length} formül ayrıştırılamadı, ` +
-  `${duzenBulgu.length} delimiter düzeni bozuk).`);
+  `${duzenBulgu.length} delimiter düzeni bozuk, ${jsxBulgu.length} formülde JSX).`);
 process.exit(1);
