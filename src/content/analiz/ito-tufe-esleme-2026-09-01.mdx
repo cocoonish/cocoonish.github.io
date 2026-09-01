@@ -46,7 +46,9 @@ import ItoHesaplayici from '../../components/ItoHesaplayici.astro';
         <td><b><Deger proje="enflasyon" anahtar="itp_tam_ilk_ay">2024-02</Deger> –
         <Deger proje="enflasyon" anahtar="itp_tam_son_ay">2026-07</Deger>, karşılaştırılabilen
         <Deger proje="enflasyon" anahtar="itp_n_tam" ondalik={0}>30</Deger> ayın tamamı.</b>
-        Daha geriye gitmiyor çünkü <b>EVDS'te İTO 2024 Ocak'tan önce yok</b> — tahmin değil,
+        Daha geriye gitmiyor çünkü <b>EVDS'te İTO'nun TÜKETİCİ FİYAT endeksi 2024
+        Ocak'tan önce yok</b> (İTO'nun uzun tarihçeli diğer endeksleri var, ama onlar
+        BAŞKA endeksler — Bölüm 0 ve 12) — tahmin değil,
         ölçüm: serinin ait olduğu EVDS veri grubu bie_itouge2023, adı "İstanbul Tüketici Fiyat Endeksi"; kod
         uzayında yalnız iki seri var ve ikisi de 2024-01'de başlıyor (Bölüm 1).</td>
       </tr>
@@ -132,7 +134,7 @@ import ItoHesaplayici from '../../components/ItoHesaplayici.astro';
         <td>Kanıtın gücü</td>
         <td><b>Orta.</b> Ortak örneklem
         <Deger proje="enflasyon" anahtar="itp_n" ondalik={0}>30</Deger> ay ve bu
-        <b>uzatılabilecek bir sınır değil</b>: seri EVDS'te Ocak 2024'te başlıyor, aranıp
+        <b>uzatılabilecek bir sınır değil</b>: bu endeks EVDS'te Ocak 2024'te başlıyor, aranıp
         bulunamadı. Ortalama fark ve sürpriz geçişi bu boyda bile net (t = 3,21 ve 4,32);
         kural sıralaması ve takvim ayı profili <b>değil</b>. Rejim yıllarını kestirimden
         çıkaran kural <b>koda kondu</b> ve bugün <b>hiçbir ayı dışlamıyor</b> — çünkü
@@ -180,10 +182,41 @@ bölgede toplanıyor; yayım ertesi ayın 3'ünde saat 10.00'da.
 fiyat toplama takvimi TÜİK'inkiyle aynı değil. EVDS'te `TP.FG.IST1.23` koduyla duruyor
 ve seviye endeksi **Ocak 2024'te başlıyor**.
 
-Adı karıştırmamak gerekiyor: İTO ayrıca bir **Ücretliler Geçinme İndeksi** ve bir
-**Toptan Eşya Fiyat İndeksi** yayımlıyor — bunlar bu yazının konusu olan endeks
-**değil**. (EVDS'te aynı pencerede duran ikinci seri `TP.FG.IST2.23` muhtemelen
-onlardan biri; bu yazı onu kullanmıyor, Bölüm 12'ye bakın.)
+**İTO tek bir endeks yayımlamıyor, bir aile yayımlıyor** — ve adları birbirine çok
+benziyor. Karıştırmak, farklı şeyleri ölçen iki seriyi aynı grafiğe koymak demek.
+EVDS'in kendi veri grubu kataloğunda İTO başlıklı altı grup duruyor:
+
+| EVDS veri grubu | Adı | Kapsam |
+|---|---|---|
+| `bie_itouge2023` | İstanbul Tüketici Fiyat Endeksi | 2024-01 → 2026-07 |
+| `bie_itouge85` | İstanbul Geçinme Endeksi (Ücretliler) | 1987-01 → 2026-07 |
+| `bie_ito95` | Geçinme Endeksi (Ücretliler) | 1996-01 → 2026-07 |
+| `bie_ito68` | Geçinme Endeksi (Ücretliler) (1968=100) | 1978-01 → 2026-07 |
+| `bie_itotefe` | Toptan Eşya Fiyat Endeksi | 1968-01 → 2026-07 |
+| `bie_itoteuc` | İstanbul Toptan Eşya Fiyat ve Ücretliler Geçinme Endeksleri (tüm seriler) | 1963-01 → 2026-07 |
+
+{/* sinav-muaf: bie_itouge2023 — EVDS veri grubu kataloğundan alınan künye; oynak değil sabit */}
+
+Üç ayrı ölçüm var, üçü de "İstanbul fiyatları" diyor ama farklı sorular soruyorlar:
+
+- **Tüketici Fiyat Endeksi (2023=100)** — İstanbul'da hanehalkı tüketimine giren mal ve
+  hizmet fiyatları. TÜFE'nin İstanbul karşılığı ve **bu yazının konusu olan tek endeks**.
+- **Ücretliler Geçinme Endeksi** — ücretli bir hanenin geçim maliyeti. Sepet, tüketici
+  endeksininkinden farklı bir harcama yapısına göre ağırlıklandırılıyor; dolayısıyla aynı
+  ay için farklı bir sayı üretmesi normaldir, hata değil. İTO'nun **en uzun tarihçeli**
+  serisi bu ailededir.
+- **Toptan Eşya Fiyat Endeksi** — perakende değil **toptan** aşamadaki fiyatlar; yani
+  fiyatın tüketiciye yansımadan önceki halkası. Doğru akrabası TÜFE değil **Yİ-ÜFE**'dir.
+
+Kataloğun kendisi de bir şey söylüyor ve söylediği kadarıyla bırakılmalı: 2023 bazlı
+tüketici endeksinin grup kodu `bie_itouge2023`, yani içinde hâlâ "uge" (ücretliler
+geçinme) geçiyor — ama grubun **adı** Tüketici Fiyat Endeksi ve eski ücretliler grupları
+da yayımlanmaya devam ediyor. Bu, iki endeks arasında bir soy bağı olduğunu *düşündürür*;
+doğrular değil, ve bu sayfada hiçbir hüküm buna dayanmıyor.
+
+(EVDS'te 2023 bazlı grubun penceresinde duran ikinci seri `TP.FG.IST2.23`'ün bu ailenin
+hangi üyesi olduğu **doğrulanmadı**; bu yazı onu kullanmıyor — Bölüm 12. Uzun tarihçeli
+serilerin kodları da orada.)
 
 <div class="kutu">
 
@@ -679,7 +712,7 @@ ay sessizce yanlış ayı gösterirdi.
 
 Girdi: **<Deger proje="enflasyon" anahtar="itp_b_ad">Ağustos 2026</Deger>** İTO aylık
 değişimi **%<Deger proje="enflasyon" anahtar="itp_b_ito" ondalik={2}>1,66</Deger>**.
-Kaynak: <Deger proje="enflasyon" anahtar="itp_b_kaynak">İTO İstanbul Ücretliler Geçinme Endeksi, Ağustos 2026 yayımı (kullanıcı bildirimi)</Deger>.
+Kaynak: <Deger proje="enflasyon" anahtar="itp_b_kaynak">İTO resmî yayımı (EVDS'e henüz düşmedi)</Deger>.
 <Deger proje="enflasyon" anahtar="itp_b_elle">EVDS bu ayı henüz yayımlamadı; okuma elle girildi ve kaynağı yukarıda yazılı. EVDS yayımladığı an iki sayı karşılaştırılır.</Deger>
 
 Kuralların parametreleri <Deger proje="enflasyon" anahtar="itp_b_n" ondalik={0}>30</Deger>
@@ -1062,7 +1095,8 @@ bir kesriyle çalışılan bir sinyaldir.
 Dürüstlük bölümü. Aşağıdakiler bu yazıda **yok** ve yokluğu sonuçların gücünü sınırlıyor.
 
 **Örneklem <Deger proje="enflasyon" anahtar="itp_n_tam" ondalik={0}>30</Deger> ay ve
-uzatılamıyor.** EVDS'te İTO Ocak 2024'te başlıyor; bu bir tercih değil, ölçülmüş bir
+uzatılamıyor.** EVDS'te İTO'nun tüketici fiyat endeksi Ocak 2024'te başlıyor; bu bir
+tercih değil, ölçülmüş bir
 sınır (Bölüm 1). Ortalama fark ve sürpriz geçişi bu boyda bile net çıkıyor
 (t = <Deger proje="enflasyon" anahtar="itp_tum_t" ondalik={2}>3,21</Deger> ve
 <Deger proje="enflasyon" anahtar="itp_s_t" ondalik={2}>4,32</Deger>); kural sıralaması ve
@@ -1086,7 +1120,7 @@ uzatmanın gerçek bir yolu olabilir. Veri grubu `bie_itoteuc` altında, seri ad
 
 Bunlar **bu yazının konusu olan endeks değil** — farklı sepet, farklı tanım — ve
 birini alıp "İTO enflasyonu" diye kullanmak tam da bu yazının başına gelen hatayı
-tekrarlamak olurdu. Ama otuz yıllık bir İstanbul fiyat serisi, İTO–TÜFE ilişkisinin
+tekrarlamak olurdu. Ama 1963'e uzanan bir İstanbul fiyat serisi, İTO–TÜFE ilişkisinin
 rejimler arasında nasıl değiştiğini sınamak için ayrı ve değerli bir çalışma. Kurulursa
 aynı kimlik doğrulaması ona da uygulanmalı.
 
