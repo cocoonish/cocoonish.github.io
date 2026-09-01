@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Sayfa ↔ hat sözleşmesi sınavı (CI'da koşturulabilir).
 
-Bu sınav, "hat koştu ama sayfa yalan söylüyor" sınıfı hataları yakalar. Yedi
+Bu sınav, "hat koştu ama sayfa yalan söylüyor" sınıfı hataları yakalar. Sekiz
 bölüm var; her biri düzenin bir kuralına karşılık gelir:
 
   (1) <Deger> anahtarları — MDX'te çağrılan her anahtar ozet.json'da var mı?
@@ -18,6 +18,9 @@ bölüm var; her biri düzenin bir kuralına karşılık gelir:
   (6) KaTeX — her formül ayrıştırılabiliyor mu? (rehype-katex düşmez, ham basar)
   (7) <Deger> anahtarları TÜM koleksiyonlarda — analiz ve araştırma
       sayfaları da aynı sözleşmeyi kullanıyor; kural 1 onları görmüyordu.
+  (8) DERLENMİŞ ÇIKTI — dist/ içinde KaTeX hatası, ham <Deger> etiketi ya
+      da çözülmemiş MDX yorumu var mı? Kaynağı sınayan ölçütlerin
+      göremediği tek şey: okurun gerçekte gördüğü sayfa.
 
 Koşum:  python3 site/tools/sayfa_sinavi.py
 Çıkış:  0 = geçti · 1 = en az bir sınav düştü
@@ -305,6 +308,38 @@ def main() -> int:
             hata.append("KaTeX: formül ayrıştırılamadı (ayrıntı yukarıda)")
         elif r.returncode != 0 or not cikti:
             print("  – node/katex yok, atlandı")
+
+    # (8) DERLENMİŞ ÇIKTIYA BAK — OKURUN GÖRDÜĞÜ ŞEY BUDUR.
+    # 6. ve 7. ölçütler kaynağı sınıyor ve ikisi de yeşil bitiyordu; sayfada
+    # ise üç formül bloğu ve ARDINDAKİ 108 <Deger> etiketi ham metin olarak
+    # duruyordu. Çünkü kusur ne KaTeX'te ne anahtar listesindeydi: MDX iki
+    # satıra yayılan bir `$$` bloğunun delimiter'ını yanlış eşliyor ve açılan
+    # span belgenin sonuna kadar uzuyor. Kaynağı ne kadar iyi sınarsak
+    # sınayalım, ÇIKTIYA bakmayan bir denetim bu sınıfı göremez.
+    #
+    # Bu ölçüt dist/ varsa koşar (npm run build sonrası). Yoksa atlanır ve
+    # bunu SÖYLER — sessizce geçmek, koşmayan bir denetimi geçmiş saymaktır.
+    print("\n▶ Derlenmiş çıktı (dist/)")
+    dist = KOK / "site/dist"
+    if not dist.exists():
+        print("  – dist/ yok (önce `npm run build`), ÖLÇÜT KOŞMADI")
+    else:
+        sayfa = sorted(dist.rglob("index.html"))
+        kirik = []
+        for h in sayfa:
+            metin = h.read_text(encoding="utf-8", errors="replace")
+            n_kt = metin.count("katex-error")
+            # Ham <Deger> etiketi: MDX bileşeni çözememiş, metne kaçmış.
+            n_dg = metin.count("&lt;Deger") + metin.count("&#x3C;Deger")
+            # Çözülmemiş MDX yorumu: aynı sınıf kusurun ikinci izi.
+            n_yr = metin.count("sinav-muaf")
+            if n_kt or n_dg or n_yr:
+                kirik.append((h.relative_to(dist).parent.as_posix() or ".",
+                              n_kt, n_dg, n_yr))
+        for yol, a, b, c in kirik:
+            hata.append(f"dist/{yol}: KaTeX hatası {a} · ham <Deger> {b} · "
+                        f"çözülmemiş MDX yorumu {c} — sayfa ham metin basıyor")
+        print(f"  {len(sayfa)} sayfa tarandı · kırık {len(kirik)}")
 
     print()
     if hata:

@@ -13,6 +13,20 @@
  * KaTeX'in kendi ayrıştırıcısına verir, düşen olursa dosya+satır ile bildirir
  * ve ÇIKIŞ KODU 1 döner.
  *
+ * İKİNCİ ÖLÇÜT — DELİMİTER DÜZENİ (01.09.2026'da ölçüldü). Yukarıdaki ölçüt
+ * doğruydu, koşuyordu, 4063 formülde yeşil bitiyordu — ve sayfada üç formül
+ * bloğu ile ARDINDAKİ 108 <Deger> etiketi ham metin olarak yayımlandı. Sebep
+ * KaTeX değil MDX'ti: bir `$$…$$` bloğu iki satıra yayıldığında remark-math
+ * delimiter'ları yanlış eşliyor, açılan span belgenin sonuna kadar uzuyor ve
+ * o bölge komple metne dönüyor. Bu betiğin regex'i `[\s\S]` ile satır
+ * atladığı için formülü DOĞRU çıkarıyor, KaTeX de onu sorunsuz ayrıştırıyordu;
+ * yani sınav, MDX'in formülü BULABİLDİĞİNİ hiç sormuyordu.
+ *
+ * Ölçütün kapsamı ölçütün parçasıdır: artık `$$` delimiter'larının aynı
+ * satırda olup olmadığı da sınanıyor. Kural, MDX'in kabul ettiği iki düzeni
+ * bırakır — ya `$$…$$` tek satırda, ya da `$$` kendi satırında (üç satırlık
+ * blok) — ve arada kalan her şeyi düşürür.
+ *
  * Kullanım:  node site/tools/katex_sinavi.mjs [dosya|dizin ...]
  * Argümansız: site/src/content altındaki bütün .mdx dosyaları.
  */
@@ -52,14 +66,33 @@ function formuller(metin) {
   return bulunan;
 }
 
+/** `$$` delimiter düzeni: MDX'in güvenle ayrıştırdığı iki biçim dışını yakala.
+ *  Kabul: (a) `$$…$$` aynı satırda, (b) `$$` tek başına kendi satırında.
+ *  Ret:   `$$` ile başlayıp satır sonunda kapanmayan blok. */
+function delimiterDuzeni(metin, kayma) {
+  const kotu = [];
+  const satirlar = metin.split('\n');
+  satirlar.forEach((s, i) => {
+    const n = (s.match(/\$\$/g) || []).length;
+    if (n % 2 === 1 && s.trim() !== '$$') {
+      kotu.push({ satir: kayma + i + 1, metin: s.trim().slice(0, 90) });
+    }
+  });
+  return kotu;
+}
+
 const hedefler = process.argv.slice(2);
 const dosyalar = (hedefler.length ? hedefler : [VARSAYILAN]).flatMap(mdxDosyalari);
 let toplam = 0;
 const bulgular = [];
+const duzenBulgu = [];
 
 for (const d of dosyalar) {
   const ham = readFileSync(d, 'utf8');
   const { govde: g, kayma } = govde(ham);
+  for (const k of delimiterDuzeni(g, kayma)) {
+    duzenBulgu.push({ dosya: relative(KOK, d), ...k });
+  }
   for (const f of formuller(g)) {
     toplam++;
     try {
@@ -76,12 +109,21 @@ for (const d of dosyalar) {
 }
 
 console.log(`KaTeX sınavı — ${dosyalar.length} dosya · ${toplam} formül`);
-if (!bulgular.length) {
-  console.log('  ✓ hepsi ayrıştırıldı');
+if (!bulgular.length && !duzenBulgu.length) {
+  console.log('  ✓ hepsi ayrıştırıldı · $$ delimiter düzeni temiz');
   process.exit(0);
 }
 for (const b of bulgular) {
   console.log(`  ✗ ${b.dosya}:${b.satir} (${b.tur})\n      ${b.formul}\n      → ${b.hata}`);
 }
-console.log(`\nKATEX SINAVI DÜŞTÜ (${bulgular.length} formül ayrıştırılamadı).`);
+for (const b of duzenBulgu) {
+  console.log(`  ✗ ${b.dosya}:${b.satir} (delimiter düzeni)\n      ${b.metin}\n` +
+    `      → \`$$\` bu satırda açılıp kapanmıyor. MDX bunu yanlış eşliyor ve\n` +
+    `        AÇILAN span belgenin sonuna kadar uzayarak o bölgeyi ham metne\n` +
+    `        çeviriyor. Bloğu TEK SATIRA indirin ya da \`$$\` işaretlerini\n` +
+    `        kendi satırlarına alın.`);
+}
+const n = bulgular.length + duzenBulgu.length;
+console.log(`\nKATEX SINAVI DÜŞTÜ (${bulgular.length} formül ayrıştırılamadı, ` +
+  `${duzenBulgu.length} delimiter düzeni bozuk).`);
 process.exit(1);
