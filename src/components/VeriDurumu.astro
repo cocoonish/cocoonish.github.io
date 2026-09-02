@@ -43,6 +43,16 @@ try {
   o = null;
 }
 const uyariDosyasi = fs.existsSync(path.join(process.cwd(), 'public', 'projeler', proje, 'uyarilar.json'));
+// Ayrıntı kutusu bu sayfada var mı? Varsa "son koşu" hücresi ona bağlanır;
+// yoksa çıplak metin kalır — hedefi olmayan bağlantı basılmaz.
+let kutuVar = false;
+try {
+  kutuVar = /<KosuKutusu\b/.test(
+    fs.readFileSync(path.join(process.cwd(), 'src', 'content', 'projeler', `${proje}.mdx`), 'utf-8'),
+  );
+} catch {
+  kutuVar = false;
+}
 
 // Manşet: kartla aynı kaynak, aynı anahtar, aynı saat.
 const m = hatManseti(proje);
@@ -102,7 +112,9 @@ const uyari = typeof o?.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
     {uyari !== null && (
       <span class="vd-parca">
         <span class="vd-ad">son koşu</span>
-        <b data-vd-uyari>{uyari === 0 ? 'uyarı yok' : `${uyari} uyarı`}</b>
+        <b>{kutuVar
+          ? <a href="#kosu" data-vd-uyari>{uyari === 0 ? 'uyarı yok' : `${uyari} uyarı`}</a>
+          : <span data-vd-uyari>{uyari === 0 ? 'uyarı yok' : `${uyari} uyarı`}</span>}</b>
       </span>
     )}
     {ritim && (
@@ -173,6 +185,7 @@ const uyari = typeof o?.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
       const uEl = el.querySelector('[data-vd-uyari]');
       if (uEl && typeof o.uyari_sayisi === 'number')
         uEl.textContent = o.uyari_sayisi === 0 ? 'uyarı yok' : `${o.uyari_sayisi} uyarı`;
+
     } catch {
       /* derleme anındaki değerler kalır */
     }
@@ -203,6 +216,7 @@ const uyari = typeof o?.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
   .vd-manset { flex-wrap: wrap; }
   .vd-ad { font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-50); }
   .vd-parca b { font-family: var(--font-mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .vd-parca b a { color: inherit; text-decoration-color: var(--ink-30); }
   .vd-ritim { font-family: var(--font-body) !important; font-weight: 500 !important; white-space: normal; }
   .vd-yas { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-50); }
   .vd-baglar { margin-left: auto; font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-50); }

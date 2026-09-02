@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import { BOLUMLER, kicker } from '../lib/bolumler';
 import { bultenler, teknikler } from '../lib/yayinlar';
 import { getCollection } from 'astro:content';
+import yayinTakvimi from '../data/yayin_takvimi.json';
 
 const nBulten = bultenler().length;
 const nTeknik = teknikler().length;
@@ -10,13 +11,17 @@ const nAnaliz = (await getCollection('analiz')).length;
 const nProje = (await getCollection('projeler')).length;
 const nDers = (await getCollection('arastirma')).length;
 
-const takvim = [
-  ['Günlük bülten', 'Hafta içi her sabah, 07:30 civarı', 'Ölçüm 06:30 İstanbul civarında kurulur; yazı katmanı üstüne yazılır ve sayı öyle yayımlanır.'],
-  ['Haftaya bakış', 'Pazar akşamı, 18:00 civarı', 'Haftanın karnesi, haftalık olağandışılık sıralaması ve önümüzdeki haftanın takvimi.'],
-  ['Haftalık teknik analiz', 'Pazar akşamı, haftaya bakışın ardından', 'Altı enstrüman, üç zaman dilimi; yorum ölçüm kapanmış barlardan kurulduktan sonra yazılır.'],
-  ['Analiz', 'Konu geldiğinde', 'Tek bir gelişmeyi sonuna kadar açan yazı; yayın günü X\'te de özetiyle çıkar.'],
-  ['Projeler', 'Her pano kendi ritminde', 'Günlük, haftalık ve aylık seriler; her sayfanın başında son veri tarihi ve hattın durumu yazar.'],
-];
+// Yayın takvimi TEK kaynaktan: site/src/data/yayin_takvimi.json. Saatler iş
+// akışlarının cron satırlarından türetilir ve bulten/duman.py her adımı cron ile
+// karşılaştırır — sayfa, iş akışının söylediğinden farklı bir saat anlatamaz.
+const takvim = (yayinTakvimi as any).yayinlar.map((y: any) => {
+  const adimlar = (y.adimlar ?? []).map((a: any) => `${a.ad} ${a.istanbul}`).join(' · ');
+  const gunler = String(y.gunler ?? '');
+  const zaman = adimlar
+    ? `${gunler.charAt(0).toUpperCase()}${gunler.slice(1)}; ${adimlar} (İstanbul)`
+    : `${gunler.charAt(0).toUpperCase()}${gunler.slice(1)}`;
+  return [y.yayin, zaman, y.aciklama] as [string, string, string];
+});
 ---
 
 <Base title="Hakkında" description="TTO Trading: sitenin amacı, yayınları, yayın ilkeleri, yayın takvimi ve düzeltme politikası.">
@@ -89,7 +94,8 @@ const takvim = [
 
       <h2>Yayın takvimi</h2>
       <table>
-        <thead><tr><th>Yayın</th><th>Ne zaman</th><th>Not</th></tr></thead>
+        <caption class="gorunmez">Yayın takvimi: yayın, ne zaman (İstanbul saati), not</caption>
+        <thead><tr><th scope="col">Yayın</th><th scope="col">Ne zaman</th><th scope="col">Not</th></tr></thead>
         <tbody>
           {takvim.map(([ad, zaman, not_]) => (
             <tr><td><strong>{ad}</strong></td><td>{zaman}</td><td>{not_}</td></tr>

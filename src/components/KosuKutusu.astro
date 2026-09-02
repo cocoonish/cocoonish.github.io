@@ -1,17 +1,14 @@
 ---
 /**
- * Koşu kutusu: bir veri hattının SON KOŞUSUNUN durumu — tazelik + uyarılar.
+ * Koşu kutusu: bir veri hattının SON KOŞUSUNUN AYRINTISI — uyarı listesi ve
+ * doğrulama özeti. Sayfa başındaki veri durumu şeridi hükmü verir ("N uyarı",
+ * bayat/taze); bu kutu o hükmün gerekçesini açar. İkisi aynı dosyadan
+ * (public/projeler/<proje>/uyarilar.json + ozet.json) DERLEME anında okunur:
+ * elle yazılmış özet yok, JS kapalıyken de dolu. Sayfa açılınca aynı dosya
+ * yeniden okunur; derleme ile ziyaret arasında hat koşmuşsa liste tazelenir.
  *
- * İki hat da aynı kalıbı kullanır ve kutu sayfanın BAŞINDA durur: "kaynak
- * düşerse GÖRÜNÜR uyarı" ilkesi, uyarıyı 800. satıra gömen bir sayfada
- * karşılanmış sayılmaz.
- *
- * Değerler /projeler/<proje>/ozet.json'dan istemci tarafında okunur:
- *   bayat          → true ise kutu kırmızıya döner ve başlığı "BAYAT VERİ" olur
- *   bayat_cumlesi  → bayatlığın gerekçesi (ya da "veri taze" cümlesi)
- *   uyari_sayisi / uyari_cumlesi / uyari_metni → bu koşuda düşen uyarılar
- *
- * Statik yedek (JSON yüklenemezse) slot içeriğinde durur.
+ * Slot isteğe bağlı: yazarın koşu hakkında yorumu (kural, tolerans, bağlam);
+ * uyarıların kendisi slot'a yazılmaz — dosya söyler.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,87 +16,101 @@ import { tarihYaz } from '../lib/bicim';
 
 interface Props {
   proje: string;
-  /** Statik yedek: son bilinen uyarı sayısı (dosya okunamazsa). */
-  sayi?: number;
 }
-const { proje, sayi = 0 } = Astro.props;
+const { proje } = Astro.props;
 
-// İlk değerler DERLEME anında dosyadan: JS kapalı okur da bu koşunun
-// durumunu görür; elle yazılan yedek yalnız dosya yokken kalır.
-let o: Record<string, any> | null = null;
-try {
-  o = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'projeler', proje, 'ozet.json'), 'utf-8'));
-} catch {
-  o = null;
-}
-const bayat = o?.bayat === true;
-const baslik = bayat
-  ? 'BAYAT VERİ — bu koşuda sayılar ilerlemedi'
-  : o?._tarih ? `Bu koşunun durumu · veri ${tarihYaz(String(o._tarih))}` : 'Bu koşunun durumu';
-const tazelik = o?.bayat_cumlesi ?? '';
-const cumle = o?.uyari_cumlesi ?? `Bu koşuda ${sayi} uyarı düştü:`;
-const metin: string | null = typeof o?.uyari_metni === 'string' ? o.uyari_metni : null;
+const oku = (ad: string): Record<string, any> | null => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'projeler', proje, ad), 'utf-8'));
+  } catch {
+    return null;
+  }
+};
+const o = oku('ozet.json');
+const u = oku('uyarilar.json');
+
+const bayat = o?.bayat === true || String(o?.bayat) === 'True';
+const uyarilar: string[] = Array.isArray(u?.uyarilar) ? u!.uyarilar.map(String) : [];
+const dogrulama = u?.dogrulama && typeof u.dogrulama === 'object' ? Object.keys(u.dogrulama) : [];
+const kosum = tarihYaz(String(u?.kosum ?? o?.kosum_tarihi ?? ''));
+const veri = tarihYaz(String(u?.tarih ?? o?._tarih ?? ''));
+const baslik = bayat ? 'BAYAT VERİ — bu koşuda sayılar ilerlemedi' : 'Bu koşunun durumu';
+// Şerit özetteki sayıyı basar (uyarı listesi ∪ veri durumu); kutu koşu kaydını.
+// Bugün eşitler; ayrıştığı gün fark burada yazılır, sessizce iki sayı dolaşmaz.
+const seritSayisi = typeof o?.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
+const uyumsuz = u && seritSayisi !== null && seritSayisi !== uyarilar.length;
+const tazelik = typeof o?.bayat_cumlesi === 'string' ? o.bayat_cumlesi : '';
 ---
 
-<div class:list={['not', 'kosu', { bayat }]} data-kosu-proje={proje}>
+<div class:list={['not', 'kosu', { bayat }]} id="kosu" data-kosu-proje={proje}>
   <span class="etiket" data-kosu-baslik>{baslik}</span>
+  <p class="kosu-meta">
+    {kosum && <>koşu {kosum}</>}{kosum && veri && ' · '}{veri && <>veri {veri}</>}
+    {dogrulama.length > 0 && <> · {dogrulama.length} kimlik denetimi</>}
+  </p>
   {tazelik && <p class="kosu-tazelik" data-kosu-tazelik>{tazelik}</p>}
-  <!-- div, p DEĞİL: MDX slot içeriğini kendi <p>'sine sarar; <p> içinde <p>
-       geçersizdir ve tarayıcı dış paragrafı erkenden kapatır. -->
-  <div class="kosu-uyari">
-    <strong data-kosu-cumle>{cumle}</strong>{' '}
-    <span data-kosu-metin>{metin ?? <slot />}</span>
-  </div>
+  {u ? (
+    uyarilar.length > 0 ? (
+      <>
+        <p class="kosu-cumle"><strong data-kosu-cumle>Bu koşuda {uyarilar.length} uyarı düştü:</strong></p>
+        <ol class="kosu-liste" data-kosu-liste>
+          {uyarilar.map((x) => <li>{x}</li>)}
+        </ol>
+      </>
+    ) : (
+      <p class="kosu-cumle"><strong data-kosu-cumle>Bu koşuda uyarı yok.</strong></p>
+    )
+  ) : (
+    <p class="kosu-cumle"><strong data-kosu-cumle>Koşu kaydı bulunamadı.</strong></p>
+  )}
+  {uyumsuz && (
+    <p class="kosu-uyumsuz">
+      Sayfa başındaki özet {seritSayisi} uyarı sayıyor, koşu kaydında {uyarilar.length} kayıt var;
+      fark veri durumu denetiminden gelir{typeof o?.uyari_metni === 'string' && o.uyari_metni ? `: ${o.uyari_metni}` : '.'}
+    </p>
+  )}
+  <div class="kosu-not"><slot /></div>
   <p class="kosu-kaynak">
-    <a href={`/projeler/${proje}/uyarilar.json`}>Uyarı listesi</a> ·
+    <a href={`/projeler/${proje}/uyarilar.json`}>Koşu kaydı</a> ·
     <a href={`/projeler/${proje}/ozet.json`}>sayfadaki canlı değerler</a>
   </p>
 </div><script>
-  import { tarihYaz } from '../lib/bicim';
+  // Sayfa açılınca aynı dosya yeniden okunur; liste ve hüküm tazelenir.
   const kutular = [...document.querySelectorAll('[data-kosu-proje]')] as HTMLElement[];
   kutular.forEach(async (kutu) => {
     const proje = kutu.dataset.kosuProje!;
     try {
-      const r = await fetch(`/projeler/${proje}/ozet.json`, { cache: 'no-cache' });
-      if (!r.ok) return;
-      const o = await r.json();
-      const taze = kutu.querySelector('[data-kosu-tazelik]') as HTMLElement | null;
-      const baslik = kutu.querySelector('[data-kosu-baslik]') as HTMLElement | null;
-      const cumle = kutu.querySelector('[data-kosu-cumle]') as HTMLElement | null;
-      const metin = kutu.querySelector('[data-kosu-metin]') as HTMLElement | null;
+      const [r1, r2] = await Promise.all([
+        fetch(`/projeler/${proje}/uyarilar.json`, { cache: 'no-cache' }),
+        fetch(`/projeler/${proje}/ozet.json`, { cache: 'no-cache' }),
+      ]);
+      if (!r1.ok) return;
+      const u = await r1.json();
+      const o = r2.ok ? await r2.json() : {};
+      const liste = Array.isArray(u.uyarilar) ? u.uyarilar.map(String) : [];
+      const cumle = kutu.querySelector('[data-kosu-cumle]');
+      if (cumle) cumle.textContent = liste.length ? `Bu koşuda ${liste.length} uyarı düştü:` : 'Bu koşuda uyarı yok.';
+      const ol = kutu.querySelector('[data-kosu-liste]');
+      if (ol) ol.innerHTML = liste.map((x: string) => `<li>${x.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c]!)}</li>`).join('');
+      const taze = kutu.querySelector('[data-kosu-tazelik]');
       if (taze && o.bayat_cumlesi) taze.textContent = o.bayat_cumlesi;
-      if (cumle && o.uyari_cumlesi) cumle.textContent = o.uyari_cumlesi;
-      if (metin && o.uyari_metni) metin.textContent = o.uyari_metni;
-      if (o.bayat === true) {
-        kutu.classList.add('bayat');
-        if (baslik) baslik.textContent = 'BAYAT VERİ — bu koşuda sayılar ilerlemedi';
-      } else if (baslik && o._tarih) {
-        baslik.textContent = `Bu koşunun durumu · veri ${tarihYaz(String(o._tarih))}`;
-      }
+      const bayat = o.bayat === true || String(o.bayat) === 'True';
+      kutu.classList.toggle('bayat', bayat);
+      const baslik = kutu.querySelector('[data-kosu-baslik]');
+      if (baslik) baslik.textContent = bayat ? 'BAYAT VERİ — bu koşuda sayılar ilerlemedi' : 'Bu koşunun durumu';
     } catch {
-      /* statik yedek kalır */
+      /* derleme anındaki değerler kalır */
     }
   });
 </script><style>
-  .not.kosu p,
-  .not.kosu .kosu-uyari {
-    margin: 0.35rem 0;
-  }
-  /* MDX slot içeriği bir <p> ile gelir; kutuda satır içi akmalı. */
-  .not.kosu .kosu-uyari span > p {
-    display: inline;
-    margin: 0;
-  }
-  .not.kosu .kosu-kaynak {
-    font-size: 0.86rem;
-    color: var(--ink-70);
-  }
-  .not.kosu.bayat {
-    border-left-color: var(--claret);
-    border-color: var(--claret);
-  }
-  .not.kosu.bayat .etiket {
-    color: var(--claret);
-    font-weight: 600;
-  }
+  .not.kosu p, .not.kosu .kosu-not { margin: 0.35rem 0; }
+  .not.kosu .kosu-meta { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-60); }
+  .not.kosu .kosu-liste { margin: 0.3rem 0 0.4rem 1.2rem; padding: 0; font-size: 0.9rem; }
+  .not.kosu .kosu-liste li { margin: 0.2rem 0; }
+  .not.kosu .kosu-not:empty { display: none; }
+  .not.kosu .kosu-uyumsuz { font-size: 0.86rem; color: var(--uyari); }
+  .not.kosu .kosu-not p { margin: 0.35rem 0; }
+  .not.kosu .kosu-kaynak { font-size: 0.86rem; color: var(--ink-70); }
+  .not.kosu.bayat { border-left-color: var(--claret); border-color: var(--claret); }
+  .not.kosu.bayat .etiket { color: var(--claret); font-weight: 600; }
 </style>
