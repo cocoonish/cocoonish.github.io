@@ -12,10 +12,14 @@ const nProje = (await getCollection('projeler')).length;
 const nDers = (await getCollection('arastirma')).length;
 
 // Yayın takvimi TEK kaynaktan: site/src/data/yayin_takvimi.json. Saatler iş
-// akışlarının cron satırlarından türetilir ve bulten/duman.py her adımı cron ile
-// karşılaştırır — sayfa, iş akışının söylediğinden farklı bir saat anlatamaz.
+// akışlarının cron satırlarından türetilir; ortak/yayin_takvimi.karsilastir her
+// adımı cron ile karşılaştırır (bülten duman sınaması ve sayfa sınavı 16 aynı
+// fonksiyonu çağırır) — sayfa, iş akışının söylediğinden farklı bir saat anlatamaz.
+// `okura: false` adımlar (nöbetçi yoklaması gibi iç alarmlar) kayıtta durur,
+// karşılaştırmaya girer, okura basılmaz: okur onların hiçbir çıktısını görmez.
 const takvim = (yayinTakvimi as any).yayinlar.map((y: any) => {
   const adimlar = [...(y.adimlar ?? [])]
+    .filter((a: any) => a.okura !== false)
     .sort((a: any, b: any) => String(a.istanbul).localeCompare(String(b.istanbul)))
     .map((a: any) => `${a.ad} ${a.istanbul}`).join(' · ');
   const gunler = String(y.gunler ?? '');
@@ -104,8 +108,8 @@ const takvim = (yayinTakvimi as any).yayinlar.map((y: any) => {
         </tbody>
       </table>
       <p>
-        Tablodaki saatler zamanlanmış koşuların saatidir; yazı daha erken biterse sayı
-        daha erken çıkar, yani her saat "en geç" diye okunmalıdır.
+        Tablodaki saatler zamanlanmış koşuların hedef saatidir: yazı daha erken biterse
+        sayı daha erken çıkar, koşucu gecikirse sarkabilir.
         Bülten ve teknik analiz yalnız yazı katmanı tamamlandığında yayımlanır; ölçüm
         hazır olsa da yorumu yazılmamış bir sayı siteye çıkmaz. Bu yüzden bir sabah sayı
         gecikirse sayfa bir önceki tam sayıyı gösterir, yarım bir taslağı değil.

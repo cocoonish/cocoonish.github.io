@@ -5,7 +5,11 @@
  * bayat/taze); bu kutu o hükmün gerekçesini açar. İkisi aynı dosyadan
  * (public/projeler/<proje>/uyarilar.json + ozet.json) DERLEME anında okunur:
  * elle yazılmış özet yok, JS kapalıyken de dolu. Sayfa açılınca aynı dosya
- * yeniden okunur; derleme ile ziyaret arasında hat koşmuşsa liste tazelenir.
+ * yeniden okunur; derleme ile ziyaret arasında hat koşmuşsa liste, koşu ve
+ * veri tarihi, bayatlık hükmü ve özet–kayıt uyumsuzluğu birlikte tazelenir.
+ *
+ * Uyarı satırları OKURA gider: hattın Python'u onları okur dilinde yazar
+ * (ortak/okur_dili.kosu_kaydi_tara; guncelle.py uyarır, sayfa sınavı 17 engel).
  *
  * Slot isteğe bağlı: yazarın koşu hakkında yorumu (kural, tolerans, bağlam);
  * uyarıların kendisi slot'a yazılmaz — dosya söyler.
@@ -64,7 +68,7 @@ const tazelik = typeof o?.bayat_cumlesi === 'string' ? o.bayat_cumlesi : '';
 <div class:list={['not', 'kosu', { bayat }]} id="kosu" data-kosu-proje={proje}>
   <span class="etiket" data-kosu-baslik>{baslik}</span>
   <p class="kosu-meta">
-    <span data-kosu-kosum>{kosum && `koşu ${kosum}`}</span>{kosum && veri && ' · '}{veri && <>veri {veri}</>}
+    <span data-kosu-kosum>{kosum && `koşu ${kosum}`}</span>{kosum && veri && ' · '}<span data-kosu-veri>{veri && `veri ${veri}`}</span>
     {dogrulamaSayisi > 0 && <> · {dogrulamaSayisi} kimlik denetimi</>}
   </p>
   {tazelik && <p class="kosu-tazelik" data-kosu-tazelik>{tazelik}</p>}
@@ -75,12 +79,10 @@ const tazelik = typeof o?.bayat_cumlesi === 'string' ? o.bayat_cumlesi : '';
   <ol class="kosu-liste" data-kosu-liste hidden={uyarilar.length === 0}>
     {uyarilar.map((x) => <li>{x}</li>)}
   </ol>
-  {uyumsuz && (
-    <p class="kosu-uyumsuz">
-      Sayfa başındaki özet {seritSayisi} uyarı sayıyor, koşu kaydında {uyarilar.length} kayıt var.
-      {fark.length > 0 ? ` Özette olup kayıtta olmayan: ${fark.join(' · ')}` : ''}
-    </p>
-  )}
+  {/* Uyumsuzluk satırı da HER ZAMAN basılır (uyumluyken gizli): ziyaret anında iki sayı ayrışırsa istemci açar. */}
+  <p class="kosu-uyumsuz" data-kosu-uyumsuz hidden={!uyumsuz}>
+    {uyumsuz ? `Sayfa başındaki özet ${seritSayisi} uyarı sayıyor, koşu kaydında ${uyarilar.length} kayıt var.${fark.length > 0 ? ` Özette olup kayıtta olmayan: ${fark.join(' · ')}` : ''}` : ''}
+  </p>
   <div class="kosu-not"><slot /></div>
   <p class="kosu-kaynak">
     <a href={`/projeler/${proje}/uyarilar.json`}>Koşu kaydı</a> ·
@@ -110,6 +112,21 @@ const tazelik = typeof o?.bayat_cumlesi === 'string' ? o.bayat_cumlesi : '';
       }
       const kosumEl = kutu.querySelector('[data-kosu-kosum]');
       if (kosumEl && typeof u.kosum === 'string') kosumEl.textContent = `koşu ${tarihYaz(u.kosum)}`;
+      const veriEl = kutu.querySelector('[data-kosu-veri]');
+      if (veriEl && typeof o._tarih === 'string') veriEl.textContent = `veri ${tarihYaz(o._tarih)}`;
+      // Şerit özetteki sayıyı, kutu koşu kaydını basar; ayrıştıkları gün fark burada yazılır.
+      const uyEl = kutu.querySelector<HTMLElement>('[data-kosu-uyumsuz]');
+      if (uyEl) {
+        const serit = typeof o.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
+        const ayrik = serit !== null && serit !== liste.length;
+        const fark = ayrik && typeof o.uyari_metni === 'string'
+          ? o.uyari_metni.split(' · ').map((x: string) => x.trim()).filter((x: string) => x && !liste.includes(x))
+          : [];
+        uyEl.textContent = ayrik
+          ? `Sayfa başındaki özet ${serit} uyarı sayıyor, koşu kaydında ${liste.length} kayıt var.${fark.length ? ` Özette olup kayıtta olmayan: ${fark.join(' · ')}` : ''}`
+          : '';
+        uyEl.hidden = !ayrik;
+      }
       const taze = kutu.querySelector('[data-kosu-tazelik]');
       if (taze && o.bayat_cumlesi) taze.textContent = o.bayat_cumlesi;
       const bayat = o.bayat === true || o.tazelik === 'bayat';

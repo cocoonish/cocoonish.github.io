@@ -25,7 +25,10 @@ const ortakSema = z.object({
 
 const projeler = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/projeler' }),
-  schema: ortakSema,
+  // Pano bir ölçüm yüzeyidir: künyesi kaynağını ve yayım ritmini yazar
+  // (projeler/YAZIM.md). İkisi burada ZORUNLU — rehberin "zorunlu" dediği
+  // şey şemada isteğe bağlıydı ve hiçbir kapı yokluğunu görmüyordu.
+  schema: ortakSema.extend({ kaynak: z.string().min(1), guncelleme: z.string().min(1) }),
 });
 
 const arastirma = defineCollection({
