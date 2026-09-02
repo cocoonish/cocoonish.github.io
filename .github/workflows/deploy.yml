@@ -37,7 +37,15 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      # YIĞIN SINIRI. 02.09.2026'da kaynak deponun yayın kapısında derleme
+      # "JavaScript heap out of memory" ile düştü (2.030 MB'ta abort): Node
+      # varsayılan yığını makinenin belleğine göre seçiyor ve koşucuda ~2 GB'ta
+      # duruyor. Aynı kaynak burada da derleniyor, yani aynı duvar buraya da
+      # çıkar. Koşucunun 16 GB'ı var; 6 GB bugünkü ihtiyacın kat kat üstünde,
+      # gerçek bir sızıntıda hâlâ düşecek kadar dar.
       - run: npm run build
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
