@@ -29,14 +29,20 @@ const oku = (ad: string): Record<string, any> | null => {
 const o = oku('ozet.json');
 const u = oku('uyarilar.json');
 
-const bayat = o?.bayat === true || String(o?.bayat) === 'True';
+// Bayatlık hükmü şeritle (VeriDurumu) AYNI kural: `bayat: true` ya da `tazelik: 'bayat'`.
+const bayat = o?.bayat === true || o?.tazelik === 'bayat';
 const uyarilar: string[] = Array.isArray(u?.uyarilar) ? u!.uyarilar.map(String) : [];
-// Kimlik denetimleri: hatlar farklı anahtarla yazıyor (dogrulama, dogrulama_veri,
-// kimlik, ytm_sinamasi) — sözlük değerli olanların kayıtları toplanır.
+// Kimlik denetimleri: yalnız HÜKÜM taşıyan kayıtlar sayılır (içinde `gecti`
+// benzeri bir alan olan sözlük). Hatlar farklı yazıyor: bazıları anahtarın
+// altına denetim adı → kayıt sözlüğü koyar, bazıları tek denetimin istatistik
+// alanlarını doğrudan yazar (DİBS `kimlik`: n, medyan, esik, gecti…). Alan
+// SAYMAK denetim saymak değildir; hüküm alanı yoksa sayı hiç basılmaz.
+const hukumlu = (v: any) => v && typeof v === 'object' && !Array.isArray(v)
+  && Object.keys(v).some((k) => /^(gecti|ozdeslik_gecti|tuttu|uyumlu)$/.test(k));
 const dogrulamaSayisi = u
   ? Object.entries(u)
       .filter(([k, v]) => /dogrulama|kimlik|sinama/.test(k) && v && typeof v === 'object' && !Array.isArray(v))
-      .reduce((n, [, v]) => n + Object.keys(v as object).length, 0)
+      .reduce((n, [, v]) => n + (hukumlu(v) ? 1 : Object.values(v as object).filter(hukumlu).length), 0)
   : 0;
 const kosum = tarihYaz(String(u?.kosum ?? o?.kosum_tarihi ?? ''));
 // Veri tarihi HATTIN saatidir (şeritle aynı kaynak): koşu kaydının `tarih`i aylık
@@ -47,34 +53,32 @@ const baslik = bayat ? 'BAYAT VERİ — bu koşuda sayılar ilerlemedi' : 'Bu ko
 // Bugün eşitler; ayrıştığı gün fark burada yazılır, sessizce iki sayı dolaşmaz.
 const seritSayisi = typeof o?.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
 const uyumsuz = u && seritSayisi !== null && seritSayisi !== uyarilar.length;
+// Özet metni bütün uyarıların birleşimidir; kutu aynı maddeleri ikinci kez basmaz,
+// yalnız koşu kaydında OLMAYAN maddeleri (veri durumu, eksik denetim) listeler.
+const fark = uyumsuz && typeof o?.uyari_metni === 'string'
+  ? o.uyari_metni.split(' · ').map((x: string) => x.trim()).filter((x: string) => x && !uyarilar.includes(x))
+  : [];
 const tazelik = typeof o?.bayat_cumlesi === 'string' ? o.bayat_cumlesi : '';
 ---
 
 <div class:list={['not', 'kosu', { bayat }]} id="kosu" data-kosu-proje={proje}>
   <span class="etiket" data-kosu-baslik>{baslik}</span>
   <p class="kosu-meta">
-    {kosum && <>koşu {kosum}</>}{kosum && veri && ' · '}{veri && <>veri {veri}</>}
+    <span data-kosu-kosum>{kosum && `koşu ${kosum}`}</span>{kosum && veri && ' · '}{veri && <>veri {veri}</>}
     {dogrulamaSayisi > 0 && <> · {dogrulamaSayisi} kimlik denetimi</>}
   </p>
   {tazelik && <p class="kosu-tazelik" data-kosu-tazelik>{tazelik}</p>}
-  {u ? (
-    uyarilar.length > 0 ? (
-      <>
-        <p class="kosu-cumle"><strong data-kosu-cumle>Bu koşuda {uyarilar.length} uyarı düştü:</strong></p>
-        <ol class="kosu-liste" data-kosu-liste>
-          {uyarilar.map((x) => <li>{x}</li>)}
-        </ol>
-      </>
-    ) : (
-      <p class="kosu-cumle"><strong data-kosu-cumle>Bu koşuda uyarı yok.</strong></p>
-    )
-  ) : (
-    <p class="kosu-cumle"><strong data-kosu-cumle>Koşu kaydı bulunamadı.</strong></p>
-  )}
+  <p class="kosu-cumle"><strong data-kosu-cumle>
+    {!u ? 'Koşu kaydı bulunamadı.' : uyarilar.length > 0 ? `Bu koşuda ${uyarilar.length} uyarı düştü:` : 'Bu koşuda uyarı yok.'}
+  </strong></p>
+  {/* Liste HER ZAMAN basılır (boşken gizli): ziyaret anında kayıt yeni uyarı getirirse istemci açar. */}
+  <ol class="kosu-liste" data-kosu-liste hidden={uyarilar.length === 0}>
+    {uyarilar.map((x) => <li>{x}</li>)}
+  </ol>
   {uyumsuz && (
     <p class="kosu-uyumsuz">
       Sayfa başındaki özet {seritSayisi} uyarı sayıyor, koşu kaydında {uyarilar.length} kayıt var.
-      {typeof o?.uyari_metni === 'string' && o.uyari_metni ? ` Özetin metni: ${o.uyari_metni}` : ''}
+      {fark.length > 0 ? ` Özette olup kayıtta olmayan: ${fark.join(' · ')}` : ''}
     </p>
   )}
   <div class="kosu-not"><slot /></div>
@@ -83,6 +87,7 @@ const tazelik = typeof o?.bayat_cumlesi === 'string' ? o.bayat_cumlesi : '';
     <a href={`/projeler/${proje}/ozet.json`}>sayfadaki canlı değerler</a>
   </p>
 </div><script>
+  import { tarihYaz } from '../lib/bicim';
   // Sayfa açılınca aynı dosya yeniden okunur; liste ve hüküm tazelenir.
   const kutular = [...document.querySelectorAll('[data-kosu-proje]')] as HTMLElement[];
   kutular.forEach(async (kutu) => {
@@ -98,11 +103,16 @@ const tazelik = typeof o?.bayat_cumlesi === 'string' ? o.bayat_cumlesi : '';
       const liste = Array.isArray(u.uyarilar) ? u.uyarilar.map(String) : [];
       const cumle = kutu.querySelector('[data-kosu-cumle]');
       if (cumle) cumle.textContent = liste.length ? `Bu koşuda ${liste.length} uyarı düştü:` : 'Bu koşuda uyarı yok.';
-      const ol = kutu.querySelector('[data-kosu-liste]');
-      if (ol) ol.innerHTML = liste.map((x: string) => `<li>${x.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c]!)}</li>`).join('');
+      const ol = kutu.querySelector<HTMLElement>('[data-kosu-liste]');
+      if (ol) {
+        ol.replaceChildren(...liste.map((x: string) => { const li = document.createElement('li'); li.textContent = x; return li; }));
+        ol.hidden = liste.length === 0;
+      }
+      const kosumEl = kutu.querySelector('[data-kosu-kosum]');
+      if (kosumEl && typeof u.kosum === 'string') kosumEl.textContent = `koşu ${tarihYaz(u.kosum)}`;
       const taze = kutu.querySelector('[data-kosu-tazelik]');
       if (taze && o.bayat_cumlesi) taze.textContent = o.bayat_cumlesi;
-      const bayat = o.bayat === true || String(o.bayat) === 'True';
+      const bayat = o.bayat === true || o.tazelik === 'bayat';
       kutu.classList.toggle('bayat', bayat);
       const baslik = kutu.querySelector('[data-kosu-baslik]');
       if (baslik) baslik.textContent = bayat ? 'BAYAT VERİ — bu koşuda sayılar ilerlemedi' : 'Bu koşunun durumu';
@@ -114,7 +124,7 @@ const tazelik = typeof o?.bayat_cumlesi === 'string' ? o.bayat_cumlesi : '';
   .not.kosu p, .not.kosu .kosu-not { margin: 0.35rem 0; }
   .not.kosu .kosu-meta { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-60); }
   .not.kosu .kosu-liste { margin: 0.3rem 0 0.4rem 1.2rem; padding: 0; font-size: 0.9rem; }
-  .not.kosu .kosu-liste li { margin: 0.2rem 0; }
+  .not.kosu .kosu-liste :global(li) { margin: 0.2rem 0; }
   .not.kosu .kosu-not:empty { display: none; }
   .not.kosu .kosu-uyumsuz { font-size: 0.86rem; color: var(--uyari); }
   .not.kosu .kosu-not p { margin: 0.35rem 0; }

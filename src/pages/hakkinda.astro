@@ -19,9 +19,8 @@ const takvim = (yayinTakvimi as any).yayinlar.map((y: any) => {
     .sort((a: any, b: any) => String(a.istanbul).localeCompare(String(b.istanbul)))
     .map((a: any) => `${a.ad} ${a.istanbul}`).join(' · ');
   const gunler = String(y.gunler ?? '');
-  const zaman = adimlar
-    ? `${gunler.charAt(0).toUpperCase()}${gunler.slice(1)}; ${adimlar} (İstanbul)`
-    : `${gunler.charAt(0).toUpperCase()}${gunler.slice(1)}`;
+  const bas = gunler.charAt(0).toLocaleUpperCase('tr-TR') + gunler.slice(1);
+  const zaman = adimlar ? `${bas}; ${adimlar} (İstanbul)` : bas;
   return [y.yayin, zaman, y.aciklama] as [string, string, string];
 });
 ---
