@@ -2,25 +2,38 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import KayitKarti from '../../components/KayitKarti.astro';
+import { kicker, bolumBul } from '../../lib/bolumler';
+import { hatManseti } from '../../lib/anaSayfa';
+import { yasMetni } from '../../lib/bicim';
+
+// Her kartta hattın manşet büyüklüğünün KENDİ tarihi: okur listeden hangi
+// panonun ne kadar taze olduğunu görür, sayfayı açmadan.
+const veriBilgisi = (slug: string): string[] => {
+  const h = hatManseti(slug);
+  if (!h.tarih) return [];
+  const yas = yasMetni(h.yas);
+  return [`veri ${h.tarih}${yas ? ` · ${yas}` : ''}`];
+};
 
 const projeler = (await getCollection('projeler'))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .sort((a, b) => (a.data.durum === 'arsiv' ? 1 : 0) - (b.data.durum === 'arsiv' ? 1 : 0));
 ---
 
-<Base title="Projeler" description="Düzenli aralıklarla güncellenen veri projeleri ve canlı grafikler.">
+<Base title="Projeler" description={bolumBul('/projeler/')?.aciklama ?? 'Kendi kaynağından beslenen, kendi ritminde tazelenen veri panoları.'}>
   <header class="liste-baslik yuksel">
-    <p class="etiket kicker">03 — Bölüm</p>
+    <p class="etiket kicker">{kicker('/projeler/')}</p>
     <h1>Projeler</h1>
     <p class="alt">
-      Her proje bir Python hattına bağlıdır: veri çekilir, hesap yeniden koşulur,
-      grafik bu sayfalara işlenir. Kartlardaki ↻ işareti güncelleme sıklığını gösterir.
+      Her pano kendi kaynağından beslenir: veri çekilir, hesap yeniden koşulur,
+      grafik ve sayılar bu sayfalara işlenir. Kartta "veri" satırı panonun manşet
+      büyüklüğünün kendi tarihini, ↻ işareti yayım ritmini gösterir.
     </p>
   </header>
   <div class="kayit-izgara">
     {
       projeler.map((p, i) => (
-        <KayitKarti href={`/projeler/${p.id}/`} sira={i + 1} gecikme={i * 60} {...p.data} />
+        <KayitKarti href={`/projeler/${p.id}/`} sira={i + 1} gecikme={i * 60} {...p.data} ekBilgi={veriBilgisi(p.id)} />
       ))
     }
   </div>

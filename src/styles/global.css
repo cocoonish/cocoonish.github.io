@@ -18,6 +18,13 @@
   --claret-dark: #6d1322;
   --gold: #9a7327;
   --teal: #1d5c5c;
+  /* Metinde kullanılabilir en soluk mürekkep (≈4,6:1): tarih ve kaynak notları.
+     --ink-30 yalnız çizgi ve kenarlıkta; metinde kullanılmaz. */
+  --ink-60: rgba(33, 27, 18, 0.62);
+  /* Anlam jetonları: yön ve uyarı renkleri tek yerde. */
+  --pozitif: #0f766e;
+  --negatif: var(--claret);
+  --uyari: #9a4a06;
 
   --font-display: 'Fraunces Variable', 'Times New Roman', serif;
   --font-body: 'Newsreader Variable', Georgia, serif;
@@ -67,6 +74,36 @@ a:hover {
   max-width: var(--genislik);
   margin-inline: auto;
   padding-inline: clamp(1.1rem, 4vw, 2.5rem);
+}
+
+/* ── Erişilebilirlik: içeriğe geç + odak halkası ─────────────
+   Klavyeyle gezen okur başlıktaki yedi bağlantıyı her sayfada geçmek
+   zorunda kalmasın; odak halkası markanın bordosuyla, her yerde aynı. */
+.atla {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 10;
+  padding: 0.5rem 0.9rem;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.atla:focus {
+  top: 0.6rem;
+  outline: 2px solid var(--claret);
+}
+:focus-visible {
+  outline: 2px solid var(--claret);
+  outline-offset: 2px;
+}
+main:focus {
+  outline: none;
 }
 
 /* ── Giriş animasyonu ──────────────────────────────────────── */
@@ -465,7 +502,7 @@ a:hover {
   margin-bottom: 0.55rem;
 }
 .yonetici .tez {
-  font-family: var(--font-serif-alt, inherit);
+  font-family: var(--font-body);
   font-size: 1.05rem;
   line-height: 1.55;
   margin: 0 0 1rem;
@@ -718,4 +755,62 @@ a:hover {
   .prose {
     font-size: 1.05rem;
   }
+}
+
+/* ── Baskı ────────────────────────────────────────────────────
+   Bülten ve analiz kâğıda ya da PDF'e alınır: gezinme, animasyon ve doku
+   gider; bağlantı adresleri metnin yanına yazılır; grafik çerçeveleri sayfa
+   ortasında bölünmez. */
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 11pt;
+  }
+  .masthead nav,
+  .atla,
+  footer .kolon,
+  .icindekiler,
+  .bulten-nav,
+  .gezinme,
+  .geri,
+  .tam-ekran {
+    display: none !important;
+  }
+  .yuksel {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .prose a[href^="http"]::after,
+  .bulten a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-family: var(--font-mono);
+    font-size: 0.75em;
+    color: #555;
+  }
+  .grafik,
+  .not,
+  .yonetici,
+  .pratik,
+  table {
+    break-inside: avoid;
+  }
+  h1, h2, h3 {
+    break-after: avoid;
+  }
+}
+
+/* Görsel olarak gizli, ekran okuyucuya açık (tablo başlıkları). */
+.gorunmez {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

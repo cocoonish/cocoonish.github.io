@@ -1,0 +1,229 @@
+---
+/**
+ * Veri durumu şeridi — proje sayfasının BAŞINDA, tazelik tek bakışta.
+ *
+ * Bir proje sayfasında sayıların hangi güne ait olduğu ancak sayfanın
+ * sonundaki "Güncel okuma" ya da koşu kutusuna inince görülüyordu; o kutu da
+ * yalnız birkaç sayfada var. "Kaynak düşerse GÖRÜNÜR uyarı" ilkesi 800.
+ * satıra gömülü bir kutuyla karşılanmış sayılmaz. Bu şerit her proje
+ * sayfasının künyesinin hemen altında durur ve dört şeyi söyler:
+ *   · manşet büyüklüğü, değeri ve o büyüklüğün KENDİ tarihi — liste
+ *     kartındakiyle birebir aynı sayı ve saat (lib/anaSayfa.hatManseti);
+ *   · hattın son verisi (hattın kendi saati) ve yaşı;
+ *   · hattın bayatlık hükmü — ÜÇ hâlli: ölçülmüş taze, ölçülmüş bayat,
+ *     ölçülmemiş. Alan yoksa "hat çalışıyor" YAZILMAZ: ölçülmemiş bir şey
+ *     ölçülmüş gibi görünmez (uydurma yok);
+ *   · son koşunun uyarı sayısı — sayfada koşu kutusu varsa ona bağlanır.
+ *
+ * Yaş etiketi tek kuraldan (lib/bicim.yasMetni): ileri valörlü bir tarih
+ * (yarının kuru) "bugün" diye etiketlenmez, yaş hiç yazılmaz.
+ *
+ * İki katmanlı: değerler DERLEME anında ozet.json'dan yazılır (JS kapalıyken
+ * de doğru), sayfa açılınca aynı dosya tazelenip üstüne yazılır — yani derleme
+ * ile ziyaret arasında hat koşmuşsa okur yeni tarihi görür.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { tariheCevir, tarihYaz, gunFarki, yasMetni } from '../lib/bicim';
+import { hatManseti, hatMansetTanimi } from '../lib/anaSayfa';
+
+interface Props {
+  proje: string;
+  /** Frontmatter'daki yayım ritmi metni ("aylık", "her iş günü") — bağlam için. */
+  ritim?: string;
+}
+const { proje, ritim } = Astro.props;
+
+let o: Record<string, any> | null = null;
+try {
+  o = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), 'public', 'projeler', proje, 'ozet.json'), 'utf-8'),
+  );
+} catch {
+  o = null;
+}
+const uyariDosyasi = fs.existsSync(path.join(process.cwd(), 'public', 'projeler', proje, 'uyarilar.json'));
+// Ayrıntı kutusu bu sayfada var mı? Varsa "son koşu" hücresi ona bağlanır;
+// yoksa çıplak metin kalır — hedefi olmayan bağlantı basılmaz.
+let kutuVar = false;
+try {
+  kutuVar = /<KosuKutusu\b/.test(
+    fs.readFileSync(path.join(process.cwd(), 'src', 'content', 'projeler', `${proje}.mdx`), 'utf-8'),
+  );
+} catch {
+  kutuVar = false;
+}
+
+// Manşet: kartla aynı kaynak, aynı anahtar, aynı saat.
+const m = hatManseti(proje);
+const tanim = hatMansetTanimi(proje);
+
+// Hattın kendi saati.
+const tarihHam: string = typeof o?._tarih === 'string' ? o._tarih : '';
+const tarih = tarihYaz(tarihHam);
+const t = tariheCevir(tarihHam);
+const yas = t ? gunFarki(t) : null;
+const yasYazi = yasMetni(yas);
+
+// Üç hâlli hüküm. Hatlar iki sözleşmeyle konuşuyor: `bayat: true/false` ya da
+// `tazelik: 'güncel' | 'bayat'`. İkisi de yoksa hüküm YOKTUR.
+type Hukum = { kod: 'yok' | 'bayat' | 'taze' | 'olculmemis'; metin: string };
+const hukumBul = (d: Record<string, any> | null): Hukum => {
+  if (!d) return { kod: 'yok', metin: 'veri dosyası yok' };
+  if (d.bayat === true || d.tazelik === 'bayat') return { kod: 'bayat', metin: 'bayat — sayılar ilerlemedi' };
+  if (d.bayat === false || d.tazelik === 'güncel') return { kod: 'taze', metin: 'veri taze' };
+  return { kod: 'olculmemis', metin: 'bayatlık ölçülmüyor' };
+};
+const hukum = hukumBul(o);
+const uyari = typeof o?.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
+---
+
+{o && (
+  <div
+    class:list={['veri-durumu', { bayat: hukum.kod === 'bayat' }]}
+    data-veri-proje={proje}
+    data-vd-anahtar={tanim?.anahtar}
+    data-vd-ondalik={tanim?.ondalik}
+    data-vd-isaret={tanim?.isaret ? '1' : undefined}
+    data-vd-tarih-alani={tanim?.tarihAlani}
+    role="note"
+    aria-label="Veri durumu"
+  >
+    <span class="vd-etiket etiket">Veri durumu</span>
+    {m.olcu && (
+      <span class="vd-parca vd-manset">
+        <span class="vd-ad">manşet</span>
+        <b data-vd-manset>{m.deger ?? '—'}{m.deger && m.birim ? ` ${m.birim}` : ''}</b>
+        <span class="vd-yas">
+          {m.olcu} · <span data-vd-manset-tarih>{m.tarih || '—'}</span>
+          {' '}<span data-vd-manset-yas>{yasMetni(m.yas)}</span>
+        </span>
+      </span>
+    )}
+    <span class="vd-parca">
+      <span class="vd-ad">hattın son verisi</span>
+      <b data-vd-tarih>{tarih || '—'}</b>
+      <span class="vd-yas" data-vd-yas>{yasYazi}</span>
+    </span>
+    <span class="vd-parca">
+      <span class="vd-ad">durum</span>
+      <b data-vd-hukum data-kod={hukum.kod}>{hukum.metin}</b>
+    </span>
+    {uyari !== null && (
+      <span class="vd-parca">
+        <span class="vd-ad">son koşu</span>
+        <b>{kutuVar
+          ? <a href="#kosu" data-vd-uyari>{uyari === 0 ? 'uyarı yok' : `${uyari} uyarı`}</a>
+          : <span data-vd-uyari>{uyari === 0 ? 'uyarı yok' : `${uyari} uyarı`}</span>}</b>
+      </span>
+    )}
+    {ritim && (
+      <span class="vd-parca">
+        <span class="vd-ad">ritim</span>
+        <b class="vd-ritim">{ritim}</b>
+      </span>
+    )}
+    <span class="vd-baglar">
+      <a href={`/projeler/${proje}/ozet.json`}>makine okunur özet</a>
+      {uyariDosyasi && <> · <a href={`/projeler/${proje}/uyarilar.json`}>uyarı listesi</a></>}
+    </span>
+  </div>
+)}
+
+<script>
+  // Sayfa açılınca aynı dosya yeniden okunur: derleme ile ziyaret arasında
+  // hat koşmuşsa manşet, tarih, yaş ve hüküm güncellenir. Kurallar sunucu
+  // tarafındakiyle AYNI kaynaktan (lib/bicim, lib/anaSayfa sözleşmesi).
+  import { sayi, tariheCevir, tarihYaz, yasMetni, gunFarki } from '../lib/bicim';
+
+  const yasHesapla = (s: unknown): number | null => {
+    const d = tariheCevir(s);
+    return d ? gunFarki(d) : null;
+  };
+  const hukumBul = (o: any): { kod: string; metin: string } => {
+    if (o.bayat === true || o.tazelik === 'bayat') return { kod: 'bayat', metin: 'bayat — sayılar ilerlemedi' };
+    if (o.bayat === false || o.tazelik === 'güncel') return { kod: 'taze', metin: 'veri taze' };
+    return { kod: 'olculmemis', metin: 'bayatlık ölçülmüyor' };
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-veri-proje]').forEach(async (el) => {
+    try {
+      const r = await fetch(`/projeler/${el.dataset.veriProje}/ozet.json`, { cache: 'no-cache' });
+      if (!r.ok) return;
+      const o = await r.json();
+
+      // Manşet: tarihAlani → <anahtar>_tarih → _tarih (kartla aynı sıra).
+      const anahtar = el.dataset.vdAnahtar;
+      if (anahtar && typeof o[anahtar] === 'number' && Number.isFinite(o[anahtar])) {
+        const mEl = el.querySelector('[data-vd-manset]');
+        const ondalik = parseInt(el.dataset.vdOndalik ?? '1', 10);
+        const birim = mEl?.textContent?.replace(/^[^ ]+ ?/, '') ?? '';
+        if (mEl) mEl.textContent = `${sayi(o[anahtar], ondalik, el.dataset.vdIsaret === '1')}${birim ? ` ${birim}` : ''}`;
+        const alan = el.dataset.vdTarihAlani;
+        const mt = (alan && typeof o[alan] === 'string' && o[alan])
+          || (typeof o[`${anahtar}_tarih`] === 'string' && o[`${anahtar}_tarih`])
+          || (typeof o._tarih === 'string' ? o._tarih : '');
+        const mtEl = el.querySelector('[data-vd-manset-tarih]');
+        const myEl = el.querySelector('[data-vd-manset-yas]');
+        if (mtEl && mt) mtEl.textContent = tarihYaz(mt);
+        if (myEl) myEl.textContent = yasMetni(yasHesapla(mt));
+      }
+
+      const tarih = typeof o._tarih === 'string' ? o._tarih : '';
+      const tEl = el.querySelector('[data-vd-tarih]');
+      if (tEl && tarih) tEl.textContent = tarihYaz(tarih);
+      const yEl = el.querySelector('[data-vd-yas]');
+      if (yEl) yEl.textContent = yasMetni(yasHesapla(tarih));
+
+      const hEl = el.querySelector<HTMLElement>('[data-vd-hukum]');
+      if (hEl) {
+        const h = hukumBul(o);
+        hEl.textContent = h.metin;
+        hEl.dataset.kod = h.kod;
+        el.classList.toggle('bayat', h.kod === 'bayat');
+      }
+      const uEl = el.querySelector('[data-vd-uyari]');
+      if (uEl && typeof o.uyari_sayisi === 'number')
+        uEl.textContent = o.uyari_sayisi === 0 ? 'uyarı yok' : `${o.uyari_sayisi} uyarı`;
+
+    } catch {
+      /* derleme anındaki değerler kalır */
+    }
+  });
+</script>
+
+<style>
+  .veri-durumu {
+    max-width: var(--olcu);
+    margin: 0.8rem auto 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 1.4rem;
+    padding: 0.55rem 0.9rem;
+    border: 1px solid var(--ink-30);
+    border-left: 3px solid var(--teal);
+    background: var(--paper-2);
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+  .veri-durumu.bayat { border-left-color: var(--claret); }
+  .vd-etiket { color: var(--teal); }
+  .veri-durumu.bayat .vd-etiket,
+  .veri-durumu.bayat [data-vd-hukum] { color: var(--claret); }
+  [data-vd-hukum][data-kod='olculmemis'] { color: var(--ink-50); font-weight: 500; }
+  .vd-parca { display: inline-flex; gap: 0.4rem; align-items: baseline; white-space: nowrap; }
+  .vd-manset { flex-wrap: wrap; }
+  .vd-ad { font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-50); }
+  .vd-parca b { font-family: var(--font-mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .vd-parca b a { color: inherit; text-decoration-color: var(--ink-30); }
+  .vd-ritim { font-family: var(--font-body) !important; font-weight: 500 !important; white-space: normal; }
+  .vd-yas { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-50); }
+  .vd-baglar { margin-left: auto; font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-50); }
+  .vd-baglar a { color: inherit; }
+  .vd-baglar a:hover { color: var(--claret); }
+  @media (max-width: 640px) {
+    .vd-baglar { margin-left: 0; }
+    .vd-parca { white-space: normal; }
+  }
+</style>

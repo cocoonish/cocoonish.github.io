@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Yazi from '../../layouts/Yazi.astro';
+import { projeSaati } from '../../lib/anaSayfa';
 
 export async function getStaticPaths() {
   const projeler = await getCollection('projeler');
@@ -11,6 +12,6 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 ---
 
-<Yazi {...entry.data} tur="proje">
+<Yazi {...entry.data} tur="proje" slug={entry.id} veriZamani={projeSaati(entry.id)}>
   <Content />
 </Yazi>

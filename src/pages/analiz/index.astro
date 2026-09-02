@@ -2,10 +2,22 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import KayitKarti from '../../components/KayitKarti.astro';
+import { kicker } from '../../lib/bolumler';
+import { ayAdi } from '../../lib/bicim';
+import { kartlar } from '../../lib/analizListesi';
 
-const yazilar = (await getCollection('analiz')).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+// Kartlar EN YENİ başta; numara kronolojik ve kalıcı (lib/analizListesi).
+const yazilar = kartlar(await getCollection('analiz')).reverse();
+
+// Aya göre gruplama: analizler biriktikçe düz ızgara "hangisi ne zamandı"
+// sorusunu cevaplayamaz; ay başlıkları arşivle aynı dili konuşur.
+const aylar: { ad: string; kartlar: typeof yazilar }[] = [];
+for (const k of yazilar) {
+  const ad = ayAdi(k.yazi.data.pubDate);
+  const son = aylar[aylar.length - 1];
+  if (son && son.ad === ad) son.kartlar.push(k);
+  else aylar.push({ ad, kartlar: [k] });
+}
 ---
 
 <Base
@@ -13,22 +25,29 @@ const yazilar = (await getCollection('analiz')).sort(
   description="Tek bir piyasa gelişmesini mekanizmasına, tarihsel emsaline ve fiyat etkisine kadar açan uzun yazılar."
 >
   <header class="liste-baslik yuksel">
-    <p class="etiket kicker">02 — Bölüm</p>
+    <p class="etiket kicker">{kicker('/analiz/')}</p>
     <h1>Analiz</h1>
     <p class="alt">
       Günlük bülten gündemin tamamını özetler; buradaki yazılar tek bir gelişmeyi
       alıp sonuna kadar açar: ne oldu, mekanizması nasıl işliyor, daha önce benzeri
-      yaşandı mı, ne bekleniyor ve fiyatlara nasıl geçiyor.
+      yaşandı mı, ne bekleniyor ve fiyatlara nasıl geçiyor. Her yazı yayın tarihini
+      taşır; aynı konu yeniden ele alındığında yazılar bir seri oluşturur.
     </p>
+    <p class="besleme"><a href="/analiz/rss.xml">RSS</a> · {yazilar.length} yazı</p>
   </header>
   {yazilar.length === 0 ? (
     <p class="bos">İlk analiz yazısı hazırlanıyor.</p>
   ) : (
-    <div class="kayit-izgara">
-      {yazilar.map((y, i) => (
-        <KayitKarti href={`/analiz/${y.id}/`} sira={i + 1} gecikme={i * 60} {...y.data} />
-      ))}
-    </div>
+    aylar.map((ay) => (
+      <section class="ay">
+        <h2 class="ay-baslik"><span>{ay.ad}</span><span class="adet">{ay.kartlar.length} yazı</span></h2>
+        <div class="kayit-izgara">
+          {ay.kartlar.map((k, i) => (
+            <KayitKarti href={`/analiz/${k.yazi.id}/`} sira={k.no} gecikme={i * 60} {...k.yazi.data} ekBilgi={k.ekBilgi} tur="analiz" />
+          ))}
+        </div>
+      </section>
+    ))
   )}
 </Base>
 
@@ -37,5 +56,13 @@ const yazilar = (await getCollection('analiz')).sort(
   .kicker { color: var(--claret); margin: 0 0 0.8rem; }
   h1 { font-family: var(--font-display); font-size: clamp(2rem, 4.4vw, 3rem); margin: 0 0 0.8rem; }
   .alt { color: var(--ink-70); }
+  .besleme { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-50); margin: 0.8rem 0 0; }
   .bos { color: var(--ink-70); font-style: italic; }
+  .ay { margin: 0 0 1.5rem; }
+  .ay-baslik {
+    display: flex; align-items: baseline; gap: 0.8rem;
+    font-family: var(--font-display); font-size: 1.1rem; font-weight: 560; margin: 0 0 0.4rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid var(--ink);
+  }
+  .adet { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-50); letter-spacing: 0.06em; }
 </style>

@@ -1,13 +1,25 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Yazi from '../../layouts/Yazi.astro';
+import AnalizGezinme from '../../components/AnalizGezinme.astro';
 import { olc } from '../../lib/ders';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export async function getStaticPaths() {
-  const arastirmalar = await getCollection('analiz');
-  const basliklar = new Map(arastirmalar.map((a) => [a.id, a.data.title]));
+  // getStaticPaths yalıtılmış koşar: bileşen kapsamındaki değişkenleri
+  // göremez, yardımcı bu yüzden fonksiyonun İÇİNDE tanımlanır.
+  /** Slug'ın tarihsiz kökü — seri anahtarı (analiz/YAZIM.md). */
+  const seriKoku = (id: string) => id.replace(/-\d{4}-\d{2}-\d{2}$/, '');
+  const analizler = (await getCollection('analiz')).sort(
+    (a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf() || a.id.localeCompare(b.id),   // eskiden yeniye; aynı gün: kimlik
+  );
+  const basliklar = new Map(analizler.map((a) => [a.id, a.data.title]));
+  const ozet = (a: (typeof analizler)[number]) => ({
+    id: a.id, title: a.data.title, pubDate: a.data.pubDate, ozet: a.data.ozet,
+  });
 
-  return arastirmalar.map((a) => ({
+  return analizler.map((a, i) => ({
     params: { slug: a.id },
     props: {
       entry: a,
@@ -16,21 +28,35 @@ export async function getStaticPaths() {
       onkosullar: (a.data.onkosul ?? [])
         .filter((s) => basliklar.has(s))
         .map((s) => ({ href: `/analiz/${s}/`, title: basliklar.get(s)! })),
+      // Aynı serinin diğer yazıları (en yeni başta) ve kronolojik komşular.
+      seri: analizler
+        .filter((b) => b.id !== a.id && seriKoku(b.id) === seriKoku(a.id))
+        .sort((x, y) => y.data.pubDate.valueOf() - x.data.pubDate.valueOf())
+        .map(ozet),
+      onceki: i > 0 ? ozet(analizler[i - 1]) : null,
+      sonraki: i < analizler.length - 1 ? ozet(analizler[i + 1]) : null,
     },
   }));
 }
 
 // Not: analiz yazıları ders GRUPLARINA bağlanmaz. /analiz/ düz bir kart ızgarasıdır,
 // grup çapası (#faiz-masasi vb.) orada yoktur; grupAdi/grupHref bu yüzden geçilmez.
-const { entry, olcum, onkosullar } = Astro.props;
+const { entry, olcum, onkosullar, seri, onceki, sonraki } = Astro.props;
 const { Content } = await render(entry);
+// Yazıya özgü bağlantı önizleme kartı varsa (site/tools/og_kart.py --analiz) onu ver;
+// yoksa bölüm kartı kalır — var olmayan bir görsele bağ verilmez.
+const kartYolu = `/og/analiz/${entry.id}.png`;
+const kartVar = fs.existsSync(path.join(process.cwd(), 'public', 'og', 'analiz', `${entry.id}.png`));
 ---
 
 <Yazi
   {...entry.data}
   tur="analiz"
+  slug={entry.id}
   olcum={olcum}
   onkosullar={onkosullar}
+  resim={kartVar ? kartYolu : undefined}
 >
   <Content />
+  <AnalizGezinme slot="son" seri={seri} onceki={onceki} sonraki={sonraki} />
 </Yazi>

@@ -1,31 +1,38 @@
 ---
+import { tarihUzun, isoGun, ozetle } from '../lib/bicim';
+
 interface Props {
   href: string;
   sira: number;
   title: string;
   description: string;
+  /** Kart için yazılmış tek cümlelik tez; varsa açıklamanın yerine geçer. */
+  ozet?: string;
   tags?: string[];
   durum?: 'aktif' | 'taslak' | 'arsiv';
   guncelleme?: string;
   pubDate?: Date;
   updatedDate?: Date;
   gecikme?: number; // giriş animasyonu sırası (ms)
+  /** Kartın alt satırına eklenen ölçülen bilgi: "veri 31.08.2026", "24 dk okuma". */
+  ekBilgi?: string[];
+  /** 'proje' kartında 'Canlı' rozeti anlamlı (pano tazeleniyor); analiz tarihli metindir, rozet basılmaz. */
+  tur?: 'proje' | 'analiz';
 }
 
-const { href, sira, title, description, tags = [], durum, guncelleme,
-        pubDate, updatedDate, gecikme = 0 } = Astro.props;
+const { href, sira, title, description, ozet, tags = [], durum, guncelleme,
+        pubDate, updatedDate, gecikme = 0, ekBilgi = [], tur = 'proje' } = Astro.props;
 const siraNo = `No ${String(sira).padStart(2, '0')}`;
+// Kart metni: yazarın tek cümlelik tezi; yoksa açıklamanın ilk cümleleri.
+// 1.200 karakterlik bir açıklamayı karta basmak kartı okunmaz yapıyordu.
+const kartMetni = ozet || ozetle(description, 240);
 
 // TARİH KARTTA DURUR. Kart tarihi hiç basmıyordu: aynı konunun iki yazısı
 // (bir sonraki çeyreğin büyüme analizi, bir sonraki ihalenin sökümü) listede
 // birbirinden ayırt edilemiyordu. Çözüm başlığa tarih yazmak DEĞİL — o, kartın
 // eksiğini her yazının başlığında tek tek onarmak olurdu.
-const bicimle = (d?: Date) =>
-  d instanceof Date && !isNaN(d.valueOf())
-    ? d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
-    : null;
-const yayim = bicimle(pubDate);
-const guncel = bicimle(updatedDate);
+const yayim = pubDate ? tarihUzun(pubDate) : null;
+const guncel = updatedDate ? tarihUzun(updatedDate) : null;
 // Güncelleme yayımla aynı günse ikinci kez yazma.
 const guncelGoster = guncel && guncel !== yayim ? guncel : null;
 ---
@@ -34,17 +41,19 @@ const guncelGoster = guncel && guncel !== yayim ? guncel : null;
   <div class="ust">
     <span class="sira">{siraNo}</span>
     {durum === 'taslak' && <span class="rozet rozet--taslak">Hazırlanıyor</span>}
-    {durum === 'aktif' && <span class="rozet rozet--aktif">Canlı</span>}
+    {durum === 'aktif' && tur === 'proje' && <span class="rozet rozet--aktif">Canlı</span>}
     {durum === 'arsiv' && <span class="rozet rozet--arsiv">Arşiv</span>}
     {yayim && (
-      <time class="tarih" datetime={pubDate?.toISOString().slice(0, 10)}>{yayim}</time>
+      <time class="tarih" datetime={isoGun(pubDate)}>{yayim}</time>
     )}
   </div>
   <h3><a href={href}>{title}</a></h3>
-  <p>{description}</p>
+  <p>{kartMetni}</p>
   <div class="alt">
     {guncelGoster && <span>güncellendi {guncelGoster}</span>}
-    {guncelleme && <span>↻ {guncelleme}</span>}
-    {tags.map((t) => <span>#{t}</span>)}
+    {ekBilgi.map((e) => <span class="ek">{e}</span>)}
+    {tur === 'proje' && guncelleme && <span>↻ {guncelleme}</span>}
+    {tags.slice(0, 4).map((t) => <span>#{t}</span>)}
+    {tags.length > 4 && <span class="ek">+{tags.length - 4}</span>}
   </div>
 </article>

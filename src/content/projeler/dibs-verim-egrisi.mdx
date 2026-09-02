@@ -1,11 +1,11 @@
 ---
-title: 'DİBS Verim Eğrisi ve Reel Faiz'
+title: 'DİBS verim eğrisi ve reel faiz'
 description: 'Türk lirası devlet iç borçlanma senetlerinin sıfır kuponlu (spot) verim eğrisi: strip fiyatlarından bootstrapsız kurulan eğri, eğim ve bükülme, taşıma, ileri oranlar, Fisher reel faizi, TÜFEX reel eğrisi ve başabaş enflasyon — her ölçünün formülü, veri kaynağı, varsayımı ve kendi kendini sınayan denetimleriyle.'
 pubDate: 2026-08-23
 updatedDate: 2026-08-23
 tags: ['dibs', 'tahvil', 'verim eğrisi', 'reel faiz', 'tüfex', 'başabaş enflasyon', 'forward', 'carry', 'fisher']
 durum: 'aktif'
-kaynak: 'TCMB EVDS3 — DİBS gösterge niteliğindeki değerleri (bie_pydibs ve arşiv eşi), TLREF, politika faizi, AOFM, faiz koridoru, Piyasa Katılımcıları Anketi, TÜFE'
+kaynak: 'TCMB EVDS3 — DİBS gösterge niteliğindeki değerleri, TLREF, politika faizi, AOFM, faiz koridoru, Piyasa Katılımcıları Anketi, TÜFE'
 guncelleme: 'her iş günü (eğri, referans faizler) + aylık (anket beklentileri, TÜFE)'
 ---
 
@@ -45,10 +45,10 @@ gereksiz kılıyor.
   <a href="/arastirma/trade-pratigi/">Trade Pratiği</a>, DV01 ve hedge oranları
   <a href="/arastirma/risk-ve-hedge/">Risk ve Hedge</a> dersinde. Bu sayfadaki
   gecelik fonlama faizinin nasıl oluştuğu
-  <a href="/projeler/fonlama-likidite/">TCMB Fonlama ve Likidite</a>, paydadaki
-  enflasyonun ayrıştırması <a href="/projeler/enflasyon/">Enflasyon Panosu</a>,
+  <a href="/projeler/fonlama-likidite/">TCMB fonlama ve likidite</a>, paydadaki
+  enflasyonun ayrıştırması <a href="/projeler/enflasyon/">Enflasyon panosu</a>,
   eğriye kıymet basan tarafın takvimi ve ihale sonuçları
-  <a href="/projeler/hazine-ihrac/">Hazine İhraç Takibi</a> sayfasındadır. Ters
+  <a href="/projeler/hazine-ihrac/">Hazine ihraç takvimi ve ihale analizi</a> sayfasındadır. Ters
   eğrinin ve reel faiz rejimlerinin tarihsel bağlamı için
   <a href="/arastirma/turkiye-piyasa-tarihi/">Türkiye Piyasa Tarihi</a>.
 </div>
@@ -71,12 +71,7 @@ sıfır kuponlu noktadan kuruldu; vade aralığı
 <Deger proje="dibs-verim-egrisi" anahtar="vade_min" ondalik={2}>0,05</Deger>–<Deger proje="dibs-verim-egrisi" anahtar="vade_maks" ondalik={2}>9,05</Deger>
 yıl.
 
-<KosuKutusu proje="dibs-verim-egrisi" sayi={2}>
-  AD BİÇİMİ: bie_pydibsarsiv grubunda 13 seri adı ayrıştırılamadı (0,2%) — TCMB ad
-  biçimini değiştirmiş olabilir; bu kıymetler evrene girmedi. · AOFM GEÇERSİZ: çıpa
-  gününde APİ fonlaması 0,0 milyar TL ile 5 milyar TL eşiğinin altında; AOFM manşet
-  taşıma ölçüsü olarak KULLANILMAZ (yerine TLREF).
-</KosuKutusu>
+<KosuKutusu proje="dibs-verim-egrisi" />
 
 Kutu **bu koşunun** durumunu gösterir. İki frekans ayrı ayrı denetlenir: eğri bacağı
 günlük (tolerans
@@ -137,7 +132,7 @@ de gösterir ve taşıma yalnız bileşik sütundan hesaplanır (gerekçe: hemen
 <div class="not">
   <span class="etiket">AOFM geçerlilik kapısı</span>
   <Deger proje="dibs-verim-egrisi" anahtar="aofm_cumlesi" ondalik={0}>AOFM bu koşuda GEÇERSİZ: çıpa gününde APİ fonlaması 0,0 milyar TL ile 5 milyar TL eşiğinin altında. AOFM bir ağırlıklı ortalamadır; ağırlık kalmayınca yayımlanan sayı son değerinde donar. Tablodaki AOFM son GEÇERLİ güne aittir (07.08.2026, 14 gün önce) ve manşet taşıma ölçüsü değildir; yerine TLREF okunur.</Deger>
-  Eşik <a href="/projeler/fonlama-likidite/">Fonlama ve Likidite</a> hattındakiyle
+  Eşik <a href="/projeler/fonlama-likidite/">TCMB fonlama ve likidite</a> hattındakiyle
   aynıdır (<Deger proje="dibs-verim-egrisi" anahtar="aofm_taban_esik_mlr" ondalik={0}>5</Deger>
   milyar TL APİ fonlaması); iki hattın aynı gün farklı AOFM durumu göstermemesi için
   kapı burada da uygulanır.
@@ -700,7 +695,7 @@ TCMB'nin fiilen ödettiği ortalama, TLREF piyasanın teminatlı gecelik faizi, 
 faizi ise bir kotasyondur. Bu üçünün nasıl ayrıştığı, hangi rejimde hangisinin
 marjinal fiyat olduğu ve fazla likidite rejiminde AOFM'nin neden tanımsız
 kalabildiği ayrı bir hattın konusudur:
-<a href="/projeler/fonlama-likidite/">TCMB Fonlama ve Likidite</a>.
+<a href="/projeler/fonlama-likidite/">TCMB fonlama ve likidite</a>.
 
 **Tuzak.** Taşıma ölçüsü **anlıktır**, gerçekleşmiş bir getiri değildir. "Bugünkü
 taşıma −8 puan" cümlesi, pozisyonun yıllıklandırılmış anlık kirasını verir; bir
@@ -1410,7 +1405,7 @@ düşer) ya da boş önbelleğinin "EVDS doğruladı" imzası taşımaması. Pla
 (<Deger proje="dibs-verim-egrisi" anahtar="uyari_sayisi" ondalik={0}>2</Deger> adet)**
 sayfanın başındaki koşu kutusunda durur:
 <Deger proje="dibs-verim-egrisi" anahtar="uyari_cumlesi" ondalik={0}>Bu koşuda 2 uyarı düştü:</Deger>
-<Deger proje="dibs-verim-egrisi" anahtar="uyari_metni" ondalik={0}>AD BİÇİMİ: bie_pydibsarsiv grubunda 13 seri adı ayrıştırılamadı (0.2%) — TCMB ad biçimini değiştirmiş olabilir; bu kıymetler evrene girmedi. · AOFM GEÇERSİZ: çıpa gününde APİ fonlaması 0.0 milyar TL ile 5 milyar TL eşiğinin altında; AOFM manşet taşıma ölçüsü olarak KULLANILMAZ (yerine TLREF).</Deger>
+<Deger proje="dibs-verim-egrisi" anahtar="uyari_metni" ondalik={0}>AD BİÇİMİ: arşiv DİBS grubunda 13 seri adı ayrıştırılamadı (%0,2) — TCMB ad biçimini değiştirmiş olabilir; bu kıymetler evrene girmedi. · AOFM GEÇERSİZ: çıpa gününde APİ fonlaması 0,0 milyar TL ile 5 milyar TL eşiğinin altında; AOFM manşet taşıma ölçüsü olarak KULLANILMAZ (yerine TLREF).</Deger>
 
 Tam liste her koşuda
 [`uyarilar.json`](/projeler/dibs-verim-egrisi/uyarilar.json) dosyasına yazılır;

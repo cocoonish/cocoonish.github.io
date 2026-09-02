@@ -1,51 +1,39 @@
 ---
 import Base from '../../layouts/Base.astro';
 import BultenGovde from '../../components/BultenGovde.astro';
+import SayiGezinme from '../../components/SayiGezinme.astro';
+import { bultenler, type BultenKaydi } from '../../lib/yayinlar';
+import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
-  const dosyalar = import.meta.glob('../../data/bulten/*.json', { eager: true });
-  // Yalnız YAZILMIŞ bültenlerin sayfası üretilir; yarım taslak siteye çıkmaz.
-  const sirali = Object.entries(dosyalar)
-    .map(([yol, m]: [string, any]) => ({
-      tarih: yol.split('/').pop()!.replace('.json', ''),
-      b: (m as any).default ?? m,
-    }))
-    .filter((x) => x.b?.gundem_kaynagi === 'yazili')
-    .sort((a, b) => (a.tarih < b.tarih ? -1 : 1));
-  // Bültenler arasında ileri/geri gezinme: arşive dönmeden gün gün okunabilsin.
+  // Yalnız YAZILMIŞ sayıların sayfası üretilir (lib/yayinlar.ts yayın kapısı).
+  // Sayılar arasında ileri/geri gezinme: arşive dönmeden gün gün okunabilsin.
+  const sirali = [...bultenler()].reverse();          // eskiden yeniye
   return sirali.map((x, i) => ({
     params: { tarih: x.tarih },
     props: {
-      b: x.b,
+      kayit: x,
       onceki: i > 0 ? sirali[i - 1] : null,
       sonraki: i < sirali.length - 1 ? sirali[i + 1] : null,
     },
   }));
 }
 
-const { b, onceki, sonraki } = Astro.props;
+interface Props { kayit: BultenKaydi; onceki: BultenKaydi | null; sonraki: BultenKaydi | null }
+const { kayit, onceki, sonraki } = Astro.props;
+const b = kayit.b;
+const hatAd = Object.fromEntries((await getCollection('projeler')).map((p) => [p.id, p.data.title]));
+const tur = kayit.haftalik ? 'Haftaya bakış' : 'Günlük bülten';
 ---
 
-<Base title={`Bülten — ${b.tr_tarih ?? b.tarih}`} description={`${b.tr_tarih ?? b.tarih} günlük makro bülteni.`}>
-  <p class="geri">
-    <a href="/bulten/">güncel bülten</a> · <a href="/bulten/arsiv/">arşiv</a>
-  </p>
-  <BultenGovde b={b} />
-  <nav class="gezinme">
-    {onceki ? (
-      <a href={`/bulten/${onceki.tarih}/`} class="onceki">← {onceki.b.tr_tarih ?? onceki.tarih}</a>
-    ) : <span />}
-    {sonraki ? (
-      <a href={`/bulten/${sonraki.tarih}/`} class="sonraki">{sonraki.b.tr_tarih ?? sonraki.tarih} →</a>
-    ) : <span />}
-  </nav>
+<Base
+  title={`${tur} · Sayı ${kayit.sayiNo} · ${kayit.trTarih}`}
+  description={kayit.aciklama}
+  tur="article"
+  yayinTarihi={kayit.olcumZamani}
+  guncellemeTarihi={kayit.yaziTarihi || kayit.olcumZamani}
+>
+  <SayiGezinme konum="ust" bolumHref="/bulten/" />
+  <BultenGovde b={b} kayit={kayit} hatAd={hatAd} />
+  <SayiGezinme konum="alt" bolumHref="/bulten/" onceki={onceki} sonraki={sonraki} />
 </Base>
-
-<style>
-  .geri { margin: 1.6rem 0 0; font-family: var(--font-mono); font-size: 0.82rem; }
-  .gezinme {
-    display: flex; justify-content: space-between; gap: 1rem;
-    border-top: 1px solid var(--ink-30); margin-top: 2rem; padding-top: 0.9rem;
-    font-family: var(--font-mono); font-size: 0.82rem;
-  }
-</style>

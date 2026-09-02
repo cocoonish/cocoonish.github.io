@@ -19,6 +19,9 @@ import HatlarTablosu from '../components/HatlarTablosu.astro';
 import { dersleriTopla } from '../lib/dersListesi';
 import { SEVIYE_ETIKET } from '../lib/dersGruplari';
 import { sonBulten, sayi } from '../lib/anaSayfa';
+import { kartlar as analizKartlari } from '../lib/analizListesi';
+import { istanbulSaat, degisim } from '../lib/bicim';
+import { bultenler, teknikler } from '../lib/yayinlar';
 
 const sirala = <T extends { data: { pubDate: Date; durum: string } }>(liste: T[]) =>
   liste
@@ -26,7 +29,8 @@ const sirala = <T extends { data: { pubDate: Date; durum: string } }>(liste: T[]
     .sort((a, b) => (a.data.durum === 'arsiv' ? 1 : 0) - (b.data.durum === 'arsiv' ? 1 : 0));
 
 const projeler = sirala(await getCollection('projeler'));
-const analizler = sirala(await getCollection('analiz'));
+// Ana sayfa manşettir, dizin değil: en yeni dört analiz; hepsi /analiz/ altında.
+const analizler = analizKartlari(await getCollection('analiz')).reverse().slice(0, 4);
 const { gruplar, toplam } = await dersleriTopla();
 
 const b = sonBulten();
@@ -48,14 +52,17 @@ const sigmaBaslik = sigmaHaftalik
   ? 'Haftanın olağandışı hareketleri'
   : 'Günün olağandışı hareketleri';
 const oynaklikEtiketi = sigmaHaftalik ? '20h oynaklık' : '20g oynaklık';
-const olcumSaati = b.olusturma ? b.olusturma.slice(11, 16) : '';
+// Ölçüm damgası koşucuda UTC ile atılıyor ve dilim taşımıyor; okura İstanbul
+// saati yazılır (eskiden ham "04:30" basılıyordu — 07:30'un UTC hâli).
+const olcumSaati = istanbulSaat(b.olusturma);
+// Yazılmış son sayının numarası (ölçülen katman yazıdan bağımsızdır; numara
+// yalnız yazılmış sayılar arasında sayılır, o yüzden ayrı okunur).
+const sonYazili = bultenler()[0];
+const sonTeknik = teknikler()[0];
+const sayiNo = sonYazili && sonYazili.tarih === b.tarih ? sonYazili.sayiNo : null;
 
-/**
- * Yüzde işareti Türkçede sayıdan ÖNCE gelir ve işaret onun da önünde durur:
- * "−%1,88". Baz puan bir birimdir, sayıdan sonra yazılır: "−6,5 bp".
- */
-const yuzdeliYaz = (v: number, birim: string) =>
-  birim === 'bp' ? sayi(v, 1, true) : `${v < 0 ? '−' : '+'}%${sayi(Math.abs(v), 2)}`;
+// Yüzde ÖNDE, bp ARKADA — kural lib/bicim'de tek yerde.
+const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp' ? 1 : 2);
 ---
 
 <Base>
@@ -65,6 +72,7 @@ const yuzdeliYaz = (v: number, birim: string) =>
         <p class="ana-kunye">
           <span>{b.trTarih}</span>
           <span>{b.gun}</span>
+          {sayiNo && <span>Sayı {sayiNo}</span>}
           {olcumSaati && <span>ölçüm {olcumSaati}'da kuruldu</span>}
           <span>{hatlar.length} hat</span>
           <span>{b.enstruman} enstrüman</span>
@@ -78,7 +86,14 @@ const yuzdeliYaz = (v: number, birim: string) =>
           Yukarıdaki cümle bir yorum değil: rejim panosunun iki satırından kuruldu ve
           ikisi de aşağıda kendi hesabıyla duruyor. Türkiye makro verisi her sabah
           yeniden ölçülüyor, her sayı kendi tarihini taşıyor.
-          <a class="ana-bulten-bag" href={b.bultenHref}>Günün bülteni →</a>
+          <a class="ana-bulten-bag" href={b.bultenHref}>
+            {b.bultenYazili
+              ? (b.bultenHaftalik ? 'Haftaya bakış →' : 'Günün bülteni →')
+              : (b.bultenTrTarih ? `Son yazılmış sayı · ${b.bultenTrTarih} →` : 'Bülten →')}
+          </a>
+          {sonTeknik && (
+            <a class="ana-bulten-bag" href={sonTeknik.href}>Haftalık teknik analiz · No {sonTeknik.sayiNo} →</a>
+          )}
         </p>
       </section>
     ) : (
@@ -182,8 +197,8 @@ const yuzdeliYaz = (v: number, birim: string) =>
           kadar açan uzun yazılar.
         </p>
         <div class="kayit-izgara">
-          {analizler.map((y, i) => (
-            <KayitKarti href={`/analiz/${y.id}/`} sira={i + 1} gecikme={120 + i * 60} {...y.data} />
+          {analizler.map((k, i) => (
+            <KayitKarti href={`/analiz/${k.yazi.id}/`} sira={k.no} gecikme={120 + i * 60} {...k.yazi.data} ekBilgi={k.ekBilgi} tur="analiz" />
           ))}
         </div>
       </section>

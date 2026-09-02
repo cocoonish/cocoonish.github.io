@@ -25,7 +25,10 @@ const ortakSema = z.object({
 
 const projeler = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/projeler' }),
-  schema: ortakSema,
+  // Pano bir ölçüm yüzeyidir: künyesi kaynağını ve yayım ritmini yazar
+  // (projeler/YAZIM.md). İkisi burada ZORUNLU — rehberin "zorunlu" dediği
+  // şey şemada isteğe bağlıydı ve hiçbir kapı yokluğunu görmüyordu.
+  schema: ortakSema.extend({ kaynak: z.string().min(1), guncelleme: z.string().min(1) }),
 });
 
 const arastirma = defineCollection({
@@ -38,7 +41,21 @@ const arastirma = defineCollection({
 // olayı mekanizmasına, tarihsel emsaline ve fiyat etkisine kadar açar.
 const analiz = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/analiz' }),
-  schema: ortakSema,
+  schema: ortakSema.extend({
+    /** VERİ ÇIPASI: yazının hangi güne kadar veri kullandığı (künyede 'Veri' hücresi).
+     *  Yayın günüyle aynı olmak zorunda değil; ödemeler dengesi 6–8 hafta gecikir. */
+    veriTarihi: z.coerce.date().optional(),
+    /** Yayımlanmış bir sayının düzeltme kaydı — bültenle aynı sözleşme; /duzeltmeler/ toplar. */
+    duzeltmeler: z
+      .array(z.object({
+        tarih: z.string(),
+        alan: z.string(),
+        eski: z.string(),
+        yeni: z.string(),
+        sebep: z.string().optional(),
+      }))
+      .default([]),
+  }),
 });
 
 export const collections = { projeler, arastirma, analiz };

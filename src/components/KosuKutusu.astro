@@ -1,84 +1,151 @@
 ---
 /**
- * Koşu kutusu: bir veri hattının SON KOŞUSUNUN durumu — tazelik + uyarılar.
+ * Koşu kutusu: bir veri hattının SON KOŞUSUNUN AYRINTISI — uyarı listesi ve
+ * doğrulama özeti. Sayfa başındaki veri durumu şeridi hükmü verir ("N uyarı",
+ * bayat/taze); bu kutu o hükmün gerekçesini açar. İkisi aynı dosyadan
+ * (public/projeler/<proje>/uyarilar.json + ozet.json) DERLEME anında okunur:
+ * elle yazılmış özet yok, JS kapalıyken de dolu. Sayfa açılınca aynı dosya
+ * yeniden okunur; derleme ile ziyaret arasında hat koşmuşsa liste, koşu ve
+ * veri tarihi, bayatlık hükmü ve özet–kayıt uyumsuzluğu birlikte tazelenir.
  *
- * İki hat da aynı kalıbı kullanır ve kutu sayfanın BAŞINDA durur: "kaynak
- * düşerse GÖRÜNÜR uyarı" ilkesi, uyarıyı 800. satıra gömen bir sayfada
- * karşılanmış sayılmaz.
+ * Uyarı satırları OKURA gider: hattın Python'u onları okur dilinde yazar
+ * (ortak/okur_dili.kosu_kaydi_tara; guncelle.py uyarır, sayfa sınavı 17 engel).
  *
- * Değerler /projeler/<proje>/ozet.json'dan istemci tarafında okunur:
- *   bayat          → true ise kutu kırmızıya döner ve başlığı "BAYAT VERİ" olur
- *   bayat_cumlesi  → bayatlığın gerekçesi (ya da "veri taze" cümlesi)
- *   uyari_sayisi / uyari_cumlesi / uyari_metni → bu koşuda düşen uyarılar
- *
- * Statik yedek (JSON yüklenemezse) slot içeriğinde durur.
+ * Slot isteğe bağlı: yazarın koşu hakkında yorumu (kural, tolerans, bağlam);
+ * uyarıların kendisi slot'a yazılmaz — dosya söyler.
  */
+import fs from 'node:fs';
+import path from 'node:path';
+import { tarihYaz } from '../lib/bicim';
+
 interface Props {
   proje: string;
-  /** Statik yedek: son bilinen uyarı sayısı */
-  sayi?: number;
 }
-const { proje, sayi = 0 } = Astro.props;
+const { proje } = Astro.props;
+
+const oku = (ad: string): Record<string, any> | null => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'projeler', proje, ad), 'utf-8'));
+  } catch {
+    return null;
+  }
+};
+const o = oku('ozet.json');
+const u = oku('uyarilar.json');
+
+// Bayatlık hükmü şeritle (VeriDurumu) AYNI kural: `bayat: true` ya da `tazelik: 'bayat'`.
+const bayat = o?.bayat === true || o?.tazelik === 'bayat';
+const uyarilar: string[] = Array.isArray(u?.uyarilar) ? u!.uyarilar.map(String) : [];
+// Kimlik denetimleri: yalnız HÜKÜM taşıyan kayıtlar sayılır (içinde `gecti`
+// benzeri bir alan olan sözlük). Hatlar farklı yazıyor: bazıları anahtarın
+// altına denetim adı → kayıt sözlüğü koyar, bazıları tek denetimin istatistik
+// alanlarını doğrudan yazar (DİBS `kimlik`: n, medyan, esik, gecti…). Alan
+// SAYMAK denetim saymak değildir; hüküm alanı yoksa sayı hiç basılmaz.
+const hukumlu = (v: any) => v && typeof v === 'object' && !Array.isArray(v)
+  && Object.keys(v).some((k) => /^(gecti|ozdeslik_gecti|tuttu|uyumlu)$/.test(k));
+const dogrulamaSayisi = u
+  ? Object.entries(u)
+      .filter(([k, v]) => /dogrulama|kimlik|sinama/.test(k) && v && typeof v === 'object' && !Array.isArray(v))
+      .reduce((n, [, v]) => n + (hukumlu(v) ? 1 : Object.values(v as object).filter(hukumlu).length), 0)
+  : 0;
+const kosum = tarihYaz(String(u?.kosum ?? o?.kosum_tarihi ?? ''));
+// Veri tarihi HATTIN saatidir (şeritle aynı kaynak): koşu kaydının `tarih`i aylık
+// hatlarda ay başını taşıyor ve aynı sayfada iki farklı tarih okunuyordu.
+const veri = tarihYaz(String(o?._tarih ?? ''));
+const baslik = bayat ? 'BAYAT VERİ — bu koşuda sayılar ilerlemedi' : 'Bu koşunun durumu';
+// Şerit özetteki sayıyı basar (uyarı listesi ∪ veri durumu); kutu koşu kaydını.
+// Bugün eşitler; ayrıştığı gün fark burada yazılır, sessizce iki sayı dolaşmaz.
+const seritSayisi = typeof o?.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
+const uyumsuz = u && seritSayisi !== null && seritSayisi !== uyarilar.length;
+// Özet metni bütün uyarıların birleşimidir; kutu aynı maddeleri ikinci kez basmaz,
+// yalnız koşu kaydında OLMAYAN maddeleri (veri durumu, eksik denetim) listeler.
+const fark = uyumsuz && typeof o?.uyari_metni === 'string'
+  ? o.uyari_metni.split(' · ').map((x: string) => x.trim()).filter((x: string) => x && !uyarilar.includes(x))
+  : [];
+const tazelik = typeof o?.bayat_cumlesi === 'string' ? o.bayat_cumlesi : '';
 ---
 
-<div class="not kosu" data-kosu-proje={proje}>
-  <span class="etiket" data-kosu-baslik>Bu koşunun durumu</span>
-  <p class="kosu-tazelik" data-kosu-tazelik>Tazelik bilgisi yükleniyor…</p>
-  <!-- div, p DEĞİL: MDX slot içeriğini kendi <p>'sine sarar; <p> içinde <p>
-       geçersizdir ve tarayıcı dış paragrafı erkenden kapatır. -->
-  <div class="kosu-uyari">
-    <strong data-kosu-cumle>Bu koşuda {sayi} uyarı düştü:</strong>{' '}
-    <span data-kosu-metin><slot /></span>
-  </div>
+<div class:list={['not', 'kosu', { bayat }]} id="kosu" data-kosu-proje={proje}>
+  <span class="etiket" data-kosu-baslik>{baslik}</span>
+  <p class="kosu-meta">
+    <span data-kosu-kosum>{kosum && `koşu ${kosum}`}</span>{kosum && veri && ' · '}<span data-kosu-veri>{veri && `veri ${veri}`}</span>
+    {dogrulamaSayisi > 0 && <> · {dogrulamaSayisi} kimlik denetimi</>}
+  </p>
+  {tazelik && <p class="kosu-tazelik" data-kosu-tazelik>{tazelik}</p>}
+  <p class="kosu-cumle"><strong data-kosu-cumle>
+    {!u ? 'Koşu kaydı bulunamadı.' : uyarilar.length > 0 ? `Bu koşuda ${uyarilar.length} uyarı düştü:` : 'Bu koşuda uyarı yok.'}
+  </strong></p>
+  {/* Liste HER ZAMAN basılır (boşken gizli): ziyaret anında kayıt yeni uyarı getirirse istemci açar. */}
+  <ol class="kosu-liste" data-kosu-liste hidden={uyarilar.length === 0}>
+    {uyarilar.map((x) => <li>{x}</li>)}
+  </ol>
+  {/* Uyumsuzluk satırı da HER ZAMAN basılır (uyumluyken gizli): ziyaret anında iki sayı ayrışırsa istemci açar. */}
+  <p class="kosu-uyumsuz" data-kosu-uyumsuz hidden={!uyumsuz}>
+    {uyumsuz ? `Sayfa başındaki özet ${seritSayisi} uyarı sayıyor, koşu kaydında ${uyarilar.length} kayıt var.${fark.length > 0 ? ` Özette olup kayıtta olmayan: ${fark.join(' · ')}` : ''}` : ''}
+  </p>
+  <div class="kosu-not"><slot /></div>
   <p class="kosu-kaynak">
-    Tam liste: <a href={`/projeler/${proje}/uyarilar.json`}>uyarilar.json</a> ·
-    sayfadaki canlı değerler: <a href={`/projeler/${proje}/ozet.json`}>ozet.json</a>
+    <a href={`/projeler/${proje}/uyarilar.json`}>Koşu kaydı</a> ·
+    <a href={`/projeler/${proje}/ozet.json`}>sayfadaki canlı değerler</a>
   </p>
 </div><script>
+  import { tarihYaz } from '../lib/bicim';
+  // Sayfa açılınca aynı dosya yeniden okunur; liste ve hüküm tazelenir.
   const kutular = [...document.querySelectorAll('[data-kosu-proje]')] as HTMLElement[];
   kutular.forEach(async (kutu) => {
     const proje = kutu.dataset.kosuProje!;
     try {
-      const r = await fetch(`/projeler/${proje}/ozet.json`, { cache: 'no-cache' });
-      if (!r.ok) return;
-      const o = await r.json();
-      const taze = kutu.querySelector('[data-kosu-tazelik]') as HTMLElement | null;
-      const baslik = kutu.querySelector('[data-kosu-baslik]') as HTMLElement | null;
-      const cumle = kutu.querySelector('[data-kosu-cumle]') as HTMLElement | null;
-      const metin = kutu.querySelector('[data-kosu-metin]') as HTMLElement | null;
-      if (taze && o.bayat_cumlesi) taze.textContent = o.bayat_cumlesi;
-      if (cumle && o.uyari_cumlesi) cumle.textContent = o.uyari_cumlesi;
-      if (metin && o.uyari_metni) metin.textContent = o.uyari_metni;
-      if (o.bayat === true) {
-        kutu.classList.add('bayat');
-        if (baslik) baslik.textContent = 'BAYAT VERİ — bu koşuda sayılar ilerlemedi';
-      } else if (baslik && o._tarih) {
-        baslik.textContent = `Bu koşunun durumu · veri ${o._tarih}`;
+      const [r1, r2] = await Promise.all([
+        fetch(`/projeler/${proje}/uyarilar.json`, { cache: 'no-cache' }),
+        fetch(`/projeler/${proje}/ozet.json`, { cache: 'no-cache' }),
+      ]);
+      if (!r1.ok) return;
+      const u = await r1.json();
+      const o = r2.ok ? await r2.json() : {};
+      const liste = Array.isArray(u.uyarilar) ? u.uyarilar.map(String) : [];
+      const cumle = kutu.querySelector('[data-kosu-cumle]');
+      if (cumle) cumle.textContent = liste.length ? `Bu koşuda ${liste.length} uyarı düştü:` : 'Bu koşuda uyarı yok.';
+      const ol = kutu.querySelector<HTMLElement>('[data-kosu-liste]');
+      if (ol) {
+        ol.replaceChildren(...liste.map((x: string) => { const li = document.createElement('li'); li.textContent = x; return li; }));
+        ol.hidden = liste.length === 0;
       }
+      const kosumEl = kutu.querySelector('[data-kosu-kosum]');
+      if (kosumEl && typeof u.kosum === 'string') kosumEl.textContent = `koşu ${tarihYaz(u.kosum)}`;
+      const veriEl = kutu.querySelector('[data-kosu-veri]');
+      if (veriEl && typeof o._tarih === 'string') veriEl.textContent = `veri ${tarihYaz(o._tarih)}`;
+      // Şerit özetteki sayıyı, kutu koşu kaydını basar; ayrıştıkları gün fark burada yazılır.
+      const uyEl = kutu.querySelector<HTMLElement>('[data-kosu-uyumsuz]');
+      if (uyEl) {
+        const serit = typeof o.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
+        const ayrik = serit !== null && serit !== liste.length;
+        const fark = ayrik && typeof o.uyari_metni === 'string'
+          ? o.uyari_metni.split(' · ').map((x: string) => x.trim()).filter((x: string) => x && !liste.includes(x))
+          : [];
+        uyEl.textContent = ayrik
+          ? `Sayfa başındaki özet ${serit} uyarı sayıyor, koşu kaydında ${liste.length} kayıt var.${fark.length ? ` Özette olup kayıtta olmayan: ${fark.join(' · ')}` : ''}`
+          : '';
+        uyEl.hidden = !ayrik;
+      }
+      const taze = kutu.querySelector('[data-kosu-tazelik]');
+      if (taze && o.bayat_cumlesi) taze.textContent = o.bayat_cumlesi;
+      const bayat = o.bayat === true || o.tazelik === 'bayat';
+      kutu.classList.toggle('bayat', bayat);
+      const baslik = kutu.querySelector('[data-kosu-baslik]');
+      if (baslik) baslik.textContent = bayat ? 'BAYAT VERİ — bu koşuda sayılar ilerlemedi' : 'Bu koşunun durumu';
     } catch {
-      /* statik yedek kalır */
+      /* derleme anındaki değerler kalır */
     }
   });
 </script><style>
-  .not.kosu p,
-  .not.kosu .kosu-uyari {
-    margin: 0.35rem 0;
-  }
-  /* MDX slot içeriği bir <p> ile gelir; kutuda satır içi akmalı. */
-  .not.kosu .kosu-uyari span > p {
-    display: inline;
-    margin: 0;
-  }
-  .not.kosu .kosu-kaynak {
-    font-size: 0.86rem;
-    color: var(--ink-70);
-  }
-  .not.kosu.bayat {
-    border-left-color: var(--claret);
-    border-color: var(--claret);
-  }
-  .not.kosu.bayat .etiket {
-    color: var(--claret);
-    font-weight: 600;
-  }
+  .not.kosu p, .not.kosu .kosu-not { margin: 0.35rem 0; }
+  .not.kosu .kosu-meta { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-60); }
+  .not.kosu .kosu-liste { margin: 0.3rem 0 0.4rem 1.2rem; padding: 0; font-size: 0.9rem; }
+  .not.kosu .kosu-liste :global(li) { margin: 0.2rem 0; }
+  .not.kosu .kosu-not:empty { display: none; }
+  .not.kosu .kosu-uyumsuz { font-size: 0.86rem; color: var(--uyari); }
+  .not.kosu .kosu-not p { margin: 0.35rem 0; }
+  .not.kosu .kosu-kaynak { font-size: 0.86rem; color: var(--ink-70); }
+  .not.kosu.bayat { border-left-color: var(--claret); border-color: var(--claret); }
+  .not.kosu.bayat .etiket { color: var(--claret); font-weight: 600; }
 </style>

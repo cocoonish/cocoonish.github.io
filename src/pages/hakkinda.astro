@@ -1,41 +1,151 @@
 ---
 import Base from '../layouts/Base.astro';
+import { BOLUMLER, kicker } from '../lib/bolumler';
+import { bultenler, teknikler } from '../lib/yayinlar';
+import { getCollection } from 'astro:content';
+import yayinTakvimi from '../data/yayin_takvimi.json';
+
+const nBulten = bultenler().length;
+const nTeknik = teknikler().length;
+const nAnaliz = (await getCollection('analiz')).length;
+const nProje = (await getCollection('projeler')).length;
+const nDers = (await getCollection('arastirma')).length;
+
+// Yayın takvimi TEK kaynaktan: site/src/data/yayin_takvimi.json. Saatler iş
+// akışlarının cron satırlarından türetilir; ortak/yayin_takvimi.karsilastir her
+// adımı cron ile karşılaştırır (bülten duman sınaması ve sayfa sınavı 16 aynı
+// fonksiyonu çağırır) — sayfa, iş akışının söylediğinden farklı bir saat anlatamaz.
+// `okura: false` adımlar (nöbetçi yoklaması gibi iç alarmlar) kayıtta durur,
+// karşılaştırmaya girer, okura basılmaz: okur onların hiçbir çıktısını görmez.
+const takvim = (yayinTakvimi as any).yayinlar.map((y: any) => {
+  const adimlar = [...(y.adimlar ?? [])]
+    .filter((a: any) => a.okura !== false)
+    .sort((a: any, b: any) => String(a.istanbul).localeCompare(String(b.istanbul)))
+    .map((a: any) => `${a.ad} ${a.istanbul}`).join(' · ');
+  const gunler = String(y.gunler ?? '');
+  const bas = gunler.charAt(0).toLocaleUpperCase('tr-TR') + gunler.slice(1);
+  const zaman = adimlar ? `${bas}; ${adimlar} (İstanbul)` : bas;
+  return [y.yayin, zaman, y.aciklama] as [string, string, string];
+});
 ---
 
-<Base title="Hakkında" description="TTO Trading — bu sitenin amacı ve çalışma şekli.">
+<Base title="Hakkında" description="TTO Trading: sitenin amacı, yayınları, yayın ilkeleri, yayın takvimi ve düzeltme politikası.">
   <article>
     <header class="makale-baslik yuksel">
-      <p class="kicker etiket">03 — Bölüm</p>
+      <p class="kicker etiket">{kicker('/hakkinda/')}</p>
       <h1>Hakkında</h1>
-      <p class="ozet">Bu site bir arşiv, bir laboratuvar ve bir yayın organının kesişimi.</p>
+      <p class="ozet">Türkiye makrosunu ölçülmüş verilerle okumak: bir arşiv, bir laboratuvar ve bir yayın organının kesişimi.</p>
       <div class="makale-meta">
-        <span><b>Yapı</b> Markdown → Astro → Statik</span>
-        <span><b>Grafikler</b> Python → Plotly</span>
+        <span><b>Bülten</b> {nBulten} sayı</span>
+        <span><b>Teknik</b> {nTeknik} sayı</span>
+        <span><b>Analiz</b> {nAnaliz} yazı</span>
+        <span><b>Proje</b> {nProje} pano</span>
+        <span><b>Ders</b> {nDers}</span>
       </div>
     </header>
     <div class="prose yuksel" style="--d: 120ms">
       <p>
-        Burada Türkiye makro verisi ve faiz piyasaları üzerine yürüttüğüm projeleri ve
-        araştırma notlarını topluyorum. Amaç iki katmanlı: kendim için düzenli, sürümlenmiş
-        bir arşiv tutmak; okur için de ham veriden geçirilmiş, tekrarlanabilir analizler sunmak.
+        Bu site Türkiye makro verisi ve faiz piyasaları üzerine yürütülen ölçüm ve
+        araştırma işinin yayın yüzüdür. Amaç iki katmanlı: kendimiz için düzenli,
+        tarihli ve tekrarlanabilir bir arşiv tutmak; okur için ham veriden geçirilmiş,
+        yöntemi açık analizler sunmak. Hedef okur profesyonel trader: jargon açıklanır,
+        seviye düşürülmez.
       </p>
-      <h2>Nasıl çalışıyor?</h2>
+
+      <h2>Yayınlar</h2>
       <ul>
-        <li>
-          <strong>Projeler</strong> — her biri bir Python hattına bağlı: veri kaynağından
-          (TCMB EVDS, Hazine, piyasa verisi) çekilir, hesap yeniden koşulur, interaktif grafik
-          siteye işlenir. Belirli aralıklarla otomatik güncellenir.
-        </li>
-        <li>
-          <strong>Araştırma</strong> — metodoloji ağırlıklı, daha uzun soluklu notlar.
-          Formüller ve varsayımlar açık yazılır; mümkün olduğunda okurken denenebilen
-          hesap araçları eklenir.
-        </li>
+        {BOLUMLER.filter((b) => !['/hakkinda/', '/arama/'].includes(b.href)).map((b) => (
+          <li><strong><a href={b.href}>{b.ad}</a></strong> — {b.aciklama}</li>
+        ))}
       </ul>
+
+      <h2>Yayın ilkeleri</h2>
+      <ol>
+        <li>
+          <strong>Önce ölçüm, sonra yorum.</strong> Bültenin piyasa fotoğrafı, rejim
+          panosu, takvimi ve hat hat değişimi kural tabanlı bir ölçüm katmanından gelir;
+          yorum o ölçümün üstüne yazılır ve altındaki sayıya dokunamaz. Yorumda geçen
+          her sayı ölçümde birebir vardır; olmayan sayı yayına giremez.
+        </li>
+        <li>
+          <strong>Her sayı kendi tarihini taşır.</strong> Aynı sayfada günlük bir seri
+          ile aylık bir seri yan yana durabilir ve ikisi aynı güne ait değildir. Tarih,
+          sayının yanında yazar; yaşlanan seri işaretlenir.
+        </li>
+        <li>
+          <strong>Uydurma yok.</strong> Sürpriz yalnız sayısal beklenti varsa hesaplanır;
+          isabet oranı yalnız notlanmış kayıtlardan verilir; kıyas eğrisi eldeki tarihçe
+          kadar geriye gider ve kendi tarihiyle etiketlenir. Ölçülmemiş bir şey ölçülmüş
+          gibi gösterilmez; boş bırakılır ve sebebi yazılır.
+        </li>
+        <li>
+          <strong>Kapanmış seans ölçülür.</strong> Günün barı piyasa kapanmadan alınmaz;
+          hangi satırın hangi seansa ait olduğu sayfada yazar.
+        </li>
+        <li>
+          <strong>Sınama örneklem dışı yapılır.</strong> İkna edici bir tablo sınanmamış
+          bir kuraldır. Bir kural siteye ancak örneklem dışında yarıştırılıp ölçüldükten
+          sonra girer; sıralamanın kendisi de bir sonuçtur ve örneklem büyüdükçe değişebilir.
+        </li>
+        <li>
+          <strong>Okura yazılır.</strong> Sayfalarda üretim süreci, dosya adları ve sürüm
+          tarihçesi anlatılmaz; bulguyu taşıyan cümle kalır.
+        </li>
+        <li>
+          <strong>Tavsiye yok.</strong> Site analiz yayımlar, yatırım tavsiyesi vermez.
+          Senaryo dili kullanılır; "alın", "satın", "hedef fiyat" yazılmaz.
+        </li>
+      </ol>
+
+      <h2>Yayın takvimi</h2>
+      <table>
+        <caption class="gorunmez">Yayın takvimi: yayın, ne zaman (İstanbul saati), not</caption>
+        <thead><tr><th scope="col">Yayın</th><th scope="col">Ne zaman</th><th scope="col">Not</th></tr></thead>
+        <tbody>
+          {takvim.map(([ad, zaman, not_]) => (
+            <tr><td><strong>{ad}</strong></td><td>{zaman}</td><td>{not_}</td></tr>
+          ))}
+        </tbody>
+      </table>
+      <p>
+        Tablodaki saatler zamanlanmış koşuların hedef saatidir: yazı daha erken biterse
+        sayı daha erken çıkar, koşucu gecikirse sarkabilir.
+        Bülten ve teknik analiz yalnız yazı katmanı tamamlandığında yayımlanır; ölçüm
+        hazır olsa da yorumu yazılmamış bir sayı siteye çıkmaz. Bu yüzden bir sabah sayı
+        gecikirse sayfa bir önceki tam sayıyı gösterir, yarım bir taslağı değil.
+      </p>
+
+      <h2>Düzeltme politikası</h2>
+      <p>
+        Yayımlanmış bir sayı sonradan yanlış çıkarsa sessizce değiştirilmez. Metnin içinde
+        "yayımlanan X yerine gerçek değer Y" biçiminde düzeltilir, sayının künyesinde
+        düzeltme sayısı görünür ve bütün düzeltmeler <a href="/duzeltmeler/">tek listede</a>
+        tarihiyle toplanır. Okur, okuduğu günkü sayıya göre karar vermiş olabilir;
+        düzeltmenin görünür olması o kararın hesabını verir.
+      </p>
+
+      <h2>Veri kaynakları</h2>
+      <p>
+        TCMB Elektronik Veri Dağıtım Sistemi, TÜİK, Hazine ve Maliye Bakanlığı, BDDK,
+        BIST ve uluslararası kurumların (Fed, ECB, BIS, IMF, Dünya Bankası) kamuya açık
+        yayınları; piyasa fiyatları için kamuya açık kapanış verileri; haber akışı için
+        kurumların resmî duyuruları ve açık haber kaynakları. Her sayfanın künyesinde o
+        sayfanın kendi kaynağı yazar.
+      </p>
+
+      <h2>Takip</h2>
+      <p>
+        Bütün yayınlar <a href="/rss.xml">RSS</a> ile izlenebilir; bülten, teknik analiz ve
+        analiz için ayrı beslemeler alt bilgide listelenir. Günlük bülten, haftaya bakış,
+        teknik analiz ve analiz yazıları yayın günü X'te de özetiyle paylaşılır; sayının
+        künyesindeki bağlantı o gönderiye gider.
+      </p>
+
       <h2>Sorumluluk notu</h2>
       <p>
         Buradaki hiçbir içerik yatırım tavsiyesi değildir. Veriler kamuya açık kaynaklardan
-        derlenir; hesaplamalarda hata olabilir, metodoloji her sayfada açıkça belirtilir.
+        derlenir; hesaplamalarda hata olabilir, yöntem her sayfada açıkça belirtilir ve
+        yayımlanan bir sayının düzeltilmesi yukarıdaki politikaya göre yapılır.
       </p>
     </div>
   </article>
