@@ -31,9 +31,17 @@ const u = oku('uyarilar.json');
 
 const bayat = o?.bayat === true || String(o?.bayat) === 'True';
 const uyarilar: string[] = Array.isArray(u?.uyarilar) ? u!.uyarilar.map(String) : [];
-const dogrulama = u?.dogrulama && typeof u.dogrulama === 'object' ? Object.keys(u.dogrulama) : [];
+// Kimlik denetimleri: hatlar farklı anahtarla yazıyor (dogrulama, dogrulama_veri,
+// kimlik, ytm_sinamasi) — sözlük değerli olanların kayıtları toplanır.
+const dogrulamaSayisi = u
+  ? Object.entries(u)
+      .filter(([k, v]) => /dogrulama|kimlik|sinama/.test(k) && v && typeof v === 'object' && !Array.isArray(v))
+      .reduce((n, [, v]) => n + Object.keys(v as object).length, 0)
+  : 0;
 const kosum = tarihYaz(String(u?.kosum ?? o?.kosum_tarihi ?? ''));
-const veri = tarihYaz(String(u?.tarih ?? o?._tarih ?? ''));
+// Veri tarihi HATTIN saatidir (şeritle aynı kaynak): koşu kaydının `tarih`i aylık
+// hatlarda ay başını taşıyor ve aynı sayfada iki farklı tarih okunuyordu.
+const veri = tarihYaz(String(o?._tarih ?? ''));
 const baslik = bayat ? 'BAYAT VERİ — bu koşuda sayılar ilerlemedi' : 'Bu koşunun durumu';
 // Şerit özetteki sayıyı basar (uyarı listesi ∪ veri durumu); kutu koşu kaydını.
 // Bugün eşitler; ayrıştığı gün fark burada yazılır, sessizce iki sayı dolaşmaz.
@@ -46,7 +54,7 @@ const tazelik = typeof o?.bayat_cumlesi === 'string' ? o.bayat_cumlesi : '';
   <span class="etiket" data-kosu-baslik>{baslik}</span>
   <p class="kosu-meta">
     {kosum && <>koşu {kosum}</>}{kosum && veri && ' · '}{veri && <>veri {veri}</>}
-    {dogrulama.length > 0 && <> · {dogrulama.length} kimlik denetimi</>}
+    {dogrulamaSayisi > 0 && <> · {dogrulamaSayisi} kimlik denetimi</>}
   </p>
   {tazelik && <p class="kosu-tazelik" data-kosu-tazelik>{tazelik}</p>}
   {u ? (
@@ -65,8 +73,8 @@ const tazelik = typeof o?.bayat_cumlesi === 'string' ? o.bayat_cumlesi : '';
   )}
   {uyumsuz && (
     <p class="kosu-uyumsuz">
-      Sayfa başındaki özet {seritSayisi} uyarı sayıyor, koşu kaydında {uyarilar.length} kayıt var;
-      fark veri durumu denetiminden gelir{typeof o?.uyari_metni === 'string' && o.uyari_metni ? `: ${o.uyari_metni}` : '.'}
+      Sayfa başındaki özet {seritSayisi} uyarı sayıyor, koşu kaydında {uyarilar.length} kayıt var.
+      {typeof o?.uyari_metni === 'string' && o.uyari_metni ? ` Özetin metni: ${o.uyari_metni}` : ''}
     </p>
   )}
   <div class="kosu-not"><slot /></div>

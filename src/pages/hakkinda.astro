@@ -15,7 +15,9 @@ const nDers = (await getCollection('arastirma')).length;
 // akışlarının cron satırlarından türetilir ve bulten/duman.py her adımı cron ile
 // karşılaştırır — sayfa, iş akışının söylediğinden farklı bir saat anlatamaz.
 const takvim = (yayinTakvimi as any).yayinlar.map((y: any) => {
-  const adimlar = (y.adimlar ?? []).map((a: any) => `${a.ad} ${a.istanbul}`).join(' · ');
+  const adimlar = [...(y.adimlar ?? [])]
+    .sort((a: any, b: any) => String(a.istanbul).localeCompare(String(b.istanbul)))
+    .map((a: any) => `${a.ad} ${a.istanbul}`).join(' · ');
   const gunler = String(y.gunler ?? '');
   const zaman = adimlar
     ? `${gunler.charAt(0).toUpperCase()}${gunler.slice(1)}; ${adimlar} (İstanbul)`
