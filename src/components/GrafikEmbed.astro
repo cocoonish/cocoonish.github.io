@@ -35,12 +35,34 @@ const cerceveYuk = cerceveYuksekligi(src, yukseklik);
 
 // Proje şekli ise veri tarihi derleme anında hattın özetinden okunur.
 // Uydurma yok: özet ya da tarih yoksa altyazıda tarih satırı hiç çıkmaz.
+//
+// SIRA ÖNEMLİ — bir hattın bütün figürleri aynı saatte DEĞİLDİR:
+//   1. MDX'te açıkça verilen `tarihAnahtari` (yazarın kararı) kazanır;
+//   2. yoksa hattın ŞEKİL SAAT DEFTERİ (`_sekil_tarih`), yani figürü çizen
+//      kodun o figür için yazdığı uç;
+//   3. o da yoksa hattın ana saati (`_tarih`).
+// İkinci basamak, FX haber endeksinde ölçülen bir kusur yüzünden var: hattın
+// iki saati (günlük haber akışı · haftalık GDELT arşivi) tek damgaya
+// sıkıştırılınca GDELT panelleri günlerce eskiyken "bugün" diye
+// damgalanıyordu — ve okur bunu tersinden okuyup TAZE endeksi bayat sanıyordu.
+// Defterde anahtar VAR ama değeri null ise bu "bu figürün ucu ölçülmedi"
+// demektir ve tarih satırı BİLEREK basılmaz; yanlış bir tarih, tarihsizlikten
+// kötüdür.
 let veriTarihi = '';
 const proje = src.match(/^\/projeler\/([^/]+)\//)?.[1];
+const dosya = src.split('/').pop() ?? '';
 if (proje) {
   try {
     const o = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'projeler', proje, 'ozet.json'), 'utf-8'));
-    const ham = (tarihAnahtari && typeof o[tarihAnahtari] === 'string' ? o[tarihAnahtari] : '') || (typeof o._tarih === 'string' ? o._tarih : '');
+    const defter = (o._sekil_tarih && typeof o._sekil_tarih === 'object') ? o._sekil_tarih : null;
+    let ham = '';
+    if (tarihAnahtari && typeof o[tarihAnahtari] === 'string') {
+      ham = o[tarihAnahtari];
+    } else if (defter && Object.prototype.hasOwnProperty.call(defter, dosya)) {
+      ham = typeof defter[dosya] === 'string' ? defter[dosya] : '';
+    } else if (typeof o._tarih === 'string') {
+      ham = o._tarih;
+    }
     veriTarihi = ham ? tarihYaz(ham) : '';
   } catch {
     veriTarihi = '';
