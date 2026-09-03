@@ -53,6 +53,8 @@ tesisi. En sonda da bu fiyatın bankacılık sistemine ne kadarının geçtiği.
 (<Deger proje="fonlama-likidite" anahtar="hafta_gecikme_gun" ondalik={0}>7</Deger> gün gecikme)
 · ZK tabanı
 <Deger proje="fonlama-likidite" anahtar="zk_taban_tarih" ondalik={0}>07.08.2026</Deger>
+· sistem likiditesi
+<Deger proje="fonlama-likidite" anahtar="likidite_tarih" ondalik={0}>03.09.2026</Deger>
 · koşum <Deger proje="fonlama-likidite" anahtar="kosum_tarihi" ondalik={0}>21.08.2026</Deger>.
 
 <KosuKutusu proje="fonlama-likidite" />
@@ -128,11 +130,16 @@ puandır (artı = tavan daha uzakta).
 | Swap ile ÇEKİLEN TL (satım yönlü) | <Deger proje="fonlama-likidite" anahtar="swap_satim_mlr_tl" ondalik={1}>224,6</Deger> | milyar TL |
 | **Swap dâhil TCMB kaynaklı net TL** (net APİ + alım − satım) | **<Deger proje="fonlama-likidite" anahtar="tcmb_tl_saglama_mlr" ondalik={1} isaret={true}>−1.127,5</Deger>** | milyar TL |
 | Tanı: yalnız alım bacaklı eski tanım | <Deger proje="fonlama-likidite" anahtar="api_ve_swap_alim_mlr" ondalik={1} isaret={true}>−902,9</Deger> | milyar TL |
-| Bankalar serbest mevduatı | <Deger proje="fonlama-likidite" anahtar="serbest_mevduat_mlr" ondalik={1}>1.765,9</Deger> | milyar TL |
-| Gün başı toplam likidite | <Deger proje="fonlama-likidite" anahtar="gun_basi_likidite_mlr" ondalik={1}>2.677,6</Deger> | milyar TL |
+| Bankalar serbest mevduatı (<Deger proje="fonlama-likidite" anahtar="serbest_mevduat_mlr_tarih" ondalik={0}>03.09.2026</Deger>) | <Deger proje="fonlama-likidite" anahtar="serbest_mevduat_mlr" ondalik={1}>1.765,9</Deger> | milyar TL |
+| Gün başı toplam likidite (<Deger proje="fonlama-likidite" anahtar="gun_basi_likidite_mlr_tarih" ondalik={0}>03.09.2026</Deger>) | <Deger proje="fonlama-likidite" anahtar="gun_basi_likidite_mlr" ondalik={1}>2.677,6</Deger> | milyar TL |
 | ZK bloke hesabı | <Deger proje="fonlama-likidite" anahtar="zk_bloke_mlr" ondalik={1}>1.140,6</Deger> | milyar TL |
 | Swap stoku — alım yönlü | <Deger proje="fonlama-likidite" anahtar="swap_alim_mn_usd" ondalik={0}>0</Deger> | milyon USD |
 | Swap stoku — satım yönlü | <Deger proje="fonlama-likidite" anahtar="swap_satim_mn_usd" ondalik={0}>4.695</Deger> | milyon USD |
+
+Tablodaki iki likidite satırı **kendi gününü taşır**. Gün başı likidite tablosu
+(`TP.PPIBSM`, `TP.PPIGBTL`) açık piyasa işlemleri tablosundan **önce** yayımlanır; o
+yüzden bu iki sayı diğerlerinden bir gün ileride olabilir. Hepsini tek güne yazmak,
+okurun gördüğü tarihi bir gün kaydırırdı — sessiz bayatlamanın aynadaki hâli.
 
 İşaret rejimi belirler: net fonlama negatif olduğunda **sistem TCMB'nin net alacaklısıdır**
 — bugünkü durum, tek cümlelik hâliyle:
@@ -521,12 +528,39 @@ milyar TL kadar aşağı çekilmektedir.
 
 ## Şekil 05 — Zorunlu karşılıklar, tesis ve sistem likiditesi
 
+{/* KARMA FİGÜR — dört panel, dört ayrı saat. Ölçüldü (03.09.2026 koşusu):
+    (a) bloke hesap ve (b) ima edilen oran 01.09'da, (c) son tesis adımı
+    28.08'de, (d) sistem likiditesi 03.09'da bitiyor; (a)'nın taban bacağı ise
+    14.08 gözlemidir ve ileriye taşınır. Hattın ana saati (`_tarih`, APİ
+    tablosu) bu dördünden HİÇBİRİ değil. Damga BAĞLAYICI bacağı söyler: ZK
+    ölçümünün ortak günü, yani `zk_oran_tarih`. Böylece figür ZK tarafında
+    olduğundan taze görünmez; (d) paneli damgadan bir–iki gün İLERİDE olur ve
+    bu, altındaki paragrafta yazılıdır. Hattın şekil saat defterinde bu figürün
+    değeri bilerek boştur — tek uç seçilemeyen bir figüre defterden tarih
+    yazmak, dört bacaktan üçü hakkında yalan olurdu; figürün KENDİ alt yazısı
+    da tarih taşımaz, her panel kendi gününü kendi başlığında yazar. Sayfadaki
+    damgayı buradaki açık anahtar verir ve o, bağlayıcı bacaktır. */}
 <GrafikEmbed
   src="/projeler/fonlama-likidite/05_zk_likidite.html"
+  tarihAnahtari="zk_oran_tarih"
   baslik="ZK bloke hesabı ve tabanı · ima edilen efektif tesis oranı · tesis dönemi adımları · bankalar serbest mevduatı ve gün başı likidite"
   no="05"
-  yukseklik={1921}
+  yukseklik={1973}
 />
+
+**Bu şeklin dört ayrı saati var ve şeklin altındaki tarih BAĞLAYICI bacağı söyler.**
+(a) ile (b) panelleri analitik bilançonun gününde biter
+(<Deger proje="fonlama-likidite" anahtar="zk_oran_tarih" ondalik={0}>01.09.2026</Deger>);
+(c) panelinin son adımı
+<Deger proje="fonlama-likidite" anahtar="zk_son_adim_tarih" ondalik={0}>28.08.2026</Deger>
+tarihlidir (seri basamak fonksiyonudur — arada adım yoksa panelin durması veridir,
+eksiklik değil); (d) paneli gün başı likidite tablosundan gelir ve o tablo daha erken
+yayımlandığı için diğerlerinden **ileride** durur
+(<Deger proje="fonlama-likidite" anahtar="likidite_tarih" ondalik={0}>03.09.2026</Deger>).
+(a) panelinin taban bacağı ise gecikmeli gelir ve ileriye taşınır; kendi gözlem günü
+<Deger proje="fonlama-likidite" anahtar="zk_taban_tarih" ondalik={0}>14.08.2026</Deger>.
+Şeklin damgası ZK ölçümünün ortak günüdür, **en taze panelin günü değil**: bir figürün
+tarihi, ortak ölçümün bittiği yerdir.
 
 ### Bu şekil nasıl hesaplanıyor?
 
@@ -615,7 +649,11 @@ yayımlamamaktan kötüdür.
 **(d) paneli — sistem likiditesi.** `TP.PPIBSM` bankaların TCMB nezdindeki serbest
 mevduatı, `TP.PPIGBTL` gün başı toplam TL likiditesi. Bunlar analitik bilanço ailesinden
 **ayrı** bir seri ailesidir; bloke hesap ile serbest mevduat arasında birebir aritmetik
-kurulmaz, çünkü tanımlar örtüşmez. Çıpa günü serbest mevduat
+kurulmaz, çünkü tanımlar örtüşmez. Bu ailenin **kendi yayım saati** vardır ve açık
+piyasa işlemleri tablosundan önce gelir, yani bu panel şeklin geri kalanından bir–iki
+gün ileride durabilir. Son gün
+(<Deger proje="fonlama-likidite" anahtar="likidite_tarih" ondalik={0}>03.09.2026</Deger>)
+serbest mevduat
 <Deger proje="fonlama-likidite" anahtar="serbest_mevduat_mlr" ondalik={1}>1.765,9</Deger>
 milyar TL, gün başı likidite
 <Deger proje="fonlama-likidite" anahtar="gun_basi_likidite_mlr" ondalik={1}>2.677,6</Deger>
@@ -640,8 +678,15 @@ sınanır ve üçü de yuvarlama hassasiyetinde kapanır.
 
 ## Şekil 06 — Fonlama maliyetinden kredi ve mevduat faizine geçişkenlik
 
+{/* Bu figürün TEK girdisi haftalık faiz akımlarıdır (haftalik_metrik.csv) ve
+    o dosyadaki on beş kolonun tamamı Cuma'da biter; hattın ana saati ise
+    günlük APİ tablosundan gelir. Damga `_tarih`ten okununca figür 11–12 gün
+    ileriden damgalanıyordu: BAYAT figür TAZE görünüyordu ve figürün kendi
+    alt yazısı ("faiz verisi Çıpa: …") sayfanın damgasıyla çelişiyordu.
+    Haftalık bacağın kendi günü: hafta_kisa. */}
 <GrafikEmbed
   src="/projeler/fonlama-likidite/06_gecirgenlik.html"
+  tarihAnahtari="hafta_kisa"
   baslik="Marjinal TCMB faizi ile kredi ve mevduat faizleri · aracılık marjları · 52 haftalık yuvarlanan geçişkenlik katsayısı"
   no="06"
   yukseklik={1449}

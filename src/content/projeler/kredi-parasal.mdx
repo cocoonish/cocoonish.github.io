@@ -523,6 +523,18 @@ gözlenmediği için etki, hafta sonu kuruyla tek adımda ölçülür.
   yukseklik={1811}
 />
 
+**Bu şeklin dört paneli aynı güne ait değildir**, bu yüzden altında tek bir veri tarihi
+yazmaz. İlk iki panel haftalık bankacılık tablolarından gelir ve
+<Deger proje="kredi-parasal" anahtar="hafta" ondalik={0}>21 Ağustos 2026</Deger>
+haftasında biter; üçüncü panel aylık banka türü tablosundandır ve
+<Deger proje="kredi-parasal" anahtar="ay" ondalik={0}>Temmuz 2026</Deger>'da biter;
+dördüncü panel üç aylık ankettir ve
+<Deger proje="kredi-parasal" anahtar="ceyrek" ondalik={0}>2026-Ç2</Deger> dönemini
+gösterir. Her panelin kendi tarihi panel başlığında yazılıdır: tek bir damga, alt iki
+paneli olduğundan taze ya da üst iki paneli olduğundan bayat gösterirdi. Alttaki iki
+panelin geriden gelmesi bir gecikme değil, yayım takviminin kendisidir — aylık ve üç
+aylık tablolar haftalıklardan sonra çıkar (tolerans tablosu aşağıda).
+
 ### Bu şekil nasıl hesaplanıyor?
 
 **Panel 1 — tür bazında büyüme.** `bie_hpbitablo6` (haftalık kredi kırılımı,
@@ -764,6 +776,7 @@ Bunun bedeli açık: **arındırılmış seri çıpadan öncesine uzatılamaz.**
   baslik="TL ve döviz mevduatı · DTH payı, ham ve arındırılmış · döviz mevduatı, döviz cinsinden"
   no="06"
   yukseklik={1425}
+  tarihAnahtari="dol_tarih_kisa"
 />
 
 ### Bu şekil nasıl hesaplanıyor?
@@ -825,6 +838,7 @@ altın bileşeni katar. Bu bileşen ayrıştırılmıyor.
   baslik="KKM stoku — TL KKM ve döviz dönüşümlü KKM · aylık değişim (erime hızı)"
   no="07"
   yukseklik={1011}
+  tarihAnahtari="kkm_son_tarih"
 />
 
 ### Bu şekil nasıl hesaplanıyor?
@@ -913,6 +927,7 @@ riskinin nerede biriktiğini gösterir.
   baslik="Arındırılmış kredi büyümesi ve TÜFE momentumu · gecikmeli korelasyon"
   no="09"
   yukseklik={1035}
+  tarihAnahtari="capraz_son"
 />
 
 ### Bu şekil nasıl hesaplanıyor?
@@ -922,6 +937,12 @@ ortalamasıyla** aylığa indirgenmiş) ile [Enflasyon panosu](/projeler/enflasy
 hattının ürettiği TÜFE momentum serileri: 3 ve 6 aylık SAAR ve 12 aylık manşet. İki hat
 arasındaki bu bağ, aynı repoda iki ayrı pipeline'ın çıktısının birleştirilmesidir; kredi
 hattı enflasyon hattının CSV çıktısını okur.
+
+**İki bacağın son noktası aynı olgunlukta değildir.** Kredi bacağı haftalık seriden ay
+ortalamasıyla kuruluyor: bir ay kapanmadan çizilen son nokta o ayın yalnız yayımlanmış
+haftalarını ortalar ve kalan haftalar geldikçe yerine oturur. Enflasyon bacağı ise ayın
+tamamını ölçer. Şeklin altındaki tarih iki bacağın örtüştüğü son aydır; o ayın kredi
+noktası, ay içinde bakıldığında henüz eksik hafta taşıyor olabilir.
 
 **Alt panel — gecikmeli korelasyon.** Her $k$ gecikmesi için:
 

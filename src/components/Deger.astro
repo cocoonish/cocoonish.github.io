@@ -41,7 +41,7 @@ const { proje, anahtar, ondalik = 1, isaret = false, bayatGun = 45 } = Astro.pro
   data-ondalik={ondalik}
   data-isaret={isaret ? '1' : undefined}
   data-bayat-gun={bayatGun}><slot>…</slot></span><script>
-  import { sayi } from '../lib/bicim';
+  import { sayi, tariheCevir } from '../lib/bicim';
   // Sayfa başına tek sefer: span'ları projeye göre grupla, ozet.json'ları çek, doldur.
   const alanlar = [...document.querySelectorAll('span.canli-deger')] as HTMLElement[];
   const projeler = [...new Set(alanlar.map((a) => a.dataset.proje!))];
@@ -50,15 +50,19 @@ const { proje, anahtar, ondalik = 1, isaret = false, bayatGun = 45 } = Astro.pro
   const bicimle = (v: unknown, ondalik: number, isaret: boolean) =>
     typeof v === 'number' ? sayi(v, ondalik, isaret) : String(v);
 
-  /** "GG.AA.YYYY" ya da ISO kabul eder; ayrıştıramazsa null döner (uydurmaz). */
-  const ayristir = (t: unknown): Date | null => {
-    if (typeof t !== 'string') return null;
-    const nokta = t.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-    if (nokta) return new Date(+nokta[3], +nokta[2] - 1, +nokta[1]);
-    const iso = t.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
-    return null;
-  };
+  /**
+   * Tarih çözümü lib/bicim'e devredildi. Burada YEREL bir ayrıştırıcı vardı
+   * ve `AA.YYYY` yazımını TANIMIYORDU; oysa aylık bir gözlemi gün gibi yazmak
+   * ("01.07.2026") okura o günün ölçümü gibi görünür, o yüzden aylık saatler
+   * `07.2026` diye yazılır. Sonuç: on beş `*_tarih` anahtarının — aralarında
+   * bütçe ve enflasyon hatlarının ANA saatinin — bayatlık denetimi sessizce
+   * kapalıydı. Ayrıştıramayan bir denetim, hep "sorun yok" diyen bir denetimdir.
+   * lib/bicim üç yazımı da çözer (GG.AA.YYYY · AA.YYYY · ISO) ve `AA.YYYY`yi
+   * ayın son gününe demirler; ölçüm katmanındaki eşiyle (ortak/bicim.py) aynı
+   * sözleşme.
+   */
+  const ayristir = (t: unknown): Date | null =>
+    typeof t === 'string' ? tariheCevir(t) : null;
   /**
    * Tarih taşıyan ama TAZELİK saati OLMAYAN anahtarlar. `kum_zirve_tarih`
    * "o zirve ne zaman yaşandı" der; donuk olması normaldir, bayat değildir.
