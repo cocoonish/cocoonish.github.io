@@ -221,24 +221,21 @@ $$
 değeridir. Fiyat, 100 TL nominal başına gösterge fiyattır. Gün sayımı ACT/365,
 bileşikleme yıllıktır.
 
+{/* sinav-ornek: bu kutunun BÜTÜN sayıları uydurmadır — 51,00 TL bir varsayım,
+    kalanı (1,96078 → 1,40028 → %40,03) o varsayımdan türüyor. Canlı bir değerle
+    değiştirilseydi zincirin geri kalanı yalan söylerdi. Canlı bir ölçüyle denk
+    düşmeleri tesadüftür ve iki kez oldu: 40,03 forward_1y1y ile, 51,00 ise
+    kimlik_cok_kaynakli ile. */}
 <div class="not">
   <span class="etiket">Aritmetiği görmek için — uydurma yuvarlak sayılarla</span>
   Kalan vadesi 730 gün olan bir anapara strip'i düşünün: vade gününde 100 TL
   ödeyecek, bugünkü gösterge fiyatı 51,00 TL olsun. O zaman
   (100 ÷ 51,00) = 1,96078 ve 365/730 = 0,5 üssü karekök demektir:
   1,96078<sup>0,5</sup> = 1,40028, yani yıllık bileşik getiri <strong>%40,03</strong>.
-  {/* sinav-muaf: forward_1y1y — bu kutu UYDURMA yuvarlak sayılarla kurulmuş bir
-      aritmetik örneği; 40,03 buradaki 51,00 TL varsayımından çıkıyor ve canlı
-      forward_1y1y ile denk düşmesi tesadüf. Canlı yapılsaydı zincirin geri
-      kalanı (51,00 → 1,96078 → 1,40028) yalan söylerdi. */}
-  {/* sinav-muaf: kimlik_cok_kaynakli — AYNI kutunun varsayılan fiyatı 51,00 TL
-      ve canlı kimlik_cok_kaynakli 02.09.2026'da 51'e geldiği için çakıştı.
-      Çakışma tesadüf, kutu ise uydurma sayılarla kurulmuş; canlıya bağlanırsa
-      örneğin bütün aritmetiği bozulur. Anahtarın kendisi sayfada zaten
-      <Deger> ile canlı basılıyor. */}
   Bu örnekteki fiyat gerçek bir gözlem değildir; yalnız formülün nasıl işlediğini
   göstermek için seçilmiştir. Sayfadaki bütün gerçek sayılar koşudan gelir.
 </div>
+{/* /sinav-ornek */}
 
 Kuponlu tahvil hiçbir yerde bu zincirin girdisi değildir. Kuponlu tahvil yalnız
 **sınama** amacıyla kullanılır (aşağıda, strip toplamı özdeşliği).
@@ -247,14 +244,11 @@ Kuponlu tahvil hiçbir yerde bu zincirin girdisi değildir. Kuponlu tahvil yaln�
 
 `.ORAN` serisinin EVDS'teki adı **"Kupon Faiz Oranı"**dır. İçerik ise **yıllık oran
 değil, dönemsel kupon TUTARIDIR** — 100 TL nominal başına, o dönem ödenecek lira.
-Bu ölçüldü: `TRT150328A17.ORAN` = 18,40 ve aynı tahvilin ilgili kupon strip'i tam
-18,40 ödüyor; yıllık kupon oranı %36,8'dir.
-{/* sinav-muaf: spot_3a — buradaki %36,8, ölçülmüş bir kupon TUTARINDAN
-    (18,40 × 2) türeyen metodoloji örneği ve tahvilin kendi sabitidir; canlı
-    üç aylık spot getirinin 02.09.2026'da %36,79'a inip aynı yazıma düşmesi
-    tesadüf. Üç aylık spot getiri sayfadaki eğri tablosunda <Deger> ile canlı
-    basılıyor. */}
-Değeri "yıllık oran" sanıp ikiye bölen
+Bu ölçüldü: {/* sinav-ornek: TRT150328A17'nin kupon tutarı ve ondan türeyen
+yıllık oran, o serinin SABİT sözleşme şartıdır — canlı bir ölçü değil. Piyasa
+faizi bir gün aynı sayıya denk gelirse bu tesadüftür (spot_3a 36,79 ile bir kez
+oldu). */}`TRT150328A17.ORAN` = 18,40 ve aynı tahvilin ilgili kupon strip'i tam
+18,40 ödüyor; yıllık kupon oranı %36,8'dir.{/* /sinav-ornek */} Değeri "yıllık oran" sanıp ikiye bölen
 bir hesap, pay tarafını yarıya indirir ve **eğriyi yaklaşık 15 puan kaydırır**.
 Kaydırma sistematiktir: grafik hâlâ "makul" görünür, sadece yanlış yerdedir. Sessiz
 hata sınıfının ders kitabı örneğidir.
