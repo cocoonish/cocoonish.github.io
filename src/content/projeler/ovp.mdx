@@ -1,0 +1,588 @@
+---
+title: 'Programın ima ettiği kur ve yıl sonu patikası'
+description: "Orta Vadeli Program bir kur patikası yayımlamaz; ama lira ve dolar cinsinden yayımladığı milli gelir satırlarının oranı, programın ima ettiği ortalama kurdur. Bu pano o imayı gerçekleşen kurla karşılaştırır, yöntemi kapanmış yıllarda sınar ve programın tutması için yıl sonuna kalan patikayı her gün yeniden ölçer."
+pubDate: 2026-09-06
+updatedDate: 2026-09-06
+tags: ['orta vadeli program', 'kur', 'enflasyon', 'maliye', 'taşıma']
+durum: 'aktif'
+kaynak: 'Strateji ve Bütçe Başkanlığı Orta Vadeli Program tabloları; TCMB EVDS gösterge kuru ve gecelik referans faiz; TÜİK tüketici fiyat endeksi'
+guncelleme: "her iş günü (TCMB gösterge kuru, 15:30); program tabloları yılda bir yayımlanır"
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+import KosuKutusu from '../../components/KosuKutusu.astro';
+
+Orta Vadeli Program bir kur tahmini yayımlamaz. Programın tablosunda politika
+faizi de yoktur, kur patikası da. Ama aynı tabloda **iki milli gelir satırı**
+yan yana durur: gayrisafi yurt içi hasıla, hem cari fiyatlarla **lira**
+cinsinden, hem cari fiyatlarla **dolar** cinsinden. Bir yılın lira gelirini o
+yılın dolar gelirine bölerseniz, elinizde o yıl için **ima edilen ortalama kur**
+kalır. Bu bir tahmin değil, tablonun kendi aritmetiğidir: program o iki satırı
+birlikte yayımladığı anda üçüncüsünü de yayımlamış olur.
+
+Bu panonun konusu o üçüncü satırdır. Ve bir yan sonucu: gerçekleşen kur her iş
+günü değiştiği için, **"programın tutması için yıl sonunda kur kaç olmalı"
+sorusunun cevabı her gün değişir.** Panonun işi o cevabı canlı tutmaktır.
+
+## Güncel okuma
+
+Kur bacağının son gözlemi
+**<Deger proje="ovp" anahtar="kur_gun" ondalik={0}>3 Eylül 2026</Deger>**,
+seviyesi <Deger proje="ovp" anahtar="son_kur" ondalik={4}>48,2075</Deger> lira.
+Bu koşum <Deger proje="ovp" anahtar="kosum_tarihi" ondalik={0}>06.09.2026</Deger>;
+verinin yaşı <Deger proje="ovp" anahtar="veri_gecikme_gun" ondalik={0}>36</Deger>
+gün ve bu yaş <Deger proje="ovp" anahtar="veri_gecikme_blok" ondalik={0}>gerçekleşen TÜFE</Deger>
+bacağından ölçülüyor — panonun üç canlı bacağı var ve biri ilerlerken öteki
+durabilir. Tazelik hükmü:
+<Deger proje="ovp" anahtar="bayat_cumlesi" ondalik={0}>Veri taze: bütün bacaklar tolerans içinde.</Deger>
+
+Yürürlükteki program **<Deger proje="ovp" anahtar="program_yeni_kisa" ondalik={0}>OVP 2027–2029</Deger>**
+(<Deger proje="ovp" anahtar="program_yeni_yayin" ondalik={0}>Eylül 2026</Deger>);
+kıyas ekseni bir önceki programdır,
+**<Deger proje="ovp" anahtar="program_eski_kisa" ondalik={0}>OVP 2026–2028</Deger>**
+(<Deger proje="ovp" anahtar="program_eski_yayin" ondalik={0}>Eylül 2025</Deger>).
+
+| | Ölçü |
+| --- | ---: |
+| Programın <Deger proje="ovp" anahtar="ima_y0_yil" ondalik={0}>2026</Deger> için ima ettiği **ortalama** kur | <Deger proje="ovp" anahtar="ima_y0" ondalik={3}>46,868</Deger> |
+| Yıl içinde şu ana kadar **gerçekleşen** ortalama (<Deger proje="ovp" anahtar="n_gerceklesen" ondalik={0}>167</Deger> işlem günü) | <Deger proje="ovp" anahtar="ger_ort_bu_yil" ondalik={3}>45,271</Deger> |
+| Gerçekleşenin programdan sapması | %<Deger proje="ovp" anahtar="sapma_bu_yil" ondalik={2} isaret={true}>−3,41</Deger> |
+| Programın tutması için **kalan <Deger proje="ovp" anahtar="kalan_gun" ondalik={0}>85</Deger> günün** ortalaması | <Deger proje="ovp" anahtar="gereken_ort" ondalik={3}>50,005</Deger> |
+| Bu, bugünkü seviyenin | %<Deger proje="ovp" anahtar="gereken_bugune_gore" ondalik={2} isaret={true}>+3,73</Deger> üstü |
+| **Yıl sonu iması** (üstel patika) | <Deger proje="ovp" anahtar="yil_sonu_ustel" ondalik={2}>51,80</Deger> |
+| Yıl sonu iması (doğrusal patika) | <Deger proje="ovp" anahtar="yil_sonu_dogrusal" ondalik={2}>51,76</Deger> |
+| İki patika arasındaki fark | %<Deger proje="ovp" anahtar="patika_farki" ondalik={3}>0,082</Deger> |
+| Bugünden yıl sonuna kalan hareket | %<Deger proje="ovp" anahtar="kalan_hareket" ondalik={2} isaret={true}>+7,46</Deger> |
+
+Tablonun tek cümlelik okuması: **kur bu yıl programın ima ettiğinden yavaş
+gitti, ve bu gecikme yıl sonuna doğru bir hızlanma borcu biriktiriyor.** Kalan
+<Deger proje="ovp" anahtar="kalan_gun" ondalik={0}>85</Deger> günün ortalamasının
+bugünkü seviyenin üstünde olması gerekiyor;
+yani programın yıl ortalaması ancak kur bugünden itibaren yukarı giderse tutar.
+
+<div class="not">
+  <span class="etiket">Bu bir tahmin değil, bir kısıtın çözümü</span>
+  Buradaki hiçbir sayı "kur şu olacak" demiyor. Hepsi tek bir soruya cevap:
+  <em>program kendi yayımladığı ortalamayı tutturacaksa</em>, geri kalan
+  günlerde ne olmalı. Programın tutmama ihtimali de bir sonuçtur ve tablo onu
+  gizlemez — gerçekleşen ortalama imadan uzaklaştıkça gereken ortalama daha
+  uçlara gider.
+</div>
+
+## Teori: ima edilen kur nedir, neden vardır
+
+Program tablosunda bir $t$ yılı için iki satır var: cari fiyatlarla lira geliri
+$Y^{TL}_t$ (milyar lira) ve cari fiyatlarla dolar geliri $Y^{USD}_t$ (milyar
+dolar). Dolar geliri, lira gelirinin bir kurla bölünmesiyle elde edilir. O
+kurun adı programda geçmez, ama tanımı gereği şudur:
+
+$$
+e_t \;=\; \frac{Y^{TL}_t}{Y^{USD}_t}
+$$
+
+Bu $e_t$ bir **yıl ortalamasıdır**, yıl sonu değeri değil: milli gelir bütün
+yıl boyunca üretilir ve dolara çevrilirken yıl boyunca geçerli olan kur
+kullanılır. Ayrım kritik — sayfanın geri kalanının yarısı, "ortalama biliniyorsa
+yıl sonu ne olur" sorusuna ayrılmış durumda.
+
+### Ölçünün kendi uyarısı, ve o uyarının sınanması
+
+Programın milli gelir tablosunun dipnotu, tasarruf–yatırım farkı ile cari
+işlemler açığı arasındaki farkın "milli gelir hesaplamalarında ihracat ve ithalat
+ağırlıklı döviz kuru kullanılmasından" kaynaklandığını söylüyor. Yani $e_t$ düz
+dolar-lira kuru değil, **dış ticaret ağırlıklı bir sepet kurudur**. Uyarı
+gerçek. Ama "farkı ihmal edilebilir" cümlesi bir varsayım değil bir **ölçüm**
+olmalı, ve ölçülebilir: kapanmış bir yılda ima edilen kuru o yılın gerçekleşen
+günlük ortalamasıyla karşılaştırmak yeter.
+
+<Deger proje="ovp" anahtar="yontem_cumlesi" ondalik={0}>Yöntem sınaması 2 kapanmış yılda kuruldu. En büyük sapma %0,12.</Deger>
+Sınama **her koşuda yeniden** yapılıyor ve sonucu aşağıdaki şeklin alt
+panelinde duruyor; fark büyürse okur bunu görür.
+
+| Program | Yıl | İma edilen | Gerçekleşen günlük ortalama | Fark |
+| --- | ---: | ---: | ---: | ---: |
+| <Deger proje="ovp" anahtar="yontem_r1_program" ondalik={0}>OVP 2027–2029</Deger> | <Deger proje="ovp" anahtar="yontem_r1_yil" ondalik={0}>2025</Deger> | <Deger proje="ovp" anahtar="yontem_r1_ima" ondalik={3}>39,476</Deger> | <Deger proje="ovp" anahtar="yontem_r1_ger" ondalik={3}>39,476</Deger> | %<Deger proje="ovp" anahtar="yontem_r1_fark" ondalik={3} isaret={true}>+0,001</Deger> |
+| <Deger proje="ovp" anahtar="yontem_r2_program" ondalik={0}>OVP 2026–2028</Deger> | <Deger proje="ovp" anahtar="yontem_r2_yil" ondalik={0}>2024</Deger> | <Deger proje="ovp" anahtar="yontem_r2_ima" ondalik={3}>32,833</Deger> | <Deger proje="ovp" anahtar="yontem_r2_ger" ondalik={3}>32,792</Deger> | %<Deger proje="ovp" anahtar="yontem_r2_fark" ondalik={3} isaret={true}>+0,124</Deger> |
+
+**Sınamaya hangi sütun girer, hangisi girmez** — bu ayrım olmasa ölçtüğümüz şey
+değişirdi. Program tablosunun sütunları üç türlüdür: gerçekleşme, gerçekleşme
+tahmini ve program. Sınamaya yalnız **gerçekleşme** sütunları girer, ve yalnız
+**kapanmış** yıllar. Gerçekleşme tahmini sütunundaki fark bir yöntem farkı
+değil bir tahmin hatasıdır; açık bir yılın yarım ortalaması ise yıl ortalaması
+değildir. Ayrım yapılmasaydı geçen yılın kendi tahmin hatası, ölçünün
+güvenilmezliği gibi görünürdü.
+
+<GrafikEmbed
+  src="/projeler/ovp/01_ima_kur.html"
+  baslik="Programın ima ettiği ortalama kur ve yöntem sınaması"
+  no="01"
+  yukseklik={1139}
+  tarihAnahtari="damga_01_ima_kur"
+/>
+
+**Bu seri nasıl hesaplanıyor.** Üst panelde her yıl için $e_t = Y^{TL}_t /
+Y^{USD}_t$; iki program ayrı ayrı, çünkü aynı yıl iki programda iki farklı ima
+taşıyor. Elmas işaretler kapanmış yılların gerçekleşen günlük ortalaması —
+gösterge kurunun o takvim yılındaki bütün gözlemlerinin düz ortalaması, ağırlık
+yok. Çarpı işareti yılın kapanmadığını söyler ve o nokta bir yıl ortalaması
+değildir. Alt panel yalnız kapanmış gerçekleşme sütunlarında $e_t$ ile
+gerçekleşen ortalamanın yüzde farkı; noktalı çizgiler bu panonun kendine koyduğu
+sınırdır, kaynağın değil.
+
+**Damgası neden iki parçalı.** Bu figürde iki cins bacak var: yayımlanmış bir
+belge ve her iş günü ilerleyen bir seri. Aralarındaki mesafe bir yıla varıyor.
+Tek bir tarih yazmak iki yönde birden yanlış olurdu — en eskisini yazmak taze
+kur bacağını bir yıl bayat gösterir, en yenisini yazmak program sürümünü bugünkü
+gibi gösterir. Damga bu yüzden ikisini birden yazıyor.
+
+## Program tabloları
+
+Aşağıdaki iki tablo, panonun bütün ölçümlerinin girdisidir. Sayıları
+yayımlanmış birer belgeden geliyor ve bir daha değişmeyecek; yine de sayfaya
+elle yazılmıyorlar, panonun kendi kaydından okunuyorlar — kayıttaki bir aktarım
+düzeltmesi sayfaya kendiliğinden ulaşsın diye. Sütun başlıklarındaki tür,
+sınamaya hangi sütunun girdiğini belirleyen alandır.
+
+### <Deger proje="ovp" anahtar="program_yeni_ad" ondalik={0}>Orta Vadeli Program (2027–2029)</Deger>
+
+| | <Deger proje="ovp" anahtar="p_y0_yil" ondalik={0}>2025</Deger> | <Deger proje="ovp" anahtar="p_y1_yil" ondalik={0}>2026</Deger> | <Deger proje="ovp" anahtar="p_y2_yil" ondalik={0}>2027</Deger> | <Deger proje="ovp" anahtar="p_y3_yil" ondalik={0}>2028</Deger> | <Deger proje="ovp" anahtar="p_y4_yil" ondalik={0}>2029</Deger> |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| *sütunun türü* | *<Deger proje="ovp" anahtar="p_y0_tur" ondalik={0}>gerçekleşme</Deger>* | *<Deger proje="ovp" anahtar="p_y1_tur" ondalik={0}>gerçekleşme tahmini</Deger>* | *<Deger proje="ovp" anahtar="p_y2_tur" ondalik={0}>program</Deger>* | *<Deger proje="ovp" anahtar="p_y3_tur" ondalik={0}>program</Deger>* | *<Deger proje="ovp" anahtar="p_y4_tur" ondalik={0}>program</Deger>* |
+| Milli gelir (milyar lira) | <Deger proje="ovp" anahtar="p_gsyh_tl_y0" ondalik={0}>63.241</Deger> | <Deger proje="ovp" anahtar="p_gsyh_tl_y1" ondalik={0}>85.346</Deger> | <Deger proje="ovp" anahtar="p_gsyh_tl_y2" ondalik={0}>111.207</Deger> | <Deger proje="ovp" anahtar="p_gsyh_tl_y3" ondalik={0}>133.184</Deger> | <Deger proje="ovp" anahtar="p_gsyh_tl_y4" ondalik={0}>153.141</Deger> |
+| Milli gelir (milyar dolar) | <Deger proje="ovp" anahtar="p_gsyh_usd_y0" ondalik={0}>1.602</Deger> | <Deger proje="ovp" anahtar="p_gsyh_usd_y1" ondalik={0}>1.821</Deger> | <Deger proje="ovp" anahtar="p_gsyh_usd_y2" ondalik={0}>1.984</Deger> | <Deger proje="ovp" anahtar="p_gsyh_usd_y3" ondalik={0}>2.091</Deger> | <Deger proje="ovp" anahtar="p_gsyh_usd_y4" ondalik={0}>2.225</Deger> |
+| **İma edilen ortalama kur** | — | **<Deger proje="ovp" anahtar="ima_y0" ondalik={3}>46,868</Deger>** | **<Deger proje="ovp" anahtar="ima_y1" ondalik={3}>56,052</Deger>** | **<Deger proje="ovp" anahtar="ima_y2" ondalik={3}>63,694</Deger>** | **<Deger proje="ovp" anahtar="ima_y3" ondalik={3}>68,827</Deger>** |
+| Kişi başına gelir (dolar) | <Deger proje="ovp" anahtar="p_kisi_basi_gelir_y0" ondalik={0}>18.040</Deger> | <Deger proje="ovp" anahtar="p_kisi_basi_gelir_y1" ondalik={0}>20.523</Deger> | <Deger proje="ovp" anahtar="p_kisi_basi_gelir_y2" ondalik={0}>22.285</Deger> | <Deger proje="ovp" anahtar="p_kisi_basi_gelir_y3" ondalik={0}>23.419</Deger> | <Deger proje="ovp" anahtar="p_kisi_basi_gelir_y4" ondalik={0}>24.842</Deger> |
+| Büyüme (%) | <Deger proje="ovp" anahtar="p_buyume_y0" ondalik={1}>3,7</Deger> | <Deger proje="ovp" anahtar="p_buyume_y1" ondalik={1}>3,3</Deger> | <Deger proje="ovp" anahtar="p_buyume_y2" ondalik={1}>4,2</Deger> | <Deger proje="ovp" anahtar="p_buyume_y3" ondalik={1}>4,6</Deger> | <Deger proje="ovp" anahtar="p_buyume_y4" ondalik={1}>5,0</Deger> |
+| Milli gelir deflatörü (%) | <Deger proje="ovp" anahtar="p_deflator_y0" ondalik={1}>36,5</Deger> | <Deger proje="ovp" anahtar="p_deflator_y1" ondalik={1}>30,6</Deger> | <Deger proje="ovp" anahtar="p_deflator_y2" ondalik={1}>25,0</Deger> | <Deger proje="ovp" anahtar="p_deflator_y3" ondalik={1}>14,5</Deger> | <Deger proje="ovp" anahtar="p_deflator_y4" ondalik={1}>9,5</Deger> |
+| **Tüketici enflasyonu, yıl sonu (%)** | <Deger proje="ovp" anahtar="p_tufe_y0" ondalik={1}>30,9</Deger> | <Deger proje="ovp" anahtar="p_tufe_y1" ondalik={1}>28,4</Deger> | <Deger proje="ovp" anahtar="p_tufe_y2" ondalik={1}>21,0</Deger> | <Deger proje="ovp" anahtar="p_tufe_y3" ondalik={1}>13,5</Deger> | <Deger proje="ovp" anahtar="p_tufe_y4" ondalik={1}>9,0</Deger> |
+| Cari denge (milyar dolar) | <Deger proje="ovp" anahtar="p_cari_y0" ondalik={1}>−30,3</Deger> | <Deger proje="ovp" anahtar="p_cari_y1" ondalik={1}>−47,5</Deger> | <Deger proje="ovp" anahtar="p_cari_y2" ondalik={1}>−38,5</Deger> | <Deger proje="ovp" anahtar="p_cari_y3" ondalik={1}>−37,0</Deger> | <Deger proje="ovp" anahtar="p_cari_y4" ondalik={1}>−35,5</Deger> |
+| Cari denge / milli gelir (%) | <Deger proje="ovp" anahtar="p_cari_gsyh_y0" ondalik={1}>−1,9</Deger> | <Deger proje="ovp" anahtar="p_cari_gsyh_y1" ondalik={1}>−2,6</Deger> | <Deger proje="ovp" anahtar="p_cari_gsyh_y2" ondalik={1}>−1,9</Deger> | <Deger proje="ovp" anahtar="p_cari_gsyh_y3" ondalik={1}>−1,8</Deger> | <Deger proje="ovp" anahtar="p_cari_gsyh_y4" ondalik={1}>−1,6</Deger> |
+| Altın hariç cari denge (milyar dolar) | <Deger proje="ovp" anahtar="p_altin_haric_cari_y0" ondalik={1}>−10,3</Deger> | <Deger proje="ovp" anahtar="p_altin_haric_cari_y1" ondalik={1}>−34,0</Deger> | <Deger proje="ovp" anahtar="p_altin_haric_cari_y2" ondalik={1}>−23,5</Deger> | <Deger proje="ovp" anahtar="p_altin_haric_cari_y3" ondalik={1}>−20,5</Deger> | <Deger proje="ovp" anahtar="p_altin_haric_cari_y4" ondalik={1}>−18,0</Deger> |
+| İhracat (milyar dolar) | <Deger proje="ovp" anahtar="p_ihracat_y0" ondalik={1}>273,2</Deger> | <Deger proje="ovp" anahtar="p_ihracat_y1" ondalik={1}>282,0</Deger> | <Deger proje="ovp" anahtar="p_ihracat_y2" ondalik={1}>292,0</Deger> | <Deger proje="ovp" anahtar="p_ihracat_y3" ondalik={1}>302,5</Deger> | <Deger proje="ovp" anahtar="p_ihracat_y4" ondalik={1}>316,0</Deger> |
+| İthalat (milyar dolar) | <Deger proje="ovp" anahtar="p_ithalat_y0" ondalik={1}>365,4</Deger> | <Deger proje="ovp" anahtar="p_ithalat_y1" ondalik={1}>387,0</Deger> | <Deger proje="ovp" anahtar="p_ithalat_y2" ondalik={1}>397,0</Deger> | <Deger proje="ovp" anahtar="p_ithalat_y3" ondalik={1}>411,0</Deger> | <Deger proje="ovp" anahtar="p_ithalat_y4" ondalik={1}>426,0</Deger> |
+| Dış ticaret dengesi (milyar dolar) | <Deger proje="ovp" anahtar="p_dis_ticaret_dengesi_y0" ondalik={1}>−92,2</Deger> | <Deger proje="ovp" anahtar="p_dis_ticaret_dengesi_y1" ondalik={1}>−105,0</Deger> | <Deger proje="ovp" anahtar="p_dis_ticaret_dengesi_y2" ondalik={1}>−105,0</Deger> | <Deger proje="ovp" anahtar="p_dis_ticaret_dengesi_y3" ondalik={1}>−108,5</Deger> | <Deger proje="ovp" anahtar="p_dis_ticaret_dengesi_y4" ondalik={1}>−110,0</Deger> |
+| Ham petrol, varil başına dolar | <Deger proje="ovp" anahtar="p_brent_y0" ondalik={1}>69,1</Deger> | <Deger proje="ovp" anahtar="p_brent_y1" ondalik={1}>88,0</Deger> | <Deger proje="ovp" anahtar="p_brent_y2" ondalik={1}>76,0</Deger> | <Deger proje="ovp" anahtar="p_brent_y3" ondalik={1}>72,0</Deger> | <Deger proje="ovp" anahtar="p_brent_y4" ondalik={1}>67,0</Deger> |
+| Enerji ithalatı (milyar dolar) | <Deger proje="ovp" anahtar="p_enerji_ithalati_y0" ondalik={1}>62,5</Deger> | <Deger proje="ovp" anahtar="p_enerji_ithalati_y1" ondalik={1}>71,0</Deger> | <Deger proje="ovp" anahtar="p_enerji_ithalati_y2" ondalik={1}>66,0</Deger> | <Deger proje="ovp" anahtar="p_enerji_ithalati_y3" ondalik={1}>63,5</Deger> | <Deger proje="ovp" anahtar="p_enerji_ithalati_y4" ondalik={1}>61,0</Deger> |
+| Turizm gelirleri (milyar dolar) | <Deger proje="ovp" anahtar="p_turizm_geliri_y0" ondalik={1}>65,2</Deger> | <Deger proje="ovp" anahtar="p_turizm_geliri_y1" ondalik={1}>65,0</Deger> | <Deger proje="ovp" anahtar="p_turizm_geliri_y2" ondalik={1}>70,0</Deger> | <Deger proje="ovp" anahtar="p_turizm_geliri_y3" ondalik={1}>73,5</Deger> | <Deger proje="ovp" anahtar="p_turizm_geliri_y4" ondalik={1}>78,5</Deger> |
+| İşsizlik oranı (%) | <Deger proje="ovp" anahtar="p_issizlik_y0" ondalik={1}>8,3</Deger> | <Deger proje="ovp" anahtar="p_issizlik_y1" ondalik={1}>8,1</Deger> | <Deger proje="ovp" anahtar="p_issizlik_y2" ondalik={1}>8,0</Deger> | <Deger proje="ovp" anahtar="p_issizlik_y3" ondalik={1}>7,8</Deger> | <Deger proje="ovp" anahtar="p_issizlik_y4" ondalik={1}>7,6</Deger> |
+| Genel devlet faiz gideri (milyar lira) | <Deger proje="ovp" anahtar="p_faiz_gideri_y0" ondalik={1}>2.054,4</Deger> | <Deger proje="ovp" anahtar="p_faiz_gideri_y1" ondalik={1}>2.824,9</Deger> | <Deger proje="ovp" anahtar="p_faiz_gideri_y2" ondalik={1}>3.975,0</Deger> | <Deger proje="ovp" anahtar="p_faiz_gideri_y3" ondalik={1}>4.693,9</Deger> | <Deger proje="ovp" anahtar="p_faiz_gideri_y4" ondalik={1}>5.244,8</Deger> |
+| Faiz gideri / milli gelir (%) | <Deger proje="ovp" anahtar="p_faiz_gideri_gsyh_y0" ondalik={1}>3,2</Deger> | <Deger proje="ovp" anahtar="p_faiz_gideri_gsyh_y1" ondalik={1}>3,3</Deger> | <Deger proje="ovp" anahtar="p_faiz_gideri_gsyh_y2" ondalik={1}>3,6</Deger> | <Deger proje="ovp" anahtar="p_faiz_gideri_gsyh_y3" ondalik={1}>3,5</Deger> | <Deger proje="ovp" anahtar="p_faiz_gideri_gsyh_y4" ondalik={1}>3,4</Deger> |
+
+### <Deger proje="ovp" anahtar="program_eski_ad" ondalik={0}>Orta Vadeli Program (2026–2028)</Deger>
+
+| | <Deger proje="ovp" anahtar="pe_y0_yil" ondalik={0}>2024</Deger> | <Deger proje="ovp" anahtar="pe_y1_yil" ondalik={0}>2025</Deger> | <Deger proje="ovp" anahtar="pe_y2_yil" ondalik={0}>2026</Deger> | <Deger proje="ovp" anahtar="pe_y3_yil" ondalik={0}>2027</Deger> | <Deger proje="ovp" anahtar="pe_y4_yil" ondalik={0}>2028</Deger> |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| *sütunun türü* | *<Deger proje="ovp" anahtar="pe_y0_tur" ondalik={0}>gerçekleşme</Deger>* | *<Deger proje="ovp" anahtar="pe_y1_tur" ondalik={0}>gerçekleşme tahmini</Deger>* | *<Deger proje="ovp" anahtar="pe_y2_tur" ondalik={0}>program</Deger>* | *<Deger proje="ovp" anahtar="pe_y3_tur" ondalik={0}>program</Deger>* | *<Deger proje="ovp" anahtar="pe_y4_tur" ondalik={0}>program</Deger>* |
+| Milli gelir (milyar lira) | <Deger proje="ovp" anahtar="pe_gsyh_tl_y0" ondalik={0}>44.587</Deger> | <Deger proje="ovp" anahtar="pe_gsyh_tl_y1" ondalik={0}>62.179</Deger> | <Deger proje="ovp" anahtar="pe_gsyh_tl_y2" ondalik={0}>77.257</Deger> | <Deger proje="ovp" anahtar="pe_gsyh_tl_y3" ondalik={0}>89.406</Deger> | <Deger proje="ovp" anahtar="pe_gsyh_tl_y4" ondalik={0}>101.397</Deger> |
+| Milli gelir (milyar dolar) | <Deger proje="ovp" anahtar="pe_gsyh_usd_y0" ondalik={0}>1.358</Deger> | <Deger proje="ovp" anahtar="pe_gsyh_usd_y1" ondalik={0}>1.569</Deger> | <Deger proje="ovp" anahtar="pe_gsyh_usd_y2" ondalik={0}>1.658</Deger> | <Deger proje="ovp" anahtar="pe_gsyh_usd_y3" ondalik={0}>1.763</Deger> | <Deger proje="ovp" anahtar="pe_gsyh_usd_y4" ondalik={0}>1.886</Deger> |
+| **İma edilen ortalama kur** | — | — | **<Deger proje="ovp" anahtar="eski_ima_y0" ondalik={3}>46,597</Deger>** | **<Deger proje="ovp" anahtar="eski_ima_y1" ondalik={3}>50,712</Deger>** | **<Deger proje="ovp" anahtar="eski_ima_y2" ondalik={3}>53,763</Deger>** |
+| Büyüme (%) | <Deger proje="ovp" anahtar="pe_buyume_y0" ondalik={1}>3,3</Deger> | <Deger proje="ovp" anahtar="pe_buyume_y1" ondalik={1}>3,3</Deger> | <Deger proje="ovp" anahtar="pe_buyume_y2" ondalik={1}>3,8</Deger> | <Deger proje="ovp" anahtar="pe_buyume_y3" ondalik={1}>4,3</Deger> | <Deger proje="ovp" anahtar="pe_buyume_y4" ondalik={1}>5,0</Deger> |
+| Milli gelir deflatörü (%) | <Deger proje="ovp" anahtar="pe_deflator_y0" ondalik={1}>59,3</Deger> | <Deger proje="ovp" anahtar="pe_deflator_y1" ondalik={1}>35,0</Deger> | <Deger proje="ovp" anahtar="pe_deflator_y2" ondalik={1}>19,7</Deger> | <Deger proje="ovp" anahtar="pe_deflator_y3" ondalik={1}>10,9</Deger> | <Deger proje="ovp" anahtar="pe_deflator_y4" ondalik={1}>8,0</Deger> |
+| **Tüketici enflasyonu, yıl sonu (%)** | <Deger proje="ovp" anahtar="pe_tufe_y0" ondalik={1}>44,4</Deger> | <Deger proje="ovp" anahtar="pe_tufe_y1" ondalik={1}>28,5</Deger> | <Deger proje="ovp" anahtar="pe_tufe_y2" ondalik={1}>16,0</Deger> | <Deger proje="ovp" anahtar="pe_tufe_y3" ondalik={1}>9,0</Deger> | <Deger proje="ovp" anahtar="pe_tufe_y4" ondalik={1}>8,0</Deger> |
+| Cari denge (milyar dolar) | <Deger proje="ovp" anahtar="pe_cari_y0" ondalik={1}>−10,2</Deger> | <Deger proje="ovp" anahtar="pe_cari_y1" ondalik={1}>−22,6</Deger> | <Deger proje="ovp" anahtar="pe_cari_y2" ondalik={1}>−22,3</Deger> | <Deger proje="ovp" anahtar="pe_cari_y3" ondalik={1}>−20,5</Deger> | <Deger proje="ovp" anahtar="pe_cari_y4" ondalik={1}>−18,5</Deger> |
+| Cari denge / milli gelir (%) | <Deger proje="ovp" anahtar="pe_cari_gsyh_y0" ondalik={1}>−0,8</Deger> | <Deger proje="ovp" anahtar="pe_cari_gsyh_y1" ondalik={1}>−1,4</Deger> | <Deger proje="ovp" anahtar="pe_cari_gsyh_y2" ondalik={1}>−1,3</Deger> | <Deger proje="ovp" anahtar="pe_cari_gsyh_y3" ondalik={1}>−1,2</Deger> | <Deger proje="ovp" anahtar="pe_cari_gsyh_y4" ondalik={1}>−1,0</Deger> |
+| İhracat (milyar dolar) | <Deger proje="ovp" anahtar="pe_ihracat_y0" ondalik={1}>261,8</Deger> | <Deger proje="ovp" anahtar="pe_ihracat_y1" ondalik={1}>273,8</Deger> | <Deger proje="ovp" anahtar="pe_ihracat_y2" ondalik={1}>282,0</Deger> | <Deger proje="ovp" anahtar="pe_ihracat_y3" ondalik={1}>294,0</Deger> | <Deger proje="ovp" anahtar="pe_ihracat_y4" ondalik={1}>308,5</Deger> |
+| İthalat (milyar dolar) | <Deger proje="ovp" anahtar="pe_ithalat_y0" ondalik={1}>344,0</Deger> | <Deger proje="ovp" anahtar="pe_ithalat_y1" ondalik={1}>367,0</Deger> | <Deger proje="ovp" anahtar="pe_ithalat_y2" ondalik={1}>378,0</Deger> | <Deger proje="ovp" anahtar="pe_ithalat_y3" ondalik={1}>393,0</Deger> | <Deger proje="ovp" anahtar="pe_ithalat_y4" ondalik={1}>410,5</Deger> |
+| Ham petrol, varil başına dolar | <Deger proje="ovp" anahtar="pe_brent_y0" ondalik={1}>80,5</Deger> | <Deger proje="ovp" anahtar="pe_brent_y1" ondalik={1}>70,0</Deger> | <Deger proje="ovp" anahtar="pe_brent_y2" ondalik={1}>65,0</Deger> | <Deger proje="ovp" anahtar="pe_brent_y3" ondalik={1}>65,1</Deger> | <Deger proje="ovp" anahtar="pe_brent_y4" ondalik={1}>65,6</Deger> |
+| İşsizlik oranı (%) | <Deger proje="ovp" anahtar="pe_issizlik_y0" ondalik={1}>8,7</Deger> | <Deger proje="ovp" anahtar="pe_issizlik_y1" ondalik={1}>8,5</Deger> | <Deger proje="ovp" anahtar="pe_issizlik_y2" ondalik={1}>8,4</Deger> | <Deger proje="ovp" anahtar="pe_issizlik_y3" ondalik={1}>8,2</Deger> | <Deger proje="ovp" anahtar="pe_issizlik_y4" ondalik={1}>7,8</Deger> |
+| Genel devlet faiz gideri (milyar lira) | <Deger proje="ovp" anahtar="pe_faiz_gideri_y0" ondalik={1}>1.270,5</Deger> | <Deger proje="ovp" anahtar="pe_faiz_gideri_y1" ondalik={1}>2.052,7</Deger> | <Deger proje="ovp" anahtar="pe_faiz_gideri_y2" ondalik={1}>2.741,7</Deger> | <Deger proje="ovp" anahtar="pe_faiz_gideri_y3" ondalik={1}>3.039,8</Deger> | <Deger proje="ovp" anahtar="pe_faiz_gideri_y4" ondalik={1}>3.346,1</Deger> |
+
+### Tablonun kendi iç tutarlılığı
+
+Bir tablo elle aktarıldığında en sinsi kusur, bir hücrenin kaymasıdır: hiçbir
+yerde hata çıkmaz, yalnız sayfada yanlış bir sayı görünür. Bu yüzden panonun
+ölçüm katmanı her koşuda üç özdeşliği yeniden sınıyor:
+
+$$
+\frac{Y^{TL}_t}{Y^{TL}_{t-1}} - 1 \;=\; (1+g_t)(1+\pi^{def}_t) - 1
+\qquad
+\frac{CA_t}{Y^{USD}_t} = \left(\frac{CA}{Y}\right)_t
+\qquad
+\frac{F_t}{Y^{TL}_t} = \left(\frac{F}{Y}\right)_t
+$$
+
+Sırasıyla: nominal gelir artışı reel büyüme ile deflatörün bileşimine eşit mi;
+yayımlanan cari denge oranı iki yayımlanan satırdan çıkıyor mu; yayımlanan faiz
+gideri oranı öyle mi. Dördüncü bir özdeşlik de sınanıyor ve tam tutuyor: dış
+ticaret dengesi ihracat eksi ithalat. Sonuç:
+<Deger proje="ovp" anahtar="tutarlilik_cumlesi" ondalik={0}>Programların kendi içindeki 38 özdeşlik sınandı ve hepsi tuttu.</Deger>
+En büyük sapma <Deger proje="ovp" anahtar="tutarlilik_maks" ondalik={3}>0,057</Deger>
+puan, sınır <Deger proje="ovp" anahtar="tutarlilik_esik" ondalik={2}>0,10</Deger>
+puan — kaynağın kendi yuvarlamasının bıraktığı bant.
+
+Bunun bir yan sonucu var ve panonun kurucu cümlesi odur: **ima edilen kur, iki
+sayının tesadüfi oranı değil, tablonun kendi aritmetiğinin sonucudur.** Nominal
+gelir özdeşliği tuttuğuna göre lira geliri büyüme ve deflatör varsayımlarının
+zorunlu sonucudur; dolar geliri de kişi başına gelir hedefiyle birlikte
+belirlenir. Kur, geriye kalan tek serbestlik derecesidir.
+
+<div class="not">
+  <span class="etiket">Ölçülemeyen bırakıldı</span>
+  Yeni programın nüfus satırında 2025 sütunu iki farklı okuma veriyor ve
+  hangisinin basılı satır olduğu ayırt edilemiyor; o hücre boş bırakıldı ve
+  hiçbir ölçüme girmiyor. Kalan yıllar tek okuma veriyor. Kişi başına gelir
+  satırı da hiçbir özdeşliğe sokulmadı: yayımlanan kişi başına gelir, dolar
+  gelirinin yayımlanan nüfusa bölümüne eşit değil ve farkın sebebi belgede
+  yazmıyor.
+</div>
+
+## İçinde bulunulan yıl: cevabı her gün değişen soru
+
+Yıl ortalaması, gerçekleşen günlerin ve kalan günlerin ağırlıklı ortalamasıdır.
+$n$ tane gözlem gerçekleşmiş ve ortalaması $\bar{e}_{ger}$ ise, kalan $k$ günün
+ortalaması $\bar{e}_{kalan}$ tek bilinmeyen olarak çözülür:
+
+$$
+e^{prog} \cdot (n + k) \;=\; \bar{e}_{ger}\cdot n \;+\; \bar{e}_{kalan}\cdot k
+\qquad\Longrightarrow\qquad
+\bar{e}_{kalan} \;=\; \frac{e^{prog}(n+k) - \bar{e}_{ger}\,n}{k}
+$$
+
+Bugünkü veriyle, adım adım: program
+<Deger proje="ovp" anahtar="ima_y0" ondalik={3}>46,868</Deger> lira ima ediyor;
+yılın ilk <Deger proje="ovp" anahtar="n_gerceklesen" ondalik={0}>167</Deger>
+işlem gününde gerçekleşen ortalama
+<Deger proje="ovp" anahtar="ger_ort_bu_yil" ondalik={3}>45,271</Deger> lira;
+kalan işlem günü <Deger proje="ovp" anahtar="kalan_gun" ondalik={0}>85</Deger>.
+Formül **<Deger proje="ovp" anahtar="gereken_ort" ondalik={3}>50,005</Deger>**
+lira veriyor — bugünkü <Deger proje="ovp" anahtar="son_kur" ondalik={4}>48,2075</Deger>
+liranın %<Deger proje="ovp" anahtar="gereken_bugune_gore" ondalik={2} isaret={true}>+3,73</Deger>
+üstü.
+
+**Kalan gün sayısı bir varsayım taşır ve o varsayım ölçülüyor.** Kalan günler
+hafta içi günler olarak sayılıyor; resmî tatiller düşülmüyor, çünkü gelecekteki
+tatilleri saymak bir varsayım olurdu. Etkisi yine de ölçülüp yazılıyor: geçmiş
+<Deger proje="ovp" anahtar="kalan_tatil_ornek_yil" ondalik={0}>5</Deger> yılda
+aynı takvim penceresinde ortanca
+<Deger proje="ovp" anahtar="kalan_tatil_payi" ondalik={0}>1</Deger> hafta içi
+gün gözlemsiz kalmış. O kadar gün düşülseydi kalan gün
+<Deger proje="ovp" anahtar="kalan_gun_tatilsiz" ondalik={0}>84</Deger>, gereken
+ortalama <Deger proje="ovp" anahtar="gereken_ort_tatilsiz" ondalik={3}>50,042</Deger>
+lira olurdu — yani bu varsayımın hükme etkisi küçük, ve küçüklüğü bir ölçümdür.
+
+### Ortalamadan yıl sonuna: iki patika
+
+Kalan günlerin **ortalaması** bilindiğinde yıl sonu **seviyesi** hâlâ patikanın
+biçimine bağlıdır. İki uç varsayım ayrı ayrı çözülüyor ve ikisi de yayımlanıyor.
+
+**Doğrusal patika.** Kur bugünkü $e_0$ seviyesinden $n$ adımda $X$'e düz artar.
+Patika bugünü içermez (bugünkü seviye zaten gerçekleşen ortalamanın içinde),
+yani ortalanan noktalar $e_0 + k(X-e_0)/n$, $k=1\dots n$:
+
+$$
+\bar{e}_{kalan} \;=\; e_0 + (X - e_0)\,\frac{n+1}{2n}
+\qquad\Longrightarrow\qquad
+X \;=\; e_0 + (\bar{e}_{kalan} - e_0)\,\frac{2n}{n+1}
+$$
+
+**Üstel patika.** Kur her gün sabit bir yüzdeyle artar, $e_k = e_0\,g^k$. Bu
+kez ortalama kısıtının kapalı çözümü yoktur:
+
+$$
+\frac{1}{n}\sum_{k=1}^{n} e_0\,g^{k} \;=\; \bar{e}_{kalan}
+$$
+
+Sol taraf $g$'de kesin artan olduğu için ikiye bölme her zaman yakınsar; pano
+bunu iki yüz adımda çözüp $X = e_0 g^n$ yazıyor.
+
+Sonuç: doğrusal <Deger proje="ovp" anahtar="yil_sonu_dogrusal" ondalik={2}>51,76</Deger>,
+üstel <Deger proje="ovp" anahtar="yil_sonu_ustel" ondalik={2}>51,80</Deger> lira;
+aradaki fark %<Deger proje="ovp" anahtar="patika_farki" ondalik={3}>0,082</Deger>.
+**İkisinin bu kadar yakın çıkması bir sonuçtur, tesadüf değil:** iki varsayım
+aynı ortalama kısıtını tutturuyor, geriye yalnız patikanın bükümü kalıyor ve
+<Deger proje="ovp" anahtar="kalan_gun" ondalik={0}>85</Deger> günlük bir pencerede
+büküm neredeyse hiçbir şey değiştirmiyor. Yani
+yıl sonu iması patikanın biçimine duyarlı değil — okurun bu sayıyı kullanırken
+"hangi patikayı varsaydınız" diye sorması gerekmiyor.
+
+<GrafikEmbed
+  src="/projeler/ovp/02_bu_yil.html"
+  baslik="İçinde bulunulan yıl: gerçekleşen ile programın arası"
+  no="02"
+  yukseklik={1115}
+/>
+
+**Bu seri nasıl hesaplanıyor.** Üst panelde koyu çizgi gösterge kurunun günlük
+gözlemleri; kesikli yatay çizgi programın ima ettiği yıl ortalaması; noktalı
+yatay çizgi kalan günlerin tutturması gereken ortalama. Sağdaki iki ince iz,
+yukarıdaki iki patika denkleminin çözümü — ikisi de aynı ortalamayı tutturur,
+yani aralarındaki mesafe yalnız büküm farkıdır. Alt panelde yıl içi **birikimli**
+ortalama: her günün soluna kadar gerçekleşenin ortalaması. O iz kesikli çizgiye
+yakınsıyorsa program tutuyor, uzaklaşıyorsa tutmuyor demektir.
+
+## Zincirlenmiş patika: her yılın çıkışı sonrakinin girişi
+
+Bir sonraki yılın ortalaması da biliniyor (programın kendi tablosundan) ve o
+yılın girişi bu yılın çıkışı. Zincir böyle kuruluyor: içinde bulunulan yılın
+çıkışı yukarıdaki üstel çözümden geliyor, sonraki yıllarda giriş belli ve çıkış
+aynı denklemin çözümü. Zincirin başlangıcı bir varsayım değil bir gözlemdir —
+<Deger proje="ovp" anahtar="zincir_y0_giris" ondalik={2}>42,86</Deger> lira,
+<Deger proje="ovp" anahtar="onceki_kapanis" ondalik={4}>42,8623</Deger> ile
+kapanan bir önceki yılın son gözlemi.
+
+| Yıl | Giriş | Programın ima ettiği ortalama | **Çıkış** | Devalüasyon | Programın enflasyonu | Reel lira |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| <Deger proje="ovp" anahtar="zincir_y0_yil" ondalik={0}>2026</Deger> | <Deger proje="ovp" anahtar="zincir_y0_giris" ondalik={2}>42,86</Deger> | <Deger proje="ovp" anahtar="zincir_y0_ort" ondalik={2}>46,87</Deger> | **<Deger proje="ovp" anahtar="zincir_y0_cikis" ondalik={2}>51,80</Deger>** | %<Deger proje="ovp" anahtar="zincir_y0_deval" ondalik={1} isaret={true}>+20,9</Deger> | %<Deger proje="ovp" anahtar="zincir_y0_tufe" ondalik={1}>28,4</Deger> | %<Deger proje="ovp" anahtar="zincir_y0_reel" ondalik={1} isaret={true}>+6,2</Deger> |
+| <Deger proje="ovp" anahtar="zincir_y1_yil" ondalik={0}>2027</Deger> | <Deger proje="ovp" anahtar="zincir_y1_giris" ondalik={2}>51,80</Deger> | <Deger proje="ovp" anahtar="zincir_y1_ort" ondalik={2}>56,05</Deger> | **<Deger proje="ovp" anahtar="zincir_y1_cikis" ondalik={2}>60,49</Deger>** | %<Deger proje="ovp" anahtar="zincir_y1_deval" ondalik={1} isaret={true}>+16,8</Deger> | %<Deger proje="ovp" anahtar="zincir_y1_tufe" ondalik={1}>21,0</Deger> | %<Deger proje="ovp" anahtar="zincir_y1_reel" ondalik={1} isaret={true}>+3,6</Deger> |
+| <Deger proje="ovp" anahtar="zincir_y2_yil" ondalik={0}>2028</Deger> | <Deger proje="ovp" anahtar="zincir_y2_giris" ondalik={2}>60,49</Deger> | <Deger proje="ovp" anahtar="zincir_y2_ort" ondalik={2}>63,69</Deger> | **<Deger proje="ovp" anahtar="zincir_y2_cikis" ondalik={2}>66,98</Deger>** | %<Deger proje="ovp" anahtar="zincir_y2_deval" ondalik={1} isaret={true}>+10,7</Deger> | %<Deger proje="ovp" anahtar="zincir_y2_tufe" ondalik={1}>13,5</Deger> | %<Deger proje="ovp" anahtar="zincir_y2_reel" ondalik={1} isaret={true}>+2,5</Deger> |
+| <Deger proje="ovp" anahtar="zincir_y3_yil" ondalik={0}>2029</Deger> | <Deger proje="ovp" anahtar="zincir_y3_giris" ondalik={2}>66,98</Deger> | <Deger proje="ovp" anahtar="zincir_y3_ort" ondalik={2}>68,83</Deger> | **<Deger proje="ovp" anahtar="zincir_y3_cikis" ondalik={2}>70,69</Deger>** | %<Deger proje="ovp" anahtar="zincir_y3_deval" ondalik={1} isaret={true}>+5,5</Deger> | %<Deger proje="ovp" anahtar="zincir_y3_tufe" ondalik={1}>9,0</Deger> | %<Deger proje="ovp" anahtar="zincir_y3_reel" ondalik={1} isaret={true}>+3,3</Deger> |
+
+Aynı zincir bir önceki programa uygulandığında **2027 gerilimi** görünüyordu ve
+o gerilim tesadüf değil, rakamların birbiriyle tutarlılığına dair bir bulguydu:
+geçen yılın programında 2026 çıkışı
+<Deger proje="ovp" anahtar="eski_zincir_y0_cikis" ondalik={2}>50,18</Deger>,
+2027 ortalaması ise
+<Deger proje="ovp" anahtar="eski_zincir_y1_ort" ondalik={2}>50,71</Deger> —
+çıkış, sonraki yılın ortalamasını neredeyse tüketiyordu ve 2027'ye yalnız
+%<Deger proje="ovp" anahtar="eski_zincir_y1_deval" ondalik={1} isaret={true}>+2,1</Deger>
+devalüasyon kalıyordu. Yeni program bu gerilimi çözdü, ama çözme biçimi
+devalüasyonu yukarı revize etmek oldu.
+
+<GrafikEmbed
+  src="/projeler/ovp/03_yil_sonu.html"
+  baslik="Yıl sonu imaları ve devalüasyon"
+  no="03"
+  yukseklik={1113}
+  tarihAnahtari="damga_03_yil_sonu"
+/>
+
+**Bu seri nasıl hesaplanıyor.** Üst panel zincirin seviyeleri: her programın
+kendi zinciri, başlangıç noktası ortak gözlem. Alt panel yıl sonundan yıl sonuna
+devalüasyon, yani $e^{cik}_t / e^{gir}_t - 1$. **Yıl ortalamasındaki değişim
+değildir** ve ikisi aynı şey değildir: program yalnız ortalamayı ima ettiği için
+yıl sonu bir çıkarımdır ve o çıkarım yukarıdaki patika denklemine dayanır.
+
+## Enflasyon tarafı: deflatör, tüketici enflasyonu ve faiz gideri
+
+İma edilen kurun paydası dolar geliri, payı lira geliri. Lira geliri reel
+büyüme ile **deflatörün** bileşimi; yani deflatör varsayımı doğrudan ima edilen
+kuru büyütür. Ve deflatör, programın her yılında tüketici enflasyonunun
+üstünde:
+
+| Yıl | Makas (puan) |
+| ---: | ---: |
+| <Deger proje="ovp" anahtar="makas_y0_yil" ondalik={0}>2026</Deger> | <Deger proje="ovp" anahtar="makas_y0" ondalik={1} isaret={true}>+2,2</Deger> |
+| <Deger proje="ovp" anahtar="makas_y1_yil" ondalik={0}>2027</Deger> | <Deger proje="ovp" anahtar="makas_y1" ondalik={1} isaret={true}>+4,0</Deger> |
+| <Deger proje="ovp" anahtar="makas_y2_yil" ondalik={0}>2028</Deger> | <Deger proje="ovp" anahtar="makas_y2" ondalik={1} isaret={true}>+1,0</Deger> |
+| <Deger proje="ovp" anahtar="makas_y3_yil" ondalik={0}>2029</Deger> | <Deger proje="ovp" anahtar="makas_y3" ondalik={1} isaret={true}>+0,5</Deger> |
+
+Deflatör bütün yurt içi üretimin fiyatını ölçer, tüketici endeksi hanenin
+sepetini; ikisinin ayrışması olağandır, ama işaretinin dört yılda da aynı yönde
+olması bir seçimdir ve sonucu şudur: **nominal gelir, tüketici enflasyonunun
+ima edeceğinden hızlı büyür; dolar hedefi sabitken bu, ima edilen kuru yukarı
+çeker.**
+
+Gerçekleşen tarafta son okuma
+%<Deger proje="ovp" anahtar="tufe_son" ondalik={2}>31,51</Deger>
+(<Deger proje="ovp" anahtar="tufe_ay" ondalik={0}>Ağustos 2026</Deger>), yani
+programın <Deger proje="ovp" anahtar="p_tufe_y1" ondalik={1}>28,4</Deger> yıl
+sonu hedefinin üstünde; geçen yılın kapanışı
+%<Deger proje="ovp" anahtar="tufe_gecen_yil" ondalik={2}>30,89</Deger> idi.
+
+### Faiz patikası: program yayımlamıyor, ama iki iz bırakıyor
+
+Program sayısal bir politika faizi patikası yayımlamaz. Ama bütçe tablosunun
+faiz gideri satırı bir izdir. <Deger proje="ovp" anahtar="faiz_artis_yil" ondalik={0}>2027</Deger>
+yılında genel devlet faiz gideri
+%<Deger proje="ovp" anahtar="faiz_artis" ondalik={1}>40,7</Deger> artıyor,
+nominal gelir ise %<Deger proje="ovp" anahtar="nominal_artis" ondalik={1}>30,3</Deger>
+— arada <Deger proje="ovp" anahtar="faiz_artis_fark" ondalik={1} isaret={true}>+10,4</Deger>
+puan var ve faiz gideri / milli gelir oranı
+%<Deger proje="ovp" anahtar="p_faiz_gideri_gsyh_y1" ondalik={1}>3,3</Deger>'ten
+%<Deger proje="ovp" anahtar="p_faiz_gideri_gsyh_y2" ondalik={1}>3,6</Deger>'ya
+çıkıyor.
+
+Bu bir faiz tahmini **değildir** ve öyle sunulmuyor: ölçülen şey iki
+yayımlanmış bütçe satırının büyüme farkıdır. Söylediği tek şey şudur — borcun
+ortalama maliyeti, program yılında nominal büyümenin üstünde kalıyor. Hızlı bir
+faiz indirimi patikasıyla bu satırı bağdaştırmak, borcun vade yapısı ve yeniden
+fiyatlanma takvimi hakkında ayrı bir varsayım gerektirir ve o varsayım burada
+kurulmuyor.
+
+<GrafikEmbed
+  src="/projeler/ovp/04_tufe_deflator.html"
+  baslik="Enflasyon, deflatör ve faiz gideri"
+  no="04"
+  yukseklik={1503}
+  tarihAnahtari="damga_04_tufe_deflator"
+/>
+
+**Bu seri nasıl hesaplanıyor.** Birinci panel iki programın yıl sonu tüketici
+enflasyonu satırları artı gerçekleşen aralık okumaları (elmas). İkinci panel
+deflatör eksi tüketici enflasyonu, puan cinsinden — çıkarma, çünkü ikisi de
+oran ve aynı yılın oranları. Üçüncü panel iki bütçe/gelir satırının yıllık
+yüzde değişimi; ilk yıl için değişim hesaplanamaz, çünkü tabloda ondan önceki
+yıl yok.
+
+## Reel lira: devalüasyon ile enflasyonun farkı
+
+Reel değişim **çarpımsal** ölçülüyor, çıkarma ile değil:
+
+$$
+r_t \;=\; \frac{1+\pi_t}{1+d_t} - 1
+$$
+
+Yüzde otuzların üstündeki oranlarda çıkarma ile çarpımsal ölçü puanlarca ayrışır
+ve o ayrışma sistematiktir. Yine de ikisi de yayımlanıyor: yukarıdaki zincir
+tablosunun reel sütunu çarpımsal, panonun kaydındaki makas sütunu çıkarmadır.
+<Deger proje="ovp" anahtar="zincir_y0_yil" ondalik={0}>2026</Deger> için
+çarpımsal ölçü %<Deger proje="ovp" anahtar="zincir_y0_reel" ondalik={1} isaret={true}>+6,2</Deger>,
+çıkarma <Deger proje="ovp" anahtar="zincir_y0_makas" ondalik={1} isaret={true}>+7,5</Deger>
+puan.
+
+Zincirin toplamı, <Deger proje="ovp" anahtar="kumule_bas_yil" ondalik={0}>2026</Deger>
+girişinden <Deger proje="ovp" anahtar="kumule_son_yil" ondalik={0}>2029</Deger>
+çıkışına:
+
+| | Yeni program | Bir önceki program |
+| --- | ---: | ---: |
+| Kümüle kur | %<Deger proje="ovp" anahtar="kumule_kur" ondalik={1} isaret={true}>+64,9</Deger> | %<Deger proje="ovp" anahtar="eski_kumule_kur" ondalik={1} isaret={true}>+31,5</Deger> |
+| Kümüle tüketici enflasyonu | %<Deger proje="ovp" anahtar="kumule_tufe" ondalik={1} isaret={true}>+92,2</Deger> | %<Deger proje="ovp" anahtar="eski_kumule_tufe" ondalik={1} isaret={true}>+36,6</Deger> |
+| **Kümüle reel lira** | **%<Deger proje="ovp" anahtar="kumule_reel" ondalik={1} isaret={true}>+16,5</Deger>** | **%<Deger proje="ovp" anahtar="eski_kumule_reel" ondalik={1} isaret={true}>+3,9</Deger>** |
+
+İki sütun **farklı ufuklarda** ölçülüyor (yeni program bir yıl daha uzun) ve
+doğrudan kıyaslanmaz; yan yana durmalarının sebebi yönün aynı olması: iki
+programda da lira reel olarak değer kazanıyor, ama yeni programda kazanç dört
+kat büyük. Bu bir reel efektif kur ölçüsü değildir — tek para birimine karşı,
+tek fiyat endeksiyle.
+
+<GrafikEmbed
+  src="/projeler/ovp/05_reel_tl.html"
+  baslik="Programın ima ettiği reel lira"
+  no="05"
+  yukseklik={1063}
+  tarihAnahtari="damga_05_reel_tl"
+/>
+
+**Bu seri nasıl hesaplanıyor.** Üst panel yıl yıl $r_t$; alt panel zincirin
+toplamı, kur ve enflasyon faktörlerinin yıl yıl bileşiklenmesiyle (toplanarak
+değil). Artı değer liranın dolar karşısında reel olarak değer kazandığını
+söyler: iç fiyatlar kurdan hızlı artıyor demektir.
+
+## Taşıma
+
+Gerçekleşen taşıma, lira gecelik faizinin **bileşik** getirisinden kur
+değişiminin çıkarılmasıdır. Lira bacağı gözlem günleri üzerinden birikir — her
+kotasyon bir günlük faiz taşır, hafta sonu ayrıca eklenmez:
+
+$$
+R^{TL} \;=\; \prod_{i} \left(1 + \frac{r_i}{365}\right)
+\qquad
+R^{net} \;=\; \frac{R^{TL}}{e_{son}/e_{ilk}} - 1
+$$
+
+Yılbaşından bugüne: lira gecelikte
+%<Deger proje="ovp" anahtar="carry_tl" ondalik={2}>19,58</Deger> getirdi
+(ortalama gecelik oran %<Deger proje="ovp" anahtar="carry_ort_gecelik" ondalik={2}>39,11</Deger>),
+kur %<Deger proje="ovp" anahtar="carry_kur" ondalik={2}>12,51</Deger> yükseldi;
+dolar bazında net %<Deger proje="ovp" anahtar="carry_net" ondalik={2} isaret={true}>+6,28</Deger>,
+<Deger proje="ovp" anahtar="carry_gun" ondalik={0}>244</Deger> takvim günü
+üzerinden yıllığa çevrilince
+%<Deger proje="ovp" anahtar="carry_yillik" ondalik={2} isaret={true}>+9,54</Deger>.
+
+**İleriye dönük taşıma bir varsayım taşır ve varsayım yazılır.**
+<Deger proje="ovp" anahtar="carry_varsayim_cumlesi" ondalik={0}>İleriye dönük taşıma, lira faizinin bugünkü %37,00 seviyesinde sabit kalması varsayımıyla hesaplandı.</Deger>
+Program bir faiz patikası yayımlamıyor; pano da uydurmuyor. Sonuç, faiz sabitken
+programın kendi devalüasyon imasına karşı ne kazanılacağıdır.
+
+| Yıl | Basit (faiz ÷ devalüasyon) | Gecelikte dönerek (bileşik) | Programın enflasyonuna karşı ex-ante reel faiz |
+| ---: | ---: | ---: | ---: |
+| <Deger proje="ovp" anahtar="carry_ileri_y0_yil" ondalik={0}>2026</Deger> | %<Deger proje="ovp" anahtar="carry_ileri_y0_basit" ondalik={1} isaret={true}>+13,4</Deger> | %<Deger proje="ovp" anahtar="carry_ileri_y0_bilesik" ondalik={1} isaret={true}>+6,7</Deger> | %<Deger proje="ovp" anahtar="carry_ileri_y0_reel_faiz" ondalik={1} isaret={true}>+6,7</Deger> |
+| <Deger proje="ovp" anahtar="carry_ileri_y1_yil" ondalik={0}>2027</Deger> | %<Deger proje="ovp" anahtar="carry_ileri_y1_basit" ondalik={1} isaret={true}>+17,3</Deger> | %<Deger proje="ovp" anahtar="carry_ileri_y1_bilesik" ondalik={1} isaret={true}>+10,4</Deger> | %<Deger proje="ovp" anahtar="carry_ileri_y1_reel_faiz" ondalik={1} isaret={true}>+13,2</Deger> |
+| <Deger proje="ovp" anahtar="carry_ileri_y2_yil" ondalik={0}>2028</Deger> | %<Deger proje="ovp" anahtar="carry_ileri_y2_basit" ondalik={1} isaret={true}>+23,7</Deger> | %<Deger proje="ovp" anahtar="carry_ileri_y2_bilesik" ondalik={1} isaret={true}>+16,5</Deger> | %<Deger proje="ovp" anahtar="carry_ileri_y2_reel_faiz" ondalik={1} isaret={true}>+20,7</Deger> |
+| <Deger proje="ovp" anahtar="carry_ileri_y3_yil" ondalik={0}>2029</Deger> | %<Deger proje="ovp" anahtar="carry_ileri_y3_basit" ondalik={1} isaret={true}>+29,8</Deger> | %<Deger proje="ovp" anahtar="carry_ileri_y3_bilesik" ondalik={1} isaret={true}>+22,2</Deger> | %<Deger proje="ovp" anahtar="carry_ileri_y3_reel_faiz" ondalik={1} isaret={true}>+25,7</Deger> |
+
+**İki sütun, iki konvansiyon — ve ikisi de gerekli.** Basit sütun yıllık faiz
+kotasyonunun yıllık devalüasyona bölünmesi; ex-ante reel faizle aynı
+konvansiyon, yani üçüncü sütunla karşılaştırılabilir. Bileşik sütun gecelikte
+dönen bir pozisyonun gerçekten biriktirdiği getiri; yukarıdaki gerçekleşen
+bacakla aynı konvansiyon. Tek sütun yazılsaydı sayfadaki iki sayıdan biri
+öbürüyle kıyaslanamaz olurdu.
+
+<GrafikEmbed
+  src="/projeler/ovp/06_carry.html"
+  baslik="Taşıma: gerçekleşen ve ileriye dönük"
+  no="06"
+  yukseklik={1165}
+/>
+
+**Bu seri nasıl hesaplanıyor.** Üst panelde üç birikimli iz: lira gecelik
+faizinin bileşik getirisi, kurun yıl içi değişimi, ve ikisinin oranından çıkan
+net. İzler yılın ilk gözleminden başlar ve yalnız iki serinin de dolu olduğu
+günlerde ilerler. Alt panel yukarıdaki tablonun ilk iki sütunu.
+
+## Revizyon: iki programın ortak yıllarında ne değişti
+
+İki program <Deger proje="ovp" anahtar="rev_ortak_yil" ondalik={0}>4</Deger>
+yılda örtüşüyor ve o yıllarda satır satır fark ölçülüyor
+(<Deger proje="ovp" anahtar="rev_hucre_sayisi" ondalik={0}>143</Deger> hücre).
+Farkın **birimi satıra göre seçiliyor** ve bu bir tercih değil zorunluluk: iki
+oran arasındaki fark puandır, iki seviye arasındaki fark yüzdedir. Aynı eksene
+konsalardı biri görünmez olurdu.
+
+| Kalem | <Deger proje="ovp" anahtar="rev_ima_y0_yil" ondalik={0}>2026</Deger> | <Deger proje="ovp" anahtar="rev_ima_y1_yil" ondalik={0}>2027</Deger> | <Deger proje="ovp" anahtar="rev_ima_y2_yil" ondalik={0}>2028</Deger> |
+| --- | ---: | ---: | ---: |
+| **İma edilen ortalama kur (%)** | %<Deger proje="ovp" anahtar="rev_ima_y0" ondalik={2} isaret={true}>+0,58</Deger> | %<Deger proje="ovp" anahtar="rev_ima_y1" ondalik={2} isaret={true}>+10,53</Deger> | %<Deger proje="ovp" anahtar="rev_ima_y2" ondalik={2} isaret={true}>+18,47</Deger> |
+| Tüketici enflasyonu (puan) | <Deger proje="ovp" anahtar="rev_tufe_y0" ondalik={1} isaret={true}>+12,4</Deger> | <Deger proje="ovp" anahtar="rev_tufe_y1" ondalik={1} isaret={true}>+12,0</Deger> | <Deger proje="ovp" anahtar="rev_tufe_y2" ondalik={1} isaret={true}>+5,5</Deger> |
+| Milli gelir deflatörü (puan) | <Deger proje="ovp" anahtar="rev_deflator_y0" ondalik={1} isaret={true}>+10,9</Deger> | <Deger proje="ovp" anahtar="rev_deflator_y1" ondalik={1} isaret={true}>+14,1</Deger> | <Deger proje="ovp" anahtar="rev_deflator_y2" ondalik={1} isaret={true}>+6,5</Deger> |
+| Büyüme (puan) | <Deger proje="ovp" anahtar="rev_buyume_y0" ondalik={1} isaret={true}>−0,5</Deger> | <Deger proje="ovp" anahtar="rev_buyume_y1" ondalik={1} isaret={true}>−0,1</Deger> | <Deger proje="ovp" anahtar="rev_buyume_y2" ondalik={1} isaret={true}>−0,4</Deger> |
+| Cari denge / milli gelir (puan) | <Deger proje="ovp" anahtar="rev_cari_gsyh_y0" ondalik={1} isaret={true}>−1,3</Deger> | <Deger proje="ovp" anahtar="rev_cari_gsyh_y1" ondalik={1} isaret={true}>−0,7</Deger> | <Deger proje="ovp" anahtar="rev_cari_gsyh_y2" ondalik={1} isaret={true}>−0,8</Deger> |
+
+En büyük kur revizyonu
+<Deger proje="ovp" anahtar="rev_ima_maks_yil" ondalik={0}>2028</Deger> yılında:
+ima edilen ortalama kur
+<Deger proje="ovp" anahtar="rev_ima_maks_eski" ondalik={2}>53,76</Deger>
+liradan <Deger proje="ovp" anahtar="rev_ima_maks_yeni" ondalik={2}>63,69</Deger>
+liraya, %<Deger proje="ovp" anahtar="rev_ima_maks" ondalik={1} isaret={true}>+18,5</Deger>.
+Aynı yıllarda enflasyon ve deflatör de çift haneli puanla yukarı revize edilmiş,
+büyüme hafifçe aşağı. Yani programın kur iması yükselirken bunun kaynağı büyüme
+değil **fiyat** varsayımlarıdır.
+
+<GrafikEmbed
+  src="/projeler/ovp/07_revizyon.html"
+  baslik="İki program arasındaki revizyon"
+  no="07"
+  yukseklik={1161}
+/>
+
+**Bu seri nasıl hesaplanıyor.** Her satır için yeni programın değerinden eski
+programın değeri çıkarılıyor (oran satırları) ya da oranlanıyor (seviye
+satırları); yalnız iki tabloda da bulunan yıllar giriyor. Üst panelde seviye
+satırları yüzde, alt panelde oran satırları puan. İma edilen ortalama kur bir
+tablo satırı değil, iki satırdan türeyen bir ölçü — haritanın başında duruyor,
+çünkü panonun sorusu odur.
+
+## Ne ölçülmedi
+
+- **Kur patikasının kendisi.** Pano bir kur tahmini üretmez. Ürettiği şey
+  koşullu bir kısıt çözümüdür: program kendi ortalamasını tutturacaksa geri
+  kalan günlerde ne olmalı.
+- **Programın sepet kuru.** İma edilen kur, dış ticaret ağırlıklı bir sepet
+  kurudur; pano onu düz dolar-lira kuruyla karşılaştırıyor ve farkı kapanmış
+  yıllarda ölçüp yayımlıyor. Sepetin bileşimi yayımlanmadığı için sepet kurunun
+  kendisi yeniden kurulmuyor.
+- **Politika faizi patikası.** Program yayımlamıyor, pano da türetmiyor. Faiz
+  gideri satırının ima ettiği maliyet artışı ölçülüyor; oradan bir politika
+  faizi çıkarmak borcun vade yapısı ve yeniden fiyatlanma takvimi hakkında ayrı
+  varsayımlar ister.
+- **Tatil takvimi.** Kalan işlem günü sayısı hafta içi günlerden geliyor;
+  gelecekteki resmî tatiller sayılmıyor. Etkisi geçmiş yıllardan ölçülüp ayrıca
+  yazılıyor.
+- **Nüfus satırının bir hücresi.** Yeni programın 2025 sütunu kaynakta iki
+  farklı okuma veriyor; boş bırakıldı.
+
+## Kaynaklar ve yayım ritmi
+
+- **Program tabloları:** <Deger proje="ovp" anahtar="program_kaynak" ondalik={0}>Strateji ve Bütçe Başkanlığı, Orta Vadeli Program</Deger>.
+  Temel ekonomik büyüklükler tablosu ve genel devlet dengesi tablosu; her
+  satır kendi tablo ve sayfa künyesiyle panonun kaydında duruyor. Yılda bir
+  yayımlanır.
+- **Gerçekleşen kur:** TCMB gösterge niteliğindeki alış kuru (<code>TP.DK.USD.A.YTL</code>),
+  her iş günü 15:30; ertesi iş gününün kuru bir gün önceden ilan edilir.
+- **Lira gecelik faiz:** Türk Lirası gecelik referans faiz oranı ve politika
+  faizi, her iş günü.
+- **Gerçekleşen enflasyon:** TÜİK tüketici fiyat endeksi, aylık; yıl sonu
+  okuması aralık gözlemidir.
+
+<KosuKutusu proje="ovp" />

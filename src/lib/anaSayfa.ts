@@ -237,6 +237,42 @@ const HAT_MANSET: Record<
     ondalik: 1,
     tarihAlani: 'stok_toplam_mia_tarih',
   },
+  // Manşet, hattın SORUSUNUN cevabıdır: program bir kur patikası yayımlamıyor,
+  // ama iki milli gelir satırının oranı ima ettiği ortalamayı veriyor ve
+  // "programın tutması için yıl sonunda kur kaç olmalı" sorusunun cevabı her
+  // yeni kotasyonla değişiyor.
+  //
+  // ADAYLAR ÖLÇÜLDÜ (06.09.2026, son 60 gözlem günü, günlük |Δ| ortancası ve
+  // pencere yayılımı): ima edilen ORTALAMA 0,0000 / 0,0000 — programın kendi
+  // sayısı, yıl boyunca SABİT; tabloya konsa her gün aynı rakamı basar ve
+  // "bu pano bugün ne söylüyor" sorusuna hiç cevap vermez. Yıl sonu (üstel)
+  // 0,0218 / 0,1895 TL · gereken ortalama 0,0196 / 1,1828 TL · sapma 0,0373 /
+  // 2,1910 puan. Oynayan üç adaydan yıl sonu SEVİYESİ seçildi: öbür ikisi
+  // birer KOŞUL (kalan günlerin tutturması gereken ortalama) ya da bir FARK
+  // ölçüsü; manşet sütunu ise okurun doğrudan piyasa fiyatıyla kıyaslayacağı
+  // bir seviye ister.
+  //
+  // VARSAYIM DUYARLILIĞI DA ÖLÇÜLDÜ, çünkü yıl sonu iki patika varsayımından
+  // birini yazıyor (üstel — zincirin de kullandığı odur). Fark kalan gün
+  // azaldıkça KÜÇÜLÜYOR, büyümüyor: 2026'da kalan 240 günde %0,429 · 97 günde
+  // %0,098 · bugün (85) %0,082; kapanmış 2025'te 240 günde %0,686 · 52 günde
+  // %0,008 · son günde %0,000. Sebep iki parçalı ve ikincisi asıl belirleyici:
+  // (a) n → 1'de iki çözüm de hedef ortalamaya iner, yani fark yapısal olarak
+  // sıfıra gider — hattın duman sınaması bunu kilitliyor; (b) fark n'de
+  // DOYUYOR (n=85 ile n=240 arasında binde bir oynuyor), asıl sürükleyen
+  // bugünkü seviye ile gereken ortalamanın ARASI. Yıl kapanırken ikisi birden
+  // küçüldüğü için duyarlılık da sıfıra gidiyor. Yani manşetin varsayıma
+  // duyarlılığı yılın BAŞINDA en yüksek ve orada bile binde yedi.
+  //
+  // tarihAlani AÇIKÇA veriliyor: hattın ana saati canlı bacakların en yenisi,
+  // bu sayı ise KUR bacağının günündedir.
+  ovp: {
+    anahtar: 'yil_sonu_ustel',
+    olcu: 'Programın ima ettiği yıl sonu kuru',
+    birim: 'TL/$',
+    ondalik: 2,
+    tarihAlani: 'yil_sonu_ustel_tarih',
+  },
 };
 
 /** Manşet tanımı (anahtar, hane, işaret, tarih alanı) — istemci tazelemesi aynı kuralı uygular. */
