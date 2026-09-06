@@ -1,0 +1,1299 @@
+---
+title: 'Yabancı para mevduatı: fiili akım ve parite etkisi'
+description: "Yurt içi yerleşiklerin yabancı para mevduatındaki değişimi, TCMB'nin kendi yayımladığı iki parçaya ayırır: hesaplara giren-çıkan tutar ile sepetin ve kıymetli maden fiyatının dolar karşısındaki hareketinden gelen değerleme. Kimlik ölçülür, hafta hizalaması sınanır, dolarizasyon payı ham ve arındırılmış olarak yan yana durur."
+pubDate: 2026-09-06
+updatedDate: 2026-09-06
+tags: ['mevduat', 'dolarizasyon', 'kıymetli maden', 'parite', 'tcmb']
+durum: 'aktif'
+kaynak: 'TCMB EVDS3 — haftalık para ve banka istatistikleri; mevduat stoku, parite etkisinden arındırılmış değişim ve parite etkisi tabloları'
+guncelleme: "haftalık (TCMB, Perşembe; bir önceki Cuma haftasının verisi)"
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Deger from '../../components/Deger.astro';
+import KosuKutusu from '../../components/KosuKutusu.astro';
+
+"Yabancı para mevduatı arttı" cümlesi tek başına bir bilgi taşımaz. Yurt içi
+yerleşiklerin döviz mevduatı **milyon dolar** cinsinden yayımlanır, ama o dolar
+rakamının arkasındaki sepette yalnız dolar yoktur: euro, sterlin ve benzeri küçük
+kalemler, ve — Türkiye'ye özgü ve giderek büyüyen bir kalem olarak — **kıymetli maden
+depo hesapları** vardır. Euro dolara karşı bir haftada yüzde bir değer kazandığında,
+ya da altının ons fiyatı yükseldiğinde, hiç kimse hesabına tek kuruş yatırmasa bile
+manşet stok büyür. Bu büyüme bir tasarruf kararı değil, bir **yeniden değerleme
+kalemidir**.
+
+Bu sayfanın konusu tam olarak o ayrımdır: haftalık değişimin ne kadarı **fiili akım**
+(hesaplara giren ve çıkan tutar), ne kadarı **parite etkisi** (sepetin ve maden
+fiyatının dolar karşısındaki hareketi). Ayrımı biz türetmiyoruz ve bir kur serisiyle
+tahmin de etmiyoruz: TCMB haftalık değişimin iki parçasını da, aynı kişi ve para cinsi
+kırılımıyla, **kendisi yayımlıyor**. Bizim işimiz o iki bloğu yayımlanan stok
+değişimiyle karşılaştırmak, kaynağın hafta damgasını sınamak, ve iki parçayı okurun
+karar verebileceği pencerelerde toplamak.
+
+Sonucun neden önemli olduğu son haftada çıplak görünüyor: stok
+<Deger proje="yp-mevduat" anahtar="stok_toplam_mia" ondalik={1}>231,4</Deger> milyar
+dolar (manşet seri
+<code>TP.HPBITABLO2.10</code>), ama o stokun
+%<Deger proje="yp-mevduat" anahtar="maden_pay_toplam" ondalik={2}>42,58</Deger>'i artık
+kıymetli maden depo hesaplarında duruyor. Yani "döviz mevduatı" diye okunan büyüklüğün
+neredeyse yarısı, dolar ya da euro değil, bir **emtia fiyatına** bağlı. Bir hafta içinde
+o fiyat oynadığında manşet oynar; hesaplarda ne olduğunu görmek için ayrıştırmayı okumak
+gerekir.
+
+## Güncel okuma
+
+Haftalık çıpa **<Deger proje="yp-mevduat" anahtar="hafta" ondalik={0}>28 Ağustos 2026</Deger>**;
+bir önceki gözlem <Deger proje="yp-mevduat" anahtar="onceki_hafta" ondalik={0}>21 Ağustos 2026</Deger>.
+Bu koşum <Deger proje="yp-mevduat" anahtar="kosum_tarihi" ondalik={0}>06.09.2026</Deger>,
+verinin yaşı <Deger proje="yp-mevduat" anahtar="veri_gecikme_gun" ondalik={0}>9</Deger>
+gün — ve bu yaş <Deger proje="yp-mevduat" anahtar="hat_saati_blok" ondalik={0}>stok tabloları</Deger>
+bacağından ölçülüyor. Kaynağın bu haftayı yayımlaması beklenen gün
+<Deger proje="yp-mevduat" anahtar="beklenen_yayim_tarihi" ondalik={0}>03.09.2026</Deger>
+idi; ölçüm ondan
+<Deger proje="yp-mevduat" anahtar="beklenen_yayim_gecikme_gun" ondalik={0}>3</Deger> gün
+sonra alındı. Tazelik hükmü:
+<Deger proje="yp-mevduat" anahtar="bayat_cumlesi" ondalik={0}>Veri taze: bütün bacaklar tolerans içinde.</Deger>
+Tolerans <Deger proje="yp-mevduat" anahtar="bayat_tolerans_gun" ondalik={0}>12</Deger> gün;
+haftalık bir seri için bu, üst üste iki yayımın kaçırılması demektir.
+
+### Stok, son hafta
+
+| Kalem | Milyar dolar | Pay |
+| --- | ---: | ---: |
+| **Yurt içi yerleşikler, toplam** | **<Deger proje="yp-mevduat" anahtar="stok_toplam_mia" ondalik={1}>231,4</Deger>** | — |
+| Gerçek kişiler | <Deger proje="yp-mevduat" anahtar="stok_gercek_mia" ondalik={1}>148,8</Deger> | %<Deger proje="yp-mevduat" anahtar="gercek_pay" ondalik={2}>64,34</Deger> |
+| Tüzel kişiler | <Deger proje="yp-mevduat" anahtar="stok_tuzel_mia" ondalik={1}>82,5</Deger> | %<Deger proje="yp-mevduat" anahtar="tuzel_pay" ondalik={2}>35,66</Deger> |
+| Gerçek kişilerin kıymetli maden hesapları | <Deger proje="yp-mevduat" anahtar="maden_gercek_mia" ondalik={1}>89,6</Deger> | %<Deger proje="yp-mevduat" anahtar="maden_pay_gercek" ondalik={2}>60,19</Deger> *(gerçek kişi stoku içinde)* |
+| Tüzel kişilerin kıymetli maden hesapları | <Deger proje="yp-mevduat" anahtar="maden_tuzel_mia" ondalik={1}>8,9</Deger> | %<Deger proje="yp-mevduat" anahtar="maden_pay_tuzel" ondalik={2}>10,82</Deger> *(tüzel kişi stoku içinde)* |
+| **Kıymetli maden, toplam** | **<Deger proje="yp-mevduat" anahtar="maden_toplam_mia" ondalik={1}>98,5</Deger>** | **%<Deger proje="yp-mevduat" anahtar="maden_pay_toplam" ondalik={2}>42,58</Deger>** |
+
+Tablonun tek cümlelik okuması şudur: yurt içi yerleşiklerin yabancı para mevduatı
+ağırlıklı olarak **hane halkının** elindedir (gerçek kişiler yaklaşık üçte iki) ve o
+hane halkı bacağının **altıda üçünden fazlası** kıymetli maden hesabıdır. Tüzel
+kişilerde madenin payı bunun altıda biri kadar. İki kesimin "döviz mevduatı" dediği
+şey aynı varlık değildir; sayfanın geri kalanı bu ayrımın üstüne kuruluyor.
+
+<div class="not">
+  <span class="etiket">Yuvarlama — sütun toplamları son hanede ayrışabilir</span>
+  Bu sayfadaki her sayı, kaynağın <strong>yuvarlanmamış</strong> gözleminden ayrı ayrı
+  yuvarlanır. Bu yüzden iki yuvarlı sayının toplamı, üçüncü yuvarlı sayıya son hanede
+  eşit olmayabilir: gerçek kişiler
+  <Deger proje="yp-mevduat" anahtar="stok_gercek_mia" ondalik={1}>148,8</Deger> ve tüzel
+  kişiler <Deger proje="yp-mevduat" anahtar="stok_tuzel_mia" ondalik={1}>82,5</Deger>
+  milyar dolar iken toplam
+  <Deger proje="yp-mevduat" anahtar="stok_toplam_mia" ondalik={1}>231,4</Deger> milyar
+  dolardır — kimlik yuvarlanmamış rakamlarda (148.848,7 + 82.508,3 = 231.357,0 milyon
+  dolar) <strong>birebir</strong> tutuyor. Alternatif, yuvarlanmış sayıları birbirine
+  uydurmak için gözleme dokunmak olurdu; o, ölçüm hatasını gizlemenin en sessiz biçimidir.
+</div>
+
+### Son haftanın ayrıştırması
+
+Milyon dolar; artı işareti hesaplara giriş, eksi çıkış demektir. Değerleme sütununda
+eksi olması bir çıkış <strong>değildir</strong>: sepetteki para birimleri ya da maden
+fiyatı dolara karşı gerilediğinde aynı mevduatın dolar karşılığı düşer.
+
+| Kesim | Fiili akım | Değerleme (parite etkisi) | Stok değişimi |
+| --- | ---: | ---: | ---: |
+| **Toplam** | **<Deger proje="yp-mevduat" anahtar="ar_toplam_mn" ondalik={1}>−2.714,8</Deger>** | **<Deger proje="yp-mevduat" anahtar="pe_toplam_mn" ondalik={1}>44,4</Deger>** | **<Deger proje="yp-mevduat" anahtar="delta_toplam_mn" ondalik={1}>−2.670,3</Deger>** |
+| Gerçek kişiler | <Deger proje="yp-mevduat" anahtar="ar_gercek_mn" ondalik={1}>−637,9</Deger> | <Deger proje="yp-mevduat" anahtar="pe_gercek_mn" ondalik={1}>172,9</Deger> | <Deger proje="yp-mevduat" anahtar="delta_gercek_mn" ondalik={1}>−465,0</Deger> |
+| Tüzel kişiler | <Deger proje="yp-mevduat" anahtar="ar_tuzel_mn" ondalik={1}>−2.076,9</Deger> | <Deger proje="yp-mevduat" anahtar="pe_tuzel_mn" ondalik={1}>−128,4</Deger> | <Deger proje="yp-mevduat" anahtar="delta_tuzel_mn" ondalik={1}>−2.205,3</Deger> |
+
+Son haftada stok düştü ve düşüşün tamamına yakını **fiili çıkıştır**: milyar cinsinden
+fiili akım <Deger proje="yp-mevduat" anahtar="ar_toplam_mia" ondalik={2}>−2,71</Deger>,
+değerleme <Deger proje="yp-mevduat" anahtar="pe_toplam_mia" ondalik={2}>0,04</Deger>
+milyar dolar. Çıkışın büyük kısmı tüzel kişilerde ve — Şekil 04'te göreceğimiz gibi —
+neredeyse tamamı tek bir bacakta, euro cinsi mevduatta toplanıyor.
+
+### İki pencere, iki farklı hüküm
+
+<div class="not">
+  <span class="etiket">Aynı seri, iki pencere, TERS iki cümle</span>
+  <strong><Deger proje="yp-mevduat" anahtar="kum_ay_etiket" ondalik={0}>Ağustos 2026</Deger></strong>
+  (<Deger proje="yp-mevduat" anahtar="kum_ay_bas_gun" ondalik={0}>7 Ağustos 2026</Deger>'den
+  bu yana <Deger proje="yp-mevduat" anahtar="kum_ay_hafta" ondalik={0}>4</Deger> hafta):
+  değerleme <Deger proje="yp-mevduat" anahtar="kum_ay_pe_toplam_mn" ondalik={1}>11.114,8</Deger>,
+  fiili akım <Deger proje="yp-mevduat" anahtar="kum_ay_ar_toplam_mn" ondalik={1}>−106,8</Deger>
+  milyon dolar. Yani ay içinde stok on bir milyar dolara yakın büyüdü ve büyümenin
+  <strong>tamamı fiyattan</strong> geldi; hesaplara net para girmedi.
+  <br /><br />
+  <strong><Deger proje="yp-mevduat" anahtar="kum_yil_etiket" ondalik={0}>2026</Deger></strong>
+  (<Deger proje="yp-mevduat" anahtar="kum_yil_bas_gun" ondalik={0}>2 Ocak 2026</Deger>'den
+  bu yana <Deger proje="yp-mevduat" anahtar="kum_yil_hafta" ondalik={0}>35</Deger> hafta):
+  fiili akım <Deger proje="yp-mevduat" anahtar="kum_yil_ar_toplam_mn" ondalik={1}>10.534,6</Deger>,
+  değerleme <Deger proje="yp-mevduat" anahtar="kum_yil_pe_toplam_mn" ondalik={1}>−635,3</Deger>
+  milyon dolar. Yani yılın tamamında stok yine on milyar dolar civarı büyüdü ve büyümenin
+  <strong>tamamı fiili paradır</strong>; değerleme net olarak eksiye çalıştı.
+  <br /><br />
+  İki hüküm birbiriyle çelişmiyor — <em>farklı sorulara</em> cevap veriyorlar. Bir aylık
+  pencerede altın fiyatı sıçradı ve akım durgundu; sekiz aylık pencerede fiyat sıçraması
+  yılın başındaki gerilemeyle büyük ölçüde sadeleşti ve geriye akım kaldı. Tek pencere
+  seçen bir okuma, seçtiği pencerenin hükmünü serinin tamamına yorar. Bu sayfa bu yüzden
+  ikisini de yayımlıyor ve hiçbirini "asıl" ilan etmiyor.
+</div>
+
+<KosuKutusu proje="yp-mevduat" />
+
+## Parite etkisi nedir
+
+### Kurulum: bir stok, çok bacak
+
+Yayımlanan stok tek bir sayı ama tek bir varlık değil. Yurt içi yerleşiklerin yabancı
+para mevduatını, her biri kendi biriminde tutulan $i$ bacaklarının dolar karşılıklarının
+toplamı olarak yazalım:
+
+$$
+S_t \;=\; \sum_i Q_{i,t}\, e_{i,t}
+$$
+
+Burada $Q_{i,t}$ bacağın **kendi cinsinden** miktarıdır (euro cinsinden euro, gram
+cinsinden altın) ve $e_{i,t}$ o birimin dolar karşılığıdır. İki bacak özel:
+dolar bacağında $e_{USD} \equiv 1$; kıymetli maden bacağında $e$ bir kur değil, bir
+**fiyattır**.
+
+Bir haftalık değişimi tam diferansiyelle açalım:
+
+$$
+\Delta S_t \;=\; \underbrace{\sum_i e_{i,t-1}\,\Delta Q_{i,t}}_{\text{fiili akım}}
+\;+\; \underbrace{\sum_i Q_{i,t}\,\Delta e_{i,t}}_{\text{parite etkisi}}
+$$
+
+İkinci terim, **hiç kimse hesabına para yatırmasa ya da çekmese bile** sıfırdan
+farklıdır: miktarlar sabitken fiyatlar değişmiştir. Birinci terim ise fiyatlar
+sabitken miktarların değişmesidir — tasarruf kararının kendisi.
+
+Ayrıştırmanın bir ince noktası var ve saklanmaması gerekir: $\Delta Q \cdot \Delta e$
+**çapraz terimi** iki bacaktan hangisine yazılacağına göre iki farklı yazım doğurur.
+Yukarıdaki yazımda çapraz terim ikinci bacağın içindedir (fiili akım dönem *başı*
+fiyatıyla, değerleme dönem *sonu* miktarıyla ölçülür); tersi de kurulabilir ve iki
+yazım toplamda aynı $\Delta S$'i verir, ama parçaları farklı olur. Bu sayfada seçim
+bize ait değil: **kaynak kendi yazımını uyguluyor ve iki bloğu da o yayımlıyor.**
+Bizim yaptığımız, iki bloğun toplamının yayımlanan stok değişimini kapatıp
+kapatmadığını ölçmek (aşağıda "Kimlik ve artık").
+
+### Dolar bacağının sıfırı tanım gereğidir
+
+Dolar cinsi mevduatın **dolar olarak ölçülen** parite etkisi olamaz, çünkü ortada
+çapraz kur yoktur:
+
+$$
+e_{USD} \equiv 1 \;\Longrightarrow\; \Delta e_{USD} = 0
+\;\Longrightarrow\; Q_{USD,t}\,\Delta e_{USD,t} = 0
+$$
+
+Bu, ölçülmemiş bir şeyin sıfır görünmesi değildir; ölçülmesi gereken şeyin tanımı gereği
+sıfır olmasıdır. İkisini ayırt etmek önemli, çünkü bir seri "hep sıfır" olduğunda
+gerçekten hareket olmamış da olabilir, kaynak o bacağı yayımlamayı bırakmış da olabilir
+— ve ikisi ekranda **aynı görünür**. Hattın sıfır denetimi bu ayrımı yapıyor ve hükmünü
+yazıyor:
+
+<div class="not">
+  <span class="etiket">Tanım gereği sıfır</span>
+  <Deger proje="yp-mevduat" anahtar="sifir_tanim_cumlesi" ondalik={0}>Parite etkisi, gerçek kişiler, dolar (TP.HPBITABLO5.14) · Parite etkisi, tüzel kişiler, dolar (TP.HPBITABLO5.19) serisinde sıfır TANIM GEREĞİDİR: dolar cinsi bir mevduatın dolar olarak ölçülen parite etkisi olamaz, çünkü ortada çapraz kur yoktur.</Deger>
+  Bu sınıfta <Deger proje="yp-mevduat" anahtar="sifir_tanim_seri" ondalik={0}>2</Deger>
+  seri var. Ayırt edilemeyen sıfırlar ise ayrı bir sınıf ve sayfanın sonundaki
+  sınırlar bölümünde, dokundukları dilimin büyüklüğüyle birlikte duruyor.
+</div>
+
+### Kıymetli maden bacağı bir para birimi değil, bir fiyattır
+
+Kıymetli maden depo hesapları kaynağın kendi tablosunda **ABD doları karşılığıyla**
+yayımlanır. Bu bacakta $e$ bir çapraz kur değil, ons ya da gram cinsinden bir
+**emtia fiyatıdır**; dolayısıyla o bacağın "parite etkisi" aslında bir *altın fiyat
+etkisidir*. Altın yükseldiğinde bacak, tek gram girmeden büyür.
+
+Bu ayrım bu sayfada akademik değil, sayısal olarak baskındır. Son haftada maden
+bacağının iki tarafı ters yönde çalıştı: fiili akım
+<Deger proje="yp-mevduat" anahtar="ar_maden_toplam_mn" ondalik={1}>−744,5</Deger>,
+değerleme <Deger proje="yp-mevduat" anahtar="pe_maden_toplam_mn" ondalik={1}>319,2</Deger>
+milyon dolar. Yani hesaplardan altın çözülürken bacağın dolar karşılığı fiyatla büyüdü.
+Bu iki sayıyı toplayıp tek bir "maden mevduatı değişti" cümlesi kurmak, iki bağımsız
+olayı birbirinin içinde eritmek olurdu.
+
+### Sayısal örnek — formülün mekaniği
+
+{/* sinav-ornek: kutunun bütün sayıları formülü göstermek için seçilmiş yuvarlak
+    varsayımlar, gerçek gözlem değil; zincirin tamamı 100 birim ve 1,10 kurundan
+    türüyor. Canlı bir değerle değiştirilseydi kalan adımlar yalan söylerdi. */}
+<div class="not">
+  <span class="etiket">Aritmetiği görmek için — uydurma yuvarlak sayılarla, tek bacak</span>
+  Bir mevduat sahibinin hesabında <strong>100 birim euro</strong> olsun ve haftanın
+  başında euro/dolar kuru <strong>1,10</strong> olsun. Stokun dolar karşılığı
+  100 × 1,10 = 110 dolardır.
+  <br /><br />
+  <strong>Birinci hâl — hiç hareket yok.</strong> Hafta boyunca hesaba hiç para
+  girmesin, hiç para çıkmasın, ama kur haftayı <strong>1,15</strong>'te kapatsın.
+  Yeni dolar karşılığı 100 × 1,15 = 115 dolar. Ayrıştırma: fiili akım
+  1,10 × 0 = <strong>0 dolar</strong>; parite etkisi 100 × (1,15 − 1,10) =
+  <strong>5 dolar</strong>; toplam değişim 0 + 5 = 5 dolar. Manşet stok
+  <strong>%4,5 arttı</strong> ve artışın tamamı fiyattır. Bu hafta hakkında
+  "mevduat sahipleri döviz aldı" cümlesi kurulamaz.
+  <br /><br />
+  <strong>İkinci hâl — hem hareket hem fiyat.</strong> Aynı hafta içinde hesaptan
+  <strong>10 birim euro</strong> çekilsin (miktar 100 → 90), kur yine 1,15'e çıksın.
+  Fiili akım 1,10 × (−10) = <strong>−11 dolar</strong>; parite etkisi
+  90 × 0,05 = <strong>4,5 dolar</strong>; toplam −6,5 dolar. Stok 110 → 103,5 dolara
+  iner.
+  <br /><br />
+  <strong>Üçüncü hâl — işaretin gizlenmesi.</strong> Aynı 10 birimlik çekişe rağmen
+  kur 1,10 yerine 1,25'e çıksaydı: fiili akım yine −11 dolar, parite etkisi
+  90 × 0,15 = 13,5 dolar, toplam +2,5 dolar. Stok <strong>artmış</strong> görünür ve
+  manşete bakan biri hesaba para girdiğini sanır. Buradaki ders: fiili akım ile
+  değerlemenin işaretleri birbirinden bağımsızdır ve toplamları, ikisinin de tek
+  başına anlattığından başka bir hikâye anlatabilir.
+  <br /><br />
+  Bu kutudaki bütün sayılar seçilmiştir; sayfadaki gerçek sayılar koşudan gelir.
+</div>
+{/* /sinav-ornek */}
+
+### Çapraz terim: ayrıştırmanın iki yazımı ve aradaki fark
+
+Yukarıdaki kutuda dikkatli bir okur bir tutarsızlık yakalamış olabilir. İkinci hâlde
+parite etkisini $90 \times 0{,}05 = 4{,}5$ diye hesapladık, yani **dönem sonu**
+miktarıyla. Ama dönem **başı** miktarıyla hesaplasaydık $100 \times 0{,}05 = 5$
+çıkardı. Hangisi doğru?
+
+İkisi de doğru — çünkü tam ayrıştırma **üç** terimlidir:
+
+$$
+\Delta S_t \;=\; \sum_i \Big(
+\underbrace{e_{i,t-1}\,\Delta Q_{i,t}}_{\text{miktar}}
+\;+\; \underbrace{Q_{i,t-1}\,\Delta e_{i,t}}_{\text{fiyat}}
+\;+\; \underbrace{\Delta Q_{i,t}\,\Delta e_{i,t}}_{\text{çapraz}} \Big)
+$$
+
+Üçüncü terim, miktar ve fiyat değişimlerinin **çarpımıdır**: ne saf bir akım ne saf bir
+değerlemedir. İki parçalı bir ayrıştırma yayımlamak isteyen herkes onu iki bacaktan
+birine yazmak zorundadır. Yazımlar şöyle ayrışıyor:
+
+| Yazım | Fiili akım | Parite etkisi | Çapraz terim nereye gitti |
+| --- | --- | --- | --- |
+| Dönem başı ağırlıklı (Laspeyres türü) | $e_{t-1}\,\Delta Q$ | $Q_{t-1}\,\Delta e$ | hiçbirine — artık olarak kalır |
+| Akım dönem başı, değerleme dönem sonu | $e_{t-1}\,\Delta Q$ | $Q_{t}\,\Delta e$ | **değerlemeye** yazıldı |
+| Akım dönem sonu, değerleme dönem başı | $e_{t}\,\Delta Q$ | $Q_{t-1}\,\Delta e$ | **akıma** yazıldı |
+
+Kutudaki ikinci hâlde çapraz terim $(-10) \times 0{,}05 = -0{,}5$ dolardı ve değerlemeye
+yazıldığı için parite etkisi 5 yerine 4,5 çıktı. Toplam her üç yazımda da aynı
+($-6{,}5$); değişen yalnız **parçaların** büyüklüğü.
+
+Bu sayfada seçim bize ait değil. Kaynak iki bloğu da kendisi yayımlıyor ve kendi
+yazımını **tutarlı** biçimde uyguluyor; bunun kanıtı kimliğin kapanmasıdır — iki blok
+farklı yazımlarla üretilseydi toplamları stok değişimini kapatmaz, artık sistematik
+olarak çapraz terim kadar sapardı. Ölçülen artık ise
+<Deger proje="yp-mevduat" anahtar="kimlik_cumlesi" ondalik={0}>Ölçülen pencerede resmî ayrıştırma ile stok değişimi arasındaki en büyük fark 5,8 milyon dolar.</Deger>
+
+**Ölçemediğimiz şey.** Çapraz terimin kendi büyüklüğünü ölçmek için bacak bacak $Q$ ve
+$e$ gerekir — kaç gram altın, kaç birim euro — ve bunların hiçbiri yayımlanmıyor.
+Elimizde yalnız çarpımları var. Dolayısıyla "çapraz terim bu haftada şu kadardı"
+cümlesi bu sayfada **kurulamaz**. Kurulabilen şey mertebe tahminidir: çapraz terim iki
+haftalık değişimin çarpımı olduğu için **ikinci derecedendir** ve haftalık frekansta
+her iki değişim de küçüktür. Aynı ayrıştırmanın aylık ya da yıllık frekansta
+yapılması hâlinde bu terim ihmal edilebilir olmaktan çıkardı — ve bu, haftalık verinin
+tercih edilmesinin görünmeyen bir sebebidir.
+
+### Neden kendi kur serimizle tahmin etmiyoruz
+
+Türkiye'de kur etkisinden arındırma çoğu zaman şöyle yapılır: yabancı para bacağı bir
+kur serisiyle bölünür ya da önceki dönemin kuruyla yeniden değerlenir. Bu yol
+<a href="/projeler/kredi-parasal/">Kredi ve parasal büyüklükler</a> sayfasında
+**zorunludur**, çünkü orada kaynak arındırılmış seriyi yayımlamıyor ve döviz kredisinin
+para cinsi bileşimi de bilinmiyor; oradaki sayfa bu yüzden "hangi kur" sorusunu açıkça
+soruyor, seçimin sonucu ne kadar değiştirdiğini ölçüp yayımlıyor.
+
+Burada o soru hiç sorulmuyor ve bu bir üstünlük değil, **veri farkıdır**: TCMB bu
+tabloda ayrıştırmayı kendisi yapıyor. Kendi kur serimizle tahmin etmeye kalksaydık üç
+ayrı belirsizlik eklerdik:
+
+1. **Sepet bilinmiyor.** Yurt içi yerleşiklerin yabancı para mevduatının para cinsi
+   dağılımı stok düzeyinde yayımlanmıyor; bir vekil sepet seçmek zorunda kalırdık.
+2. **Maden bacağı bir kurla değerlenmez.** Stokun
+   %<Deger proje="yp-mevduat" anahtar="maden_pay_toplam" ondalik={2}>42,58</Deger>'i
+   kıymetli maden; o bacağın "kuru" bir altın fiyatıdır ve hangi fiyatın (ons ya da
+   gram, hangi saatin kotasyonu, hangi rafineri farkı) kullanıldığı ölçüyü doğrudan
+   değiştirir.
+3. **Haftanın hangi anı.** Kur ve fiyat gün içinde oynar; haftalık gözlemin hangi anına
+   demirleneceği bir seçimdir ve o seçim ayrıştırmanın iki bacağına birden yansır.
+
+Üçü de kaynağın kendi ayrıştırmasında **zaten çözülmüş** durumda — bizim yapmamız
+gereken tek şey, çözümün stok tablosuyla tutarlı olup olmadığını ölçmek. Sayfanın
+"Kimlik ve artık" ile "Hafta hizalaması" bölümleri tam olarak bunu yapıyor.
+
+Bunun bir bedeli var ve yazılması gerekiyor: **ayrıştırma bizim tanımımız değil,
+kaynağınkidir.** Kaynağın hangi çapraz terim yazımını kullandığını, hangi ara fiyatları
+aldığını ve maden bacağını hangi kotasyonla değerlediğini yayımlanmış metaveriden
+okuyoruz, kendi hesabımızla yeniden üretmiyoruz. Bir yöntem değişikliği olursa burada
+**tanım gereği** görünmez; görünecek yer kimliğin artığıdır ve o da ancak stok tablosu
+aynı değişikliği almazsa kıpırdar.
+
+### Gerçek haftayla pratik
+
+Şimdi aynı hesabı, çıpa haftasının **gerçek** rakamlarıyla, gerçek kişilerin bacak
+bacak ayrıştırmasında yürütelim. Bütün sayılar milyon dolar:
+
+| Bacak | Fiili akım | Değerleme | Okuma |
+| --- | ---: | ---: | --- |
+| ABD doları | <Deger proje="yp-mevduat" anahtar="ar_gercek_usd_mn" ondalik={1}>−98,0</Deger> | <Deger proje="yp-mevduat" anahtar="pe_gercek_usd_mn" ondalik={1}>0,0</Deger> | değerleme **tanım gereği** sıfır |
+| Euro | <Deger proje="yp-mevduat" anahtar="ar_gercek_eur_mn" ondalik={1}>78,9</Deger> | <Deger proje="yp-mevduat" anahtar="pe_gercek_eur_mn" ondalik={1}>−117,9</Deger> | hesaba para girdi, euro dolara karşı geriledi |
+| Diğer para birimleri | <Deger proje="yp-mevduat" anahtar="ar_gercek_diger_mn" ondalik={1}>34,3</Deger> | <Deger proje="yp-mevduat" anahtar="pe_gercek_diger_mn" ondalik={1}>0,0</Deger> | sıfırın sınıfı belirsiz (aşağıda) |
+| Kıymetli maden | <Deger proje="yp-mevduat" anahtar="ar_gercek_maden_mn" ondalik={1}>−653,0</Deger> | <Deger proje="yp-mevduat" anahtar="pe_gercek_maden_mn" ondalik={1}>290,8</Deger> | altın çözüldü, bacak fiyatla büyüdü |
+| **Gerçek kişiler, toplam** | **<Deger proje="yp-mevduat" anahtar="ar_gercek_mn" ondalik={1}>−637,9</Deger>** | **<Deger proje="yp-mevduat" anahtar="pe_gercek_mn" ondalik={1}>172,9</Deger>** | stok değişimi <Deger proje="yp-mevduat" anahtar="delta_gercek_mn" ondalik={1}>−465,0</Deger> |
+
+Üç şeyi bu tablodan doğrudan okuyabiliyoruz. Birincisi, **euro bacağında akımla
+değerleme ters işaretli**: hesaba para girmiş ama euro dolara karşı gerilediği için
+bacağın dolar karşılığı düşmüş — manşete bakan biri "euro mevduatı azaldı" derdi ve
+mevduat sahibinin kararını tersine okurdu. İkincisi, **dolar bacağının değerlemesi tam
+sıfır** ve bu bir ölçüm sonucu değil, tanımın kendisi. Üçüncüsü ve bu haftanın en
+büyük kalemi: **maden bacağında ters işaret**, yani gerçek kişiler altın hesaplarını
+çözerken o hesapların dolar değeri fiyatla büyüdü. Toplam sıfırdan uzak olduğu hâlde,
+bu haftanın hikâyesi "hane halkı dövizden çıktı" değil, "hane halkı altını bozdurdu"dur.
+
+## Kimlik ve artık
+
+### Kimlik
+
+Kaynak üç şeyi ayrı ayrı yayımlıyor: stokun **seviyesini**, arındırılmış **değişimi**
+ve **parite etkisini**. Üçünün birbirini kapatması gerekir:
+
+$$
+\Delta S_t \;=\; A_t \;+\; P_t \;+\; \varepsilon_t
+$$
+
+Burada $A_t$ arındırılmış (fiili) değişim, $P_t$ parite etkisi, $\varepsilon_t$ ise
+**artıktır**. Kritik nokta şu: bu kimliğin sol tarafı ile sağ tarafı **iki ayrı tablodan**
+geliyor. Sol taraf stok tablosunun ardışık iki gözleminin farkı, sağ taraf değişim
+tablosunun iki bloğu. İki tablo aynı kurumdan çıksa da aynı hesap değildir; aynı sayıyı
+söylemek zorunda da değildirler. Bu yüzden $\varepsilon$ türetilen bir düzeltme kalemi
+değil, **ölçülen ve yayımlanan bir büyüklüktür**.
+
+### Ölçüm
+
+<div class="not">
+  <span class="etiket">Kimlik denetimi</span>
+  <Deger proje="yp-mevduat" anahtar="kimlik_cumlesi" ondalik={0}>Ölçülen pencerede resmî ayrıştırma ile stok değişimi arasındaki en büyük fark 5,8 milyon dolar.</Deger>
+  <strong><Deger proje="yp-mevduat" anahtar="kimlik_hukum" ondalik={0}>Resmî ayrıştırma stok değişimini kapatıyor.</Deger></strong>
+  <br /><br />
+  Pencere son <Deger proje="yp-mevduat" anahtar="kimlik_pencere_hafta" ondalik={0}>52</Deger>
+  hafta; tolerans o haftanın brüt hareketinin
+  %<Deger proje="yp-mevduat" anahtar="kimlik_esik_pay" ondalik={0}>1</Deger>'i ya da
+  <Deger proje="yp-mevduat" anahtar="kimlik_esik_mn" ondalik={1}>25,0</Deger> milyon
+  dolar — hangisi büyükse. Artığın son haftadaki değeri toplamda
+  <Deger proje="yp-mevduat" anahtar="kimlik_artik_toplam_mn" ondalik={1}>0,0</Deger>,
+  gerçek kişilerde
+  <Deger proje="yp-mevduat" anahtar="kimlik_artik_gercek_mn" ondalik={1}>0,0</Deger>,
+  tüzel kişilerde
+  <Deger proje="yp-mevduat" anahtar="kimlik_artik_tuzel_mn" ondalik={1}>−0,0</Deger>
+  milyon dolar. Bağıl ölçü mutlak ölçüyle <strong>aynı pencereden</strong> okunur ve
+  pencerenin <strong>en kötü haftasını</strong> bildirir: artığın brüt harekete oranı
+  hiçbir haftada
+  %<Deger proje="yp-mevduat" anahtar="kimlik_artik_pay" ondalik={3}>0,393</Deger>'i
+  aşmıyor. Son haftanın kendi oranı bunun çok altında — yukarıdaki üç artık
+  yuvarlandığında sıfır.
+</div>
+
+Eşiğin **iki yönlü** olması bilinçli: sabit bir milyon dolar eşiği durgun haftalarda
+fazla gevşek, sıçramalı haftalarda fazla sıkı olurdu. Brüt harekete oranlı eşik ise
+hareketin sıfıra yaklaştığı haftalarda anlamsız derecede daralır. İkisinin **büyüğü**
+alınıyor.
+
+### Sayısal yürütme
+
+Gerçek kişiler için, son haftanın rakamlarıyla:
+
+$$
+\underbrace{-637{,}9}_{A_t} \;+\; \underbrace{172{,}9}_{P_t}
+\;=\; \underbrace{-465{,}0}_{\Delta S_t}
+$$
+
+Aynı üç sayı yukarıdaki tabloda ayrı ayrı duruyor:
+<Deger proje="yp-mevduat" anahtar="ar_gercek_mn" ondalik={1}>−637,9</Deger> fiili akım,
+<Deger proje="yp-mevduat" anahtar="pe_gercek_mn" ondalik={1}>172,9</Deger> değerleme ve
+<Deger proje="yp-mevduat" anahtar="delta_gercek_mn" ondalik={1}>−465,0</Deger> stok
+değişimi. Tüzel kişilerde de aynı toplama tutuyor
+(<Deger proje="yp-mevduat" anahtar="ar_tuzel_mn" ondalik={1}>−2.076,9</Deger> +
+<Deger proje="yp-mevduat" anahtar="pe_tuzel_mn" ondalik={1}>−128,4</Deger> =
+<Deger proje="yp-mevduat" anahtar="delta_tuzel_mn" ondalik={1}>−2.205,3</Deger>).
+Toplam satırında yuvarlanmış üç sayının son hanesi ayrışıyor
+(<Deger proje="yp-mevduat" anahtar="ar_toplam_mn" ondalik={1}>−2.714,8</Deger> +
+<Deger proje="yp-mevduat" anahtar="pe_toplam_mn" ondalik={1}>44,4</Deger> aritmetik
+olarak −2.670,4 verir, yayımlanan stok değişimi ise
+<Deger proje="yp-mevduat" anahtar="delta_toplam_mn" ondalik={1}>−2.670,3</Deger>);
+kimlik yuvarlanmamış gözlemlerde ölçülüyor ve o düzeyde artık
+<Deger proje="yp-mevduat" anahtar="kimlik_artik_toplam_mn" ondalik={1}>0,0</Deger>
+milyon dolar. Fark yuvarlamanın kendisidir, ölçümün değil.
+
+### Kimlik neyi ölçmez
+
+Bir denetimin kapsamı denetimin parçasıdır, o yüzden bu kimliğin **görmediği** şeyi
+de yazalım. Kimlik iki tablo arasındaki **tutarlılığı** ölçer, ikisinin birden
+**doğruluğunu** değil. Kaynak her iki tabloyu birden aynı yönde revize ederse artık
+yine sıfır çıkar ve denetim yeşil geçer. Aynı şekilde iki taraf birlikte donarsa artık
+yine sıfırdır — bayatlık ayrı ölçülür (yukarıdaki tazelik hükmü, duvar saatiyle).
+
+## Hafta hizalaması: varsayılmadı, ölçüldü
+
+Kimliğin kapanması, iki tablonun **aynı haftayı** aynı cumaya damgaladığı varsayımına
+dayanıyor. Bu varsayım yanlış olsaydı ne olurdu? Değişim tablosu bir hafta kaymış olsa,
+$\Delta S_t$ ile $A_t + P_t$ farklı haftaları anlatırdı ve artık büyürdü — ama serilerin
+otokorelasyonu yüksekse "kabaca tutuyor" görünmeye devam edebilirdi. Varsayımı test
+etmeden bırakmak, denetimin kendisini kör etmek olurdu.
+
+Üç aday hizalama yan yana koşuldu: değişim tablosu bir hafta geri kaydırılmış, hiç
+kaydırılmamış, bir hafta ileri kaydırılmış. Her adayda kimliğin **medyan mutlak artığı**
+ölçüldü. Seçilen kaydırma
+<Deger proje="yp-mevduat" anahtar="kimlik_kaydirma" ondalik={0}>0</Deger>, yani kaynağın
+kendi damgası.
+
+<div class="not">
+  <span class="etiket">Ölçüm penceresi — hizalama sınaması, 28.06.2024 – 28.08.2026 (113 hafta), ölçüm günü 06.09.2026</span>
+  Medyan mutlak artık, milyon dolar:
+  <br /><br />
+  <strong>Gerçek kişiler</strong> — bir hafta geri: 1.293,7 · <strong>kaydırmasız:
+  0,03</strong> · bir hafta ileri: 1.271,3.
+  <br />
+  <strong>Tüzel kişiler</strong> — bir hafta geri: 2.027,0 · <strong>kaydırmasız:
+  0,04</strong> · bir hafta ileri: 2.021,8.
+  <br /><br />
+  Doğru hizalamanın artığı, yanlış hizalamanınkinin <strong>kırk üç binde biri</strong>
+  kadar. Bu, "biraz daha iyi" değil, kategorik bir fark: kaynağın kendi damgası
+  doğrudur ve kaydırma uygulanmadı. Bu kutu <strong>kapanmış bir sınamanın</strong>
+  sonucudur ve haftalık koşuyla tazelenmez; canlı hükmü yukarıdaki kimlik denetimi
+  taşır.
+</div>
+
+### Haftanın kendisi: cuma damgası ne kapsar
+
+İkinci ve daha sinsi bir hizalama sorusu, haftanın **içeriğiyle** ilgili. Haftalık gözlem
+cumaya damgalıdır ve **bir önceki cumadan bu yana** olan değişimi taşır. Bunun iki
+sonucu var:
+
+1. **Ayın ilk haftası bir önceki ayın son günlerini de kapsar.** Dolayısıyla "ay içi
+   toplam", takvim ayının akımı **değildir**; o aya damgalı haftaların toplamıdır.
+   Bu koşuda ay içi toplam
+   <Deger proje="yp-mevduat" anahtar="kum_ay_hafta" ondalik={0}>4</Deger> haftayı
+   topluyor ve çıpası
+   <Deger proje="yp-mevduat" anahtar="kum_ay_bas_gun" ondalik={0}>7 Ağustos 2026</Deger>.
+   Sabit pencerelerin takvim kapsamı ayrıca ölçülüyor, çünkü kaçırılan bir yayım
+   gözlem sayısını değil **kapsanan günü** değiştirir: dört haftalık pencere
+   <Deger proje="yp-mevduat" anahtar="kum_4h_kapsam_gun" ondalik={0}>21</Deger>,
+   on üç haftalık pencere
+   <Deger proje="yp-mevduat" anahtar="kum_13h_kapsam_gun" ondalik={0}>84</Deger>
+   takvim günü.
+2. **Toplama boş hafta doldurmaz.** Ölçülmemiş bir hafta sıfır sayılmaz; kümüle toplama
+   yalnız gerçekten gözlenmiş haftalar girer. Bu, ay başında kümülenin sıfıra yakın
+   olmasını bir **ölçüm** yapar — ama besleme durduğunda da kümüle aynı görünür.
+   İkisini ayıran şey toplanan hafta sayısıdır ve o sayı sayfada yazılı.
+
+## Şekil 01 — Stok, kişi kırılımı ve maden hesapları
+
+<GrafikEmbed
+  src="/projeler/yp-mevduat/01_stok_kirilim.html"
+  baslik="Yurt içi yerleşiklerin yabancı para mevduatı — kişi kırılımı, kıymetli maden hesapları ve yurt dışı yerleşikler dahil geniş toplam"
+  no="01"
+  yukseklik={1215}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** TCMB EVDS3, haftalık para ve banka istatistikleri. Manşet ve kişi kırılımı
+stok tablosundan: `TP.HPBITABLO2.10` (yurt içi yerleşiklerin toplam yabancı para
+mevduatı), `TP.HPBITABLO2.11` (gerçek kişiler), `TP.HPBITABLO2.12` (tüzel kişiler).
+Kıymetli maden depo hesapları ve geniş toplam kırılım tablosundan: `TP.HPBITABLO4.1`
+(toplam), `TP.HPBITABLO4.7` (gerçek kişilerin maden hesapları, dolar karşılığı),
+`TP.HPBITABLO4.12` (tüzel kişilerin maden hesapları). Birim **milyon dolar**; şekilde
+milyar dolara çevrilir (bin ile bölünür).
+
+**Kimlik.** Kişi kırılımının toplamı manşete birebir eşit olmalı ve öyle:
+gerçek kişiler artı tüzel kişiler, ölçülen bütün haftalarda manşetin kendisini veriyor.
+Bu, çizilen serilerin gerçekten aynı tablodan geldiğinin ilk sınavıdır; ayrışsalardı
+paylar (yukarıdaki tablodaki %<Deger proje="yp-mevduat" anahtar="gercek_pay" ondalik={2}>64,34</Deger>
+ve %<Deger proje="yp-mevduat" anahtar="tuzel_pay" ondalik={2}>35,66</Deger>) anlamsız
+olurdu.
+
+**Üst panel.** Dört iz: toplam, gerçek kişiler, tüzel kişiler ve kesikli gri izle
+geniş toplam. **Alt panel.** İki maden serisinin seviyesi (sol eksen, milyar dolar) ve
+ikisinin toplam içindeki payı (sağ eksen, yüzde). Pay şöyle kuruluyor:
+
+$$
+\text{maden payı}_t \;=\;
+\frac{\text{gerçek kişi madeni}_t + \text{tüzel kişi madeni}_t}{\text{yurt içi yerleşikler, toplam}_t}
+$$
+
+Bugünkü değeri %<Deger proje="yp-mevduat" anahtar="maden_pay_toplam" ondalik={2}>42,58</Deger>.
+Paydada **manşet** duruyor, geniş toplam değil — payda değişirse pay da değişir ve
+iki tabanın karıştırılması bu hattın en pahalı hatası olurdu.
+
+**Kapsam ve başlangıç.** Bu şeklin bütün izleri stok tablolarından geliyor ve
+<Deger proje="yp-mevduat" anahtar="kapsam_stok_bas" ondalik={0}>28.06.2024</Deger>'te
+başlıyor. Haftalık ayrıştırma tablosu çok daha geriye gidiyor
+(<Deger proje="yp-mevduat" anahtar="kapsam_akim_bas" ondalik={0}>28.02.2014</Deger>) ve
+o tarihçe akım şekillerinde görünüyor; burada görünmemesinin sebebi tercih değil,
+verinin kendisi.
+
+**Varsayımlar.** (i) Haftalık gözlem cuma itibarıyladır ve iki tablo aynı cumayı
+damgalar (ölçüldü, yukarıda); (ii) kıymetli maden depo hesaplarının dolar karşılığı
+kaynağın kendi değerlemesiyle üretilir, biz bir altın fiyatı serisiyle yeniden
+değerlemiyoruz; (iii) kapsam (yurt içi şubeler, katılım bankaları dahil) dönem boyunca
+sabittir.
+
+### Sınır — geniş toplam manşet değildir
+
+<div class="not">
+  <span class="etiket">İki toplamı yan yana koymak, bu hattın en pahalı hatası olurdu</span>
+  <Deger proje="yp-mevduat" anahtar="genis_fark_cumlesi" ondalik={0}>Kaynağın geniş toplamı ile bu sayfanın manşeti arasındaki kapsam farkı 39,7 milyar dolar.</Deger>
+  Geniş toplam <Deger proje="yp-mevduat" anahtar="genis_toplam_mia" ondalik={1}>271,1</Deger>,
+  bu sayfanın manşeti
+  <Deger proje="yp-mevduat" anahtar="stok_toplam_mia" ondalik={1}>231,4</Deger> milyar
+  dolar; fark
+  <Deger proje="yp-mevduat" anahtar="genis_fark_mia" ondalik={1}>39,7</Deger> milyar
+  dolar, yani geniş toplamın
+  %<Deger proje="yp-mevduat" anahtar="genis_fark_pay" ondalik={2}>14,65</Deger>'i.
+  <br /><br />
+  Farkın <strong>tamamı yurt dışı yerleşik bankalar değildir</strong>: kaynağın kırılım
+  tablosunda, yurt dışı bacağın dışında kalan bölümler de bu farkın içinde ve
+  bileşimi bu sayfada <strong>ölçülmedi</strong>. Manşet olarak alınan seri
+  <Deger proje="yp-mevduat" anahtar="taban_manset_kod" ondalik={0}>TP.HPBITABLO2.10</Deger>,
+  geniş toplam
+  <Deger proje="yp-mevduat" anahtar="taban_genis_kod" ondalik={0}>TP.HPBITABLO4.1</Deger>.
+  Şekilde geniş toplam <em>kesikli</em> çizilir ve lejantında "yurt dışı yerleşikler
+  dahil" yazar; aynı üslupla çizilseydi okur iki toplamı aynı büyüklüğün iki ölçüsü
+  sanardı.
+</div>
+
+Bu hattın sorusu **yurt içi yerleşiklerin** kararıdır: Türkiye'de yerleşik hane halkı
+ve şirketler tasarruflarını hangi para biriminde tutuyor. Yurt dışı yerleşik bankaların
+Türkiye'deki mevduatı bambaşka bir olgudur (muhabir bankacılık, sınır ötesi likidite
+yönetimi) ve o bacağı manşete katmak, sorunun kendisini değiştirir. Ana sayfadaki pano
+tablosunda da bu yüzden dar toplam basılıyor.
+
+## Şekil 02 — Parite etkisinden arındırılmış kümüle akım
+
+<GrafikEmbed
+  src="/projeler/yp-mevduat/02_kumule_akim.html"
+  baslik="Parite etkisinden arındırılmış kümüle akım — yıl içi, ay içi ve on üç haftalık kayan toplam"
+  no="02"
+  yukseklik={1557}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Yalnız arındırılmış değişim bloğu: `TP.HPBITABLO5.1` (toplam),
+`TP.HPBITABLO5.2` (gerçek kişiler), `TP.HPBITABLO5.7` (tüzel kişiler). Parite etkisi bu
+şeklin dışındadır ve Şekil 03'te ayrıca duruyor. Birim milyon dolar.
+
+**Üç panel, üç pencere.** Üstte yıl içi kümüle, ortada ay içi kümüle, altta on üç
+haftalık kayan toplam. Kümüle toplam, çıpadan bu yana gözlenmiş haftaların basit
+toplamıdır:
+
+$$
+C_t \;=\; \sum_{s=\tau+1}^{t} A_s \qquad
+\tau = \text{pencerenin çıpası}
+$$
+
+Ay içi pencerede $\tau$ her takvim ayının başında, yıl içi pencerede her takvim yılının
+başında döner. **Toplama boş hafta doldurmaz**: gözlenmemiş bir hafta sıfır sayılmaz,
+toplamdan düşer ve toplanan hafta sayısı yazılır. Bu koşuda yıl içi kümüle
+<Deger proje="yp-mevduat" anahtar="kum_yil_hafta" ondalik={0}>35</Deger>, ay içi kümüle
+<Deger proje="yp-mevduat" anahtar="kum_ay_hafta" ondalik={0}>4</Deger> haftayı topluyor;
+alttaki kayan pencere ise sabit
+<Deger proje="yp-mevduat" anahtar="kum_pencere_uzun_hafta" ondalik={0}>13</Deger>
+haftadır.
+
+**Alt panel neden on üç hafta?** Haftalık akım gürültülüdür ve tek bir haftanın işareti
+çoğu zaman bir sonraki hafta tersine döner; üç aylık bir kayan toplam, mevsimsel
+düzeltme yapmadan gürültünün büyük kısmını söndürür ve iki kesimin (gerçek ve tüzel
+kişiler) birbirine göre konumunu okunur kılar. Kayan toplam on üç gözlem istediği için
+o iki iz, ötekilerden on iki hafta sonra başlar.
+
+**Son haftada.** On üç haftalık toplam: fiili akım
+<Deger proje="yp-mevduat" anahtar="kum_13h_ar_toplam_mn" ondalik={1}>302,0</Deger>,
+karşılığında değerleme
+<Deger proje="yp-mevduat" anahtar="kum_13h_pe_toplam_mn" ondalik={1}>627,9</Deger>
+milyon dolar — yani son üç ayda stoktaki artışın çoğunluğu yine fiyattan geldi, ama
+ay penceresindeki kadar ezici değil. Pencere uzadıkça fiyat etkisi sadeleşiyor;
+sadeleşmenin ne kadar sürdüğü, bu sayfanın en somut ölçüsü.
+
+**Varsayım.** Kümüle toplamda haftalar **eşit ağırlıklıdır**; hafta uzunluğunun
+(tatil, yarım gün) akım hacmine etkisi ölçülmedi ve düzeltilmedi.
+
+## On iki buçuk yılın ölçümü
+
+Şekil 02'nin en uzun panelinde görünen şey, tek bir haftanın ya da tek bir ayın
+anlatamayacağı bir hikâye. Aşağıdaki kutu o hikâyeyi sayıya çeviriyor. Kutu **kapanmış
+bir pencerenin ölçümüdür**: sınırları, hafta sayısı ve ölçüm günü yazılıdır, haftalık
+koşuyla tazelenmez. Canlı karşılığı Şekil 02'nin kümüle izidir; bu kutu o izin
+sayısal dökümüdür.
+
+<div class="not">
+  <span class="etiket">Ölçüm penceresi — <Deger proje="yp-mevduat" anahtar="tum_bas" ondalik={0}>28.02.2014</Deger> – <Deger proje="yp-mevduat" anahtar="tum_son" ondalik={0}>28.08.2026</Deger>, <Deger proje="yp-mevduat" anahtar="tum_hafta" ondalik={0}>653</Deger> hafta</span>
+  Yurt içi yerleşiklerin yabancı para mevduatına bu pencerede net <strong>fiili</strong>
+  (parite etkisinden arındırılmış) akım <strong>+<Deger proje="yp-mevduat" anahtar="tum_ar_toplam_mia" ondalik={1}>50,0</Deger> milyar dolar</strong>. Bunun
+  <strong>+<Deger proje="yp-mevduat" anahtar="tum_ar_maden_mia" ondalik={1}>44,1</Deger> milyarı kıymetli maden</strong>; gerçek döviz (dolar, euro ve diğer para
+  birimleri birlikte) yalnız <strong>+<Deger proje="yp-mevduat" anahtar="tum_ar_maden_disi_mia" ondalik={1}>6,0</Deger> milyar</strong>.
+  <br /><br />
+  Kişi bazında ayrışma daha da keskin: <strong>gerçek kişiler</strong> madene +<Deger proje="yp-mevduat" anahtar="tum_ar_gercek_maden_mia" ondalik={1}>39,1</Deger>
+  milyar dolar koyarken gerçek dövizden <strong><Deger proje="yp-mevduat" anahtar="tum_ar_gercek_maden_disi_mia" ondalik={1}>−14,4</Deger> milyar</strong> çıkardı;
+  <strong>tüzel kişiler</strong> madene +<Deger proje="yp-mevduat" anahtar="tum_ar_tuzel_maden_mia" ondalik={1}>4,9</Deger>, gerçek dövize +<Deger proje="yp-mevduat" anahtar="tum_ar_tuzel_maden_disi_mia" ondalik={1}>20,4</Deger> milyar dolar koydu.
+  Aynı pencerede parite etkisinin toplamı +<Deger proje="yp-mevduat" anahtar="tum_pe_toplam_mia" ondalik={1}>36,3</Deger> milyar dolar — yani stokun bu
+  pencerede büyümesinin önemli bir bölümü hiç hesap hareketi olmadan, yalnız
+  fiyattan geldi.
+</div>
+
+### Yıllık fiili akım
+
+Milyar dolar; her satır o takvim yılına damgalı haftaların toplamıdır. "Maden dışı"
+sütunu, toplamdan maden bacağı çıkarılarak elde edilir (dolar + euro + diğer para
+birimleri). Son sütun aynı yılın parite etkisidir ve fiili akımın **dışındadır**.
+
+| Yıl | Toplam | Gerçek | Tüzel | Maden | Maden dışı | Parite |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2014 | 5,1 | 4,7 | 0,4 | −0,5 | 5,6 | −7,1 |
+| 2015 | 18,4 | 10,5 | 7,8 | −3,1 | 21,4 | −5,6 |
+| 2016 | −8,7 | −4,8 | −4,0 | 0,9 | −9,6 | −1,5 |
+| 2017 | 12,8 | 3,6 | 9,2 | 0,7 | 12,0 | 7,0 |
+| 2018 | −1,6 | 0,7 | −2,4 | 1,5 | −3,1 | −2,7 |
+| 2019 | 32,6 | 23,0 | 9,5 | 4,3 | 28,2 | 0,1 |
+| 2020 | 31,7 | 21,8 | 9,9 | 20,3 | 11,4 | 9,5 |
+| 2021 | 8,8 | 2,4 | 6,4 | −5,4 | 14,1 | −6,5 |
+| 2022 | −41,0 | −28,6 | −12,4 | −3,0 | −38,0 | −4,1 |
+| 2023 | −21,6 | −18,6 | −3,1 | −2,2 | −19,5 | 5,9 |
+| 2024 | −18,2 | −6,1 | −12,1 | 2,3 | −20,6 | 5,4 |
+| 2025 | 21,4 | 9,8 | 11,6 | 14,2 | 7,2 | 36,7 |
+
+Satırlar 0,1 milyar dolara yuvarlıdır ve pencere toplamları yuvarlanmamış haftalardan
+hesaplandığı için, satırların toplamıyla dönem toplamları son hanede ayrışabilir.
+**Tablo 2025'te bitiyor** çünkü kapanmış bir yılın toplamı bir sonraki haftalık koşuyla
+değişmez; açık yıl her hafta büyür ve statik bir tabloda gerçekten donardı. Açık yılın
+canlı okuması bir sonraki bölümde.
+
+### Üç dönem
+
+Aşağıdaki dönem toplamları ve bacak kırılımları yalnız KAPANMIŞ takvim
+yıllarından hesaplandı — yukarıdaki tablonun satırlarından, açık yıl dışarıda.
+Bu yüzden haftalık koşuyla tazelenmezler ve tazelenmemeleri gerekir: kapanmış bir
+yılın toplamı bir sonraki koşuyla değişmez. Açık yılın canlı okuması yukarıdaki
+kutuda.
+
+**2019–2020 birikimi.** İki yılda +64,3 milyar dolar fiili giriş — örneklemin en hızlı
+birikim dönemi. 2020'de tek başına maden bacağına +20,3 milyar dolar girdi, yani o yılın
+girişinin üçte ikisi altın hesaplarına gitti. Dönemin parite etkisi +9,5 milyar dolar;
+akımın yanında küçük kalıyor. Bu, "dolarizasyon" kelimesinin gerçekten hak edildiği
+dönem: hane halkı ve şirketler aynı anda ve büyük hacimlerle yabancı para varlığa geçti.
+
+**2022–2024 çözülmesi.** Üç yıl üst üste net çıkış, toplam **−80,9 milyar dolar**. Ve
+bu çıkışın neredeyse tamamı maden **dışıdır**: maden dışı bacak −78,0 milyar, maden
+bacağı yalnız −2,8 milyar dolar. Yani kur korumalı mevduatın ve yüksek TL faizinin
+geçerli olduğu yıllarda çözülen şey döviz mevduatıydı; altın hesapları neredeyse hiç
+kımıldamadı. Aynı dönemin parite etkisi +7,1 milyar dolar, yani stok düşerken fiyat
+düşüşü yavaşlatıcı yönde çalıştı.
+
+**2025 ve sonrası dönüş.** 2025'te +21,4 milyar dolar fiili giriş, bunun +14,2 milyarı
+maden. Ve asıl çarpıcı sayı 2025'in **parite etkisi: +36,7 milyar dolar**, örneklemin
+açık ara en büyüğü — kendisinden sonraki en büyük yıl 2020, +9,5 milyar dolar. Bu, bir
+kur hareketi değil bir **altın fiyatı** hareketidir: maden bacağı stokun beşte ikisini
+aşmışken (bugün
+%<Deger proje="yp-mevduat" anahtar="maden_pay_toplam" ondalik={2}>42,58</Deger>) altın
+fiyatındaki bir yükseliş, manşet stoku hesaplarda hiçbir şey olmadan on milyarlarca
+dolar büyütüyor.
+
+Ve bu bir çıkarım değil, ölçüm: parite etkisinin kendisi de bacak bacak yayımlanıyor.
+2025'in +36,7 milyar dolarlık parite etkisinin **+29,8 milyarı maden bacağından**,
++7,0 milyarı euro bacağından geliyor. Aynı ayrıştırma örneklemin başında tam tersini
+söylüyor: 2015'in −5,6 milyar dolarlık parite etkisinin −5,4 milyarı euro, yalnız
+−0,2 milyarı madendi. Yani parite etkisinin **kaynağı** on iki yılda kayma geçirdi —
+bir zamanlar euro/dolar paritesinin ölçüsüydü, bugün büyük ölçüde altın fiyatının
+ölçüsü. Kırılma yılı 2024: o yıl toplam +5,4 milyar parite etkisinin +8,6 milyarı
+madendendi ve euro bacağı −3,2 milyarla ters yönde çalıştı.
+
+### Hüküm
+
+"Türkiye dolarizasyonu" diye okunan birikimin — <Deger proje="yp-mevduat" anahtar="tum_bas" ondalik={0}>28.02.2014</Deger>'ten bu yana ölçülen <Deger proje="yp-mevduat" anahtar="tum_hafta" ondalik={0}>653</Deger> hafta — **neredeyse tamamı
+kıymetli maden hesaplarına gitmiş**; gerçek para cinsi mevduat, fiili akım düzeyinde
+neredeyse yatay (+<Deger proje="yp-mevduat" anahtar="tum_ar_maden_disi_mia" ondalik={1}>6,0</Deger> milyar dolar, ölçülen pencerenin tamamında). Bu, bir aylık ya da bir yıllık
+pencereyle görülemez — kısa pencerelerde maden ve döviz bacakları birbirini götürür,
+uzun pencerede ayrışırlar.
+
+Cümlenin sınırı da yazılmalı: bu bir **akım** ölçümüdür, tercih ölçümü değildir. Maden
+hesaplarının stok içindeki payının bugün
+%<Deger proje="yp-mevduat" anahtar="maden_pay_toplam" ondalik={2}>42,58</Deger>'e
+çıkmasının bir kısmı fiili akımdan, bir kısmı fiyattan gelir; yukarıdaki kutu yalnız
+birincisini ölçüyor. İkisini birlikte okuyan tek yer Şekil 01'in alt panelidir.
+
+## Açık yıl: 2026
+
+Kapanmış yılların tablosunun bittiği yerden devam edelim. Aşağıdaki paragrafın tamamı
+canlıdır ve her haftalık koşuyla ilerler.
+
+<Deger proje="yp-mevduat" anahtar="kum_yil_etiket" ondalik={0}>2026</Deger> yılında,
+<Deger proje="yp-mevduat" anahtar="kum_yil_bas_gun" ondalik={0}>2 Ocak 2026</Deger>'den
+bu yana toplanan
+<Deger proje="yp-mevduat" anahtar="kum_yil_hafta" ondalik={0}>35</Deger> haftada net
+fiili akım <Deger proje="yp-mevduat" anahtar="kum_yil_ar_toplam_mn" ondalik={1}>10.534,6</Deger>
+milyon dolar: gerçek kişiler
+<Deger proje="yp-mevduat" anahtar="kum_yil_ar_gercek_mn" ondalik={1}>6.313,2</Deger>,
+tüzel kişiler
+<Deger proje="yp-mevduat" anahtar="kum_yil_ar_tuzel_mn" ondalik={1}>4.221,4</Deger>
+milyon dolar. Aynı pencerede parite etkisi
+<Deger proje="yp-mevduat" anahtar="kum_yil_pe_toplam_mn" ondalik={1}>−635,3</Deger>
+milyon dolar, yani yılın tamamında değerleme net olarak **eksiye** çalıştı. Milyar
+cinsinden: fiili akım
+<Deger proje="yp-mevduat" anahtar="kum_yil_ar_toplam_mia" ondalik={2}>10,53</Deger>
+milyar dolar.
+
+### Ayrışmanın ekseni giriş/çıkış değil, maden ile döviz arasındaki tercih
+
+Bu yılın manşeti "yurt içi yerleşikler yabancı para mevduatına on milyar dolar koydu"
+diye okunur ve bu okuma, cümlenin doğru olduğu hâlde **yanlış sonuca** götürür.
+Bileşimi açalım:
+
+Gerçek kişilerin yıl içi **toplam** fiili akımı
+<Deger proje="yp-mevduat" anahtar="kum_yil_ar_gercek_mn" ondalik={1}>6.313,2</Deger>
+milyon dolar. Aynı dönemde yalnız **kıymetli maden hesaplarına**
+<Deger proje="yp-mevduat" anahtar="kum_yil_ar_gercek_maden_mn" ondalik={1}>12.326,3</Deger>
+milyon dolar girdi. İkinci sayı birincisinden **büyük** — ve iki sayı aynı bütünün
+parçası olduğuna göre bunun tek bir anlamı var: **maden dışı bacak eksidir.** Gerçek
+kişiler yıl içinde gerçek dövizden çıkıp madene geçti; net rakam "hane halkı döviz
+alıyor" gibi görünürken bileşimi tam tersini söylüyor.
+
+<div class="not">
+  <span class="etiket">Ölçüm penceresi — 02.01.2026 – 28.08.2026, 35 hafta; ölçüm günü 06.09.2026</span>
+  Fiili akımın maden ve maden dışı ayrışması, milyar dolar:
+  <br /><br />
+  <strong>Gerçek kişiler</strong> — toplam +<Deger proje="yp-mevduat" anahtar="kum_yil_ar_gercek_mia" ondalik={1}>6,3</Deger> · maden <strong>+<Deger proje="yp-mevduat" anahtar="kum_yil_ar_gercek_maden_mia" ondalik={1}>12,3</Deger></strong> ·
+  maden dışı <strong><Deger proje="yp-mevduat" anahtar="kum_yil_ar_gercek_maden_disi_mia" ondalik={1}>−6,0</Deger></strong>.
+  <br />
+  <strong>Tüzel kişiler</strong> — toplam +<Deger proje="yp-mevduat" anahtar="kum_yil_ar_tuzel_mia" ondalik={1}>4,2</Deger> · maden +<Deger proje="yp-mevduat" anahtar="kum_yil_ar_tuzel_maden_mia" ondalik={1}>1,5</Deger> · maden dışı
+  <strong>+<Deger proje="yp-mevduat" anahtar="kum_yil_ar_tuzel_maden_disi_mia" ondalik={1}>2,7</Deger></strong>.
+  <br />
+  <strong>Toplam</strong> — +<Deger proje="yp-mevduat" anahtar="kum_yil_ar_toplam_mia" ondalik={1}>10,5</Deger> · maden <strong>+<Deger proje="yp-mevduat" anahtar="kum_yil_ar_toplam_maden_mia" ondalik={1}>13,8</Deger></strong> · maden dışı
+  <strong><Deger proje="yp-mevduat" anahtar="kum_yil_ar_toplam_maden_disi_mia" ondalik={1}>−3,3</Deger></strong>.
+  <br /><br />
+  İki kesim <em>ters yönde</em> davranıyor ve ters yön "giriş mi çıkış mı" ekseninde
+  değil: ikisi de net giriş yaptı. Ayrışma <strong>hangi varlığa</strong> girdiklerinde.
+  Gerçek kişilerin maden hesaplarının kendi stokları içindeki payı yılın ilk haftasında
+  %54,18 idi; bugün
+  %<Deger proje="yp-mevduat" anahtar="maden_pay_gercek" ondalik={2}>60,19</Deger>.
+  Bu kutu kapanmış bir pencerenin ölçümüdür ve haftalık koşuyla tazelenmez; canlı
+  karşılıkları yukarıdaki paragrafta ve Şekil 04'ün üçüncü panelinde.
+</div>
+
+Ay penceresinde tablo tersine dönüyor ve bu da kayda değer: ağustosta gerçek kişilerin
+maden hesaplarına fiili akım
+<Deger proje="yp-mevduat" anahtar="kum_ay_ar_gercek_maden_mn" ondalik={1}>−181,0</Deger>,
+tüzel kişilerde
+<Deger proje="yp-mevduat" anahtar="kum_ay_ar_tuzel_maden_mn" ondalik={1}>−321,3</Deger>
+milyon dolar — yani ayın tamamında altın hesaplarından **çözülme** var, üstelik tam da
+altın fiyatının stoku on bir milyar dolar büyüttüğü ayda. Yıl boyunca altına giren para,
+fiyatın en çok yükseldiği ayda kısmen kâr realizasyonuna dönüyor. Bu, bir aylık
+gözlemdir ve bir davranış kuralı değildir; sekiz aylık pencerenin işareti hâlâ artı.
+
+## Şekil 03 — Haftalık değişimin ayrıştırılması
+
+<GrafikEmbed
+  src="/projeler/yp-mevduat/03_ayristirma.html"
+  baslik="Haftalık değişimin ayrıştırılması — fiili akım ve parite etkisi; toplam, gerçek ve tüzel kişiler"
+  no="03"
+  yukseklik={1481}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** İki blok birden. Arındırılmış değişim: `TP.HPBITABLO5.1` … `TP.HPBITABLO5.11`.
+Parite etkisi: `TP.HPBITABLO5.12` … `TP.HPBITABLO5.22`. Bu şekilde her panelde iki seri
+kullanılıyor — o kesimin fiili akımı ve o kesimin parite etkisi. Birim milyon dolar,
+frekans haftalık, örneklem
+<Deger proje="yp-mevduat" anahtar="kapsam_akim_hafta" ondalik={0}>653</Deger> hafta.
+
+**Çubuklar üst üste yığılıdır.** Yani bir haftanın iki çubuğunun toplam yüksekliği o
+haftanın **stok değişimidir**; bu, Bölüm "Kimlik ve artık"taki $\Delta S = A + P$
+denkleminin görsel karşılığıdır. Panel 1 toplam, panel 2 gerçek kişiler, panel 3 tüzel
+kişiler; üç panel de aynı ölçek mantığıyla, alt alta.
+
+**İşaret sözlüğü.** Eksi değer hesaplardan **çıkış**, artı değer **giriş** demektir —
+ama bu yalnız *fiili akım* çubuğu için geçerlidir. Parite etkisinin eksi olması bir
+çıkış **değildir**: sepetteki para birimleri ya da maden fiyatı dolara karşı
+gerilediğinde aynı mevduatın dolar karşılığı düşer. İki çubuğun aynı renkte ve aynı
+sözlükle okunması, bu sayfada en sık yapılan okuma hatası olurdu.
+
+**Son haftanın adım adım okunuşu.** Fiili akım
+<Deger proje="yp-mevduat" anahtar="ar_toplam_mn" ondalik={1}>−2.714,8</Deger> milyon
+dolar (aşağıya doğru uzun bir çubuk), parite etkisi
+<Deger proje="yp-mevduat" anahtar="pe_toplam_mn" ondalik={1}>44,4</Deger> milyon dolar
+(neredeyse görünmeyecek kadar kısa, yukarı doğru); ikisinin toplamı yayımlanan stok
+değişimi
+<Deger proje="yp-mevduat" anahtar="delta_toplam_mn" ondalik={1}>−2.670,3</Deger> milyon
+dolar. Milyar cinsinden fiili akım
+<Deger proje="yp-mevduat" anahtar="ar_toplam_mia" ondalik={2}>−2,71</Deger>, değerleme
+<Deger proje="yp-mevduat" anahtar="pe_toplam_mia" ondalik={2}>0,04</Deger> milyar dolar.
+Kesimlere inildiğinde çıkışın nerede olduğu netleşiyor: gerçek kişilerde fiili akım
+<Deger proje="yp-mevduat" anahtar="ar_gercek_mn" ondalik={1}>−637,9</Deger>, tüzel
+kişilerde <Deger proje="yp-mevduat" anahtar="ar_tuzel_mn" ondalik={1}>−2.076,9</Deger>
+milyon dolar — çıkışın dörtte üçü tüzel kişilerde.
+
+**Neden bu şekilde mevsimsel düzeltme yok.** Haftalık akımda mevsimsellik olabilir
+(yıl sonu bilanço hareketleri, bayram öncesi nakit ihtiyacı), ama bu seride mevsimsel
+bir bileşen **ölçülmedi**. Ölçülmemiş bir düzeltmeyi uygulamak, gürültüyü azaltmak
+yerine sistematik bir sapma eklerdi; onun yerine gürültü, kayan toplam penceresiyle
+söndürülüyor (Şekil 02, üçüncü panel).
+
+**Varsayım.** Kaynağın iki bloğu aynı hafta damgasını taşır (ölçüldü) ve aynı kapsamı
+kullanır; ikinci varsayım doğrudan sınanamıyor, ama kimliğin kapanması onun dolaylı
+kanıtıdır — kapsam ayrışsaydı artık sistematik olarak sıfırdan uzaklaşırdı.
+
+## Şekil 04 — Fiili akımın para cinsi ve maden kırılımı
+
+<GrafikEmbed
+  src="/projeler/yp-mevduat/04_para_cinsi.html"
+  baslik="Fiili akımın para cinsi ve kıymetli maden kırılımı; maden bacağında akım ile değerleme"
+  no="04"
+  yukseklik={1529}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** Arındırılmış değişimin dört alt bacağı, iki kesim için ayrı ayrı: gerçek
+kişilerde `TP.HPBITABLO5.3` (dolar), `TP.HPBITABLO5.4` (euro), `TP.HPBITABLO5.5` (diğer
+para birimleri), `TP.HPBITABLO5.6` (kıymetli maden); tüzel kişilerde `TP.HPBITABLO5.8`
+… `TP.HPBITABLO5.11`. Üçüncü panelde ayrıca parite etkisinin maden bacakları
+(`TP.HPBITABLO5.17` ve `TP.HPBITABLO5.22`).
+
+**İlk iki panel: on üç haftalık toplam, yığılı.** Dört bacağın her biri kendi çubuğunu
+katıyor ve çubukların toplam yüksekliği o kesimin toplam fiili akımıdır. Yığma
+bilinçli: dört bacağı ayrı çizgiler olarak çizmek "hangisi büyük" sorusunu cevaplar ama
+"toplamı ne" sorusunu cevaplamaz; bu sayfanın sorusu ikincisi. Kayan toplam olduğu için
+bu iki panelin izleri, ötekilerden on iki hafta sonra başlıyor.
+
+**Üçüncü panel: maden bacağının iki tarafı.** Düz izler fiili akımın, kesikli izler
+değerlemenin **yıl içi** toplamıdır. İkisi ters yöne gittiğinde stok büyürken
+hesaplardan para çıkıyor demektir; büyümenin kaynağı fiyattır. 2026 boyunca bu iki iz
+arasındaki mesafe, bu sayfanın en anlatıcı grafiği.
+
+**Son hafta, bacak bacak** (milyon dolar):
+
+| Bacak | Gerçek kişi, akım | Gerçek kişi, değerleme | Tüzel kişi, akım | Tüzel kişi, değerleme |
+| --- | ---: | ---: | ---: | ---: |
+| ABD doları | <Deger proje="yp-mevduat" anahtar="ar_gercek_usd_mn" ondalik={1}>−98,0</Deger> | <Deger proje="yp-mevduat" anahtar="pe_gercek_usd_mn" ondalik={1}>0,0</Deger> | <Deger proje="yp-mevduat" anahtar="ar_tuzel_usd_mn" ondalik={1}>−145,9</Deger> | <Deger proje="yp-mevduat" anahtar="pe_tuzel_usd_mn" ondalik={1}>0,0</Deger> |
+| Euro | <Deger proje="yp-mevduat" anahtar="ar_gercek_eur_mn" ondalik={1}>78,9</Deger> | <Deger proje="yp-mevduat" anahtar="pe_gercek_eur_mn" ondalik={1}>−117,9</Deger> | <Deger proje="yp-mevduat" anahtar="ar_tuzel_eur_mn" ondalik={1}>−1.874,1</Deger> | <Deger proje="yp-mevduat" anahtar="pe_tuzel_eur_mn" ondalik={1}>−156,9</Deger> |
+| Diğer para birimleri | <Deger proje="yp-mevduat" anahtar="ar_gercek_diger_mn" ondalik={1}>34,3</Deger> | <Deger proje="yp-mevduat" anahtar="pe_gercek_diger_mn" ondalik={1}>0,0</Deger> | <Deger proje="yp-mevduat" anahtar="ar_tuzel_diger_mn" ondalik={1}>34,6</Deger> | <Deger proje="yp-mevduat" anahtar="pe_tuzel_diger_mn" ondalik={1}>0,0</Deger> |
+| Kıymetli maden | <Deger proje="yp-mevduat" anahtar="ar_gercek_maden_mn" ondalik={1}>−653,0</Deger> | <Deger proje="yp-mevduat" anahtar="pe_gercek_maden_mn" ondalik={1}>290,8</Deger> | <Deger proje="yp-mevduat" anahtar="ar_tuzel_maden_mn" ondalik={1}>−91,5</Deger> | <Deger proje="yp-mevduat" anahtar="pe_tuzel_maden_mn" ondalik={1}>28,4</Deger> |
+
+Bu tablonun en büyük tek kalemi tüzel kişilerin **euro** bacağındaki
+<Deger proje="yp-mevduat" anahtar="ar_tuzel_eur_mn" ondalik={1}>−1.874,1</Deger> milyon
+dolarlık çıkış: haftanın toplam çıkışının çoğunluğu tek bir bacakta ve tek bir kesimde.
+Gerçek kişilerin euro bacağı ise aynı hafta artıda
+(<Deger proje="yp-mevduat" anahtar="ar_gercek_eur_mn" ondalik={1}>78,9</Deger>). İki
+kesim aynı para biriminde ters yöne gitmiş; toplamı okuyup "euro mevduatı çözüldü"
+demek, hane halkının kararını görünmez kılardı.
+
+Maden bacağının toplamı da tablodan çıkıyor: fiili akım
+<Deger proje="yp-mevduat" anahtar="ar_maden_toplam_mn" ondalik={1}>−744,5</Deger>,
+değerleme
+<Deger proje="yp-mevduat" anahtar="pe_maden_toplam_mn" ondalik={1}>319,2</Deger> milyon
+dolar. Ay penceresinde de aynı yön sürüyor: gerçek kişiler
+<Deger proje="yp-mevduat" anahtar="kum_ay_ar_gercek_maden_mn" ondalik={1}>−181,0</Deger>,
+tüzel kişiler
+<Deger proje="yp-mevduat" anahtar="kum_ay_ar_tuzel_maden_mn" ondalik={1}>−321,3</Deger>
+milyon dolar.
+
+**Varsayım ve sınır.** "Diğer para birimleri" bacağı sterlin ve benzeri küçük kalemleri
+toplar; bu bacağın **parite etkisi** elimizdeki bütün haftalarda tam sıfır ve bunun
+sebebi ölçülemiyor (aşağıdaki sınırlar bölümü). Kırılım toplamı kesim toplamını
+kapatıyor; kapatmasaydı yığılı çubuğun yüksekliği Şekil 03'ün aynı haftasıyla
+ayrışırdı.
+
+## Şekil 05 — Kimlik denetimi
+
+<GrafikEmbed
+  src="/projeler/yp-mevduat/05_kimlik.html"
+  baslik="Kimlik denetimi — resmî ayrıştırmanın toplamı yayımlanan stok değişimini kapatıyor mu"
+  no="05"
+  yukseklik={1165}
+/>
+
+### Bu şekil nasıl hesaplanıyor?
+
+**Veri.** İki tablo birden: stok tablosunun ardışık farkı (`TP.HPBITABLO2.10` · `.11` ·
+`.12`) ve değişim tablosunun iki bloğu. Bu, sayfadaki tek şekildir ki iki bağımsız
+kaynağı karşı karşıya koyar.
+
+**Üst panel.** Yığılı çubuklar arındırılmış değişim ve parite etkisi; kesikli iz
+yayımlanan stok değişimi. Kimlik tutuyorsa kesikli iz her noktada çubukların toplam
+ucundan geçmelidir. **Alt panel.** Artık — üç kesim için ayrı ayrı — ve gri kesikli
+izlerle toleransın iki yönü:
+
+$$
+\varepsilon_t \;=\; \Delta S_t - (A_t + P_t),
+\qquad
+|\varepsilon_t| \;\le\; \max\!\left(25{,}0\ \text{milyon dolar},\ 0{,}01 \cdot \text{brüt hareket}_t\right)
+$$
+
+**Ortak pencere.** Şekil yalnız iki tablonun **ortak** haftalarını çiziyor:
+<Deger proje="yp-mevduat" anahtar="kapsam_ortak_hafta" ondalik={0}>114</Deger> ortak
+haftanın ardışık fark alınabilen
+<Deger proje="yp-mevduat" anahtar="kimlik_pencere_hafta" ondalik={0}>52</Deger>
+haftalık son dilimi hükmü taşıyor; değişim tablosunun **tek başına** uzandığı daha eski
+dönemde stok gözlemi yok, dolayısıyla kimlik **sınanamaz** ve o dönem burada
+gösterilmez. Sınanamayan bir dönemi çizmek, kimliğin orada da tuttuğunu ima ederdi.
+
+**Hüküm.**
+<Deger proje="yp-mevduat" anahtar="kimlik_cumlesi" ondalik={0}>Ölçülen pencerede resmî ayrıştırma ile stok değişimi arasındaki en büyük fark 5,8 milyon dolar.</Deger>
+<Deger proje="yp-mevduat" anahtar="kimlik_hukum" ondalik={0}>Resmî ayrıştırma stok değişimini kapatıyor.</Deger>
+Ölçek duygusu için: aynı pencerede haftalık brüt hareket çoğu hafta bir milyar doların
+üstünde; artığın brüt harekete oranı pencerenin en kötü haftasında bile
+%<Deger proje="yp-mevduat" anahtar="kimlik_artik_pay" ondalik={3}>0,393</Deger>.
+
+**Varsayım.** Stok tablosunun ardışık farkı ile değişim tablosunun aynı haftayı
+anlattığı varsayılmıyor, **ölçülüyor** (hafta hizalaması bölümü). Ölçülmeyen tek şey
+kaynağın kendi revizyonudur ve o, sayfanın sonundaki sınırlarda yazılı.
+
+## Şekil 06 — Dolarizasyon payı: ham ve arındırılmış
+
+<GrafikEmbed
+  src="/projeler/yp-mevduat/06_dolarizasyon.html"
+  baslik="Dolarizasyon payı — ham ve parite etkisinden arındırılmış; iki ölçünün farkı"
+  no="06"
+  yukseklik={1165}
+/>
+
+### Neden iki ölçü var
+
+Mevduat dolarizasyonu, yabancı para mevduatın toplam mevduat içindeki payıdır:
+
+$$
+d_t \;=\; \frac{Y_t}{L_t + Y_t}
+$$
+
+Burada $L_t$ lira mevduatı, $Y_t$ yabancı para mevduatın **lira karşılığıdır**. İki
+bacak da lira cinsinden ölçülür (`TP.HPBITABLO2.3` ve `TP.HPBITABLO2.6`; taban serisi
+<Deger proje="yp-mevduat" anahtar="taban_lira_kod" ondalik={0}>TP.HPBITABLO2.6</Deger>).
+Sorun şurada: $Y_t$'nin lira karşılığı, sepet dolara karşı değer kazandığında **hiçbir
+hesap değişmeden** yükselir. Yani ham pay, mevduat sahiplerinin hiçbir kararı
+olmadan tırmanabilir.
+
+### Arındırma nasıl kuruluyor — kur serisi kullanılmadı
+
+Arındırılmış payda yabancı para bacağı, resmî parite etkisinin **çıpadan bu yana
+birikmiş toplamı** stoktan düşülerek ölçeklendi:
+
+$$
+\tilde{Y}_t \;=\; Y_t \cdot \frac{S_t - \sum_{s=\tau+1}^{t} P_s}{S_t},
+\qquad
+\tilde{d}_t \;=\; \frac{\tilde{Y}_t}{L_t + \tilde{Y}_t}
+$$
+
+Buradaki çarpan **birimsizdir**: pay ve payda aynı dolar cinsinden stok, dolayısıyla
+kur sadeleşir. Bu bilinçli bir tasarım — bir kur serisi seçmek zorunda kalsaydık,
+"hangi kur" sorusu (dolar mı, sepet mi, hangi günün kotasyonu) ölçünün içine yeni bir
+belirsizlik sokardı. Burada o soru hiç sorulmuyor, çünkü arındırma malzemesi
+kaynağın **kendi** parite etkisi.
+
+**Çıpa her takvim yılında döner.** Bu koşuda çıpa
+<Deger proje="yp-mevduat" anahtar="dol_cipa" ondalik={0}>2 Ocak 2026</Deger> ve o gün
+pay %<Deger proje="yp-mevduat" anahtar="dol_pay_cipa" ondalik={2}>38,34</Deger>. Çıpanın
+dönmesinin sebebi şu: birikmiş parite etkisi çıpadan uzaklaştıkça büyür ve ölçünün
+kendisi bir "kur endeksine" dönüşür; yıllık dönüş, birikmiş farkı bir yılla sınırlıyor.
+Bunun bedeli, arındırılmış payın çıpadan öncesine **uzatılamamasıdır** ve şekilde
+arındırılmış iz gerçekten çıpada başlıyor.
+
+### Son hafta
+
+Ham pay %<Deger proje="yp-mevduat" anahtar="dol_pay_ham" ondalik={2}>37,52</Deger>,
+arındırılmış pay
+%<Deger proje="yp-mevduat" anahtar="dol_pay_ar" ondalik={2}>37,45</Deger>; iki ölçünün
+farkı <Deger proje="yp-mevduat" anahtar="dol_pay_fark" ondalik={2}>0,06</Deger> puan.
+Yukarıdaki iki yuvarlı payın çıkarması 0,07 verir; fark yuvarlanmamış paylardan
+ölçülüyor ve son hane bu yüzden ayrışıyor — sayfanın başındaki yuvarlama notu bu
+sayı için de geçerli.
+<Deger proje="yp-mevduat" anahtar="dol_cumlesi" ondalik={0}>Dolarizasyon payının ham ölçüsü ile parite etkisinden arındırılmış ölçüsü son haftada 0,06 puan ayrışıyor.</Deger>
+Tabanlar: lira mevduatı
+<Deger proje="yp-mevduat" anahtar="mevduat_tl_mlr" ondalik={0}>18.486</Deger> milyar TL,
+yabancı para mevduat (lira karşılığı)
+<Deger proje="yp-mevduat" anahtar="mevduat_yp_mlr" ondalik={0}>11.099</Deger> milyar TL,
+arındırılmış yabancı para bacağı
+<Deger proje="yp-mevduat" anahtar="mevduat_yp_ar_mlr" ondalik={0}>11.069</Deger> milyar TL.
+
+Farkın bu koşuda küçük olması bir **ölçüm sonucudur**, ölçünün gereksiz olduğunun
+kanıtı değil: yılın parite etkisi
+<Deger proje="yp-mevduat" anahtar="kum_yil_pe_toplam_mn" ondalik={1}>−635,3</Deger>
+milyon dolarda, yani stokun yüzde birinin altında kaldı. Aynı ölçü 2025 gibi bir yılda
+(parite etkisi +36,7 milyar dolar) puanlarla ayrışırdı.
+
+### Sınırlar
+
+**Liranın dolar karşısındaki hareketi bu ölçünün dışındadır.** Kaynağın arındırdığı şey
+**paritedir** — yani sepetin dolar karşısındaki hareketi — kur değil. Lira dolara karşı
+değer kaybettiğinde $Y_t$'nin lira karşılığı yükselir ve ham pay da arındırılmış pay da
+birlikte tırmanır. Bu sayfa lira hareketini ayrıştırmıyor; ayrıştıran ölçü
+<a href="/projeler/kredi-parasal/">Kredi ve parasal büyüklükler</a> sayfasındaki kur
+etkisinden arındırılmış dolarizasyon payıdır ve iki ölçü **aynı şey değildir**.
+
+**Payın gerçek ve tüzel kişi kırılımı yok**, çünkü ölçülemiyor: kaynak lira mevduatının
+kişi kırılımını yayımlamıyor. Yabancı para bacağının kırılımı elimizde (yukarıdaki
+tablolar), ama payda olmadan bir pay kurulamaz. Bölünmüş bir pay uydurmak yerine
+bölünmemiş pay yayımlanıyor ve sebebi burada yazılı.
+
+## Gerçek ve tüzel kişiler: bu bir ölçüm, kural değil
+
+Sayfanın buraya kadarki her bölümünde iki kesim ayrı ayrı okundu ve birkaç yerde ters
+yöne gittiler. Bu gözlemden bir **davranış kuralı** çıkarmak cazip: "hane halkı ile
+şirketler sistematik olarak ters hareket eder, biri satarken diğeri alır." Cümle
+kurulmadan önce ölçüldü.
+
+<Deger proje="yp-mevduat" anahtar="ayrisma_cumlesi" ondalik={0}>Gerçek ve tüzel kişilerin arındırılmış haftalık akımlarının ters yönde hareket ettiği haftaların payı %36,6.</Deger>
+Ölçülen <Deger proje="yp-mevduat" anahtar="ayrisma_n_hafta" ondalik={0}>653</Deger>
+haftanın
+<Deger proje="yp-mevduat" anahtar="ayrisma_ters_hafta" ondalik={0}>239</Deger>'unda iki
+akım ters işaret taşıyor. Örneklem ikiye bölündüğünde ilk yarıda
+%<Deger proje="yp-mevduat" anahtar="ayrisma_ters_pay_ilk_yari" ondalik={1}>35,0</Deger>,
+ikinci yarıda
+%<Deger proje="yp-mevduat" anahtar="ayrisma_ters_pay_ikinci_yari" ondalik={1}>38,2</Deger>
+— yani oran zaman içinde de belirgin biçimde kaymıyor.
+
+Korelasyon tarafı daha da öğretici. Tam örneklemde iki akımın korelasyonu
+<Deger proje="yp-mevduat" anahtar="ayrisma_korel" ondalik={3}>0,324</Deger>, yani
+**pozitif**: uzun vadede iki kesim daha çok birlikte hareket ediyor. Son bir yıllık
+pencerede ise
+<Deger proje="yp-mevduat" anahtar="ayrisma_korel_son_pencere" ondalik={3}>−0,003</Deger>,
+yani pratikte sıfır.
+
+### Hüküm
+
+"İkisi sistematik olarak ters hareket eder" cümlesi bu veriyle **kurulamaz** ve
+kurulmuyor. Üç sebep:
+
+1. **Ters hareket oranı, rastgele beklenenin altında.** İki bağımsız ve simetrik seri
+   için ters işaret oranının beklentisi yüzde elliye yakındır; ölçülen oran
+   %<Deger proje="yp-mevduat" anahtar="ayrisma_ters_pay" ondalik={1}>36,6</Deger>, yani
+   iki kesim rastgeleden **daha çok birlikte** hareket ediyor. "Ters hareket ederler"
+   cümlesi işareti bile yanlış kurardı.
+2. **Sıralama da bir sonuçtur.** Pencere değişince korelasyonun işareti değişiyor
+   (tam örneklemde artı, son bir yılda sıfırın hemen altında). Bir ölçünün pencere
+   seçimine bu kadar duyarlı olması, o ölçüden bir kural çıkarılmaması için tek başına
+   yeterli sebep.
+3. **Örneklem içi uyum yanlış soruyu cevaplar.** "Geçmişte kaç hafta ters gitti"
+   sorusunun cevabı, "gelecek hafta ne olacak" sorusunun cevabı değildir; bunu
+   söyleyebilmek için örneklem dışı bir sınama gerekir ve bu sayfada böyle bir sınama
+   **koşulmadı**.
+
+Yani ölçüm yayımlanıyor, hüküm kurulmuyor. Kesimlerin bu yılki ayrışması (Bölüm "Açık
+yıl") gerçek ve büyüktür, ama o ayrışma "ters yön" ekseninde değil, **maden ile döviz
+arasındaki tercih** ekseninde okunuyor — ve o bile bir yılın gözlemidir.
+
+## Dört yaygın okuma hatası
+
+Bu sayfanın malzemesi az sayıda seriden oluşuyor ama okunuşu kolayca yanlış gidiyor.
+Dördü de bu koşunun kendi sayılarıyla gösterilebiliyor.
+
+### 1. Manşet artışını akım sanmak
+
+En sık hata. Ağustos ayında stok on bir milyar dolara yakın büyüdü ve bu, "yurt içi
+yerleşikler yabancı para mevduatına on bir milyar dolar koydu" diye okundu. Ölçüm
+tersini söylüyor: ay içinde değerleme
+<Deger proje="yp-mevduat" anahtar="kum_ay_pe_toplam_mn" ondalik={1}>11.114,8</Deger>,
+fiili akım
+<Deger proje="yp-mevduat" anahtar="kum_ay_ar_toplam_mn" ondalik={1}>−106,8</Deger>
+milyon dolar. Hesaplara net para **girmedi**; artışın tamamı fiyattan geldi. Kesim
+bazında da aynı: gerçek kişilerde değerleme
+<Deger proje="yp-mevduat" anahtar="kum_ay_pe_gercek_mn" ondalik={1}>9.782,9</Deger>,
+tüzel kişilerde
+<Deger proje="yp-mevduat" anahtar="kum_ay_pe_tuzel_mn" ondalik={1}>1.331,9</Deger>
+milyon dolar — yani fiyat etkisinin de neredeyse tamamı hane halkı bacağında, çünkü
+maden hesaplarının çoğu orada.
+
+### 2. Parite etkisinin eksisini "çıkış" sanmak
+
+İkinci sütunun işareti bir tasarruf kararı değildir. Yılın tamamında parite etkisi
+<Deger proje="yp-mevduat" anahtar="kum_yil_pe_toplam_mn" ondalik={1}>−635,3</Deger>
+milyon dolar; bu, mevduat sahiplerinin altı yüz milyon dolar çektiği anlamına
+**gelmez**, sepetin ve maden fiyatının dolar karşısındaki net hareketinin stoku o kadar
+küçülttüğü anlamına gelir. Aynı yılda fiili akım
+<Deger proje="yp-mevduat" anahtar="kum_yil_ar_toplam_mn" ondalik={1}>10.534,6</Deger>
+milyon dolar artı. İki sütunu tek bir "yön" olarak okumak, artı on buçuk milyarlık bir
+girişi eksi altı yüz milyonluk bir fiyat hareketiyle aynı cümleye koymak olur.
+
+### 3. Tek pencere seçmek
+
+Aynı serinin ay ve yıl pencereleri **ters** hükümler veriyor: ayda artışın tamamı
+fiyat, yılda artışın tamamı para. İkisi de doğru, çünkü farklı sorulara cevap
+veriyorlar. Bir pencere seçip onu serinin tamamına yormak, ölçünün kendisini değil
+pencereyi yayımlamak olur. Sayfa bu yüzden iki pencereyi de yan yana basıyor ve
+hiçbirini "asıl" ilan etmiyor; hangisinin okunacağı sorulan soruya bağlı.
+
+Pencere duyarlılığının mertebesi de yazılmalı: on üç haftalık kayan toplamda fiili akım
+<Deger proje="yp-mevduat" anahtar="kum_13h_ar_toplam_mn" ondalik={1}>302,0</Deger>,
+değerleme
+<Deger proje="yp-mevduat" anahtar="kum_13h_pe_toplam_mn" ondalik={1}>627,9</Deger>
+milyon dolar — dört haftalık pencerede ezici olan fiyat üstünlüğü, on üç haftaya
+çıkıldığında iki katına iniyor ve otuz beş haftada işaret değiştiriyor. Fiyat etkisi
+**sadeleşiyor**, akım birikiyor: pencere uzadıkça ayrıştırmanın hükmü akım tarafına
+kayar ve bu, rastlantı değil yapısal bir özelliktir.
+
+### 4. Toplamı okuyup bileşimi atlamak
+
+En pahalısı. Gerçek kişilerin yıl içi net fiili akımı
+<Deger proje="yp-mevduat" anahtar="kum_yil_ar_gercek_mn" ondalik={1}>6.313,2</Deger>
+milyon dolar artı — tek başına "hane halkı döviz alıyor" diye okunur. Aynı dönemde
+yalnız maden hesaplarına
+<Deger proje="yp-mevduat" anahtar="kum_yil_ar_gercek_maden_mn" ondalik={1}>12.326,3</Deger>
+milyon dolar girdi, yani maden dışı bacak eksi. Toplam doğru, hüküm yanlış: hane halkı
+döviz **almadı**, dövizden çıkıp altına geçti. Bu ayrımın makro karşılığı da farklıdır —
+biri döviz talebi, diğeri emtia talebidir ve ikisi para politikasına farklı kanallardan
+bağlanır.
+
+## Sınırlar ve ne ölçmedik
+
+### "Diğer para birimleri" bacağında arındırma eksik olabilir
+
+<div class="not">
+  <span class="etiket">Belirsizliğin kendisi değil, dokunduğu dilim ölçüldü</span>
+  <Deger proje="yp-mevduat" anahtar="sifir_dayanaksiz_cumlesi" ondalik={0}>Parite etkisi, gerçek kişiler, diğer para birimleri (TP.HPBITABLO5.16) · Parite etkisi, tüzel kişiler, diğer para birimleri (TP.HPBITABLO5.21) serisi elimizdeki 653 haftanın tamamında tam sıfır. Hareketin yokluğu ile ölçünün yokluğu elimizdeki gözlemle ayırt edilemiyor.</Deger>
+  <br /><br />
+  Bu sınıfta <Deger proje="yp-mevduat" anahtar="sifir_dayanaksiz_seri" ondalik={0}>2</Deger>
+  seri var ve ikisi de
+  <Deger proje="yp-mevduat" anahtar="sifir_dayanaksiz_hafta" ondalik={0}>653</Deger>
+  haftanın tamamında tam sıfır.
+</div>
+
+Bu sınırın nasıl yazıldığı önemli. Bilmediğimiz şey, o bacakta gerçekten hiç parite
+etkisi olmadığı mı yoksa kaynağın o bacağı yayımlamadığı mı. Belirsizliğin
+**büyüklüğünü** ölçemeyiz — ölçebilseydik zaten belirsizlik olmazdı. Ölçebileceğimiz
+şey, belirsizliğin **dokunduğu dilimdir**:
+
+- O bacağın haftalık **fiili akımı**
+  <Deger proje="yp-mevduat" anahtar="sifir_sinir_dilim_hafta" ondalik={0}>653</Deger>
+  haftada medyan
+  <Deger proje="yp-mevduat" anahtar="sifir_sinir_dilim_medyan_mn" ondalik={1}>58,6</Deger>,
+  en büyük
+  <Deger proje="yp-mevduat" anahtar="sifir_sinir_dilim_maks_mn" ondalik={1}>1.225,6</Deger>
+  milyon dolar.
+- Aynı haftalarda **manşet** haftalık akımın medyanı
+  <Deger proje="yp-mevduat" anahtar="sifir_sinir_manset_medyan_mn" ondalik={1}>1.017,4</Deger>
+  milyon dolar.
+- Yani dilim, manşet haftalık akımın
+  %<Deger proje="yp-mevduat" anahtar="sifir_sinir_dilim_manset_pay" ondalik={1}>5,8</Deger>'i
+  kadar.
+
+Bu, **etkilenebilecek büyüklüğün üst sınırıdır**; etkinin kendisi ölçülmedi. Sınırın üst
+sınır olması da anlamlı: o bacağın parite etkisi gerçekten sıfırsa etki tam sıfırdır,
+değilse en fazla dilimin kendisi kadar olabilir — çünkü bir bacağın değerlemesi, o
+bacağın hacminden bağımsız olarak manşeti etkileyemez.
+
+Sıfır denetiminin tamamı: toplam
+<Deger proje="yp-mevduat" anahtar="sifir_olculen_seri" ondalik={0}>33</Deger> seri,
+<Deger proje="yp-mevduat" anahtar="sifir_esik_hafta" ondalik={0}>26</Deger> haftalık
+eşikle tarandı;
+<Deger proje="yp-mevduat" anahtar="sifir_tam_sifir_seri" ondalik={0}>4</Deger> seri tam
+sıfır çıktı. Bunların
+<Deger proje="yp-mevduat" anahtar="sifir_tanim_seri" ondalik={0}>2</Deger>'si **tanım
+gereği** sıfır (dolar bacağı, yukarıda),
+<Deger proje="yp-mevduat" anahtar="sifir_sinir_seri" ondalik={0}>2</Deger>'si bu sınıra
+giriyor. Kalan iki sınıfta bu koşuda bacak yok:
+<Deger proje="yp-mevduat" anahtar="sifir_cumlesi" ondalik={0}>Bu koşuda bu sınıfa giren bacak yok.</Deger>
+<Deger proje="yp-mevduat" anahtar="sifir_hukumsuz_cumlesi" ondalik={0}>Bu koşuda bu sınıfa giren bacak yok.</Deger>
+
+### Tarihçe asimetrik
+
+<Deger proje="yp-mevduat" anahtar="kapsam_cumlesi" ondalik={0}>Bu koşuda elimizdeki stok gözlemleri, resmî ayrıştırma gözlemlerinden 539 hafta sonra başlıyor.</Deger>
+Ayrıştırma tablosu
+<Deger proje="yp-mevduat" anahtar="kapsam_akim_bas" ondalik={0}>28.02.2014</Deger>'te,
+stok tabloları
+<Deger proje="yp-mevduat" anahtar="kapsam_stok_bas" ondalik={0}>28.06.2024</Deger>'te
+başlıyor:
+<Deger proje="yp-mevduat" anahtar="kapsam_akim_hafta" ondalik={0}>653</Deger> akım
+haftasına karşı
+<Deger proje="yp-mevduat" anahtar="kapsam_ortak_hafta" ondalik={0}>114</Deger> ortak
+hafta, aradaki fark
+<Deger proje="yp-mevduat" anahtar="kapsam_asimetri_hafta" ondalik={0}>539</Deger> hafta.
+
+Bunun üç somut sonucu var. (i) Kümüle akım ve yıllık tablo geriye çok daha uzağa gider;
+(ii) stok seviyesi, kişi payları ve maden payı yalnız ortak pencerede vardır — Şekil
+01'in başlangıcı bu yüzden 2024'tür; (iii) kimlik yalnız ortak pencerede kurulabilir ve
+Şekil 05 yalnız o pencereyi çizer. Sınanamayan dönemi çizmek, kimliğin orada da tuttuğu
+iddiasını sessizce eklerdi.
+
+### Geniş toplam manşet değildir
+
+Kaynağın geniş toplamı yurt dışı yerleşik bankaların mevduatını da içerir ve bu hattın
+konusu değildir; fark
+<Deger proje="yp-mevduat" anahtar="genis_fark_mia" ondalik={1}>39,7</Deger> milyar dolar
+(geniş toplamın
+%<Deger proje="yp-mevduat" anahtar="genis_fark_pay" ondalik={2}>14,65</Deger>'i).
+Farkın **bileşimi ölçülmedi**: tamamı yurt dışı bacak değildir, kaynağın kırılım
+tablosunda onların dışında kalan bölümler de bu farkın içinde. Ayrıntı Şekil 01'in
+altında.
+
+### Dolarizasyon payı kişi bazında bölünmez
+
+Lira mevduatının gerçek/tüzel kırılımı yayımlanmıyor; paydası olmayan bir pay
+kurulamaz. Ayrıca arındırılmış pay **çıpadan öncesine uzatılmaz** — sabit bir çıpaya
+göre tanımlı bir seri geriye uzatılırsa dolarizasyon değil çıpa okunur.
+
+### Sepet bileşimi bu sayfada kullanılmadı
+
+Kaynağın zorunlu karşılık tabanından türeyen sepet bileşimi tablosu (dolar payı, euro
+payı, kıymetli maden, diğer) bu hatta hiç kullanılmadı ve hiçbir şekle girmedi. Sebebi
+iki katlı: (i) ayrıştırma **resmî** olduğu için bir sepet vekiline ihtiyaç yok —
+bileşimden kur etkisi tahmin etmek gerekmiyor; (ii) o tablo bu koşuda hattın bir hafta
+gerisinden geliyor, yani kullanılsaydı onu kullanan şeklin damgası, bağlayıcı bacak
+olarak o eski haftaya çekilmek zorunda kalırdı. Bir figürün tarihi, çizdiği bütün
+serilerin ölçüldüğü en eski gündür.
+
+### Bu denetimlerin yakalamadığı şey
+
+Kimlik, artık ve hafta hizalaması — üçü de **iki tablo arasındaki tutarlılığı** ölçer.
+Kaynak her iki tabloyu birden revize ederse üçü de sessizce geçer: artık yine sıfır
+çıkar, hizalama yine kaydırmasızı seçer, kimlik yine "tutuyor" der. Aynı şekilde iki
+taraf birlikte donarsa da üçü geçer; bayatlık bu yüzden ayrı ve duvar saatiyle
+ölçülüyor. Revizyon takibi bu sayfada **kurulmadı** ve kurulmadığı için bir revizyon
+olduğunda burada görünmez.
+
+İkinci bir kör nokta: bu sayfa **kimin** para yatırdığını değil, **hangi kalemde**
+yatırdığını görür. Gerçek kişiler kategorisi hane halkını ve şahıs firmalarını birlikte
+taşır; içeride dağılımın nasıl değiştiği (kaç hesap, hangi büyüklükte) yayımlanmıyor ve
+ölçülmedi. "Hane halkı altına geçti" cümlesi bu yüzden bir toplam akım cümlesidir,
+bir davranış dağılımı cümlesi değil.
+
+Üçüncüsü: kıymetli maden bacağının **miktar** bilgisi (kaç gram, kaç ons) yayımlanmıyor.
+Elimizde yalnız dolar karşılığı var; fiili akım ile değerlemenin ayrımı kaynağın kendi
+hesabına dayanıyor ve biz onu bir altın fiyatı serisiyle yeniden üretmiyoruz. Üretmeye
+çalışsaydık, hangi fiyatın (ons, gram, hangi saatin kotasyonu) kullanıldığı sorusu
+ölçüye yeni bir belirsizlik sokardı; kaynağın kendi ayrıştırması bu soruyu hiç
+sordurmuyor.
+
+## İlgili sayfalar
+
+- <a href="/projeler/kredi-parasal/">Kredi ve parasal büyüklükler</a> — aynı haftalık
+  tablo ailesinden besleniyor. Oradaki **kur etkisinden arındırma** ile buradaki
+  **parite etkisi** aynı çerçevenin iki yüzüdür: biri lira karşılığındaki bir stoku
+  kurdan, diğeri dolar karşılığındaki bir stoku sepetten temizler. Mevduat
+  dolarizasyonunun kurdan arındırılmış ölçüsü orada.
+- <a href="/projeler/tcmb-net-rezerv/">TCMB net rezerv takibi</a> — altın fiyat etkisi
+  ayrıştırmasının miktar/fiyat sözlüğü ortak: orada da bir stok, miktar hareketi ile
+  fiyat hareketine ayrılıyor ve "ölçülemeyen sıfır" ile "ölçülen sıfır" ayrımı aynı
+  disiplinle yapılıyor.
+- <a href="/projeler/reel-sektor-fx/">Reel sektörün döviz pozisyonu</a> — buradaki
+  tüzel kişi bacağının bilanço tarafı: şirketlerin döviz varlıkları ve yükümlülükleri
+  birlikte.
+
+## Kaynaklar
+
+- TCMB, *Haftalık Para ve Banka İstatistikleri* — tablo tanımları, kapsam ve birim
+  notları; yayım ritmi haftalık (Perşembe), bir önceki cuma haftasının verisi.
+- **Stok ve kişi kırılımı:** `TP.HPBITABLO2.10` (yurt içi yerleşiklerin toplam yabancı
+  para mevduatı, manşet), `TP.HPBITABLO2.11` (gerçek kişiler), `TP.HPBITABLO2.12`
+  (tüzel kişiler). Lira bacağı ve dolarizasyon payı için `TP.HPBITABLO2.2`,
+  `TP.HPBITABLO2.3` ve `TP.HPBITABLO2.6`. Birim milyon dolar; lira bacağı bin TL.
+- **Kırılım ve kıymetli maden:** `TP.HPBITABLO4.1` (yurt dışı yerleşikler dahil geniş
+  toplam), `TP.HPBITABLO4.3` ve `TP.HPBITABLO4.8` (gerçek ve tüzel kişiler),
+  `TP.HPBITABLO4.7` ve `TP.HPBITABLO4.12` (kıymetli maden depo hesapları, dolar
+  karşılığı), `TP.HPBITABLO4.20` ve `TP.HPBITABLO4.21`.
+- **Parite etkisinden arındırılmış değişim:** `TP.HPBITABLO5.1` … `TP.HPBITABLO5.11` —
+  toplam, gerçek ve tüzel kişiler, her biri dolar · euro · diğer para birimleri ·
+  kıymetli maden kırılımıyla. Birim milyon dolar.
+- **Parite etkisi:** `TP.HPBITABLO5.12` … `TP.HPBITABLO5.22` — aynı kırılım.
+- TCMB, *Haftalık Para ve Banka İstatistikleri metaverisi* — kıymetli maden depo
+  hesaplarının kapsamı ve dolar karşılığının nasıl hesaplandığı.
+- ECB, *Monetary developments in the euro area* — kur ve yeniden sınıflandırma
+  etkilerinden arındırılmış akım hesabının kurumsal örneği; buradaki fiili
+  akım/değerleme ayrımının aynı ailesi.
+- IMF, *Monetary and Financial Statistics Manual* — stok/akım uzlaştırması ve
+  değerleme değişimlerinin ayrıştırılmasına ilişkin standart tanımlar.

@@ -222,6 +222,21 @@ const HAT_MANSET: Record<
   'reel-sektor-fx': { anahtar: 'net_pozisyon', olcu: 'Net döviz pozisyonu', birim: 'mlr $', ondalik: 1, isaret: true },
   'fx-haber-endeksi': { anahtar: 'spread', olcu: "Sepet spread'i", birim: '', ondalik: 2, isaret: true },
   'yiyecek-hizmetleri-marj': { anahtar: 'oran_ev_yemekleri', olcu: 'Ev yemekleri / gıda oranı', birim: '×', ondalik: 2 },
+  // Manşet, hattın SORUSUNUN öznesidir: yurt içi yerleşiklerin yabancı para
+  // mevduatı. Kaynağın GENİŞ toplamı (271,1 mlr $) yurt dışı yerleşik bankaları
+  // da içerir ve bu hattın konusu değildir; onu ana sayfa tablosuna basmak,
+  // kapsam karışıklığını sitenin en görünür yerine taşırdı. Akım manşeti de
+  // seçilmedi: haftadan haftaya işaret değiştiren tek haftalık bir sayı, tablo
+  // satırında bağlamsız okunur. tarihAlani AÇIKÇA veriliyor, çünkü ayrıştırma
+  // tablosu stok tablolarından 539 hafta daha eskiye gidiyor: bacaklar bir gün
+  // ayrışırsa şerit manşetin KENDİ gününü basmalı.
+  'yp-mevduat': {
+    anahtar: 'stok_toplam_mia',
+    olcu: 'Yurt içi yerleşiklerin YP mevduatı',
+    birim: 'mlr $',
+    ondalik: 1,
+    tarihAlani: 'stok_toplam_mia_tarih',
+  },
 };
 
 /** Manşet tanımı (anahtar, hane, işaret, tarih alanı) — istemci tazelemesi aynı kuralı uygular. */
