@@ -6,11 +6,12 @@
 import Base from '../../layouts/Base.astro';
 import BultenGovde from '../../components/BultenGovde.astro';
 import { bultenler } from '../../lib/yayinlar';
-import { getCollection } from 'astro:content';
+import { hatSayfalari } from '../../lib/hatSayfa';
 
-// Öne çıkanlar ve veri günlüğü hattın ADINI basar, slug'ını değil; adlar
-// proje sayfalarının başlığından gelir.
-const hatAd = Object.fromEntries((await getCollection('projeler')).map((p) => [p.id, p.data.title]));
+// Öne çıkanlar hattın ADINI basar ve sayfasına bağlar; ikisini de
+// lib/hatSayfa çözer — panosu olmayan hat (ölçümünü bir yazıya besleyen)
+// slug'a ya da 404'e düşmesin.
+const hatSayfa = await hatSayfalari();
 const hepsi = bultenler();
 const son = hepsi[0];
 const sonGunluk = hepsi.find((x) => !x.haftalik);
@@ -41,7 +42,7 @@ const arsiv = hepsi.slice(1, 12);
         <a href="/bulten/rss.xml" class="nav-oge rss-link" title="RSS beslemesi">RSS</a>
         <a href="/bulten/arsiv/" class="nav-oge arsiv-link">Tüm arşiv ({hepsi.length})</a>
       </nav>
-      <BultenGovde b={son.b} kayit={son} hatAd={hatAd} />
+      <BultenGovde b={son.b} kayit={son} hatSayfa={hatSayfa} />
       <section class="arsiv">
         <h2>Önceki sayılar <a class="tumu" href="/bulten/arsiv/">tümü →</a></h2>
         {arsiv.length > 0 ? (

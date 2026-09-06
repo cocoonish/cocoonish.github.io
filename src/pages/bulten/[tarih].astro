@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 import BultenGovde from '../../components/BultenGovde.astro';
 import SayiGezinme from '../../components/SayiGezinme.astro';
 import { bultenler, type BultenKaydi } from '../../lib/yayinlar';
-import { getCollection } from 'astro:content';
+import { hatSayfalari } from '../../lib/hatSayfa';
 
 export async function getStaticPaths() {
   // Yalnız YAZILMIŞ sayıların sayfası üretilir (lib/yayinlar.ts yayın kapısı).
@@ -22,7 +22,10 @@ export async function getStaticPaths() {
 interface Props { kayit: BultenKaydi; onceki: BultenKaydi | null; sonraki: BultenKaydi | null }
 const { kayit, onceki, sonraki } = Astro.props;
 const b = kayit.b;
-const hatAd = Object.fromEntries((await getCollection('projeler')).map((p) => [p.id, p.data.title]));
+// Öne çıkanlar hattın ADINI basar ve sayfasına bağlar; ikisini de
+// lib/hatSayfa çözer — panosu olmayan hat (ölçümünü bir yazıya besleyen)
+// slug'a ya da 404'e düşmesin.
+const hatSayfa = await hatSayfalari();
 const tur = kayit.haftalik ? 'Haftaya bakış' : 'Günlük bülten';
 ---
 
@@ -34,6 +37,6 @@ const tur = kayit.haftalik ? 'Haftaya bakış' : 'Günlük bülten';
   guncellemeTarihi={kayit.yaziTarihi || kayit.olcumZamani}
 >
   <SayiGezinme konum="ust" bolumHref="/bulten/" />
-  <BultenGovde b={b} kayit={kayit} hatAd={hatAd} />
+  <BultenGovde b={b} kayit={kayit} hatSayfa={hatSayfa} />
   <SayiGezinme konum="alt" bolumHref="/bulten/" onceki={onceki} sonraki={sonraki} />
 </Base>

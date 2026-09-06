@@ -15,15 +15,16 @@ import { sayi, yuzde, degisim, ondalikSay, istanbulSaat, tarihUzun, tarihYaz } f
 import type { BultenKaydi } from '../lib/yayinlar';
 import { xBulten } from '../lib/x';
 import { FERAGAT } from '../consts';
+import type { HatSayfa } from '../lib/hatSayfa';
 
 interface Props {
   b: any;
   /** Sayı numarası, ölçüm saati, sayımlar — lib/yayinlar.ts kaydı. */
   kayit?: BultenKaydi;
-  /** Hat slug'ı → okura görünen ad (proje sayfası başlığı). */
-  hatAd?: Record<string, string>;
+  /** Hat slug'ı → okura görünen ad ve sayfası (lib/hatSayfa). */
+  hatSayfa?: Record<string, HatSayfa>;
 }
-const { b: ham, kayit, hatAd = {} } = Astro.props;
+const { b: ham, kayit, hatSayfa = {} } = Astro.props;
 // ŞEMA TEK YERDE TOPARLANIR: eksik bir liste bütün /bulten/* sayfalarını ve ana
 // sayfayı düşürüp sitenin tamamının yayınını durdururdu. Yokluk boş listedir;
 // bölüm başlıkları zaten 'liste doluysa' koşuluyla basılır.
@@ -35,7 +36,12 @@ const b: any = {
   haberler: { bolumler: [], okunamayan: [], ...(ham?.haberler ?? {}) },
   izleme: { acik: [], kapanan: [], karne: {}, ...(ham?.izleme ?? {}) },
 };
-const ad = (slug: string) => hatAd[slug] ?? slug;
+// AD ve BAĞ ayrı çözülür ve ikisinin de son çaresi farklı. Ad: pano başlığı →
+// kaydın kendi `hat_ad`ı (ölçüm katmanı, bulten/ayar.HAT_ADI) → slug. Bağ:
+// sayfası varsa bağ, YOKSA HİÇ — panosu olmayan bir hat için `/projeler/<slug>/`
+// yazmak okura 404 verirdi ve koşu yeşil biterdi.
+const ad = (o: any) => hatSayfa[o?.hat]?.ad || o?.hat_ad || o?.hat || '';
+const sayfa = (o: any) => hatSayfa[o?.hat]?.href ?? null;
 const tz = (t: unknown) => (typeof t === 'string' ? tarihYaz(t) : '');
 // Kipe bağlı etiketler tek yerde: günlük ve haftaya bakış farklı sözcükler kullanır.
 const kip = b.haftalik
@@ -317,7 +323,7 @@ const bolumler = [
           <li>
             <span class="metin">{o.metin}</span>
             {o.aciklama && <span class="dipnot">{o.aciklama}</span>}
-            <span class="kaynak-not"><a href={`/projeler/${o.hat}/`}>{ad(o.hat)}</a> · veri {tz(o.tarih)}{o.onceki_tarih ? ` (kıyas: ${tz(o.onceki_tarih)})` : ''}</span>
+            <span class="kaynak-not">{sayfa(o) ? <a href={sayfa(o)!}>{ad(o)}</a> : ad(o)} · veri {tz(o.tarih)}{o.onceki_tarih ? ` (kıyas: ${tz(o.onceki_tarih)})` : ''}</span>
           </li>
         ))}
       </ul>
