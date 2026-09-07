@@ -41,6 +41,19 @@ const b: any = {
 // yazmak okura 404 verirdi ve koşu yeşil biterdi.
 const ad = (o: any) => hatSayfa[o?.hat]?.ad || o?.hat_ad || o?.hat || '';
 const sayfa = (o: any) => hatSayfa[o?.hat]?.href ?? null;
+// YAZI KATMANININ METİN SÖZLEŞMESİ: alanlar HTML taşır. `yorum`, `gundem.*`
+// ve teknikteki `giris` zaten `set:html` ile basılıyordu; `ozet` ise metin
+// olarak basılıyor ve yazarın koyduğu <p> okura ETİKET OLARAK görünüyordu
+// (dört sayıda, yirmi kaçış). Tek alanı sözleşmenin dışında bırakmak, yazarın
+// hangi alanda hangi dili yazacağını bilmesini gerektirir — bilemez.
+//
+// Düz metin de kabul: etiketle açılmayan bir değer <p> ile sarılır, yani
+// sözleşme iki yönde de bozulmaz. Kaynak yazı katmanının kendi dosyasıdır
+// (yaz.py kapısından geçer), okur girdisi değil.
+const yaziMetni = (m: unknown) => {
+  const t = String(m ?? '').trim();
+  return t.startsWith('<') ? t : `<p>${t}</p>`;
+};
 const tz = (t: unknown) => (typeof t === 'string' ? tarihYaz(t) : '');
 // Kipe bağlı etiketler tek yerde: günlük ve haftaya bakış farklı sözcükler kullanır.
 const kip = b.haftalik
@@ -204,13 +217,13 @@ const bolumler = [
       {b.ozet.ne_oldu && (
         <div class="ozet-parca">
           <h2>{b.haftalik ? 'Geçen hafta ne oldu' : 'Ne oldu'}</h2>
-          <p>{b.ozet.ne_oldu}</p>
+          <div class="ozet-metin" set:html={yaziMetni(b.ozet.ne_oldu)} />
         </div>
       )}
       {b.ozet.ne_bekleniyor && (
         <div class="ozet-parca">
           <h2>{b.haftalik ? 'Önümüzdeki hafta ne bekleniyor' : 'Ne bekleniyor'}</h2>
-          <p>{b.ozet.ne_bekleniyor}</p>
+          <div class="ozet-metin" set:html={yaziMetni(b.ozet.ne_bekleniyor)} />
         </div>
       )}
     </section>
@@ -832,7 +845,8 @@ const bolumler = [
   .ozet-parca h2 {
     font-family: var(--font-display); font-size: 1.12rem; margin: 0 0 0.4rem;
   }
-  .ozet-parca p { margin: 0; line-height: 1.62; }
+  .ozet-parca :global(p) { margin: 0 0 0.7rem; line-height: 1.62; }
+  .ozet-parca :global(p:last-child) { margin-bottom: 0; }
 
   .gosterge-serit {
     display: grid;
