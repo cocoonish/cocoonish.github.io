@@ -11,7 +11,6 @@ import GrafikEmbed from './GrafikEmbed.astro';
 import Kunye from './Kunye.astro';
 import { istanbulSaat, tarihUzun, sayi as bicimSayi, degisim, yuzde } from '../lib/bicim';
 import type { TeknikKaydi } from '../lib/yayinlar';
-import { xTeknik } from '../lib/x';
 import { FERAGAT } from '../consts';
 
 interface Props {
@@ -21,7 +20,6 @@ interface Props {
 }
 const { b, kayit } = Astro.props;
 
-const xGonderi = xTeknik(b.tarih);
 // Zaman dilimleri veriden: bir enstrümanın dilimi kaynakta yoksa künye onu
 // "üç dilim" diye saymaz; ölçülemeyen dilim sayısı ayrıca yazılır.
 const DILIM_AD: Record<string, string> = { s1: '1 saatlik', s4: '4 saatlik', gun: 'günlük' };
@@ -44,7 +42,6 @@ const kunye = [
   { deger: 'İstanbul', etiket: 'Saat dilimi', alt: 'bar kapanışları' },
   b.yorum_zamani ? { deger: istanbulSaat(b.yorum_zamani), etiket: 'Yorum', alt: istanbulSaat(b.yorum_zamani, 'tam').replace(/ \d{2}:\d{2}$/, '') } : null,
   b.duzeltmeler?.length ? { deger: String(b.duzeltmeler.length), etiket: 'Düzeltme', href: '#duzeltmeler', vurgu: true } : null,
-  xGonderi ? { deger: 'X gönderisi ↗', etiket: 'Paylaşım', href: xGonderi.url } : null,
 ].filter(Boolean) as any[];
 
 // Şekil numaraları boşluksuz: eksik dilimin grafiği numara tüketmez.

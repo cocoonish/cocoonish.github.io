@@ -13,7 +13,6 @@ import SigmaSerit from './SigmaSerit.astro';
 import Kunye from './Kunye.astro';
 import { sayi, yuzde, degisim, ondalikSay, istanbulSaat, tarihUzun, tarihYaz } from '../lib/bicim';
 import type { BultenKaydi } from '../lib/yayinlar';
-import { xBulten } from '../lib/x';
 import { FERAGAT } from '../consts';
 import type { HatSayfa } from '../lib/hatSayfa';
 
@@ -81,7 +80,6 @@ const enstruman = kayit?.enstruman
   ?? (b?.piyasa?.gruplar ?? []).reduce((n: number, g: any) => n + (g?.satirlar?.length ?? 0), 0);
 const haberSayisi = kayit?.haber ?? (b?.haberler?.haber?.length ?? 0);
 const olcumSaati = kayit?.olcumSaati || istanbulSaat(b.olusturma);
-const xGonderi = xBulten(b.tarih);
 const kunye = [
   kayit ? { deger: `No ${kayit.sayiNo}`, etiket: 'Sayı', vurgu: true } : null,
   { deger: olcumSaati, etiket: 'Ölçüm', alt: olcumSaati ? 'İstanbul saati' : undefined },
@@ -90,7 +88,6 @@ const kunye = [
   haberSayisi ? { deger: String(haberSayisi), etiket: 'Taranan haber' } : null,
   b.piyasa?.kapanis_seansi ? { deger: String(b.piyasa.kapanis_seansi), etiket: 'Ölçülen seans' } : null,
   b.duzeltmeler?.length ? { deger: String(b.duzeltmeler.length), etiket: 'Düzeltme', href: '#duzeltmeler', vurgu: true } : null,
-  xGonderi ? { deger: 'X gönderisi ↗', etiket: 'Paylaşım', href: xGonderi.url } : null,
 ].filter(Boolean) as any[];
 
 

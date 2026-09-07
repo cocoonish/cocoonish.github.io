@@ -2,7 +2,6 @@
 import Base from './Base.astro';
 import DersKunyesi from '../components/DersKunyesi.astro';
 import VeriDurumu from '../components/VeriDurumu.astro';
-import { xAnaliz } from '../lib/x';
 import { tarihUzun } from '../lib/bicim';
 import type { DersOlcum } from '../lib/ders';
 
@@ -79,8 +78,6 @@ const TUR_ETIKET: Record<string, string> = {
 const lede = ozet || description;
 const kapsam = ozet && description && description !== ozet ? description : null;
 
-// Analiz yayın günü X'te de çıkar; gönderi kimliği defterin aynasından okunur.
-const xGonderi = tur === 'analiz' && slug ? xAnaliz(slug) : null;
 ---
 
 <Base
@@ -112,7 +109,6 @@ const xGonderi = tur === 'analiz' && slug ? xAnaliz(slug) : null;
         {guncelleme && <span><b>Ritim</b> {guncelleme}</span>}
         {durum === 'taslak' && <span class="rozet rozet--taslak">Hazırlanıyor</span>}
         {duzeltmeler.length > 0 && <span><b>Düzeltme</b> <a href="#duzeltmeler">{duzeltmeler.length} kayıt</a></span>}
-        {xGonderi && <span><b>Paylaşım</b> <a href={xGonderi.url} rel="noopener">X gönderisi ↗</a></span>}
       </div>
       {kaynak && <p class="kaynak-satiri"><span class="etiket">Kaynak</span> {kaynak}</p>}
       {kapsam && <p class="kapsam-satiri"><span class="etiket">Kapsam</span> {kapsam}</p>}
