@@ -54,6 +54,28 @@ const yaziMetni = (m: unknown) => {
   const t = String(m ?? '').trim();
   return t.startsWith('<') ? t : `<p>${t}</p>`;
 };
+// SÖZ DEFTERİ HER SABAH BAŞTAN ANLATILMAZ. Ölçüldü (07.09.2026, 13 sayı):
+// bültenin düzyazısı günden güne tekrar etmiyor (gündem %0,6 · yorum %0,3),
+// ama söz defteri ardışık iki sayı arasında %91,4 birebir örtüşüyordu —
+// 4.816 sözcüklük bölüm her gün kelimesi kelimesine yeniden basılıyordu.
+// Ölçüm katmanı artık her kaydı `degisti`/`duran` diye işaretliyor; sayfa
+// değişeni TAM metniyle, duranı tek satırlık künyesiyle basar. Kayıt
+// silinmiyor: duran bir sözün tam metni onu son değiştiren sayıda duruyor.
+const sozKayitlari = [...(b.izleme.acik ?? []), ...(b.izleme.kapanan ?? [])];
+// GERİYE DÖNÜK EMNİYET: ölçüm katmanı bu alanı yazmadan önce yayımlanmış
+// sayılarda `degisti` YOK. O sayılarda ayrım KOŞMAMIŞTIR ve hepsini "duran"
+// sayıp tek satıra indirmek, yayımlanmış bir metni sonradan kırpmak olurdu —
+// okur o sayıyı tam hâliyle okumuştu. Alanı hiç taşımayan bir defterde bütün
+// kayıtlar tam metinle basılır.
+const sozAyrimVar = sozKayitlari.some((k: any) => k && 'degisti' in k);
+const sozDegisen = sozAyrimVar ? sozKayitlari.filter((k: any) => k?.degisti) : sozKayitlari;
+const sozDuran = sozAyrimVar ? sozKayitlari.filter((k: any) => !k?.degisti) : [];
+const sozVade = (k: any) =>
+  k.durum === 'kapandi' ? (k.isabet || 'kapandı')
+  : k.gun_kalan === null ? 'vadesiz'
+  : k.gun_kalan < 0 ? `${-k.gun_kalan} gün gecikti`
+  : k.gun_kalan === 0 ? 'bugün'
+  : `${k.gun_kalan} gün`;
 const tz = (t: unknown) => (typeof t === 'string' ? tarihYaz(t) : '');
 // Kipe bağlı etiketler tek yerde: günlük ve haftaya bakış farklı sözcükler kullanır.
 const kip = b.haftalik
@@ -487,25 +509,20 @@ const bolumler = [
           : ' Kapanan kayıtlar henüz tuttu/tutmadı diye notlanmadığı için isabet oranı verilmiyor.'}
       </p>
 
-      {b.izleme.acik.length > 0 && (
+      {sozDegisen.length > 0 && (
         <>
-          <h3>Açık sözler</h3>
+          <h3>{sozAyrimVar ? 'Bu sayıda değişenler' : 'Söz kayıtları'}</h3>
           <ul class="soz-liste">
-            {b.izleme.acik.map((k: any) => (
-              <li class:list={{ gecikti: k.gun_kalan !== null && k.gun_kalan < 0 }}>
-                <span class="soz-vade">
-                  {k.gun_kalan === null
-                    ? 'vadesiz'
-                    : k.gun_kalan < 0
-                      ? `${-k.gun_kalan} gün gecikti`
-                      : k.gun_kalan === 0
-                        ? 'bugün'
-                        : `${k.gun_kalan} gün`}
-                </span>
+            {sozDegisen.map((k: any) => (
+              <li class:list={{ gecikti: k.gun_kalan !== null && k.gun_kalan < 0,
+                                kapali: k.durum === 'kapandi' }}>
+                <span class="soz-vade">{sozVade(k)}</span>
                 <span class="soz-govde">
                   <strong class="soz-konu">{k.konu}</strong>
-                  {k.soz && <span class="soz-metin">{k.soz}</span>}
-                  {k.ne_bakilacak && <span class="soz-bakis">Ne bakılacak: {k.ne_bakilacak}</span>}
+                  {k.soz && <span class="soz-metin">{k.durum === 'kapandi' ? 'Ne demiştik: ' : ''}{k.soz}</span>}
+                  {k.sonuc && <span class="soz-sonuc">Ne oldu: {k.sonuc}</span>}
+                  {k.durum !== 'kapandi' && k.ne_bakilacak &&
+                    <span class="soz-bakis">Ne bakılacak: {k.ne_bakilacak}</span>}
                   <span class="kaynak-not">açılış {tz(k.acilis)}{k.vade ? ` · vade ${tz(k.vade)}` : ''}</span>
                 </span>
               </li>
@@ -514,19 +531,19 @@ const bolumler = [
         </>
       )}
 
-      {b.izleme.kapanan.length > 0 && (
+      {sozDuran.length > 0 && (
         <>
-          <h3>Yakın zamanda kapananlar</h3>
-          <ul class="soz-liste kapanan">
-            {b.izleme.kapanan.map((k: any) => (
-              <li>
-                <span class="soz-vade">{k.isabet || 'kapandı'}</span>
-                <span class="soz-govde">
-                  <strong class="soz-konu">{k.konu}</strong>
-                  {k.soz && <span class="soz-metin">Ne demiştik: {k.soz}</span>}
-                  {k.sonuc && <span class="soz-sonuc">Ne oldu: {k.sonuc}</span>}
-                  <span class="kaynak-not">açılış {tz(k.acilis)}{k.vade ? ` · vade ${tz(k.vade)}` : ''}</span>
-                </span>
+          <h3>Değişmeden duranlar</h3>
+          <p class="alt-not">
+            Bu sözler bir önceki sayıdan bu yana değişmedi; metinleri o sayıda
+            tam hâliyle duruyor. Burada yalnız konusu ve saati yazılır.
+          </p>
+          <ul class="soz-duran">
+            {sozDuran.map((k: any) => (
+              <li class:list={{ gecikti: k.gun_kalan !== null && k.gun_kalan < 0 }}>
+                <span class="soz-vade">{sozVade(k)}</span>
+                <span class="soz-konu">{k.konu}</span>
+                <span class="kaynak-not">açılış {tz(k.acilis)}</span>
               </li>
             ))}
           </ul>
@@ -977,7 +994,20 @@ const bolumler = [
   .soz-liste.kapanan .soz-vade { color: var(--pozitif); }
   .soz-govde { display: grid; gap: 0.2rem; }
   .soz-konu { line-height: 1.35; }
-  .soz-metin, .soz-sonuc, .soz-bakis { font-size: 0.84rem; color: var(--ink-70); line-height: 1.5; }
+  .soz-metin, .soz-sonuc, .soz-bakis { font-size: 0.95rem; color: var(--ink-70); line-height: 1.55; max-width: 31rem; }
+  .soz-liste li.kapali { border-left-color: var(--pozitif); }
+  /* Duran kayıtlar: tek satır, künye ritmi. Sayfada yer kaplamadan GÖRÜNÜR
+     kalırlar — bir sözün sessizce düşmesi, defterin anlamını götürür. */
+  .soz-duran { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.3rem; }
+  .soz-duran li {
+    display: grid; grid-template-columns: 7.5rem 1fr auto; gap: 0.6rem;
+    align-items: baseline; padding: 0.3rem 0; border-bottom: 1px solid var(--ink-15);
+  }
+  .soz-duran .soz-konu { font-weight: 500; }
+  .soz-duran li.gecikti .soz-vade { color: var(--uyari); }
+  @media (max-width: 640px) {
+    .soz-duran li { grid-template-columns: 1fr; gap: 0.1rem; }
+  }
   .soz-bakis { font-style: italic; }
   @media (max-width: 640px) {
     .soz-liste li { grid-template-columns: 1fr; gap: 0.25rem; }
