@@ -140,6 +140,29 @@ const takvimGruplari = (b.takvim ?? [])
   .filter((t: any) => t.kayitlar.length > 0);
 const takvimVar = kritikler.length > 0 || takvimGruplari.length > 0;
 
+// AYNI OLAY İKİ BÖLÜMDE ANLATILMAZ — takvimdeki kalıbın eşi, bu kez olaylar için.
+// Ölçüldü (07.09.2026, 13 sayı): "Öne çıkanlar" ve "Notlar" bölümlerindeki
+// 115 maddenin 115'i de "Hat hat değişim"de BİREBİR tekrar ediyordu. Okur
+// aynı cümleyi iki kez okuyor ve ikincisinde yeni bir şey öğrenmiyor.
+//
+// Öne çıkanlar ve notlar YUKARIDA duruyor (eşiği aşan olaylar okurun ilk
+// göreceği şey); hat hat bölümü onların GERİ KALANINI taşır — takvimde
+// "kritik geri sayım + listenin geri kalanı" nasıl kurulduysa aynen öyle.
+// Anahtar hat+anahtar çifti: aynı ölçüden doğan olay tekildir.
+const anilanOlay = new Set(
+  [...(b.one_cikanlar ?? []), ...(b.notlar ?? [])]
+    .filter((o: any) => o?.hat && o?.anahtar)
+    .map((o: any) => `${o.hat}|${o.anahtar}`),
+);
+const gruplarKalan = (b.gruplar ?? [])
+  .map((g: any) => ({
+    ...g,
+    olaylar: (g.olaylar ?? []).filter(
+      (o: any) => !(o?.hat && o?.anahtar && anilanOlay.has(`${o.hat}|${o.anahtar}`)),
+    ),
+  }))
+  .filter((g: any) => g.olaylar.length > 0);
+
 // İçindekiler: yalnız GERÇEKTEN basılan bölümler listelenir. Koşulları
 // bölümlerin kendi koşullarıyla birebir aynı tutmak şart — yoksa boşa çıkan
 // bir bağlantı okuru hiçbir yere götürmez.
@@ -165,7 +188,7 @@ const bolumler = [
   b.one_cikanlar?.length > 0 && { id: 'one-cikanlar', ad: 'Öne çıkanlar' },
   b.sonuclar?.length > 0 && { id: 'sonuclar', ad: 'Ne bekleniyordu, ne geldi' },
   takvimVar && { id: 'takvim', ad: 'Takvim' },
-  b.gruplar?.length > 0 && { id: 'hat-hat', ad: 'Hat hat değişim' },
+  gruplarKalan.length > 0 && { id: 'hat-hat', ad: 'Hat hat değişim' },
   (b.izleme?.acik?.length > 0 || b.izleme?.kapanan?.length > 0) &&
     { id: 'soz-defteri', ad: 'Söz defteri' },
   b.haberler?.bolumler?.length > 0 && { id: 'gundem', ad: 'Gündem' },
@@ -471,10 +494,14 @@ const bolumler = [
     </section>
   )}
 
-  {b.gruplar.length > 0 && (
+  {gruplarKalan.length > 0 && (
     <section class="blok" id="hat-hat">
       <h2>Hat hat değişim</h2>
-      {b.gruplar.map((g: any) => (
+      <p class="alt-not">
+        Yukarıda anılan olaylar burada tekrarlanmaz; bu bölüm eşiği aşan geri
+        kalan hareketleri hat hat toplar.
+      </p>
+      {gruplarKalan.map((g: any) => (
         <div class="grup">
           <h3>{g.baslik}</h3>
           <ul class="olay-liste">
@@ -856,13 +883,14 @@ const bolumler = [
     background: color-mix(in srgb, var(--claret) 4%, transparent);
   }
   .yorum .etiket { color: var(--claret); margin: 0 0 0.4rem; }
+  .yorum :global(p) { max-width: var(--olcu-metin); }
 
 
   .ozet { margin: 0 0 2.4rem; display: grid; gap: 1.3rem; }
   .ozet-parca h2 {
     font-family: var(--font-display); font-size: 1.12rem; margin: 0 0 0.4rem;
   }
-  .ozet-parca :global(p) { margin: 0 0 0.7rem; line-height: 1.62; }
+  .ozet-parca :global(p) { margin: 0 0 0.7rem; line-height: 1.62; max-width: var(--olcu-metin); }
   .ozet-parca :global(p:last-child) { margin-bottom: 0; }
 
   .gosterge-serit {
@@ -889,13 +917,13 @@ const bolumler = [
     padding-bottom: 0.35rem; border-bottom: 2px solid var(--ink);
   }
   .blok h3 { font-size: 0.95rem; margin: 1.3rem 0 0.5rem; color: var(--ink-70); font-variant: small-caps; letter-spacing: 0.06em; }
-  .adet { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-30); }
+  .adet { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-60); }
 
   .olay-liste { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.7rem; }
   .olay-liste li { display: grid; gap: 0.15rem; padding-left: 0.9rem; border-left: 2px solid var(--ink-30); }
   .olay-liste.onemli li { border-left-color: var(--claret); }
   .olay-liste li.dikkat { border-left-color: var(--uyari); }
-  .olay-liste .metin { line-height: 1.45; }
+  .olay-liste .metin { line-height: 1.45; max-width: var(--olcu-metin); }
   .olay-liste.kucuk .metin { font-size: 0.86rem; color: var(--ink-70); }
   .dipnot { font-size: 0.78rem; color: var(--ink-70); font-style: italic; }
   .kaynak-not { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-60); }
@@ -906,7 +934,7 @@ const bolumler = [
   tr.kritik .t-olay { font-weight: 600; }
   tr.kritik td { background: color-mix(in srgb, var(--claret) 4%, transparent); }
   .t-tarih { white-space: nowrap; font-family: var(--font-mono); font-size: 0.78rem; }
-  .t-gun { display: block; color: var(--ink-30); font-size: 0.7rem; }
+  .t-gun { display: block; color: var(--ink-60); font-size: 0.7rem; }
   .t-saat { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-70); white-space: nowrap; }
   .t-ulke { font-family: var(--font-mono); font-size: 0.7rem; color: var(--claret); }
   .t-olay { line-height: 1.35; }
@@ -924,7 +952,7 @@ const bolumler = [
     color: var(--claret); border: 1px solid var(--claret); padding: 0.15rem 0.5rem;
     margin: 0 0 0.6rem;
   }
-  .kapsam .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.2rem 0 0.8rem; max-width: 62ch; }
+  .kapsam .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.2rem 0 0.8rem; max-width: 24rem; }
   .kapsam-liste { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.85rem; }
   .kapsam-liste li {
     display: grid; gap: 0.15rem; padding-left: 0.9rem;
@@ -934,7 +962,7 @@ const bolumler = [
     font-size: 0.83rem; color: var(--ink-70); line-height: 1.5;
   }
 
-  .rejim .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1rem; max-width: 62ch; }
+  .rejim .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1rem; max-width: 24rem; }
   .rejim-liste { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; }
   .rejim-liste li { padding-left: 0.9rem; border-left: 2px solid var(--ink-30); display: grid; gap: 0.1rem; }
   .rejim-ust { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.6rem; }
@@ -950,7 +978,7 @@ const bolumler = [
   .rejim-konum { margin: 0; font-size: 0.8rem; color: var(--ink-70); }
   .rejim-aciklama { margin: 0.1rem 0 0; font-size: 0.83rem; color: var(--ink-70); line-height: 1.5; }
 
-  .sonuclar .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1rem; max-width: 62ch; }
+  .sonuclar .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1rem; max-width: 24rem; }
   .sonuc-liste { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.1rem; }
   .sonuc-liste li { padding-left: 0.9rem; border-left: 2px solid var(--ink-30); display: grid; gap: 0.18rem; }
   .sonuc-ust { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; }
@@ -965,7 +993,7 @@ const bolumler = [
   .sonuc-surpriz.eksi, .sonuc-hareket.eksi { color: var(--claret); }
   .sonuc-bekliyor { font-style: italic; }
 
-  .kritik-blok .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 0.9rem; }
+  .kritik-blok .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 0.9rem; max-width: 24rem; }
   ol.kritik { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; }
   ol.kritik li { display: grid; grid-template-columns: 5.4rem 1fr; gap: 0.7rem; align-items: baseline; }
   .k-sayac {
@@ -978,7 +1006,7 @@ const bolumler = [
   .k-beklenti { font-size: 0.79rem; color: var(--ink-70); }
 
 
-  .soz .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1.1rem; max-width: 62ch; }
+  .soz .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1.1rem; max-width: 24rem; }
   .soz-liste { list-style: none; padding: 0; margin: 0 0 0.4rem; display: grid; gap: 0.9rem; }
   .soz-liste li {
     display: grid; grid-template-columns: 7.5rem 1fr; gap: 0.7rem;
@@ -1014,14 +1042,16 @@ const bolumler = [
     .soz-vade { text-align: left; }
   }
 
-  .gundem .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1.1rem; }
+  .gundem .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1.1rem; max-width: 24rem; }
   .gundem-bolum { margin: 1.5rem 0; }
   .gundem-bolum h3 {
     font-size: 0.9rem; color: var(--claret); font-variant: small-caps;
     letter-spacing: 0.07em; margin: 0 0 0.5rem;
     border-bottom: 1px solid var(--ink-30); padding-bottom: 0.2rem;
   }
-  .gundem-metin { margin: 0 0 0.7rem; line-height: 1.6; }
+  /* DÜZYAZI ~72 karakterde tutulur; sütunun kendisi (74ch ≈ 100 karakter)
+     tablolar için geniş kalmak zorunda, o yüzden sınır METNE konuyor. */
+  .gundem-metin { margin: 0 0 0.7rem; line-height: 1.6; max-width: var(--olcu-metin); }
   .gundem-metin p { margin: 0 0 0.6rem; }
   .yazi-bolum h3 { color: var(--ink); }
   .gundem-bolum.kilit {
@@ -1032,12 +1062,15 @@ const bolumler = [
   .gundem-bolum.kilit h3 { font-size: 1rem; color: var(--claret); }
   .gundem-bolum.kilit .haber-liste a { font-weight: 600; }
   .kilit-not { font-size: 0.76rem; color: var(--ink-70); font-style: italic; margin: -0.2rem 0 0.7rem; }
-  .h-ozet { display: block; font-size: 0.82rem; color: var(--ink-70); line-height: 1.45; }
+  /* 44 haber özeti, 9.167 karakter: sayfanın en küçük ve en geniş metniydi
+     (13,1px, genişlik sınırı yok → satır başına 129 karakter). */
+  .h-ozet { display: block; font-size: 0.95rem; color: var(--ink-70); line-height: 1.55;
+            max-width: 29rem; }
 
 
-  .piyasa .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1.1rem; }
-  .sigma-blok .alt-not { margin: -0.2rem 0 0.7rem; max-width: 64ch; }
-  .p-sigma { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-30); white-space: nowrap; }
+  .piyasa .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 1.1rem; max-width: 24rem; }
+  .sigma-blok .alt-not { margin: -0.2rem 0 0.7rem; max-width: 24rem; }
+  .p-sigma { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink-60); white-space: nowrap; }
   .p-sigma.olagandisi { color: var(--claret); font-weight: 600; }
   .p-grup { margin: 1.4rem 0; }
   .p-grup h3 {
@@ -1065,7 +1098,7 @@ const bolumler = [
   .p-degisim { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-70); }
   .p-degisim.arti { color: var(--pozitif); }
   .p-degisim.eksi { color: var(--claret); }
-  .p-aralik { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-30); }
+  .p-aralik { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-60); }
   table.p-tablo.tl td:first-child { min-width: 16rem; }
   tr.gecersiz .p-son { color: var(--ink-70); }
   .p-bayrak {
@@ -1092,7 +1125,7 @@ const bolumler = [
   .tema-gelisme p { margin: 0 0 0.4rem; line-height: 1.55; }
   .tema-tez { margin: 0 0 0.5rem; line-height: 1.5; font-size: 0.92rem; }
   .tema-gozlem { margin: 0 0 0.6rem; font-size: 0.85rem; color: var(--ink-70); }
-  .tema-sutun { font-family: var(--font-mono); font-size: 0.66rem; color: var(--ink-30); margin: 0.2rem 0 0; }
+  .tema-sutun { font-family: var(--font-mono); font-size: 0.66rem; color: var(--ink-60); margin: 0.2rem 0 0; }
   .tema-isaret { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.9rem; margin: 0.8rem 0 0.4rem; }
   .isaret-baslik { font-variant: small-caps; letter-spacing: 0.06em; font-size: 0.78rem; color: var(--claret); }
   .tema-isaret ul { margin: 0.2rem 0 0; padding-left: 1.1rem; }
