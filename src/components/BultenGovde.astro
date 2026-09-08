@@ -286,6 +286,14 @@ const bolumler = [
         <span class:list={['g-fark', { arti: (g.fark ?? 0) > 0, eksi: (g.fark ?? 0) < 0 }]}>
           {gostergeFark(g.fark_metin, g.birim)}
         </span>
+        {g.baglam_metin && (
+          <span class="g-baglam">
+            {g.baglam_ad}{' '}
+            {String(g.birim ?? '').trim() === '%'
+              ? <>{'%'}{eksiDuzelt(g.baglam_metin)}</>
+              : <>{eksiDuzelt(g.baglam_metin)}<span class="g-birim">{g.birim}</span></>}
+          </span>
+        )}
         <span class="g-tarih">
           {tz(g.veri_tarihi)}
           {g.kiyas && g.kiyas !== 'son yayım' && <span class="g-kiyas">{g.kiyas}</span>}
@@ -910,6 +918,13 @@ const bolumler = [
   .g-fark.eksi { color: var(--claret); }
   .g-tarih { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-60); }
   .g-kiyas { display: block; font-size: 0.92em; font-style: italic; }
+  /* BAĞLAM SATIRI — tek günlük okumanın altında, ondan sönük ama okunur.
+     --ink-60 jetonun kendi yorumunun "metinde kullanılabilir en soluk mürekkep"
+     dediği değer (4,59:1); --ink-30 metinde kullanılmaz (1,90:1). */
+  .g-baglam {
+    display: block; font-size: 0.86rem; color: var(--ink-60);
+    margin-top: 0.1rem; font-variant-numeric: tabular-nums;
+  }
 
   .blok { margin: 2.6rem 0; }
   .blok h2 {
