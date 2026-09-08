@@ -106,7 +106,7 @@ const kapsam = ozet && description && description !== ozet ? description : null;
         <span><b>Yayın</b> {tarihUzun(pubDate)}</span>
         {updatedDate && <span><b>Güncelleme</b> {tarihUzun(updatedDate)}</span>}
         {veriTarihi && <span><b>Veri</b> {tarihUzun(veriTarihi)} kapanışına kadar</span>}
-        {guncelleme && <span><b>Ritim</b> {guncelleme}</span>}
+        {tur === 'proje' && guncelleme && <span><b>Ritim</b> {guncelleme}</span>}
         {durum === 'taslak' && <span class="rozet rozet--taslak">Hazırlanıyor</span>}
         {duzeltmeler.length > 0 && <span><b>Düzeltme</b> <a href="#duzeltmeler">{duzeltmeler.length} kayıt</a></span>}
       </div>
@@ -149,7 +149,16 @@ const kapsam = ozet && description && description !== ozet ? description : null;
         </ul>
       </section>
     )}
-    <div class="prose yuksel" style="--d: 120ms">
+    {/*
+      CANLI DEĞER KABI. Yalnız PANOLAR (tur === 'proje') canlıdır: <Deger>
+      etiketleri sayfa açılınca hattın ozet.json'undan tazelenir. Analiz ve
+      ders yazıları YAYIMLANDIĞI GÜNÜN metnidir (karar 08.09.2026): içlerindeki
+      <Deger> etiketleri yedek metniyle sabit kalır, canlı işareti (noktalı alt
+      çizgi, ipucu) basılmaz. Kap `data-deger="sabit"`; Deger bileşeninin
+      betiği bu kabın içindeki alanlara dokunmaz, sayfa sınavının 24. ölçütü
+      kabı derlenmiş çıktıda arar.
+    */}
+    <div class="prose yuksel" style="--d: 120ms" data-deger={tur === 'proje' ? undefined : 'sabit'}>
       <slot />
     </div>
     {gorunenEtiketler.length > kickerEtiketler.length && (

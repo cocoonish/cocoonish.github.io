@@ -11,7 +11,8 @@
    sayfadır. Bunu bir listeden değil `<Deger proje="<slug>">` çağrısından
    türetiyoruz (bkz. CLAUDE.md "bir denetimin KAPSAMI denetimin parçasıdır"):
      1) panosu varsa pano,
-     2) yoksa o hattı okuyan EN YENİ analiz yazısı,
+     2) yoksa o hattı anlatan EN YENİ analiz yazısı (08.09.2026'dan beri analiz
+        sabittir — canlı okumaz; bağ, hattın okura görünen tek yazısına gider),
      3) hiçbiri yoksa bağ HİÇ kurulmaz — 404 veren bir bağ, bağsız bir
         addan kötüdür.
 

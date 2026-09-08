@@ -6,6 +6,13 @@
  * sayfa açılınca /projeler/<proje>/ozet.json çekilir ve tüm değerler güncellenir.
  * Böylece sayfa metnindeki sayılar, veri güncellendikçe MDX'e dokunmadan tazelenir.
  *
+ * YALNIZ PANOLAR CANLIDIR (karar 08.09.2026). Analiz ve ders yazıları
+ * yayımlandığı günün metnidir; düzen (layouts/Yazi.astro) gövdelerini
+ * `data-deger="sabit"` kabına alır. Kabın içindeki alanlar bu betikçe HİÇ
+ * okunmaz: yedek metin olduğu gibi kalır, ipucu ve canlı işareti basılmaz,
+ * aşağıdaki stil kabın içinde alt çizgiyi kaldırır. Eski analizlerdeki
+ * <Deger> etiketleri MDX'e dokunulmadan sabit metne döner.
+ *
  * BİÇİM UYARISI — aşağıdaki script ve style blokları bilerek span'ın kapanış
  * etiketine YAPIŞIK yazıldı; araya boş satır KOYMAYIN. Astro bu blokları şablondan
  * söküp hoist eder, ama aralarındaki satır sonları çıktıda boşluk metni olarak kalır
@@ -43,7 +50,9 @@ const { proje, anahtar, ondalik = 1, isaret = false, bayatGun = 45 } = Astro.pro
   data-bayat-gun={bayatGun}><slot>…</slot></span><script>
   import { sayi, tariheCevir } from '../lib/bicim';
   // Sayfa başına tek sefer: span'ları projeye göre grupla, ozet.json'ları çek, doldur.
-  const alanlar = [...document.querySelectorAll('span.canli-deger')] as HTMLElement[];
+  // Sabit kap (analiz, ders) dışarıda: oradaki değer yayım günündeki metindir.
+  const alanlar = ([...document.querySelectorAll('span.canli-deger')] as HTMLElement[])
+    .filter((a) => !a.closest('[data-deger="sabit"]'));
   const projeler = [...new Set(alanlar.map((a) => a.dataset.proje!))];
 
   // Sayı yazımı tek yerden (lib/bicim): eksi U+2212, ondalık virgül.
@@ -123,6 +132,12 @@ const { proje, anahtar, ondalik = 1, isaret = false, bayatGun = 45 } = Astro.pro
   }
   .canli-deger.yuklendi {
     border-bottom-color: color-mix(in srgb, var(--teal) 55%, transparent);
+  }
+  /* Sabit kap: analiz ve ders yazılarında değer yayım günündeki metindir;
+     canlı işareti (noktalı alt çizgi, yardım imleci) basılmaz. */
+  :global([data-deger="sabit"]) .canli-deger {
+    border-bottom: none;
+    cursor: inherit;
   }
   /* Hattın saatinin çok gerisinde kalmış seri: okur sayının ne kadar eski
      olduğunu ÜSTÜNE GELMEDEN de görsün. İşaret küçük, satır yüksekliğini
