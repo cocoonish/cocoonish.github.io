@@ -62,9 +62,10 @@ tesisi. En sonda da bu fiyatın bankacılık sistemine ne kadarının geçtiği.
 Kutu **bu koşunun** durumunu gösterir ve veri katmanının uyarılarını da taşır: ağ
 düşüp eski önbelleğe düşüldüğünde, ya da bir yayın durduğunda kutu kırmızıya döner ve
 başlığı **BAYAT VERİ** olur. Bayatlık ölçüsü sayfanın kendi tazelik toleranslarından
-okunur (günlük aile <Deger proje="fonlama-likidite" anahtar="bayat_tolerans_gun" ondalik={0}>4</Deger>
-gün, haftalık aile <Deger proje="fonlama-likidite" anahtar="bayat_tolerans_hafta" ondalik={0}>12</Deger>
-gün) — iki yerde ayrı eşik tutulmaz.
+okunur (günlük aile <Deger proje="fonlama-likidite" anahtar="bayat_tolerans_gun" ondalik={0}>2</Deger>
+**yayım günü** — hafta sonu ve resmî tatil sayılmaz — haftalık aile
+<Deger proje="fonlama-likidite" anahtar="bayat_tolerans_hafta" ondalik={0}>13</Deger>
+takvim günü) — iki yerde ayrı eşik tutulmaz.
 
 ### Fiyat
 
@@ -947,12 +948,24 @@ olduğuna işaret eder — uyarı olarak düşer, gizlenmez.
 **Tazelik, aile bazlı.** Tek bir eşik her hafta yanlış alarm üretirdi: APİ, kotasyon ve
 sistem likiditesi her iş günü; TLREF ve analitik bilanço bir gün gecikmeli; haftalık
 faiz ailesi altı gün; ZK tabanı on üç gün gecikmelidir. Her aile kendi takvimiyle
-denetlenir (sırasıyla 4 · 5 · 12 · 20 gün eşikleriyle). Referans **duvar saatidir** —
-verinin kendi son gününü referans almak, denetimi kendi kendine referanslı hâle
-getirirdi ve hiçbir bayatlama yakalanmazdı.
+denetlenir: günlük aileler 2 ve 3 **yayım günü**, haftalık aileler 13 ve 20 takvim günü.
+Referans **duvar saatidir** — verinin kendi son gününü referans almak, denetimi kendi
+kendine referanslı hâle getirirdi ve hiçbir bayatlama yakalanmazdı.
 
-**Kur serisi muaftır**, çünkü gecikmesi **negatiftir**: TCMB ertesi günün kurunu bir gün
-önce ilan eder. Bu muafiyet olmasa tazelik denetimi her gün yanlış alarm verirdi.
+**Günlük ailenin birimi takvim günü değil, kaynağın yayım yaptığı gündür.** Hafta sonu
+tek başına üç takvim günü yer; bir bayram bunu altı-yedi güne çıkarır. Takvim günü
+ölçüsü bu yüzden bayram haftalarında kaynak sapasağlam çalışırken **BAYAT VERİ** der:
+günlük çekirdek serinin Eylül 2018'de başlayan tarihçesinde takvim günü ölçüsünün
+yanılacağı sekiz gün var (2019, 2021, 2022, 2023, 2024 ve 2026 bayramları), yayım günü
+ölçüsünün yanılacağı ise bir gün bile yok. Resmî tatiller kanunla sabit olanlar için
+kuralla, hareketli dinî bayramlar için hesapla belirlenir; hesabın bir günlük kayması
+ölçüldüğü için bayram penceresi iki uçtan birer gün geniş tutulur — bedeli yılda
+ortalama üç gün, yani hafta içi günlerin yüzde biri kadarının tazelik ölçüsünün dışında
+kalmasıdır.
+
+**Kur serisi muaftır**, çünkü tek gözlemi **ileri tarihli** olabilir: kur bacağı
+küresel işlem gününden gelir ve gün dönümüne yakın saatlerde yerel takvimin bir gün
+önündedir. Bu muafiyet olmasa tazelik denetimi o saatlerde yanlış alarm verirdi.
 
 **`LAST_UPDATED` bir tazelik ölçüsü değildir.** EVDS'in metaveri kaydı, serinin son
 gözlemiyle ilgisiz bir tarihe işaret edebilir. Tazelik yalnız **son dolu gözlemden**
