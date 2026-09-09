@@ -67,11 +67,23 @@ const yasYazi = yasMetni(yas);
 
 // Üç hâlli hüküm. Hatlar iki sözleşmeyle konuşuyor: `bayat: true/false` ya da
 // `tazelik: 'güncel' | 'bayat'`. İkisi de yoksa hüküm YOKTUR.
+//
+// HÜKÜM KOŞU ANININ ÖLÇÜSÜDÜR, BUGÜNÜN DEĞİL. İki alan da hat koştuğu an
+// ölçülüp dosyaya DONAR: hat bir daha hiç koşmazsa dosya "güncel" demeye
+// devam eder. 09.09.2026'da iki hatta ölçüldü — try-reer'de `tazelik:
+// 'güncel'` 04.09 koşusundan kalmaydı, yabancı pozisyonunda şerit aynı
+// satırda `_tarih`ten CANLI hesapladığı yaşı (38 gün) yazarken hükmü "veri
+// taze" basıyordu. Metin bu yüzden ZAMANINI söylüyor: okur donmuş hükümle
+// canlı yaşı yan yana görüyor ve çelişkiyi kendisi okuyabiliyor. Hükmü
+// yaşa göre ÇEVİRMEK için hattın kendi toleransı (bulten/ayar.RITIM)
+// gerekir ve o eşik bugün yalnız Python tarafında tanımlı; ölçülmemiş bir
+// eşiği bileşene yazmak yerine eşiğin tek kaynaktan dışa verilmesi
+// beklendi (AÇIK KALAN).
 type Hukum = { kod: 'yok' | 'bayat' | 'taze' | 'olculmemis'; metin: string };
 const hukumBul = (d: Record<string, any> | null): Hukum => {
   if (!d) return { kod: 'yok', metin: 'veri dosyası yok' };
   if (d.bayat === true || d.tazelik === 'bayat') return { kod: 'bayat', metin: 'bayat — sayılar ilerlemedi' };
-  if (d.bayat === false || d.tazelik === 'güncel') return { kod: 'taze', metin: 'veri taze' };
+  if (d.bayat === false || d.tazelik === 'güncel') return { kod: 'taze', metin: 'son koşuda taze ölçüldü' };
   return { kod: 'olculmemis', metin: 'bayatlık ölçülmüyor' };
 };
 const hukum = hukumBul(o);
@@ -142,7 +154,7 @@ const uyari = typeof o?.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
   };
   const hukumBul = (o: any): { kod: string; metin: string } => {
     if (o.bayat === true || o.tazelik === 'bayat') return { kod: 'bayat', metin: 'bayat — sayılar ilerlemedi' };
-    if (o.bayat === false || o.tazelik === 'güncel') return { kod: 'taze', metin: 'veri taze' };
+    if (o.bayat === false || o.tazelik === 'güncel') return { kod: 'taze', metin: 'son koşuda taze ölçüldü' };
     return { kod: 'olculmemis', metin: 'bayatlık ölçülmüyor' };
   };
 
