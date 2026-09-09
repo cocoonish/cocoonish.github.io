@@ -43,8 +43,12 @@ mevduat dolarizasyonuna ve KKM'nin bitmiş tarihine taşıyoruz.
 Haftalık çıpa **<Deger proje="kredi-parasal" anahtar="hafta" ondalik={0}>14 Ağustos 2026</Deger>**
 (yayım <Deger proje="kredi-parasal" anahtar="yayim_tarihi" ondalik={0}>20.08.2026</Deger>,
 gecikme <Deger proje="kredi-parasal" anahtar="yayim_gecikme_gun" ondalik={0}>1</Deger> gün);
-günlük aileler <Deger proje="kredi-parasal" anahtar="gun" ondalik={0}>21 Ağustos 2026</Deger>,
-aylık aileler <Deger proje="kredi-parasal" anahtar="ay" ondalik={0}>Haziran 2026</Deger>,
+günlük aileler <Deger proje="kredi-parasal" anahtar="gun" ondalik={0}>21 Ağustos 2026</Deger>
+— döviz kuru, analitik bilanço, APİ fonlaması ve faiz kotasyonlarının **tamamının**
+dolu olduğu son iş günü; kur ertesi iş günü için ilan edildiğinden tek başına bir adım
+ileridedir
+(<Deger proje="kredi-parasal" anahtar="gun_kur_tarih" ondalik={0}>21.08.2026</Deger>).
+Aylık aileler <Deger proje="kredi-parasal" anahtar="ay" ondalik={0}>Haziran 2026</Deger>,
 üç aylık <Deger proje="kredi-parasal" anahtar="ceyrek" ondalik={0}>2026-Ç2</Deger>.
 Bu koşum: <Deger proje="kredi-parasal" anahtar="kosum_tarihi" ondalik={0}>21.08.2026</Deger>.
 
@@ -141,11 +145,13 @@ kalemlerinde çıkarılamıyor. İki sütun aynı cümlede okunmaz.
 
 Beklenti girdisi PKA 12 aylık TÜFE beklentisi:
 %<Deger proje="kredi-parasal" anahtar="pka_12a" ondalik={2}>23,69</Deger>
-(<Deger proje="kredi-parasal" anahtar="pka_tarih" ondalik={0}>01.08.2026</Deger> damgalı;
-faiz gözleminden <Deger proje="kredi-parasal" anahtar="pka_yas_gun" ondalik={0}>13</Deger>
-gün eski). Aylık anket haftalık eksene taşındığı için beklentinin **yaşı** ayrıca
-yayımlanır: yaş 45 günü aşarsa görünür uyarı düşer, çünkü anket yayını gecikirse reel
-faizler sessizce eski beklentiyle hesaplanmaya devam ederdi.
+(<Deger proje="kredi-parasal" anahtar="pka_tarih" ondalik={0}>08.2026</Deger> ayına ait;
+faiz gözleminden en çok
+<Deger proje="kredi-parasal" anahtar="pka_yas_gun" ondalik={0}>13</Deger>
+gün eski — anket ayın ilk yarısında derlenir, yaş ise ayın ilk gününden sayılır, yani
+yazılan sayı bir üst sınırdır). Aylık anket haftalık eksene taşındığı için beklentinin
+**yaşı** ayrıca yayımlanır: yaş 45 günü aşarsa görünür uyarı düşer, çünkü anket yayını
+gecikirse reel faizler sessizce eski beklentiyle hesaplanmaya devam ederdi.
 
 ### Parasal büyüklükler ve dolarizasyon
 
@@ -738,7 +744,10 @@ toplam rezerv para
 **ima edilen bileşik orandır** ve tebliğdeki herhangi bir tek orana eşit değildir:
 tebliğ vade, para cinsi ve yükümlülük türüne göre farklı oranlar tanımlar, üstelik bir
 kısmı TL cinsinden döviz tesisi ve altın tesisi ile karşılanır. EVDS'te zorunlu karşılık
-oranı serisi **yoktur**; bu satır bir vekil ölçüdür ve öyle etiketlenir.
+oranı serisi **yoktur**; bu satır bir vekil ölçüdür ve öyle etiketlenir. Payda —
+zorunlu karşılığa tabi taban — kredi ve para arzı tablolarından bir hafta sonra
+yayımlanır, bu yüzden oran haftalık çıpanın değil kendi gününün ölçüsüdür
+(<Deger proje="kredi-parasal" anahtar="zk_ima_oran_tarih" ondalik={0}>21.08.2026</Deger>).
 
 **Frekans notu.** Analitik bilanço iş günü, para arzı haftalık yayımlanır. Bilanço
 kalemleri haftalık eksene **geri taşıma** ile hizalanır (her hafta o hafta bilinen son
