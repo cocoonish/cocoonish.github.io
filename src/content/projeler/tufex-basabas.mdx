@@ -118,9 +118,22 @@ Elmayla armudu kıyaslamamak için anket patikası vade boyunca ortalanır
 beklentisi geçerli sayılıp vade boyunca ağırlıklı ortalama alınır. Prim
 kolonları $prim_v = BE_v - \overline{PKA}_v$ farkıdır.
 
+**Anketin geçerlilik günü bir varsayımdır.** Anket ayın ikinci yarısında
+yayımlanır; kaynak seri ise yalnız anketin ayını taşır, yayım gününü değil.
+Hesapta her ayın anketi o ayın
+<Deger proje="tufex-basabas" anahtar="pka_yayim_gun" ondalik={0}>20</Deger>.
+gününden (hafta sonuna denk gelirse izleyen iş gününden) itibaren geçerli
+sayılır; ay başından sayılsaydı piyasanın henüz bilmediği bir beklentiyle prim
+hesaplanmış olurdu. Yürürlükteki anket
+<Deger proje="tufex-basabas" anahtar="pka_ay_ad" ondalik={0}>Ağustos 2026</Deger>
+sayısıdır ve hesapta geçerli sayıldığı ilk gün
+<Deger proje="tufex-basabas" anahtar="pka_gecerli_baslangic" ondalik={0}>20.08.2026</Deger>.
+Tablodaki anket sütunu ve anketten türeyen sayılar bu yüzden günün değil
+anketin ayının tarihini taşır.
+
 ## Şekil 01 — Piyasa ile anketin makası
 
-<GrafikEmbed src="/projeler/tufex-basabas/basabas_anket.html" baslik="Başabaş ve eşlenmiş anket beklentisi" no="01" />
+<GrafikEmbed src="/projeler/tufex-basabas/basabas_anket.html" baslik="Başabaş ve eşlenmiş anket beklentisi" no="01" tarihAnahtari="damga_basabas_anket" />
 
 ### Bu şekil nasıl hesaplanıyor?
 
@@ -129,12 +142,15 @@ eşlenmiş ortalaması. İki serinin **birlikte** hareket ettiği dönemler piya
 anketi izlediği dönemlerdir; makasın açıldığı dönemler, piyasanın anket
 patikasına prim istediği dönemler. Serilerin başlangıcı vadeye göre değişir
 (2y başabaş 2022 başından, 1y ve 5y 2023 başından) — kesitte o vadeyi kuracak
-TÜFEX kâğıdı her zaman yoktur ve seri uydurulmaz, kesilir.
+TÜFEX kâğıdı her zaman yoktur ve seri uydurulmaz, kesilir. Anket izi aylık
+anketin günlük eksene yayılmış basamağıdır: çizgi bugüne kadar uzanır ama
+bilgisi yürürlükteki anketin ayına aittir. Şeklin damgası bu yüzden iki
+parçalıdır — piyasa bacağı son işlem gününü, anket bacağı anketin ayını taşır.
 
 ## Şekil 02 — Risk priminin vade yapısı ve tarihçesi
 
-<GrafikEmbed src="/projeler/tufex-basabas/prim_kesit.html" baslik="Bugünkü prim kesiti" no="02a" yukseklik={420} />
-<GrafikEmbed src="/projeler/tufex-basabas/prim_tarihce.html" baslik="Primin tarihçesi" no="02b" />
+<GrafikEmbed src="/projeler/tufex-basabas/prim_kesit.html" baslik="Bugünkü prim kesiti" no="02a" yukseklik={420} tarihAnahtari="damga_prim_kesit" />
+<GrafikEmbed src="/projeler/tufex-basabas/prim_tarihce.html" baslik="Primin tarihçesi" no="02b" tarihAnahtari="damga_prim_tarihce" />
 
 ### Bu şekil nasıl hesaplanıyor?
 
@@ -147,10 +163,15 @@ kısmen doğrudur — ya piyasa anketin orta vadeli iyimserliğine inanmıyor
 (beklenti farkı), ya da uzun vadeli enflasyon belirsizliğinin tazminatı yüksek
 (gerçek prim). Ayrım için tarihçeye bakılır: prim **dezenflasyon güveni
 arttıkça** daralır; daralmadan süren bir yüksek prim, güvensizliğin fiyatıdır.
+Üç yıllık iz, yukarıdaki kutuda anlatılan itfa boşluğu yüzünden
+<Deger proje="tufex-basabas" anahtar="prim_3y_tarih" ondalik={0}>12.06.2026</Deger>
+tarihinde durur; iki şeklin damgası o bacağı diğerlerinden ayırıp kendi
+tarihiyle yazar — tek bir tarih ya donmuş izi bugünün verisi gösterir ya da
+bütün şekli üç ay bayat.
 
 ## Şekil 03 — Reel getiriler
 
-<GrafikEmbed src="/projeler/tufex-basabas/reel_tarihce.html" baslik="TÜFEX reel getirileri" no="03" />
+<GrafikEmbed src="/projeler/tufex-basabas/reel_tarihce.html" baslik="TÜFEX reel getirileri" no="03" tarihAnahtari="damga_reel_tarihce" />
 
 ### Bu şekil nasıl hesaplanıyor?
 
@@ -165,7 +186,7 @@ korumanın bedelle satıldığı rejimdi.
 
 ## Şekil 04 — Mevsimsellik: kısa başabaşın takvim tuzağı
 
-<GrafikEmbed src="/projeler/tufex-basabas/mevsim.html" baslik="Aylık TÜFE'nin takvim deseni" no="04" yukseklik={460} />
+<GrafikEmbed src="/projeler/tufex-basabas/mevsim.html" baslik="Aylık TÜFE'nin takvim deseni" no="04" yukseklik={460} tarihAnahtari="damga_mevsim" />
 
 ### Bu şekil nasıl hesaplanıyor?
 
@@ -187,9 +208,13 @@ başabaşta aylar tam yıl sayısına tamamlandığı için desen kendiliğinden
   ikisini ayrıştırmaz; ayrıştırma model ister ve model varsayımı fiyat değil
   tahmindir. Ölçülen neyse o gösterilir.
 - **Anket, piyasanın beklentisi için kusurlu bir vekildir**: katılımcı sayısı
-  sınırlıdır (son ankette
-  <Deger proje="tufex-basabas" anahtar="pka_12a" ondalik={2}>23,69</Deger>'luk
-  12a medyanı 63 katılımcıdan) ve anket cevabı pozisyonla desteklenmez.
+  sınırlıdır (yürürlükteki
+  <Deger proje="tufex-basabas" anahtar="pka_ay_ad" ondalik={0}>Ağustos 2026</Deger>
+  anketinde 12 ay sonrası beklentisinin ortalaması
+  %<Deger proje="tufex-basabas" anahtar="pka_12a" ondalik={2}>23,69</Deger>
+  ve bu ortalama
+  <Deger proje="tufex-basabas" anahtar="pka_katilimci" ondalik={0}>63</Deger>
+  katılımcıdan geliyor) ve anket cevabı pozisyonla desteklenmez.
 - **TÜFEX kesiti nominalden seyrektir**: bazı vadeler bazı dönemlerde
   kurulamaz ve seriler kesiktir; kesikler grafikte olduğu gibi bırakılır.
 - **Endeks gecikmesi kasıtlı olarak reel getiriden düzeltilmez**: kesitin
