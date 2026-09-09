@@ -38,8 +38,16 @@ sayfasında; sıkılığın toplam resmi günlük bültenin rejim panosunda.
 Veri tarihi: <Deger proje="makroihtiyati" anahtar="_tarih" ondalik={0}>14.08.2026</Deger>
 (kredi haftalık serileri); faizler <Deger proje="makroihtiyati" anahtar="f_ihtiyac_tarih" ondalik={0}>14.08.2026</Deger>.
 Tablonun son satırı bu iki saatten değil, üç ayda bir yayımlanan anketten
-gelir: BKEA <Deger proje="makroihtiyati" anahtar="bkea_std_isletme_tarih" ondalik={0}>01.04.2026</Deger>
-ile başlayan çeyrek.
+gelir: <Deger proje="makroihtiyati" anahtar="bkea_ceyrek" ondalik={0} bayatGun={110}>2026-Ç2</Deger>
+anketi, yani <Deger proje="makroihtiyati" anahtar="bkea_std_isletme_tarih" ondalik={0}>06.2026</Deger>
+ile biten çeyrek.
+
+{/* Anket bacağının bayatlık eşiği 110 gün: kredi hattının kendi tazelik
+    tablosunda üç aylık eğilim anketi için ölçülmüş tolerans budur ve dönem
+    SONUNDAN sayılır. Öntanımlı 45 gün burada KALICI bir bayat işareti üretir
+    (09.09.2026'da ölçüldü: çeyrek sonundan 59 gün geçmiş, en taze anket
+    düştüğü gün bile boşluk yayım gecikmesi kadar olur). Eşik iki listede
+    duruyor — burada ve ölçüm katmanının karanlık eşiğinde. */}
 
 | İz | Ölçü | Değer | Okuma |
 |---|---|---|---|
@@ -49,15 +57,17 @@ ile başlayan çeyrek.
 | Kaçak | Kurumsal kart − ticari kredi | <Deger proje="makroihtiyati" anahtar="kacak_kurumsal_kart" ondalik={1} isaret={true}>+31,9</Deger> puan | |
 | Gölge fiyat | İhtiyaç kredisi − politika | <Deger proje="makroihtiyati" anahtar="makas_ihtiyac" ondalik={2} isaret={true}>+28,46</Deger> puan | miktar kısıtı fiyata yansımış |
 | Gölge fiyat | Ticari − politika / mevduat − politika | <Deger proje="makroihtiyati" anahtar="makas_ticari_tl" ondalik={2} isaret={true}>+16,15</Deger> / <Deger proje="makroihtiyati" anahtar="makas_mevduat" ondalik={2} isaret={true}>+9,46</Deger> puan | |
-| Beyan | BKEA işletme kredisi standartları | <Deger proje="makroihtiyati" anahtar="bkea_std_isletme" ondalik={1} isaret={true}>−20,4</Deger> net% | son çeyrekte sıkılaşma beyanı |
+| Beyan | BKEA işletme kredisi standartları | <Deger proje="makroihtiyati" anahtar="bkea_std_isletme" ondalik={1} isaret={true} bayatGun={110}>−20,4</Deger> net% | son çeyrekte sıkılaşma beyanı |
 
 ### Bir cümlelik okuma
 
-Toplam kredi görünümü tek sayıya sıkıştırıldığında "%26, enflasyonun altında,
-reel daralma" der ve doğrudur; ama çerçevenin asıl işi kanal içindedir —
-tüketici ticariden 24 puan hızlı büyüyor, akışın bir kısmı kart kanalına
-kaçıyor ve ihtiyaç kredisi faizi politikanın 28 puan üstünde: üçü birden,
-bağlayıcı kısıtın nerede olduğunun ölçülen cevabıdır.
+Toplam kredi görünümü tek sayıya sıkıştırıldığında "%<Deger proje="makroihtiyati" anahtar="g_ar_13y" ondalik={0}>27</Deger>,
+enflasyonun altında, reel daralma" der ve doğrudur; ama çerçevenin asıl işi
+kanal içindedir — tüketici ticariden
+<Deger proje="makroihtiyati" anahtar="ayrisma" ondalik={0}>11</Deger> puan hızlı
+büyüyor, akışın bir kısmı kart kanalına kaçıyor ve ihtiyaç kredisi faizi
+politikanın <Deger proje="makroihtiyati" anahtar="makas_ihtiyac" ondalik={0}>24</Deger>
+puan üstünde: üçü birden, bağlayıcı kısıtın nerede olduğunun ölçülen cevabıdır.
 
 ## Yöntem — sınır çizilmez, iz ölçülür
 
@@ -135,14 +145,15 @@ geçirilmediğinin, yani tavanın hâlâ bağlayıcı olduğunun işaretidir.
 TCMB'nin çeyreklik anketinden net yüzde: standartları gevşettiğini söyleyen
 bankaların payı eksi sıkılaştırdığını söyleyenler (pozitif = gevşeme), ve
 işletme kredisi talebi. Şeklin altındaki tarih bu anketin kendi saatidir,
-sayfanın haftalık kredi saati değil: nokta çeyreğin ilk gününe konur ve anket
-üç ayda bir yayımlanır — yani bu figür, yukarıdaki üç şeklin gerisinde durur ve
+sayfanın haftalık kredi saati değil: damga anketin kapsadığı çeyreğin SON
+AYINI taşır ve anket üç ayda bir, çeyrek kapandıktan sonra yayımlanır — yani
+bu figür, yukarıdaki üç şeklin gerisinde durur ve
 iki yayım arasında aylarca aynı okumayı gösterir. Anket beyandır, ölçüm
 değildir — ama üç iz ile aynı yönü gösterdiğinde hikâye kapanır: son çeyrekte
 işletme standartları
-<Deger proje="makroihtiyati" anahtar="bkea_std_isletme" ondalik={1} isaret={true}>−20,4</Deger>
+<Deger proje="makroihtiyati" anahtar="bkea_std_isletme" ondalik={1} isaret={true} bayatGun={110}>−20,4</Deger>
 net% ile sıkılaşırken talep
-+<Deger proje="makroihtiyati" anahtar="bkea_talep" ondalik={1}>41,1</Deger>
++<Deger proje="makroihtiyati" anahtar="bkea_talep" ondalik={1} bayatGun={110}>41,1</Deger>
 net% ile güçlü — arz kısıtlı, talep canlı: makasların ve kaçağın anlattığıyla
 aynı tablo.
 
