@@ -5,8 +5,8 @@ pubDate: 2026-07-15
 updatedDate: 2026-08-18
 tags: ['usdtry', 'fx', 'trend']
 durum: 'aktif'
-kaynak: 'TCMB EVDS (kur + faiz serileri)'
-guncelleme: 'her iş günü (TCMB gösterge kuru, 15:30)'
+kaynak: 'Yahoo Finance (USD/TRY) + TCMB EVDS (faiz serileri)'
+guncelleme: 'her iş günü (piyasa kapanışı)'
 ---
 
 import GrafikEmbed from '../../components/GrafikEmbed.astro';
@@ -15,7 +15,7 @@ import Deger from '../../components/Deger.astro';
 "Kur koptu mu, olağan seyrinde mi?" Bu sorunun doğru birimi seviye değil **hızdır**:
 TL'nin yıllıklandırılmış değer kaybı, carry pozisyonunun kâr-zarar denklemindeki karşı
 bacaktır. Deval hızı faizin altındaysa carry kazandırır; üstüne çıktığı anlar rejim
-değişikliği sinyalidir. Seri EVDS'ten günlük beslenir; son okuma (<Deger proje="usdtry-deval" anahtar="_tarih" ondalik={1}>19.08.2026</Deger>, kur
+değişikliği sinyalidir. Seri Yahoo Finance'ten günlük kapanışla beslenir; son okuma (<Deger proje="usdtry-deval" anahtar="_tarih" ondalik={1}>19.08.2026</Deger>, kur
 <Deger proje="usdtry-deval" anahtar="kur" ondalik={2}>47,83</Deger>): 1 hafta **+%<Deger proje="usdtry-deval" anahtar="d1h" ondalik={1}>21,6</Deger>** · 1 ay **+%<Deger proje="usdtry-deval" anahtar="d1a" ondalik={1}>21,5</Deger>** · 3 ay **+%<Deger proje="usdtry-deval" anahtar="d3a" ondalik={1}>22,4</Deger>** — üçü de politika
 faizinin belirgin altında, carry hâlâ pozitif bölgede; üç pencerenin yakınsaması
 rejimin oturduğunu gösterir.
@@ -29,7 +29,7 @@ rejimin oturduğunu gösterir.
 
 ## Şekil 01 nasıl hesaplanıyor?
 
-**Deval oranları (sol eksen).** EVDS günlük USD/TRY alış kuru (TP.DK.USD.A.YTL)
+**Deval oranları (sol eksen).** Yahoo Finance günlük USD/TRY kapanış kuru
 üzerinden üç pencereyle bileşik yıllıklandırma. Faizle aynı gün-sayım tabanını
 kullanırız — **ACT/365, gerçek takvim günü farkıyla**:
 
@@ -129,12 +129,9 @@ orta vadeli bir okuma katmanı sağlar.
 
 ## Yorum notları
 
-- **Değer tarihi:** TCMB, ertesi iş gününün gösterge kurunu bugün öğleden sonra
-  yayımlar. Hat bu erken yayımlanan kuru bilinçli olarak alır (EVDS sorgusu birkaç gün
-  ileri biter), bu yüzden "son okuma" tarihi içinde bulunduğunuz günden bir iş günü
-  ileride olabilir — bu bir hata değil, kurun **değer tarihidir**. Grafikler ve
-  veri özeti aynı pencereyi kullanır; sayfa metnindeki sayı ile grafiğin son noktası
-  tanımı gereği aynı gözlemdir.
+- **Değer tarihi:** Seri işlem gününü taşır; günün barı piyasa kapanmadan seriye
+  alınmaz, yani son okuma her zaman kapanmış bir seansa aittir. Tatil öncesi
+  ileri tarihli bir gün üretilmez.
 - **Konvansiyon:** Yıllıklandırma ACT/365 ve takvim günü tabanlıdır — TL faizleriyle
   (ACT/365) aynı ölçek. İş günü (252) tabanlı yıllıklandırma aynı seriyi ~%3-4 farklı
   gösterir ve faizle karşılaştırmayı bozar; bu projede kullanılmaz.
