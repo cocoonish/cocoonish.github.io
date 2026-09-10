@@ -141,16 +141,28 @@ const takvimGruplari = (b.takvim ?? [])
 const takvimVar = kritikler.length > 0 || takvimGruplari.length > 0;
 
 // AYNI OLAY İKİ BÖLÜMDE ANLATILMAZ — takvimdeki kalıbın eşi, bu kez olaylar için.
-// Ölçüldü (07.09.2026, 13 sayı): "Öne çıkanlar" ve "Notlar" bölümlerindeki
-// 115 maddenin 115'i de "Hat hat değişim"de BİREBİR tekrar ediyordu. Okur
-// aynı cümleyi iki kez okuyor ve ikincisinde yeni bir şey öğrenmiyor.
+// Ölçüldü (07.09.2026, 13 sayı): "Öne çıkanlar" bölümündeki maddeler "Hat hat
+// değişim"de BİREBİR tekrar ediyordu. Okur aynı cümleyi iki kez okuyor ve
+// ikincisinde yeni bir şey öğrenmiyor.
 //
-// Öne çıkanlar ve notlar YUKARIDA duruyor (eşiği aşan olaylar okurun ilk
-// göreceği şey); hat hat bölümü onların GERİ KALANINI taşır — takvimde
-// "kritik geri sayım + listenin geri kalanı" nasıl kurulduysa aynen öyle.
+// SÜZGEÇ YALNIZ GERÇEKTEN BASILAN BÖLÜMDEN KURULUR. İlk yazımda küme
+// `one_cikanlar` ARTI `notlar`dan kuruluyordu ve üstündeki yorum "notlar
+// YUKARIDA duruyor" diyordu — oysa bu bileşende `id="notlar"` diye bir bölüm
+// HİÇ OLMADI; `b.notlar` dosyaya ilk kez o commit'le, yalnız bu kümenin içinde
+// girdi. Sonuç: `dikkat` seviyesindeki olaylar hem hiçbir yerde basılmıyor hem
+// de basıldıkları varsayılarak hat hat listesinden SÜZÜLÜYORDU. Ölçüldü
+// (10.09.2026, derlenmiş 17 sayı): 108 dikkat olayının 108'i sayfada yok,
+// kontrol olarak 37 önemli olayın 37'si var; 08–10.09 sayılarında
+// `one_cikanlar` boş olduğu için okura ölçüm cümlesi HİÇ ulaşmıyordu.
+// Bir süzgecin dayandığı varsayım yazıldığı gün ölçülmezse, süzgeç kendi
+// gerekçesinden bağımsız olarak yaşamaya devam eder.
+//
+// `notlar` kovası JSON'da duruyor (denetim ve yazı katmanı onu okuyor) ama
+// SAYFANIN tek dikkat-seviyesi evi `gruplar`dır: uret.py o kovaya önemli VE
+// dikkat olayların hepsini konu konu yazıyor, yani içerik kaybı yok.
 // Anahtar hat+anahtar çifti: aynı ölçüden doğan olay tekildir.
 const anilanOlay = new Set(
-  [...(b.one_cikanlar ?? []), ...(b.notlar ?? [])]
+  (b.one_cikanlar ?? [])
     .filter((o: any) => o?.hat && o?.anahtar)
     .map((o: any) => `${o.hat}|${o.anahtar}`),
 );
