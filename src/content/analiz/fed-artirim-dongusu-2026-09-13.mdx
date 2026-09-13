@@ -2,6 +2,7 @@
 title: '13 Eylül 2026 Fed Artırım Döngüsü — eğrinin fiyatladığı tepe, ön ucun kalan alanı ve 10 yıllığın vade primi'
 description: 'Ağustos çekirdek enflasyonu beklentiyi aşınca 16 Eylül toplantısı için artırım fiyatlaması %90''a yaklaştı. Getiri eğrisinden türetilen ima edilen tepe %4,70–5,02 bandında; bu, bugünkü 3,50–3,75 bandından dört ila altı çeyrek puanlık artırım demek. Haziran nokta grafiğinin medyanı ise 2027 sonu için değişiklik göstermiyordu: komite ile piyasa arasındaki açık, döngünün kendisinden büyük. Çekirdek yıllık %2,4 iken manşetin %3,4 olması, artırımın bir talep şokuna değil enerji kaynaklı bir arz şokuna karşı yapılacağını söylüyor.'
 pubDate: 2026-09-13
+updatedDate: 2026-09-13
 tags: ['fed', 'abd', 'faiz', 'getiri eğrisi', 'enflasyon', 'türkiye']
 durum: 'aktif'
 kaynak: 'ABD Hazinesi günlük getiri eğrisi; New York Fed SOFR; TCMB EVDS; BIST; bülten piyasa anlık görüntüsü'
@@ -75,9 +76,10 @@ import GrafikEmbed from '../../components/GrafikEmbed.astro';
 
 <div class="not gezinme">
 
-Bu yazı altı adımda ilerler: nerede durduğumuz (1), eğriden tepenin türetilmesi (2),
-komite ile piyasa arasındaki açık (3), şokun cinsi (4), ön uç ile uzun ucun ayrı ayrı
-alanı (5–6) ve Türkiye bacağı (7). Türetimin cebiri ve duyarlılığı yöntem ekinde.
+Bu yazı dokuz adımda ilerler: nerede durduğumuz (1), eğriden tepenin türetilmesi ve ima edilen ileri faizler (2),
+yeniden fiyatlamanın anatomisi (3), komite ile piyasa arasındaki açık (4), şokun cinsi
+(5), ön uç ile uzun ucun ayrı ayrı alanı (6–7), piyasa etkisinin ölçümü (8) ve Türkiye
+bacağı (9). Türetimin cebiri ve duyarlılığı yöntem ekinde.
 
 </div>
 
@@ -117,10 +119,17 @@ tutacağı beklense, 3 aylık bono gecelik çıpaya yapışırdı. 39 baz puanl�
 bir buçuk çeyrek puanlık artırımın fiyatlandığı anlamına gelir. 1 yıllıktaki 70 baz puan
 ve 2 yıllıktaki 101 baz puan, fiyatlamanın tek bir toplantıyla sınırlı olmadığını söylüyor.
 
+<GrafikEmbed src="/arastirma/fed-artirim-dongusu-2026-09-13/01_egri.html" baslik="ABD getiri eğrisi ve gecelik çıpa" no="01" kaynak="ABD Hazinesi" />
+
+Şekil 01 bunu gösteriyor: gri bant hedef aralığı (3,50–3,75), kesikli çizgi gerçekleşen
+gecelik maliyet, mavi sayılar her vadenin o çıpaya farkı. Eğrinin hiçbir noktası çıpanın
+altında değil ve fark vadeyle birlikte tek yönlü büyüyor — bu biçim, faizin sabit
+kalacağı beklentisiyle bağdaşmaz.
+
 Aynı günkü diğer ölçümler bağlamı tamamlıyor: dolar endeksi 99,09, EUR/USD 1,1634, Brent
-107,63 dolar, ons altın 4.364,5 dolar, VIX 17,84 (10 Eylül kapanışları). Bültenin kendi
-ölçümüne göre 10 ve 30 yıllık getiriler 52 haftalık aralıklarının sırasıyla %99 ve
-%92'sinde — yani uzun uç, bir yılın en yüksek bölgesinde.
+107,63 dolar, ons altın 4.364,5 dolar, VIX 17,84, MOVE 82,09 (10 Eylül kapanışları).
+Bültenin kendi ölçümüne göre 10 ve 30 yıllık getiriler 52 haftalık aralıklarının sırasıyla
+%99 ve %92'sinde — yani uzun uç, bir yılın en yüksek bölgesinde.
 
 ## 2. Eğriden tepeyi türetmek
 
@@ -152,7 +161,75 @@ puan. Eğer ikinci yılda yeni adımlar fiyatlansaydı bu fark çok daha geniş 
 puan, **ikinci yılın tepede geçirileceğinin** fiyatlandığını söylüyor. Döngü öne yüklü,
 sonrası plato.
 
-## 3. Komite ne diyor, piyasa ne fiyatlıyor
+<GrafikEmbed src="/arastirma/fed-artirim-dongusu-2026-09-13/02_patika.html" baslik="Eğriden türetilen ima edilen politika patikası" no="02" kaynak="ABD Hazinesi; NY Fed" />
+
+### Patika varsayımı olmadan: ima edilen ileri faizler
+
+Yukarıdaki türetimin bir zayıflığı var: faizin tepeye **doğrusal** çıktığını varsayıyor.
+Bu varsayımı hiç yapmadan da eğriye aynı soru sorulabilir. İki vadeli getiriden aradaki
+dönemin ima edilen faizi mekanik olarak çıkar:
+
+$$f_{t_1 \to t_2} = \left[\frac{(1+y_{t_2})^{t_2}}{(1+y_{t_1})^{t_1}}\right]^{\frac{1}{t_2-t_1}} - 1$$
+
+| dönem | ima edilen ileri faiz | gecelik çıpaya fark |
+|---|---|---|
+| 3 ay → 1 yıl | %4,42 | +80 bp |
+| 1 yıl → 2 yıl | **%4,94** | +132 bp |
+| 2 yıl → 10 yıl | %5,07 | +145 bp |
+| 10 yıl → 30 yıl | %5,55 | +193 bp |
+
+<GrafikEmbed src="/arastirma/fed-artirim-dongusu-2026-09-13/03_ileri.html" baslik="İma edilen ileri faizler tepe bandının üzerinde" no="03" kaynak="ABD Hazinesi" />
+
+**Bir yıl sonrasının bir yılı %4,94 fiyatlanıyor.** Bu sayı, 2. bölümde türetilen
+%4,70–5,02 bandının içinde ve orta noktasının (%4,85) 9 baz puan üzerinde. Altını
+çizmek gerekiyor: bu **bağımsız bir veri noktası değil** — aynı iki getiriden
+hesaplanıyor. Bağımsız olan şey **varsayım**: ileri faiz hiçbir patika biçimi
+varsaymıyor, bileşik aritmetikten çıkıyor. İkisinin buluşması, bandın patika
+varsayımından doğmadığını gösteriyor — varsayımı kaldırdığınızda cevap yerinde kalıyor.
+
+Asıl bilgi ise ileri faizlerin **davranışında**. İma edilen tepe %4,70–5,02 ise, o tepeden
+sonraki yılların ileri faizinin **aşağı** dönmesi beklenirdi: döngü biter, faiz nötre
+normalleşir. Ölçülen tam tersi — 2y→10y %5,07, 10y→30y %5,55. Yani eğri, uzak geleceğin
+gecelik faizini bugünkü tepenin de üzerinde fiyatlıyor.
+
+Bunun tek bir iktisadi okuması yok, iki tane var ve ayrıştırılması bu yazıda mümkün değil.
+Ya piyasa nötr faizin kalıcı olarak yukarı kaydığını düşünüyor, ya da uzak ileri faizler
+saf beklenti değil **vade primi** taşıyor. İkinci okuma 3. bölümdeki ölçümle uyuşuyor:
+son üç haftada hareketi göbek çekti, uzun uç geride kaldı — yani bu yükseliş politika
+patikasından geldi, uzak ileri faizlerin seviyesi ise ondan önce zaten oradaydı. 7. bölüm
+bu kalıntıyı adıyla ölçüyor.
+
+## 3. Yeniden fiyatlamanın anatomisi: hareketi göbek çekti
+
+Fiyatlanan tepenin büyüklüğü kadar, o fiyatlamanın **eğrinin neresinden geldiği** de
+bilgi taşıyor. Bültenin günlük anlık görüntüleriyle 22 Ağustos – 10 Eylül arasındaki
+kayma ölçüldü:
+
+| vade | 22 Ağustos | 10 Eylül | değişim |
+|---|---|---|---|
+| 3 ay | %3,710 | %3,845 | +13,5 bp |
+| 5 yıl | %4,424 | %4,733 | **+30,9 bp** |
+| 10 yıl | %4,738 | %4,944 | +20,6 bp |
+| 30 yıl | %5,276 | %5,361 | +8,5 bp |
+
+<GrafikEmbed src="/arastirma/fed-artirim-dongusu-2026-09-13/04_tarihce.html" baslik="Eğri ağustos sonundan bu yana yukarı kaydı" no="04" kaynak="Bülten piyasa anlık görüntüsü" />
+
+**Hareketi göbek çekti.** Beş yıllık 30,9 baz puan yükselirken otuz yıllık yalnız 8,5
+baz puan yükseldi; 5s30s eğimi 85,2'den 62,8 baz puana, yani 22,4 baz puan **yatıklaştı**.
+Üç aylık ile on yıllık arası ise 7,1 baz puan **dikleşti**.
+
+Bu biçimin adı var. Piyasa uzun vadeli enflasyon beklentisini ya da vade primini yeniden
+fiyatlasaydı hareketi **uzun uç** çekerdi ve 5s30s diklerdi. Göbeğin önde gitmesi,
+fiyatlananın **politika patikası** olduğunu söylüyor: önümüzdeki iki-üç yılın ortalama
+gecelik faizi yukarı revize edilmiş, ondan sonrası değil.
+
+Bunun bu yazı için iki sonucu var ve ikincisi kendi 7. bölümümü sınırlıyor. Birincisi:
+2. bölümdeki türetim, ölçülen hareketin cinsiyle tutarlı — eğri gerçekten bir döngü
+fiyatlıyor. İkincisi: 10 yıllığın **seviyesi** yüksek bir vade primi taşıyor olabilir ama
+son üç haftalık **hareketi** vade priminden gelmiyor. Vade primi hikâyesi seviyeyi
+açıklar, yakın dönemli yükselişi açıklamaz.
+
+## 4. Komite ne diyor, piyasa ne fiyatlıyor
 
 Haziran 2026 projeksiyonlarında on sekiz katılımcının dokuzu daha yüksek faiz öngördü;
 bunların üçü bir çeyrek puan, beşi yarım puan işaret etti. Medyan 2027 sonu için
@@ -170,7 +247,7 @@ değişiyordu ve bu aralık bir ölçüm değil, farklı enstrümanların (vadel
 piyasası) farklı sorulara verdiği cevaplar. Bu yüzden yazı boyunca olasılık değil **ima
 edilen seviye** kullanıldı: seviye resmî eğriden ölçülüyor, olasılık ölçülemiyor.
 
-## 4. Bu bir talep şoku değil
+## 5. Bu bir talep şoku değil
 
 Fiyatlamanın dayanağı, enflasyonun kırılımında zayıflıyor. Ağustos verisinde:
 
@@ -194,7 +271,7 @@ beş adımın gerekçesi ortadan kalkar. Çekirdek manşeti takip etmeye başlar
 geçişkenlik ölçülürse — tepe %5,02'nin de üzerine çıkabilir. **Bugün ölçülen çekirdek,
 ikincisini söylemiyor.**
 
-## 5. Ön uç: 1–2 yılda alan kaldı mı
+## 6. Ön uç: 1–2 yılda alan kaldı mı
 
 Soru şöyle çevrilir: 2 yıllık getirinin bugünkü %4,63'ten yukarı gitmesi için ne
 gerekiyor?
@@ -213,6 +290,8 @@ Mesafeleri ölçelim:
 | Şok gevşer, döngü iki adımda biter | ~%4,15 | −48 bp |
 | Artırım hiç gelmez, fiyatlama tamamen geri alınır | ~%3,70 | −93 bp |
 
+<GrafikEmbed src="/arastirma/fed-artirim-dongusu-2026-09-13/05_senaryo.html" baslik="2 yıllık getirinin senaryo yelpazesi" no="05" kaynak="ABD Hazinesi" />
+
 Dağılım **aşağı doğru geniş, yukarı doğru dar**. Bunun sebebi aritmetik: fiyatlanan tepe
 zaten bugünkü politika faizinin 135 baz puan üzerinde, yani fiyatlamanın geri alınacağı
 alan, ilerletileceği alandan yapısal olarak büyük. Bu bir yön öngörüsü değil, fiyatlanmış
@@ -224,13 +303,15 @@ tahvil arasındaki fark yalnız 2 baz puandı. Ön uçta swap ile tahvil eğrisi
 şeyi söylüyor; bu yüzden yukarıdaki türetim her iki enstrüman için de okunabilir. 11
 Eylül'e ait swap seviyeleri ölçülemedi.
 
-## 6. Uzun uç: 10 yıllıkta sürücü artık politika faizi değil
+## 7. Uzun uç: 10 yıllıkta sürücü artık politika faizi değil
 
 10 yıllık getiri %4,98. Bunu iki parçaya ayıralım. Döngü %4,85 civarında tepe yapıp
 sonraki yıllarda nötr bölgeye (%3,00–3,50) normalleşirse, on yıllık ortalama beklenen
 gecelik faiz kabaca %3,40–3,60 çıkar. Kalan:
 
 $$4{,}98 - 3{,}50 \approx 150 \text{ bp vade primi}$$
+
+<GrafikEmbed src="/arastirma/fed-artirim-dongusu-2026-09-13/06_ayristirma.html" baslik="10 yıllık getirinin içinde ne var" no="06" kaynak="ABD Hazinesi" />
 
 Bu ayrıştırma bir model değil bir muhasebe; nötr faiz varsayımına doğrudan duyarlı ve
 ±50 baz puanlık bir hata payı taşıyor. Ama işaret ettiği şey sağlam: **10 yıllığın
@@ -253,12 +334,57 @@ Bir de karşı ağırlık var: 30 yıllık %5,36 ile 52 haftalık aralığının
 eğimi zaten dik. Uzun ucun tamamı aynı anda pahalılaşmış durumda, yani yukarı hareket
 için yeni bir sürücü gerekiyor — mevcut sürücüler fiyatın içinde.
 
-Ve fiyatlanmamış bir şey var: **VIX 17,84.** Şahin bir çerçeve, yazı-tura bir toplantı ve
-52 haftalık zirvede uzun uç getirileri varken korunma bu kadar ucuzsa, olay riski opsiyon
-piyasasında fiyatlanmıyor demektir. Bültenin haftalık değerlendirmesi bunu "haftanın en
-açık çelişkisi" diye kaydetmişti ve çelişki 16 Eylül'e kadar duruyor.
 
-## 7. Türkiye bacağı: iki eğri ters yöne bakıyor
+## 8. Piyasa etkisi: hangi varlık ne kadar yedi
+
+"Faiz artarsa piyasalar düşer" cümlesi ölçülebilir bir şey söylemiyor. Aynı pencerede
+(22 Ağustos – 10 Eylül, eğrinin göbeği 30,9 baz puan yükselirken) her varlığın ne yaptığı
+ölçüldü:
+
+| varlık | 22 Ağustos | 10 Eylül | değişim |
+|---|---|---|---|
+| S&P 500 | 7.674,37 | 7.591,70 | −%1,08 |
+| Nasdaq 100 | 29.308,86 | 29.103,51 | −%0,70 |
+| **Russell 2000** | 3.017,87 | 2.890,95 | **−%4,21** |
+| Yüksek getirili tahvil (HYG) | 79,61 | 78,62 | −%1,24 |
+| Yatırım yapılabilir tahvil (LQD) | 105,92 | 104,36 | −%1,47 |
+| GOÜ dolar tahvili (EMB) | 94,72 | 93,41 | −%1,38 |
+| GOÜ hisse (EEM) | 67,12 | 67,00 | −%0,18 |
+| Altın (ons) | 4.680,60 | 4.364,50 | **−%6,75** |
+| VIX | 15,13 | 17,84 | +%17,91 |
+| MOVE (tahvil oynaklığı) | 73,40 | 82,09 | +%11,84 |
+
+Dört okuma çıkıyor ve dördü de 3. bölümdeki "politika yeniden fiyatlaması" teşhisini
+destekliyor.
+
+**Faize duyarlılık ayrıştı, risk iştahı değil.** Russell 2000 %4,21 düşerken Nasdaq 100
+yalnız %0,70 düştü — altı kat. Küçük şirketler borçlarının daha büyük kısmını değişken
+faizle taşır ve refinansman ufku kısadır; politika patikasının yukarı revize edilmesi
+onların nakit akışını doğrudan vurur. Büyük teknoloji aynı şoku iskonto oranı kanalından
+alır ve o kanal çok daha zayıf çalıştı.
+
+**Kredi primi AÇILMADI.** Yüksek getirili ile yatırım yapılabilir tahvil arasındaki oran
+0,7516'dan 0,7534'e **yükseldi** (+%0,23). İkisi de düştü ama neredeyse aynı oranda —
+yani hareket kredi riskinden değil FAİZDEN geldi. Bir resesyon korkusu fiyatlansaydı
+yüksek getirili bacak belirgin biçimde geride kalırdı. Bu, göbeğin öncülük etmesiyle aynı
+şeyi söylüyor: piyasa büyüme değil politika fiyatlıyor.
+
+**Altın %6,75 düştü ve bu en temiz mekanizma.** Altının taşıma getirisi yoktur; alternatif
+maliyeti reel faizdir. Nominal getiriler yükselirken enflasyon beklentisi aynı oranda
+artmadıysa reel faiz yükselir ve altın düşer. Aynı pencerede dolar endeksi 98,80'den
+99,09'a çıktı — ikisi tutarlı.
+
+**Gelişmekte olan piyasalar ikiye ayrıldı.** Dolar tahvili %1,38 düşerken hisse yalnız
+%0,18 düştü. Fark vade: EMB uzun vadeli dolar borcu taşır ve ABD eğrisinden doğrudan
+etkilenir, hisse bacağı ise büyüme beklentisine bağlı ve o beklenti bozulmadı.
+
+Ve fiyatlanmayan bir şey: **VIX 17,84.** Şahin bir çerçeve, dört-altı adımlık bir döngü
+fiyatlaması ve 52 haftalık zirvede uzun uç getirileri varken korunma bu seviyede ucuzsa,
+16 Eylül'ün olay riski opsiyon piyasasında fiyatlanmıyor demektir. Tahvil oynaklığı
+(MOVE 82,09) hisse oynaklığından daha çok yükseldi — piyasa şoku doğru yerde, faiz
+tarafında bekliyor ama hisse tarafında beklemiyor.
+
+## 9. Türkiye bacağı: iki eğri ters yöne bakıyor
 
 Bu tablonun Türkiye için anlamı, ABD faizinin seviyesinde değil **yönünün TL eğrisinin
 yönüyle zıt olmasında**. 10 Eylül kapanışında TL tarafı:
@@ -273,6 +399,8 @@ yönüyle zıt olmasında**. 10 Eylül kapanışında TL tarafı:
 | Anket: 12 ay sonrası politika faizi | %29,59 |
 | 2 yıllık reel getiri | %8,15 |
 | USD/TRY | 48,4873 |
+
+<GrafikEmbed src="/arastirma/fed-artirim-dongusu-2026-09-13/07_tr_abd.html" baslik="İki eğri ters yöne bakıyor" no="07" kaynak="ABD Hazinesi; TCMB EVDS" />
 
 TCMB faizi 22 Ocak'tan bu yana %37,0'de sabit ve eğri belirgin biçimde **ters eğimli**:
 9 yıllık, 2 yıllığın 9,09 puan altında. Anket 12 ay sonrası için %29,59 görüyor. Yani TL
@@ -300,7 +428,7 @@ gecelik faiz hesabında gerçekleşen gecelik maliyet kullanıldı: SOFR'ın 10 
 gecelik endeks swapıdır; burada Hazine eğrisi kullanıldı çünkü 11 Eylül'e ait swap
 seviyeleri ölçülemedi. Sapmanın yönü bilinebiliyor: 2 Eylül'de 2 yıllık swap ile 2 yıllık
 tahvil arasındaki fark +2 baz puandı, yani ön uçta ihmal edilebilir. Uzun uçta swap
-tahvilin altında işlem görüyor (10 yılda −38 baz puan), dolayısıyla 6. bölümdeki vade
+tahvilin altında işlem görüyor (10 yılda −38 baz puan), dolayısıyla 7. bölümdeki vade
 primi hesabı tahvil bazlıdır ve swap bazlı bir hesap daha düşük bir prim verirdi.
 
 **Patika duyarlılığı.** Türetim, faizin doğrusal biçimde tepeye çıktığını varsayıyor.
@@ -308,6 +436,12 @@ primi hesabı tahvil bazlıdır ve swap bazlı bir hesap daha düşük bir prim 
 tepe daha düşük, arkaya yüklü bir patikada daha yüksek çıkar. 1 yıllık ve 2 yıllıktan
 çıkan iki cevabın 5 baz puan içinde buluşması, gözlenen eğri biçiminin doğrusala yakın
 olduğunu gösteriyor; başka bir biçim iki cevabı birbirinden uzaklaştırırdı.
+
+**İleri faiz tabanı.** İma edilen ileri faizler yıllık bileşik kabulüyle ve Hazine
+eğrisinin yatırım bazlı kotasyonlarından hesaplandı. Sürekli bileşik kabulü aynı vadelerde
+birkaç baz puan farklı sonuç verir; hükümlerin hiçbiri bu farka duyarlı değil. İleri faiz
+bir tahmin değil, iki getiriden çıkan bir özdeşliktir — taşıdığı beklenti/vade primi
+ayrışması ölçülmedi.
 
 **Bono kotasyon tabanı.** 3 aylık bono getirisi yatırım bazında (%4,01) alındı. İskonto
 bazlı kotasyon aynı bono için yaklaşık 15 baz puan düşük görünür; iki tabanı karıştırmak
@@ -338,25 +472,34 @@ birbirini doğruluyor (%4,98 ve %5,36'ya karşı %4,944 ve %5,361), ama günlük
 hangi seansa ait olduğu iki kaynak arasında bir gün kayıyor. Bu yüzden yazıda gün gün
 hareket anlatılmadı, seviyeler kullanıldı.
 
+**Tarihsel emsal.** "Arz şokuna karşı artırım" bu yazıda yalnız MEKANİZMA olarak
+anlatıldı; geçmiş epizotların sayısal karşılaştırması yapılmadı. Elde o karşılaştırmayı
+kuracak ölçülmüş bir örneklem yok ve hafızadan yazılan bir emsal, ölçüm değildir.
+
+**Figürlerin kapsamı.** Yedi şekil de bu yazının ölçüm gününe DONMUŞTUR; hattan beslenen
+canlı figür değildir. 3. ve 8. bölümdeki pencere bültenin günlük anlık görüntülerinden
+gelir ve ölçüm bir önceki kapanışa aittir. 2 yıllık ABD serisi o pencerede sapmalı
+olduğu için Şekil 04'e hiç girmedi.
+
 **Türkiye'ye geçiş kanalları.** Rezerv, CDS, yabancı pozisyon ve dış borçlanma maliyeti
-ölçülmedi; 7. bölüm yalnız aynı günün kapanış seviyelerini yan yana koyuyor.
+ölçülmedi; 9. bölüm yalnız aynı günün kapanış seviyelerini yan yana koyuyor.
 
 ## İzleme listesi
 
 **16 Eylül, Çarşamba 21:00 — Fed kararı ve projeksiyonlar.** Kararın kendisinden çok iki
 şey ölçülecek: karar metninde "adımların büyüklüğü" benzeri bir kademe ifadesinin girip
 girmediği, ve projeksiyon yayımlanıyorsa medyanın piyasaya doğru mu yoksa piyasanın
-medyana doğru mu hareket ettiği. 3. bölümdeki açığın hangi yönde kapandığını bu belirler.
+medyana doğru mu hareket ettiği. 4. bölümdeki açığın hangi yönde kapandığını bu belirler.
 
 **16 Eylül sonrası 2 yıllık getiri.** Artırım gelir ve 2 yıllık %4,63'ün üzerinde kalırsa
 piyasa tepeyi yukarı revize ediyor demektir; artırıma rağmen aşağı gelirse "son adım"
-okunuyor demektir. İkincisi, 5. bölümdeki asimetriyi doğrular.
+okunuyor demektir. İkincisi, 6. bölümdeki asimetriyi doğrular.
 
 **Ekim başı — eylül enflasyonu.** Tek ölçüt: çekirdek aylık. %0,3 ve üzeri bir ikinci ay,
-4. bölümdeki "geçişkenlik yok" hükmünü çürütür ve tepeyi %5,02'nin üzerine taşıyabilir.
+5. bölümdeki "geçişkenlik yok" hükmünü çürütür ve tepeyi %5,02'nin üzerine taşıyabilir.
 %0,2 ve altı, enerji kaynaklı okumayı doğrular.
 
-**Brent'in üç haneli bölgede kalıp kalmadığı.** 4. bölümün tamamı bu şokun geçici olduğu
+**Brent'in üç haneli bölgede kalıp kalmadığı.** 5. bölümün tamamı bu şokun geçici olduğu
 varsayımına dayanmıyor ama kalıcılık, manşet ile çekirdek arasındaki 1,0 puanlık farkın
 hangi yöne kapanacağını belirler.
 
