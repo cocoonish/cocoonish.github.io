@@ -171,26 +171,42 @@ dönemin ima edilen faizi mekanik olarak çıkar:
 
 $$f_{t_1 \to t_2} = \left[\frac{(1+y_{t_2})^{t_2}}{(1+y_{t_1})^{t_1}}\right]^{\frac{1}{t_2-t_1}} - 1$$
 
-| dönem | ima edilen ileri faiz | gecelik çıpaya fark |
-|---|---|---|
-| 3 ay → 1 yıl | %4,42 | +80 bp |
-| 1 yıl → 2 yıl | **%4,94** | +132 bp |
-| 2 yıl → 10 yıl | %5,07 | +145 bp |
-| 10 yıl → 30 yıl | %5,55 | +193 bp |
+Kotasyon tabanı burada fark yaratıyor, o yüzden iki konvansiyon da yazıldı.
+Hazine'nin yayımladığı eğri bir **par** getiri eğrisidir; ileri faiz ise **sıfır**
+getirilerin özdeşliğidir. Par getirileri doğrudan kullanmak, yukarı eğimli bir eğride
+ileri faizleri sistematik olarak **küçük** gösterir. Par eğrisi yarım yıllık düğümlere
+aradeğerlenip bootstrap edildiğinde sapmanın büyüklüğü ölçülüyor:
+
+| dönem | par getiriden | sıfır getiriden | fark |
+|---|---|---|---|
+| 3 ay → 1 yıl | %4,42 | %4,49 | +7 bp |
+| 1 yıl → 2 yıl | **%4,94** | **%5,02** | +8 bp |
+| 2 yıl → 10 yıl | %5,07 | %5,18 | +12 bp |
+| 10 yıl → 30 yıl | %5,55 | %6,01 | +46 bp |
+
+Sapma **tek yönlü** ve vadeyle büyüyor — beklenen davranış: par ile sıfır eğrisi
+arasındaki fark yukarı eğimli bir eğride vadeyle açılır.
 
 <GrafikEmbed src="/arastirma/fed-artirim-dongusu-2026-09-13/03_ileri.html" baslik="İma edilen ileri faizler tepe bandının üzerinde" no="03" kaynak="ABD Hazinesi" />
 
-**Bir yıl sonrasının bir yılı %4,94 fiyatlanıyor.** Bu sayı, 2. bölümde türetilen
-%4,70–5,02 bandının içinde ve orta noktasının (%4,85) 9 baz puan üzerinde. Altını
-çizmek gerekiyor: bu **bağımsız bir veri noktası değil** — aynı iki getiriden
+**Bir yıl sonrasının bir yılı %4,94 ile %5,02 arasında fiyatlanıyor** —
+hangi konvansiyonu seçtiğinize göre. Her iki değer de 2. bölümde türetilen %4,70–5,02
+bandının **içinde**, ama aynı yerinde değil: par bazlı sayı bandın ortasına yakın, sıfır
+bazlı sayı tam **üst sınırında**. Bandın ne kadar doğrulandığı bu seçime bağlı ve bunu
+saklamanın anlamı yok.
+
+Altını çizmek gerekiyor: bu **bağımsız bir veri noktası değil** — aynı iki getiriden
 hesaplanıyor. Bağımsız olan şey **varsayım**: ileri faiz hiçbir patika biçimi
-varsaymıyor, bileşik aritmetikten çıkıyor. İkisinin buluşması, bandın patika
-varsayımından doğmadığını gösteriyor — varsayımı kaldırdığınızda cevap yerinde kalıyor.
+varsaymıyor, bileşik aritmetikten çıkıyor. Buluşmanın söylediği şu kadar: bandı üreten
+şey patika varsayımı değil. Söylemediği şey, bandın dar olduğu — sıfır bazlı okuma
+tepeyi bandın tavanına itiyor.
 
 Asıl bilgi ise ileri faizlerin **davranışında**. İma edilen tepe %4,70–5,02 ise, o tepeden
 sonraki yılların ileri faizinin **aşağı** dönmesi beklenirdi: döngü biter, faiz nötre
-normalleşir. Ölçülen tam tersi — 2y→10y %5,07, 10y→30y %5,55. Yani eğri, uzak geleceğin
-gecelik faizini bugünkü tepenin de üzerinde fiyatlıyor.
+normalleşir. Ölçülen tam tersi — 2y→10y %5,07, 10y→30y %5,55; sıfır bazlı okumada
+%5,18 ve %6,01. Yani eğri, uzak geleceğin gecelik faizini bugünkü tepenin de üzerinde
+fiyatlıyor. Bu hüküm konvansiyon seçimine dayanmıyor: iki tabanın **ikisinde de** uzak
+ileri faizler %5,02'lik tavanın üzerinde, ve sıfır bazlı taban aradaki farkı büyütüyor.
 
 Bunun tek bir iktisadi okuması yok, iki tane var ve ayrıştırılması bu yazıda mümkün değil.
 Ya piyasa nötr faizin kalıcı olarak yukarı kaydığını düşünüyor, ya da uzak ileri faizler
@@ -437,11 +453,15 @@ tepe daha düşük, arkaya yüklü bir patikada daha yüksek çıkar. 1 yıllık
 çıkan iki cevabın 5 baz puan içinde buluşması, gözlenen eğri biçiminin doğrusala yakın
 olduğunu gösteriyor; başka bir biçim iki cevabı birbirinden uzaklaştırırdı.
 
-**İleri faiz tabanı.** İma edilen ileri faizler yıllık bileşik kabulüyle ve Hazine
-eğrisinin yatırım bazlı kotasyonlarından hesaplandı. Sürekli bileşik kabulü aynı vadelerde
-birkaç baz puan farklı sonuç verir; hükümlerin hiçbiri bu farka duyarlı değil. İleri faiz
-bir tahmin değil, iki getiriden çıkan bir özdeşliktir — taşıdığı beklenti/vade primi
-ayrışması ölçülmedi.
+**İleri faiz tabanı.** İleri faizler yıllık bileşik kabulüyle hesaplandı; sürekli
+bileşik kabulü birkaç baz puan oynatır ve hiçbir hüküm o farka duyarlı değil. Asıl
+seçim par–sıfır ayrımında: Hazine'nin yayımladığı eğri par getiridir, ileri faiz
+özdeşliği sıfır getiri ister. Sapma varsayılmadı, ölçüldü — par eğrisi yarım yıllık
+düğümlere doğrusal aradeğerlenip bootstrap edildi ve fark 7 ila 46 baz puan çıktı, tek
+yönlü ve vadeyle büyüyerek. Bootstrap'in kendi aradeğer varsayımı var; bu yüzden par
+bazlı sütun ANA sütun olarak bırakıldı — yayımlanan getiri tablosundan doğrudan yeniden
+hesaplanabilen tek sütun odur. İleri faiz bir tahmin değil, iki getiriden çıkan bir
+özdeşliktir; taşıdığı beklenti/vade primi ayrışması ölçülmedi.
 
 **Bono kotasyon tabanı.** 3 aylık bono getirisi yatırım bazında (%4,01) alındı. İskonto
 bazlı kotasyon aynı bono için yaklaşık 15 baz puan düşük görünür; iki tabanı karıştırmak
