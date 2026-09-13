@@ -1,0 +1,663 @@
+---
+title: 'Formül Kâğıdı: Eğri, Fiyatlama, Risk ve Opsiyon'
+description: 'Derslerde türetilen bütün formüller tek sayfada: iskonto faktörü ve üç kotasyon, forward ve FRA, par swap bootstrap (K=1 · K=2 · Newton-Raphson), interpolasyon, tahvil fiyatlama ve durasyon, DV01 konvansiyonları, forward DV01 ve OIS hedge, ASW, swaption Black ve Bachelier, FX opsiyon Greeks, regresyon tabanlı hedge ölçüleri. Türetim ve örnek yok; yalnız formül, sembol ve konvansiyon.'
+pubDate: 2026-09-13
+tags: ['formül', 'faiz', 'swap', 'opsiyon', 'risk', 'başvuru']
+durum: 'aktif'
+ozet: 'Altı dersin bütün formülleri, türetim ve sayısal örnek olmadan, tek başvuru sayfasında.'
+seviye: 'ileri'
+onkosul: ['faiz-egrisi-ve-konvansiyonlar', 'enstruman-fiyatlama', 'risk-ve-hedge']
+---
+
+<div class="not">
+
+Bu sayfa **başvuru kâğıdıdır**, ders değil: türetim, gerekçe ve sayısal örnek
+içermez. Her formül şu derslerden birinde türetilmiştir —
+[Faiz Teorisi ve Eğri İnşası](/arastirma/faiz-egrisi-ve-konvansiyonlar/) ·
+[Enstrüman Fiyatlama](/arastirma/enstruman-fiyatlama/) ·
+[Risk ve Hedge](/arastirma/risk-ve-hedge/) ·
+[Trade Pratiği](/arastirma/trade-pratigi/) ·
+[Opsiyon Book Yönetimi](/arastirma/opsiyon-book-yonetimi/) ·
+[Bloomberg HRA](/arastirma/bloomberg-hra-korelasyon/).
+
+Gün sayımı aksi yazmadıkça **ACT/365**, oranlar **yıllık**.
+
+</div>
+
+## Semboller
+
+| sembol | anlamı |
+|---|---|
+| $DF(t)$, $DF_i$ | $t$ vadesine iskonto faktörü |
+| $z$ | zero (spot) oran — alt indis: $z_s$ simple, $z_a$ yıllık bileşik, $z_c$ sürekli |
+| $F$ | forward oran ya da forward fiyat (bağlama göre) |
+| $R$, $S$ | par swap oranı |
+| $\tau_i$ | $i$. dönemin gün kesri (ör. $d_i/365$) |
+| $A$ | annuity, $A=\sum_i \tau_i DF_i$ |
+| $N$ | nominal |
+| $P$, $DP$, $AI$ | temiz fiyat, kirli fiyat, işlemiş faiz |
+| $y$, $r$ | getiri (yıllık), dönemsel getiri |
+| $\sigma$, $\sigma_N$ | lognormal vol, normal (basis point) vol |
+| $n(\cdot)$, $N(\cdot)$ | standart normal yoğunluk ve kümülatif |
+
+## 1 · İskonto faktörü ve kotasyon
+
+**Üç kotasyon, tek DF**
+
+$$
+DF = \frac{1}{1 + z\,t} \quad \text{(simple)}, \qquad DF = (1+z)^{-t} \quad \text{(yıllık bileşik)}, \qquad DF = e^{-z\,t} \quad \text{(sürekli)}
+$$
+
+**Konvansiyon dönüşümü**
+
+$$
+z_c = -\frac{\ln DF}{t}, \qquad z_{simple} = \frac{1/DF - 1}{t}, \qquad z_{ann} = DF^{-1/t} - 1
+$$
+
+**Gün bazlı yazım**
+
+$$
+DF = \frac{1}{1 + R_s\cdot d/365}, \qquad DF = \left(1+\frac{R_g}{365}\right)^{-d}, \qquad DF = e^{-R_c\, T}
+$$
+
+**Sürekli limit**
+
+$$
+\lim_{n \to \infty} \left(1 + \frac{z}{n}\right)^{n t} = e^{z\,t}
+$$
+
+**Bugünkü değer**
+
+$$
+PV = \sum_i CF_i \cdot DF_i
+$$
+
+## 2 · Forward ve FRA
+
+**İki DF'den forward (teleskop)**
+
+$$
+DF(T_2) = DF(T_1)\cdot\left(1+\frac{F}{365}\right)^{-(d_2-d_1)}
+\;\Rightarrow\;
+F[T_1,T_2] = 365\left[\left(\frac{DF(T_1)}{DF(T_2)}\right)^{\frac{1}{d_2-d_1}}-1\right]
+$$
+
+**Tarihten tarihe**
+
+$$
+F[d_1,d_2] = 365\left[\left(\frac{DF(d_1)}{DF(d_2)}\right)^{\frac{1}{d_2-d_1}}-1\right]
+$$
+
+**Zero'lardan forward (sürekli/doğrusal)**
+
+$$
+f(t_1, t_2) = \frac{z_2 t_2 - z_1 t_1}{t_2 - t_1}
+$$
+
+## 3 · Par swap ve bootstrap
+
+**Par denklemi**
+
+$$
+R\,\tau \sum_{i=1}^{N} DF_i = 1 - DF_N
+$$
+
+**Değişken bacak teleskobu**
+
+$$
+PV_{float} = \sum_i \tau_i F_i\, DF_i = \sum_i\left(DF_{i-1}-DF_i\right) = DF_0 - DF_N = 1 - DF_N
+$$
+
+**Par oranı (genel)**
+
+$$
+R = \frac{DF(spot) - DF(T)}{\sum_i \tau_i\, DF(t_i)}, \qquad S_N = \frac{1 - DF_N}{\sum_i \tau_i DF_i}
+$$
+
+**K = 1 · kapalı form** (yeni pillar bir ödeme dönemi ilerideyse)
+
+$$
+DF_N = \frac{1 - R\,\tau\, S_{prev}}{1 + R\,\tau}, \qquad S_{prev} = \sum_{i=1}^{N-1} DF_i
+$$
+
+**K = 2 · ikinci derece** ($y = DF_N^{1/2}$, $a = DF_{prev}$)
+
+$$
+(1+R\tau)\,y^2 + R\tau\sqrt{a}\; y + \left(R\tau S_{prev} - 1\right) = 0
+$$
+
+**K ≥ 2 · Newton-Raphson** ($u = (DF_N/a)^{1/K}$)
+
+$$
+g(u) = (1+R\tau)\,u^K + \sum_{j=1}^{K-1} R\tau\, a^{\frac{K-j}{K}}\, u^{\,j} + \left(R\tau S_{prev}-1\right) = 0
+$$
+
+**Öz-tutarlılık sağlaması** — bootstrap'lanmış eğri girdiyi geri vermeli
+
+$$
+R_{implied} = \frac{1-DF_N}{\tau \sum_i DF_i} \;\overset{!}{=}\; R_{girdi}
+$$
+
+## 4 · Forward starting swap
+
+**DF'den**
+
+$$
+R_{fwd}(t_1,t_2) = \frac{DF(t_1)-DF(t_2)}{A_{fwd}}, \qquad A_{fwd} = \sum_{t_i\in(t_1,t_2]} \tau_i DF(t_i)
+$$
+
+**Par oranlardan (annuity ağırlıklı)**
+
+$$
+R_{fwd} = \frac{R_{t_2}A(t_2) - R_{t_1}A(t_1)}{A(t_2)-A(t_1)}
+$$
+
+**Bacak ayrıştırması**
+
+$$
+\text{receive } 1y1y \approx \text{receive } 2y + \text{pay } 1y \quad (\text{DV01-nötr nominallerle})
+$$
+
+## 5 · İnterpolasyon
+
+**Zero × vade üzerinde doğrusal**
+
+$$
+f(t_1, t_2) = \frac{z_2 t_2 - z_1 t_1}{t_2 - t_1}
+$$
+
+**DF üzerinde log-doğrusal (kırık tarih)**
+
+$$
+DF(t) = DF(t_1)^{\,w} \times DF(t_2)^{\,1-w}, \qquad w = \frac{t_2 - t}{t_2 - t_1}
+$$
+
+## 6 · Tahvil fiyatlama
+
+**İşlemiş faiz ve kirli fiyat**
+
+$$
+AI = \frac{C}{m}\cdot\frac{\text{geçen gün}}{\text{dönem günü}}, \qquad DP = P_{temiz} + AI
+$$
+
+**İlk kupon kesri ve üs**
+
+$$
+w = 1 - \frac{\text{geçen gün}}{\text{dönem günü}} = \frac{\text{ilk kupona kalan gün}}{\text{dönem günü}}
+\qquad\Rightarrow\qquad
+\text{üs}_i = (i-1) + w
+$$
+
+**Fiyat**
+
+$$
+DP = \sum_{i=1}^{n} \frac{CF_i}{(1+r)^{\,\text{üs}_i}}, \qquad r = \frac{y}{m}
+$$
+
+**Durasyon** — $D_{Mac}$'ın birimi konvansiyonun parçasıdır
+
+$$
+D_{mod} = -\frac{1}{P}\frac{\partial P}{\partial y}
+$$
+
+$$
+D_{Mac}^{\text{yıl}} = \frac{\sum_i t_i \cdot CF_i \cdot DF_i}{P} \;\Rightarrow\; D_{mod} = \frac{D_{Mac}^{\text{yıl}}}{1+r}
+$$
+
+$$
+D_{Mac}^{\text{dönem}} = \frac{\sum_i \text{üs}_i \cdot BD_i}{DP} \;\Rightarrow\; D_{mod} = \frac{D_{Mac}^{\text{dönem}}}{1+r}\Big/ m
+$$
+
+**DV01**
+
+$$
+DV01 = D_{mod} \cdot P \cdot 10^{-4}
+$$
+
+**Konveksite (bump)**
+
+$$
+C = \frac{P_{+} + P_{-} - 2P}{P\,(\Delta y)^2}
+$$
+
+## 7 · DV01 konvansiyonları
+
+**DF'nin orana türevi**
+
+$$
+\text{Sürekli:} \ \frac{\partial DF}{\partial z} = -t\,DF, \qquad
+\text{Simple:} \ \frac{\partial DF}{\partial z} = -t\,DF^{2}, \qquad
+\text{Yıllık:} \ \frac{\partial DF}{\partial z} = -\frac{t}{1+z}\,DF
+$$
+
+**Türev çekirdeği (simple)**
+
+$$
+\frac{dDF}{dr} = -\frac{\tau}{(1 + r\tau)^2} = -\tau \cdot DF^2
+$$
+
+**Tek bullet DV01**
+
+$$
+DV01_{cont} = N\,t\,DF \times 10^{-4}, \qquad DV01_{simple} = N\,t\,DF^{2} \times 10^{-4}, \qquad DV01_{ann} = N\,\frac{t}{1+z}\,DF \times 10^{-4}
+$$
+
+**Oran kimliği**
+
+$$
+\frac{DV01_{cont}}{DV01_{simple}} = \frac{1}{DF} = 1 + z_{simple}\,t
+$$
+
+**Braket (sağlama)**
+
+$$
+N\,t\,DF^{2} \times 10^{-4} \;\le\; DV01 \;\le\; N\,t\,DF \times 10^{-4}
+$$
+
+**Merkezi fark**
+
+$$
+DV01_{central} = \frac{PV(r + 1\,\text{bp}) - PV(r - 1\,\text{bp})}{2}
+$$
+
+**Nominal geri-çözme**
+
+$$
+N_{ima} = \frac{DV01}{t \cdot DF \times 10^{-4}} \qquad \text{(sürekli tanımda)}
+$$
+
+**Konveksite (tek bullet, sürekli)**
+
+$$
+C = N\,t^{2}\,DF \times 10^{-8}, \qquad \Delta PV_{2.\text{derece}} = \tfrac{1}{2}\,C\,(\Delta r)^{2}
+$$
+
+## 8 · Swap riski ve hedge
+
+**Annuity ve PV01**
+
+$$
+A = \sum_i \tau_i \cdot DF_i, \qquad PV01 = A \cdot N \times 10^{-4}
+$$
+
+**Swap MtM**
+
+$$
+PV \approx (K - S_{piyasa})\cdot A\cdot N, \qquad DV01 \approx A\cdot N \times 10^{-4}
+$$
+
+**Hedge nominali**
+
+$$
+N_{OIS} = \frac{DV01_{fwd}}{PV01_{OIS,\,\text{birim}}}, \qquad
+N_{swap} = N_{tahvil} \cdot \frac{DV01_{tahvil}}{DV01_{swap}}
+$$
+
+**Hedge nominali — DF tabanlı eşdeğer**
+
+$$
+N_{OIS} = \frac{DV01_{TRY}}{\tau_{TRY} \times DF_{TRY} \times 10^{-4}}
+$$
+
+**Fly ağırlığı (50:50)**
+
+$$
+N_{\text{kanat}} = 0{,}5\cdot N_{\text{gövde}}\cdot
+\frac{\text{DV01}_{\text{gövde}}}{\text{DV01}_{\text{kanat}}}
+$$
+
+**Boyutlandırma tavanı**
+
+$$
+\text{Nosyonel} \le \min\left\{
+\frac{\text{Risk bütçesi}}{\text{stop mesafesi}\cdot \text{DV01}_{\text{birim}}},\;
+\text{Çıkış klipi},\;
+\text{Limit alanı}
+\right\}
+$$
+
+## 9 · OIS ve TLREF
+
+**Geriye dönük bileşikleme**
+
+$$
+\text{Kupon} = \prod_i \left(1 + TLREF_i \cdot \frac{n_i}{365}\right) - 1
+$$
+
+**Yıllıklandırılmış eşdeğer**
+
+$$
+F = \left[\prod_i \left(1 + r_i\cdot\frac{d_i}{365}\right) - 1\right]\cdot\frac{365}{D}
+$$
+
+**Günlük patika**
+
+$$
+\text{Accrual}_n = 1+\frac{r_n}{365},
+\qquad
+CumDF_n = \frac{CumDF_{n-1}}{\text{Accrual}_n}
+$$
+
+**Toplantı bazlı ima (MPC implied)**
+
+$$
+MPC_k = 365\left[\left(\frac{DF(\text{eff}_k)}{DF(\text{eff}_{k+1})}\right)^{1/\text{gün}}-1\right], \qquad G_k = MPC_{k+1} - MPC_k
+$$
+
+**Gün ağırlıklı strip kotasyonu**
+
+$$
+\text{Kotasyon}_D \approx \frac{\sum_k \text{gün}_k\cdot \text{seviye}_k}{D},
+\qquad
+\text{seviye}_k = \text{TLREF}_0 + \sum_{j\le k}\Delta_j
+$$
+
+**Taşıma bileşenleri**
+
+$$
+\text{fixing carry} \approx (K - \overline{TLREF})\cdot\frac{h}{365}\cdot N, \qquad
+\text{eğri-sabit taşıma} = \text{fixing carry} + \text{rolldown}
+$$
+
+## 10 · FX forward ve çapraz kur riski
+
+**CIP**
+
+$$
+F = S \cdot \frac{1 + r_{TRY}\,t}{1 + r_{USD}\,t} = S \cdot \frac{DF_{USD}}{DF_{TRY}}
+$$
+
+**İki bacaklı PV**
+
+$$
+PV = N_{USD} \times S \times DF_{USD} \;-\; N_{TRY} \times DF_{TRY} \qquad \text{(TRY cinsinden)}
+$$
+
+**Tek terimli hâli**
+
+$$
+V_{TRY} = N_{USD} \cdot (F - K) \cdot DF_{TRY}
+$$
+
+**Bacak DV01'leri (simple kotasyon)**
+
+$$
+DV01_{USD} = -\,N_{USD} \times S \times \tau_{USD} \times DF_{USD}^{2} \times 10^{-4}, \qquad
+DV01_{TRY} = +\,N_{TRY} \times \tau_{TRY} \times DF_{TRY}^{2} \times 10^{-4}
+$$
+
+**TRY DV01 tabanı** — $F$ sadeleşir, taban $K$'dir
+
+$$
+\frac{\partial V}{\partial r_{TRY}} = -\,N_{USD} \cdot K \cdot DF_{TRY}'
+$$
+
+## 11 · Asset swap
+
+**ASW marjı**
+
+$$
+ASW = y_{tahvil} - R^{OIS}_{par}(T_{tahvil})
+$$
+
+**Net taşıma**
+
+$$
+\text{net carry (bp/yıl)} = ASW - \text{repo bazı}
+$$
+
+**Eğri-sabit taşıma (spread için)**
+
+$$
+\text{eğri-sabit taşıma}(h) = \text{spot spread} - \text{forward spread}(h)
+$$
+
+## 12 · Swaption
+
+**Dayanak forward swap oranı**
+
+$$
+F = \frac{DF(T_{exp}) - DF(T_{mat})}{A}, \qquad A = \sum \tau_i DF(t_i) \;\; (T_{exp} < t_i \le T_{mat})
+$$
+
+**Black (lognormal)**
+
+$$
+d_1 = \frac{\ln(F/K) + \sigma^2 T/2}{\sigma\sqrt{T}},\quad d_2 = d_1 - \sigma\sqrt{T}
+$$
+
+$$
+\text{Payer} = A\left[F\,N(d_1) - K\,N(d_2)\right],
+\qquad
+\text{Receiver} = A\left[K\,N(-d_2) - F\,N(-d_1)\right]
+$$
+
+**Bachelier (normal)**
+
+$$
+d = \frac{F-K}{\sigma_N\sqrt{T}},\qquad
+\text{Payer} = A\left[(F-K)N(d) + \sigma_N\sqrt{T}\,n(d)\right],
+\qquad \sigma_N \approx \sigma_{Black}\times F
+$$
+
+**Parite**
+
+$$
+\text{Payer} - \text{Receiver} = A\,(F-K)\times N
+$$
+
+**Implied vol (Newton)**
+
+$$
+\sigma_{n+1} = \sigma_n - \frac{P(\sigma_n) - P_{mkt}}{\text{Vega}(\sigma_n)}
+$$
+
+## 13 · FX opsiyon
+
+**Forward ve Garman-Kohlhagen**
+
+$$
+F = S \, e^{(r_d - r_f)\,T}
+$$
+
+$$
+\begin{aligned}
+\text{Call} &= e^{-r_d T}\left[\,F\,N(d_1) - K\,N(d_2)\,\right] \\[4pt]
+\text{Put}  &= e^{-r_d T}\left[\,K\,N(-d_2) - F\,N(-d_1)\,\right] \\[4pt]
+d_1 &= \frac{\ln(F/K) + \tfrac{1}{2}\sigma^2 T}{\sigma\sqrt{T}}\,, \qquad d_2 = d_1 - \sigma\sqrt{T}
+\end{aligned}
+$$
+
+**Birinci derece Greeks**
+
+$$
+\Delta_{spot} = e^{-r_f T}\cdot N(d_1), \qquad
+\Gamma = \frac{e^{-r_f T}\cdot n(d_1)}{S \cdot \sigma \cdot \sqrt{T}}, \qquad
+\text{Vega} = S \cdot e^{-r_f T} \cdot n(d_1) \cdot \sqrt{T}
+$$
+
+**Cash gamma** — %1 spot hareketi için delta değişimi
+
+$$
+\Gamma_{cash} = \Gamma \times S \times 1\% \times N
+$$
+
+**İkinci derece Greeks**
+
+$$
+\text{Vanna} = -e^{-r_f T} \cdot n(d_1) \cdot \frac{d_2}{\sigma}, \qquad
+\text{Volga} = \text{Vega} \cdot \frac{d_1 \, d_2}{\sigma}
+$$
+
+**Bump karşılığı**
+
+$$
+\text{Vanna} \approx \frac{\text{Vega}(S+\Delta S) - \text{Vega}(S-\Delta S)}{2\,\Delta S}
+\qquad
+\text{Volga} \approx \frac{\text{Vega}(\sigma+\Delta\sigma) - \text{Vega}(\sigma-\Delta\sigma)}{2\,\Delta\sigma}
+$$
+
+**P&L ayrıştırması**
+
+$$
+\Delta V \;\approx\; \Delta\cdot\Delta S
+\;+\; \tfrac12\,\Gamma\,(\Delta S)^2
+\;+\; \mathrm{Vega}\cdot\Delta\sigma
+\;+\; \Theta\cdot\Delta t
+\;+\; \mathrm{Vanna}\cdot\Delta S\cdot\Delta\sigma
+\;+\; \tfrac12\,\mathrm{Volga}\,(\Delta\sigma)^2
+\;+\; \mathrm{Residual}
+$$
+
+**Gamma P&L ve başabaş hareket**
+
+$$
+\text{Günlük gamma P\&L} \;\approx\; \tfrac{1}{2}\,\Gamma_{cash}\,(\Delta S)^2, \qquad
+\Delta S_{BE} \;=\; \sigma\sqrt{\tfrac{1}{252}}
+$$
+
+**Vade kovasına dağıtım (off-grid)**
+
+$$
+w_{1} = \frac{T_{2} - T}{T_{2} - T_{1}}, \qquad w_{2} = 1 - w_{1}
+$$
+
+**Smile kotasyonu**
+
+$$
+\sigma_{25C} = \sigma_{ATM} + BF_{25} + \tfrac{RR_{25}}{2},\qquad \sigma_{25P} = \sigma_{ATM} + BF_{25} - \tfrac{RR_{25}}{2}
+$$
+
+$$
+RR = \sigma_C - \sigma_P, \qquad BF = \tfrac{\sigma_C + \sigma_P}{2} - \sigma_{ATM}
+$$
+
+**Risk-nötr yoğunluk (Breeden-Litzenberger)**
+
+$$
+\varphi(K) \;=\; e^{r_d T}\,\frac{\partial^2 C}{\partial K^2}
+$$
+
+**Digital ve skew düzeltmesi**
+
+$$
+\text{Digital} = -\frac{\partial C}{\partial K} = e^{-r_d T}\,N(d_2) - \text{Vega}(K)\cdot\frac{d\sigma}{dK}
+$$
+
+**Çapraz kur**
+
+$$
+S_{EURTRY} = S_{EURUSD}\times S_{USDTRY}, \qquad
+\sigma^2_{EURTRY} = \sigma^2_{EURUSD} + \sigma^2_{USDTRY} + 2\,\rho\,\sigma_{EURUSD}\,\sigma_{USDTRY}
+$$
+
+**Çapraz delta**
+
+$$
+\frac{\partial V}{\partial S_{EURUSD}} = \Delta_{EURTRY}\times S_{USDTRY}
+\qquad
+\frac{\partial V}{\partial S_{USDTRY}} = \Delta_{EURTRY}\times S_{EURUSD}
+$$
+
+**Çapraz gamma**
+
+$$
+\Gamma_{\times} = \frac{V(S_1^{\uparrow},S_2^{\uparrow}) - V(S_1^{\uparrow},S_2^{\downarrow}) - V(S_1^{\downarrow},S_2^{\uparrow}) + V(S_1^{\downarrow},S_2^{\downarrow})}{4\,\Delta S_1\,\Delta S_2}
+$$
+
+**Vega ayrıştırması**
+
+$$
+\frac{\partial \sigma_{ET}}{\partial \sigma_{EU}} = \frac{\sigma_{EU} + \rho\,\sigma_{UT}}{\sigma_{ET}}, \qquad
+\frac{\partial \sigma_{ET}}{\partial \rho} = \frac{\sigma_{EU}\,\sigma_{UT}}{\sigma_{ET}}
+$$
+
+## 14 · Regresyon tabanlı hedge
+
+**Beta**
+
+$$
+\beta = \frac{\operatorname{Cov}(X, Y)}{\operatorname{Var}(X)} = \rho \cdot \frac{\sigma_Y}{\sigma_X}, \qquad Y_t = \beta \, X_t + \alpha + \varepsilon_t
+$$
+
+**Ters regresyon kimliği**
+
+$$
+\beta_{Y|X} \times \beta_{X|Y} = R^2
+$$
+
+**Blume düzeltmesi**
+
+$$
+\beta_{adj} = 0{,}67 \times \beta_{raw} + 0{,}33 \times 1{,}0
+$$
+
+**Artık ölçüleri**
+
+$$
+SEE = \sigma_\varepsilon = \sigma_Y \cdot \sqrt{1 - R^2}, \qquad
+SE(\beta) = \frac{SEE}{\sigma_X \cdot \sqrt{N - 1}}
+$$
+
+**Anlamlılık**
+
+$$
+t = \frac{\beta}{SE(\beta)} = \frac{R \cdot \sqrt{N - 2}}{\sqrt{1 - R^2}}, \qquad
+\beta \pm 1{,}96 \times SE(\beta)
+$$
+
+**Alfa anlamlılığı**
+
+$$
+t(\alpha) = \frac{\alpha}{SE(\alpha)}
+$$
+
+**Kalan oynaklık ve pozisyon tavanı**
+
+$$
+\frac{\text{Kalan vol}}{\text{Orijinal vol}} = \sqrt{1 - R^2}, \qquad
+V_{\max} = \frac{\text{risk bütçesi}}{SEE}
+$$
+
+**Sapma ve bant**
+
+$$
+\text{Last T-Value} = \frac{\text{son artık}}{SEE}, \qquad
+\text{Bant}(1\sigma) \approx \sqrt{SEE^2 + (SE(\beta)\cdot\Delta X)^2}
+$$
+
+**Ortalamaya dönüş**
+
+$$
+\Delta z(t) = c + \varphi\cdot z(t-1) + u(t), \qquad \text{Half-life} = \frac{-\ln 2}{\ln(1+\varphi)} \quad (\varphi < 0)
+$$
+
+**Tahvil eşdeğeri**
+
+$$
+\Delta P_{\%} \approx -D_{mod} \cdot \Delta y
+$$
+
+**İma edilen hareket ve sapma**
+
+$$
+\Delta Y_{\text{ima}} = \beta \cdot \Delta X + \alpha, \qquad \text{gap} = \Delta Y_{\text{gerçek}} - \Delta Y_{\text{ima}}, \qquad \text{gap}(\sigma) = \frac{\text{gap}}{SEE}
+$$
+
+**Çok dönemli**
+
+$$
+\Delta Y_{\text{ima}}^{\text{kum}} \approx \beta \cdot \Delta X_{\text{kum}} + k \cdot \alpha, \qquad \sigma_{\text{kum}} = \sqrt{k}\cdot SEE
+$$
+
+**Spread P&L kimliği**
+
+$$
+\text{P\&L} = V_Y\cdot\Delta Y\% - V_X\cdot\Delta X\% = V_Y\cdot(\Delta Y\% - \beta\cdot\Delta X\%) = V_Y\cdot\frac{\alpha+\varepsilon}{100}
+$$
+
+**Ödül/risk (half-life $h$ ile)**
+
+$$
+\frac{\text{Reward}}{\text{Risk}} \approx \frac{1{,}5\cdot SEE}{SEE\cdot\sqrt{2h}} = \frac{1{,}5}{\sqrt{2h}}
+$$
