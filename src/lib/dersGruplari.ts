@@ -83,11 +83,23 @@ export const GRUPLAR: DersGrubu[] = [
     slugSirasi: ['turkiye-piyasa-tarihi'],
     etiketler: ['makro', 'kriz', 'tcmb', 'tarih', 'türkiye', 'rezerv', 'enflasyon'],
   },
+  {
+    id: 'basvuru',
+    no: '06',
+    baslik: 'Başvuru',
+    aciklama:
+      'Derslerde türetilen formüllerin tek sayfada toplandığı başvuru kâğıdı. ' +
+      'Ders değil: türetim, gerekçe ve sayısal örnek içermez — masada açık ' +
+      'tutulmak için yazıldı. Kapsamı tek bir hat değil, üç hattır birden ' +
+      '(faiz masası · FX opsiyon kitabı · ölçüm ve göreli değer), bu yüzden ' +
+      'hiçbirinin içinde değil yanında durur.',
+    slugSirasi: ['formul-kagidi'],
+  },
 ];
 
 export const DIGER_GRUP: DersGrubu = {
   id: 'diger',
-  no: '06',
+  no: '07',
   baslik: 'Diğer notlar',
   aciklama: 'Henüz bir hatta bağlanmamış tekil araştırma notları.',
 };
