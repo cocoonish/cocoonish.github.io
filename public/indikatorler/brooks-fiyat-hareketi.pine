@@ -481,16 +481,26 @@ barrenk = not barBoya ? na :
    ayiGovde  ? color.new(cClaret, 55) : cGri
 barcolor(barrenk, title = "Bar sınıfı")
 
+f_dusenler(a1, a2, a3, a5) =>
+    string d = ""
+    d := d + (a1 ? "" : (d == "" ? "" : ", ") + "açılış/kapanış yönü")
+    d := d + (a2 ? "" : (d == "" ? "" : ", ") + "kuyruk geometrisi")
+    d := d + (a3 ? "" : (d == "" ? "" : ", ") + "örtüşme sınırı")
+    d := d + (a5 ? "" : (d == "" ? "" : ", ") + "yeni uç")
+    d == "" ? "dördü de tutuyor" : "düşen: " + d
+
 if sinyalGoster and bogaDonus and kaliteBoga >= asgariKalite and kaliteBoga > 0 and not yalnizSat
     label.new(bar_index, low, str.tostring(kaliteBoga) + "/4", yloc = yloc.belowbar,
        style = label.style_label_up, color = color.new(cMavi, 80), textcolor = cMurekkep, size = size.tiny,
        tooltip = "Boğa sinyal barı · canlı kalite " + str.tostring(kaliteBoga) + "/4" +
+       "\n" + f_dusenler(n1Boga, n2Boga, n3, n5Boga) +
        "\nÖrtüşme: %" + str.tostring(math.round(ortusme * 100)) + (ikiBarlikDonus ? " → İKİ BARLIK dönüş oku" : ""))
 
 if sinyalGoster and ayiDonus and kaliteAyi >= asgariKalite and kaliteAyi > 0 and not yalnizAl
     label.new(bar_index, high, str.tostring(kaliteAyi) + "/4", yloc = yloc.abovebar,
        style = label.style_label_down, color = color.new(cClaret, 80), textcolor = cMurekkep, size = size.tiny,
        tooltip = "Ayı sinyal barı · canlı kalite " + str.tostring(kaliteAyi) + "/4" +
+       "\n" + f_dusenler(n1Ayi, n2Ayi, n3, n5Ayi) +
        "\nÖrtüşme: %" + str.tostring(math.round(ortusme * 100)) + (ikiBarlikDonus ? " → İKİ BARLIK dönüş oku" : ""))
 
 if sayimGoster and not na(hEtiket)
@@ -601,8 +611,10 @@ if barstate.islast and kutuKip != "Kapalı"
         // ── KALIP VE UYARI ───────────────────────────────────────────────
         kalipMetin = (kalipAd != "" ? kalipAd + " · kırılım modu" : govdeIcBar ? "yalnız gövdeler ii" : "")
            + (ikiBarDonus ? (kalipAd != "" or govdeIcBar ? " · " : "") + ikiBarAd : "")
-           + (math.abs(momentumYok) >= momentumBar ? " · " + str.tostring(math.abs(momentumYok)) + " bardır "
-              + (momentumYok > 0 ? "boğa" : "ayı") + " kapanışı yok" : "")
+           + (math.abs(momentumYok) >= momentumBar
+              ? (kalipAd != "" or govdeIcBar or ikiBarDonus ? " · " : "")
+                + str.tostring(math.abs(momentumYok)) + " bardır "
+                + (momentumYok > 0 ? "boğa" : "ayı") + " kapanışı yok" : "")
         // Bu bölüm yalnız SÖYLEYECEK BİR ŞEY VARKEN çıkar. Her barda boş bir
         // "—" satırı basmak, kutuyu okunur yapmak için harcanan yeri geri alır.
         if kalipMetin != "" or iptalAd != "—"

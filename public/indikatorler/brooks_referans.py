@@ -195,12 +195,15 @@ PINE_KARSILIGI: dict[str, str] = {
     "momentum_yoklugu": "momentumYok",
     # Bölüm 3 · 6 · 7 · 8A · 12
     "mikro_kanal": "mikroKanal",
-    "bar_sayimi": "hSayac",
+    "bar_sayimi": "hEtiket",
+    "bar_sayaci": "hSayac",
     "ma_dokundu": "maDokundu",
     "gap_sayaci": "gapSayac",
     "yon_filtresi": "yalnizAl",
     "always_in": "flipLong",
     "iptal_kurali": "iptalAd",
+    # Bölüm 4.9 · rejim panosu
+    "barbwire": "barbwire",
 }
 
 # Pine'da karşılığı OLMAYAN ve olmaması GEREKEN metotlar, gerekçesiyle.
@@ -229,28 +232,47 @@ def pine_sabitleri(yol: Path) -> dict[str, float | int | bool]:
     return out
 
 
-def olcu_kapsami(pine_fh: Path) -> list[str]:
+def olcu_kapsami(pine_fh: Path, pine_rp: Path) -> list[str]:
     """Her Python ölçüsünün Pine'da bir karşılığı var mı — İKİ YÖNLÜ.
 
     Eşik kapısının göremediği kusuru kapatır: yeni bir eşik getirmeyen bir
-    ölçü, Pine'a taşınmadan da eşik karşılaştırmasını geçer."""
-    metin = pine_fh.read_text(encoding="utf-8")
+    ölçü, Pine'a taşınmadan da eşik karşılaştırmasını geçer.
+
+    KAPSAM SINIFTAN TÜRER. Ölçüt bir zamanlar TEK Pine dosyası alıyordu ve
+    bütün ilanları ona karşı sınıyordu; `RejimPanosu`nun bir ölçüsü Pine
+    karşılığını ilan ettiği anda, karşılığı öbür dosyada olduğu için ölçüt
+    DÜŞÜYORDU. Yani rejim panosunun hiçbir ölçüsü karşılık ilan EDEMİYORDU
+    ve tek çıkış yolu onu muafiyete yazmaktı — denetimin kendi kapsamı,
+    ölçtüğü sözleşmeyi daraltıyordu. Artık her sınıf KENDİ dosyasına karşı
+    sınanıyor."""
+    kaynak = {FiyatPaneli: pine_fh, RejimPanosu: pine_rp}
+    metin = {s: y.read_text(encoding="utf-8") for s, y in kaynak.items()}
     eksik: list[str] = []
 
-    # (a) Sınıfın her genel metodu ya ilan edilmiş ya muaf olmalı.
-    for sinif in (FiyatPaneli, RejimPanosu):
+    for sinif, yol in kaynak.items():
         for ad in vars(sinif):
             if ad.startswith("_"):
                 continue
+            # (a) Sınıfın her genel metodu ya ilan edilmiş ya muaf olmalı.
             if ad not in PINE_KARSILIGI and ad not in PINE_DISI:
                 eksik.append(f"ölçü '{sinif.__name__}.{ad}' ne Pine karşılığı ne muafiyeti "
                              f"ilan etmiş — PINE_KARSILIGI ya da PINE_DISI'na yazılmalı")
+                continue
+            # (b) İlan edilen Pine adı O SINIFIN dosyasında ATANIYOR mu.
+            pine_ad = PINE_KARSILIGI.get(ad)
+            if pine_ad and not re.search(
+                    r"^\s*(?:var\s+\w+\s+)?" + re.escape(pine_ad) + r"\s*(?::?=)",
+                    metin[sinif], re.M):
+                eksik.append(f"'{ad}' için ilan edilen Pine değişkeni '{pine_ad}' "
+                             f"{yol.name} içinde atanmıyor — ölçü taşınmamış olabilir")
 
-    # (b) İlan edilen her Pine adı dosyada gerçekten ATANIYOR mu.
-    for py_ad, pine_ad in PINE_KARSILIGI.items():
-        if not re.search(r"^\s*(?:var\s+\w+\s+)?" + re.escape(pine_ad) + r"\s*(?::?=)", metin, re.M):
-            eksik.append(f"'{py_ad}' için ilan edilen Pine değişkeni '{pine_ad}' "
-                         f"{pine_fh.name} içinde atanmıyor — ölçü taşınmamış olabilir")
+    # (c) İlan edilen ama HİÇBİR sınıfta karşılığı olmayan giriş: ölçü
+    # silinmiş ama ilanı kalmış olabilir; ilan da bir sözleşmedir.
+    tanimli = {a for s in kaynak for a in vars(s) if not a.startswith("_")}
+    for py_ad in PINE_KARSILIGI:
+        if py_ad not in tanimli:
+            eksik.append(f"PINE_KARSILIGI'nda '{py_ad}' ilan edilmiş ama böyle bir "
+                         "ölçü yok — silinen bir ölçünün ilanı kalmış olabilir")
     return eksik
 
 
@@ -551,6 +573,39 @@ class FiyatPaneli:
             out.append(etiket)
         return out
 
+    def bar_sayaci(self) -> list[str]:
+        """Pine satır 598: durum kutusunun bastığı SAYAÇ — etiket değil.
+
+        `bar_sayimi` grafikteki ETİKETİN eşidir (Pine `hEtiket`/`lEtiket`) ve
+        yalnız barın yeni bir zirve/dip yaptığı barda doludur. Kutu ise
+        always-in'in yönü varken HER barda sayacın o anki değerini yazar:
+            aiLong ? "H"+min(hSayac,4) : aiShort ? "L"+min(lSayac,4) : "—"
+        İkisi 4.574 barın 2.017'sinde (%44,1) ayrışıyor — etiketi kutuya
+        basmak, always-in LONG iken "—" yazmak demektir ve okur sayacın
+        sıfırlandığını sanır. İki ölçü ayrı isimlerle durur, çünkü ikisi de
+        Pine'da ayrı ayrı var ve ikisi de okura ayrı yerde görünüyor."""
+        yon, _, _ = self.always_in()
+        h = l = 0
+        gc_zirve = gc_dip = None
+        out: list[str] = []
+        for i in range(len(self.s)):
+            if i > 0 and yon[i] != yon[i - 1]:
+                h = l = 0
+                gc_zirve = gc_dip = None
+            if yon[i] == 1:
+                if gc_zirve is None or self.s.h[i] > gc_zirve:
+                    gc_zirve, h = self.s.h[i], 0
+                elif i > 0 and self.s.h[i] > self.s.h[i - 1]:
+                    h += 1
+            elif yon[i] == -1:
+                if gc_dip is None or self.s.l[i] < gc_dip:
+                    gc_dip, l = self.s.l[i], 0
+                elif i > 0 and self.s.l[i] < self.s.l[i - 1]:
+                    l += 1
+            out.append(f"H{min(h, 4)}" if yon[i] == 1
+                       else f"L{min(l, 4)}" if yon[i] == -1 else "—")
+        return out
+
     # ── Bölüm 1.2 · Kapanışın menzil içindeki yeri ─────────────────────────
     def kapanis_yeri(self, i: int) -> float:
         """(kapanış − dip) / menzil. Ders: 'gövdenin büyüklüğünden bile daha
@@ -841,6 +896,7 @@ class FiyatPaneli:
             "ters_iki_kapanis": self.ters_iki_kapanis(i),
             "gap_bar": gap[i],
             "bar_sayimi": self.bar_sayimi()[i] or "—",
+            "bar_sayaci": self.bar_sayaci()[i],
             "bar_sinifi": self.sinif(i),
             "ortusme": round(self.ortusme(i), 6),
             "ic_bar": self.ic_bar(i),
@@ -898,6 +954,35 @@ class RejimPanosu:
             return 0.0
         return max(0.0, min(self.s.h[j], self.s.h[j - 1]) - max(self.s.l[j], self.s.l[j - 1])) / onceki
 
+    def barbwire(self, i: int) -> dict:
+        """Bölüm 4.9 · barbwire — rejim panosunun DOKUZUNCU satırı.
+
+        SABIT_RP bu üç sabiti (bwBar · bwOrtaPay · bwDoji) taşıyordu ve
+        onları kullanan hiçbir kod YOKTU: Pine ölçüyü hesaplayıp kutuya
+        basıyor, replikasyon hiç hesaplamıyordu — "iki uygulama sessizce
+        ayrıştı" kusurunun bir eşi. 4.548 barın 563'ünde (%12,4) VAR.
+
+        Ölçü ORTADAKİ bara bakar (Pine'da `[1]`), komşuları `[2]` ve `[0]`:
+        ortadaki barın menzilinin yarıdan fazlası her iki komşusunun da
+        içindeyse ve üç barın en az biri doji ise barbwire.
+
+        Bant SAYISINA GİRMEZ ve bu bir seçim değil dersin hükmü: barbwire
+        bir rejim ölçüsü değil, tekil bir bar kalıbıdır."""
+        s = self.s
+        if i < 2:
+            return {"var": False, "oran": 0.0}
+        orta = s.h[i - 1] - s.l[i - 1]
+        kes_once = min(s.h[i - 1], s.h[i - 2]) - max(s.l[i - 1], s.l[i - 2])
+        kes_sonra = min(s.h[i - 1], s.h[i]) - max(s.l[i - 1], s.l[i])
+        ortusuyor = (orta > 0
+                     and max(0.0, kes_once) / orta > self.k["bwOrtaPay"]
+                     and max(0.0, kes_sonra) / orta > self.k["bwOrtaPay"])
+        bw_bar = int(self.k["bwBar"])
+        doji = sum(1 for j in range(max(0, i - bw_bar + 1), i + 1)
+                   if self._govde(j) <= self.k["dojiGovde"])
+        return {"var": bool(ortusuyor and doji >= int(self.k["bwDoji"])),
+                "oran": (max(0.0, min(kes_once, kes_sonra)) / orta) if orta > 0 else 0.0}
+
     def olcu(self, i: int) -> dict | None:
         """Beş ölçü + kaçının bant tarafında olduğu. Pencere dolmadıysa None."""
         s, k, w = self.s, self.k, self.pencere
@@ -935,6 +1020,7 @@ class RejimPanosu:
         return {
             "ortusme_oran": round(ortusme_oran, 3), "doji_oran": round(doji_oran, 3),
             "kesisme": kesisme, "net_aralik": round(net_aralik, 3), "azami_dizi": azami,
+            "barbwire": self.barbwire(i),
             "isaret": isaret, "n": n,
             "rejim": "BANT" if n >= 4 else "trend" if n <= 1 else "ara",
         }
