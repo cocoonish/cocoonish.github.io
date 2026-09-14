@@ -1,19 +1,26 @@
 ---
-title: 'Brooks · Fiyat Hareketi — fiyat paneli indikatörü'
-description: 'Al Brooks dersinin OHLC ile ölçülebilen kısmını fiyat paneline çizen TradingView indikatörü: bar sınıfı, always-in yönü ve dönüş anı, sinyal barı kalitesi (canlı 0–4), örtüşme kuralı, bar sayımı H1–H4 / L1–L4, 20 barlık EMA ile gap bar sayacı ve yön filtresi. Her eşik dersin sayısal sabitler tablosundan gelir; kalibre edilmiş parametre yoktur.'
+title: 'Brooks · Fiyat Hareketi — iki panelli TradingView indikatörü'
+description: 'Al Brooks dersinin OHLC ile ölçülebilen kısmını çizen iki parçalı TradingView indikatörü. Fiyat panelinde bar sınıfı, always-in yönü ve dönüş anı, sinyal barı kalitesi (canlı 0–4), örtüşme kuralı, bar sayımı H1–H4 / L1–L4 ve 20 barlık EMA; alt panelde yatay bant tanı listesinin ölçülebilir beş maddesi. Her eşik dersin sayısal sabitler tablosundan gelir; kalibre edilmiş parametre yoktur. Kullanımı 4.574 gerçek bar üzerinde ölçülmüş örneklerle anlatılır.'
 pubDate: 2026-09-13
-tags: ['indikatör', 'pine script', 'tradingview', 'brooks', 'fiyat-aksiyonu', 'teknik-analiz']
+updatedDate: 2026-09-14
+tags: ['indikatör', 'pine script', 'tradingview', 'brooks', 'fiyat-aksiyonu', 'yatay bant', 'teknik-analiz']
 durum: 'aktif'
-ozet: 'Brooks dersinin ölçülebilen kısmını fiyat paneline çizer: bar sınıfı, always-in, sinyal barı kalitesi, bar sayımı, ortalama ilişkisi.'
+ozet: 'Brooks dersinin ölçülebilen kısmını iki panelde çizer: bar sınıfı, always-in, sinyal barı kalitesi, bar sayımı, ortalama ilişkisi ve rejim tanısı. Kullanımı gerçek barlar üzerinde ölçülmüş altı örnekle anlatılıyor.'
 seviye: 'ileri'
 kaynakDers: 'fiyat-hareketi-brooks'
-panel: 'fiyat'
-dosya: '/indikatorler/brooks-fiyat-hareketi.pine'
 pine: 'v6'
+parcalar:
+  - panel: 'fiyat'
+    ad: 'Brooks · Fiyat Hareketi'
+    dosya: '/indikatorler/brooks-fiyat-hareketi.pine'
+  - panel: 'alt'
+    ad: 'Brooks · Rejim Panosu'
+    dosya: '/indikatorler/brooks-rejim-panosu.pine'
 ---
 
 import PineKod from '../../components/PineKod.astro';
-import kod from '../../../public/indikatorler/brooks-fiyat-hareketi.pine?raw';
+import kodFiyat from '../../../public/indikatorler/brooks-fiyat-hareketi.pine?raw';
+import kodRejim from '../../../public/indikatorler/brooks-rejim-panosu.pine?raw';
 
 <div class="not">
 
@@ -21,11 +28,16 @@ Bu indikatör [Fiyat Hareketi: Al Brooks Yöntemiyle Bar Bar Okuma](/arastirma/f
 dersinden türetilmiştir. **Her eşik dersin kendi sayısal sabitler tablosundan gelir**;
 hiçbiri geçmişe uydurulmuş, optimize edilmiş ya da tarafımızdan seçilmiş değildir.
 
-Alt panele konan eşi: [Brooks · Rejim Panosu](/indikatorler/brooks-rejim-panosu/).
+**İki dosya, tek sistem.** TradingView bir indikatörü ya fiyatın üstüne ya ayrı bir
+panele koyar; ikisini birden yapamaz. Bu yüzden kod iki dosyaya bölündü — ama
+kullanımı tek parçadır ve **ikisi birlikte grafikte olmadan bu sayfadaki okuma sırası
+kurulamaz**. Önce alt panel rejimi söyler, sonra fiyat paneli yönü ve kurulumu.
 
 </div>
 
 ## Ne çizer
+
+**Fiyat paneli** — `Brooks · Fiyat Hareketi`
 
 | Katman | Ne gösterir | Dersteki yeri |
 |---|---|---|
@@ -37,13 +49,26 @@ Alt panele konan eşi: [Brooks · Rejim Panosu](/indikatorler/brooks-rejim-panos
 | Gri çizgi | 20 barlık EMA | Bölüm 7 |
 | Sağ üst kutu | always-in · yön filtresi · gap bar · sayım · bar sınıfı | Bölüm 7, 12 |
 
+**Alt panel** — `Brooks · Rejim Panosu`
+
+| Ölçü | Dersteki madde | Dersin Şekil 30'da ölçtüğü |
+|---|---|---|
+| Örtüşme oranı | 10, 11 — birçok bar bir öncekiyle %50+ örtüşüyor | **0,725** |
+| Doji oranı | 12 — çok sayıda doji | **0,314** |
+| Ortalama kesişme sayısı | 4, 13 — birden fazla yön değişimi, ortalama yatay | **17** |
+| Net / aralık | 5 — hareket çoğunlukla yatay | **0,037** |
+| Azami ardışık trend barı | 8 — üç-dört ardışık aynı yönlü trend barı ender | — |
+
+Pano beş ölçünün kaçının bant tarafında olduğunu `n / 5` diye yazar ve rejimi üç
+kademede okur: `trend` (≤1), `ara` (2–3), `BANT` (≥4).
+
 ## Kurallar ve kaynakları
 
 ### Bar sınıfı
 
 Dersin sabitler tablosundan doğrudan: trend barı **gövde ≥ menzilin %50'si**, güçlüsü
-**~%75+**, doji **gövde ≈ menzilin %0–10'u**. Bunlar indikatörün girdileridir; enstrümanınıza
-göre değiştirebilirsiniz ama varsayılanları dersin sayılarıdır.
+**~%75+**, doji **gövde ≈ menzilin %0–10'u**. Bunlar indikatörün girdileridir;
+enstrümanınıza göre değiştirebilirsiniz ama varsayılanları dersin sayılarıdır.
 
 ### Always-in
 
@@ -107,34 +132,247 @@ trend çizgisi kırılımı olmalıdır."* Trend çizgisi çizmek bir yorum işi
 - **Ters tarafta ardışık iki kapanış** — dersin "güçlü trendin imzası" dediği şeyin
   bozulması; kutuda görünür.
 
+### Neden bant tarafında sayaç var, trend tarafında yok
+
+Ders iki kontrol listesi verir ve **ikisine farklı davranır**. Alt panelin tasarımı
+tamamen bu ayrımdan çıkar:
+
+- **Güçlü trend listesi (Bölüm 3.5, 24 madde)** — ders puanlamayı adıyla yasaklar:
+  *"Maddeler eşit ağırlıklı değildir ve sayılmaz; okunur."*
+- **Yatay bant tanı listesi (Bölüm 4.2, 19 madde)** — ders sayıyı kendisi kullanır:
+  *"Beş veya daha fazla madde işaretliyse bar sayımına dayalı stop girişlerini bırak ve
+  bandın uçlarında fade rejimine geç."*
+
+Karşılaştırma çıpası da dersin kendisinden: net/aralık oranı **trend penceresinde 1,00**,
+o bant gününde **0,037**; ortalama kesişme sayısı bir trend gününde *"bir elin
+parmaklarını geçmez"*, o bant gününde **17**. Pencere varsayılanı **70 bar**, çünkü
+dersin Şekil 30'undaki bant tam 70 bar sürüyor.
+
+## Örneklerle kullanım
+
+Aşağıdaki örneklerin hiçbiri uydurma değil. Hepsi **gerçek barlar** üzerinde, tam bu
+sayfadaki kodun kurallarıyla ölçüldü: 13 seri, **4.574 bar** — dolar endeksi, EUR/USD,
+USD/CHF, ABD 10 yıllık getirisi ve BIST 100'ün günlük, 4 saatlik ve 1 saatlik barları.
+Her örnekteki oranlar, yanında basılan açılış-yüksek-düşük-kapanış değerlerinden
+yeniden hesaplanabilir; isterseniz kendiniz kontrol edin.
+
+**Ölçek uyarısı, en başa:** ders eşiklerini 5 dakikalık barda kalibre eder. Buradaki
+örnekler saatlik ve günlük barlardan. Kurallar ölçek bağımsız kurulmuştur ama
+**kalibrasyon ölçeği bu değildir**; örnekler mekanizmayı gösterir, eşiğin o ölçekte
+doğru olduğunu kanıtlamaz.
+
+### 1 · Önce rejim: pano ne zaman "BANT" der
+
+Dersin en pahalı hatası *doğru kurulumu yanlış günde almaktır*. O yüzden okuma alt
+panelden başlar. İki gerçek pencere, aynı beş ölçüyle:
+
+| Ölçü | USD/CHF · 1 saatlik<br/>04.09 09:00 → 09.09 08:00 | BIST 100 · günlük<br/>04.12 → 13.03 |
+|---|---|---|
+| Örtüşme oranı | **0,686** ✓ | 0,486 — |
+| Doji oranı | 0,100 — | 0,114 — |
+| Ortalama kesişme | **12** ✓ | 3 — |
+| Net / aralık | **0,002** ✓ | 0,598 — |
+| Azami ardışık trend barı | **2** ✓ | 3 — |
+| Sonuç | **4/5 → BANT** | **0/5 → trend** |
+
+Soldaki pencerede yetmiş barın sonunda fiyat başladığı yere döndü: net değişim, tüm
+aralığın **binde ikisi**. Ortalamayı on iki kez kesti ve barların üçte ikisinden fazlası
+bir öncekiyle yarıdan fazla örtüştü. Bu tabloda bar sayımına dayalı stop girişi aramak,
+dersin açıkça yasakladığı şeydir.
+
+Sağdaki pencerede aynı beş ölçünün **hiçbiri** bant tarafında değil: fiyat aralığın
+%59,8'i kadar yol aldı ve ortalamayı yetmiş barda yalnızca üç kez kesti. Burada geri
+çekilme kurulumları ve bar sayımı geçerlidir; fade edilmez.
+
+**Beklentiyi baştan kalibre edin:** 3.430 pencerenin **%13,7'si** bant, **%7,7'si**
+trend, **%78,6'sı** ara çıktı. Pano çoğu zaman "ne o, ne bu" der ve bu bir kusur değil,
+ölçünün dürüstlüğüdür. Ara bölgede pano size karar vermez; yalnızca hangi tarafa
+yakın olduğunuzu söyler.
+
+### 2 · Sonra yön: always-in dönüşü nasıl görünür
+
+BIST 100 günlük, 13 Nisan 2026 — long'a dönüş:
+
+| Bar | Açılış | Yüksek | Düşük | Kapanış | Gövde / menzil | Sınıf |
+|---|---|---|---|---|---|---|
+| 09.04 | 13.531 | 13.712 | 13.529 | 13.689 | **0,863** | güçlü trend |
+| 10.04 | 13.774 | 14.074 | 13.764 | 14.074 | **0,968** | güçlü trend |
+| 13.04 | 13.924 | 14.099 | 13.843 | 14.058 | 0,523 | trend |
+
+İlk iki bar aynı yönde ve ikisi de güçlü trend barı — 10 Nisan barı menzilinin
+**%96,8'ini** gövde olarak kapattı ve düşüğü (13.764) önceki günün yükseğinin (13.712)
+üstünde, yani boşluklu açtı. Üçüncü bar, takip barı: gövdesi daha küçük ama **kapanışı
+açılışının üstünde**, yani ayı kapanışı yok. Ölçüt bir yoklukla sağlandı ve üçgen o gün
+basıldı. Rejim panosu o gün `ara` diyordu, yön filtresi `serbest`.
+
+**Kural ne kadar seçici, ölçtük.** Aynı 4.574 barda iki ardışık güçlü trend barından
+oluşan **57 dizi** var. Bunların yalnız **24'ü** dönüşü onayladı; **33'ü** takip
+barının yokluk ölçütünde elendi — yani dizilerin **%57,9'u ateşlemedi**. Grafiğinizde
+üçgen az görüyorsanız kod eksik çalışmıyor; kural bu kadar seçici. Bir dönüş
+ortalama **190 barda bir** geliyor.
+
+### 3 · Sonra kurulum: 4/4 kalite nasıl bir bardır
+
+BIST 100 · 1 saatlik, 31 Ağustos 2026 12:30 — hem always-in short dönüşünün
+onaylandığı bar, hem 4/4 ayı sinyal barı:
+
+| Bar | Açılış | Yüksek | Düşük | Kapanış | Gövde / menzil | Sınıf |
+|---|---|---|---|---|---|---|
+| 11:30 | 14.457 | 14.462 | 14.353 | 14.359 | 0,899 | güçlü trend |
+| **12:30** | 14.359 | 14.382 | 14.319 | **14.321** | 0,603 | trend |
+
+Dört niteliğin dördü de tutuyor ve hepsi yukarıdaki sayılardan doğrulanabilir:
+
+1. **Açılış önceki kapanışta (14.359 = 14.359), kapanış hem kendi açılışının hem önceki
+   kapanışın altında** (14.321 < 14.359). ✓
+2. **Karşı kuyruk menzilin üçte biri ile yarısı arasında.** Menzil 14.382 − 14.319 = 63;
+   üst kuyruk 14.382 − 14.359 = 23, yani menzilin %36,5'i — bant 33–50 arası. Alt kuyruk
+   yalnız 2 puan, menzilin %3,2'si. ✓
+3. **Örtüşme eşiğin altında.** Kesişim 14.382 − 14.353 = 29; önceki barın menzili
+   14.462 − 14.353 = 109; oran **0,266** — eşik 0,75. ✓
+4. **Kapanış son 8 barın kapanışını, düşük son 5 barın düşüğünü kırıyor.** ✓
+
+Etiket `4/4` basar. Always-in aynı barda short'a döndü ve yön filtresi `serbest`;
+üç katman aynı yöne bakıyor. Dersin aradığı hizalanma budur.
+
+### 4 · Dört üzerinden dört bir işlem DEĞİLDİR
+
+Bu sayfadaki en önemli ölçüm: 4.574 barda sadece **10 bar** 4/4 aldı — ortalama **457
+barda bir**. Ama o onunun kaçı gerçekten alınabilir bir kurulumdu?
+
+| 4/4 barın always-in ile ilişkisi | Sayı |
+|---|---|
+| Aynı yönde (hizalı) | **2** |
+| Ters yönde | 3 |
+| Always-in henüz belirsiz | 5 |
+
+Yani **onda ikisi**. Üçü doğrudan trendin tersine bakıyordu; beşinde always-in daha hiç
+kurulmamıştı. Dersin *"ilk flip'ten sonra yalnızca short arandı"* cümlesi tam bu yüzden
+var — ve puanın yüksekliği o cümleyi geçersiz kılmaz.
+
+Somut hâli, BIST 100 · 1 saatlik, 4 Eylül 2026 13:30:
+
+| Bar | Açılış | Yüksek | Düşük | Kapanış | Gövde / menzil | Sınıf |
+|---|---|---|---|---|---|---|
+| 12:30 | 13.989 | 13.989 | 13.896 | 13.984 | 0,054 | doji |
+| **13:30** | 13.984 | 14.025 | 13.959 | **14.025** | 0,621 | trend |
+
+Boğa sinyal barı, dört niteliğin dördü de tutuyor: **4/4**. Ve alınmaz. Always-in
+**short**, yön filtresi **yalnız SAT** — son on barın yedisi ortalamanın altında
+kapanmış. İndikatör bu yüzden o etiketi **hiç basmaz**: kod boğa etiketini yalnız
+`yalnız SAT` yasağı yokken çizer. Filtrenin varlık sebebi budur; siz barı yine de
+görürsünüz, ama etiket sizi çağırmaz. Aynı süzgeç 4.574 barda **160 kez** devreye
+girdi — yani kalitesi 3 veya 4 olan bir sinyal 160 kez yön filtresi tarafından
+kapatıldı.
+
+### 5 · Örtüşme kuralı devredeyken ne yapılır
+
+Dolar endeksi · günlük, 23 Mart 2026:
+
+| Bar | Açılış | Yüksek | Düşük | Kapanış | Gövde / menzil |
+|---|---|---|---|---|---|
+| 20.03 | 99,29 | 99,79 | 99,25 | 99,65 | 0,667 |
+| **23.03** | 99,68 | **100,15** | **98,88** | 98,95 | 0,575 |
+
+23 Mart barı 20 Mart'ı **tamamen yutuyor**: yükseği daha yüksek, düşüğü daha düşük.
+Kesişim 99,79 − 99,25 = 0,54 ve önceki barın menzili de 0,54 — örtüşme **1,000**,
+yani eşiğin çok üstünde. Diğer üç nitelik tutuyor, skor **3/4** ve düşen tam olarak
+örtüşme niteliği.
+
+Ders bu hâlde barı reddetmeyi değil, **iki barlık dönüş** okumayı söyler: kurulum tek
+barın ucuna değil, iki barlık yapının ucuna göre kurulur. Etiketin ipucunda bu uyarı
+yazar. Ölçtük: bu durum **268 kez** oluştu — örtüşme, en sık bağlayan niteliktir.
+Grafiğinizde `3/4` gördüğünüzde düşen niteliğin hangisi olduğunu ipucundan okumak,
+skorun kendisinden daha çok bilgi verir.
+
+### 6 · Gap bar sayacı: ne zaman bakılır
+
+Ders ortalamaya dokunmayan **20 ardışık barı** bir kurulum sayar. Ölçülen azami
+değerler: ABD 10 yıllık getirisi · 1 saatlikte **102 bar**, BIST 100 · günlükte
+**39 bar**, dolar endeksi · 1 saatlikte 37 bar. Yani eşik on üç serinin **on üçünde de**
+aşıldı — sayacın işi nadir bir olayı yakalamak değil, *trendin ne kadar ısrarlı*
+olduğunu sürekli ölçmek.
+
+Kutudaki sayı 20'yi geçtiğinde ⚑ çıkar. Dersin okuması: ortalamaya bu kadar uzun
+dokunmayan bir trendde, ortalamaya ilk dönüş genellikle karşı yön işlemi için değil,
+**trend yönünde** giriş için bir fırsattır.
+
+### Sayılarla özet
+
+| Ölçü | 4.574 barda |
+|---|---|
+| İki güçlü trend barlık dizi | 57 |
+| Onaylanan always-in dönüşü | **24** (dizilerin %42,1'i) |
+| 4/4 sinyal barı | **10** (~457 barda bir) |
+| 4/4 iken always-in ile hizalı | **2** |
+| Örtüşme niteliğinin düştüğü sinyal barı | 268 |
+| Yön filtresinin kapattığı sinyal (kalite ≥ 3) | 160 |
+| Rejim: BANT · ara · trend | %13,7 · %78,6 · %7,7 |
+
+Bu tablo indikatörün ne kadar *çalıştığını* söylemez — kazanç, kayıp ya da isabet
+ölçmedik. Söylediği şey **ne sıklıkta konuştuğu**: sistem seyrek konuşur ve konuştuğu
+zamanların çoğunda üç katmandan biri "hayır" der.
+
 ## Nasıl kullanılır
 
-**Kurulum.** TradingView'de Pine Editor'ü açın, aşağıdaki kodu yapıştırın (ya da dosyayı
-indirip yapıştırın), *Save* → *Add to chart*. Ders 5 dakikalık grafikte çalışır; indikatör
-zaman diliminden bağımsızdır ama eşikler o ölçekte kalibre edilmiştir.
+**Kurulum.** TradingView'de Pine Editor'ü açın. Önce fiyat paneli kodunu yapıştırıp
+*Save* → *Add to chart* deyin; sonra yeni bir betik açıp alt panel kodunu yapıştırın ve
+aynı işlemi yapın — o kendiliğinden alta düşer. İkisi de grafikte olmadan aşağıdaki
+sıra kurulamaz.
 
 **Okuma sırası — ders bu sırayı dayatır.**
 
-1. **Önce rejim.** Alt paneldeki rejim panosuna bakın. Bant rejimindeyse bar sayımına
-   dayalı stop girişlerini bırakın; ders bunu açıkça söyler.
+1. **Önce rejim.** Alt panel. `BANT` diyorsa bar sayımına dayalı stop girişlerini
+   bırakın, bandın **uçlarında** fade rejimine geçin ve bandın **içinde** dönüş barı
+   aramayın. `trend` diyorsa geri çekilme kurulumları ve bar sayımı geçerlidir;
+   fade edilmez. `ara` en sık çıkan hâldir ve size karar vermez.
 2. **Sonra yön.** Sağ üst kutudaki always-in. Ders: *"İlk flip'ten sonra yalnızca short
    arandı, ikinci flip'ten sonra yalnızca long."* Karşı yön işlemi bu dersin varsayılan
-   yasağıdır.
-3. **Sonra yasak.** Yön filtresi "yalnız AL" diyorsa short sinyali aramayın. İndikatör o
-   yönde etiket basmaz ama kendi gözünüzle görebilirsiniz — filtre o refleksi kapatmak
+   yasağıdır — ve yukarıdaki 4. örnek, en yüksek skorlu barların bile bu yasağa
+   takılabildiğini gösteriyor.
+3. **Sonra yasak.** Yön filtresi "yalnız AL" diyorsa short sinyali aramayın. İndikatör
+   o yönde etiket basmaz ama siz barı yine de görürsünüz — filtre o refleksi kapatmak
    içindir.
-4. **En son kurulum.** Sinyal barı etiketi ve kalitesi. `1/4` bir kurulum değil; `3/4` ve
-   `4/4` dersin "ideal nitelikler" listesine yaklaşır.
+4. **En son kurulum.** Sinyal barı etiketi ve kalitesi. `1/4` bir kurulum değil; `3/4`
+   ve `4/4` dersin "ideal nitelikler" listesine yaklaşır. `3/4` gördüğünüzde ipucundan
+   **hangi** niteliğin düştüğüne bakın: örtüşme düştüyse iki barlık dönüş okuyun.
 
 **Emir mekaniği — indikatör bunu çizmez, ders verir.** Giriş: sinyal barının uç
 noktasının bir tick ötesinde stop emri. Stop: barın karşı ucunun bir tick ötesi. Hedef:
 en az bar boyu kadar ölçülmüş hareket. Küçük veya doji sinyal barında stop bir tick
 yerine ~3 tick ötede.
 
+Yukarıdaki 3. örnekte bu somut olarak şu demek: sinyal barının düşüğü 14.319, yani giriş
+onun bir tick altında; stop barın yükseği 14.382'nin bir tick üstünde, yani risk
+yaklaşık 63 puan; ilk hedef en az bir bar boyu, yani 14.319 − 63 ≈ 14.256.
+
 **Denklem her işlemde kurulur.** Ders bunu bir tablodan geçirmeyi şart koşar:
 P × Ödül > (1 − P) × Risk. Ödül = risk ise başabaş kazanma oranı %50, komisyonla ~%55;
 ödül = 2 × risk ise ~%33, komisyonla ~%36,7. İndikatör olasılık üretmez — o sizin
 okumanızdır.
+
+## Veri beslemeniz gerçek mum taşıyor mu
+
+Bu indikatörün **her** ölçüsü bar gövdesinden okunur: sınıf, always-in, kalite, doji
+oranı. Besleme gerçek bir seans açılışı ve kapanışı vermiyorsa hepsi anlamsızlaşır —
+ve bunu fark etmezsiniz, çünkü grafik normal görünür.
+
+Ölçtük ve gerçekten oluyor. Yukarıdaki on üç serinin yanında üç seri daha vardı ve
+üçü de **dışarıda bırakıldı**: bir veri sağlayıcısının günlük döviz ve kısa vadeli
+tahvil barlarında açılış ile kapanış neredeyse aynı kotasyondan geliyor.
+
+| Seri | Doji payı | Medyan gövde / menzil |
+|---|---|---|
+| Sağlıklı on üç serinin bandı | 0,088 – 0,145 | 0,407 – 0,513 |
+| EUR/USD · günlük | **0,973** | **0,014** |
+| USD/CHF · günlük | **0,977** | **0,013** |
+| ABD 2 yıllık getirisi · günlük | **0,954** | **0,000** |
+
+Son üçünde barların neredeyse tamamı doji sayılıyor, hiçbiri gövde eşiğini geçmiyor ve
+sonuç şu: always-in **hiç** kurulmaz, kalite skoru hep düşük çıkar ve rejim panosu
+dümdüz yükselen bir grafiğe bile **BANT** der. Kural basit — indikatörü açmadan önce
+birkaç güne bakın, gövdeler menzillerinin yarısına yakın mı. Değilse önce beslemenizi
+değiştirin.
 
 ## Ne ölçmez
 
@@ -144,13 +382,22 @@ olarak hesaplanamaz:
 - **Güçlü trend kontrol listesi.** Ders 24 maddelik listeyi puana çevirmeyi adıyla
   yasaklar: *"Maddeler eşit ağırlıklı değildir ve sayılmaz; okunur."* Bu yüzden burada
   bir "trend gücü skoru" **yoktur** ve olmayacaktır.
+- **Bant tanı listesinin on dört maddesi.** Belirsizlik hissi, aynı anda meşru iki
+  taraflı kurulum, stop toplama, vakum etkisi, sinyal barlarının "zayıf görünmesi" —
+  hepsi gözle okunur. Pano `n / 5` yazar, `n / 19` değil; aradaki fark **sizin
+  okumanızdır**.
 - **Trend çizgisi ve kanal çizgisi.** Çizim bir yorumdur; kırılımı da öyle.
 - **Bağlamla yeterli olan tek trend barı.** Always-in dönüşünün bu hâli görülmez.
 - **Spike ve kanal fazı ayrımı.** Ders sınırların "bulanık" olduğunu kendisi söyler.
+- **Bandın seviyeleri.** Tavan ve taban çizilmez; onlar seviye seçimi ister.
 - **Mıknatıslar, ölçülmüş hareket hedefleri, üst zaman dilimi çıpaları.** Hepsi seviye
   seçimi gerektirir.
 - **Emir akışı.** Grafiğin altındaki kararı görmez; ders zaten görmediğini söyler.
+- **İsabet ve getiri.** Bu sayfada hiçbir kazanç, kayıp ya da başarı oranı yok.
+  Ölçtüğümüz tek şey kuralların ne sıklıkta ateşlediği.
 
 ## Kod
 
-<PineKod kod={kod} dosya="/indikatorler/brooks-fiyat-hareketi.pine" baslik="Brooks · Fiyat Hareketi" />
+<PineKod kod={kodFiyat} dosya="/indikatorler/brooks-fiyat-hareketi.pine" baslik="Fiyat paneli · Brooks · Fiyat Hareketi" />
+
+<PineKod kod={kodRejim} dosya="/indikatorler/brooks-rejim-panosu.pine" baslik="Alt panel · Brooks · Rejim Panosu" />

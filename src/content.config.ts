@@ -38,10 +38,23 @@ const indikatorler = defineCollection({
   schema: ortakSema.extend({
     /** Hangi dersten türetildi (slug) — kaynağı gizlenmez. */
     kaynakDers: z.string().min(1),
-    /** TradingView panel yerleşimi. */
-    panel: z.enum(['fiyat', 'alt']),
-    /** İndirilebilir Pine dosyasının site köküne göreli yolu. */
-    dosya: z.string().min(1),
+    /**
+     * İndikatörün PARÇALARI. Bir indikatör birden çok panele dağılabilir ve
+     * o zaman birden çok Pine dosyası taşır; ikisi TEK sistem olarak
+     * kullanılıyorsa tek sayfada durur. Sıra, sayfadaki okuma sırasıdır.
+     */
+    parcalar: z
+      .array(
+        z.object({
+          /** TradingView panel yerleşimi. */
+          panel: z.enum(['fiyat', 'alt']),
+          /** İndirilebilir Pine dosyasının site köküne göreli yolu. */
+          dosya: z.string().min(1),
+          /** Parçanın TradingView'de görünen adı. */
+          ad: z.string().min(1),
+        }),
+      )
+      .min(1),
     /** Pine Script sürümü. */
     pine: z.string().default('v6'),
   }),

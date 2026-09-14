@@ -7,15 +7,21 @@ import { tarihUzun } from '../../lib/bicim';
 const dersler = await getCollection('arastirma');
 const dersAdi = new Map(dersler.map((d) => [d.id, d.data.title]));
 
+const PANEL: Record<string, string> = { fiyat: 'Fiyat paneli', alt: 'Alt panel' };
+
+/** Rozet, parçaların TAMAMINDAN kurulur — tek panelli de çok panelli de aynı yerden. */
+const panelEtiketi = (p: { panel: string }[]) =>
+  [...new Set(p.map((x) => PANEL[x.panel] ?? x.panel))].join(' + ');
+
+/** Fiyat paneline dokunan indikatör önce: okuma sırası ders gibi, ana indikatör başta. */
+const fiyattaMi = (p: { panel: string }[]) => p.some((x) => x.panel === 'fiyat');
+
 const kayitlar = (await getCollection('indikatorler'))
   .filter((i) => i.data.durum !== 'taslak')
-  // Fiyat paneli önce: okuma sırası ders gibi, ana indikatör başta.
   .sort((a, b) =>
-    a.data.panel === b.data.panel
+    fiyattaMi(a.data.parcalar) === fiyattaMi(b.data.parcalar)
       ? b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-      : a.data.panel === 'fiyat' ? -1 : 1);
-
-const PANEL: Record<string, string> = { fiyat: 'Fiyat paneli', alt: 'Alt panel' };
+      : fiyattaMi(a.data.parcalar) ? -1 : 1);
 ---
 
 <Base
@@ -42,8 +48,11 @@ const PANEL: Record<string, string> = { fiyat: 'Fiyat paneli', alt: 'Alt panel' 
       kayitlar.map((k) => (
         <li class="ind-kart">
           <p class="ind-ust">
-            <span class="etiket">{PANEL[k.data.panel] ?? k.data.panel}</span>
-            <span class="etiket sonek">Pine {k.data.pine}</span>
+            <span class="etiket">{panelEtiketi(k.data.parcalar)}</span>
+            <span class="etiket sonek">
+              Pine {k.data.pine}
+              {k.data.parcalar.length > 1 && ` · ${k.data.parcalar.length} dosya`}
+            </span>
           </p>
           <h2><a href={`/indikatorler/${k.id}/`}>{k.data.title}</a></h2>
           {k.data.ozet && <p class="ind-ozet">{k.data.ozet}</p>}
