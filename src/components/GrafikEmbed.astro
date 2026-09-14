@@ -23,6 +23,15 @@ interface Props {
   /** Kısa kaynak adı, altyazıda ("TCMB EVDS"). */
   kaynak?: string;
   /**
+   * Figürü METİN SÜTUNUNU AŞACAK biçimde genişletir. Çok panelli figürler
+   * ev stilinde 1000+ piksel asgari genişlik ister (plotly_stil: 2+ sütun,
+   * 4+ panel); düzyazı sütunu 714 piksel olduğu için o figürler çerçevenin
+   * İÇİNDE yatay kayıyor ve okur panellerin bir kısmını ancak kaydırarak
+   * görüyor. Yan yana KIYAS için çizilmiş bir figürde bu, figürün işini
+   * yapmaması demektir. Opt-in: verilmezse davranış birebir eskisi.
+   */
+  genis?: boolean;
+  /**
    * Açıkça verilirse KAZANIR. Verilmezse figürün kendi ilan ettiği yükseklik
    * kullanılır — sabit 540px, kendi yüksekliğini yazan figürleri alttan
    * kırpıyordu ve bunu hiçbir şey ölçmüyordu (bkz. lib/grafikOlcu.ts).
@@ -30,7 +39,7 @@ interface Props {
   yukseklik?: number;
 }
 
-const { src, baslik, no, yukseklik, tarihAnahtari, kaynak } = Astro.props;
+const { src, baslik, no, yukseklik, tarihAnahtari, kaynak, genis } = Astro.props;
 const cerceveYuk = cerceveYuksekligi(src, yukseklik);
 
 // Proje şekli ise veri tarihi derleme anında hattın özetinden okunur.
@@ -70,7 +79,7 @@ if (proje) {
 }
 ---
 
-<figure class="grafik">
+<figure class:list={["grafik", { genis }]}>
   <figcaption>
     <span class="etiket grafik-no">{no ? `Şekil ${no}` : 'Şekil'}</span>
     <span class="grafik-baslik">{baslik}</span>
@@ -97,6 +106,14 @@ if (proje) {
     border: 1px solid var(--ink-30);
     background: #fff;
     box-shadow: 0 1px 0 var(--ink-15);
+  }
+
+  .grafik.genis {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    /* Ekranın izin verdiği kadar; asla yatay taşma üretmez. */
+    width: min(1180px, calc(100vw - 32px));
   }
   figcaption {
     display: flex;
