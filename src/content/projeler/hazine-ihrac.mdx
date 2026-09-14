@@ -36,6 +36,7 @@ talep, vade, strateji revizyonları, ileriye dönük tahmin ve backtest.
 | --- | --- | --- |
 | İhale / Doğrudan satış | ihale: fiyat teklifle; doğrudan satış (kira sert., altın/dolar senedi): idari | tahmin modeli yalnız ihaleleri kapsar |
 | Net satış | brüt − geri alım/değişim | tüm seriler net üzerinedir |
+| ROT (rekabetçi olmayan teklif) | fiyat teklifi vermeden, ihalede oluşan ortalama fiyattan alım | **her "net satış" sayısı ihale + ROT'tur**; payı küçük değil |
 | Bid-to-cover (B/C) | toplam teklif / satış | talep gücü; düşüşü zayıf ihale sinyali |
 | Kabul oranı | satış / teklif | Hazine'nin talebi ne kadar "kestiği" |
 | Strateji hedefi | aylık programdaki tutar; **revizyonlar sürümlenir** | revizyon yönü başlı başına sinyal |
@@ -206,6 +207,25 @@ etiketi hangi senet türünün sırtında taşınıyor, burada görünür.
 Beklenen tutar iki katmanla üretilir: **strateji-tutarlı ölçekleme** (hedef × son
 ayların gerçekleşme oranı, ayın kalanı ihalelere dağıtılır) + **benzer senet
 dağılımı** (tanım+vade eşleşmeli tarihsel paylar; beklenen teklif geçmiş B/C'den).
+
+**ROT bu sayıların içindedir.** Sayfadaki her "net satış" ve her teklif rakamı
+ihale bacağı **artı** rekabetçi olmayan teklifi (ROT) kapsar — kaynak sütunları
+ikisini birden taşıyor. Payı küçük de değil: <Deger proje="hazine-ihrac" anahtar="rot_n" ondalik={0}>463</Deger> ihalede
+medyan **%<Deger proje="hazine-ihrac" anahtar="rot_pay_medyan">49,5</Deger>**, çeyrekler arası
+%<Deger proje="hazine-ihrac" anahtar="rot_pay_alt">39,0</Deger>–%<Deger proje="hazine-ihrac" anahtar="rot_pay_ust">59,8</Deger>,
+son on iki ayda %<Deger proje="hazine-ihrac" anahtar="rot_pay_son12">51,6</Deger>; ROT'un sıfır olduğu
+ihale sayısı <Deger proje="hazine-ihrac" anahtar="rot_sifir_n" ondalik={0}>0</Deger>. Yani ihalelerin yarısına
+yakını fiyat teklifi verilmeden, ihalede oluşan ortalama fiyattan satılıyor.
+
+**ROT ayrı tahmin edilmiyor — ve ölçtük, edilmesi isabeti artırmıyor.** Bunun ilk
+yarısı cebir: kestirici bir *ortalama* ve ortalama doğrusaldır, yani iki bacağı ayrı
+tahmin edip toplamak ile toplamı doğrudan tahmin etmek **aynı sayıyı** verir —
+449 ihalenin 449'unda birebir, azami fark 1,5·10⁻¹¹ milyon TL. İkinci yarısı ölçüm:
+ROT'u bir *pay* olarak modelleyip ihale bacağını ona bölen kestiriciler örneklem
+dışı denendi ve hiçbiri mevcut yöntemi geçemedi (en iyisi MAE'yi %2,0 indiriyor ama
+eşli fark anlamsız, ihalelerin yalnız %47'sinde kazanıyor); üstelik aylık hedefe
+ölçekleme adımıyla birlikte koşulduğunda **anlamlı biçimde kötüleşiyor**. Bu yüzden
+ROT toplamın içinde bırakıldı.
 
 <GrafikEmbed
   src="/projeler/hazine-ihrac/planlanan_ihraclar.html"
