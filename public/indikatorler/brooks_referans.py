@@ -213,6 +213,11 @@ PINE_DISI: dict[str, str] = {
     "durum": "Pine'da tablo hücreleri; tek bir değişkeni yok",
     "kirp": "yalnız geleceğe bakma sınamasının aracı",
     "olcu": "rejim panosunun karşılığı ayrı dosyada, ayrı kapıda",
+    "bar_sayaci_ham": "Pine `hSayac`ı tavansız TUTAR ama kutuya min(hSayac,4) "
+                      "basar; ham değer okura hiçbir yerde gösterilmez. Burada "
+                      "yalnız 'etiket dörtte durdu, sayaç sürüyor' iddiasını "
+                      "ÖLÇMEK için var — tavanlı diziyle bakan biri üç barda da "
+                      "4 görür ve iddiayı kendi eliyle çürütür.",
 }
 
 
@@ -604,6 +609,36 @@ class FiyatPaneli:
                     l += 1
             out.append(f"H{min(h, 4)}" if yon[i] == 1
                        else f"L{min(l, 4)}" if yon[i] == -1 else "—")
+        return out
+
+    def bar_sayaci_ham(self) -> list[int]:
+        """`hSayac`/`lSayac`ın TAVANSIZ hâli — işaretli (boğa +, ayı −).
+
+        Pine sayacı tavansız TUTAR ama kutuya `min(hSayac, 4)` basar; yani
+        "H4" üç bar üst üste görünebilir ve iç sayaç 4 · 5 · 6 olabilir.
+        Tavanlı hâli (`bar_sayaci`) okura giden metin; bu ise o metnin
+        ARKASINDAKİ sayı. Ayrı duruyor çünkü "etiket dörtte durdu ama sayaç
+        sürüyor" iddiası ancak tavansız değerle ÖLÇÜLEBİLİR — tavanlı diziyle
+        bakan biri üç barda da 4 görür ve iddiayı kendi eliyle çürütür."""
+        yon, _, _ = self.always_in()
+        h = l = 0
+        gc_zirve = gc_dip = None
+        out: list[int] = []
+        for i in range(len(self.s)):
+            if i > 0 and yon[i] != yon[i - 1]:
+                h = l = 0
+                gc_zirve = gc_dip = None
+            if yon[i] == 1:
+                if gc_zirve is None or self.s.h[i] > gc_zirve:
+                    gc_zirve, h = self.s.h[i], 0
+                elif i > 0 and self.s.h[i] > self.s.h[i - 1]:
+                    h += 1
+            elif yon[i] == -1:
+                if gc_dip is None or self.s.l[i] < gc_dip:
+                    gc_dip, l = self.s.l[i], 0
+                elif i > 0 and self.s.l[i] < self.s.l[i - 1]:
+                    l += 1
+            out.append(h if yon[i] == 1 else -l if yon[i] == -1 else 0)
         return out
 
     # ── Bölüm 1.2 · Kapanışın menzil içindeki yeri ─────────────────────────
