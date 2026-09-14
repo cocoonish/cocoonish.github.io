@@ -1,27 +1,31 @@
 ---
 /* ─────────────────────────────────────────────────────────────
-   Pine Script kod kutusu — TEK KAYNAK.
+   Kod kutusu — TEK KAYNAK.
 
-   Kod `site/public/indikatorler/` altındaki .pine dosyasında durur ve
-   sayfaya oradan `?raw` ile alınır. MDX'e kopyalanmaz: kopyalansaydı
-   indirilen dosya ile sayfada görünen kod bir gün sessizce ayrışır ve
-   hangisinin doğru olduğu kimsenin aklında kalmazdı. Aynı dosya hem
-   basılır hem indirilir.
+   Kod `site/public/` altındaki gerçek dosyada durur ve sayfaya oradan
+   `?raw` ile alınır. MDX'e kopyalanmaz: kopyalansaydı indirilen dosya
+   ile sayfada görünen kod bir gün sessizce ayrışır ve hangisinin doğru
+   olduğu kimsenin aklında kalmazdı. Aynı dosya hem basılır hem indirilir
+   — ve okur indirdiğini koşturduğunda sayfadakiyle aynı şeyi koşturur.
    ───────────────────────────────────────────────────────────── */
 interface Props {
   kod: string;
   /** Site köküne göreli indirme yolu. */
   dosya: string;
   baslik?: string;
+  /** Dil etiketi; kutunun ne olduğunu okur başlıktan değil buradan bilir. */
+  dil?: string;
 }
-const { kod, dosya, baslik } = Astro.props;
+const { kod, dosya, baslik, dil } = Astro.props;
 const satir = kod.trimEnd().split('\n').length;
+const uzanti = dosya.slice(dosya.lastIndexOf('.') + 1);
+const dilAdi = dil ?? (uzanti === 'py' ? 'Python' : 'Pine Script');
 ---
 
 <figure class="pine">
   <figcaption>
-    <span class="etiket">{baslik ?? 'Pine Script'}</span>
-    <span class="pine-olcu">{satir} satır</span>
+    <span class="etiket">{baslik ?? dilAdi}</span>
+    <span class="pine-olcu">{dilAdi} · {satir} satır</span>
     <a class="pine-indir" href={dosya} download>İndir ↓</a>
   </figcaption>
   <pre><code>{kod.trimEnd()}</code></pre>

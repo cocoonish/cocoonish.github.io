@@ -18,9 +18,10 @@ parcalar:
     dosya: '/indikatorler/brooks-rejim-panosu.pine'
 ---
 
-import PineKod from '../../components/PineKod.astro';
+import KodKutusu from '../../components/KodKutusu.astro';
 import kodFiyat from '../../../public/indikatorler/brooks-fiyat-hareketi.pine?raw';
 import kodRejim from '../../../public/indikatorler/brooks-rejim-panosu.pine?raw';
+import kodPython from '../../../public/indikatorler/brooks_referans.py?raw';
 
 <div class="not">
 
@@ -147,6 +148,100 @@ Karşılaştırma çıpası da dersin kendisinden: net/aralık oranı **trend pe
 o bant gününde **0,037**; ortalama kesişme sayısı bir trend gününde *"bir elin
 parmaklarını geçmez"*, o bant gününde **17**. Pencere varsayılanı **70 bar**, çünkü
 dersin Şekil 30'undaki bant tam 70 bar sürüyor.
+
+## Python replikasyonu: kuralları koşturarak okumak
+
+Pine Script yalnız TradingView'de koşar ve kendine özgü bir dili vardır. Bu yüzden
+aynı kuralların **Python karşılığı** da burada: aynı eşikler, aynı sıra, aynı
+çıktılar. Amacı işlem yapmak değil — kuralları **okunur** ve **sınanabilir** kılmak.
+Pine bilmiyorsanız ne olup bittiğini buradan görürsünüz; biliyorsanız iki dosyayı
+yan yana koyup satır satır karşılaştırabilirsiniz.
+
+Dosya tek başına koşar; ağa çıkmaz, kütüphane istemez, indirilip çalıştırılabilir:
+
+```bash
+python3 brooks_referans.py
+```
+
+Bu komut önce kendi kapılarını koşturur, sonra sentetik bir seri üzerinde son barın
+durum kutusunu basar. Sayfadaki bütün ölçülmüş örnekler de bu dosyayla üretildi.
+
+### Tek şeyi anlayın, gerisi gelir: Pine bir döngünün gövdesidir
+
+Bir Pine betiğinin **tamamı bir döngünün içidir.** Yazdığınız her satır, grafikteki
+her bar için bir kez, soldan sağa koşar. Pine o döngüyü gizler — Python göstermek
+zorunda. Aşağıdaki her satır bu tek farkın sonucudur.
+
+| Pine | Python | Ne demek |
+|---|---|---|
+| `close` | `s.c[i]` | `i` = o anda hesaplanan bar |
+| `close[1]` | `s.c[i - 1]` | `[1]` = bir bar önce |
+| `high[2]` | `s.h[i - 2]` | köşeli parantez geriye sayar |
+| `var int ai = 0` | döngü **dışında** `ai = 0` | `var` yalnız ilk barda atanır, sonra taşınır |
+| `ai := 1` | `ai = 1` | Pine'da `:=` yeniden atama, `=` yeni değişken |
+| `ta.ema(close, 20)` | `ema(s.c, 20)` | ilk 19 bar `na`; 20. bar SMA ile tohumlanır |
+| `ta.highest(close[1], 8)` | `max(s.c[i-8 : i])` | pencere **i−1'de biter** |
+| `math.sum(x ? 1 : 0, 10)` | `pencere_toplam(...)` | pencere **i'yi içerir** |
+| `na(x)` | `x is None` | |
+| `barstate.islast` | `i == len(s) - 1` | |
+| `label.new` · `plotshape` | döndürülen sözlük | çizim yok, ölçüm var |
+
+### Üç tuzak
+
+**Birincisi, iki pencere sınırı aynı değil.** `ta.highest(close[1], 8)` ifadesinde
+argüman zaten `close[1]`; pencere bir bar geriden başlar ve **şimdiki barı içermez**.
+İçerseydi bar kendini aşmaya çalışırdı — "kapanışım son sekiz barın kapanışını aştı
+mı" sorusu ancak böyle sorulabilir. `math.sum` ise şimdiki barı **sayar**: "son on
+barın kaçı ortalamanın üstünde" sorusunda bugün de bir bardır. İkisini karıştırmak
+sessiz bir bir-bar kaymasıdır ve **hiçbir yerde hata vermez**.
+
+**İkincisi, `var` tek kalıcı durumdur.** Pine'da `var` ile açılmayan her şey o barda
+baştan hesaplanır. Always-in yönü, ortalamaya dokunmama sayacı ve bar sayımı bu
+yüzden `var`dır — üçü de "bir önceki barda ne olduğunu" hatırlamak zorundadır.
+Python'da karşılığı döngüden önce tanımlanan değişkendir. Bir kuralı taşırken
+sorulacak ilk soru budur: bu değer her barda sıfırlanır mı, yoksa taşınır mı?
+
+**Üçüncüsü — ve en pahalısı — geleceğe bakmak.** Bir hesap yalnız **kapanmış**
+barlardan kurulur. Python'da bunu `i`'den büyük hiçbir indeks kullanmayarak siz
+dayatırsınız; ama "dayattık" demek yetmez.
+
+### Kapılar: söz değil ölçüm
+
+Bir indikatörün en sinsi kusuru **geriye dönük mükemmel görünmesidir** ve sebebi
+neredeyse her zaman aynıdır: bir hesap, o barda henüz var olmayan bir bilgiyi
+kullanır. Bu, "kullanmıyoruz" diye yazılacak bir şey değil, koşturularak ölçülecek
+bir şeydir. Dosyanın üç kapısı var ve üçü de **arızaya karşı koşturularak** sınandı:
+
+**① Geleceğe bakmama.** Seri `i`'de kırpılır ve `i`'deki bütün çıktılar yeniden
+hesaplanır. Sızıntı yoksa sonuç **birebir aynı** olmalıdır: geleceği silmek geçmişi
+değiştiremez. Sınama her barda koşar.
+
+**Bir kapının örneklemi de kapının parçasıdır** ve bu ölçüldü. Sınamaya bilerek bir
+sızıntı enjekte edildi: bir nitelik, şimdiki bar yerine **sonraki** barın tepesine
+baksın. Yedi barda bir örnekleyen ve kalite skorunu yalnız dönüş barı olan barlarda
+raporlayan bir ölçüt bu arızayı **hiç** görmüyor — çünkü bir sızıntı ancak
+*bağladığı* barda görünür ve o barlar seyrektir. Örneklem her bara çekilip çıktı
+koşuldan kurtarıldığında aynı arıza sekiz barda birden yakalanıyor. Dosyadaki sürüm
+ikincisidir.
+
+**② Eşik ayrışması.** Aynı kuralın iki uygulaması bir gün sessizce ayrışır. Python
+tarafındaki her eşik, Pine dosyalarının kendi `input` varsayılanlarıyla
+karşılaştırılır; bir tanesi bile tutmazsa sınama düşer. Denendi: Python'daki güçlü
+trend barı eşiği `0,75`'ten `0,70`'e çekildiğinde kapı adıyla öttü.
+
+**③ Kuralın ilan ettiği hâller.** Always-in'in üç parçası, takip barının *yokluk*
+ölçütü, tek güçlü barın yetmemesi, kalite tavanının **dört** olması, örtüşme eşiği
+ve rejim panosunun iki ucu — her biri kendi sentetik barlarıyla ayrı ayrı sınanır.
+Bir kuralı sınamak ile o kuralı **ölçen** ölçütü sınamak iki ayrı iştir.
+
+### Eşikler tek kaynaktan
+
+Python dosyasındaki hiçbir sabit orada **seçilmedi**. Hepsi dersin sayısal sabitler
+tablosundan gelir ve Pine dosyalarının girdi varsayılanlarıyla birebir aynıdır.
+Dosya tek başına indirildiğinde eşikler kendi içinde yazılıdır; depoda koşarken
+ikisi karşılaştırılır. Zincir üç ucundan da bağlı: **ders → Pine → Python.**
+
+<KodKutusu kod={kodPython} dosya="/indikatorler/brooks_referans.py" baslik="Python replikasyonu · brooks_referans.py" />
 
 ## Örneklerle kullanım
 
@@ -398,6 +493,6 @@ olarak hesaplanamaz:
 
 ## Kod
 
-<PineKod kod={kodFiyat} dosya="/indikatorler/brooks-fiyat-hareketi.pine" baslik="Fiyat paneli · Brooks · Fiyat Hareketi" />
+<KodKutusu kod={kodFiyat} dosya="/indikatorler/brooks-fiyat-hareketi.pine" baslik="Fiyat paneli · Brooks · Fiyat Hareketi" />
 
-<PineKod kod={kodRejim} dosya="/indikatorler/brooks-rejim-panosu.pine" baslik="Alt panel · Brooks · Rejim Panosu" />
+<KodKutusu kod={kodRejim} dosya="/indikatorler/brooks-rejim-panosu.pine" baslik="Alt panel · Brooks · Rejim Panosu" />
