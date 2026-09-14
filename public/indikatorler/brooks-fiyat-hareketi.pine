@@ -42,7 +42,7 @@ g3 = "Sinyal barı (Bölüm 2)"
 kapanisPenc  = input.int(8, "Kapanış tersine çevirme penceresi", minval = 2, group = g3, tooltip = "Ders: kapanış son ~8 barın kapanışının ötesinde")
 ucPenc       = input.int(5, "Uç tersine çevirme penceresi",      minval = 2, group = g3, tooltip = "Ders: uç son ~5 barın ucunun ötesinde")
 ortusmeEsik  = input.float(0.75, "Örtüşme eşiği", minval = 0.3, maxval = 0.95, step = 0.05, group = g3, tooltip = "Ders: önceki barın %75'inden fazlası örtülüyorsa tek bar değil İKİ BARLIK dönüş okunur")
-asgariKalite = input.int(0, "Etiketlenecek asgari kalite (0–4)", minval = 0, maxval = 4, group = g3)
+asgariKalite = input.int(2, "Etiketlenecek asgari kalite (0–4)", minval = 0, maxval = 4, group = g3, tooltip = "0 her dönüş barını etiketler ve grafiği doldurur — ölçüldü: barların yarıdan fazlası asgari dönüş barı koşulunu sağlıyor. Varsayılan 2; dersin 'ideal nitelikler' listesine yaklaşan kurulumlar 3 ve 4'tür.")
 
 g5 = "Bölüm 1.3 · trendleşme ve göreli gövde"
 trendlesmeEsik = input.int(3, "Trendleşme asgari bar sayısı", minval = 2, group = g5, tooltip = "Ders: 'Asgari eşik her üçünde de üç bar veya üç salınımdır.'")
@@ -70,6 +70,9 @@ cevirmeTavan  = input.int(100, "Çevirme sayacı tarama tavanı", minval = 20, m
 medyanPencere = input.int(10, "Göreli gövde/menzil penceresi", minval = 3, group = gT, tooltip = "Ders 'son 5–10 bar' der; 10 o aralığın içinden bir seçimdir.")
 
 g4 = "Gösterim"
+kutuKip   = input.string("Tam",     "Durum kutusu", options = ["Tam", "Özet", "Kapalı"], group = g4, tooltip = "Özet kipi yalnız DÖRT ADIMLIK okuma sırasını gösterir: rejim → yön → yasak → kurulum. Ayrıntı satırları gizlenir.")
+kutuYeri  = input.string("Sağ üst", "Kutunun yeri", options = ["Sağ üst", "Sağ alt", "Sol üst", "Sol alt", "Orta sağ"], group = g4)
+kutuBoyut = input.string("Küçük",   "Kutu yazı boyutu", options = ["Minik", "Küçük", "Normal"], group = g4)
 barBoya      = input.bool(true,  "Barları sınıfına göre boya",   group = g4)
 aiZemin      = input.bool(true,  "Always-in zemini",             group = g4)
 sinyalGoster = input.bool(true,  "Sinyal barı ve kalite skoru",  group = g4)
@@ -519,64 +522,94 @@ if maGoster and gapSayac == gapEsik
 // ─────────────────────────────────────────────────────────────────────────
 //  Durum kutusu
 // ─────────────────────────────────────────────────────────────────────────
-var table kutu = table.new(position.top_right, 2, 14, border_width = 1)
-if barstate.islast
-    table.cell(kutu, 0, 0, "Always-in", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 0, aiLong ? "LONG" : aiShort ? "SHORT" : "—", text_size = size.small,
-       text_color = aiLong ? cMavi : aiShort ? cClaret : cGri)
-    table.cell(kutu, 0, 1, "Yön filtresi", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 1, yalnizAl ? "yalnız AL" : yalnizSat ? "yalnız SAT" : "serbest", text_size = size.small,
-       text_color = yalnizAl ? cMavi : yalnizSat ? cClaret : cGri)
-    table.cell(kutu, 0, 2, "Gap bar", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 2, str.tostring(gapSayac) + (gapSayac >= gapEsik ? " ⚑" : ""), text_size = size.small, text_color = cMurekkep)
-    table.cell(kutu, 0, 3, "Bar sayımı", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 3, aiLong ? "H" + str.tostring(math.min(hSayac, 4)) : aiShort ? "L" + str.tostring(math.min(lSayac, 4)) : "—",
-       text_size = size.small, text_color = cMurekkep)
-    table.cell(kutu, 0, 4, "Ters iki kapanış", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 4, tersIkiKapanis ? "VAR" : "yok", text_size = size.small,
-       text_color = tersIkiKapanis ? cClaret : cGri)
-    table.cell(kutu, 0, 5, "Bar sınıfı", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 5, (gucluTrendBari ? "güçlü trend" : trendBari ? "trend" : doji ? "doji" : "ara")
-       + (govdeGuclu ? " · gövde güçlü" : "") + (tirasAd != "—" ? " · " + tirasAd : ""),
-       text_size = size.small, text_color = cMurekkep)
+//  Kutu DERSİN OKUMA SIRASINA göre dizilir, uygulama sırasına göre değil:
+//  ① rejim → ② yön → ③ yasak → ④ kurulum. Dersin en pahalı hatası "doğru
+//  kurulumu yanlış günde almak" olduğu için kurulum EN SONA konur; okurun
+//  gözü ilk oraya gitmemelidir.
+//
+//  Ayrıntı satırları ayrı bir bölümde durur ve "Özet" kipinde gizlenir.
+//  On dört satırı düz akıtan bir kutu, hiçbir satırı okutmaz.
+f_yer(string s) =>
+    s == "Sağ alt" ? position.bottom_right : s == "Sol üst" ? position.top_left :
+       s == "Sol alt" ? position.bottom_left : s == "Orta sağ" ? position.middle_right : position.top_right
 
-    // Bölüm 1.2 — kapanışın yeri: gövdeden bile bilgi verici
-    table.cell(kutu, 0, 6, "Kapanışın yeri", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 6, "%" + str.tostring(math.round(kapanisYeri * 100)), text_size = size.small,
-       text_color = kapanisYeri > 0.5 ? cMavi : kapanisYeri < 0.5 ? cClaret : cGri)
+f_boyut(string s) =>
+    s == "Minik" ? size.tiny : s == "Normal" ? size.normal : size.small
 
-    // Bölüm 1.10b — SAYI basılır, hüküm basılmaz (kademenin hükmü sınandı ve tutmadı)
-    table.cell(kutu, 0, 7, "Çevirme (kapanış · uç)", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 7, str.tostring(cevirmeKap) + " · " + str.tostring(cevirmeUcSay) + "  (" + cevirmeKademe + ")",
-       text_size = size.small, text_color = cMurekkep)
+var table kutu = table.new(f_yer(kutuYeri), 3, 17, border_width = 1)
 
-    // Bölüm 1.3 — trendleşme: kapanış / zirve / dip
-    table.cell(kutu, 0, 8, "Trendleşme (k·z·d)", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 8, str.tostring(diziKapanis) + " · " + str.tostring(diziZirve) + " · " + str.tostring(diziDip)
-       + (trendlesiyor ? " ⚑" : ""), text_size = size.small, text_color = cMurekkep)
+// Bölüm başlığı: kutuyu okunur yapan şey satır sayısı değil, GRUPLANMASI.
+f_baslik(int satir, string metin, string ipucu) =>
+    table.cell(kutu, 0, satir, metin, text_size = f_boyut(kutuBoyut), text_color = cMurekkep,
+       text_halign = text.align_left, bgcolor = color.new(cGri, 82), tooltip = ipucu)
+    table.cell(kutu, 1, satir, "", bgcolor = color.new(cGri, 82))
+    table.cell(kutu, 2, satir, "", bgcolor = color.new(cGri, 82))
 
-    // Bölüm 2.3 — örtüşme kuralının ADI OLAN hâli
-    table.cell(kutu, 0, 9, "Orta nokta ölçütü", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 9, ortaNoktaBoga ? "boğa ✓" : ortaNoktaAyi ? "ayı ✓" : "—", text_size = size.small,
-       text_color = ortaNoktaBoga ? cMavi : ortaNoktaAyi ? cClaret : cGri)
+f_satir(int satir, string no, string ad, string deger, color renk) =>
+    table.cell(kutu, 0, satir, no,    text_size = f_boyut(kutuBoyut), text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, satir, ad,    text_size = f_boyut(kutuBoyut), text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 2, satir, deger, text_size = f_boyut(kutuBoyut), text_color = renk, text_halign = text.align_left)
 
-    // Bölüm 1.8 · 2.5 — kırılım modu
-    table.cell(kutu, 0, 10, "Kalıp", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 10, (kalipAd == "" ? (govdeIcBar ? "yalnız gövdeler ii" : "—") : kalipAd + " · kırılım modu")
-       + (math.abs(momentumYok) >= momentumBar ? "  · " + str.tostring(math.abs(momentumYok)) + " bardır "
-          + (momentumYok > 0 ? "boğa" : "ayı") + " kapanışı yok" : ""),
-       text_size = size.small, text_color = kalipAd == "" and not govdeIcBar ? cGri : cMurekkep)
+if barstate.islast and kutuKip != "Kapalı"
+    table.clear(kutu, 0, 0, 2, 16)
 
-    // Bölüm 2.4 · 2.6 — iki barlık dönüş, bar boyu, mikro çift
-    table.cell(kutu, 0, 11, "Kalıp (2 bar)", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 11, ikiBarAd, text_size = size.small, text_color = ikiBarDonus ? cMurekkep : cGri)
-    table.cell(kutu, 0, 12, "Bar boyu · mikro", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 12, barBoyuAd + " · " + mikroCift, text_size = size.small, text_color = cMurekkep)
+    // ── OKUMA SIRASI ─────────────────────────────────────────────────────
+    f_baslik(0, "OKUMA SIRASI", "Ders bu sırayı dayatır: önce rejim, sonra yön, sonra yasak, en son kurulum. " +
+       "Sıra bozulursa 'doğru kurulumu yanlış günde almak' olur — dersin en pahalı hatası.")
 
-    // Bölüm 3.8 · 8A.6 — mikro kanal ve iptal kuralı
-    table.cell(kutu, 0, 13, "Mikro kanal · iptal", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 13, str.tostring(mikroKanal) + " bar · " + iptalAd, text_size = size.small,
-       text_color = iptalAd != "—" ? cClaret : cMurekkep)
+    f_satir(1, "①", "Rejim", "alt panele bak", cGri)
+
+    aiMetin = aiLong ? "LONG" : aiShort ? "SHORT" : "henüz belirsiz"
+    f_satir(2, "②", "Always-in", aiMetin, aiLong ? cMavi : aiShort ? cClaret : cGri)
+
+    yasakMetin = yalnizAl ? "yalnız AL — short arama" : yalnizSat ? "yalnız SAT — long arama" : "serbest"
+    f_satir(3, "③", "Yön filtresi", yasakMetin, yalnizAl ? cMavi : yalnizSat ? cClaret : cGri)
+
+    kurBoga = bogaDonus and kaliteBoga > 0 and not yalnizSat
+    kurAyi  = ayiDonus  and kaliteAyi  > 0 and not yalnizAl
+    kurMetin = kurBoga and kurAyi ? "iki yönlü — " + str.tostring(kaliteBoga) + "/4 boğa · " + str.tostring(kaliteAyi) + "/4 ayı" :
+       kurBoga ? str.tostring(kaliteBoga) + "/4 boğa" :
+       kurAyi  ? str.tostring(kaliteAyi)  + "/4 ayı"  : "kurulum yok"
+    hizali = (kurBoga and aiLong) or (kurAyi and aiShort)
+    f_satir(4, "④", "Kurulum", kurMetin + (hizali ? "  ✓ yönle hizalı" : (kurBoga or kurAyi) ? "  ⚠ yönle hizasız" : ""),
+       hizali ? cMavi : (kurBoga or kurAyi) ? cClaret : cGri)
+
+    if kutuKip == "Tam"
+        // ── BU BAR ───────────────────────────────────────────────────────
+        f_baslik(5, "BU BAR", "Barın kendi ölçüleri. Kapanışın yeri gövde oranından bile bilgi vericidir; %50 berabere.")
+        f_satir(6, "", "Sınıf", (gucluTrendBari ? "güçlü trend" : trendBari ? "trend" : doji ? "doji" : "ara")
+           + (govdeGuclu ? " · gövde güçlü" : "") + (tirasAd != "—" ? " · " + tirasAd : ""), cMurekkep)
+        f_satir(7, "", "Kapanışın yeri", "%" + str.tostring(math.round(kapanisYeri * 100)),
+           kapanisYeri > 0.5 ? cMavi : kapanisYeri < 0.5 ? cClaret : cGri)
+        f_satir(8, "", "Boy · mikro", barBoyuAd + " · " + mikroCift, cMurekkep)
+        f_satir(9, "", "Orta nokta ölçütü", ortaNoktaBoga ? "boğa geçti" : ortaNoktaAyi ? "ayı geçti" : "—",
+           ortaNoktaBoga ? cMavi : ortaNoktaAyi ? cClaret : cGri)
+
+        // ── BAĞLAM ───────────────────────────────────────────────────────
+        f_baslik(10, "BAĞLAM", "Barın etrafı. Çevirme sayacı bir GÜÇ ölçüsüdür, hüküm değil: " +
+           "en üst kademenin 'always-in çeviren kırılım' hükmü ölçüldü ve tutmadı (kesinlik %1,05).")
+        f_satir(11, "", "Çevirme (kap·uç)", str.tostring(cevirmeKap) + " · " + str.tostring(cevirmeUcSay)
+           + "  " + cevirmeKademe, cMurekkep)
+        f_satir(12, "", "Trendleşme k·z·d", str.tostring(diziKapanis) + " · " + str.tostring(diziZirve)
+           + " · " + str.tostring(diziDip) + (trendlesiyor ? "  ⚑" : ""), cMurekkep)
+        f_satir(13, "", "Ortalama", "gap " + str.tostring(gapSayac) + (gapSayac >= gapEsik ? " ⚑" : "")
+           + (tersIkiKapanis ? " · TERS İKİ KAPANIŞ" : ""), tersIkiKapanis ? cClaret : cMurekkep)
+        f_satir(14, "", "Sayım · mikro kanal",
+           (aiLong ? "H" + str.tostring(math.min(hSayac, 4)) : aiShort ? "L" + str.tostring(math.min(lSayac, 4)) : "—")
+           + " · " + str.tostring(mikroKanal) + " bar", cMurekkep)
+
+        // ── KALIP VE UYARI ───────────────────────────────────────────────
+        kalipMetin = (kalipAd != "" ? kalipAd + " · kırılım modu" : govdeIcBar ? "yalnız gövdeler ii" : "")
+           + (ikiBarDonus ? (kalipAd != "" or govdeIcBar ? " · " : "") + ikiBarAd : "")
+           + (math.abs(momentumYok) >= momentumBar ? " · " + str.tostring(math.abs(momentumYok)) + " bardır "
+              + (momentumYok > 0 ? "boğa" : "ayı") + " kapanışı yok" : "")
+        // Bu bölüm yalnız SÖYLEYECEK BİR ŞEY VARKEN çıkar. Her barda boş bir
+        // "—" satırı basmak, kutuyu okunur yapmak için harcanan yeri geri alır.
+        if kalipMetin != "" or iptalAd != "—"
+            f_baslik(15, "KALIP · UYARI", "Kırılım modunda yön BİLİNMEZ: iki tarafa da emir konur. " +
+               "Beş bar iptal kuralı bir ÜST SINIRDIR — geçmek dönüş kurulumunu öldürür.")
+            f_satir(16, "", kalipMetin == "" ? "—" : kalipMetin, iptalAd,
+               iptalAd != "—" ? cClaret : cMurekkep)
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Uyarılar — hepsi KAPANMIŞ bar üzerinden
