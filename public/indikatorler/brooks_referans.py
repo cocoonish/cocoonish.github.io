@@ -312,13 +312,20 @@ def ema(x: list[float], n: int) -> list[float | None]:
 
 
 def en_yuksek(x: list[float], i: int, n: int) -> float:
-    """`ta.highest(x[1], n)` — pencere i−1'de BİTER, şimdiki barı içermez."""
-    return max(x[max(0, i - n): i])
+    """`ta.highest(x[1], n)` — pencere i−1'de BİTER, şimdiki barı içermez.
+
+    İLK BARDA PENCERE BOŞTUR ve Pine orada `na` döner; `na` ile yapılan her
+    karşılaştırma `false`'tur. Python'da bunun birebir karşılığı `nan`:
+    `x > nan` da `x < nan` de False. Boş pencerede istisna fırlatmak
+    İKİ YÖNDE de yanlış olurdu — replikasyon Pine'dan ayrışır ve dosyayı
+    kendi indirip koşturan okur, üretim yolunda hiç görünmeyen bir çökmeyle
+    karşılaşır. Ölçülemeyen bir pencere boş bırakılır, uydurulmaz."""
+    return max(x[max(0, i - n): i], default=math.nan)
 
 
 def en_dusuk(x: list[float], i: int, n: int) -> float:
-    """`ta.lowest(x[1], n)` — aynı sınır."""
-    return min(x[max(0, i - n): i])
+    """`ta.lowest(x[1], n)` — aynı sınır, aynı `na` sözleşmesi."""
+    return min(x[max(0, i - n): i], default=math.nan)
 
 
 def pencere_toplam(kosul, i: int, n: int) -> int:
@@ -973,6 +980,24 @@ def kendini_sina() -> list[str]:
     b3 = [(10, 10.4, 9.6, 10.0)] * 3 + [(10.0, 11.0, 9.95, 10.95), (10.95, 11.1, 10.9, 11.0)]
     if FiyatPaneli(seri(b3)).always_in()[1]:
         hata.append("③ tek güçlü trend barı dönüş üretmemeliydi")
+
+    # ③b BOŞ PENCERE: Pine `na` döner, karşılaştırma `false`'tur. Ölçüt
+    #     ölçüm katmanının giriş noktasını İLK BARDAN çağırır — üretim yolu
+    #     ısınma payıyla koştuğu için bu hâl orada hiç görünmez, ve
+    #     görünmediği yer geçen sınavla aynı görünür.
+    #     Ölçüt ÇÖKMEZ, BİLDİRİR: arıza enjekte edildiğinde (nan kaldırılınca)
+    #     çıplak çağrı ValueError fırlatıyor ve ekrandaki teşhis sınamanın
+    #     kendi hatası gibi görünüyordu.
+    try:
+        if not math.isnan(en_dusuk([1.0, 2.0], 0, 5)):
+            hata.append("③b boş pencere nan vermeliydi (Pine'ın na sözleşmesi)")
+        fp0 = FiyatPaneli(seri(b))
+        for j in range(len(b)):
+            for yonu in (True, False):
+                if fp0.donus_bari(j, yonu):
+                    fp0.kalite(j, yonu)
+    except Exception as e:                                  # noqa: BLE001
+        hata.append(f"③b ilk barlarda ölçüm çöküyor: {type(e).__name__}: {e}")
 
     # ④ Canlı kalite tavanı DÖRTTÜR; nitelik sayısı da dört olmalı.
     fp = FiyatPaneli(seri(b))
