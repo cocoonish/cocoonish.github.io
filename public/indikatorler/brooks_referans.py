@@ -173,6 +173,7 @@ PINE_KARSILIGI: dict[str, str] = {
     "ic_bar": "icBar",
     "dis_bar": "disBar",
     "kapanis_yeri": "kapanisYeri",
+    "ters_iki_kapanis": "tersIkiKapanis",
     "tirasli": "tirasAd",
     "cevirme": "cevirmeKap",
     "cevirme_kademesi": "cevirmeKademe",
@@ -475,6 +476,33 @@ class FiyatPaneli:
             sayac = 0 if self.ma_dokundu(i) else sayac + 1
             out.append(sayac)
         return out
+
+    def ters_iki_kapanis(self, i: int) -> bool:
+        """İki ardışık kapanış always-in yönünün TERSİNDE, ortalamaya göre.
+
+        Pine'daki satır BİREBİR şöyle:
+            (aiLong and close < ema and close[1] < ema) or
+            (aiShort and close > ema and close[1] > ema)
+        Dikkat — `close[1] < ema` ÖNCEKİ kapanışı BUGÜNKÜ ortalamayla kıyaslar
+        (Pine'da `ema` indekssiz yazıldığında şimdiki bardır). Burada o yazım
+        aynen korunuyor: bu dosya Pine'ın REPLİKASYONUDUR, düzeltilmiş hâli
+        değil. İkisi ayrışırsa ölçü kapısı düşer ve hangisinin doğru olduğu
+        ayrı bir karardır.
+
+        Ders bunu bir TEŞHİS olarak kullanır: trendin karakteri değişmiş
+        olabilir. Bir kurulum üretmez, bu yüzden kutuda uyarı olarak durur."""
+        if i < 1:
+            return False
+        yon, _, _ = self.always_in()
+        e = self.ema[i]
+        if e is None or self.ema[i - 1] is None:
+            return False
+        c0, c1 = self.s.c[i], self.s.c[i - 1]
+        if yon[i] == 1:
+            return c0 < e and c1 < e
+        if yon[i] == -1:
+            return c0 > e and c1 > e
+        return False
 
     def yon_filtresi(self, i: int) -> str:
         """Son 10 barın 7'si ortalamanın bir yanındaysa KARŞI yön yasaktır.
@@ -810,6 +838,7 @@ class FiyatPaneli:
         return {
             "always_in": {1: "LONG", -1: "SHORT", 0: "—"}[yon[i]],
             "yon_filtresi": self.yon_filtresi(i),
+            "ters_iki_kapanis": self.ters_iki_kapanis(i),
             "gap_bar": gap[i],
             "bar_sayimi": self.bar_sayimi()[i] or "—",
             "bar_sinifi": self.sinif(i),
