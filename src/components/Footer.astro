@@ -6,8 +6,12 @@
 import { SITE_TITLE, FERAGAT } from '../consts';
 import { BOLUMLER, BESLEMELER } from '../lib/bolumler';
 const yil = new Date().getFullYear();
-const yayinlar = BOLUMLER.filter((b) => ['/bulten/', '/teknik/', '/analiz/'].includes(b.href));
-const kaynaklar = BOLUMLER.filter((b) => ['/projeler/', '/arastirma/', '/arama/'].includes(b.href));
+// Kolonlar SÖZLEŞMEDEN türer, elle tutulan href listesinden değil: beslemesi
+// olan bölüm bir YAYIN, olmayan bir KAYNAKTIR. Liste elle tutulduğunda yeni bir
+// bölüm başlık gezinmesinde çıkıp alt bilgide çıkmıyordu ve hiçbir yer bunu
+// söylemiyordu — "İndikatörler" eklenirken tam bu oldu.
+const yayinlar = BOLUMLER.filter((b) => b.rss);
+const kaynaklar = BOLUMLER.filter((b) => !b.rss && b.href !== '/hakkinda/');
 ---
 
 <footer>

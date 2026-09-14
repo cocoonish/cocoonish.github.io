@@ -1,0 +1,156 @@
+---
+title: 'Brooks · Fiyat Hareketi — fiyat paneli indikatörü'
+description: 'Al Brooks dersinin OHLC ile ölçülebilen kısmını fiyat paneline çizen TradingView indikatörü: bar sınıfı, always-in yönü ve dönüş anı, sinyal barı kalitesi (canlı 0–4), örtüşme kuralı, bar sayımı H1–H4 / L1–L4, 20 barlık EMA ile gap bar sayacı ve yön filtresi. Her eşik dersin sayısal sabitler tablosundan gelir; kalibre edilmiş parametre yoktur.'
+pubDate: 2026-09-13
+tags: ['indikatör', 'pine script', 'tradingview', 'brooks', 'fiyat-aksiyonu', 'teknik-analiz']
+durum: 'aktif'
+ozet: 'Brooks dersinin ölçülebilen kısmını fiyat paneline çizer: bar sınıfı, always-in, sinyal barı kalitesi, bar sayımı, ortalama ilişkisi.'
+seviye: 'ileri'
+kaynakDers: 'fiyat-hareketi-brooks'
+panel: 'fiyat'
+dosya: '/indikatorler/brooks-fiyat-hareketi.pine'
+pine: 'v6'
+---
+
+import PineKod from '../../components/PineKod.astro';
+import kod from '../../../public/indikatorler/brooks-fiyat-hareketi.pine?raw';
+
+<div class="not">
+
+Bu indikatör [Fiyat Hareketi: Al Brooks Yöntemiyle Bar Bar Okuma](/arastirma/fiyat-hareketi-brooks/)
+dersinden türetilmiştir. **Her eşik dersin kendi sayısal sabitler tablosundan gelir**;
+hiçbiri geçmişe uydurulmuş, optimize edilmiş ya da tarafımızdan seçilmiş değildir.
+
+Alt panele konan eşi: [Brooks · Rejim Panosu](/indikatorler/brooks-rejim-panosu/).
+
+</div>
+
+## Ne çizer
+
+| Katman | Ne gösterir | Dersteki yeri |
+|---|---|---|
+| Bar rengi | güçlü trend barı · trend barı · doji · ara | Bölüm 1 · sabitler tablosu |
+| Zemin | always-in yönü (long / short) | Bölüm 12 |
+| Üçgen | always-in yönünün döndüğü bar | Bölüm 12 |
+| Etiket `n/4` | sinyal barı ve canlı kalite skoru | Bölüm 2 |
+| `H1–H4` · `L1–L4` | geri çekilme içindeki bar sayımı | Bölüm 6 |
+| Gri çizgi | 20 barlık EMA | Bölüm 7 |
+| Sağ üst kutu | always-in · yön filtresi · gap bar · sayım · bar sınıfı | Bölüm 7, 12 |
+
+## Kurallar ve kaynakları
+
+### Bar sınıfı
+
+Dersin sabitler tablosundan doğrudan: trend barı **gövde ≥ menzilin %50'si**, güçlüsü
+**~%75+**, doji **gövde ≈ menzilin %0–10'u**. Bunlar indikatörün girdileridir; enstrümanınıza
+göre değiştirebilirsiniz ama varsayılanları dersin sayılarıdır.
+
+### Always-in
+
+Dersin kuralı üç parçalı ve üçü de kodda:
+
+1. **Aynı yönde iki ardışık güçlü trend barı.** Çoğunluğun yön değiştirdiğine inanması için
+   gereken asgari kanıt.
+2. **İkinci barın kapanış yönü doğru olmalı.** Dersin cümlesi: *"Kapanış yönü doğru değilse
+   bar sayısı önemsizdir."*
+3. **Takip barının asgari ölçütü bir YOKLUKTUR.** Short'a dönüş için takip barının boğa
+   kapanışı **olmaması**; long'a dönüş için ayı kapanışı **olmaması**.
+
+Yani dönüş, iki barlık diziden **bir bar sonra** onaylanır. Üçgen o barda basılır.
+
+**Dışarıda kalan.** Ders şunu da söyler: *"Tek bir ortalama boyutlu trend barı, bağlam çok
+uygunsa yeterli olabilir."* Bağlam ölçülemez; indikatör bu hâli **görmez**. Gördüğünüz
+dönüşlerin bir kısmını geç işaretler ve bu bilinçlidir.
+
+### Sinyal barı ve neden skor 4 üzerinden
+
+Asgari koşul: boğa dönüş barında kapanış ya açılışın ya da orta noktanın üstünde
+(ayıda ayna). Dersin beş ideal niteliğinden **dördü kapanmış bardan hesaplanabilir**:
+
+1. açılış önceki kapanışta/altında, kapanış hem kendi açılışının hem önceki kapanışın ötesinde,
+2. karşı kuyruk menzilin üçte biri ile yarısı arasında, aynı yön kuyruğu küçük,
+3. önceki barla örtüşme eşiğin altında,
+4. kapanış son **8 barın** kapanışını, uç son **5 barın** ucunu tersine çeviriyor.
+
+Beşinci nitelik — *sinyalden sonraki barın doji iç bar olmaması* — bir **sonraki bara**
+bakar. Ders bunu adıyla söyler: *"Kalite skoru gerçek zamanda hiçbir zaman beş üzerinden
+beş olmaz; en fazla dörttür ve beşincisi girişten sonra öğrenilir."*
+
+Skoru 5'e tamamlamak, indikatörü geleceğe baktırmak olurdu. **Etiket bu yüzden `n/4`
+yazar.** Bir indikatörün en sık rastlanan kusuru geriye dönük mükemmel görünmesidir;
+buradaki dördüncü nitelik o kusurun tam olarak gireceği yerdir ve kapalıdır.
+
+### Örtüşme kuralı
+
+Örtüşme, dersin Şekil 15'te ölçtüğü büyüklüktür: kabul edilen örnekte **%67**, reddedilende
+**%92**. Eşik **%75** ve aşıldığında ders tek bar değil **iki barlık dönüş** okumayı söyler.
+Etiketin ipucunda örtüşme yüzdesi ve gerektiğinde bu uyarı yazar.
+
+### Bar sayımı
+
+Dersin tanımı: *"Boğa trendinde veya yatay bantta yatay/aşağı bir harekette, zirvesi önceki
+barın zirvesinin en az bir tick üstüne çıkan ilk bar high 1'dir."* Rejim filtresi de dersten:
+boğa trendinde `low` sayılmaz, ayı trendinde `high` sayılmaz — sayaç always-in yönünü izler.
+
+**Dışarıda kalan.** Ders şu koşulu da koyar: *"High 1 ile high 2 arasında en az küçücük bir
+trend çizgisi kırılımı olmalıdır."* Trend çizgisi çizmek bir yorum işidir. Sayaç bu koşulu
+**sormaz** — bu yüzden sayaç bir kurulum değil, bir sayaçtır.
+
+### Hareketli ortalama
+
+Üç kullanım, üçü de dersten:
+
+- **Gap bar sayacı** — ortalamaya dokunmayan ardışık bar sayısı; ders **≥ 20** barı bir
+  kurulum sayar.
+- **Yön filtresi** — son 10 barın 7'si ortalamanın bir yanındaysa **karşı yön işlemi
+  aranmaz**. Bu bir sinyal değil, bir **yasaktır**; indikatör o yönde sinyal etiketi basmaz.
+- **Ters tarafta ardışık iki kapanış** — dersin "güçlü trendin imzası" dediği şeyin
+  bozulması; kutuda görünür.
+
+## Nasıl kullanılır
+
+**Kurulum.** TradingView'de Pine Editor'ü açın, aşağıdaki kodu yapıştırın (ya da dosyayı
+indirip yapıştırın), *Save* → *Add to chart*. Ders 5 dakikalık grafikte çalışır; indikatör
+zaman diliminden bağımsızdır ama eşikler o ölçekte kalibre edilmiştir.
+
+**Okuma sırası — ders bu sırayı dayatır.**
+
+1. **Önce rejim.** Alt paneldeki rejim panosuna bakın. Bant rejimindeyse bar sayımına
+   dayalı stop girişlerini bırakın; ders bunu açıkça söyler.
+2. **Sonra yön.** Sağ üst kutudaki always-in. Ders: *"İlk flip'ten sonra yalnızca short
+   arandı, ikinci flip'ten sonra yalnızca long."* Karşı yön işlemi bu dersin varsayılan
+   yasağıdır.
+3. **Sonra yasak.** Yön filtresi "yalnız AL" diyorsa short sinyali aramayın. İndikatör o
+   yönde etiket basmaz ama kendi gözünüzle görebilirsiniz — filtre o refleksi kapatmak
+   içindir.
+4. **En son kurulum.** Sinyal barı etiketi ve kalitesi. `1/4` bir kurulum değil; `3/4` ve
+   `4/4` dersin "ideal nitelikler" listesine yaklaşır.
+
+**Emir mekaniği — indikatör bunu çizmez, ders verir.** Giriş: sinyal barının uç
+noktasının bir tick ötesinde stop emri. Stop: barın karşı ucunun bir tick ötesi. Hedef:
+en az bar boyu kadar ölçülmüş hareket. Küçük veya doji sinyal barında stop bir tick
+yerine ~3 tick ötede.
+
+**Denklem her işlemde kurulur.** Ders bunu bir tablodan geçirmeyi şart koşar:
+P × Ödül > (1 − P) × Risk. Ödül = risk ise başabaş kazanma oranı %50, komisyonla ~%55;
+ödül = 2 × risk ise ~%33, komisyonla ~%36,7. İndikatör olasılık üretmez — o sizin
+okumanızdır.
+
+## Ne ölçmez
+
+Bunlar eksik değil, **sınır**. Brooks sisteminin çekirdeği bağlamdır ve bağlam mekanik
+olarak hesaplanamaz:
+
+- **Güçlü trend kontrol listesi.** Ders 24 maddelik listeyi puana çevirmeyi adıyla
+  yasaklar: *"Maddeler eşit ağırlıklı değildir ve sayılmaz; okunur."* Bu yüzden burada
+  bir "trend gücü skoru" **yoktur** ve olmayacaktır.
+- **Trend çizgisi ve kanal çizgisi.** Çizim bir yorumdur; kırılımı da öyle.
+- **Bağlamla yeterli olan tek trend barı.** Always-in dönüşünün bu hâli görülmez.
+- **Spike ve kanal fazı ayrımı.** Ders sınırların "bulanık" olduğunu kendisi söyler.
+- **Mıknatıslar, ölçülmüş hareket hedefleri, üst zaman dilimi çıpaları.** Hepsi seviye
+  seçimi gerektirir.
+- **Emir akışı.** Grafiğin altındaki kararı görmez; ders zaten görmediğini söyler.
+
+## Kod
+
+<PineKod kod={kod} dosya="/indikatorler/brooks-fiyat-hareketi.pine" baslik="Brooks · Fiyat Hareketi" />

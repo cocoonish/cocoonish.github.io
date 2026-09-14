@@ -31,6 +31,22 @@ const projeler = defineCollection({
   schema: ortakSema.extend({ kaynak: z.string().min(1), guncelleme: z.string().min(1) }),
 });
 
+// İndikatörler: bir dersin öğrettiği yöntemin çalışan karşılığı. Ders değil,
+// araç — ama kaynağı DERSTİR: her eşik hangi bölümden geldiğini yazar.
+const indikatorler = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/indikatorler' }),
+  schema: ortakSema.extend({
+    /** Hangi dersten türetildi (slug) — kaynağı gizlenmez. */
+    kaynakDers: z.string().min(1),
+    /** TradingView panel yerleşimi. */
+    panel: z.enum(['fiyat', 'alt']),
+    /** İndirilebilir Pine dosyasının site köküne göreli yolu. */
+    dosya: z.string().min(1),
+    /** Pine Script sürümü. */
+    pine: z.string().default('v6'),
+  }),
+});
+
 const arastirma = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/arastirma' }),
   schema: ortakSema,
@@ -58,4 +74,4 @@ const analiz = defineCollection({
   }),
 });
 
-export const collections = { projeler, arastirma, analiz };
+export const collections = { projeler, arastirma, analiz, indikatorler };

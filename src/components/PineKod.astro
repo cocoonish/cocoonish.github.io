@@ -1,0 +1,62 @@
+---
+/* ─────────────────────────────────────────────────────────────
+   Pine Script kod kutusu — TEK KAYNAK.
+
+   Kod `site/public/indikatorler/` altındaki .pine dosyasında durur ve
+   sayfaya oradan `?raw` ile alınır. MDX'e kopyalanmaz: kopyalansaydı
+   indirilen dosya ile sayfada görünen kod bir gün sessizce ayrışır ve
+   hangisinin doğru olduğu kimsenin aklında kalmazdı. Aynı dosya hem
+   basılır hem indirilir.
+   ───────────────────────────────────────────────────────────── */
+interface Props {
+  kod: string;
+  /** Site köküne göreli indirme yolu. */
+  dosya: string;
+  baslik?: string;
+}
+const { kod, dosya, baslik } = Astro.props;
+const satir = kod.trimEnd().split('\n').length;
+---
+
+<figure class="pine">
+  <figcaption>
+    <span class="etiket">{baslik ?? 'Pine Script'}</span>
+    <span class="pine-olcu">{satir} satır</span>
+    <a class="pine-indir" href={dosya} download>İndir ↓</a>
+  </figcaption>
+  <pre><code>{kod.trimEnd()}</code></pre>
+</figure>
+
+<style>
+  .pine {
+    margin: 1.75rem 0;
+    border: 1px solid var(--ink-30, #d8d4cc);
+    background: var(--paper-2, #f7f4ee);
+  }
+  .pine figcaption {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--ink-30, #d8d4cc);
+    font-size: 0.8rem;
+  }
+  .pine-olcu {
+    color: var(--ink-60, #6b6b6b);
+    font-family: var(--font-mono);
+  }
+  .pine-indir { margin-left: auto; }
+  .pine pre {
+    margin: 0;
+    padding: 0.9rem;
+    max-height: 34rem;
+    overflow: auto;
+    background: transparent;
+  }
+  .pine code {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    line-height: 1.55;
+    white-space: pre;
+  }
+</style>

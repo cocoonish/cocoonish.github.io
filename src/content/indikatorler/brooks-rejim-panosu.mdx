@@ -1,0 +1,90 @@
+---
+title: 'Brooks · Rejim Panosu — alt panel indikatörü'
+description: 'Al Brooks dersinin yatay bant tanı listesinden ölçülebilen maddeleri alt panelde canlı hesaplayan TradingView indikatörü: örtüşme oranı, doji oranı, hareketli ortalama kesişme sayısı, net/aralık oranı ve azami ardışık trend barı. Eşikler dersin gerçek veri figüründe ölçtüğü değerlerdir. Trend gücü skoru bilerek yoktur.'
+pubDate: 2026-09-13
+tags: ['indikatör', 'pine script', 'tradingview', 'brooks', 'yatay bant', 'teknik-analiz']
+durum: 'aktif'
+ozet: 'Dersin bant tanı listesinden ölçülebilen beş maddeyi alt panelde canlı hesaplar; rejimi trend/ara/bant olarak yazar.'
+seviye: 'ileri'
+kaynakDers: 'fiyat-hareketi-brooks'
+panel: 'alt'
+dosya: '/indikatorler/brooks-rejim-panosu.pine'
+pine: 'v6'
+---
+
+import PineKod from '../../components/PineKod.astro';
+import kod from '../../../public/indikatorler/brooks-rejim-panosu.pine?raw';
+
+<div class="not">
+
+Bu indikatör [Fiyat Hareketi: Al Brooks Yöntemiyle Bar Bar Okuma](/arastirma/fiyat-hareketi-brooks/)
+dersinin **Bölüm 4.2** — yatay bandın tanı listesi — kısmından türetilmiştir.
+
+Fiyat paneline konan eşi: [Brooks · Fiyat Hareketi](/indikatorler/brooks-fiyat-hareketi/).
+
+</div>
+
+## Neden sayılabilir
+
+Ders iki kontrol listesi verir ve **ikisine farklı davranır**. Bu indikatörün tasarımı
+tamamen bu ayrımdan çıkar:
+
+- **Güçlü trend listesi (Bölüm 3.5, 24 madde)** — ders puanlamayı adıyla yasaklar:
+  *"Maddeler eşit ağırlıklı değildir ve sayılmaz; okunur."*
+- **Yatay bant tanı listesi (Bölüm 4.2, 19 madde)** — ders sayıyı kendisi kullanır:
+  *"Beş veya daha fazla madde işaretliyse bar sayımına dayalı stop girişlerini bırak ve
+  bandın uçlarında fade rejimine geç."*
+
+Bu yüzden bu panoda **bant tarafında bir sayaç vardır, trend tarafında yoktur.**
+
+## Ne ölçer
+
+Ondokuz maddenin çoğu gözle okunur ("belirsizlik hissi", "aynı anda hem meşru boğa hem
+meşru ayı kurulumu oluşuyor"). Dersin **Şekil 30'u** o listenin ölçülebilir dört maddesini
+gerçek veride sayıyla veriyor. Pano tam olarak o dört sayıyı hesaplar, beşinciyi ekler:
+
+| Ölçü | Dersteki madde | Şekil 30'un ölçtüğü |
+|---|---|---|
+| Örtüşme oranı | 10, 11 — birçok bar bir öncekiyle %50+ örtüşüyor | **0,725** |
+| Doji oranı | 12 — çok sayıda doji | **0,314** |
+| Ortalama kesişme sayısı | 4, 13 — birden fazla yön değişimi, ortalama yatay | **17** |
+| Net / aralık | 5 — hareket çoğunlukla yatay | **0,037** |
+| Azami ardışık trend barı | 8 — üç-dört ardışık aynı yönlü trend barı ender | — |
+
+Karşılaştırma çıpası dersin kendisinden: net/aralık oranı **trend penceresinde 1,00**,
+o bant gününde **0,037**. Ortalama kesişme sayısı bir trend gününde *"bir elin
+parmaklarını geçmez"*, o bant gününde **17**.
+
+Pano beş ölçünün kaçının bant tarafında olduğunu **`n / 5`** diye yazar ve rejimi
+üç kademede okur: `trend` (≤1), `ara` (2–3), `BANT` (≥4).
+
+## Nasıl kullanılır
+
+**Kurulum.** Kodu Pine Editor'e yapıştırın, *Add to chart* deyin — indikatör alt panele
+düşer. Fiyat paneline eşini de ekleyin; ikisi birlikte çalışır.
+
+**Sıra önemli: önce rejim, sonra yön, sonra kurulum.** Dersin en pahalı hatası
+*"doğru kurulumu yanlış günde almak"*tır. Pano `BANT` diyorsa:
+
+- Bar sayımına dayalı stop girişleri bırakılır. Ders bunu doğrudan söyler.
+- Bandın **uçlarında** fade rejimine geçilir — düşükten al, yüksekten sat.
+- Bandın **içinde** dönüş barı aranmaz. Dersin kuralı: *"Bant içinde dönüş barı arama;
+  bandın ucunda ara."*
+
+Pano `trend` diyorsa geri çekilme kurulumları ve bar sayımı geçerlidir; fade edilmez.
+
+**Ölçüm penceresi.** Varsayılan 70 bar, çünkü dersin Şekil 30'undaki bant tam **70 bar**
+sürüyor ve dört tanı sayısı o pencerede ölçülmüş. Pencereyi büyütmek rejim değişimini
+geciktirir, küçültmek gürültüyü artırır.
+
+## Ne ölçmez
+
+- **Ondokuz maddenin on dördü.** Belirsizlik hissi, aynı anda meşru iki taraflı kurulum,
+  stop toplama, vakum etkisi, sinyal barlarının "zayıf görünmesi" — hepsi gözle okunur.
+  Pano `n / 5` yazar, `n / 19` değil; aradaki fark **sizin okumanızdır**.
+- **Trend gücü.** Bilerek yok; gerekçe yukarıda.
+- **Bandın seviyeleri.** Tavan ve taban çizilmez; onlar seviye seçimi ister.
+
+## Kod
+
+<PineKod kod={kod} dosya="/indikatorler/brooks-rejim-panosu.pine" baslik="Brooks · Rejim Panosu" />

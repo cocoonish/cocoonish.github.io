@@ -1,0 +1,101 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { kicker } from '../../lib/bolumler';
+import { tarihUzun } from '../../lib/bicim';
+
+const dersler = await getCollection('arastirma');
+const dersAdi = new Map(dersler.map((d) => [d.id, d.data.title]));
+
+const kayitlar = (await getCollection('indikatorler'))
+  .filter((i) => i.data.durum !== 'taslak')
+  // Fiyat paneli önce: okuma sırası ders gibi, ana indikatör başta.
+  .sort((a, b) =>
+    a.data.panel === b.data.panel
+      ? b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+      : a.data.panel === 'fiyat' ? -1 : 1);
+
+const PANEL: Record<string, string> = { fiyat: 'Fiyat paneli', alt: 'Alt panel' };
+---
+
+<Base
+  title="İndikatörler"
+  description="Derslerde öğretilen yöntemlerin TradingView karşılığı: kaynağı açık, eşiği dersten gelen Pine Script indikatörleri."
+>
+  <header class="liste-baslik yuksel">
+    <p class="etiket kicker">{kicker('/indikatorler/')}</p>
+    <h1>İndikatörler</h1>
+    <p class="alt">
+      Sitedeki derslerin öğrettiği yöntemlerin çalışan karşılığı. Her indikatör tek bir
+      dersten türetilir ve <b>her eşiği o dersin kendi sayısal tablosundan</b> gelir —
+      kalibre edilmiş, optimize edilmiş ya da uydurulmuş parametre yoktur. Kaynağı açıktır:
+      kodu okuyabilir, indirebilir ve kendi grafiğinize koyabilirsiniz.
+    </p>
+    <p class="alt">
+      Bir indikatör kurulum seçmez, işlem önermez, hedef vermez. Ölçülebilen şeyi ölçer;
+      ölçülemeyeni <b>adıyla dışarıda bırakır</b> ve bunu sayfasında yazar.
+    </p>
+  </header>
+
+  <ul class="ind-liste yuksel" style="--d: 80ms">
+    {
+      kayitlar.map((k) => (
+        <li class="ind-kart">
+          <p class="ind-ust">
+            <span class="etiket">{PANEL[k.data.panel] ?? k.data.panel}</span>
+            <span class="etiket sonek">Pine {k.data.pine}</span>
+          </p>
+          <h2><a href={`/indikatorler/${k.id}/`}>{k.data.title}</a></h2>
+          {k.data.ozet && <p class="ind-ozet">{k.data.ozet}</p>}
+          <p class="ind-alt">
+            <span>Kaynak ders: <a href={`/arastirma/${k.data.kaynakDers}/`}>{dersAdi.get(k.data.kaynakDers) ?? k.data.kaynakDers}</a></span>
+            <span class="ind-tarih">{tarihUzun(k.data.pubDate)}</span>
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+
+  {kayitlar.length === 0 && <p class="alt">Henüz yayımlanmış indikatör yok.</p>}
+</Base>
+
+<style>
+  .ind-liste {
+    list-style: none;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1.75rem;
+  }
+  .ind-kart {
+    border-top: 1px solid var(--ink-30, #d8d4cc);
+    padding-top: 1.25rem;
+  }
+  .ind-ust {
+    display: flex;
+    gap: 1rem;
+    margin: 0 0 0.4rem;
+  }
+  .ind-ust .sonek { color: var(--ink-60, #6b6b6b); }
+  .ind-kart h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+  .ind-kart h2 a { text-decoration: none; }
+  .ind-kart h2 a:hover { text-decoration: underline; }
+  .ind-ozet {
+    margin: 0 0 0.6rem;
+    max-width: var(--olcu-metin, 32rem);
+    color: var(--ink-70);
+  }
+  .ind-alt {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.25rem;
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--ink-60, #6b6b6b);
+  }
+  .ind-tarih { font-family: var(--font-mono); }
+</style>

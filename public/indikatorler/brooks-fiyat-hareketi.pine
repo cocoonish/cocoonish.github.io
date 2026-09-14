@@ -1,0 +1,269 @@
+// Bu indikatör TTO Trading'in "Fiyat Hareketi: Al Brooks Yöntemiyle Bar Bar
+// Okuma" dersinden türetilmiştir. Her eşik dersin kendi sayısal sabitler
+// tablosundan gelir; hiçbiri kalibre edilmemiş, uydurulmamıştır.
+//
+// KAPSAM UYARISI. Brooks sisteminin çekirdeği BAĞLAM okumasıdır ve bağlam
+// mekanik olarak hesaplanamaz. Bu indikatör yalnız OHLC'den ÖLÇÜLEBİLEN
+// kısmı çizer: bar sınıfı, always-in yönü, sinyal barı kalitesi, örtüşme,
+// bar sayımı, ortalama ilişkisi. Kurulum seçmez, işlem önermez, hedef
+// vermez. Dersin kendi cümlesiyle: liste okunur, sayılmaz.
+//
+//@version=6
+indicator("Brooks · Fiyat Hareketi", shorttitle="Brooks FH", overlay = true, max_labels_count = 500, max_lines_count = 500)
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Girdiler — varsayılanlar dersin sabitler tablosundan
+// ─────────────────────────────────────────────────────────────────────────
+g1 = "Bar sınıfı (Bölüm 1)"
+trendGovde   = input.float(0.50, "Trend barı: gövde/menzil ≥",        minval = 0.1, maxval = 0.9, step = 0.05, group = g1, tooltip = "Ders: gövde ≥ menzilin ~%50'si")
+gucluGovde   = input.float(0.75, "Güçlü trend barı: gövde/menzil ≥",  minval = 0.5, maxval = 1.0, step = 0.05, group = g1, tooltip = "Ders: güçlüsünde ~%75+")
+dojiGovde    = input.float(0.10, "Doji: gövde/menzil ≤",              minval = 0.01, maxval = 0.3, step = 0.01, group = g1, tooltip = "Ders: gövde ≈ menzilin %0–10'u")
+
+g2 = "Hareketli ortalama (Bölüm 7)"
+maUzunluk    = input.int(20, "EMA uzunluğu", minval = 2, group = g2, tooltip = "Ders: 20 barlık EMA. Brooks bu seçimin sihirli olmadığını söyler; önemli olan çoğunluğun AYNI çizgiye bakmasıdır.")
+gapEsik      = input.int(20, "Gap bar sayacı eşiği", minval = 5, group = g2, tooltip = "Ders: ortalamaya dokunmayan ≥ 20 ardışık bar bir kurulumdur")
+yonPencere   = input.int(10, "Yön filtresi penceresi", minval = 4, group = g2)
+yonEsik      = input.int(7,  "Yön filtresi eşiği",     minval = 2, group = g2, tooltip = "Ders: son 10 barın 7'si ortalamanın bir yanındaysa KARŞI yön işlemi aranmaz")
+
+g3 = "Sinyal barı (Bölüm 2)"
+kapanisPenc  = input.int(8, "Kapanış tersine çevirme penceresi", minval = 2, group = g3, tooltip = "Ders: kapanış son ~8 barın kapanışının ötesinde")
+ucPenc       = input.int(5, "Uç tersine çevirme penceresi",      minval = 2, group = g3, tooltip = "Ders: uç son ~5 barın ucunun ötesinde")
+ortusmeEsik  = input.float(0.75, "Örtüşme eşiği", minval = 0.3, maxval = 0.95, step = 0.05, group = g3, tooltip = "Ders: önceki barın %75'inden fazlası örtülüyorsa tek bar değil İKİ BARLIK dönüş okunur")
+asgariKalite = input.int(0, "Etiketlenecek asgari kalite (0–4)", minval = 0, maxval = 4, group = g3)
+
+g4 = "Gösterim"
+barBoya      = input.bool(true,  "Barları sınıfına göre boya",   group = g4)
+aiZemin      = input.bool(true,  "Always-in zemini",             group = g4)
+sinyalGoster = input.bool(true,  "Sinyal barı ve kalite skoru",  group = g4)
+sayimGoster  = input.bool(true,  "Bar sayımı (H1–H4 / L1–L4)",   group = g4)
+maGoster     = input.bool(true,  "EMA ve gap bar sayacı",        group = g4)
+
+// Ev paleti
+cMurekkep = color.new(#1a1a1a, 0)
+cClaret   = color.new(#8c2f39, 0)
+cMavi     = color.new(#2f5d8c, 0)
+cGri      = color.new(#8a8a8a, 0)
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 1 · Bar anatomisi
+// ─────────────────────────────────────────────────────────────────────────
+menzil    = high - low
+govde     = math.abs(close - open)
+govdeOran = menzil > 0 ? govde / menzil : 0.0
+ortaNokta = (high + low) / 2
+altKuyruk = math.min(open, close) - low
+ustKuyruk = high - math.max(open, close)
+
+bogaGovde = close > open
+ayiGovde  = close < open
+
+trendBari      = govdeOran >= trendGovde
+gucluTrendBari = govdeOran >= gucluGovde
+doji           = govdeOran <= dojiGovde
+
+gucluBoga = gucluTrendBari and bogaGovde
+gucluAyi  = gucluTrendBari and ayiGovde
+
+icBar  = high <= high[1] and low >= low[1]
+disBar = high >= high[1] and low <= low[1]
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 12 · Always-in
+//
+//  Ders: "Always-in yönünün döndüğüne çoğunluğun inanması için genellikle
+//  AYNI YÖNDE İKİ ARDIŞIK GÜÇLÜ TREND BARI gerekir." + "Kritik ayrıntı:
+//  ikinci trend barının kapanışı" + takip barının ASGARİ ölçütü bir
+//  YOKLUK olarak tanımlanır: short'a dönüş için takip barının boğa
+//  kapanışı OLMAMASI, long'a dönüş için ayı kapanışı OLMAMASI.
+//
+//  Dersin hesaplanamayan kısmı adıyla dışarıda: "tek bir ortalama boyutlu
+//  trend barı, BAĞLAM çok uygunsa yeterli olabilir" — bağlam ölçülemez.
+// ─────────────────────────────────────────────────────────────────────────
+ikiBoga = gucluBoga and gucluBoga[1]
+ikiAyi  = gucluAyi  and gucluAyi[1]
+
+// Takip barı: iki barlık diziden SONRAKİ bar. Ölçüt yokluk.
+flipLong  = ikiBoga[1] and close >= open
+flipShort = ikiAyi[1]  and close <= open
+
+var int ai = 0                      // 1 long · −1 short · 0 henüz belirsiz
+if flipLong
+    ai := 1
+else if flipShort
+    ai := -1
+
+aiLong  = ai ==  1
+aiShort = ai == -1
+aiDondu = ai != ai[1] and not na(ai[1])
+
+bgcolor(aiZemin and aiLong  ? color.new(cMavi,   94) : aiZemin and aiShort ? color.new(cClaret, 94) : na, title = "Always-in zemini")
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 7 · Hareketli ortalama
+// ─────────────────────────────────────────────────────────────────────────
+ema = ta.ema(close, maUzunluk)
+plot(maGoster ? ema : na, "EMA", color = cGri, linewidth = 2)
+
+maDokundu = low <= ema and high >= ema
+
+// Gap barı: tamamen ortalamanın diğer tarafında kalan bar (Ders 7.2)
+var int gapSayac = 0
+gapSayac := maDokundu ? 0 : gapSayac + 1
+
+// Yön filtresi (Ders 7.5②): son N barın K'sı ortalamanın bir yanındaysa
+// KARŞI yön işlemi aranmaz. Bu bir sinyal değil, bir YASAKTIR.
+ustteSayi = math.sum(close > ema ? 1 : 0, yonPencere)
+altta     = math.sum(close < ema ? 1 : 0, yonPencere)
+yalnizAl  = ustteSayi >= yonEsik
+yalnizSat = altta     >= yonEsik
+
+// Ters tarafta ardışık iki kapanış (Ders 7.5①) — güçlü trendin imzasının BOZULMASI
+tersIkiKapanis = (aiLong and close < ema and close[1] < ema) or (aiShort and close > ema and close[1] > ema)
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 2 · Sinyal barı ve kalite
+//
+//  Asgari koşul (bunun altı dönüş barı DEĞİLDİR):
+//    boğa: kapanış açılışın üstünde YA DA orta noktanın üstünde
+//    ayı : kapanış açılışın altında YA DA orta noktanın altında
+//
+//  KALİTE: ders beş ideal nitelik sayar ve şunu açıkça söyler —
+//  "Kalite skoru GERÇEK ZAMANDA hiçbir zaman beş üzerinden beş olmaz;
+//  en fazla dörttür ve beşincisi girişten sonra öğrenilir."
+//  Dördüncü nitelik (sinyalden sonraki barın doji iç bar OLMAMASI) bir
+//  sonraki bara bakar; bu yüzden canlı skor 0–4'tür ve o nitelik burada
+//  HESAPLANMAZ. Skoru 5'e tamamlamak, indikatörü geleceğe baktırmak olurdu.
+// ─────────────────────────────────────────────────────────────────────────
+bogaDonus = close > open or close > ortaNokta
+ayiDonus  = close < open or close < ortaNokta
+
+// Örtüşme: dersin Şekil 15'te ölçtüğü büyüklük (kabul %67 · ret %92)
+ortKesisim = math.min(high, high[1]) - math.max(low, low[1])
+ortusme    = menzil[1] > 0 ? math.max(0, ortKesisim) / menzil[1] : 0.0
+ikiBarlikDonus = ortusme > ortusmeEsik
+
+// Nitelik 1 · açılış önceki kapanışta/altında, kapanış hem kendi açılışının
+//             hem önceki kapanışın ötesinde
+n1Boga = open <= close[1] and close > open and close > close[1]
+n1Ayi  = open >= close[1] and close < open and close < close[1]
+
+// Nitelik 2 · karşı kuyruk menzilin 1/3–1/2'si, aynı yön kuyruğu küçük
+n2Boga = menzil > 0 and altKuyruk >= menzil / 3 and altKuyruk <= menzil / 2 and ustKuyruk <= menzil * 0.15
+n2Ayi  = menzil > 0 and ustKuyruk >= menzil / 3 and ustKuyruk <= menzil / 2 and altKuyruk <= menzil * 0.15
+
+// Nitelik 3 · önceki barla az örtüşme
+n3 = ortusme <= ortusmeEsik
+
+// Nitelik 5 · BİRDEN FAZLA barın kapanışını ve ucunu tersine çevirme
+n5Boga = close > ta.highest(close[1], kapanisPenc) and high > ta.highest(high[1], ucPenc)
+n5Ayi  = close < ta.lowest(close[1],  kapanisPenc) and low  < ta.lowest(low[1],   ucPenc)
+
+kaliteBoga = (n1Boga ? 1 : 0) + (n2Boga ? 1 : 0) + (n3 ? 1 : 0) + (n5Boga ? 1 : 0)
+kaliteAyi  = (n1Ayi  ? 1 : 0) + (n2Ayi  ? 1 : 0) + (n3 ? 1 : 0) + (n5Ayi  ? 1 : 0)
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 6 · Bar sayma
+//
+//  Ders: "Boğa trendinde veya yatay bantta yatay/aşağı bir harekette,
+//  zirvesi önceki barın zirvesinin en az bir tick üstüne çıkan ilk bar
+//  'high 1'dir." Rejim filtresi: boğa trendinde low sayılmaz, ayıda high.
+//
+//  DIŞARIDA KALAN: "high 1 ile high 2 arasında en az küçücük bir trend
+//  çizgisi kırılımı olmalıdır." Trend çizgisi çizimi bir yorum işidir;
+//  sayaç bu koşulu SORMAZ, o yüzden sayaç bir kurulum değil bir SAYAÇTIR.
+// ─────────────────────────────────────────────────────────────────────────
+var int  hSayac = 0
+var int  lSayac = 0
+var float gcZirve = na          // geri çekilmenin başladığı zirve
+var float gcDip   = na
+
+if aiDondu
+    hSayac := 0
+    lSayac := 0
+    gcZirve := na
+    gcDip   := na
+
+if aiLong
+    if na(gcZirve) or high > gcZirve
+        gcZirve := high          // trend sürüyor, sayım sıfırlanır
+        hSayac  := 0
+    else if high > high[1]
+        hSayac := hSayac + 1     // geri çekilme içinde bir bacak bitti
+if aiShort
+    if na(gcDip) or low < gcDip
+        gcDip  := low
+        lSayac := 0
+    else if low < low[1]
+        lSayac := lSayac + 1
+
+hEtiket = hSayac > 0 and high > high[1] and aiLong  ? "H" + str.tostring(math.min(hSayac, 4)) : na
+lEtiket = lSayac > 0 and low  < low[1]  and aiShort ? "L" + str.tostring(math.min(lSayac, 4)) : na
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Çizim
+// ─────────────────────────────────────────────────────────────────────────
+barrenk = not barBoya ? na :
+   gucluBoga ? cMavi :
+   gucluAyi  ? cClaret :
+   doji      ? cGri :
+   bogaGovde ? color.new(cMavi, 55) :
+   ayiGovde  ? color.new(cClaret, 55) : cGri
+barcolor(barrenk, title = "Bar sınıfı")
+
+if sinyalGoster and bogaDonus and kaliteBoga >= asgariKalite and kaliteBoga > 0 and not yalnizSat
+    label.new(bar_index, low, str.tostring(kaliteBoga) + "/4", yloc = yloc.belowbar,
+       style = label.style_label_up, color = color.new(cMavi, 80), textcolor = cMurekkep, size = size.tiny,
+       tooltip = "Boğa sinyal barı · canlı kalite " + str.tostring(kaliteBoga) + "/4" +
+       "\nÖrtüşme: %" + str.tostring(math.round(ortusme * 100)) + (ikiBarlikDonus ? " → İKİ BARLIK dönüş oku" : ""))
+
+if sinyalGoster and ayiDonus and kaliteAyi >= asgariKalite and kaliteAyi > 0 and not yalnizAl
+    label.new(bar_index, high, str.tostring(kaliteAyi) + "/4", yloc = yloc.abovebar,
+       style = label.style_label_down, color = color.new(cClaret, 80), textcolor = cMurekkep, size = size.tiny,
+       tooltip = "Ayı sinyal barı · canlı kalite " + str.tostring(kaliteAyi) + "/4" +
+       "\nÖrtüşme: %" + str.tostring(math.round(ortusme * 100)) + (ikiBarlikDonus ? " → İKİ BARLIK dönüş oku" : ""))
+
+if sayimGoster and not na(hEtiket)
+    label.new(bar_index, high, hEtiket, yloc = yloc.abovebar, style = label.style_none,
+       textcolor = cMavi, size = size.tiny)
+if sayimGoster and not na(lEtiket)
+    label.new(bar_index, low, lEtiket, yloc = yloc.belowbar, style = label.style_none,
+       textcolor = cClaret, size = size.tiny)
+
+plotshape(aiDondu and aiLong,  "Always-in → long",  shape.triangleup,   location.belowbar, cMavi,   size = size.small)
+plotshape(aiDondu and aiShort, "Always-in → short", shape.triangledown, location.abovebar, cClaret, size = size.small)
+
+if maGoster and gapSayac == gapEsik
+    label.new(bar_index, aiLong ? low : high, str.tostring(gapEsik) + " gap bar",
+       yloc = aiLong ? yloc.belowbar : yloc.abovebar, style = label.style_none,
+       textcolor = cGri, size = size.tiny)
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Durum kutusu
+// ─────────────────────────────────────────────────────────────────────────
+var table kutu = table.new(position.top_right, 2, 6, border_width = 1)
+if barstate.islast
+    table.cell(kutu, 0, 0, "Always-in", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 0, aiLong ? "LONG" : aiShort ? "SHORT" : "—", text_size = size.small,
+       text_color = aiLong ? cMavi : aiShort ? cClaret : cGri)
+    table.cell(kutu, 0, 1, "Yön filtresi", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 1, yalnizAl ? "yalnız AL" : yalnizSat ? "yalnız SAT" : "serbest", text_size = size.small,
+       text_color = yalnizAl ? cMavi : yalnizSat ? cClaret : cGri)
+    table.cell(kutu, 0, 2, "Gap bar", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 2, str.tostring(gapSayac) + (gapSayac >= gapEsik ? " ⚑" : ""), text_size = size.small, text_color = cMurekkep)
+    table.cell(kutu, 0, 3, "Bar sayımı", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 3, aiLong ? "H" + str.tostring(math.min(hSayac, 4)) : aiShort ? "L" + str.tostring(math.min(lSayac, 4)) : "—",
+       text_size = size.small, text_color = cMurekkep)
+    table.cell(kutu, 0, 4, "Ters iki kapanış", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 4, tersIkiKapanis ? "VAR" : "yok", text_size = size.small,
+       text_color = tersIkiKapanis ? cClaret : cGri)
+    table.cell(kutu, 0, 5, "Bar sınıfı", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 5, gucluTrendBari ? "güçlü trend" : trendBari ? "trend" : doji ? "doji" : "ara",
+       text_size = size.small, text_color = cMurekkep)
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Uyarılar — hepsi KAPANMIŞ bar üzerinden
+// ─────────────────────────────────────────────────────────────────────────
+alertcondition(aiDondu and aiLong,  "Always-in long'a döndü",  "Brooks FH: always-in LONG")
+alertcondition(aiDondu and aiShort, "Always-in short'a döndü", "Brooks FH: always-in SHORT")
+alertcondition(gapSayac == gapEsik, "Gap bar eşiği",           "Brooks FH: ortalamaya dokunmayan bar sayısı eşiğe ulaştı")
+alertcondition(tersIkiKapanis,      "Ters tarafta iki kapanış","Brooks FH: trendin karakteri değişmiş olabilir")

@@ -43,11 +43,15 @@ export const BOLUMLER: Bolum[] = [
     aciklama: 'Faiz, kur, opsiyon ve teknik analiz üzerine ders formatında uzun notlar.',
   },
   {
-    no: '06', ad: 'Hakkında', href: '/hakkinda/', gezinme: true,
+    no: '06', ad: 'İndikatörler', href: '/indikatorler/', gezinme: true,
+    aciklama: 'Derslerde öğretilen yöntemlerin TradingView karşılığı: kaynağı açık, eşiği dersten gelen Pine Script indikatörleri.',
+  },
+  {
+    no: '07', ad: 'Hakkında', href: '/hakkinda/', gezinme: true,
     aciklama: 'Sitenin amacı, yayın ilkeleri, yayın takvimi ve düzeltme politikası.',
   },
   {
-    no: '07', ad: 'Arama', href: '/arama/', gezinme: true,
+    no: '08', ad: 'Arama', href: '/arama/', gezinme: true,
     aciklama: 'Başlık, etiket ve metinlerde tam metin arama.',
   },
 ];

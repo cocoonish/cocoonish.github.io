@@ -1,0 +1,28 @@
+---
+import { getCollection, render } from 'astro:content';
+import Yazi from '../../layouts/Yazi.astro';
+
+export async function getStaticPaths() {
+  const kayitlar = await getCollection('indikatorler');
+  const dersler = await getCollection('arastirma');
+  const dersAdi = new Map(dersler.map((d) => [d.id, d.data.title]));
+
+  return kayitlar.map((k) => ({
+    params: { slug: k.id },
+    props: {
+      entry: k,
+      // Kaynak ders bir ÖN KOŞULDUR: indikatör o dersin ölçüleriyle çalışır.
+      onkosullar: dersAdi.has(k.data.kaynakDers)
+        ? [{ href: `/arastirma/${k.data.kaynakDers}/`, title: dersAdi.get(k.data.kaynakDers)! }]
+        : [],
+    },
+  }));
+}
+
+const { entry, onkosullar } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<Yazi {...entry.data} tur="indikator" onkosullar={onkosullar}>
+  <Content />
+</Yazi>

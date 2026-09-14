@@ -1,0 +1,126 @@
+// Bu indikatör TTO Trading'in "Fiyat Hareketi: Al Brooks Yöntemiyle Bar Bar
+// Okuma" dersinden türetilmiştir. Alt panele konur; fiyat paneline konan
+// "Brooks · Fiyat Hareketi" indikatörünün eşidir.
+//
+// NE ÖLÇER. Dersin Bölüm 4.2'deki yatay bant tanı listesi 19 maddedir ve
+// çoğu GÖZLE okunur ("belirsizlik hissi", "aynı anda hem boğa hem ayı
+// kurulumu"). Dersin Şekil 30'u o listenin ÖLÇÜLEBİLİR dört maddesini
+// gerçek veride sayıyla verir: örtüşme oranı, doji oranı, ortalama kesişme
+// sayısı ve net/aralık. Bu pano tam olarak o dört sayıyı canlı hesaplar.
+//
+// NE ÖLÇMEZ — VE BU BİLEREK. Dersin Bölüm 3.5'teki güçlü trend kontrol
+// listesi 24 maddedir ve ders onu puana çevirmeyi ADIYLA yasaklar:
+// "Maddeler eşit ağırlıklı değildir ve sayılmaz; okunur." Bu yüzden burada
+// bir "trend gücü skoru" YOKTUR. Bant tarafında sayım meşrudur, çünkü ders
+// orada açıkça "beş veya daha fazla madde işaretliyse" der; trend tarafında
+// değildir.
+//
+//@version=6
+indicator("Brooks · Rejim Panosu", shorttitle="Brooks RP", overlay = false)
+
+g1 = "Pencere"
+pencere    = input.int(70, "Ölçüm penceresi (bar)", minval = 10, maxval = 300, tooltip = "Ders Şekil 30'da bant 70 bar sürüyor ve dört tanı sayısı o pencerede ölçülüyor.", group = g1)
+maUzunluk  = input.int(20, "EMA uzunluğu", minval = 2, group = g1)
+
+g2 = "Bant eşikleri — dersin Şekil 30'da ölçtüğü değerler"
+ortusmeEsik = input.float(0.50, "Bir bar 'örtüşüyor' sayılır: örtüşme ≥", minval = 0.2, maxval = 0.9, step = 0.05, group = g2, tooltip = "Madde 10: 'Birçok bar bir öncekiyle %50 veya daha fazla örtüşüyor'")
+ortusmePay  = input.float(0.50, "Bant işareti: örtüşen bar payı ≥",       minval = 0.2, maxval = 0.9, step = 0.05, group = g2, tooltip = "Ders Şekil 30'da bant gününde ölçülen: 0,725")
+dojiGovde   = input.float(0.10, "Doji: gövde/menzil ≤",                   minval = 0.02, maxval = 0.3, step = 0.01, group = g2)
+dojiPay     = input.float(0.25, "Bant işareti: doji payı ≥",              minval = 0.05, maxval = 0.6, step = 0.05, group = g2, tooltip = "Ders Şekil 30'da bant gününde ölçülen: 0,314")
+kesismeEsik = input.int(5, "Bant işareti: ortalama kesişme ≥",            minval = 2, group = g2, tooltip = "Ders: trend gününde bu sayı 'bir elin parmaklarını geçmez'. Şekil 30'da bant gününde 17.")
+netEsik     = input.float(0.50, "Bant işareti: net/aralık ≤",             minval = 0.05, maxval = 0.95, step = 0.05, group = g2, tooltip = "Ders: trend penceresinde 1,00; Şekil 30'un bant gününde 0,037.")
+diziEsik    = input.int(3, "Bant işareti: azami ardışık trend barı <",     minval = 2, maxval = 6, group = g2, tooltip = "Madde 8: 'üç-dört ardışık aynı yönlü trend barı ENDER'")
+
+cMurekkep = color.new(#1a1a1a, 0)
+cClaret   = color.new(#8c2f39, 0)
+cMavi     = color.new(#2f5d8c, 0)
+cGri      = color.new(#8a8a8a, 0)
+
+// ── Ölçüler ──────────────────────────────────────────────────────────────
+menzil    = high - low
+govdeOran = menzil > 0 ? math.abs(close - open) / menzil : 0.0
+doji      = govdeOran <= dojiGovde
+ema       = ta.ema(close, maUzunluk)
+
+// ① Örtüşme oranı — barların kaçı bir öncekiyle eşikten fazla örtüşüyor
+kesisim     = math.min(high, high[1]) - math.max(low, low[1])
+ortusmeBar  = menzil[1] > 0 ? (math.max(0, kesisim) / menzil[1]) >= ortusmeEsik : false
+ortusmeOran = math.sum(ortusmeBar ? 1 : 0, pencere) / pencere
+
+// ② Doji oranı
+dojiOran = math.sum(doji ? 1 : 0, pencere) / pencere
+
+// ③ Ortalama kesişme sayısı
+kesti    = (close > ema and close[1] <= ema) or (close < ema and close[1] >= ema)
+kesisme  = math.sum(kesti ? 1 : 0, pencere)
+
+// ④ Net / aralık
+enYuksek = ta.highest(high, pencere)
+enDusuk  = ta.lowest(low, pencere)
+toplamAralik = enYuksek - enDusuk
+netDegisim   = math.abs(close - close[pencere - 1])
+netAralik    = toplamAralik > 0 ? netDegisim / toplamAralik : 0.0
+
+// ⑤ Azami ardışık aynı yönlü trend barı (madde 8)
+trendBari = govdeOran >= 0.50
+var int bogaDizi = 0
+var int ayiDizi  = 0
+bogaDizi := trendBari and close > open ? bogaDizi + 1 : 0
+ayiDizi  := trendBari and close < open ? ayiDizi  + 1 : 0
+dizi     = math.max(bogaDizi, ayiDizi)
+azamiDizi = ta.highest(dizi, pencere)
+
+// ── Bant işaretleri (yalnız ÖLÇÜLEBİLİR maddeler) ────────────────────────
+i1 = ortusmeOran >= ortusmePay
+i2 = dojiOran    >= dojiPay
+i3 = kesisme     >= kesismeEsik
+i4 = netAralik   <= netEsik
+i5 = azamiDizi   <  diziEsik
+bantIsareti = (i1 ? 1 : 0) + (i2 ? 1 : 0) + (i3 ? 1 : 0) + (i4 ? 1 : 0) + (i5 ? 1 : 0)
+
+// ── Çizim ────────────────────────────────────────────────────────────────
+plot(ortusmeOran, "Örtüşme oranı", color = cClaret, linewidth = 2)
+plot(dojiOran,    "Doji oranı",    color = cMavi,   linewidth = 2)
+plot(netAralik,   "Net / aralık",  color = cMurekkep, linewidth = 2)
+hline(ortusmePay, "örtüşme eşiği", color = color.new(cClaret, 60), linestyle = hline.style_dotted)
+hline(dojiPay,    "doji eşiği",    color = color.new(cMavi, 60),   linestyle = hline.style_dotted)
+hline(netEsik,    "net/aralık eşiği", color = color.new(cMurekkep, 70), linestyle = hline.style_dotted)
+
+bgcolor(bantIsareti >= 4 ? color.new(cGri, 82) : bantIsareti >= 3 ? color.new(cGri, 91) : na,
+   title = "Bant rejimi zemini")
+
+// ── Durum tablosu ────────────────────────────────────────────────────────
+var table t = table.new(position.top_right, 3, 7, border_width = 1)
+if barstate.islast
+    table.cell(t, 0, 0, "Ölçü",  text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(t, 1, 0, "Değer", text_size = size.small, text_color = cGri)
+    table.cell(t, 2, 0, "Bant?", text_size = size.small, text_color = cGri)
+
+    table.cell(t, 0, 1, "Örtüşme oranı", text_size = size.small, text_halign = text.align_left, text_color = cMurekkep)
+    table.cell(t, 1, 1, str.tostring(ortusmeOran, "0.000"), text_size = size.small, text_color = cMurekkep)
+    table.cell(t, 2, 1, i1 ? "✓" : "—", text_size = size.small, text_color = i1 ? cClaret : cGri)
+
+    table.cell(t, 0, 2, "Doji oranı", text_size = size.small, text_halign = text.align_left, text_color = cMurekkep)
+    table.cell(t, 1, 2, str.tostring(dojiOran, "0.000"), text_size = size.small, text_color = cMurekkep)
+    table.cell(t, 2, 2, i2 ? "✓" : "—", text_size = size.small, text_color = i2 ? cClaret : cGri)
+
+    table.cell(t, 0, 3, "Ortalama kesişme", text_size = size.small, text_halign = text.align_left, text_color = cMurekkep)
+    table.cell(t, 1, 3, str.tostring(kesisme), text_size = size.small, text_color = cMurekkep)
+    table.cell(t, 2, 3, i3 ? "✓" : "—", text_size = size.small, text_color = i3 ? cClaret : cGri)
+
+    table.cell(t, 0, 4, "Net / aralık", text_size = size.small, text_halign = text.align_left, text_color = cMurekkep)
+    table.cell(t, 1, 4, str.tostring(netAralik, "0.000"), text_size = size.small, text_color = cMurekkep)
+    table.cell(t, 2, 4, i4 ? "✓" : "—", text_size = size.small, text_color = i4 ? cClaret : cGri)
+
+    table.cell(t, 0, 5, "Azami ardışık trend barı", text_size = size.small, text_halign = text.align_left, text_color = cMurekkep)
+    table.cell(t, 1, 5, str.tostring(azamiDizi), text_size = size.small, text_color = cMurekkep)
+    table.cell(t, 2, 5, i5 ? "✓" : "—", text_size = size.small, text_color = i5 ? cClaret : cGri)
+
+    table.cell(t, 0, 6, "Ölçülebilir bant işareti", text_size = size.small, text_halign = text.align_left, text_color = cGri)
+    table.cell(t, 1, 6, str.tostring(bantIsareti) + " / 5", text_size = size.small,
+       text_color = bantIsareti >= 4 ? cClaret : cMurekkep)
+    table.cell(t, 2, 6, bantIsareti >= 4 ? "BANT" : bantIsareti <= 1 ? "trend" : "ara", text_size = size.small,
+       text_color = bantIsareti >= 4 ? cClaret : bantIsareti <= 1 ? cMavi : cGri)
+
+alertcondition(ta.crossover(bantIsareti, 3.5),  "Bant rejimine geçiş",  "Brooks RP: ölçülebilir bant işaretleri 4'e çıktı")
+alertcondition(ta.crossunder(bantIsareti, 1.5), "Bant rejiminden çıkış","Brooks RP: ölçülebilir bant işaretleri 1'e indi")
