@@ -144,6 +144,74 @@ SABIT_RP: dict[str, float | int] = {
     "bwDoji": 1,            # "en az biri çok küçük gövdeli (doji)"
 }
 
+
+# ── Ölçü sözleşmesi: her Python ölçüsünün Pine karşılığı ────────────────────
+#
+# Eşik kapısı (pine_ile_karsilastir) İKİ UYGULAMANIN EŞİKLERİNİ karşılaştırır —
+# ama bir ölçü YENİ BİR EŞİK GETİRMİYORSA o kapı onu hiç göremez. "Yalnızca
+# gövdeler ii" tam böyleydi: mevcut girdilerle çalışıyor, kendi eşiği yok.
+# Pine'a taşınmasaydı hiçbir kapı ötmezdi ve sayfadaki kod, sayfadaki
+# açıklamayı karşılamazdı.
+#
+# Bu yüzden sözleşme ADIYLA yazılır: her ölçünün Pine'daki karşılık değişkeni
+# burada ilan edilir ve kapı İKİ YÖNLÜ sorar —
+#   (a) Python'da ilan edilmemiş bir ölçü var mı,
+#   (b) ilan edilen her ad .pine dosyasında gerçekten ATANIYOR mu.
+# Liste elle tutulan bir kapsam listesi DEĞİL: kapı, sınıfın bütün genel
+# metotlarını dolaşıp burada karşılığı olmayanı ENGEL sayar.
+PINE_KARSILIGI: dict[str, str] = {
+    # Bölüm 1 · bar anatomisi
+    "menzil": "menzil",
+    "govde": "govde",
+    "govde_orani": "govdeOran",
+    "orta_nokta": "ortaNokta",
+    "alt_kuyruk": "altKuyruk",
+    "ust_kuyruk": "ustKuyruk",
+    "sinif": "trendBari",
+    "guclu_boga": "gucluBoga",
+    "guclu_ayi": "gucluAyi",
+    "ic_bar": "icBar",
+    "dis_bar": "disBar",
+    "kapanis_yeri": "kapanisYeri",
+    "tirasli": "tirasAd",
+    "cevirme": "cevirmeKap",
+    "cevirme_kademesi": "cevirmeKademe",
+    "trendlesme": "diziKapanis",
+    "govde_gucu": "govdeGuclu",
+    "govde_boslugu": "govdeBosluk",
+    # Bölüm 2 · sinyal barı ve kalıplar
+    "ortusme": "ortusme",
+    "donus_bari": "bogaDonus",
+    "nitelikler": "n1Boga",
+    "kalite": "kaliteBoga",
+    "orta_nokta_olcutu": "ortaNoktaBoga",
+    "iki_barlik_donus": "ikiBarAd",
+    "bar_boyu": "barBoyuAd",
+    "mikro_cift": "mikroCift",
+    "kalip": "kalipAd",
+    "kirilim_modu": "kalipTepe",
+    "govde_ii": "govdeIcBar",
+    "momentum_yoklugu": "momentumYok",
+    # Bölüm 3 · 6 · 7 · 8A · 12
+    "mikro_kanal": "mikroKanal",
+    "bar_sayimi": "hSayac",
+    "ma_dokundu": "maDokundu",
+    "gap_sayaci": "gapSayac",
+    "yon_filtresi": "yalnizAl",
+    "always_in": "flipLong",
+    "iptal_kurali": "iptalAd",
+}
+
+# Pine'da karşılığı OLMAYAN ve olmaması GEREKEN metotlar, gerekçesiyle.
+# Gerekçe yazılmazsa bir sonraki oturum unutulmuş bir ölçü ile bilinçli bir
+# muafiyeti ayırt edemez.
+PINE_DISI: dict[str, str] = {
+    "durum": "Pine'da tablo hücreleri; tek bir değişkeni yok",
+    "kirp": "yalnız geleceğe bakma sınamasının aracı",
+    "olcu": "rejim panosunun karşılığı ayrı dosyada, ayrı kapıda",
+}
+
+
 _INPUT = re.compile(
     r"^\s*(?P<ad>\w+)\s*=\s*input\.(?P<tip>float|int|bool)\(\s*(?P<deger>[^,]+?)\s*,", re.M
 )
@@ -158,6 +226,31 @@ def pine_sabitleri(yol: Path) -> dict[str, float | int | bool]:
             int(ham) if tip == "int" else float(ham)
         )
     return out
+
+
+def olcu_kapsami(pine_fh: Path) -> list[str]:
+    """Her Python ölçüsünün Pine'da bir karşılığı var mı — İKİ YÖNLÜ.
+
+    Eşik kapısının göremediği kusuru kapatır: yeni bir eşik getirmeyen bir
+    ölçü, Pine'a taşınmadan da eşik karşılaştırmasını geçer."""
+    metin = pine_fh.read_text(encoding="utf-8")
+    eksik: list[str] = []
+
+    # (a) Sınıfın her genel metodu ya ilan edilmiş ya muaf olmalı.
+    for sinif in (FiyatPaneli, RejimPanosu):
+        for ad in vars(sinif):
+            if ad.startswith("_"):
+                continue
+            if ad not in PINE_KARSILIGI and ad not in PINE_DISI:
+                eksik.append(f"ölçü '{sinif.__name__}.{ad}' ne Pine karşılığı ne muafiyeti "
+                             f"ilan etmiş — PINE_KARSILIGI ya da PINE_DISI'na yazılmalı")
+
+    # (b) İlan edilen her Pine adı dosyada gerçekten ATANIYOR mu.
+    for py_ad, pine_ad in PINE_KARSILIGI.items():
+        if not re.search(r"^\s*(?:var\s+\w+\s+)?" + re.escape(pine_ad) + r"\s*(?::?=)", metin, re.M):
+            eksik.append(f"'{py_ad}' için ilan edilen Pine değişkeni '{pine_ad}' "
+                         f"{pine_fh.name} içinde atanmıyor — ölçü taşınmamış olabilir")
+    return eksik
 
 
 def pine_ile_karsilastir(pine_fh: Path, pine_rp: Path) -> list[str]:
