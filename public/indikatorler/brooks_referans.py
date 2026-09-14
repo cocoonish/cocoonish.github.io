@@ -105,6 +105,8 @@ SABIT_FH: dict[str, float | int] = {
     "cevirmeKirilim": 15,   # > 15 → dersin en üst kademesi (hükmü sınandı, bkz. cevirme_kademesi)
     # Bölüm 2.6 · tükeniş barı bağlamı
     "tukenisTrendBar": 10,  # "10 veya daha fazla bar süren bir trendin içinde"
+    # Bölüm 2.9 · ikinci giriş ilkesinin momentum eşiği
+    "momentumBar": 6,       # "altı bar boyunca boğa kapanışı yok"
     # Bölüm 8A.6 · beş bar iptal kuralı
     "iptalKapanis": 5,      # eski ucun ötesinde ≥ 5 KAPANIŞ → dönüş arayışı iptal
 }
@@ -546,6 +548,37 @@ class FiyatPaneli:
             return "oo"
         return ""
 
+    def govde_ii(self, i: int) -> bool:
+        """"Yalnızca gövdeler ii": kuyruklar yok sayılır, ikinci gövde
+        birincinin içindedir. Ders bunu ii'nin "daha az güvenilir bir
+        çeşidi" diye adlandırır — o yüzden ayrı bir ad taşır, ii sayılmaz."""
+        if i < 1 or self.ic_bar(i):
+            return False
+        ust, alt = max(self.s.o[i], self.s.c[i]), min(self.s.o[i], self.s.c[i])
+        oust, oalt = max(self.s.o[i - 1], self.s.c[i - 1]), min(self.s.o[i - 1], self.s.c[i - 1])
+        return ust <= oust and alt >= oalt
+
+    def momentum_yoklugu(self, i: int) -> int:
+        """Kaç bardır boğa (ya da ayı) kapanışı YOK.
+
+        Dersin ikinci giriş ilkesindeki eşik: "Günün yeni dibinde ilk alış
+        girişi ama ALTI BAR boyunca boğa kapanışı yok → ikinci alış girişini
+        bekleyin." Pozitif = boğa kapanışı yok, negatif = ayı kapanışı yok.
+
+        Dersin bu ölçüyü kullandığı KURULUM (ikinci giriş) indikatörde YOK:
+        "ilk giriş oldu mu" sorusu bir kurulum takibi ister ve o bir yorum
+        işidir. Ölçünün kendisi saf."""
+        boga = ayi = 0
+        for j in range(i, -1, -1):
+            if self.s.c[j] > self.s.o[j]:
+                break
+            boga += 1
+        for j in range(i, -1, -1):
+            if self.s.c[j] < self.s.o[j]:
+                break
+            ayi += 1
+        return boga if boga >= ayi else -ayi
+
     def kirilim_modu(self, i: int) -> dict | None:
         """Kalıbın üstüne alış stop, altına satış stop; biri tetiklenince
         öbürü iptal. Stop, dolmamış olan karşı emirdir."""
@@ -695,6 +728,8 @@ class FiyatPaneli:
             "govde_gucu": self.govde_gucu(i),
             "govde_boslugu": self.govde_boslugu(i),
             "kalip": self.kalip(i),
+            "govde_ii": self.govde_ii(i),
+            "momentum_yoklugu": self.momentum_yoklugu(i),
             "orta_nokta_boga": self.orta_nokta_olcutu(i, True),
             "orta_nokta_ayi": self.orta_nokta_olcutu(i, False),
             "iki_barlik": self.iki_barlik_donus(i),

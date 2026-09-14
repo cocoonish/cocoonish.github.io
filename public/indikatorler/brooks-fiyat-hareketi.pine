@@ -55,6 +55,9 @@ cevirmeKirilim = input.int(15, "En üst kademe: çevirme >", minval = 5, group =
 g7 = "Bölüm 2.6 · bar boyu ve tükeniş"
 tukenisTrendBar = input.int(10, "Tükeniş için asgari trend barı", minval = 3, group = g7, tooltip = "Ders: '10 veya daha fazla bar süren bir trendin içinde alışılmadık büyüklükte bir bar.'")
 
+g9 = "Bölüm 2.9 · ikinci giriş momentum eşiği"
+momentumBar = input.int(6, "Karşı kapanış görülmeyen bar sayısı ≥", minval = 2, group = g9, tooltip = "Ders: 'Günün yeni dibinde ilk alış girişi ama ALTI BAR boyunca boğa kapanışı yok → ikinci alış girişini bekleyin.' Ölçü burada; ikinci giriş KURULUMU indikatörde yok, o bir kurulum takibi ister.")
+
 g8 = "Bölüm 8A.6 · beş bar iptal kuralı"
 iptalKapanis = input.int(5, "İptal için gereken KAPANIŞ sayısı", minval = 2, group = g8, tooltip = "Eski ucun ötesinde bu kadar KAPANIŞ görülürse dönüş arayışı iptal. Üst sınırdır: geçmek kurulumu öldürür.")
 
@@ -329,6 +332,28 @@ trendlesiyor = math.abs(diziKapanis) >= trendlesmeEsik
 medyanGovde = ta.median(govde[1], medyanPencere)
 govdeGuclu  = not na(medyanGovde) and govde >= medyanGovde
 
+// Bölüm 2.5 · "Yalnızca gövdeler ii" — kuyruklar yok sayılır. Ders bunu
+// ii'nin DAHA AZ GÜVENİLİR bir çeşidi sayar, o yüzden ii ile aynı ada girmez.
+govdeUst  = math.max(open, close)
+govdeAlt  = math.min(open, close)
+govdeIcBar = not icBar and govdeUst <= math.max(open[1], close[1]) and govdeAlt >= math.min(open[1], close[1])
+
+// Bölüm 2.9 · Momentum yokluğu — kaç bardır karşı kapanış görülmedi
+f_momentum() =>
+    int boga = 0
+    for j = 0 to 200
+        if na(close[j]) or close[j] > open[j]
+            break
+        boga += 1
+    int ayi = 0
+    for j = 0 to 200
+        if na(close[j]) or close[j] < open[j]
+            break
+        ayi += 1
+    boga >= ayi ? boga : -ayi
+
+momentumYok = f_momentum()
+
 // Bölüm 1.6 · Gövde boşluğu — kuyruklar örtüşebilir, ölçülen GÖVDELERDİR.
 govdeBosluk = open > close[1] ? 1 : open < close[1] ? -1 : 0
 
@@ -537,8 +562,10 @@ if barstate.islast
 
     // Bölüm 1.8 · 2.5 — kırılım modu
     table.cell(kutu, 0, 10, "Kalıp", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 10, kalipAd == "" ? "—" : kalipAd + " · kırılım modu", text_size = size.small,
-       text_color = kalipAd == "" ? cGri : cMurekkep)
+    table.cell(kutu, 1, 10, (kalipAd == "" ? (govdeIcBar ? "yalnız gövdeler ii" : "—") : kalipAd + " · kırılım modu")
+       + (math.abs(momentumYok) >= momentumBar ? "  · " + str.tostring(math.abs(momentumYok)) + " bardır "
+          + (momentumYok > 0 ? "boğa" : "ayı") + " kapanışı yok" : ""),
+       text_size = size.small, text_color = kalipAd == "" and not govdeIcBar ? cGri : cMurekkep)
 
     // Bölüm 2.4 · 2.6 — iki barlık dönüş, bar boyu, mikro çift
     table.cell(kutu, 0, 11, "Kalıp (2 bar)", text_size = size.small, text_color = cGri, text_halign = text.align_left)
