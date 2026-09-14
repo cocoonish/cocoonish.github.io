@@ -97,6 +97,32 @@ SABIT_FH: dict[str, float | int] = {
     "kapanisPenc": 8,       # kapanış son ~8 barın kapanışını çeviriyor
     "ucPenc": 5,            # uç son ~5 barın ucunu çeviriyor
     "ortusmeEsik": 0.75,    # %75 üstü örtüşme → iki barlık dönüş oku
+    # Bölüm 1.3 · trendleşme ve göreli gövde
+    "trendlesmeEsik": 3,    # trendleşen kapanış/zirve/dip: ≥ 3 bar
+    # Bölüm 1.10b · çevirme sayacı eşikleri
+    "cevirmeSiradan": 3,    # < 3 → bar sıradan
+    "cevirmeRejim": 5,      # > 5 → bar bir REJİM İDDİASI
+    "cevirmeKirilim": 15,   # > 15 → dersin en üst kademesi (hükmü sınandı, bkz. cevirme_kademesi)
+    # Bölüm 2.6 · tükeniş barı bağlamı
+    "tukenisTrendBar": 10,  # "10 veya daha fazla bar süren bir trendin içinde"
+    # Bölüm 8A.6 · beş bar iptal kuralı
+    "iptalKapanis": 5,      # eski ucun ötesinde ≥ 5 KAPANIŞ → dönüş arayışı iptal
+}
+
+# ── Tanım seçimleri: ders bir SAYI VERMİYOR ───────────────────────────────
+#
+# Aşağıdakiler dersin eşikleri DEĞİL. Ders bu kuralları sözle kurar
+# ("kabaca eşit", "belirgin altında", "neredeyse aynı") ve sayı vermez. Bir
+# indikatör sayı olmadan karar veremez, o yüzden bir tanım seçmek zorunda —
+# ama seçtiğini SAYMAZ: bu tablo ayrı durur ki okur hangi sayının dersten,
+# hangisinin bizden geldiğini karıştırmasın. Hepsi girdi olarak açıktır.
+TANIM: dict[str, float | int] = {
+    "esitGovdeOran": 0.50,   # iki barlık dönüşte "kabaca eşit gövde"
+    "kucukBarOran": 0.50,    # küçük bar: menzil < son N barın ortalamasının bu katı
+    "tukenisOran": 2.00,     # tükeniş barı: menzil > son N barın ortalamasının bu katı
+    "mikroTolerans": 0.05,   # mikro çift dip/tepe: "neredeyse aynı" — menzilin payı
+    "cevirmeTavan": 100,     # çevirme sayacı tarama tavanı; ölçülen p99 tam burada — sayı SANSÜRLÜ
+    "medyanPencere": 10,     # göreli gövde gücü penceresi (ders: "son 5–10 bar")
 }
 
 SABIT_RP: dict[str, float | int] = {
@@ -110,6 +136,10 @@ SABIT_RP: dict[str, float | int] = {
     "kesismeEsik": 5,       # bant işareti (Şekil 30'da ölçülen: 17)
     "netEsik": 0.50,        # bant işareti (Şekil 30'da ölçülen: 0,037)
     "diziEsik": 3,          # madde 8: üç-dört ardışık trend barı ENDER
+    # Bölüm 4.9 · barbwire
+    "bwBar": 3,             # "üç veya daha fazla bar büyük ölçüde örtüşüyorsa"
+    "bwOrtaPay": 0.50,      # "ortadaki barın menzilinin %50'sinden fazlası komşularında"
+    "bwDoji": 1,            # "en az biri çok küçük gövdeli (doji)"
 }
 
 _INPUT = re.compile(
@@ -134,7 +164,11 @@ def pine_ile_karsilastir(pine_fh: Path, pine_rp: Path) -> list[str]:
     Aynı kuralın iki uygulaması bir gün sessizce ayrışır; ayrışma ancak
     sorulursa görünür. Burada soruluyor."""
     ayrik: list[str] = []
-    for ad, yol, beyan in (("fiyat paneli", pine_fh, SABIT_FH), ("rejim panosu", pine_rp, SABIT_RP)):
+    # Tanım seçimleri de karşılaştırılır: ders vermediği için SEÇTİĞİMİZ bir
+    # sayının iki uygulamada farklı olması, dersten gelen bir eşiğin
+    # ayrışmasından daha sinsidir — kimse onu bir yerde aramaz.
+    fh_beyan = dict(SABIT_FH, **TANIM)
+    for ad, yol, beyan in (("fiyat paneli", pine_fh, fh_beyan), ("rejim panosu", pine_rp, SABIT_RP)):
         p = pine_sabitleri(yol)
         for k, v in beyan.items():
             if k not in p:
@@ -143,7 +177,8 @@ def pine_ile_karsilastir(pine_fh: Path, pine_rp: Path) -> list[str]:
                 ayrik.append(f"{ad}: '{k}' Pine {p[k]} ≠ Python {v}")
         for k in p:
             if k not in beyan and k not in ("barBoya", "aiZemin", "sinyalGoster",
-                                            "sayimGoster", "maGoster", "asgariKalite"):
+                                            "sayimGoster", "maGoster", "kalipGoster",
+                                            "asgariKalite"):
                 ayrik.append(f"{ad}: '{k}' Pine'da var, Python'da YOK")
     return ayrik
 
@@ -207,9 +242,10 @@ class FiyatPaneli:
     gibi KALICI durum taşıyanlar ise bütün seriyi bir kez dolaşır — çünkü
     Pine'daki karşılıkları `var` ile açılmıştır."""
 
-    def __init__(self, s: Seri, sabit: dict | None = None):
+    def __init__(self, s: Seri, sabit: dict | None = None, tanim: dict | None = None):
         self.s = s
         self.k = dict(SABIT_FH, **(sabit or {}))
+        self.t = dict(TANIM, **(tanim or {}))
         self.ema = ema(s.c, int(self.k["maUzunluk"]))
 
     # ── Bölüm 1 · Bar anatomisi ────────────────────────────────────────────
@@ -385,6 +421,249 @@ class FiyatPaneli:
             out.append(etiket)
         return out
 
+    # ── Bölüm 1.2 · Kapanışın menzil içindeki yeri ─────────────────────────
+    def kapanis_yeri(self, i: int) -> float:
+        """(kapanış − dip) / menzil. Ders: 'gövdenin büyüklüğünden bile daha
+        bilgi verici — çünkü kapanış, mücadelenin nihai skorudur.' %50 berabere."""
+        m = self.menzil(i)
+        return (self.s.c[i] - self.s.l[i]) / m if m > 0 else 0.5
+
+    # ── Bölüm 1.1 · Tıraşlı bar ────────────────────────────────────────────
+    def tirasli(self, i: int, tick: float = 0.0) -> str:
+        """Kuyruğu olmayan uç. Ders §2.6: 'Tepede bir tick kuyruk … hâlâ
+        güçlüdür' — o yüzden ölçü tam sıfır değil, BİR TİCK toleranslı.
+        Tick verilmezse tam sıfır aranır (sentetik seride tick yoktur)."""
+        ust, alt = self.ust_kuyruk(i) <= tick, self.alt_kuyruk(i) <= tick
+        return "marubozu" if (ust and alt) else "tıraşlı tepe" if ust else "tıraşlı dip" if alt else ""
+
+    # ── Bölüm 1.10b · Çevirme sayaçları ────────────────────────────────────
+    def cevirme(self, i: int) -> dict[str, int]:
+        """Bu bar KAÇ önceki barın kapanışını ve ucunu tersine çevirdi.
+
+        Ders: 'barın kapanış seviyesinden geriye doğru bakın ve o çizginin
+        altında kalan kapanış sayısını sayın.' Sayım ARDIŞIKTIR — ilk
+        aşılamayan barda durur; toplam sayım bir pencere seçimi isterdi ve
+        ders pencere vermiyor. Uç sayacı ile kapanış sayacı AYRI tutulur;
+        ders ikincisinin daha ağır bastığını söyler: 'Bir seviyeyi kuyrukla
+        aşan bar reddedilmiştir; kapanışla aşan bar o emirleri tüketmiştir.'"""
+        s, tavan = self.s, int(self.t["cevirmeTavan"])
+        boga = s.c[i] > s.o[i]
+        kap = uc = 0
+        for j in range(i - 1, max(-1, i - 1 - tavan), -1):
+            if (s.c[i] > s.c[j]) if boga else (s.c[i] < s.c[j]):
+                kap += 1
+            else:
+                break
+        for j in range(i - 1, max(-1, i - 1 - tavan), -1):
+            if (s.c[i] > s.h[j]) if boga else (s.c[i] < s.l[j]):
+                uc += 1
+            else:
+                break
+        return {"kapanis": kap, "uc": uc}
+
+    def cevirme_kademesi(self, i: int) -> str:
+        """Sayacın kademesi — dersin sayılarıyla, dersin HÜKMÜ OLMADAN.
+
+        Ders üç kademe verir (< 3 sıradan · > 5 rejim iddiası · > 15 büyük
+        olasılıkla always-in yönünü çeviren kırılım) ve üçüncüsü SINANDI.
+        4.314 gerçek bar üzerinde ölçüldü:
+
+          · Sayaç gerçekten sinyal taşıyor: always-in dönüşünün onaylandığı
+            barlarda medyan 30, bütün barlarda 3; >15 payı %55'e karşı %24,3.
+          · Ama HÜKÜM olarak tutmuyor: '>15' diyen 1.047 barın yalnız 11'i
+            gerçekten dönüş barı — kesinlik %1,05, taban oran %0,46. Yani
+            ihtimali iki katına çıkarıyor ve orada bırakıyor.
+
+        Sebep ölçünün kendisinde: ardışık geriye tarama, güçlü bir trendde
+        her yeni uç kapanışında trendin başına kadar sayar; ölçü "dönüşü"
+        değil "trendin uzunluğunu" ölçmeye başlar. Bu yüzden üçüncü kademe
+        SONUCUYLA değil BÜYÜKLÜĞÜYLE adlandırılır: sayı basılır, hüküm
+        basılmaz. Dersin eşikleri 5 dakikalık barda kalibre; buradaki ölçüm
+        1 saatlik, 4 saatlik ve günlük barlardan — kademe o ölçekte
+        tutuyor olabilir, bu veri onu söyleyemez."""
+        n = self.cevirme(i)["kapanis"]
+        if n > self.k["cevirmeKirilim"]:
+            return "çok güçlü çevirme"
+        if n > self.k["cevirmeRejim"]:
+            return "rejim iddiası"
+        return "sıradan" if n < self.k["cevirmeSiradan"] else "ara"
+
+    # ── Bölüm 1.3 · Trendleşme ─────────────────────────────────────────────
+    def trendlesme(self, i: int) -> dict[str, int]:
+        """Ardışık kaç barda kapanış / zirve / dip aynı yöne gidiyor.
+        Dersin asgari eşiği ÜÇ; üçünde de aynı."""
+        s = self.s
+        out = {}
+        for ad, dizi in (("kapanis", s.c), ("zirve", s.h), ("dip", s.l)):
+            yukari = asagi = 0
+            for j in range(i, 0, -1):
+                if dizi[j] > dizi[j - 1]:
+                    yukari += 1
+                else:
+                    break
+            for j in range(i, 0, -1):
+                if dizi[j] < dizi[j - 1]:
+                    asagi += 1
+                else:
+                    break
+            out[ad] = yukari if yukari >= asagi else -asagi
+        return out
+
+    # ── Bölüm 1.3 · Göreli gövde gücü ──────────────────────────────────────
+    def govde_gucu(self, i: int) -> bool:
+        """Ders: 'Bir gövde, son 5–10 barın MEDYAN gövdesi kadar veya daha
+        büyükse güçlüdür.' Mutlak gövde eşiği kullanılmaz; ölçü göreceli."""
+        n = int(self.t["medyanPencere"])
+        if i < n:
+            return False
+        onceki = sorted(self.govde(j) for j in range(i - n, i))
+        return self.govde(i) >= onceki[len(onceki) // 2]
+
+    # ── Bölüm 1.6 · Gövde boşluğu ──────────────────────────────────────────
+    def govde_boslugu(self, i: int) -> int:
+        """Boğa trendinde açılış, önceki barın KAPANIŞININ üstünde.
+        Kuyruklar örtüşebilir; ölçülen şey gövdelerdir. İkili: 1 · −1 · 0."""
+        if i == 0:
+            return 0
+        return 1 if self.s.o[i] > self.s.c[i - 1] else -1 if self.s.o[i] < self.s.c[i - 1] else 0
+
+    # ── Bölüm 1.8 · 2.5 · İç/dış bar kalıpları ve kırılım modu ─────────────
+    def kalip(self, i: int) -> str:
+        """ii · iii · ioi · oio · oo. Dersin ortak dili: 'Bu dört kalıbın
+        hepsi aynı şeyi söyler: KALIP BİR YATAY BANTTIR. Yön bilinmez.'
+        Bu yüzden çıktı yön değil, KIRILIM MODUDUR: iki tarafa da emir."""
+        ic = lambda j: j > 0 and self.ic_bar(j)
+        dis = lambda j: j > 0 and self.dis_bar(j)
+        if i >= 3 and ic(i) and ic(i - 1) and ic(i - 2):
+            return "iii"
+        if i >= 3 and ic(i) and dis(i - 1) and ic(i - 2):
+            return "ioi"
+        if i >= 3 and dis(i) and ic(i - 1) and dis(i - 2):
+            return "oio"
+        if i >= 2 and ic(i) and ic(i - 1):
+            return "ii"
+        if i >= 2 and dis(i) and dis(i - 1) and self.menzil(i) > self.menzil(i - 1):
+            return "oo"
+        return ""
+
+    def kirilim_modu(self, i: int) -> dict | None:
+        """Kalıbın üstüne alış stop, altına satış stop; biri tetiklenince
+        öbürü iptal. Stop, dolmamış olan karşı emirdir."""
+        k = self.kalip(i)
+        if not k:
+            return None
+        n = 3 if k in ("iii", "ioi", "oio") else 2
+        tepe = max(self.s.h[i - n + 1: i + 1])
+        dip = min(self.s.l[i - n + 1: i + 1])
+        return {"kalip": k, "alis_stop": tepe, "satis_stop": dip, "yukseklik": tepe - dip}
+
+    # ── Bölüm 2.3 · Orta nokta ölçütü ──────────────────────────────────────
+    def orta_nokta_olcutu(self, i: int, boga: bool) -> bool:
+        """Örtüşme kuralının ADI OLAN hâli; sabitler tablosunda böyle geçer:
+        'Sinyal barında örtüşme kuralı — kapanış, önceki barın ORTA
+        NOKTASININ ötesinde.' Dersin Şekil 15'i iki paneli tam buradan
+        ayırır: kabul edilen bar orta noktanın üstünde, reddedilen altında
+        kapanıyor. %75'lik örtüşme eşiği AYRI bir ölçüttür ve 'iki barlık
+        dönüş oku' der; bu ise barın kabul/ret sınırıdır."""
+        if i == 0:
+            return False
+        orta = (self.s.h[i - 1] + self.s.l[i - 1]) / 2
+        return self.s.c[i] > orta if boga else self.s.c[i] < orta
+
+    # ── Bölüm 2.4 · İki barlık dönüş ───────────────────────────────────────
+    def iki_barlik_donus(self, i: int) -> str:
+        """'Yaklaşık aynı boyda, zıt yönlü iki trend barı.' Giriş HER İKİ
+        barın ötesine konur — dibi önceki barın bir tick üstünde olan bir
+        ayı dönüş barı sık sık ayı tuzağıdır.
+
+        'Kabaca eşit' bir TANIM SEÇİMİDİR; ders sayı vermez."""
+        if i < 1:
+            return ""
+        tb = lambda j: self.govde_orani(j) >= self.k["trendGovde"]
+        if not (tb(i) and tb(i - 1)):
+            return ""
+        a, b = self.s.c[i - 1] - self.s.o[i - 1], self.s.c[i] - self.s.o[i]
+        if a * b >= 0:
+            return ""
+        buyuk, kucuk = max(abs(a), abs(b)), min(abs(a), abs(b))
+        if buyuk <= 0 or kucuk / buyuk < self.t["esitGovdeOran"]:
+            return ""
+        return "iki barlık dönüş (boğa)" if b > 0 else "iki barlık dönüş (ayı)"
+
+    # ── Bölüm 2.6 · Küçük bar · tükeniş barı · mikro çift dip/tepe ─────────
+    def bar_boyu(self, i: int) -> str:
+        """Küçük bar ve tükeniş barı. İkisinin de ölçüsü GÖRECELİdir; oranlar
+        tanım seçimidir, dersin verdiği tek sayı tükenişin BAĞLAMIDIR:
+        '10 veya daha fazla bar süren bir trendin içinde alışılmadık
+        büyüklükte bir bar.'"""
+        n = int(self.t["medyanPencere"])
+        if i < n:
+            return ""
+        ort = sum(self.menzil(j) for j in range(i - n, i)) / n
+        if ort <= 0:
+            return ""
+        if self.menzil(i) < ort * self.t["kucukBarOran"]:
+            return "küçük bar"
+        if self.menzil(i) > ort * self.t["tukenisOran"]:
+            tr = self.trendlesme(i)
+            uzun = abs(tr["kapanis"]) >= self.k["tukenisTrendBar"]
+            return "tükeniş barı" if uzun else "alışılmadık büyük bar"
+        return ""
+
+    def mikro_cift(self, i: int) -> str:
+        """'Ardışık veya neredeyse ardışık, dipleri (veya tepeleri) aynı ya
+        da neredeyse aynı olan barlar.' Dersin uyarısı kodda DEĞİL sayfada:
+        bu kalıbın bağlama göre İKİ TAMAMEN ZIT anlamı vardır — ayı spike'ı
+        içinde tek barlık bayrak (devam), başka her yerde dönüş. İndikatör
+        kalıbı gösterir, hükmü vermez.
+
+        'Neredeyse aynı' bir TANIM SEÇİMİDİR; ders sayı vermez."""
+        if i < 1:
+            return ""
+        tol = self.menzil(i) * self.t["mikroTolerans"]
+        if tol <= 0:
+            return ""
+        if abs(self.s.l[i] - self.s.l[i - 1]) <= tol:
+            return "mikro çift dip"
+        if abs(self.s.h[i] - self.s.h[i - 1]) <= tol:
+            return "mikro çift tepe"
+        return ""
+
+    # ── Bölüm 3.8 · Mikro kanal ────────────────────────────────────────────
+    def mikro_kanal(self, i: int) -> int:
+        """Geri çekilmesiz ardışık bar sayısı: boğa mikro kanalında hiçbir
+        barın dibi bir öncekinin altına inmez. Pozitif = boğa, negatif = ayı."""
+        s = self.s
+        yukari = asagi = 0
+        for j in range(i, 0, -1):
+            if s.l[j] >= s.l[j - 1]:
+                yukari += 1
+            else:
+                break
+        for j in range(i, 0, -1):
+            if s.h[j] <= s.h[j - 1]:
+                asagi += 1
+            else:
+                break
+        return yukari if yukari >= asagi else -asagi
+
+    # ── Bölüm 8A.6 · Beş bar iptal kuralı ──────────────────────────────────
+    def iptal_kurali(self, i: int) -> dict:
+        """'Eski ucun ötesinde ≥ 5 KAPANIŞ' → dönüş arayışı iptal edilir.
+        Eşik bir ÜST SINIRDIR: geçmek kurulumu öldürür. Ölçü kapanışla
+        yapılır, uçla değil — ucun aşılması bir deneme, kapanışın aşılması
+        bir sonuçtur."""
+        n = int(self.k["iptalKapanis"])
+        if i < n:
+            return {"boga": 0, "ayi": 0, "iptal": ""}
+        onceki_tepe = max(self.s.h[max(0, i - 40): i - n + 1] or [self.s.h[i]])
+        onceki_dip = min(self.s.l[max(0, i - 40): i - n + 1] or [self.s.l[i]])
+        ust = sum(1 for j in range(i - n + 1, i + 1) if self.s.c[j] > onceki_tepe)
+        alt = sum(1 for j in range(i - n + 1, i + 1) if self.s.c[j] < onceki_dip)
+        return {"boga": ust, "ayi": alt,
+                "iptal": "ayı dönüşü arayışı iptal" if ust >= n
+                else "boğa dönüşü arayışı iptal" if alt >= n else ""}
+
     # ── Durum kutusu — Pine'daki sağ üst tablo ─────────────────────────────
     def durum(self, i: int) -> dict:
         """Barın BÜTÜN çıktıları. Geleceğe bakma sınaması bunu karşılaştırır.
@@ -408,6 +687,21 @@ class FiyatPaneli:
             "donus_ayi": self.donus_bari(i, False),
             "nitelik_boga": self.nitelikler(i, True),
             "nitelik_ayi": self.nitelikler(i, False),
+            "kapanis_yeri": round(self.kapanis_yeri(i), 3),
+            "tirasli": self.tirasli(i),
+            "cevirme": self.cevirme(i),
+            "cevirme_kademesi": self.cevirme_kademesi(i),
+            "trendlesme": self.trendlesme(i),
+            "govde_gucu": self.govde_gucu(i),
+            "govde_boslugu": self.govde_boslugu(i),
+            "kalip": self.kalip(i),
+            "orta_nokta_boga": self.orta_nokta_olcutu(i, True),
+            "orta_nokta_ayi": self.orta_nokta_olcutu(i, False),
+            "iki_barlik": self.iki_barlik_donus(i),
+            "bar_boyu": self.bar_boyu(i),
+            "mikro_cift": self.mikro_cift(i),
+            "mikro_kanal": self.mikro_kanal(i),
+            "iptal": self.iptal_kurali(i),
         }
 
 

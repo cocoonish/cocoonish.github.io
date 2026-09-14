@@ -31,6 +31,11 @@ kesismeEsik = input.int(5, "Bant işareti: ortalama kesişme ≥",            mi
 netEsik     = input.float(0.50, "Bant işareti: net/aralık ≤",             minval = 0.05, maxval = 0.95, step = 0.05, group = g2, tooltip = "Ders: trend penceresinde 1,00; Şekil 30'un bant gününde 0,037.")
 diziEsik    = input.int(3, "Bant işareti: azami ardışık trend barı <",     minval = 2, maxval = 6, group = g2, tooltip = "Madde 8: 'üç-dört ardışık aynı yönlü trend barı ENDER'")
 
+g3 = "Bölüm 4.9 · Barbwire (dikenli tel)"
+bwBar     = input.int(3, "Asgari örtüşen bar", minval = 3, maxval = 6, group = g3, tooltip = "Ders: 'Üç veya daha fazla bar büyük ölçüde örtüşüyorsa…'")
+bwOrtaPay = input.float(0.50, "Ortadaki barın komşularında kalan payı >", minval = 0.2, maxval = 0.9, step = 0.05, group = g3, tooltip = "Dersin SAYISAL ölçütü: 'üç barın ortadakine bak; yüksekliğinin yarısından fazlası önceki ve sonraki barın aralığı içindeyse üç barı barbwire say.'")
+bwDoji    = input.int(1, "Asgari doji sayısı", minval = 1, maxval = 3, group = g3, tooltip = "Ders: '…bunlardan en az biri çok küçük gövdeliyse (doji)'")
+
 cMurekkep = color.new(#1a1a1a, 0)
 cClaret   = color.new(#8c2f39, 0)
 cMavi     = color.new(#2f5d8c, 0)
@@ -70,6 +75,30 @@ ayiDizi  := trendBari and close < open ? ayiDizi  + 1 : 0
 dizi     = math.max(bogaDizi, ayiDizi)
 azamiDizi = ta.highest(dizi, pencere)
 
+// ── Bölüm 4.9 · Barbwire ─────────────────────────────────────────────────
+//
+//  Dersin bu kalıp için verdiği ölçüt SAYISALDIR ve gözle teşhisin yerine
+//  geçer: "üç barın ORTADAKİNE bak; yüksekliğinin yarısından fazlası önceki
+//  VE sonraki barın aralığı içindeyse üç barı barbwire say."
+//
+//  "Sonraki bar" geleceğe bakmak DEĞİL: kalıp üçüncü barında adlandırılır,
+//  yani ortadaki bar [1], komşuları [2] ve [0]. Üçü de kapanmıştır.
+//
+//  NİÇİN ÖNEMLİ — dersin en sinsi tuzağı: "Barbwire içindeki bir dönüş
+//  barını gerçek dönüş barı sanmak." Dar bantta dönüş barının TERS
+//  ÇEVİRECEK BİR ŞEYİ YOKTUR; bir doji gibi davranır. Pano bu yüzden
+//  barbwire'ı ayrıca işaretler: fiyat panelindeki kalite skoru orada
+//  okunmaz.
+// ─────────────────────────────────────────────────────────────────────────
+bwOrtaMenzil = high[1] - low[1]
+bwKesOnce    = math.min(high[1], high[2]) - math.max(low[1], low[2])
+bwKesSonra   = math.min(high[1], high[0]) - math.max(low[1], low[0])
+bwOrtusme    = bwOrtaMenzil > 0 and
+   math.max(0.0, bwKesOnce)  / bwOrtaMenzil > bwOrtaPay and
+   math.max(0.0, bwKesSonra) / bwOrtaMenzil > bwOrtaPay
+bwDojiSay    = math.sum(doji ? 1 : 0, bwBar)
+barbwire     = bwOrtusme and bwDojiSay >= bwDoji
+
 // ── Bant işaretleri (yalnız ÖLÇÜLEBİLİR maddeler) ────────────────────────
 i1 = ortusmeOran >= ortusmePay
 i2 = dojiOran    >= dojiPay
@@ -88,9 +117,10 @@ hline(netEsik,    "net/aralık eşiği", color = color.new(cMurekkep, 70), lines
 
 bgcolor(bantIsareti >= 4 ? color.new(cGri, 82) : bantIsareti >= 3 ? color.new(cGri, 91) : na,
    title = "Bant rejimi zemini")
+plotshape(barbwire, "Barbwire", shape.xcross, location.top, cClaret, size = size.tiny)
 
 // ── Durum tablosu ────────────────────────────────────────────────────────
-var table t = table.new(position.top_right, 3, 7, border_width = 1)
+var table t = table.new(position.top_right, 3, 8, border_width = 1)
 if barstate.islast
     table.cell(t, 0, 0, "Ölçü",  text_size = size.small, text_color = cGri, text_halign = text.align_left)
     table.cell(t, 1, 0, "Değer", text_size = size.small, text_color = cGri)
@@ -122,5 +152,11 @@ if barstate.islast
     table.cell(t, 2, 6, bantIsareti >= 4 ? "BANT" : bantIsareti <= 1 ? "trend" : "ara", text_size = size.small,
        text_color = bantIsareti >= 4 ? cClaret : bantIsareti <= 1 ? cMavi : cGri)
 
+    table.cell(t, 0, 7, "Barbwire (4.9)", text_size = size.small, text_halign = text.align_left, text_color = cGri)
+    table.cell(t, 1, 7, str.tostring(math.round(math.max(0.0, math.min(bwKesOnce, bwKesSonra)) / math.max(bwOrtaMenzil, syminfo.mintick), 2)),
+       text_size = size.small, text_color = cMurekkep)
+    table.cell(t, 2, 7, barbwire ? "VAR ⚠" : "—", text_size = size.small, text_color = barbwire ? cClaret : cGri)
+
 alertcondition(ta.crossover(bantIsareti, 3.5),  "Bant rejimine geçiş",  "Brooks RP: ölçülebilir bant işaretleri 4'e çıktı")
 alertcondition(ta.crossunder(bantIsareti, 1.5), "Bant rejiminden çıkış","Brooks RP: ölçülebilir bant işaretleri 1'e indi")
+alertcondition(barbwire, "Barbwire", "Brooks RP: barbwire — dönüş barı burada dönüş barı gibi işlev GÖRMEZ")

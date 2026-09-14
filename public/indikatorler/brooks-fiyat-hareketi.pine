@@ -1,15 +1,28 @@
 // Bu indikatör TTO Trading'in "Fiyat Hareketi: Al Brooks Yöntemiyle Bar Bar
-// Okuma" dersinden türetilmiştir. Her eşik dersin kendi sayısal sabitler
-// tablosundan gelir; hiçbiri kalibre edilmemiş, uydurulmamıştır.
+// Okuma" dersinden türetilmiştir.
+//
+// EŞİKLER İKİ KÜMEDİR VE KARIŞTIRILMAZ.
+//   · g1–g8 grupları: dersin kendi SAYISAL SABİTLER TABLOSUNDAN gelir.
+//     Hiçbiri kalibre edilmemiş, geçmişe uydurulmamıştır.
+//   · gT grubu: dersin SAYI VERMEDİĞİ kurallar için bizim TANIM SEÇİMİMİZ
+//     ("kabaca eşit", "belirgin altında", "neredeyse aynı"). Ayrı grupta
+//     durur ki dersin eşiğiyle karışmasın; her biri girdi olarak açıktır.
 //
 // KAPSAM UYARISI. Brooks sisteminin çekirdeği BAĞLAM okumasıdır ve bağlam
 // mekanik olarak hesaplanamaz. Bu indikatör yalnız OHLC'den ÖLÇÜLEBİLEN
-// kısmı çizer: bar sınıfı, always-in yönü, sinyal barı kalitesi, örtüşme,
-// bar sayımı, ortalama ilişkisi. Kurulum seçmez, işlem önermez, hedef
-// vermez. Dersin kendi cümlesiyle: liste okunur, sayılmaz.
+// kısmı çizer: bar anatomisi ve sınıfı, kapanışın yeri, tıraşlı uç, çevirme
+// sayaçları, trendleşme, göreli gövde, gövde boşluğu, iç/dış bar kalıpları
+// ve kırılım modu, always-in yönü, sinyal barı kalitesi (canlı 0–4), orta
+// nokta ölçütü, örtüşme, iki barlık dönüş, bar boyu, mikro çift, mikro
+// kanal, bar sayımı, ortalama ilişkisi, beş bar iptal kuralı.
+//
+// Kurulum seçmez, işlem önermez, hedef vermez. Kalıpları GÖSTERİR, hükmü
+// VERMEZ — hüküm bağlamdan gelir. Dersin kendi cümlesiyle: liste okunur,
+// sayılmaz.
 //
 //@version=6
-indicator("Brooks · Fiyat Hareketi", shorttitle="Brooks FH", overlay = true, max_labels_count = 500, max_lines_count = 500)
+indicator("Brooks · Fiyat Hareketi", shorttitle="Brooks FH", overlay = true,
+   max_labels_count = 500, max_lines_count = 500, max_bars_back = 300)
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Girdiler — varsayılanlar dersin sabitler tablosundan
@@ -31,12 +44,35 @@ ucPenc       = input.int(5, "Uç tersine çevirme penceresi",      minval = 2, g
 ortusmeEsik  = input.float(0.75, "Örtüşme eşiği", minval = 0.3, maxval = 0.95, step = 0.05, group = g3, tooltip = "Ders: önceki barın %75'inden fazlası örtülüyorsa tek bar değil İKİ BARLIK dönüş okunur")
 asgariKalite = input.int(0, "Etiketlenecek asgari kalite (0–4)", minval = 0, maxval = 4, group = g3)
 
+g5 = "Bölüm 1.3 · trendleşme ve göreli gövde"
+trendlesmeEsik = input.int(3, "Trendleşme asgari bar sayısı", minval = 2, group = g5, tooltip = "Ders: 'Asgari eşik her üçünde de üç bar veya üç salınımdır.'")
+
+g6 = "Bölüm 1.10b · çevirme sayacı"
+cevirmeSiradan = input.int(3,  "Sıradan bar: çevirme <", minval = 1, group = g6)
+cevirmeRejim   = input.int(5,  "Rejim iddiası: çevirme >", minval = 2, group = g6)
+cevirmeKirilim = input.int(15, "En üst kademe: çevirme >", minval = 5, group = g6, tooltip = "Ders bu kademeyi 'büyük olasılıkla always-in yönünü çeviren kırılım' diye adlandırır. O HÜKÜM sınandı ve tutmadı (kesinlik %1,05, taban oran %0,46); kutu bu yüzden sayıyı ve büyüklüğü yazar, hükmü yazmaz.")
+
+g7 = "Bölüm 2.6 · bar boyu ve tükeniş"
+tukenisTrendBar = input.int(10, "Tükeniş için asgari trend barı", minval = 3, group = g7, tooltip = "Ders: '10 veya daha fazla bar süren bir trendin içinde alışılmadık büyüklükte bir bar.'")
+
+g8 = "Bölüm 8A.6 · beş bar iptal kuralı"
+iptalKapanis = input.int(5, "İptal için gereken KAPANIŞ sayısı", minval = 2, group = g8, tooltip = "Eski ucun ötesinde bu kadar KAPANIŞ görülürse dönüş arayışı iptal. Üst sınırdır: geçmek kurulumu öldürür.")
+
+gT = "Tanım seçimleri — DERS SAYI VERMİYOR"
+esitGovdeOran = input.float(0.50, "İki barlık dönüş: gövde eşitliği ≥", minval = 0.1, maxval = 1.0, step = 0.05, group = gT, tooltip = "Ders 'kabaca eşit' der, sayı vermez. Bu bir TANIM SEÇİMİDİR.")
+kucukBarOran  = input.float(0.50, "Küçük bar: menzil < ortalamanın",    minval = 0.1, maxval = 1.0, step = 0.05, group = gT, tooltip = "Ders 'belirgin altında' der, sayı vermez.")
+tukenisOran   = input.float(2.00, "Büyük bar: menzil > ortalamanın",    minval = 1.1, maxval = 5.0, step = 0.1,  group = gT, tooltip = "Ders 'alışılmadık büyüklükte' der, sayı vermez.")
+mikroTolerans = input.float(0.05, "Mikro çift: 'neredeyse aynı' payı",  minval = 0.0, maxval = 0.3, step = 0.01, group = gT, tooltip = "Ders 'aynı ya da neredeyse aynı' der, sayı vermez.")
+cevirmeTavan  = input.int(100, "Çevirme sayacı tarama tavanı", minval = 20, maxval = 300, group = gT, tooltip = "Başarım tavanı. Ölçülen p99 tam buraya oturuyor, yani sayı SANSÜRLÜ.")
+medyanPencere = input.int(10, "Göreli gövde/menzil penceresi", minval = 3, group = gT, tooltip = "Ders 'son 5–10 bar' der; 10 o aralığın içinden bir seçimdir.")
+
 g4 = "Gösterim"
 barBoya      = input.bool(true,  "Barları sınıfına göre boya",   group = g4)
 aiZemin      = input.bool(true,  "Always-in zemini",             group = g4)
 sinyalGoster = input.bool(true,  "Sinyal barı ve kalite skoru",  group = g4)
 sayimGoster  = input.bool(true,  "Bar sayımı (H1–H4 / L1–L4)",   group = g4)
 maGoster     = input.bool(true,  "EMA ve gap bar sayacı",        group = g4)
+kalipGoster  = input.bool(true,  "Kırılım modu kalıpları (ii·iii·ioi·oio·oo)", group = g4)
 
 // Ev paleti
 cMurekkep = color.new(#1a1a1a, 0)
@@ -199,6 +235,213 @@ if aiShort
 hEtiket = hSayac > 0 and high > high[1] and aiLong  ? "H" + str.tostring(math.min(hSayac, 4)) : na
 lEtiket = lSayac > 0 and low  < low[1]  and aiShort ? "L" + str.tostring(math.min(lSayac, 4)) : na
 
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 1.2 · Kapanışın menzil içindeki yeri
+//
+//  Ders: "Kapanışın menzil içindeki yeri, gövdenin büyüklüğünden bile daha
+//  bilgi vericidir — çünkü kapanış, mücadelenin nihai skorudur." %50 berabere.
+// ─────────────────────────────────────────────────────────────────────────
+kapanisYeri = menzil > 0 ? (close - low) / menzil : 0.5
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 1.1 · Tıraşlı bar
+//
+//  Kuyruğu olmayan uç. Ders 2.6: "Tepede bir tick kuyruk … hâlâ güçlüdür" —
+//  ölçü bu yüzden tam sıfır değil, BİR TİCK toleranslı.
+// ─────────────────────────────────────────────────────────────────────────
+tirasliTepe = ustKuyruk <= syminfo.mintick
+tirasliDip  = altKuyruk <= syminfo.mintick
+tirasAd = tirasliTepe and tirasliDip ? "marubozu" : tirasliTepe ? "tıraşlı tepe" : tirasliDip ? "tıraşlı dip" : "—"
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 1.10b · Çevirme sayaçları
+//
+//  "Bir barın gücünü ölçmenin en ekonomik yolu, o barın KAÇ ÖNCEKİ BARIN
+//  KAPANIŞINI tersine çevirdiğini saymaktır." Uç sayacı ile kapanış sayacı
+//  AYRI tutulur; ders ikincisinin ağır bastığını söyler — "bir seviyeyi
+//  kuyrukla aşan bar reddedilmiştir; kapanışla aşan bar o emirleri
+//  tüketmiştir."
+//
+//  Sayım ARDIŞIKTIR: ilk aşılamayan barda durur. Toplam sayım bir pencere
+//  seçimi isterdi ve ders pencere vermiyor.
+// ─────────────────────────────────────────────────────────────────────────
+f_cevirmeKapanis(bool boga, int tavan) =>
+    int n = 0
+    for j = 1 to tavan
+        gecti = not na(close[j]) and (boga ? close > close[j] : close < close[j])
+        if not gecti
+            break
+        n += 1
+    n
+
+f_cevirmeUc(bool boga, int tavan) =>
+    int n = 0
+    for j = 1 to tavan
+        gecti = boga ? (not na(high[j]) and close > high[j]) : (not na(low[j]) and close < low[j])
+        if not gecti
+            break
+        n += 1
+    n
+
+cevirmeKap    = f_cevirmeKapanis(bogaGovde, cevirmeTavan)
+cevirmeUcSay  = f_cevirmeUc(bogaGovde, cevirmeTavan)
+cevirmeKademe = cevirmeKap > cevirmeKirilim ? "çok güçlü çevirme" :
+   cevirmeKap > cevirmeRejim ? "rejim iddiası" :
+   cevirmeKap < cevirmeSiradan ? "sıradan" : "ara"
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 1.3 · Trendleşme ve göreli gövde gücü
+//
+//  "Trendleşen kapanışlar: üç veya daha fazla barda her kapanış bir
+//  öncekinin üzerinde (boğa) veya altında (ayı)." Aynı ölçüt zirve ve dip
+//  için de geçerli; asgari eşik üçtür.
+//
+//  Gövde gücü GÖRECELİ ölçülür: "Bir gövde, son 5–10 barın MEDYAN gövdesi
+//  kadar veya daha büyükse güçlüdür." Mutlak gövde eşiği kullanılmaz.
+// ─────────────────────────────────────────────────────────────────────────
+//  NOT: fonksiyon seriyi PARAMETRE olarak almaz. Pine, bir fonksiyonun
+//  yerel değişkeninin geçmişine bakmaya izin vermez; seriyi argüman yapıp
+//  gövdede src[j] demek tam o kısıta çarpar. Seçici bir int alıp globalleri
+//  okumak kısıtı yapısal olarak dışarıda bırakır.
+f_dizi(int hangi) =>
+    int yukari = 0
+    for j = 0 to 200
+        float a = hangi == 0 ? close[j] : hangi == 1 ? high[j] : low[j]
+        float b = hangi == 0 ? close[j + 1] : hangi == 1 ? high[j + 1] : low[j + 1]
+        if na(b) or not (a > b)
+            break
+        yukari += 1
+    int asagi = 0
+    for j = 0 to 200
+        float a = hangi == 0 ? close[j] : hangi == 1 ? high[j] : low[j]
+        float b = hangi == 0 ? close[j + 1] : hangi == 1 ? high[j + 1] : low[j + 1]
+        if na(b) or not (a < b)
+            break
+        asagi += 1
+    yukari >= asagi ? yukari : -asagi
+
+diziKapanis = f_dizi(0)
+diziZirve   = f_dizi(1)
+diziDip     = f_dizi(2)
+trendlesiyor = math.abs(diziKapanis) >= trendlesmeEsik
+
+medyanGovde = ta.median(govde[1], medyanPencere)
+govdeGuclu  = not na(medyanGovde) and govde >= medyanGovde
+
+// Bölüm 1.6 · Gövde boşluğu — kuyruklar örtüşebilir, ölçülen GÖVDELERDİR.
+govdeBosluk = open > close[1] ? 1 : open < close[1] ? -1 : 0
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 1.8 · 2.5 · ii · iii · ioi · oio · oo ve KIRILIM MODU
+//
+//  Dersin ortak dili: "Bu dört kalıbın hepsi aynı şeyi söyler: KALIP BİR
+//  YATAY BANTTIR. Yön bilinmez." Bu yüzden çıktı bir yön değil, iki taraflı
+//  bir EMİR MİMARİSİDİR: üstüne alış stop, altına satış stop; biri
+//  tetiklenince öbürü iptal ve fiilen koruyucu stop olur.
+// ─────────────────────────────────────────────────────────────────────────
+kalipAd = (icBar and icBar[1] and icBar[2]) ? "iii" :
+   (icBar and disBar[1] and icBar[2]) ? "ioi" :
+   (disBar and icBar[1] and disBar[2]) ? "oio" :
+   (icBar and icBar[1]) ? "ii" :
+   (disBar and disBar[1] and menzil > menzil[1]) ? "oo" : ""
+//  ta.highest/ta.lowest UZUNLUĞU simple int ister; kalıbın bar sayısı ise
+//  bara göre değişen bir SERİ int. İkisi ayrı ayrı hesaplanıp seçilir.
+kalipBar   = kalipAd == "iii" or kalipAd == "ioi" or kalipAd == "oio" ? 3 : 2
+tepe3 = ta.highest(high, 3)
+tepe2 = ta.highest(high, 2)
+dip3  = ta.lowest(low, 3)
+dip2  = ta.lowest(low, 2)
+kalipTepe  = kalipBar == 3 ? tepe3 : tepe2
+kalipDip   = kalipBar == 3 ? dip3  : dip2
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 2.3 · ORTA NOKTA ÖLÇÜTÜ
+//
+//  Örtüşme kuralının ADI OLAN hâli; sabitler tablosunda böyle geçer:
+//  "Sinyal barında örtüşme kuralı — kapanış, önceki barın ORTA NOKTASININ
+//  ötesinde." Dersin Şekil 15'i iki paneli tam buradan ayırır: kabul edilen
+//  bar orta noktanın üstünde, reddedilen altında kapanıyor.
+//
+//  %75'lik örtüşme eşiği AYRI bir ölçüttür ve "iki barlık dönüş oku" der;
+//  bu ise barın KABUL/RET sınırıdır. İkisi aynı şey değildir.
+// ─────────────────────────────────────────────────────────────────────────
+oncekiOrta   = (high[1] + low[1]) / 2
+ortaNoktaBoga = close > oncekiOrta
+ortaNoktaAyi  = close < oncekiOrta
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 2.4 · İki barlık dönüş
+//
+//  "Yaklaşık aynı boyda, zıt yönlü iki trend barı." Giriş HER İKİ barın
+//  ötesine konur: dibi önceki barın bir tick üstünde olan bir ayı dönüş
+//  barı sık sık ayı tuzağıdır.
+// ─────────────────────────────────────────────────────────────────────────
+govdeIm     = close - open
+zitYon      = govdeIm * govdeIm[1] < 0
+buyukGovde  = math.max(math.abs(govdeIm), math.abs(govdeIm[1]))
+kucukGovde  = math.min(math.abs(govdeIm), math.abs(govdeIm[1]))
+esitGovde   = buyukGovde > 0 and kucukGovde / buyukGovde >= esitGovdeOran
+ikiBarDonus = trendBari and trendBari[1] and zitYon and esitGovde
+ikiBarAd    = not ikiBarDonus ? "—" : govdeIm > 0 ? "iki barlık dönüş (boğa)" : "iki barlık dönüş (ayı)"
+ikiBarTepe  = math.max(high, high[1])
+ikiBarDip   = math.min(low, low[1])
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 2.6 · Küçük bar · tükeniş barı · mikro çift dip/tepe
+//
+//  İkisinin de ölçüsü GÖRECELİdir. Dersin verdiği tek sayı tükenişin
+//  BAĞLAMIDIR: "10 veya daha fazla bar süren bir trendin içinde alışılmadık
+//  büyüklükte bir bar."
+//
+//  Mikro çift dip/tepe için dersin uyarısı koda değil OKUMAYA aittir: bu
+//  kalıbın bağlama göre İKİ TAMAMEN ZIT anlamı vardır — ayı spike'ı içinde
+//  tek barlık bayrak (devam), başka her yerde dönüş. İndikatör kalıbı
+//  gösterir, hükmü vermez.
+// ─────────────────────────────────────────────────────────────────────────
+ortMenzil  = ta.sma(menzil[1], medyanPencere)
+kucukBar   = not na(ortMenzil) and ortMenzil > 0 and menzil < ortMenzil * kucukBarOran
+buyukBar   = not na(ortMenzil) and ortMenzil > 0 and menzil > ortMenzil * tukenisOran
+tukenis    = buyukBar and math.abs(diziKapanis) >= tukenisTrendBar
+barBoyuAd  = kucukBar ? "küçük bar" : tukenis ? "tükeniş barı" : buyukBar ? "alışılmadık büyük" : "—"
+
+mikroTol   = menzil * mikroTolerans
+mikroCift  = mikroTol <= 0 ? "—" :
+   math.abs(low - low[1]) <= mikroTol ? "mikro çift dip" :
+   math.abs(high - high[1]) <= mikroTol ? "mikro çift tepe" : "—"
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 3.8 · Mikro kanal — geri çekilmesiz ardışık bar
+// ─────────────────────────────────────────────────────────────────────────
+f_mikroKanal() =>
+    int yukari = 0
+    for j = 0 to 200
+        if na(low[j + 1]) or not (low[j] >= low[j + 1])
+            break
+        yukari += 1
+    int asagi = 0
+    for j = 0 to 200
+        if na(high[j + 1]) or not (high[j] <= high[j + 1])
+            break
+        asagi += 1
+    yukari >= asagi ? yukari : -asagi
+
+mikroKanal = f_mikroKanal()
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 8A.6 · Beş bar iptal kuralı
+//
+//  "Eski ucun ötesinde ≥ 5 KAPANIŞ" → dönüş arayışı iptal. Eşik bir ÜST
+//  SINIRDIR: geçmek kurulumu ÖLDÜRÜR. Ölçü kapanışla yapılır, uçla değil —
+//  ucun aşılması bir deneme, kapanışın aşılması bir sonuçtur.
+// ─────────────────────────────────────────────────────────────────────────
+eskiTepe = ta.highest(high, 40)[iptalKapanis]
+eskiDip  = ta.lowest(low, 40)[iptalKapanis]
+ustKapanis = math.sum(not na(eskiTepe) and close > eskiTepe ? 1 : 0, iptalKapanis)
+altKapanis = math.sum(not na(eskiDip)  and close < eskiDip  ? 1 : 0, iptalKapanis)
+iptalAd = ustKapanis >= iptalKapanis ? "ayı dönüşü arayışı İPTAL" :
+   altKapanis >= iptalKapanis ? "boğa dönüşü arayışı İPTAL" : "—"
+
 // ─────────────────────────────────────────────────────────────────────────
 //  Çizim
 // ─────────────────────────────────────────────────────────────────────────
@@ -229,6 +472,17 @@ if sayimGoster and not na(lEtiket)
     label.new(bar_index, low, lEtiket, yloc = yloc.belowbar, style = label.style_none,
        textcolor = cClaret, size = size.tiny)
 
+if kalipGoster and kalipAd != ""
+    label.new(bar_index, high, kalipAd, yloc = yloc.abovebar, style = label.style_label_down,
+       color = color.new(cGri, 80), textcolor = cMurekkep, size = size.tiny,
+       tooltip = "Kırılım modu · kalıp bir YATAY BANTTIR, yön bilinmez." +
+       "\nAlış stop " + str.tostring(kalipTepe, format.mintick) +
+       " · satış stop " + str.tostring(kalipDip, format.mintick) +
+       "\nYükseklik " + str.tostring(kalipTepe - kalipDip, format.mintick) +
+       "\nBiri tetiklenince öbürü iptal; dolmamış emir koruyucu stop olur.")
+    line.new(bar_index - kalipBar + 1, kalipTepe, bar_index + 2, kalipTepe, color = color.new(cMavi, 40), style = line.style_dotted)
+    line.new(bar_index - kalipBar + 1, kalipDip,  bar_index + 2, kalipDip,  color = color.new(cClaret, 40), style = line.style_dotted)
+
 plotshape(aiDondu and aiLong,  "Always-in → long",  shape.triangleup,   location.belowbar, cMavi,   size = size.small)
 plotshape(aiDondu and aiShort, "Always-in → short", shape.triangledown, location.abovebar, cClaret, size = size.small)
 
@@ -240,7 +494,7 @@ if maGoster and gapSayac == gapEsik
 // ─────────────────────────────────────────────────────────────────────────
 //  Durum kutusu
 // ─────────────────────────────────────────────────────────────────────────
-var table kutu = table.new(position.top_right, 2, 6, border_width = 1)
+var table kutu = table.new(position.top_right, 2, 14, border_width = 1)
 if barstate.islast
     table.cell(kutu, 0, 0, "Always-in", text_size = size.small, text_color = cGri, text_halign = text.align_left)
     table.cell(kutu, 1, 0, aiLong ? "LONG" : aiShort ? "SHORT" : "—", text_size = size.small,
@@ -257,8 +511,45 @@ if barstate.islast
     table.cell(kutu, 1, 4, tersIkiKapanis ? "VAR" : "yok", text_size = size.small,
        text_color = tersIkiKapanis ? cClaret : cGri)
     table.cell(kutu, 0, 5, "Bar sınıfı", text_size = size.small, text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, 5, gucluTrendBari ? "güçlü trend" : trendBari ? "trend" : doji ? "doji" : "ara",
+    table.cell(kutu, 1, 5, (gucluTrendBari ? "güçlü trend" : trendBari ? "trend" : doji ? "doji" : "ara")
+       + (govdeGuclu ? " · gövde güçlü" : "") + (tirasAd != "—" ? " · " + tirasAd : ""),
        text_size = size.small, text_color = cMurekkep)
+
+    // Bölüm 1.2 — kapanışın yeri: gövdeden bile bilgi verici
+    table.cell(kutu, 0, 6, "Kapanışın yeri", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 6, "%" + str.tostring(math.round(kapanisYeri * 100)), text_size = size.small,
+       text_color = kapanisYeri > 0.5 ? cMavi : kapanisYeri < 0.5 ? cClaret : cGri)
+
+    // Bölüm 1.10b — SAYI basılır, hüküm basılmaz (kademenin hükmü sınandı ve tutmadı)
+    table.cell(kutu, 0, 7, "Çevirme (kapanış · uç)", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 7, str.tostring(cevirmeKap) + " · " + str.tostring(cevirmeUcSay) + "  (" + cevirmeKademe + ")",
+       text_size = size.small, text_color = cMurekkep)
+
+    // Bölüm 1.3 — trendleşme: kapanış / zirve / dip
+    table.cell(kutu, 0, 8, "Trendleşme (k·z·d)", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 8, str.tostring(diziKapanis) + " · " + str.tostring(diziZirve) + " · " + str.tostring(diziDip)
+       + (trendlesiyor ? " ⚑" : ""), text_size = size.small, text_color = cMurekkep)
+
+    // Bölüm 2.3 — örtüşme kuralının ADI OLAN hâli
+    table.cell(kutu, 0, 9, "Orta nokta ölçütü", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 9, ortaNoktaBoga ? "boğa ✓" : ortaNoktaAyi ? "ayı ✓" : "—", text_size = size.small,
+       text_color = ortaNoktaBoga ? cMavi : ortaNoktaAyi ? cClaret : cGri)
+
+    // Bölüm 1.8 · 2.5 — kırılım modu
+    table.cell(kutu, 0, 10, "Kalıp", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 10, kalipAd == "" ? "—" : kalipAd + " · kırılım modu", text_size = size.small,
+       text_color = kalipAd == "" ? cGri : cMurekkep)
+
+    // Bölüm 2.4 · 2.6 — iki barlık dönüş, bar boyu, mikro çift
+    table.cell(kutu, 0, 11, "Kalıp (2 bar)", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 11, ikiBarAd, text_size = size.small, text_color = ikiBarDonus ? cMurekkep : cGri)
+    table.cell(kutu, 0, 12, "Bar boyu · mikro", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 12, barBoyuAd + " · " + mikroCift, text_size = size.small, text_color = cMurekkep)
+
+    // Bölüm 3.8 · 8A.6 — mikro kanal ve iptal kuralı
+    table.cell(kutu, 0, 13, "Mikro kanal · iptal", text_size = size.small, text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 1, 13, str.tostring(mikroKanal) + " bar · " + iptalAd, text_size = size.small,
+       text_color = iptalAd != "—" ? cClaret : cMurekkep)
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Uyarılar — hepsi KAPANMIŞ bar üzerinden
@@ -267,3 +558,6 @@ alertcondition(aiDondu and aiLong,  "Always-in long'a döndü",  "Brooks FH: alw
 alertcondition(aiDondu and aiShort, "Always-in short'a döndü", "Brooks FH: always-in SHORT")
 alertcondition(gapSayac == gapEsik, "Gap bar eşiği",           "Brooks FH: ortalamaya dokunmayan bar sayısı eşiğe ulaştı")
 alertcondition(tersIkiKapanis,      "Ters tarafta iki kapanış","Brooks FH: trendin karakteri değişmiş olabilir")
+alertcondition(kalipAd != "",       "Kırılım modu kalıbı",     "Brooks FH: ii/iii/ioi/oio/oo — iki tarafa da emir")
+alertcondition(ikiBarDonus,         "İki barlık dönüş",        "Brooks FH: giriş HER İKİ barın ötesine konur")
+alertcondition(iptalAd != "—",      "Beş bar iptal kuralı",    "Brooks FH: eski ucun ötesinde beş kapanış — dönüş arayışı iptal")
