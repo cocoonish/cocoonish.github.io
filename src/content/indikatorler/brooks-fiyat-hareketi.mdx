@@ -255,6 +255,40 @@ okuyamazsınız — barbwire'ın kutudaki `VAR ⚠` satırı da o kipte gizlenir
 yalnız panelin üstündeki çarpı kalır. Üçüncü kip `Kapalı` kutuyu bütünüyle kaldırır;
 eğriler, eşikler ve zemin orada da durur.
 
+### Kutudaki her satır ne diyebilir
+
+Kutu boş bir satır bırakmaz: her satırın bir değeri vardır ve **hiçbir şey ölçülemediğinde
+tire (`—`) yazar**. Ekranda bir satırın karşısını boş görüyorsanız o satır "bir şey yok"
+demiyor demektir — okunmuyor demektir; bunun en sık sebebi koyu temadır ve ayarlardaki
+`Kutu renk teması` ile açılır.
+
+**Fiyat paneli.** İlk dört satır hükümdür, gerisi hükmün gerekçesi.
+
+| Satır | Ne diyebilir | Ne anlama gelir |
+|---|---|---|
+| ① Rejim | hep `alt panele bak` | Hüküm bu panelde değil; okuma sırası alt panelden başlar. Bu satır bir ölçü değil, bir yönlendirmedir |
+| ② Always-in | `LONG` · `SHORT` · `henüz belirsiz` | O gün işlem yapılmasına izin verilen tek yön. `henüz belirsiz`, yön katmanının evet demediği anlamına gelir |
+| ③ Yön filtresi | `yalnız AL — short arama` · `yalnız SAT — long arama` · `serbest` | Ortalamanın koyduğu yasak. Bir sinyal değil, bir kapı: kapalı yönde etiket hiç basılmaz |
+| ④ Kurulum | `kurulum yok` · `n/4 boğa` · `n/4 ayı` · `iki yönlü — n/4 boğa · n/4 ayı`, arkasında `✓ yönle hizalı` ya da `⚠ yönle hizasız` | Elinizde bir dönüş barı var mı, kaç niteliği tutuyor ve yönle uyuşuyor mu. `iki yönlü`, asgari dönüş barı koşulunun iki tarafta birden tutması demektir — çelişki değil, koşulun gevşekliği |
+| Sınıf | `güçlü trend` · `trend` · `doji` · `ara`, arkasında `· gövde güçlü`, `· tıraşlı tepe` · `· tıraşlı dip` · `· marubozu` | Barın gövde/menzil oranından gelen sınıfı. Bar rengi üç kademedir, bu satır dört — "trend barı mı" sorusunun cevabı yalnız burada |
+| Kapanışın yeri | `%0` ile `%100` arası | Kapanışın barın menzili içindeki yeri. %50 berabere; ders bunu gövde oranından bile bilgi verici sayar |
+| Boy · mikro | `küçük bar` · `tükeniş barı` · `alışılmadık büyük` · `—`, ardından `mikro çift dip` · `mikro çift tepe` · `—` | Barın boyu ve önceki barla dip/tepe eşleşmesi. İkisi de `—` ise bar sıradan boyda ve eşleşme yok |
+| Orta nokta ölçütü | `boğa geçti` · `ayı geçti` · `—` | Kapanış önceki barın orta noktasını aştı mı — dersin ikinci dönüş ölçütü |
+| Çevirme (kap·uç) | iki sayı, ardından `sıradan` · `ara` · `rejim iddiası` · `çok güçlü çevirme` | Bu barın kaç önceki kapanışı ve ucu aştığı. Bir GÜÇ ölçüsüdür, hüküm değil: en üst kademenin dönüş habercisi olduğu ölçüldü ve **tutmadı**. Sayılar 100'de kapaklanır |
+| Trendleşme k·z·d | üç işaretli sayı, arkasında `⚑` | Kapanış, zirve ve dip dizilerinin uzunluğu; eksi işaret **aşağı yön** demektir, "azaldı" değil. `⚑` üçünün birden trendleştiğini söyler |
+| Ortalama | `gap n`, arkasında `⚑` ve `· TERS İKİ KAPANIŞ` | Fiyatın kaç bardır ortalamaya dokunmadığı. `⚑` eşiğin aşıldığını, `TERS İKİ KAPANIŞ` trendin karakterinin değişmiş olabileceğini söyler — ikincisi yalnız always-in kilitliyken hesaplanır |
+| Sayım · mikro kanal | `H1`–`H4` · `L1`–`L4` · `—`, ardından işaretli bar sayısı | Geri çekilmedeki bacak sayısı ve mikro kanalın uzunluğu. **`H4` dördüncü bacak olmayabilir**: sayaç ekranda dörtte kapaklanır. Kanal sayısındaki eksi işaret aşağı yön demektir |
+| Kalıp · uyarı | `ii` · `iii` · `ioi` · `oio` · `oo` · `yalnız gövdeler ii`, `iki barlık dönüş (boğa/ayı)`, `n bardır boğa/ayı kapanışı yok`; uyarı sütununda `ayı dönüşü arayışı İPTAL` · `boğa dönüşü arayışı İPTAL` | Bu bölüm **yalnız söyleyecek bir şey varken çıkar**; görünmemesi kusur değildir. Kırılım modunda yön bilinmez, iki tarafa da emir konur. "İPTAL" bir pozisyon değil bir **arayış** kapatır |
+
+**Alt panel.** İlk iki satır hüküm, kalanı gerekçe.
+
+| Satır | Ne diyebilir | Ne anlama gelir |
+|---|---|---|
+| ① REJİM | `BANT` · `ara` · `trend`, yanında `n/5` | Kaç bant işaretinin tuttuğu. Dört ve üstü `BANT`, bir ve altı `trend`, arası `ara` |
+| (hükmün altındaki satır) | `bar sayımına dayalı stop girişi yok · uçlarda fade` · `geri çekilme kurulumları geçerli · fade edilmez` · `pano karar vermez · hangi tarafa yakın olduğunu söyler` | O rejimde ne yapılacağı. Bu satır `Özet` kipinde de kalır — hükmün karşılığı sayı değil cümledir |
+| Beş ölçü satırı | ortada ölçülen sayı, sağda `✓` ya da `—` | `✓` o ölçünün bant tarafında olması. Soldaki parantez içi sayı **eşik değil**, dersin referans bant günüdür |
+| Barbwire | ortada bir oran, sağda `VAR ⚠` ya da `—` | Sayıya **girmez**: rejim ölçüsü değil tekil bir bar kalıbıdır. `VAR ⚠` gördüğünüzde o barda kalite skoru okunmaz |
+
 ### Fiyat paneli: dört satır hüküm, gerisi bağlam
 
 Fiyat panelinin kutusu okuma sırasını dört satırda taşır ve **kurulum bilerek en
@@ -987,7 +1021,13 @@ ayrı sebeple düşebilmesi, bu sistemin neden seyrek konuştuğunu tek bakışt
 **Kutu kalabalıksa kısaltın.** Her iki indikatörün ayarlarında `Durum kutusu` girdisi
 var: `Tam` bütün ayrıntıyı, `Özet` yalnız dört adımlık sırayı (alt panelde hükmü,
 `n/5` sayısını ve o rejimde ne yapılacağını), `Kapalı` hiçbirini gösterir. Kutunun yeri ve yazı boyutu da ayarlanabilir —
-iki panel yan yana kullanıldığında kutuların çakışmaması için. Fiyat panelinde
+iki panel yan yana kullanıldığında kutuların çakışmaması için.
+
+**Koyu tema kullanıyorsanız kutu kendini ona göre ayarlar.** `Kutu renk teması`
+girdisi öntanımlı olarak `Otomatik`tir ve grafiğin zemin rengine bakar; `Açık` ve
+`Koyu` ile elle de sabitlenebilir. Ayar yalnız **kutu metninin** rengini değiştirir —
+bar rengi, zemin, üçgen ve ortalama olduğu gibi kalır, yani bu sayfadaki figürlerle
+grafiğiniz aynı dili konuşmaya devam eder. Fiyat panelinde
 `Etiketlenecek asgari kalite` varsayılan olarak **2**'dir: sıfırda her dönüş barı
 etiketlenir ve grafik dolar, çünkü ölçüldüğünde barların yarısından fazlası asgari
 dönüş barı koşulunu sağlıyor.

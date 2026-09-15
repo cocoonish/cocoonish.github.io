@@ -86,6 +86,31 @@ cClaret   = color.new(#8c2f39, 0)
 cMavi     = color.new(#2f5d8c, 0)
 cGri      = color.new(#8a8a8a, 0)
 
+// ── TEMA · KUTU METNİ ZEMİNE GÖRE SEÇİLİR ────────────────────────────────
+//  Palet siteden kopyalanmıştı: kâğıt beyaz, mürekkep #1a1a1a. TradingView'in
+//  KOYU temasında o mürekkep zeminle 1,03:1 kontrast veriyor — yani metin
+//  GÖRÜNMÜYOR. Kusur sessiz, çünkü satırın ETİKETİ gri (#8a8a8a, koyu zeminde
+//  5,18:1) ve okunuyor: okur satırı görüyor, değerini boş sanıyor. Ölçüldü ve
+//  kutunun on üç satırının BEŞİ (Sınıf · Boy·mikro · Çevirme · Trendleşme ·
+//  Sayım) yalnız bu mürekkeple yazıldığı için koyu temada tamamen kayboluyordu.
+//
+//  Açık temada da bir kusur vardı ve ters yönde: etiket grisi beyaz zeminde
+//  3,45:1, WCAG AA gövde eşiğinin (4,5) ALTINDA. Kutunun kendi etiketleri
+//  okunabilir en soluk mürekkepten daha soluktu.
+//
+//  GRAFİK PALETİ DEĞİŞMEZ. Bar rengi, zemin, üçgen ve EMA sayfadaki
+//  figürlerle aynı kalmalı; değişen yalnız TABLO metninin rengidir.
+tema = input.string("Otomatik", "Kutu renk teması", options = ["Otomatik", "Açık", "Koyu"],
+   group = g4, tooltip = "Otomatik, grafiğin zemin rengine bakar. Koyu temada near-black metin görünmez.")
+zeminIsik = (color.r(chart.bg_color) * 0.299 + color.g(chart.bg_color) * 0.587 +
+   color.b(chart.bg_color) * 0.114) / 255
+koyuTema = tema == "Koyu" or (tema == "Otomatik" and zeminIsik < 0.5)
+
+cYaziAna  = koyuTema ? color.new(#dcd9d2, 0) : cMurekkep
+cYaziGri  = koyuTema ? color.new(#a0a6ad, 0) : color.new(#6f6f6f, 0)
+cYaziKzl  = koyuTema ? color.new(#e0919a, 0) : cClaret
+cYaziMavi = koyuTema ? color.new(#8ab6e8, 0) : cMavi
+
 // ─────────────────────────────────────────────────────────────────────────
 //  Bölüm 1 · Bar anatomisi
 // ─────────────────────────────────────────────────────────────────────────
@@ -550,14 +575,14 @@ var table kutu = table.new(f_yer(kutuYeri), 3, 17, border_width = 1)
 
 // Bölüm başlığı: kutuyu okunur yapan şey satır sayısı değil, GRUPLANMASI.
 f_baslik(int satir, string metin, string ipucu) =>
-    table.cell(kutu, 0, satir, metin, text_size = f_boyut(kutuBoyut), text_color = cMurekkep,
-       text_halign = text.align_left, bgcolor = color.new(cGri, 82), tooltip = ipucu)
-    table.cell(kutu, 1, satir, "", bgcolor = color.new(cGri, 82))
-    table.cell(kutu, 2, satir, "", bgcolor = color.new(cGri, 82))
+    table.cell(kutu, 0, satir, metin, text_size = f_boyut(kutuBoyut), text_color = cYaziAna,
+       text_halign = text.align_left, bgcolor = color.new(cYaziGri, 82), tooltip = ipucu)
+    table.cell(kutu, 1, satir, "", bgcolor = color.new(cYaziGri, 82))
+    table.cell(kutu, 2, satir, "", bgcolor = color.new(cYaziGri, 82))
 
 f_satir(int satir, string no, string ad, string deger, color renk) =>
-    table.cell(kutu, 0, satir, no,    text_size = f_boyut(kutuBoyut), text_color = cGri, text_halign = text.align_left)
-    table.cell(kutu, 1, satir, ad,    text_size = f_boyut(kutuBoyut), text_color = cGri, text_halign = text.align_left)
+    table.cell(kutu, 0, satir, no,    text_size = f_boyut(kutuBoyut), text_color = cYaziGri, text_halign = text.align_left)
+    table.cell(kutu, 1, satir, ad,    text_size = f_boyut(kutuBoyut), text_color = cYaziGri, text_halign = text.align_left)
     table.cell(kutu, 2, satir, deger, text_size = f_boyut(kutuBoyut), text_color = renk, text_halign = text.align_left)
 
 if barstate.islast and kutuKip != "Kapalı"
@@ -567,13 +592,13 @@ if barstate.islast and kutuKip != "Kapalı"
     f_baslik(0, "OKUMA SIRASI", "Ders bu sırayı dayatır: önce rejim, sonra yön, sonra yasak, en son kurulum. " +
        "Sıra bozulursa 'doğru kurulumu yanlış günde almak' olur — dersin en pahalı hatası.")
 
-    f_satir(1, "①", "Rejim", "alt panele bak", cGri)
+    f_satir(1, "①", "Rejim", "alt panele bak", cYaziGri)
 
     aiMetin = aiLong ? "LONG" : aiShort ? "SHORT" : "henüz belirsiz"
-    f_satir(2, "②", "Always-in", aiMetin, aiLong ? cMavi : aiShort ? cClaret : cGri)
+    f_satir(2, "②", "Always-in", aiMetin, aiLong ? cYaziMavi : aiShort ? cYaziKzl : cYaziGri)
 
     yasakMetin = yalnizAl ? "yalnız AL — short arama" : yalnizSat ? "yalnız SAT — long arama" : "serbest"
-    f_satir(3, "③", "Yön filtresi", yasakMetin, yalnizAl ? cMavi : yalnizSat ? cClaret : cGri)
+    f_satir(3, "③", "Yön filtresi", yasakMetin, yalnizAl ? cYaziMavi : yalnizSat ? cYaziKzl : cYaziGri)
 
     kurBoga = bogaDonus and kaliteBoga > 0 and not yalnizSat
     kurAyi  = ayiDonus  and kaliteAyi  > 0 and not yalnizAl
@@ -582,31 +607,31 @@ if barstate.islast and kutuKip != "Kapalı"
        kurAyi  ? str.tostring(kaliteAyi)  + "/4 ayı"  : "kurulum yok"
     hizali = (kurBoga and aiLong) or (kurAyi and aiShort)
     f_satir(4, "④", "Kurulum", kurMetin + (hizali ? "  ✓ yönle hizalı" : (kurBoga or kurAyi) ? "  ⚠ yönle hizasız" : ""),
-       hizali ? cMavi : (kurBoga or kurAyi) ? cClaret : cGri)
+       hizali ? cYaziMavi : (kurBoga or kurAyi) ? cYaziKzl : cYaziGri)
 
     if kutuKip == "Tam"
         // ── BU BAR ───────────────────────────────────────────────────────
         f_baslik(5, "BU BAR", "Barın kendi ölçüleri. Kapanışın yeri gövde oranından bile bilgi vericidir; %50 berabere.")
         f_satir(6, "", "Sınıf", (gucluTrendBari ? "güçlü trend" : trendBari ? "trend" : doji ? "doji" : "ara")
-           + (govdeGuclu ? " · gövde güçlü" : "") + (tirasAd != "—" ? " · " + tirasAd : ""), cMurekkep)
+           + (govdeGuclu ? " · gövde güçlü" : "") + (tirasAd != "—" ? " · " + tirasAd : ""), cYaziAna)
         f_satir(7, "", "Kapanışın yeri", "%" + str.tostring(math.round(kapanisYeri * 100)),
-           kapanisYeri > 0.5 ? cMavi : kapanisYeri < 0.5 ? cClaret : cGri)
-        f_satir(8, "", "Boy · mikro", barBoyuAd + " · " + mikroCift, cMurekkep)
+           kapanisYeri > 0.5 ? cYaziMavi : kapanisYeri < 0.5 ? cYaziKzl : cYaziGri)
+        f_satir(8, "", "Boy · mikro", barBoyuAd + " · " + mikroCift, cYaziAna)
         f_satir(9, "", "Orta nokta ölçütü", ortaNoktaBoga ? "boğa geçti" : ortaNoktaAyi ? "ayı geçti" : "—",
-           ortaNoktaBoga ? cMavi : ortaNoktaAyi ? cClaret : cGri)
+           ortaNoktaBoga ? cYaziMavi : ortaNoktaAyi ? cYaziKzl : cYaziGri)
 
         // ── BAĞLAM ───────────────────────────────────────────────────────
         f_baslik(10, "BAĞLAM", "Barın etrafı. Çevirme sayacı bir GÜÇ ölçüsüdür, hüküm değil: " +
            "en üst kademenin 'always-in çeviren kırılım' hükmü ölçüldü ve tutmadı (kesinlik %1,05).")
         f_satir(11, "", "Çevirme (kap·uç)", str.tostring(cevirmeKap) + " · " + str.tostring(cevirmeUcSay)
-           + "  " + cevirmeKademe, cMurekkep)
+           + "  " + cevirmeKademe, cYaziAna)
         f_satir(12, "", "Trendleşme k·z·d", str.tostring(diziKapanis) + " · " + str.tostring(diziZirve)
-           + " · " + str.tostring(diziDip) + (trendlesiyor ? "  ⚑" : ""), cMurekkep)
+           + " · " + str.tostring(diziDip) + (trendlesiyor ? "  ⚑" : ""), cYaziAna)
         f_satir(13, "", "Ortalama", "gap " + str.tostring(gapSayac) + (gapSayac >= gapEsik ? " ⚑" : "")
-           + (tersIkiKapanis ? " · TERS İKİ KAPANIŞ" : ""), tersIkiKapanis ? cClaret : cMurekkep)
+           + (tersIkiKapanis ? " · TERS İKİ KAPANIŞ" : ""), tersIkiKapanis ? cYaziKzl : cYaziAna)
         f_satir(14, "", "Sayım · mikro kanal",
            (aiLong ? "H" + str.tostring(math.min(hSayac, 4)) : aiShort ? "L" + str.tostring(math.min(lSayac, 4)) : "—")
-           + " · " + str.tostring(mikroKanal) + " bar", cMurekkep)
+           + " · " + str.tostring(mikroKanal) + " bar", cYaziAna)
 
         // ── KALIP VE UYARI ───────────────────────────────────────────────
         kalipMetin = (kalipAd != "" ? kalipAd + " · kırılım modu" : govdeIcBar ? "yalnız gövdeler ii" : "")
@@ -621,7 +646,7 @@ if barstate.islast and kutuKip != "Kapalı"
             f_baslik(15, "KALIP · UYARI", "Kırılım modunda yön BİLİNMEZ: iki tarafa da emir konur. " +
                "Beş bar iptal kuralı bir ÜST SINIRDIR — geçmek dönüş kurulumunu öldürür.")
             f_satir(16, "", kalipMetin == "" ? "—" : kalipMetin, iptalAd,
-               iptalAd != "—" ? cClaret : cMurekkep)
+               iptalAd != "—" ? cYaziKzl : cYaziAna)
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Uyarılar — hepsi KAPANMIŞ bar üzerinden

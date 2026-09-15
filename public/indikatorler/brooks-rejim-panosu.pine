@@ -46,6 +46,31 @@ cClaret   = color.new(#8c2f39, 0)
 cMavi     = color.new(#2f5d8c, 0)
 cGri      = color.new(#8a8a8a, 0)
 
+// ── TEMA · KUTU METNİ ZEMİNE GÖRE SEÇİLİR ────────────────────────────────
+//  Palet siteden kopyalanmıştı: kâğıt beyaz, mürekkep #1a1a1a. TradingView'in
+//  KOYU temasında o mürekkep zeminle 1,03:1 kontrast veriyor — yani metin
+//  GÖRÜNMÜYOR. Kusur sessiz, çünkü satırın ETİKETİ gri (#8a8a8a, koyu zeminde
+//  5,18:1) ve okunuyor: okur satırı görüyor, değerini boş sanıyor. Ölçüldü ve
+//  kutunun on üç satırının BEŞİ (Sınıf · Boy·mikro · Çevirme · Trendleşme ·
+//  Sayım) yalnız bu mürekkeple yazıldığı için koyu temada tamamen kayboluyordu.
+//
+//  Açık temada da bir kusur vardı ve ters yönde: etiket grisi beyaz zeminde
+//  3,45:1, WCAG AA gövde eşiğinin (4,5) ALTINDA. Kutunun kendi etiketleri
+//  okunabilir en soluk mürekkepten daha soluktu.
+//
+//  GRAFİK PALETİ DEĞİŞMEZ. Bar rengi, zemin, üçgen ve EMA sayfadaki
+//  figürlerle aynı kalmalı; değişen yalnız TABLO metninin rengidir.
+tema = input.string("Otomatik", "Kutu renk teması", options = ["Otomatik", "Açık", "Koyu"],
+   group = g4, tooltip = "Otomatik, grafiğin zemin rengine bakar. Koyu temada near-black metin görünmez.")
+zeminIsik = (color.r(chart.bg_color) * 0.299 + color.g(chart.bg_color) * 0.587 +
+   color.b(chart.bg_color) * 0.114) / 255
+koyuTema = tema == "Koyu" or (tema == "Otomatik" and zeminIsik < 0.5)
+
+cYaziAna  = koyuTema ? color.new(#dcd9d2, 0) : cMurekkep
+cYaziGri  = koyuTema ? color.new(#a0a6ad, 0) : color.new(#6f6f6f, 0)
+cYaziKzl  = koyuTema ? color.new(#e0919a, 0) : cClaret
+cYaziMavi = koyuTema ? color.new(#8ab6e8, 0) : cMavi
+
 // ── Ölçüler ──────────────────────────────────────────────────────────────
 menzil    = high - low
 govdeOran = menzil > 0 ? math.abs(close - open) / menzil : 0.0
@@ -139,50 +164,50 @@ f_boyut(string s) =>
 var table t = table.new(f_yer(kutuYeri), 3, 9, border_width = 1)
 
 f_satir(int satir, string ad, string deger, string isaret, color renk) =>
-    table.cell(t, 0, satir, ad,     text_size = f_boyut(kutuBoyut), text_color = cGri, text_halign = text.align_left)
-    table.cell(t, 1, satir, deger,  text_size = f_boyut(kutuBoyut), text_color = cMurekkep, text_halign = text.align_right)
+    table.cell(t, 0, satir, ad,     text_size = f_boyut(kutuBoyut), text_color = cYaziGri, text_halign = text.align_left)
+    table.cell(t, 1, satir, deger,  text_size = f_boyut(kutuBoyut), text_color = cYaziAna, text_halign = text.align_right)
     table.cell(t, 2, satir, isaret, text_size = f_boyut(kutuBoyut), text_color = renk)
 
 if barstate.islast and kutuKip != "Kapalı"
     table.clear(t, 0, 0, 2, 8)
 
     rejimAd  = bantIsareti >= 4 ? "BANT" : bantIsareti <= 1 ? "trend" : "ara"
-    rejimUst = bantIsareti >= 4 ? cClaret : bantIsareti <= 1 ? cMavi : cGri
+    rejimUst = bantIsareti >= 4 ? cYaziKzl : bantIsareti <= 1 ? cYaziMavi : cYaziGri
     // Ders bu üç hâle ayrı ayrı NE YAPILACAĞINI söyler; kutu o cümleyi taşır,
     // yoksa okur "4/5" sayısından kendi kuralını uydurur.
     rejimNot = bantIsareti >= 4 ? "bar sayımına dayalı stop girişi yok · uçlarda fade" :
        bantIsareti <= 1 ? "geri çekilme kurulumları geçerli · fade edilmez" :
        "pano karar vermez · hangi tarafa yakın olduğunu söyler"
 
-    table.cell(t, 0, 0, "① REJİM", text_size = f_boyut(kutuBoyut), text_color = cGri,
-       text_halign = text.align_left, bgcolor = color.new(cGri, 82))
+    table.cell(t, 0, 0, "① REJİM", text_size = f_boyut(kutuBoyut), text_color = cYaziGri,
+       text_halign = text.align_left, bgcolor = color.new(cYaziGri, 82))
     table.cell(t, 1, 0, rejimAd, text_size = f_boyut(kutuBoyut), text_color = rejimUst,
-       text_halign = text.align_right, bgcolor = color.new(cGri, 82))
+       text_halign = text.align_right, bgcolor = color.new(cYaziGri, 82))
     table.cell(t, 2, 0, str.tostring(bantIsareti) + "/5", text_size = f_boyut(kutuBoyut),
-       text_color = rejimUst, bgcolor = color.new(cGri, 82))
+       text_color = rejimUst, bgcolor = color.new(cYaziGri, 82))
     table.cell(t, 0, 1, rejimNot, text_size = f_boyut(kutuBoyut), text_color = rejimUst,
        text_halign = text.align_left)
     table.cell(t, 1, 1, "", text_size = f_boyut(kutuBoyut))
     table.cell(t, 2, 1, "", text_size = f_boyut(kutuBoyut))
 
     if kutuKip == "Tam"
-        table.cell(t, 0, 2, "Ölçü · dersin Şekil 30'u", text_size = f_boyut(kutuBoyut), text_color = cGri,
-           text_halign = text.align_left, bgcolor = color.new(cGri, 88))
-        table.cell(t, 1, 2, "bu pencere", text_size = f_boyut(kutuBoyut), text_color = cGri,
-           text_halign = text.align_right, bgcolor = color.new(cGri, 88))
-        table.cell(t, 2, 2, "bant?", text_size = f_boyut(kutuBoyut), text_color = cGri,
-           bgcolor = color.new(cGri, 88))
+        table.cell(t, 0, 2, "Ölçü · dersin Şekil 30'u", text_size = f_boyut(kutuBoyut), text_color = cYaziGri,
+           text_halign = text.align_left, bgcolor = color.new(cYaziGri, 88))
+        table.cell(t, 1, 2, "bu pencere", text_size = f_boyut(kutuBoyut), text_color = cYaziGri,
+           text_halign = text.align_right, bgcolor = color.new(cYaziGri, 88))
+        table.cell(t, 2, 2, "bant?", text_size = f_boyut(kutuBoyut), text_color = cYaziGri,
+           bgcolor = color.new(cYaziGri, 88))
 
-        f_satir(3, "Örtüşme oranı  (0,725)", str.tostring(ortusmeOran, "0.000"), i1 ? "✓" : "—", i1 ? cClaret : cGri)
-        f_satir(4, "Doji oranı  (0,314)",    str.tostring(dojiOran,    "0.000"), i2 ? "✓" : "—", i2 ? cClaret : cGri)
-        f_satir(5, "Ortalama kesişme  (17)", str.tostring(kesisme),              i3 ? "✓" : "—", i3 ? cClaret : cGri)
-        f_satir(6, "Net / aralık  (0,037)",  str.tostring(netAralik,  "0.000"),  i4 ? "✓" : "—", i4 ? cClaret : cGri)
-        f_satir(7, "Azami ardışık trend barı", str.tostring(azamiDizi),          i5 ? "✓" : "—", i5 ? cClaret : cGri)
+        f_satir(3, "Örtüşme oranı  (0,725)", str.tostring(ortusmeOran, "0.000"), i1 ? "✓" : "—", i1 ? cYaziKzl : cYaziGri)
+        f_satir(4, "Doji oranı  (0,314)",    str.tostring(dojiOran,    "0.000"), i2 ? "✓" : "—", i2 ? cYaziKzl : cYaziGri)
+        f_satir(5, "Ortalama kesişme  (17)", str.tostring(kesisme),              i3 ? "✓" : "—", i3 ? cYaziKzl : cYaziGri)
+        f_satir(6, "Net / aralık  (0,037)",  str.tostring(netAralik,  "0.000"),  i4 ? "✓" : "—", i4 ? cYaziKzl : cYaziGri)
+        f_satir(7, "Azami ardışık trend barı", str.tostring(azamiDizi),          i5 ? "✓" : "—", i5 ? cYaziKzl : cYaziGri)
         // Barbwire bir REJİM ölçüsü değil, tekil bir bar kalıbıdır: bant
         // işaretine girmez ve sayılmaz. Sayıya karışmasın diye ayrı satırda.
         f_satir(8, "Barbwire (4.9) — sayıya girmez",
            str.tostring(math.round(math.max(0.0, math.min(bwKesOnce, bwKesSonra)) / math.max(bwOrtaMenzil, syminfo.mintick), 2)),
-           barbwire ? "VAR ⚠" : "—", barbwire ? cClaret : cGri)
+           barbwire ? "VAR ⚠" : "—", barbwire ? cYaziKzl : cYaziGri)
 
 alertcondition(ta.crossover(bantIsareti, 3.5),  "Bant rejimine geçiş",  "Brooks RP: ölçülebilir bant işaretleri 4'e çıktı")
 alertcondition(ta.crossunder(bantIsareti, 1.5), "Bant rejiminden çıkış","Brooks RP: ölçülebilir bant işaretleri 1'e indi")
