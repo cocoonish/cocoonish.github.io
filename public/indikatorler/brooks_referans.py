@@ -604,14 +604,16 @@ class FiyatPaneli:
 
         Ders sayımı BACAKLA kurar: high 1 geri çekilmede zirvesi öncekini aşan
         ilk bar; geri çekilme SÜRERSE (zirvesi öncekini aşmayan bir bar daha
-        gelirse) ve yeniden bir bar öncekini aşarsa o bar high 2. Yani iki
-        sayım arasında en az bir "aşamayan" bar olmalı. Yeni bir trend
-        zirvesi sayımı sıfırlar; always-in dönüşü de. Rejim filtresi dersten:
+        gelirse) ve yeniden bir bar öncekini aşarsa o bar high 2. İki sayım
+        arasında en az bir "aşamayan" bar şartı SAYACIN SEÇİMİDİR, dersin
+        değil: ders arka arkaya iki barın H1 ve H2 olmasını olası sayar
+        (Şekil 46 notu); sayaç bacağı bir bar daha bekleyerek daha muhafazakâr
+        okur. Yeni bir trend zirvesi sayımı sıfırlar; always-in dönüşü de. Rejim filtresi dersten:
         boğa trendinde low sayılmaz, ayıda high.
 
-        Ölçüldü (15.09.2026, 13 seri): eski sayaç zirvesi öncekini aşan HER
-        barı sayıyordu — iki ardışık yükselen bar H1·H2 oluyor, 1.297
-        etiketin %88'i tavan H4'e düşüyordu (`bar_sayimi_eski`).
+        Ölçüldü (15.09.2026, 13 seri): zirvesi öncekini aşan HER barı sayan
+        bir sayaç iki ardışık yükselen bara H1·H2 der ve 1.297 etiketin %88'i
+        tavan H4'e oturur (`bar_sayimi_eski` o sayacı ölçüm için taşır).
 
         DIŞARIDA KALAN, dersin kendi cümlesiyle: 'high 1 ile high 2 arasında
         en az küçücük bir trend çizgisi kırılımı olmalıdır' — çizgi çizmek
@@ -1115,9 +1117,10 @@ class RejimPanosu:
 
         NEDEN. Dersin Şekil 30 eşikleri tek bir seride, tek bir günde ölçülmüş
         SEVİYELERDİR ve ölçüldü (15.09.2026): seviyeler enstrümana ve beslemeye
-        göre kayıyor — örtüşme işareti 1 saatlik 13 serinin 9'unda %100 açık,
-        Yahoo 5 dk EUR/USD'de %3, USD/CHF'de %100, GBP/USD'de %9; doji
-        işareti 13 seride %0. Sabit bir eşik bir enstrümanda hep "bant",
+        göre kayıyor — örtüşme işareti 13 serinin (1 saatlik, 4 saatlik ve
+        günlük) 7'sinde pencerelerin %100'ünde, 9'unda %99'un üstünde açık,
+        ABD 10 yıllık getirinin 4 saatliğinde %0; Yahoo 5 dk EUR/USD'de %3,
+        USD/CHF'de %100, GBP/USD'de %9; doji işareti 13 serinin 13'ünde %0. Sabit bir eşik bir enstrümanda hep "bant",
         öbüründe hiç "bant" der ve ikisi de rejim ölçmez. Göreli eşik her
         ölçüyü son `tarihce` bardaki kendi değerlerine göre sıralar: ölçü
         tarihçesinin %60'ından daha bantlıysa işaret. Böylece her ölçü her
@@ -1492,6 +1495,35 @@ def kendini_sina() -> list[str]:
     dar = Kurulumlar(seri(kb[:-1] + [(10.1, 10.9, 10.0, 10.85)]), 0.01).bant_kenari(len(kb) - 1)   # risk 0,92 > bant/3
     if dar is not None:
         hata.append(f"⑩ bant < 3 × stop iken emir olmamalı; {dar}")
+    # Yukarıdaki "dar" hâl KONUMU da geçmiyor (kapanış 0,425 > 1/3), yani
+    # yükseklik şartını tek başına sınamaz. Aşağıdaki üç hâl her şartı TEK
+    # BAŞINA bağlar; öbür şartlar geçerken yalnız biri düşüyor.
+    #   · yükseklik: konum 0,325 ✓, sığma 11,43 ≤ 12 ✓, bant 2,0 < 3 × 0,72
+    yuk = Kurulumlar(seri(kb[:-1] + [(10.05, 10.70, 10.00, 10.65)]), 0.01).bant_kenari(len(kb) - 1)
+    if yuk is not None:
+        hata.append(f"⑩ konum ve sığma geçerken bant < 3 × stop emir vermemeli; {yuk}")
+    #   · yön süzgeci: son 10 barın 9'u ortalamanın üstünde → 'yalnız AL';
+    #     dipteki boğa dönüş barı konum · yükseklik · sığma · HO'yu geçiyor
+    kc = kb[:63] + [(11.6, 12.0, 11.5, 11.9)] * 9 + [(10.1, 10.3, 10.0, 10.25)]
+    kuc = Kurulumlar(seri(kc), 0.01)
+    if kuc.fp.yon_filtresi(len(kc) - 1) != "yalnız AL" or kuc.bant_kenari(len(kc) - 1) is not None:
+        hata.append("⑩ yön süzgeci serbest değilken bant kenarı emir vermemeli")
+    #   · HO süzgeci: pencerenin %60'ı ortalamanın altında, son 10 bar 5/5
+    #     dengeli (serbest), dipte boğa dönüş barı; konum 0,08 · bant 11,8
+    kh = [(11.0, 12.0, 10.0, 11.5)] * 10 + [(20.0 - k * 0.12 + 0.1, 20.0 - k * 0.12 + 0.3,
+                                             20.0 - k * 0.12 - 0.3, 20.0 - k * 0.12) for k in range(60)]
+    kh += [(16.5, 17.5, 16.0, 17.0) if k % 2 == 0 else (9.5, 10.0, 8.5, 9.0) for k in range(9)]
+    kh.append((9.2, 9.5, 9.0, 9.45))
+    kuh = Kurulumlar(seri(kh), 0.01)
+    ih = len(kh) - 1
+    ho_alti = sum(1 for j in range(ih - 69, ih + 1) if kuh.fp.ema[j] is not None and kh[j][3] < kuh.fp.ema[j]) / 70
+    if kuh.fp.yon_filtresi(ih) != "serbest" or ho_alti <= 0.5:
+        hata.append(f"⑩ HO fikstürü kendi şartını kurmuyor: yön {kuh.fp.yon_filtresi(ih)} · altta {ho_alti:.2f}")
+    elif kuh.bant_kenari(ih) is not None:
+        hata.append("⑩ kapanışların yarıdan fazlası ortalamanın altındayken alım emri olmamalı")
+    # SIĞMA (giriş + risk ≤ tavan) tek başına SINANAMAZ: konum ≤ 1/3 ve
+    # bant ≥ 3 × risk geçerken cebirsel olarak sağlanır (2h − l + 3t ≤ tavan);
+    # ancak konum ya da yükseklik düşerken bağlar, o zaman da onlar bağlar.
     try:
         Kurulumlar(seri(kb), 0.0)
         hata.append("⑩ tick'siz Kurulumlar hata vermeliydi")
