@@ -25,6 +25,86 @@ import kodRejim from '../../../public/indikatorler/brooks-rejim-panosu.pine?raw'
 import kodPython from '../../../public/indikatorler/brooks_referans.py?raw';
 import durumKutusu from '../../../public/indikatorler/durum_kutusu.html?raw';
 
+<div class="yonetici">
+  <span class="etiket">Kısa yol — almak ya da satmak için ekranda neye bakılır</span>
+
+  <p class="tez">Bu indikatör "al" ya da "sat" demez. Üç ayrı katmana ayrı ayrı soru
+  sorar ve <b>her biri tek başına veto edebilir</b>; işlem ancak üçü de aynı yöne
+  baktığında konuşulur. Sıra dersin dayattığı sıradır ve tersine çevrilemez.
+  <b>Önce alt panel:</b> hükmü tek sözcüktür — `BANT` diyorsa o pencerede geri çekilme
+  ve bar sayımı kurulumları geçersizdir, gerisini okumaya gerek yok. <b>Sonra fiyat
+  panelinin köşesindeki kutu:</b> ② satırı (<i>always-in</i>) o gün işlem yapmanıza
+  izin verilen <b>tek yönü</b> söyler, ③ satırı ortalamanın koyduğu yasağı, ④ satırı
+  ise elinizde bir bar olup olmadığını ve o barın yönle hizalı olup olmadığını.
+  ④'te "yönle hizasız" yazıyorsa skor kaç olursa olsun cevap hayırdır. Üçü de evet
+  dediğinde indikatörün işi biter: giriş sinyal barının ucunun bir tick ötesi, stop
+  karşı ucun bir tick ötesi, hedef en az bir bar boyu. Kalan her şey — hedefin
+  tutup tutmayacağı, pozisyonun büyüklüğü, o günkü bağlam — indikatörün değil
+  sizin işinizdir.</p>
+
+  <table>
+    <tbody>
+      <tr>
+        <td>Sırayla neye bakarım</td>
+        <td><b>1.</b> Alt panelin en üst satırı: `BANT` mı, `ara` mı, `trend` mi.
+        <b>2.</b> Fiyat kutusunun ② satırı: `LONG` mu `SHORT` mu. <b>3.</b> ③ satırı:
+        bir yön yasaklanmış mı. <b>4.</b> ④ satırı: kurulum var mı, kaç bölü dört ve
+        yönle hizalı mı. Dördü aynı yöne bakmıyorsa işlem yok.</td>
+      </tr>
+      <tr>
+        <td>Ne zaman almayı düşünürüm</td>
+        <td>Alt panel `BANT` demiyor, ② satırı `LONG`, ③ satırı long'u yasaklamıyor ve
+        ④ satırında boğa kurulumu "✓ yönle hizalı" yazıyorsa. Satış bunun tam
+        aynasıdır. Dördünün birden tuttuğu bar seyrektir ve öyle olması beklenir.</td>
+      </tr>
+      <tr>
+        <td>Ne zaman hiçbir şey yapmam</td>
+        <td>Üç ayrı "hayır" var ve üçü de tek başına yeter: alt panel `BANT` diyorsa
+        (yanlış gün), ④ satırı "⚠ yönle hizasız" diyorsa (yanlış yön), ya da alt
+        panelin son satırı barbwire işaretliyorsa (dar bantta dönüş barının ters
+        çevirecek bir şeyi yoktur — kalite skoru orada okunmaz).</td>
+      </tr>
+      <tr>
+        <td>Ne sıklıkta konuşur</td>
+        <td>Nadiren, ve bu bir kusur değil. Ölçülen 4.574 barda yön değişimi
+        <b>11</b> kez oldu — dönüş başına <b>416 bar</b>. En yüksek kurulum skoru
+        (4/4) on kez çıktı, onun da yalnız <b>ikisi</b> yönle hizalıydı. Ekranda
+        günlerce hiçbir şey olmaması beklenen hâldir.</td>
+      </tr>
+      <tr>
+        <td>Hangi satır hüküm, hangisi ölçü</td>
+        <td>Hüküm yalnız iki yerdedir: alt panelin en üst satırı ve fiyat kutusunun
+        ①–④ satırları. Kutunun altındaki "Bu bar", "Bağlam" ve "Kalıp" bölümleri
+        ölçüdür — hükmün gerekçesini gösterir, kendileri karar vermez. Bir ölçünün
+        yüksek çıkması işlem gerekçesi değildir.</td>
+      </tr>
+      <tr>
+        <td>Neyi söylemez</td>
+        <td>İsabet, getiri, başarı oranı, hedef seviyesi, pozisyon büyüklüğü.
+        Bu sayfada hiçbiri yok ve ölçülmedi; ölçülen tek şey kuralların ne sıklıkta
+        ateşlediği. Sayfadaki tek tam işlem örneğinde üç katman da "evet" dedi ve
+        işlem stop oldu — o örnek bilerek seçildi.</td>
+      </tr>
+      <tr>
+        <td>Baştan bilinmesi gereken</td>
+        <td>Eşikler dersin 5 dakikalık barlarında kalibre edilmiştir; buradaki
+        örnekler saatlik ve günlük barlardan. Kurallar ölçekten bağımsız kurulmuştur
+        ama kalibrasyon ölçeği bu değildir. Ayrıca iki panelin ikisi de grafikte
+        olmadan bu sıra kurulamaz.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <ul class="rakamlar">
+    <li><b>416 bar</b><span>bir yön değişimi başına — bekleyiş normaldir</span></li>
+    <li><b>%13,7 · %78,6 · %7,7</b><span>alt panel: bant · ara · trend payı</span></li>
+    <li><b>10 · 2</b><span>4/4 sinyal barı sayısı · bunların yönle hizalı olanı</span></li>
+    <li><b>160</b><span>kurulum doluyken yön yasağının kapattığı sinyal</span></li>
+    <li><b>%12,4</b><span>barbwire payı — sekiz barda bir, skor orada okunmaz</span></li>
+    <li><b>ölçülmedi</b><span>isabet, getiri ve başarı oranı — sayfada yok</span></li>
+  </ul>
+</div>
+
 <div class="not">
 
 Bu indikatör [Fiyat Hareketi: Al Brooks Yöntemiyle Bar Bar Okuma](/arastirma/fiyat-hareketi-brooks/)
@@ -75,6 +155,118 @@ sayıyor.
 Figürdeki bütün katmanlar bu sayfadaki kodun çıktısıdır; ayrı bir çizim uygulaması
 yok. Renkler de indikatörünkiyle aynı: koyu mavi güçlü boğa, koyu kırmızı güçlü ayı,
 gri doji, soluk tonlar ara barlar.
+
+## Panelleri okumak
+
+Yukarıdaki iki tablo neyin **çizildiğini** sayıyor. Bu bölüm neyin **söylendiğini**
+anlatıyor: ekrandaki hangi işaret bir hüküm, hangisi yalnızca bir ölçü, ve hangi
+görüntü kolayca yanlış okunuyor.
+
+Baştan bir ayrım: **hüküm iki yerdedir** — alt panelin en üst satırı ve fiyat
+kutusunun ①–④ satırları. Geri kalan her şey ölçüdür. Bir ölçünün yüksek çıkması
+işlem gerekçesi değildir; ölçüler hükmün *gerekçesi* olsun diye vardır.
+
+### Alt panel: üç çizgi, iki görünmez ölçü
+
+Alt panelin işi tek bir soruyu cevaplamak: **bugün hangi tür piyasadayız.** Okuma
+sırasının birinci adımı burasıdır, çünkü dersin en pahalı hatası doğru kurulumu
+yanlış günde almaktır.
+
+<GrafikEmbed src="/indikatorler/02_alt_panel_gorunumu.html" baslik="Alt panel ekranda ne çizer: üç çizgi, üç noktalı eşik, grileşen zemin — ve hükmü çeviren iki görünmez ölçü" no="02" kaynak="13 seri · 4.574 bar" genis />
+
+**Ekranda ne var.** Panel 0 ile 1 arasında bir ölçekte üç eğri çizer; üçü de birer
+orandır, yani fiyat birimi taşımazlar.
+
+| Gördüğünüz | Nedir | Nasıl okunur |
+|---|---|---|
+| Kızıl eğri | Örtüşme oranı — son 70 barın kaçı bir öncekiyle yarıdan fazla örtüştü | Noktalı eşiğin **üstü** bant sayılır |
+| Mavi eğri | Doji oranı — pencerede gövdesi menzilinin onda birini geçmeyen barların payı | Noktalı eşiğin **üstü** bant sayılır |
+| Koyu eğri | Net / aralık — pencerede gerçekten gidilen yolun kat edilen mesafeye oranı | Noktalı eşiğin **altı** bant sayılır |
+| Noktalı çizgiler | Üç eşik | Yönleri aynı değil; yukarıdaki sütuna bakın |
+| Grileşen zemin | Bant işaretlerinin sayısı | Koyu gri dört ve üstü, soluk gri üç |
+| Üstteki çarpılar | Barbwire | Yüksekliği bir ölçü değildir; yalnız "var" der |
+
+**Birinci tuzak: üç çizginin ikisi yukarı, biri aşağı okunur.** Örtüşme ve doji
+oranları için eşiğin **üstüne** çıkmak bant işaretidir; net/aralık için eşiğin
+**altına** inmek. "Çizgi noktalı çizgiyi geçtiyse bant" diye genelleyen okur,
+üçüncü çizgide tam tersini okur. Sebebi ölçünün kendisinde: örtüşme ve doji
+sıkışmayı *sayar*, net/aralık ise **yol alındığını** ölçer — yüksek olması trend
+demektir.
+
+**İkinci tuzak: varsayılan ayarda iki noktalı çizgi üst üste biner.** Örtüşme eşiği
+de net/aralık eşiği de **0,50**'dir, yani ekranda 0,50'de tek bir noktalı çizgi
+varmış gibi görünür. O tek çizgi iki eğri için **zıt yönde** okunur. Ayarlardan
+birini oynatırsanız ayrışırlar; oynatmayacaksanız hangi eğrinin hangi yönde
+okunduğunu akılda tutmak gerekir.
+
+**Üçüncü tuzak — ve asıl kafa karıştıran budur: hükmü kuran beş ölçünün ikisinin
+ekranda çizgisi yoktur.** Ortalama kesişme sayısı ve azami ardışık trend barı yalnız
+kutuda yaşar. Sonuç şu: **üç eğri kımıldamadan hüküm değişebilir** ve okur sebebini
+grafikte arayıp bulamaz. Yukarıdaki figürde bu birebir görünüyor — kesikli iki
+çizginin arasında kızıl eğri tam olarak aynı yükseklikte duruyor, ama bir yanda
+pano bant diyor, öbür yanda trend. Çeviren üç ölçüden ikisi görünmez olanlardır.
+Bu yüzden panelin altındaki üçüncü şerit figüre kondu; **o şerit TradingView'de
+yoktur**, ekranda yalnız zeminin grileşmesiyle ve kutudaki `n/5` sayısıyla görünür.
+
+**Zemini boyalı ama kutusu `ara` diyen bir ekran arıza değildir.** Zemin üç
+işarette de grileşir, `BANT` hükmü ise ancak dörtte verilir. İki koyuluk iki ayrı
+hâli anlatıyor: soluk gri "bant tarafına yaklaşıyor", koyu gri "bant". Ekranda bunu
+söyleyen bir lejant yok, kutudaki sayı söylüyor.
+
+**Kutudaki parantez içi sayı bir eşik değildir.** `Örtüşme oranı (0,725)` satırında
+parantezdeki sayı dersin Şekil 30'unda ölçtüğü **referans bant günüdür**; o pencerede
+ölçülen değer ortadaki sütundadır ve sağdaki ✓ işareti ayarlardaki eşiğe bakar,
+parantezdeki sayıya değil. Yani parantezde 0,725 yazarken ölçülen 0,543 için ✓ çıkması
+bir çelişki değil: eşik 0,50'dir. Sütun başlığı bunu söyler, ama hızlı bakışta
+kaçar.
+
+**İki küçük şey daha.** Kutu yalnız **son barda** yazılır: geçmişe gidip bir bara
+baktığınızda o barın zemin rengini görürsünüz ama kutu hâlâ en son barı anlatıyordur.
+Ve `Özet` kipi paneli sadeleştirmez, yalnız **tabloyu** kısaltır — eğriler, eşikler,
+zemin ve çarpılar olduğu gibi kalır; `4/5` görürsünüz ama hangi ikisinin tutmadığını
+okuyamazsınız.
+
+### Fiyat paneli: dört satır hüküm, gerisi bağlam
+
+Fiyat panelinin kutusu okuma sırasını dört satırda taşır ve **kurulum bilerek en
+sondadır**. Kalan bölümler — "Bu bar", "Bağlam", "Kalıp · uyarı" — hükmün gerekçesidir.
+
+**Zemin rengi "trend şu anda güçlü" demez.** Always-in **kilitli bir durumdur**: bir
+kez yön kurulduktan sonra karşı dönüş koşulu gelene kadar her bar boyanır. Derin bir
+geri çekilmede, hatta uzun bir yatay bantta bile renk değişmez. Mavi zemin
+"son hüküm long'du" demektir, "şu anda yükseliyor" değil.
+
+**Grafikteki ilk üçgen bir dönüş değildir.** Serinin başında always-in yönsüzdür ve
+ilk onay yön *değiştirmez*, ilk kez yön **kurar**. Ölçtük: onaylanan 24 olayın 13'ü
+bu ilk kurulma, gerçek yön değişimi 11 tane. Üçgeni "burada trend döndü" diye okumak,
+grafikte ömründe bir kez olan bir olayı tekrar eden bir sinyal sanmaktır.
+
+**Kutu dolu ama barda etiket yoksa indikatör bozulmamıştır.** Kutunun ④ satırı bir
+kurulumu "var" saymak için skorun sıfırdan büyük olmasını yeter görür; barın üstüne
+basılan `n/4` etiketi ise `Etiketlenecek asgari kalite` ayarını (varsayılan **2**)
+aşmak zorundadır. Yani kutu `1/4 boğa` yazarken o barda etiket olmaz. İkisi bilerek
+farklıdır: varsayılan sıfıra çekilirse barların yarıdan fazlası asgari dönüş barı
+koşulunu sağladığı için grafik okunmaz hâle gelir.
+
+**`H4` gördüğünüz her yer dördüncü bacak değildir.** Sayaç ekranda dörtte kapaklanır;
+beşinci, yedinci, dokuzuncu bacak da `H4` yazar. Art arda iki `H4` bir tekrar ya da
+hata değil, sayacın tavanıdır. Aynı kapaklanma çevirme sayacında da var: kutuda
+görünen `100`, "yüz veya daha fazla" demektir.
+
+**Bar rengi üç kademe, kutunun `Sınıf` satırı dört kademe.** Renkte trend barı
+eşiğinin ayrı bir karşılığı yoktur: gövdesi menzilinin %60'ı olan bir trend barı ile
+%20'si olan bir ara bar ekranda **aynı soluk renktedir**. "Bu bar trend barı değil"
+hükmü renkten verilemez; o hüküm yalnız kutunun `Sınıf` satırındadır.
+
+**Eski barlarda etiket görmüyorsanız o dönemde sinyal olmadığı anlamına gelmez.**
+TradingView bir betiğin basabileceği etiket sayısını sınırlar; geçmişe gidildikçe en
+eskiler düşer. Kalite etiketi, bar sayımı ve kalıp uyarıları bu bütçeden harcanır.
+
+**Ve en sık yanlış okunan işaret: `✓ yönle hizalı`.** Bu işaret yalnızca kurulumun
+yönü ile always-in durumunun **mekanik olarak** aynı olduğunu söyler. Kalitenin
+yüksek olduğunu, bağlamın uygun olduğunu ya da işlemin iyi olduğunu söylemez —
+`1/4 boğa ✓ yönle hizalı` ile `4/4 boğa ⚠ yönle hizasız` aynı işareti taşıyabilir ve
+ikincisi çok daha güçlü bir bardır. Hizalı olmak bir izindir, bir tavsiye değil.
 
 ## Kurallar ve kaynakları
 
@@ -128,7 +320,7 @@ Etiketin ipucunda örtüşme yüzdesi ve gerektiğinde bu uyarı yazar.
 Dört sınıf tek pencerede, hepsi aynı fiyat ekseninde — ve sınıfın **ayırt edemediği**
 şey sağdaki panelde:
 
-<GrafikEmbed src="/indikatorler/02_bar_sozlugu.html" baslik="Bar sözlüğü: dört sınıf tek pencerede, ve aynı sınıfın ayırt edemediği kapanış yeri" no="02" kaynak="13 seri · 4.574 bar" genis />
+<GrafikEmbed src="/indikatorler/03_bar_sozlugu.html" baslik="Bar sözlüğü: dört sınıf tek pencerede, ve aynı sınıfın ayırt edemediği kapanış yeri" no="03" kaynak="13 seri · 4.574 bar" genis />
 
 ### Bar sayımı
 
@@ -170,7 +362,7 @@ dersin Şekil 30'undaki bant tam 70 bar sürüyor.
 Sayım bir dizi değil bir **durumdur**, ve cevabın yarısı sayının kendisi değil sayacın
 nerede **sıfırlandığıdır** — bu ancak barların üstünde görünür:
 
-<GrafikEmbed src="/indikatorler/03_bar_sayimi.html" baslik="H1'den H4'e bir tur, sayacın sıfırlandığı bar, ve H4'ün bir tavan oluşu" no="03" kaynak="13 seri · 4.574 bar" genis />
+<GrafikEmbed src="/indikatorler/04_bar_sayimi.html" baslik="H1'den H4'e bir tur, sayacın sıfırlandığı bar, ve H4'ün bir tavan oluşu" no="04" kaynak="13 seri · 4.574 bar" genis />
 
 ### Bar anatomisinin geri kalanı (Bölüm 1)
 
@@ -233,7 +425,7 @@ uyarısının en pahalı hâli, çünkü o barda hem pozisyona girilir hem de ay
 içinde ters emirle çıkılır. Son panel ilk panelle aynı kalıptır (**ii**) ve
 başka bir sonuç vermiştir — kalıbın kendisi bir yön vaadi taşımaz.
 
-<GrafikEmbed src="/indikatorler/04_kirilim_modu.html" baslik="Kırılım modu kalıpları gerçek barlarda: kalıp, iki stop seviyesi ve sonrasında ölçülen yön" no="04" kaynak="EUR/USD ve ABD 10 yıllık · 1 dk – 4 sa" genis />
+<GrafikEmbed src="/indikatorler/05_kirilim_modu.html" baslik="Kırılım modu kalıpları gerçek barlarda: kalıp, iki stop seviyesi ve sonrasında ölçülen yön" no="05" kaynak="EUR/USD ve ABD 10 yıllık · 1 dk – 4 sa" genis />
 
 Altı panel bir örnektir, hüküm değil. Dersin *"yön bilinmez"* cümlesi sınanabilir
 bir iddiadır ve 250 oluşumun tamamında sınandı — ama sınamanın kendisi bir tuzak
@@ -251,7 +443,7 @@ tetiklenmesi kalıplarda tabanın iki–üç katı. Yani kalıp size yönü söy
 ama iki taraflı emrin ikisinin birden dolma riskini ölçülebilir biçimde
 artırıyor — pozisyona girip aynı bar içinde ters emirle çıkmak.
 
-<GrafikEmbed src="/indikatorler/05_yon_bilinmez.html" baslik="Kalıp sonrası yön ve 'iki stop da aynı barda' oranı, aynı braketin kalıp olmayan barlardaki tabanıyla yan yana" no="05" kaynak="13 seri · 4.314 bar · 250 oluşum" />
+<GrafikEmbed src="/indikatorler/06_yon_bilinmez.html" baslik="Kalıp sonrası yön ve 'iki stop da aynı barda' oranı, aynı braketin kalıp olmayan barlardaki tabanıyla yan yana" no="06" kaynak="13 seri · 4.314 bar · 250 oluşum" />
 
 ### Orta nokta ölçütü (Bölüm 2.3)
 
@@ -285,7 +477,7 @@ kalıbıdır. İndikatör kalıbı gösterir, hükmü vermez.
 Yukarıdaki dört kural da tanımı gereği **şekildir**; dördü gerçek barlarda, ölçülen
 sayılarıyla:
 
-<GrafikEmbed src="/indikatorler/06_donus_kaliplari.html" baslik="Dört kural dört panelde: iki barlık dönüş, mikro çift, orta nokta ölçütü, örtüşme" no="06" kaynak="13 seri · 4.574 bar" genis />
+<GrafikEmbed src="/indikatorler/07_donus_kaliplari.html" baslik="Dört kural dört panelde: iki barlık dönüş, mikro çift, orta nokta ölçütü, örtüşme" no="07" kaynak="13 seri · 4.574 bar" genis />
 
 ### Mikro kanal (Bölüm 3.8) ve beş bar iptal kuralı (Bölüm 8A.6)
 
@@ -311,7 +503,7 @@ işaretlediğinde fiyat panelindeki kalite skoru orada okunmaz.
 
 Ölçüt sayısal ama tuzağı görsel — ve tuzak dersin en sinsi hatası:
 
-<GrafikEmbed src="/indikatorler/07_barbwire.html" baslik="Barbwire üçlüsünün içindeki sinyal barı ve akıbeti; ve ölçünün seçiciliği" no="07" kaynak="13 seri · 4.574 bar" genis />
+<GrafikEmbed src="/indikatorler/08_barbwire.html" baslik="Barbwire üçlüsünün içindeki sinyal barı ve akıbeti; ve ölçünün seçiciliği" no="08" kaynak="13 seri · 4.574 bar" genis />
 
 ## Ders sayı vermediğinde: tanım seçimleri
 
@@ -359,7 +551,7 @@ yalnız **11'i** gerçekten always-in dönüş barı. Kesinlik **%1,05**, taban 
 
 İki dağılım yan yana konunca hem sinyal hem sınır aynı anda görünüyor:
 
-<GrafikEmbed src="/indikatorler/08_cevirme_sayaci.html" baslik="Çevirme sayacının dağılımı: bütün barlar karşısında always-in dönüş barları" no="08" kaynak="13 seri · 4.314 bar" />
+<GrafikEmbed src="/indikatorler/09_cevirme_sayaci.html" baslik="Çevirme sayacının dağılımı: bütün barlar karşısında always-in dönüş barları" no="09" kaynak="13 seri · 4.314 bar" />
 
 Kırmızı sütunlar sağa yığılmış — dönüş barlarında sayaç gerçekten yüksek ve bu bir
 sinyaldir. Ama gri dağılımın da bir kuyruğu var ve o kuyruk çok daha kalabalık:
@@ -415,7 +607,7 @@ güvenilirdir ama daha seyrektir" cümlesi bu veride de görünüyor.
 
 Aynı tablo, sistemin **ne sıklıkta konuştuğunu** tek bakışta veriyor:
 
-<GrafikEmbed src="/indikatorler/09_ne_beklemeli_siklik.html" baslik="Kalıpların ölçülen sıklığı — barların yüzdesi olarak" no="09" kaynak="13 seri · 4.314 bar" />
+<GrafikEmbed src="/indikatorler/10_ne_beklemeli_siklik.html" baslik="Kalıpların ölçülen sıklığı — barların yüzdesi olarak" no="10" kaynak="13 seri · 4.314 bar" />
 
 **Ne beklemeli, buradan okunur.** Üst kalıplar (küçük bar, mikro kanal, mikro çift
 dip/tepe) her on barda bir civarında geliyor — bunlar bağlam okumalarıdır, işlem
@@ -563,7 +755,7 @@ yakın olduğunuzu söyler.
 Dağılım seriden seriye de değişiyor ve bu ayrım kullanılabilir: aynı enstrümanın
 farklı zaman dilimi farklı rejim profili verir.
 
-<GrafikEmbed src="/indikatorler/10_rejim_dagilimi.html" baslik="Rejim panosunun 70 barlık pencerelerdeki dağılımı — seri ve zaman dilimi bazında" no="10" kaynak="13 seri · 4.574 bar" />
+<GrafikEmbed src="/indikatorler/11_rejim_dagilimi.html" baslik="Rejim panosunun 70 barlık pencerelerdeki dağılımı — seri ve zaman dilimi bazında" no="11" kaynak="13 seri · 4.574 bar" />
 
 Rejimin neden **ilk** adım olduğu ancak şu ikisi yan yana konunca görünür: aşağıda
 fiyat panelinin dört satırı da birebir aynı olan iki gerçek bar var — aynı always-in
@@ -571,7 +763,7 @@ yönü, aynı yön filtresi, aynı kurulum ve aynı kalite. Üst panele bakan bi
 **ayırt edemez**. Ayrışan tek şey alt panelin hükmü, ve ders bu iki barda zıt
 davranmayı söylüyor.
 
-<GrafikEmbed src="/indikatorler/11_ayni_kurulum.html" baslik="Fiyat panelinin dört satırı aynı, alt panelin hükmü zıt: rejim neden ilk adım" no="11" kaynak="13 seri · 4.574 bar" genis />
+<GrafikEmbed src="/indikatorler/12_ayni_kurulum.html" baslik="Fiyat panelinin dört satırı aynı, alt panelin hükmü zıt: rejim neden ilk adım" no="12" kaynak="13 seri · 4.574 bar" genis />
 
 Okunuşu: USD/CHF 1 saatlikte pencerelerin yarısından çoğu **bant** — orada bar
 sayımına dayalı stop girişi yapısal olarak yanlış araçtır. ABD 10 yıllık getirisi 4
@@ -607,7 +799,7 @@ Onaylanan 24 olayın hepsi bir *dönüş* değil. Serinin başında always-in he
 olay başına 191 bar düşüyor ama **dönüş** başına **416 bar**. Üçgeni bir yön değişimi
 işareti olarak bekliyorsanız doğru sayı ikincisidir.
 
-<GrafikEmbed src="/indikatorler/12_always_in_donusu.html" baslik="Kuralın üç hâli aynı seride: onaylanan dizi, takip barında elenen dizi, hiç kurulmayan dizi" no="12" kaynak="13 seri · 4.574 bar" genis />
+<GrafikEmbed src="/indikatorler/13_always_in_donusu.html" baslik="Kuralın üç hâli aynı seride: onaylanan dizi, takip barında elenen dizi, hiç kurulmayan dizi" no="13" kaynak="13 seri · 4.574 bar" genis />
 
 ### 3 · Sonra kurulum: 4/4 kalite nasıl bir bardır
 
@@ -638,7 +830,7 @@ barı: skor 4/4'ten 2/4'e inerken piyasa da, saat de, enstrüman da değişmiyor
 yalnız barın kendi biçimi. Panel başlığı hangi niteliğin düştüğünü yazar, yani
 grafikte `3/4` gördüğünüzde ipucundan okuyacağınız şeyin resmi budur.
 
-<GrafikEmbed src="/indikatorler/13_kalite_skoru.html" baslik="Aynı seansın üç barı, üç farklı skor: düşen niteliğin adıyla" no="13" kaynak="13 seri · 4.574 bar" genis />
+<GrafikEmbed src="/indikatorler/14_kalite_skoru.html" baslik="Aynı seansın üç barı, üç farklı skor: düşen niteliğin adıyla" no="14" kaynak="13 seri · 4.574 bar" genis />
 
 ### 4 · Dört üzerinden dört bir işlem DEĞİLDİR
 
@@ -655,7 +847,7 @@ Yani **onda ikisi**. Üçü doğrudan trendin tersine bakıyordu; beşinde alway
 kurulmamıştı. Dersin *"ilk flip'ten sonra yalnızca short arandı"* cümlesi tam bu yüzden
 var — ve puanın yüksekliği o cümleyi geçersiz kılmaz.
 
-<GrafikEmbed src="/indikatorler/14_kalite_hizasi.html" baslik="Ölçülen on adet 4/4 sinyal barının always-in yönüyle ilişkisi" no="14" kaynak="13 seri · 4.574 bar" />
+<GrafikEmbed src="/indikatorler/15_kalite_hizasi.html" baslik="Ölçülen on adet 4/4 sinyal barının always-in yönüyle ilişkisi" no="15" kaynak="13 seri · 4.574 bar" />
 
 **Örneklem küçük ve öyle kalmalı:** on gözlem bir oran kurmaya yetmez, bu yüzden
 figürde pay değil **sayı** var. Söylediği tek şey şudur: en yüksek skor bile tek
@@ -711,7 +903,7 @@ panel aynı eşikte (20 bar ortalamaya dokunmadı) ve sonrasında ters sonuç ve
 açılıp nerede kapandığı ancak barların ortalamanın hangi tarafında kapandığı
 işaretlenince görünür.
 
-<GrafikEmbed src="/indikatorler/15_gap_yon_filtresi.html" baslik="Aynı gap eşiği iki ters sonuç; ve yön filtresinin kapandığı bar" no="15" kaynak="13 seri · 4.574 bar" genis />
+<GrafikEmbed src="/indikatorler/16_gap_yon_filtresi.html" baslik="Aynı gap eşiği iki ters sonuç; ve yön filtresinin kapandığı bar" no="16" kaynak="13 seri · 4.574 bar" genis />
 
 Kutudaki sayı 20'yi geçtiğinde ⚑ çıkar. Dersin okuması: ortalamaya bu kadar uzun
 dokunmayan bir trendde, ortalamaya ilk dönüş genellikle karşı yön işlemi için değil,
@@ -787,7 +979,7 @@ dönüş barı koşulunu sağlıyor.
 
 Dört adım tek bir karar barında:
 
-<GrafikEmbed src="/indikatorler/16_okuma_sirasi.html" baslik="Okuma sırası tek bir karar barında: rejim → yön → yasak → kurulum" no="16" kaynak="BIST 100 · 1 saatlik" />
+<GrafikEmbed src="/indikatorler/17_okuma_sirasi.html" baslik="Okuma sırası tek bir karar barında: rejim → yön → yasak → kurulum" no="17" kaynak="BIST 100 · 1 saatlik" />
 
 Sıra tersine çevrilemez. Önce kurulumu görüp sonra rejime bakmak, kararı çoktan
 vermiş olmak demektir: `4/4` etiketini gördükten sonra alt panelin `BANT` demesi
@@ -803,7 +995,7 @@ Yukarıdaki 3. örnekte bu somut olarak şu demek: sinyal barının düşüğü 
 onun bir tick altında; stop barın yükseği 14.382'nin bir tick üstünde, yani risk
 yaklaşık 63 puan; ilk hedef en az bir bar boyu, yani 14.319 − 63 ≈ 14.256.
 
-<GrafikEmbed src="/indikatorler/17_islem_mekanigi.html" baslik="Emir mekaniği aynı bar üzerinde: giriş, stop ve ilk hedef barın kendi sayılarından" no="17" kaynak="BIST 100 · 1 saatlik" />
+<GrafikEmbed src="/indikatorler/18_islem_mekanigi.html" baslik="Emir mekaniği aynı bar üzerinde: giriş, stop ve ilk hedef barın kendi sayılarından" no="18" kaynak="BIST 100 · 1 saatlik" />
 
 **Bu örnek stop oldu ve figürde öyle duruyor.** Giriş barından sonraki dördüncü bar
 14.382'nin üstüne çıktı, yani stop hedefe ulaşmadan önce vuruldu — üstelik pencerenin
