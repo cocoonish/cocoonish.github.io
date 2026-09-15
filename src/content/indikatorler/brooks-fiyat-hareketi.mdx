@@ -99,10 +99,10 @@ import durumKutusu from '../../../public/indikatorler/durum_kutusu.html?raw';
       </tr>
       <tr>
         <td>Ekrana bakamıyorsam</td>
-        <td>On alarm koşulu betiklerde hazır: always-in dönüşü (iki yön), ikinci giriş,
+        <td>On üç alarm koşulu iki betikte hazır — fiyat panelinde on: always-in dönüşü (iki yön), ikinci giriş,
         bant kenarı, başarısız dönüş, kırılım modu kalıbı, iki barlık dönüş, gap bar
-        eşiği, ters tarafta iki kapanış, beş bar iptal; alt panelde bant rejimine
-        geçiş/çıkış ve barbwire.</td>
+        eşiği, ters tarafta iki kapanış, beş bar iptal; alt panelde üç: bant rejimine
+        geçiş, bant rejiminden çıkış ve barbwire.</td>
       </tr>
       <tr>
         <td>Baştan bilinmesi gereken</td>
@@ -163,7 +163,8 @@ Ortalamanın rengi yön filtresinin yasağıdır: mavi "yalnız al", claret "yal
 serbest. Kalite etiketi (n/4) kapanmış dönüş barının kaç ideal niteliği taşıdığını yazar ve
 rengi always-in ile hizayı: hizalıysa renkli, karşıysa gri. Kurulum işaretleri dersin
 paketleridir — H2/L2 ikinci giriş, ok başarısız dönüş girişi, "bant" bant kenarı. Son
-barın sağında dört çizgi o barın öncelikli paketinin giriş, stop, 1R ve 2R seviyeleridir.
+barın sağındaki çizgiler o barın öncelikli paketinin seviyeleridir: giriş, stop, 1R ve 2R; kırılım
+modunda yalnız iki çizgi, alış stop ve satış stop (yön bilinmez, hedef yok).
 
 **Alt panel üç çizgi çizer ve göreli kipte bunlar ölçünün kendisi değil sırasıdır.**
 
@@ -208,7 +209,8 @@ kurulum. "Doğru kurulumu yanlış günde almak" dersin en pahalı hatasıdır v
    "✓ yönle hizalı" ya da "⚠ yöne KARŞI". Karşı ise skor kaç olursa olsun cevap hayırdır.
    Aynı barda birden çok paket geçerliyse öncelik: kırılım modu → bant kenarı → ikinci
    giriş → başarısız dönüş → dönüş barı.
-5. **Emir.** Kutunun "Emir" satırı ve son barın dört çizgisi: giriş · stop · 1R · 2R.
+5. **Emir.** Kutunun "Emir" satırı ve son barın çizgileri: giriş · stop · 1R · 2R (kırılım modunda
+   alış stop · satış stop).
    Sinyal barı kapanmadan emir yok.
 
 Dört adımın hepsi aynı yöne baktığında indikatörün işi biter. Hedefin tutup tutmayacağı,
@@ -262,16 +264,18 @@ Süzgeçsiz hâli barların yarısında ateşler — dersin "her barın ötesine
 yasağı — o yüzden karşı barın kalitesi etiketlenecek asgari kaliteyi geçmelidir.
 
 **Bant kenarı.** Ders bantta ne "hiç işlem" ne "körlemesine fade" der; kararı bandın
-yüksekliğine, fiyatın bant içindeki konumuna ve emir tipine bağlar. Paket dört şartı
+yüksekliğine, fiyatın bant içindeki konumuna ve emir tipine bağlar. Paket beş şartı
 kendisi sorar: fiyat bandın alt (alım) ya da üst (satım) üçte birinde, bant en az stop'un
 üç katı (dar bant değil), 1R hedef bandın içinde sığıyor, penceredeki kapanışların yarıdan
-fazlası ortalamanın yanlış tarafında değil. Beşincisi rejimdir ve onu alt panel söyler:
+fazlası ortalamanın yanlış tarafında değil, ve yön filtresi serbest (son on barın yedisi
+ortalamanın bir yanındaysa bu bir bant değil trenddir). Altıncısı rejimdir ve onu alt panel
+söyler:
 alt panel `BANT` demiyorsa bant kenarı işareti bir işlem değildir.
 
 ## 4 · Emir mekaniği ve yönetim
 
 Ders emri bir seviye olarak değil, bir **paket** olarak verir ve paket her kurulumda aynıdır.
-İndikatörün çizdiği dört çizgi o paketin dört sayısıdır; aşağıdaki kurallar da dersin
+İndikatörün son barda çizdiği çizgiler o paketin sayılarıdır (kırılım modunda yalnız iki stop); aşağıdaki kurallar da dersin
 sayılarıdır, indikatörün seçimi değil.
 
 <GrafikEmbed src="/indikatorler/08_islem_mekanigi.html" baslik="Emir mekaniği aynı bar üzerinde: giriş, stop, 1R ve 2R sinyal barının kendi sayılarından" no="08" kaynak="BIST 100 · 1 saatlik" />
@@ -428,7 +432,7 @@ gösterir ki okur onu kendisi eklesin.
 |---|---|---|
 | Fiyat | Always-in long'a döndü · short'a döndü | üçgenin basıldığı bar |
 | Fiyat | İkinci giriş (H2/L2) | sayaç ikinci bacağı kapattığında; paket seviyeleri kutuda |
-| Fiyat | Bant kenarı | bandın uç üçte birinde dönüş barı, dört mekanik şart tutuyor — alt panel BANT demiyorsa alınmaz |
+| Fiyat | Bant kenarı | bandın uç üçte birinde dönüş barı, beş mekanik şart tutuyor — alt panel BANT demiyorsa alınmaz |
 | Fiyat | Başarısız dönüş | trend içindeki karşı dönüş barı, kalite eşiğin üstünde |
 | Fiyat | Kırılım modu kalıbı | ii · iii · ioi · oio · oo — iki tarafa da emir |
 | Fiyat | İki barlık dönüş | giriş her iki barın ötesine konur |
@@ -486,15 +490,15 @@ hizalı olduğu hâlde **rejim** itiraz ediyor.
 | ② Always-in | `LONG` · `SHORT` · `henüz belirsiz` | O gün işlem yapılmasına izin verilen tek yön. `henüz belirsiz`, yön katmanının evet demediği anlamına gelir |
 | ③ Yön filtresi | `yalnız AL — short arama` · `yalnız SAT — long arama` · `serbest` | Ortalamanın koyduğu yasak. Bir sinyal değil, bir kapı: kapalı yönde ne etiket ne paket basılır |
 | ④ Kurulum | `kırılım modu · ii` · `bant kenarı · alış/satış` · `ikinci giriş · H2/L2` · `başarısız dönüş · alış/satış` · `dönüş barı · alış/satış n/4`; arkasında `✓ yönle hizalı` ya da `⚠ yöne KARŞI`; paket yoksa `dönüş barı n/4 … (eşiğin altında)` ya da `kurulum yok` | Öncelik sırasıyla **tek** paket. `eşiğin altında`: dönüş barı var ama kalitesi etiket eşiğini geçmiyor, paket kurulmaz. Kırılım modunda hiza yazılmaz — yön bilinmez |
-| Emir | `giriş · stop · 1R · 2R` ya da kırılım modunda `alış stop · satış stop`; paket yoksa `—` | Paketin dört seviyesi, enstrümanın tick basamağıyla. Son barın sağındaki dört çizgi aynı sayılardır |
-| Sınıf | `güçlü trend` · `trend` · `doji` · `ara`, arkasında `· gövde güçlü`, `· tıraşlı tepe` · `· tıraşlı dip` · `· marubozu` | Barın gövde/menzil oranından gelen sınıfı. Bar boyaması öntanımlıda yalnız güçlü trend barını renklendirir; "trend barı mı" sorusunun cevabı bu satırda |
+| Emir | `giriş · stop · 1R · 2R` ya da kırılım modunda `alış stop · satış stop`; paket yoksa `—` | Paketin dört seviyesi, enstrümanın tick basamağıyla. Son barın sağındaki çizgiler aynı sayılardır; kırılım modunda yalnız iki stop çizgisi |
+| Sınıf | `güçlü trend` · `trend` · `doji` · `ara`, arkasında `· gövde güçlü`, `· tıraşlı tepe` · `· tıraşlı dip` · `· marubozu`, `· gövde boşluğu ↑` / `↓` | Barın gövde/menzil oranından gelen sınıfı; gövde boşluğu, açılışın önceki barın kapanışının ötesinde olması (kuyruklar örtüşebilir). Bar boyaması öntanımlıda yalnız güçlü trend barını renklendirir; "trend barı mı" sorusunun cevabı bu satırda |
 | Kapanışın yeri | `%0` ile `%100` arası | Kapanışın barın menzili içindeki yeri. %50 berabere; ders bunu gövde oranından bile bilgi verici sayar |
 | Boy · mikro | `küçük bar` · `tükeniş barı` · `alışılmadık büyük` · `—`, ardından `mikro çift dip` · `mikro çift tepe` · `—` | Barın boyu ve önceki barla dip/tepe eşleşmesi |
 | Orta nokta ölçütü | `boğa geçti` · `ayı geçti` · `—` | Kapanış önceki barın orta noktasını aştı mı — dersin ikinci dönüş ölçütü |
 | Çevirme (kap·uç) | iki sayı, ardından `sıradan` · `ara` · `rejim iddiası` · `çok güçlü çevirme` | Bu barın kaç önceki kapanışı ve ucu aştığı. Bir güç ölçüsüdür, hüküm değil (Ek D). Sayılar 100'de kapaklanır |
 | Trendleşme k·z·d | üç işaretli sayı, arkasında `⚑` | Kapanış, zirve ve dip dizilerinin uzunluğu; eksi işaret aşağı yön demektir. `⚑` üçünün birden trendleştiğini söyler |
 | Ortalama | `gap n`, arkasında `⚑` ve `· TERS İKİ KAPANIŞ` | Fiyatın kaç bardır ortalamaya dokunmadığı; `⚑` eşiğin aşıldığını, `TERS İKİ KAPANIŞ` trendin karakterinin değişmiş olabileceğini söyler |
-| Sayım · bant konumu | `H1`–`H4` · `L1`–`L4` · `—`, ardından `bantta %n` ve `mikro kanal n` | Geri çekilme sayacının o anki değeri (dörtte kapaklı), kapanışın son 70 barın bandı içindeki yeri (%0 taban, %100 tavan — bant kenarı paketi alt üçte biri ve üst üçte biri sorar), mikro kanalın uzunluğu |
+| Sayım · bant konumu | `H0`–`H4` · `L0`–`L4` · `—`, ardından `bantta %n` ve `mikro kanal n` | Geri çekilme sayacının o anki değeri (dörtte kapaklı; `H0`/`L0`: yön kurulu ama geri çekilme henüz sayılmadı ya da yeni trend ucu sayacı sıfırladı), kapanışın son 70 barın bandı içindeki yeri (%0 taban, %100 tavan — bant kenarı paketi alt üçte biri ve üst üçte biri sorar), mikro kanalın uzunluğu |
 | Kalıp · uyarı | `ii` · `iii` · `ioi` · `oio` · `oo` · `yalnız gövdeler ii`, `iki barlık dönüş (boğa/ayı)`, `n bardır boğa/ayı kapanışı yok`; uyarı sütununda `… dönüşü arayışı İPTAL` | Bu bölüm yalnız söyleyecek bir şey varken çıkar; görünmemesi kusur değildir. "İPTAL" bir pozisyon değil bir arayış kapatır |
 
 **Alt panel.** İlk iki satır hüküm, kalanı gerekçe.
@@ -502,7 +506,7 @@ hizalı olduğu hâlde **rejim** itiraz ediyor.
 | Satır | Ne diyebilir | Ne anlama gelir |
 |---|---|---|
 | ① REJİM | `BANT` · `ara` · `trend` · `—`, yanında `n/5 g` (göreli) ya da `n/5 d` (ders) | Kaç bant işaretinin tuttuğu. Dört ve üstü `BANT`, bir ve altı `trend`, arası `ara`. `—` göreli tarihçe henüz dolmadı demektir; 280 bar |
-| (hükmün altındaki satır) | `bar sayımına dayalı stop girişi yok · uçlarda fade` · `geri çekilme kurulumları geçerli · fade edilmez` · `pano karar vermez · hangi tarafa yakın olduğunu söyler` | O rejimde ne yapılacağı. `Özet` kipinde de kalır |
+| (hükmün altındaki satır) | `uçlarda bant kenarı · ortada emir yok · H2/L2 yalnız uçta` · `geri çekilme kurulumları (H2/L2, dönüş barı) · fade edilmez` · `pano karar vermez · hangi tarafa yakın olduğunu söyler`; tarihçe dolmadan `tarihçe doluyor · 280 bar gerekir` | O rejimde ne yapılacağı. `Özet` kipinde de kalır |
 | Beş ölçü satırı | ortada ölçülen değer ve göreli kipte yanında `· sıra` (0–1), sağda `✓` ya da `—` | `✓` o ölçünün bant tarafında olması: göreli kipte sıra ≥ 0,60, ders kipinde sabit eşik. Soldaki parantez içi sayı eşik değil, dersin Şekil 30'da ölçtüğü referans bant günü |
 | Barbwire | ortada bir oran, sağda `VAR ⚠` ya da `—` | Sayıya girmez: rejim ölçüsü değil tekil bir bar kalıbı. `VAR ⚠` gördüğünüzde o barda hiçbir paket okunmaz |
 
@@ -565,7 +569,8 @@ etiket bu yüzden `n/4` yazar.
 Eşik **%75** ve aşıldığında ders tek bar değil **iki barlık dönüş** okumayı söyler; etiketin ipucunda
 örtüşme yüzdesi ve gerektiğinde bu uyarı yazar. **Orta nokta ölçütü** ayrı bir şey söyler: kapanış
 önceki barın orta noktasının ötesinde mi — dersin Şekil 15'inin iki panelini ayıran ölçüt. Biri barın
-kabul/ret sınırı, öbürü kurulumun biçimi; kutu ikisini ayrı satırda gösterir.
+kabul/ret sınırı, öbürü kurulumun biçimi; orta nokta ölçütü kutuda ayrı satırda durur, örtüşme yüzdesi
+ve iki barlık dönüş uyarısı kalite etiketinin ipucunda yazar.
 
 <GrafikEmbed src="/indikatorler/10_bar_sozlugu.html" baslik="Bar sözlüğü: dört sınıf tek pencerede, ve aynı sınıfın ayırt edemediği kapanış yeri" no="10" kaynak="13 seri · 4.574 bar" genis />
 
@@ -896,7 +901,7 @@ karşılaştırılır; bir tanesi bile tutmazsa sınama düşer. **③ Ölçü k
 ölçü Pine'a hiç taşınmadan eşik kapısını geçer; bu yüzden Python'daki her ölçünün Pine'da bir karşılığı
 olduğu ayrıca sınanır. **④ Kuralın ilan ettiği hâller.** Always-in'in üç parçası, takip barının yokluk
 ölçütü, kalite tavanının dört olması, dersin bacak sayımı, göreli sıranın Pine sözleşmesi, paketlerin
-seviyeleri ve bant kenarının dört şartı — her biri kendi sentetik barlarıyla ayrı ayrı sınanır.
+seviyeleri ve bant kenarının beş şartı — her biri kendi sentetik barlarıyla ayrı ayrı sınanır.
 
 <KodKutusu kod={kodPython} dosya="/indikatorler/brooks_referans.py" baslik="Python replikasyonu · brooks_referans.py" />
 
@@ -933,7 +938,7 @@ disiplindir — hiçbiri kapanmış bar dizisinden hesaplanamaz.
 | **1 · Bar okuma** | **geniş** | Sınıf, kuyruk, tıraşlı, kapanışın yeri, çevirme sayaçları, trendleşme, göreli gövde, gövde boşluğu, iç/dış bar, ii·iii·ioi·oio·oo. Dışarıda: bar içi okuma, bağlam hükümleri |
 | **2 · Sinyal barı** | **geniş** | Asgari koşul, dört canlı nitelik, orta nokta ölçütü, %75 örtüşme, iki barlık dönüş, küçük/tükeniş barı, mikro çift, standart emir paketi, başarısız dönüş paketi, kırılım modu paketi. Dışarıda: beşinci nitelik |
 | 3 · Trend, spike-kanal, çizgiler | **dar** | Yalnız mikro kanal. Dışarıda: trend ve kanal çizgisi (çizim bir yorumdur), spike/kanal faz ayrımı, 24 maddelik güçlü trend listesi (ders puanlamayı adıyla yasaklar) |
-| **4 · Yatay bant, barbwire** | **orta** | Tanı listesinin ölçülebilir beş maddesi (göreli ve ders kipi), barbwire'ın sayısal ölçütü, bant kenarı paketinin dört mekanik şartı. Dışarıda: on dört gözle okunan madde, bandın seviyeleri, üçgen ailesi |
+| **4 · Yatay bant, barbwire** | **orta** | Tanı listesinin ölçülebilir beş maddesi (göreli ve ders kipi), barbwire'ın sayısal ölçütü, bant kenarı paketinin beş mekanik şartı. Dışarıda: on dört gözle okunan madde, bandın seviyeleri, üçgen ailesi |
 | 5 · Kırılım ve başarısız kırılım | — | Güç ve başarısızlık listeleri ağırlıklı olarak bağlam |
 | **6 · Geri çekilme ve bar sayma** | **orta** | H1–H4 / L1–L4 dersin bacak sayımıyla, ikinci giriş paketi. Dışarıda: trend çizgisi kırılımı şartı, ABC düzeltmesi, kama, çift dip bayrağı |
 | **7 · Hareketli ortalama** | **geniş** | 20 barlık EMA, gap bar sayacı, yön filtresi, ters iki kapanış |

@@ -331,8 +331,11 @@ stopAyi   = high + tick
 riskPaket = girisBoga - stopBoga
 
 // 2.9 + 6.4 · ikinci giriş: always-in yönünde H2 / L2 barı
-ikinciBoga = aiLong  and not na(hEtiket) and hEtiket == "H2"
-ikinciAyi  = aiShort and not na(lEtiket) and lEtiket == "L2"
+// Yön yasağı burada da sorulur: dönüş barı ve başarısız dönüş paketleri yasağa
+// bakarken ikinci giriş bakmıyordu — kutu "kapalı yönde paket basılmaz" der,
+// sayfa da; backtest'in tam indikatörü yasağı zaten bütün paketlere uygular.
+ikinciBoga = aiLong  and not na(hEtiket) and hEtiket == "H2" and not yalnizSat
+ikinciAyi  = aiShort and not na(lEtiket) and lEtiket == "L2" and not yalnizAl
 
 // 2.7 · başarısız dönüş: trend içindeki KARŞI dönüş barının ters tarafından giriş.
 //  Karşı barın kalitesi asgariKalite'yi geçmeli: süzgeçsiz hâli barların
@@ -791,7 +794,8 @@ if barstate.islast and kutuKip != "Kapalı"
         // ── BU BAR ───────────────────────────────────────────────────────
         f_baslik(6, "BU BAR", "Barın kendi ölçüleri. Kapanışın yeri gövde oranından bile bilgi vericidir; %50 berabere.")
         f_satir(7, "", "Sınıf", (gucluTrendBari ? "güçlü trend" : trendBari ? "trend" : doji ? "doji" : "ara")
-           + (govdeGuclu ? " · gövde güçlü" : "") + (tirasAd != "—" ? " · " + tirasAd : ""), cYaziAna)
+           + (govdeGuclu ? " · gövde güçlü" : "") + (tirasAd != "—" ? " · " + tirasAd : "")
+           + (govdeBosluk > 0 ? " · gövde boşluğu ↑" : govdeBosluk < 0 ? " · gövde boşluğu ↓" : ""), cYaziAna)
         f_satir(8, "", "Kapanışın yeri", "%" + str.tostring(math.round(kapanisYeri * 100)),
            kapanisYeri > 0.5 ? cYaziMavi : kapanisYeri < 0.5 ? cYaziKzl : cYaziGri)
         f_satir(9, "", "Boy · mikro", barBoyuAd + " · " + mikroCift, cYaziAna)
