@@ -1,0 +1,85 @@
+---
+/* ─────────────────────────────────────────────────────────────
+   Brooks indikatörünün backtest tablosu — SAYILAR ÖLÇÜM DOSYASINDAN.
+
+   İki ölçüm var ve ikisi de depoda durur: 1 sa / 4 sa / günlük seriler
+   (site/src/data/brooks_backtest.json, backtest aracının çıktısı) ve
+   Yahoo 5–15 dakikalık FX serileri (brooks_backtest_5dk.json, bulut
+   koşusunun kaydı). Tablo o dosyalardan derleme zamanında kurulur; sayfaya
+   elle sayı yazılmaz — elle yazılan sayı bir sonraki ölçümde sessizce
+   eskir. Biçim tek sözleşmeden (lib/bicim): ondalık virgül, eksi U+2212.
+   ───────────────────────────────────────────────────────────── */
+import yerel from '../data/brooks_backtest.json';
+import bulut from '../data/brooks_backtest_5dk.json';
+import { sayi } from '../lib/bicim';
+
+interface Props {
+  veri: 'yerel' | 'bulut';
+  hedef?: 1 | 2;
+  yonetim?: 'ders' | 'sabit';
+  /** Yalnız bu yapılandırmalar (ad başlangıcı); boşsa hepsi. */
+  sec?: string[];
+}
+const { veri, hedef = 2, yonetim = 'ders', sec = [] } = Astro.props;
+
+type Satir = Record<string, any>;
+const kaynak: Satir[] = veri === 'yerel' ? (yerel as any).yapilandirma : (bulut as any).yapilandirma;
+const satirlar = kaynak.filter((y) => {
+  const yon = veri === 'yerel' ? (y.yonetim.basabas ? 'ders' : 'sabit') : y.yonetim;
+  if (y.hedef_R !== hedef || yon !== yonetim) return false;
+  return sec.length === 0 || sec.some((s) => String(y.ad).startsWith(s));
+});
+const r = (v: number | null | undefined, o = 2) => (v === null || v === undefined ? '—' : sayi(v, o, true));
+const p = (v: number | null | undefined) => (v === null || v === undefined ? '—' : sayi(100 * v, 1));
+const ca = (y: Satir) => (y.ca_alt === null || y.ca_alt === undefined ? '—' : `[${r(y.ca_alt)}, ${r(y.ca_ust)}]`);
+const rast = (y: Satir) => (veri === 'yerel' ? y.rastgele?.yuzdelik : y.rastgele_yuzdelik);
+const ilk = (y: Satir) => (veri === 'yerel' ? y.ilk_yari?.ort_R : y.ilk_yari_ort_R);
+const iki = (y: Satir) => (veri === 'yerel' ? y.ikinci_yari?.ort_R : y.ikinci_yari_ort_R);
+const az = (y: Satir) => y.n < 10;
+---
+
+<div class="bt-kap">
+  <table class="bt">
+    <thead>
+      <tr>
+        <th>Yapılandırma</th>
+        <th>N</th>
+        <th>Kazanma</th>
+        <th>Ort. R</th>
+        <th>%95 aralık</th>
+        <th>Kâr f.</th>
+        <th>Rastgele yüzdelik</th>
+        <th>İlk / ikinci yarı</th>
+        {veri === 'bulut' && <th>Net 0,5 pip</th>}
+        {veri === 'bulut' && <th>Net 1 pip</th>}
+        {veri === 'bulut' && <th>Net 2 pip</th>}
+      </tr>
+    </thead>
+    <tbody>
+      {satirlar.map((y) => (
+        <tr class={az(y) ? 'az' : ''}>
+          <td>{y.ad}</td>
+          <td>{sayi(y.n, 0)}</td>
+          <td>{az(y) ? '—' : '%' + p(y.kazanma)}</td>
+          <td>{az(y) ? '—' : r(y.ort_R)}</td>
+          <td>{az(y) ? 'N < 10' : ca(y)}</td>
+          <td>{az(y) || y.kar_faktoru === null ? '—' : sayi(y.kar_faktoru, 2)}</td>
+          <td>{az(y) ? '—' : sayi(rast(y), 0)}</td>
+          <td>{az(y) ? '—' : `${r(ilk(y))} / ${r(iki(y))}`}</td>
+          {veri === 'bulut' && <td>{r(y.net_R_maliyet_pip['0.5'].ort)}</td>}
+          {veri === 'bulut' && <td>{r(y.net_R_maliyet_pip['1.0'].ort)}</td>}
+          {veri === 'bulut' && <td>{r(y.net_R_maliyet_pip['2.0'].ort)}</td>}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .bt-kap { overflow-x: auto; margin: 1.25rem 0; }
+  .bt { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.78rem; }
+  .bt th, .bt td { padding: 0.32rem 0.5rem; border-bottom: 1px solid var(--ink-30, #d8d4cc); text-align: right; white-space: nowrap; }
+  .bt th:first-child, .bt td:first-child { text-align: left; white-space: normal; min-width: 14rem; }
+  .bt thead th { font-weight: 600; color: var(--ink-60, #6f6f6f); border-bottom-width: 2px; }
+  .bt tr.az td { color: var(--ink-60, #6f6f6f); }
+</style>

@@ -1247,12 +1247,18 @@ class Kurulumlar:
             yok" — 1R hedef bandın içinde kalmalı: giriş + risk ≤ tavan.
           · HO SÜZGECİ (4.3 s.1992–2004): penceredeki kapanışların yarıdan
             fazlası ortalamanın ALTINDAYSA alım yok, üstündeyse satım yok.
+          · YÖN SÜZGECİ SERBEST (7.5 · 4.3): son 10 barın 7'si ortalamanın
+            bir yanındaysa bu bir bant değil trenddir — dersin rejim için
+            verdiği tek mekanik vekil. Ölçüldü (15.09.2026, BIST 100 1 sa):
+            bu şart olmadan yükselen bir trendde fiyat hep bandın üst üçte
+            birindeydi ve pencerenin dokuz barı "bant kenarı" işareti
+            taşıyordu — trendde fade paketi.
         Sinyal barı dönüş barıdır; ders bant uçlarında gövde rengini süzgeç
         saymaz (4.6 s.2154), o yüzden kalite şartı yok. Paket standart
-        (uç ± tick). Rejimin BANT olup olmadığını bu fonksiyon SORMAZ —
-        ayar katmanı sorar; burada yalnız konum, yükseklik, sığma ve HO."""
+        (uç ± tick). Alt panelin BANT hükmünü bu fonksiyon SORMAZ — ayar
+        katmanı sorar; burada konum, yükseklik, sığma, HO ve yön süzgeci."""
         w = int(self.rp.pencere)
-        if i + 1 < w or self.fp.ema[i] is None:
+        if i + 1 < w or self.fp.ema[i] is None or self.fp.yon_filtresi(i) != "serbest":
             return None
         s, t = self.s, self.tick
         pen = range(i - w + 1, i + 1)

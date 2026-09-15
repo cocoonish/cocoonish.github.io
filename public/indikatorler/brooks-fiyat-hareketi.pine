@@ -347,9 +347,13 @@ bantTaban  = ta.lowest(low, pencere)
 bantYuk    = bantTavan - bantTaban
 bantKonum  = bantYuk > 0 ? (close - bantTaban) / bantYuk : 0.5
 emaAltiPay = math.sum(close < ema ? 1 : 0, pencere) / pencere
-bantBoga = bantYuk > 0 and bantKonum <= 1.0 / 3 and bogaDonus and emaAltiPay <= 0.5 and
+//  Yön süzgeci SERBEST olmalı (7.5): son 10 barın 7'si ortalamanın bir
+//  yanındaysa bu bir bant değil trenddir — ölçüldü, şart olmadan yükselen
+//  trendde her bar "bant" işareti taşıyordu (fiyat hep üst üçte birde).
+bantSerbest = not yalnizAl and not yalnizSat
+bantBoga = bantSerbest and bantYuk > 0 and bantKonum <= 1.0 / 3 and bogaDonus and emaAltiPay <= 0.5 and
    bantYuk >= 3 * riskPaket and girisBoga + riskPaket <= bantTavan
-bantAyi  = bantYuk > 0 and bantKonum >= 2.0 / 3 and ayiDonus and (1 - emaAltiPay) <= 0.5 and
+bantAyi  = bantSerbest and bantYuk > 0 and bantKonum >= 2.0 / 3 and ayiDonus and (1 - emaAltiPay) <= 0.5 and
    bantYuk >= 3 * riskPaket and girisAyi - riskPaket >= bantTaban
 
 
