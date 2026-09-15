@@ -29,16 +29,19 @@ import durumKutusu from '../../../public/indikatorler/durum_kutusu.html?raw';
   <span class="etiket">Kısa yol — almak ya da satmak için ekranda neye bakılır</span>
 
   <p class="tez">Bu indikatör "al" ya da "sat" demez. Üç ayrı katmana ayrı ayrı soru
-  sorar ve <b>her biri tek başına veto edebilir</b>; işlem ancak üçü de aynı yöne
-  baktığında konuşulur. Sıra dersin dayattığı sıradır ve tersine çevrilemez.
-  <b>Önce alt panel:</b> hükmü tek sözcüktür — `BANT` diyorsa o pencerede geri çekilme
-  ve bar sayımı kurulumları geçersizdir, gerisini okumaya gerek yok. <b>Sonra fiyat
+  sorar — ① rejim, yön (② always-in ve ③ ortalamanın yasağı) ve ④ kurulum — ve
+  <b>her biri tek başına veto edebilir</b>; işlem ancak üçü de aynı yöne baktığında
+  konuşulur. Sıra dersin dayattığı sıradır ve tersine çevrilemez.
+  <b>Önce alt panel:</b> hükmü tek sözcüktür — `BANT` diyorsa o pencerede bar sayımına
+  dayalı stop girişleri geçersizdir; arayış bandın <b>uçlarındaki</b> fade'e döner ve
+  bandın <b>içinde</b> dönüş barı aranmaz. <b>Sonra fiyat
   panelinin köşesindeki kutu:</b> ② satırı (<i>always-in</i>) o gün işlem yapmanıza
   izin verilen <b>tek yönü</b> söyler, ③ satırı ortalamanın koyduğu yasağı, ④ satırı
   ise elinizde bir bar olup olmadığını ve o barın yönle hizalı olup olmadığını.
   ④'te "yönle hizasız" yazıyorsa skor kaç olursa olsun cevap hayırdır. Üçü de evet
-  dediğinde indikatörün işi biter: giriş sinyal barının ucunun bir tick ötesi, stop
-  karşı ucun bir tick ötesi, hedef en az bir bar boyu. Kalan her şey — hedefin
+  dediğinde indikatörün işi biter: giriş <b>kapanmış</b> sinyal barının ucunun bir
+  tick ötesi, stop karşı ucun bir tick ötesi (küçük ya da doji bir sinyal barında
+  ~3 tick), hedef en az bir bar boyu. Kalan her şey — hedefin
   tutup tutmayacağı, pozisyonun büyüklüğü, o günkü bağlam — indikatörün değil
   sizin işinizdir.</p>
 
@@ -47,22 +50,28 @@ import durumKutusu from '../../../public/indikatorler/durum_kutusu.html?raw';
       <tr>
         <td>Sırayla neye bakarım</td>
         <td><b>1.</b> Alt panelin en üst satırı: `BANT` mı, `ara` mı, `trend` mi.
-        <b>2.</b> Fiyat kutusunun ② satırı: `LONG` mu `SHORT` mu. <b>3.</b> ③ satırı:
-        bir yön yasaklanmış mı. <b>4.</b> ④ satırı: kurulum var mı, kaç bölü dört ve
-        yönle hizalı mı. Dördü aynı yöne bakmıyorsa işlem yok.</td>
+        <b>2.</b> Fiyat kutusunun ② satırı: `LONG` mu, `SHORT` mü, yoksa
+        `henüz belirsiz` mi — belirsizse yön katmanı evet demiyor demektir.
+        <b>3.</b> ③ satırı: bir yön yasaklanmış mı. <b>4.</b> ④ satırı: kurulum var
+        mı, kaç bölü dört ve yönle hizalı mı. Dört adımın hepsi aynı yöne bakmıyorsa
+        işlem yok.</td>
       </tr>
       <tr>
         <td>Ne zaman almayı düşünürüm</td>
         <td>Alt panel `BANT` demiyor, ② satırı `LONG`, ③ satırı long'u yasaklamıyor ve
-        ④ satırında boğa kurulumu "✓ yönle hizalı" yazıyorsa. Satış bunun tam
-        aynasıdır. Dördünün birden tuttuğu bar seyrektir ve öyle olması beklenir.</td>
+        ④ satırında <b>3/4 ya da 4/4</b> boğa kurulumu "✓ yönle hizalı" yazıyorsa.
+        Satış bunun tam aynasıdır. `1/4` bir kurulum değildir; barın üstüne etiket de
+        varsayılan ayarda ancak 2'den itibaren basılır. Dördünün birden tuttuğu bar
+        sayılmadı — ölçülen en yakın şey on adet 4/4 sinyal barının yalnız ikisinin
+        yönle hizalı çıkması.</td>
       </tr>
       <tr>
         <td>Ne zaman hiçbir şey yapmam</td>
-        <td>Üç ayrı "hayır" var ve üçü de tek başına yeter: alt panel `BANT` diyorsa
-        (yanlış gün), ④ satırı "⚠ yönle hizasız" diyorsa (yanlış yön), ya da alt
-        panelin son satırı barbwire işaretliyorsa (dar bantta dönüş barının ters
-        çevirecek bir şeyi yoktur — kalite skoru orada okunmaz).</td>
+        <td>Dört ayrı "hayır" var ve dördü de tek başına yeter: alt panel `BANT`
+        diyorsa bar sayımına dayalı giriş yapılmaz (arayış bandın uçlarındaki fade'e
+        döner), ③ satırı o yönü yasaklıyorsa, ④ satırı "⚠ yönle hizasız" diyorsa,
+        ya da alt panelin son satırı barbwire işaretliyorsa — dar bantta dönüş
+        barının ters çevirecek bir şeyi yoktur, kalite skoru orada okunmaz.</td>
       </tr>
       <tr>
         <td>Ne sıklıkta konuşur</td>
@@ -79,15 +88,27 @@ import durumKutusu from '../../../public/indikatorler/durum_kutusu.html?raw';
         yüksek çıkması işlem gerekçesi değildir.</td>
       </tr>
       <tr>
+        <td>Ekrana bakamıyorsam</td>
+        <td>Hüküm değişimi alarma bağlanabilir: alt panelde "bant rejimine geçiş",
+        "bant rejiminden çıkış" ve "barbwire"; fiyat panelinde "always-in long'a
+        döndü" ve "short'a döndü" koşulları betiklerde hazır durur. Üç eğri
+        kımıldamadan hükmün değiştiği hâllerde tek pratik çözüm budur.</td>
+      </tr>
+      <tr>
         <td>Neyi söylemez</td>
-        <td>İsabet, getiri, başarı oranı, hedef seviyesi, pozisyon büyüklüğü.
+        <td>İsabet, getiri, başarı oranı, pozisyon büyüklüğü. Hedefi de bir seviye
+        olarak vermez: yalnız dersin kuralını taşır (en az bir bar boyu); mıknatıs ve
+        ölçülmüş hareket seviyeleri kapsam dışıdır.
         Bu sayfada hiçbiri yok ve ölçülmedi; ölçülen tek şey kuralların ne sıklıkta
-        ateşlediği. Sayfadaki tek tam işlem örneğinde üç katman da "evet" dedi ve
-        işlem stop oldu — o örnek bilerek seçildi.</td>
+        ateşlediği. Sayfadaki tek tam işlem örneğinde hiçbir katman itiraz etmedi
+        (rejim `ara`, yani karar vermiyor; yön ve kurulum hizalı) ve işlem stop
+        oldu — o örnek bilerek seçildi.</td>
       </tr>
       <tr>
         <td>Baştan bilinmesi gereken</td>
-        <td>Eşikler dersin 5 dakikalık barlarında kalibre edilmiştir; buradaki
+        <td><b>Kutu oluşmakta olan barı da yazar:</b> hüküm, yön ve skor bar
+        kapanana kadar her fiyat hareketinde değişebilir. Karar kapanmış bardan
+        okunur.<br/><br/>Eşikler dersin 5 dakikalık barlarında kalibre edilmiştir; buradaki
         örnekler saatlik ve günlük barlardan. Kurallar ölçekten bağımsız kurulmuştur
         ama kalibrasyon ölçeği bu değildir. Ayrıca iki panelin ikisi de grafikte
         olmadan bu sıra kurulamaz.</td>
@@ -99,7 +120,7 @@ import durumKutusu from '../../../public/indikatorler/durum_kutusu.html?raw';
     <li><b>416 bar</b><span>bir yön değişimi başına — bekleyiş normaldir</span></li>
     <li><b>%13,7 · %78,6 · %7,7</b><span>alt panel: bant · ara · trend payı</span></li>
     <li><b>10 · 2</b><span>4/4 sinyal barı sayısı · bunların yönle hizalı olanı</span></li>
-    <li><b>160</b><span>kurulum doluyken yön yasağının kapattığı sinyal</span></li>
+    <li><b>160</b><span>kalite 3–4 kurulum varken yön yasağının kapattığı sinyal</span></li>
     <li><b>%12,4</b><span>barbwire payı — sekiz barda bir, skor orada okunmaz</span></li>
     <li><b>ölçülmedi</b><span>isabet, getiri ve başarı oranı — sayfada yok</span></li>
   </ul>
@@ -175,16 +196,18 @@ yanlış günde almaktır.
 <GrafikEmbed src="/indikatorler/02_alt_panel_gorunumu.html" baslik="Alt panel ekranda ne çizer: üç çizgi, üç noktalı eşik, grileşen zemin — ve hükmü çeviren iki görünmez ölçü" no="02" kaynak="13 seri · 4.574 bar" genis />
 
 **Ekranda ne var.** Panel 0 ile 1 arasında bir ölçekte üç eğri çizer; üçü de birer
-orandır, yani fiyat birimi taşımazlar.
+orandır, yani fiyat birimi taşımazlar. Üçü **aynı pencereyi** kullanır: ayarlardaki
+ölçüm penceresi varsayılan olarak **70 bardır** (dersin Şekil 30'undaki bant 70 bar
+sürdüğü için) ve 10 ile 300 arasında değiştirilebilir.
 
 | Gördüğünüz | Nedir | Nasıl okunur |
 |---|---|---|
-| Kızıl eğri | Örtüşme oranı — son 70 barın kaçı bir öncekiyle yarıdan fazla örtüştü | Noktalı eşiğin **üstü** bant sayılır |
+| Kızıl eğri | Örtüşme oranı — son 70 barın kaçı, bir önceki barın menzilinin yarısı kadar ya da daha fazlasıyla örtüştü | Noktalı eşiğin **üstü** bant sayılır |
 | Mavi eğri | Doji oranı — pencerede gövdesi menzilinin onda birini geçmeyen barların payı | Noktalı eşiğin **üstü** bant sayılır |
-| Koyu eğri | Net / aralık — pencerede gerçekten gidilen yolun kat edilen mesafeye oranı | Noktalı eşiğin **altı** bant sayılır |
+| Koyu eğri | Net / aralık — pencerenin ilk ve son kapanışı arasındaki net yer değiştirmenin, aynı penceredeki en yüksek–en düşük aralığına oranı | Noktalı eşiğin **altı** bant sayılır |
 | Noktalı çizgiler | Üç eşik | Yönleri aynı değil; yukarıdaki sütuna bakın |
 | Grileşen zemin | Bant işaretlerinin sayısı | Koyu gri dört ve üstü, soluk gri üç |
-| Üstteki çarpılar | Barbwire | Yüksekliği bir ölçü değildir; yalnız "var" der |
+| Üstteki çarpılar | Barbwire | Yüksekliği bir ölçü değildir; üçlünün **üçüncü** barına düşer |
 
 **Birinci tuzak: üç çizginin ikisi yukarı, biri aşağı okunur.** Örtüşme ve doji
 oranları için eşiğin **üstüne** çıkmak bant işaretidir; net/aralık için eşiğin
@@ -205,8 +228,9 @@ kutuda yaşar. Sonuç şu: **üç eğri kımıldamadan hüküm değişebilir** v
 grafikte arayıp bulamaz. Yukarıdaki figürde bu birebir görünüyor — kesikli iki
 çizginin arasında kızıl eğri tam olarak aynı yükseklikte duruyor, ama bir yanda
 pano bant diyor, öbür yanda trend. Çeviren üç ölçüden ikisi görünmez olanlardır.
-Bu yüzden panelin altındaki üçüncü şerit figüre kondu; **o şerit TradingView'de
-yoktur**, ekranda yalnız zeminin grileşmesiyle ve kutudaki `n/5` sayısıyla görünür.
+Figürdeki kesikli dikey çizgiler de karşılaştırma için bizim eklediğimiz
+işaretlerdir, panelde yoktur. Aynı sebeple panelin altına üçüncü bir şerit kondu;
+**o şerit TradingView'de yoktur**, ekranda yalnız zeminin grileşmesiyle ve kutudaki `n/5` sayısıyla görünür.
 
 **Zemini boyalı ama kutusu `ara` diyen bir ekran arıza değildir.** Zemin üç
 işarette de grileşir, `BANT` hükmü ise ancak dörtte verilir. İki koyuluk iki ayrı
@@ -218,13 +242,18 @@ parantezdeki sayı dersin Şekil 30'unda ölçtüğü **referans bant günüdür
 ölçülen değer ortadaki sütundadır ve sağdaki ✓ işareti ayarlardaki eşiğe bakar,
 parantezdeki sayıya değil. Yani parantezde 0,725 yazarken ölçülen 0,543 için ✓ çıkması
 bir çelişki değil: eşik 0,50'dir. Sütun başlığı bunu söyler, ama hızlı bakışta
-kaçar.
+kaçar. Bu dört ölçü satırı için geçerli; `Barbwire (4.9)` satırındaki parantez ise
+bir ölçüm değil dersin bölüm numarasıdır.
 
 **İki küçük şey daha.** Kutu yalnız **son barda** yazılır: geçmişe gidip bir bara
 baktığınızda o barın zemin rengini görürsünüz ama kutu hâlâ en son barı anlatıyordur.
+Ve o son bar **oluşmakta olan** bardır — beş ölçü, hüküm ve `n/5` sayısı bar kapanana
+kadar her fiyat hareketinde değişebilir; karar kapanmış bardan okunur.
 Ve `Özet` kipi paneli sadeleştirmez, yalnız **tabloyu** kısaltır — eğriler, eşikler,
-zemin ve çarpılar olduğu gibi kalır; `4/5` görürsünüz ama hangi ikisinin tutmadığını
-okuyamazsınız.
+zemin ve çarpılar olduğu gibi kalır; `4/5` görürsünüz ama hangi ölçünün tutmadığını
+okuyamazsınız — barbwire'ın kutudaki `VAR ⚠` satırı da o kipte gizlenir, geriye
+yalnız panelin üstündeki çarpı kalır. Üçüncü kip `Kapalı` kutuyu bütünüyle kaldırır;
+eğriler, eşikler ve zemin orada da durur.
 
 ### Fiyat paneli: dört satır hüküm, gerisi bağlam
 
@@ -244,7 +273,7 @@ grafikte ömründe bir kez olan bir olayı tekrar eden bir sinyal sanmaktır.
 **Kutu dolu ama barda etiket yoksa indikatör bozulmamıştır.** Kutunun ④ satırı bir
 kurulumu "var" saymak için skorun sıfırdan büyük olmasını yeter görür; barın üstüne
 basılan `n/4` etiketi ise `Etiketlenecek asgari kalite` ayarını (varsayılan **2**)
-aşmak zorundadır. Yani kutu `1/4 boğa` yazarken o barda etiket olmaz. İkisi bilerek
+**ulaşmak** zorundadır. Yani kutu `1/4 boğa` yazarken o barda etiket olmaz. İkisi bilerek
 farklıdır: varsayılan sıfıra çekilirse barların yarıdan fazlası asgari dönüş barı
 koşulunu sağladığı için grafik okunmaz hâle gelir.
 
@@ -259,14 +288,17 @@ eşiğinin ayrı bir karşılığı yoktur: gövdesi menzilinin %60'ı olan bir 
 hükmü renkten verilemez; o hüküm yalnız kutunun `Sınıf` satırındadır.
 
 **Eski barlarda etiket görmüyorsanız o dönemde sinyal olmadığı anlamına gelmez.**
-TradingView bir betiğin basabileceği etiket sayısını sınırlar; geçmişe gidildikçe en
-eskiler düşer. Kalite etiketi, bar sayımı ve kalıp uyarıları bu bütçeden harcanır.
+TradingView bir betiğin basabileceği etiket sayısını sınırlar — bu indikatörde bütçe
+**500**'dür ve geçmişe gidildikçe en eskiler düşer. Kalite etiketi, bar sayımı, kalıp
+uyarıları ve gap bar işareti aynı bütçeden harcanır; ölçtüğümüz on üç seride bar
+başına 0,4–0,9 etiket düşüyor, yani bütçe son 600–1.200 bara yetiyor.
 
 **Ve en sık yanlış okunan işaret: `✓ yönle hizalı`.** Bu işaret yalnızca kurulumun
 yönü ile always-in durumunun **mekanik olarak** aynı olduğunu söyler. Kalitenin
 yüksek olduğunu, bağlamın uygun olduğunu ya da işlemin iyi olduğunu söylemez —
-`1/4 boğa ✓ yönle hizalı` ile `4/4 boğa ⚠ yönle hizasız` aynı işareti taşıyabilir ve
-ikincisi çok daha güçlü bir bardır. Hizalı olmak bir izindir, bir tavsiye değil.
+`1/4 boğa ✓ yönle hizalı` gördüğünüz bar, `4/4 boğa ⚠ yönle hizasız` gördüğünüz
+bardan zayıf olabilir: ✓ kalitenin değil yalnız **yönün** işaretidir. Hizalı olmak bir
+izindir, bir tavsiye değil — ve hizasız bar ne kadar güçlü olursa olsun alınmaz.
 
 ## Kurallar ve kaynakları
 
@@ -953,8 +985,8 @@ ayrı sebeple düşebilmesi, bu sistemin neden seyrek konuştuğunu tek bakışt
 <div set:html={durumKutusu} />
 
 **Kutu kalabalıksa kısaltın.** Her iki indikatörün ayarlarında `Durum kutusu` girdisi
-var: `Tam` bütün ayrıntıyı, `Özet` yalnız dört adımlık sırayı (alt panelde yalnız
-hükmü), `Kapalı` hiçbirini gösterir. Kutunun yeri ve yazı boyutu da ayarlanabilir —
+var: `Tam` bütün ayrıntıyı, `Özet` yalnız dört adımlık sırayı (alt panelde hükmü,
+`n/5` sayısını ve o rejimde ne yapılacağını), `Kapalı` hiçbirini gösterir. Kutunun yeri ve yazı boyutu da ayarlanabilir —
 iki panel yan yana kullanıldığında kutuların çakışmaması için. Fiyat panelinde
 `Etiketlenecek asgari kalite` varsayılan olarak **2**'dir: sıfırda her dönüş barı
 etiketlenir ve grafik dolar, çünkü ölçüldüğünde barların yarısından fazlası asgari
@@ -985,6 +1017,14 @@ Sıra tersine çevrilemez. Önce kurulumu görüp sonra rejime bakmak, kararı �
 vermiş olmak demektir: `4/4` etiketini gördükten sonra alt panelin `BANT` demesi
 insanı fikrinden döndürmez. Ders sırayı bu yüzden dayatır ve indikatör de bu yüzden
 kurulumu en sona koyar — kutuda da bu sırayla yazılır.
+
+**Ekrana sürekli bakamıyorsanız hüküm değişimi alarma bağlanabilir.** İki betik de
+TradingView'in alarm penceresine hazır koşullar bırakır: alt panelde bant rejimine
+giriş ve çıkış ile barbwire, fiyat panelinde always-in'in long'a ya da short'a
+dönmesi, gap eşiğinin aşılması, ters iki kapanış, kırılım kalıbı, iki barlık dönüş ve
+beş bar iptal kuralı. Bu, üç eğri kımıldamadan hükmün değişebildiği hâllerde tek
+pratik çözümdür — ve barın kapanmasını beklemek gerektiği için alarmı `Bar kapanışı`
+seçeneğiyle kurmak gerekir.
 
 **Emir mekaniği — indikatör bunu çizmez, ders verir.** Giriş: sinyal barının uç
 noktasının bir tick ötesinde stop emri. Stop: barın karşı ucunun bir tick ötesi. Hedef:
