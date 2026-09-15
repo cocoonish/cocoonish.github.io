@@ -142,6 +142,9 @@ SABIT_RP: dict[str, float | int] = {
     "bwBar": 3,             # "üç veya daha fazla bar büyük ölçüde örtüşüyorsa"
     "bwOrtaPay": 0.50,      # "ortadaki barın menzilinin %50'sinden fazlası komşularında"
     "bwDoji": 1,            # "en az biri çok küçük gövdeli (doji)"
+    # GÖRELİ EŞİK — dersin değil, ÖLÇÜMÜN getirdiği sabitler (bkz. olcu_goreli)
+    "tarihce": 280,         # her ölçü kendi son 280 barlık değerine göre sıralanır (5 dk'da ~1 gün)
+    "goreliPay": 0.60,      # ölçü tarihçesinin %60'ından "daha bantlı" ise işaret
 }
 
 
@@ -204,6 +207,15 @@ PINE_KARSILIGI: dict[str, str] = {
     "iptal_kurali": "iptalAd",
     # Bölüm 4.9 · rejim panosu
     "barbwire": "barbwire",
+    "olcu_goreli": "siraOrtusme",
+    # Bölüm 6.4 · dersin sayımı (geri çekilme bacağı arasında)
+    "bar_sayimi_ders": "hDers",
+    # Kurulumlar (Bölüm 2 · 6 · 11 emir paketleri) — fiyat paneli dosyasında
+    "donus": "kurBoga",
+    "ikinci_giris": "ikinciBoga",
+    "kirilim": "kalipTepe",
+    "basarisiz_donus": "basarisizBoga",
+    "bant_kenari": "bantBoga",
 }
 
 # Pine'da karşılığı OLMAYAN ve olmaması GEREKEN metotlar, gerekçesiyle.
@@ -641,6 +653,58 @@ class FiyatPaneli:
             out.append(h if yon[i] == 1 else -l if yon[i] == -1 else 0)
         return out
 
+    def bar_sayimi_ders(self) -> list[str]:
+        """Bölüm 6.4'ün sayımı: H2, İKİNCİ bacağın ilk yüksek-zirve barıdır.
+
+        `bar_sayimi` (Pine `hSayac`) zirvesi öncekini aşan HER barı sayar;
+        iki ardışık yükselen bar H1 ve H2 diye etiketlenir. Ölçüldü
+        (15.09.2026, 13 seri): 1.297 etiketin %88'i tavan "H4"tü — sayaç bir
+        geri çekilmenin BACAKLARINI değil yükselen barları sayıyordu. Ders
+        ise sayımı bacakla kurar: high 1 geri çekilmede zirvesi öncekini
+        aşan ilk bar; geri çekilme SÜRERSE (zirvesi öncekini aşmayan bir bar
+        daha gelirse) ve yeniden bir bar öncekini aşarsa o bar high 2.
+        Yani iki sayım arasında en az bir "aşamayan" bar olmalı. Yeni bir
+        trend zirvesi sayımı sıfırlar; always-in dönüşü de.
+
+        DIŞARIDA KALAN, dersin kendi cümlesiyle: 'high 1 ile high 2 arasında
+        en az küçücük bir trend çizgisi kırılımı olmalıdır' — çizgi çizmek
+        yorum işidir ve sayaç onu sormaz.
+
+        Çıktı: yalnız SAYIM BARINDA dolu ("H1"…"H4", "L1"…"L4"), gerisi ""."""
+        yon, _, _ = self.always_in()
+        h = l = 0
+        gc_zirve = gc_dip = None
+        bekle_h = bekle_l = False        # sonraki sayım için araya "aşamayan" bar gerekiyor mu
+        out: list[str] = []
+        for i in range(len(self.s)):
+            if i > 0 and yon[i] != yon[i - 1]:
+                h = l = 0
+                gc_zirve = gc_dip = None
+                bekle_h = bekle_l = False
+            etiket = ""
+            if yon[i] == 1:
+                if gc_zirve is None or self.s.h[i] > gc_zirve:
+                    gc_zirve, h, bekle_h = self.s.h[i], 0, False
+                elif i > 0 and self.s.h[i] > self.s.h[i - 1]:
+                    if not bekle_h:
+                        h += 1
+                        bekle_h = True
+                        etiket = f"H{min(h, 4)}"
+                else:
+                    bekle_h = False
+            elif yon[i] == -1:
+                if gc_dip is None or self.s.l[i] < gc_dip:
+                    gc_dip, l, bekle_l = self.s.l[i], 0, False
+                elif i > 0 and self.s.l[i] < self.s.l[i - 1]:
+                    if not bekle_l:
+                        l += 1
+                        bekle_l = True
+                        etiket = f"L{min(l, 4)}"
+                else:
+                    bekle_l = False
+            out.append(etiket)
+        return out
+
     # ── Bölüm 1.2 · Kapanışın menzil içindeki yeri ─────────────────────────
     def kapanis_yeri(self, i: int) -> float:
         """(kapanış − dip) / menzil. Ders: 'gövdenin büyüklüğünden bile daha
@@ -1060,6 +1124,210 @@ class RejimPanosu:
             "rejim": "BANT" if n >= 4 else "trend" if n <= 1 else "ara",
         }
 
+    # Beş ölçünün YÖNÜ: hangi taraf "bant". Göreli eşik bu tabloyu okur.
+    BANT_YONU = {"ortusme_oran": "ge", "doji_oran": "ge", "kesisme": "ge",
+                 "net_aralik": "le", "azami_dizi": "le"}
+
+    def _ham(self, i: int) -> dict | None:
+        """`olcu`nun önbelleği: göreli sıra 280 barlık tarihçe ister ve her
+        bar için tarihçeyi yeniden hesaplamak O(pencere × tarihçe) olurdu."""
+        if not hasattr(self, "_ham_onbellek"):
+            self._ham_onbellek: dict[int, dict | None] = {}
+        if i not in self._ham_onbellek:
+            self._ham_onbellek[i] = self.olcu(i)
+        return self._ham_onbellek[i]
+
+    def olcu_goreli(self, i: int) -> dict | None:
+        """Aynı beş ölçü, eşik KENDİ TARİHÇESİNDEN.
+
+        NEDEN. Dersin Şekil 30 eşikleri tek bir seride, tek bir günde ölçülmüş
+        SEVİYELERDİR ve ölçüldü (15.09.2026): seviyeler enstrümana ve beslemeye
+        göre kayıyor — örtüşme işareti 1 saatlik 13 serinin 9'unda %100 açık,
+        Yahoo 5 dk EUR/USD'de %3, USD/CHF'de %100, GBP/USD'de %9; doji
+        işareti 13 seride %0. Sabit bir eşik bir enstrümanda hep "bant",
+        öbüründe hiç "bant" der ve ikisi de rejim ölçmez. Göreli eşik her
+        ölçüyü son `tarihce` bardaki kendi değerlerine göre sıralar: ölçü
+        tarihçesinin %60'ından daha bantlıysa işaret. Böylece her ölçü her
+        seride ortalama %40 dolayında açık kalır ve pano "bugün, bu enstrüman
+        için, son günlere göre" konuşur.
+
+        ÖLÇÜLMÜŞ SINIR, adıyla: göreli hüküm de ileriye dönük bir şey
+        SÖYLEMİYOR — 5 seri × 2 tarihçede BANT ile trend pencerelerinin ileri
+        35 barlık net/aralık'ı ayrışmıyor (permütasyon p 0,19–0,94; mutlak
+        hükümde de aynı). Pano bir rejim TARİFİDİR, tahmin değil; kurulum
+        ailesini seçtirir, yönü ya da kenarı ilan etmez.
+
+        Sıra Pine `ta.percentrank(x, tarihce)` sözleşmesiyle: ÖNCEKİ tarihce
+        barın (i dahil değil) kaçı ≤ bugünkü değer; payda tarihce. ≤-tipi
+        ölçüde (net/aralık · dizi) işaret `ta.percentrank(-x, …)` ile, yani
+        kaçı ≥ bugünkü değer. Tarihçe dolmadıysa None."""
+        k = self.k
+        n_t = int(k["tarihce"])
+        bugun = self._ham(i)
+        if bugun is None or i - n_t < 0:
+            return None
+        gecmis = [self._ham(j) for j in range(i - n_t, i)]
+        if any(g is None for g in gecmis):
+            return None
+        sira: dict[str, float] = {}
+        isaret: dict[str, bool] = {}
+        for ad, yon in self.BANT_YONU.items():
+            v = bugun[ad]
+            if yon == "ge":
+                sira[ad] = sum(1 for g in gecmis if g[ad] <= v) / n_t     # type: ignore[index]
+            else:
+                sira[ad] = sum(1 for g in gecmis if g[ad] >= v) / n_t     # type: ignore[index]
+            isaret[ad.split("_")[0] if ad != "azami_dizi" else "dizi"] = sira[ad] >= k["goreliPay"]
+        n = sum(isaret.values())
+        return {
+            **{ad: bugun[ad] for ad in self.BANT_YONU},
+            "sira": {ad: round(v, 3) for ad, v in sira.items()},
+            "barbwire": bugun["barbwire"],
+            "isaret": isaret, "n": n,
+            "rejim": "BANT" if n >= 4 else "trend" if n <= 1 else "ara",
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  KURULUMLAR — Bölüm 2 · 6 · 11: OHLC'den kurulabilen EMİR PAKETLERİ
+# ═══════════════════════════════════════════════════════════════════════════
+class Kurulumlar:
+    """Dersin emir paketleri, kapanmış bar i'de sorulur; ya bir EMİR döner
+    ya None. Emir mekaniği (dolum, stop, hedef, yönetim) burada DEĞİL —
+    site/tools/brooks_backtest.py'de; bu sınıf yalnız "hangi barda hangi
+    seviyeye hangi emir" sorusunu cevaplar.
+
+    Dört paket, dördü de dersin sayısıyla:
+      · `donus`           — 2.1/11.1 standart paket: sinyal barının ucu
+                            + 1 tick stop emri, karşı uç − 1 tick koruyucu
+                            stop. Dönüş barı koşulu ve kalite 2.2'den.
+      · `ikinci_giris`    — 2.9 + 6.4: always-in yönünde H2/L2 barı; aynı
+                            paket. "İlk giriş stop yedikten sonra ikinci
+                            sinyal alınır" ilkesinin bar sayımıyla
+                            kurulmuş hâli.
+      · `kirilim`         — 2.5: ii · iii · ioi · oio · oo — kalıbın üstüne
+                            alış stop, altına satış stop; biri dolunca öbürü
+                            koruyucu stop olur. YÖN BİLİNMEZ, iki taraf.
+      · `basarisiz_donus` — 2.7: trend içindeki karşı dönüş barı ters
+                            taraftan kırılırsa (ayı dönüş barının ÜSTÜNE
+                            çıkılırsa) trend yönünde giriş; tuzağa düşen
+                            karşı tarafın çıkışı yakıttır.
+      · `bant_kenari`     — 4.5/4.6/4.12: BANT'ta yalnız uç üçte birde,
+                            bant ≥ 3 × stop ise, hedef bandın içinde
+                            kalıyorsa ve HO süzgeci izin veriyorsa; dönüş
+                            barı ucundan standart paket.
+
+    Tick zorunludur ve seriden GELMEZ: ders emirleri "bir tick ötesine"
+    koyar ve tick'siz bir paket o cümleyi taşımaz."""
+
+    def __init__(self, s: Seri, tick: float, sabit: dict | None = None,
+                 tanim: dict | None = None):
+        if not tick or tick <= 0:
+            raise ValueError("Kurulumlar tick ister: dersin emirleri 'bir tick ötesine' konur")
+        self.s, self.tick = s, float(tick)
+        self.fp = FiyatPaneli(s, sabit, tanim)
+        self.rp = RejimPanosu(s)
+        self.ai, _, _ = self.fp.always_in()
+        self.sayim = self.fp.bar_sayimi_ders()
+
+    def _paket(self, i: int, yon: int) -> dict:
+        s, t = self.s, self.tick
+        if yon == 1:
+            return {"yon": 1, "giris": s.h[i] + t, "stop": s.l[i] - t}
+        return {"yon": -1, "giris": s.l[i] - t, "stop": s.h[i] + t}
+
+    def donus(self, i: int, boga: bool) -> dict | None:
+        """Standart paket; kalite 2.2'den. 0 kaliteli dönüş barı da bir
+        dönüş barıdır (asgari koşul), K süzgeci mekanikte uygulanır."""
+        if i < 1 or not self.fp.donus_bari(i, boga):
+            return None
+        return dict(self._paket(i, 1 if boga else -1), kalite=self.fp.kalite(i, boga), kurulum="donus")
+
+    def ikinci_giris(self, i: int) -> dict | None:
+        """H2 (always-in long) ya da L2 (short) barı; paket aynı."""
+        et = self.sayim[i]
+        if et == "H2" and self.ai[i] == 1:
+            return dict(self._paket(i, 1), kalite=self.fp.kalite(i, True), kurulum="ikinci")
+        if et == "L2" and self.ai[i] == -1:
+            return dict(self._paket(i, -1), kalite=self.fp.kalite(i, False), kurulum="ikinci")
+        return None
+
+    def kirilim(self, i: int) -> dict | None:
+        """Kırılım modu: iki taraflı stop, dolmayan taraf koruyucu stop."""
+        km = self.fp.kirilim_modu(i)
+        if km is None:
+            return None
+        return {"cift": True, "alis": km["alis_stop"] + self.tick, "satis": km["satis_stop"] - self.tick,
+                "kalip": km["kalip"], "kurulum": "kirilim"}
+
+    def bant_kenari(self, i: int) -> dict | None:
+        """Bölüm 4.5 · 4.6 · 4.12 — BANT içinde uçtan işlem, üç mekanik şart.
+
+        Ders bantta ne "hiç işlem" ne "körlemesine fade" der; kararı bandın
+        YÜKSEKLİĞİNE, fiyatın bant içindeki KONUMUNA ve emir tipine bağlar:
+          · KONUM (4.6 s.2132–2138): alım yalnız bandın ALT üçte birinde,
+            satım yalnız ÜST üçte birinde; ortada emir yok (4.1 s.1943).
+            Bant = son `pencere` (70) barın yüksek/düşüğü.
+          · YÜKSEKLİK (4.12 s.2533–2541): bant < 3 × stop ise DAR banttır ve
+            stop emirle giriş yoktur; ≥ 3 × stop ise uçlarda çalışılır.
+          · SIĞMA (4.6 s.2123): "bant 10 tick ise dibin 6 tick üstünden alım
+            yok" — 1R hedef bandın içinde kalmalı: giriş + risk ≤ tavan.
+          · HO SÜZGECİ (4.3 s.1992–2004): penceredeki kapanışların yarıdan
+            fazlası ortalamanın ALTINDAYSA alım yok, üstündeyse satım yok.
+        Sinyal barı dönüş barıdır; ders bant uçlarında gövde rengini süzgeç
+        saymaz (4.6 s.2154), o yüzden kalite şartı yok. Paket standart
+        (uç ± tick). Rejimin BANT olup olmadığını bu fonksiyon SORMAZ —
+        ayar katmanı sorar; burada yalnız konum, yükseklik, sığma ve HO."""
+        w = int(self.rp.pencere)
+        if i + 1 < w or self.fp.ema[i] is None:
+            return None
+        s, t = self.s, self.tick
+        pen = range(i - w + 1, i + 1)
+        tavan, taban = max(s.h[j] for j in pen), min(s.l[j] for j in pen)
+        yuk = tavan - taban
+        if yuk <= 0:
+            return None
+        konum = (s.c[i] - taban) / yuk
+        ema_alti = sum(1 for j in pen if self.fp.ema[j] is not None and s.c[j] < self.fp.ema[j]) / w
+        if konum <= 1 / 3 and self.fp.donus_bari(i, True) and ema_alti <= 0.5:
+            e = self._paket(i, 1)
+            risk = e["giris"] - e["stop"]
+            if risk > 0 and yuk >= 3 * risk and e["giris"] + risk <= tavan:
+                return dict(e, kalite=self.fp.kalite(i, True), kurulum="bant", konum=round(konum, 3),
+                            bant_yukseklik=yuk)
+        if konum >= 2 / 3 and self.fp.donus_bari(i, False) and (1 - ema_alti) <= 0.5:
+            e = self._paket(i, -1)
+            risk = e["stop"] - e["giris"]
+            if risk > 0 and yuk >= 3 * risk and e["giris"] - risk >= taban:
+                return dict(e, kalite=self.fp.kalite(i, False), kurulum="bant", konum=round(konum, 3),
+                            bant_yukseklik=yuk)
+        return None
+
+    def basarisiz_donus(self, i: int) -> dict | None:
+        """Always-in long iken AYI dönüş barı: üstüne alış stop, altına
+        koruyucu stop; dolum ancak ayı tarafı ÖNCE tetiklenmediyse geçerli
+        (mekanik bunu sorar: aynı barda iki uç da geçildiyse emir sayılmaz)."""
+        if i < 1 or self.ai[i] == 0:
+            return None
+        if self.ai[i] == 1 and self.fp.donus_bari(i, False):
+            return dict(self._paket(i, 1), kalite=self.fp.kalite(i, False), kurulum="basarisiz", sart_ters_uc=True)
+        if self.ai[i] == -1 and self.fp.donus_bari(i, True):
+            return dict(self._paket(i, -1), kalite=self.fp.kalite(i, True), kurulum="basarisiz", sart_ters_uc=True)
+        return None
+
+
+def tick_tahmini(s: Seri) -> float:
+    """Serinin fiyat adımı: gözlenen en küçük pozitif fark, 10'un kuvvetine
+    yuvarlanır (aşağı). Kaynak tick ilan etmiyorsa yedek; ilan ediyorsa o
+    kullanılmalı. Yahoo 5 dk EUR/USD 5 ondalık → 0,00001."""
+    import math
+    fiyatlar = sorted(set(s.o + s.h + s.l + s.c))
+    farklar = [b - a for a, b in zip(fiyatlar, fiyatlar[1:]) if b - a > 1e-12]
+    if not farklar:
+        raise ValueError("tick tahmin edilemedi: seride tek fiyat var")
+    en_kucuk = min(farklar)
+    return 10.0 ** math.floor(math.log10(en_kucuk) + 1e-9)
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  KAPILAR — kural SÖZ olarak değil ÖLÇÜM olarak sınanır
@@ -1077,15 +1345,35 @@ def gelecege_bakma_sinamasi(s: Seri, adim: int = 1, bas: int = 120) -> list[str]
     enjekte edilmiş gerçek bir sızıntıyı KAÇIRDI. Bir kapının örneklemi de
     kapının parçasıdır."""
     hata: list[str] = []
+    tick = tick_tahmini(s)
+    fp_tam, rp_tam, ku_tam = FiyatPaneli(s), RejimPanosu(s), Kurulumlar(s, tick)
+    sayim_tam = fp_tam.bar_sayimi_ders()
     for i in range(bas, len(s), adim):
-        tam = FiyatPaneli(s).durum(i)
-        kirpik = FiyatPaneli(s.kirp(i + 1)).durum(i)
+        kirp = s.kirp(i + 1)
+        tam = fp_tam.durum(i)
+        kirpik = FiyatPaneli(kirp).durum(i)
         if tam != kirpik:
             hata.append(f"fiyat paneli i={i}: tam {tam} ≠ kırpık {kirpik}")
-        a = RejimPanosu(s).olcu(i)
-        b = RejimPanosu(s.kirp(i + 1)).olcu(i)
+        a = rp_tam.olcu(i)
+        b = RejimPanosu(kirp).olcu(i)
         if a != b:
             hata.append(f"rejim panosu i={i}: tam {a} ≠ kırpık {b}")
+        # Göreli eşik, dersin sayımı ve emir paketleri de aynı kapıdan geçer:
+        # kapsam bir listeden değil, okura giden her çıktıdan türer.
+        rp_k = RejimPanosu(kirp)
+        if rp_tam.olcu_goreli(i) != rp_k.olcu_goreli(i):
+            hata.append(f"göreli rejim i={i}: tam ≠ kırpık")
+        if sayim_tam[i] != FiyatPaneli(kirp).bar_sayimi_ders()[i]:
+            hata.append(f"dersin sayımı i={i}: tam {sayim_tam[i]} ≠ kırpık")
+        ku_k = Kurulumlar(kirp, tick)
+        for ad, f_t, f_k in (("donus", lambda j: (ku_tam.donus(j, True), ku_tam.donus(j, False)),
+                              lambda j: (ku_k.donus(j, True), ku_k.donus(j, False))),
+                             ("ikinci", ku_tam.ikinci_giris, ku_k.ikinci_giris),
+                             ("kirilim", ku_tam.kirilim, ku_k.kirilim),
+                             ("basarisiz", ku_tam.basarisiz_donus, ku_k.basarisiz_donus),
+                             ("bant", ku_tam.bant_kenari, ku_k.bant_kenari)):
+            if f_t(i) != f_k(i):
+                hata.append(f"kurulum '{ad}' i={i}: tam {f_t(i)} ≠ kırpık {f_k(i)}")
     return hata
 
 
@@ -1173,7 +1461,66 @@ def kendini_sina() -> list[str]:
     if rt is None or rt["rejim"] != "trend":
         hata.append(f"⑥ tek yönlü pencere trend olmalıydı; {rt and rt['rejim']}")
 
-    # ⑦ GELECEĞE BAKMA: seri kırpılınca geçmiş çıktılar değişmemeli.
+    # ⑧ DERSİN SAYIMI: iki sayım arasında "aşamayan" bir bar gerekir. Eski
+    #    sayaç ardışık iki yükselen barı H1·H2 diye etiketler; ders etmez.
+    b8 = [(10, 10.4, 9.6, 10.0)] * 3 + [
+        (10.0, 11.0, 9.95, 10.95), (11.0, 12.0, 10.95, 11.95), (11.95, 12.2, 11.9, 12.10),   # → always-in long (5)
+        (12.10, 12.5, 12.0, 12.40),    # 6: yeni zirve → sayım sıfır
+        (12.40, 12.3, 12.0, 12.10),    # 7: geri çekilme (zirve aşılmadı)
+        (12.10, 12.4, 12.05, 12.35),   # 8: H1
+        (12.35, 12.45, 12.3, 12.42),   # 9: yine aşıyor — ders: etiket YOK · eski sayaç: H2
+        (12.42, 12.4, 12.2, 12.25),    # 10: geri çekilme sürüyor
+        (12.25, 12.48, 12.2, 12.45),   # 11: H2
+    ]
+    fp8 = FiyatPaneli(seri(b8))
+    ders, eski = fp8.bar_sayimi_ders(), fp8.bar_sayimi()
+    if ders[8] != "H1" or ders[9] != "" or ders[11] != "H2":
+        hata.append(f"⑧ dersin sayımı H1(8) · —(9) · H2(11) beklerdi; {ders[6:]}")
+    if eski[9] != "H2":
+        hata.append(f"⑧ eski sayaç 9. barı H2 saymalıydı (farkın kendisi ölçülüyor); {eski[6:]}")
+
+    # ⑨ GÖRELİ EŞİK: sıra = önceki `tarihce` değerin kaçı ≤ bugünkü (Pine
+    #    percentrank sözleşmesi, bugünkü bar hariç, payda tarihçe); ≤-tipi
+    #    ölçüde kaçı ≥. Ölçü değerleri doğrudan verilir.
+    n_t = int(SABIT_RP["tarihce"])
+    rp9 = RejimPanosu(_sentetik(n_t + 120, tohum=11))
+    sabit_bar = {"barbwire": {"var": False, "oran": 0.0}, "isaret": {}, "n": 0, "rejim": "ara"}
+    tarih = {j: dict(sabit_bar, ortusme_oran=j / 1000, doji_oran=0.1, kesisme=5, net_aralik=j / 1000, azami_dizi=3)
+             for j in range(n_t)}
+    for bugun_ort, bugun_net, bekl_ort, bekl_net in ((0.15, 0.10, False, True), (0.20, 0.20, True, False)):
+        rp9._ham_onbellek = dict(tarih)
+        rp9._ham_onbellek[n_t] = dict(sabit_bar, ortusme_oran=bugun_ort, doji_oran=0.1, kesisme=5,
+                                      net_aralik=bugun_net, azami_dizi=3)
+        g = rp9.olcu_goreli(n_t)
+        if g is None or g["isaret"]["ortusme"] != bekl_ort or g["isaret"]["net"] != bekl_net:
+            hata.append(f"⑨ göreli sıra: örtüşme {bugun_ort} → {bekl_ort}, net {bugun_net} → {bekl_net} beklerdi; {g and g['sira']}")
+    rp9._ham_onbellek = {}
+    if RejimPanosu(_sentetik(n_t + 60)).olcu_goreli(n_t - 1) is not None:
+        hata.append("⑨ tarihçe dolmadan göreli hüküm verilmemeli")
+
+    # ⑩ PAKETLER: tick'li giriş/stop; bant kenarı konum ve sığma şartları.
+    ku = Kurulumlar(seri([(10, 10.4, 9.6, 10.0), (10.0, 10.5, 10.0, 10.4)]), 0.01)
+    d = ku.donus(1, True)
+    if not d or abs(d["giris"] - 10.51) > 1e-9 or abs(d["stop"] - 9.99) > 1e-9:
+        hata.append(f"⑩ dönüş paketi giriş 10,51 · stop 9,99 beklerdi; {d}")
+    kb = [(11.0, 12.0, 10.0, 11.5)] * 72 + [(10.1, 10.3, 10.0, 10.25)]           # dipte boğa dönüş barı
+    bk = Kurulumlar(seri(kb), 0.01).bant_kenari(len(kb) - 1)
+    if not bk or bk["yon"] != 1 or abs(bk["giris"] - 10.31) > 1e-9 or bk["konum"] > 1 / 3:
+        hata.append(f"⑩ bant kenarı dipte alış paketi beklerdi; {bk}")
+    ko = Kurulumlar(seri(kb[:-1] + [(11.0, 11.2, 10.9, 11.15)]), 0.01).bant_kenari(len(kb) - 1)
+    if ko is not None:
+        hata.append(f"⑩ bandın ortasında emir olmamalı; {ko}")
+    dar = Kurulumlar(seri(kb[:-1] + [(10.1, 10.9, 10.0, 10.85)]), 0.01).bant_kenari(len(kb) - 1)   # risk 0,92 > bant/3
+    if dar is not None:
+        hata.append(f"⑩ bant < 3 × stop iken emir olmamalı; {dar}")
+    try:
+        Kurulumlar(seri(kb), 0.0)
+        hata.append("⑩ tick'siz Kurulumlar hata vermeliydi")
+    except ValueError:
+        pass
+
+    # ⑦ GELECEĞE BAKMA: seri kırpılınca geçmiş çıktılar değişmemeli — göreli
+    #    eşik, dersin sayımı ve bütün paketler dahil.
     hata += gelecege_bakma_sinamasi(_sentetik(400))
 
     return hata
@@ -1189,7 +1536,7 @@ if __name__ == "__main__":
         for h in hata:
             print("  ✗", h, file=sys.stderr)
         raise SystemExit(1)
-    print("sınama · 7 madde GEÇTİ (geleceğe bakma dahil)")
+    print("sınama · 10 madde GEÇTİ (geleceğe bakma dahil: göreli eşik, dersin sayımı, paketler)")
 
     s = _sentetik(400)
     fp, rp = FiyatPaneli(s), RejimPanosu(s)
