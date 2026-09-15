@@ -16,9 +16,34 @@
 // nokta ölçütü, örtüşme, iki barlık dönüş, bar boyu, mikro çift, mikro
 // kanal, bar sayımı, ortalama ilişkisi, beş bar iptal kuralı.
 //
-// Kurulum seçmez, işlem önermez, hedef vermez. Kalıpları GÖSTERİR, hükmü
-// VERMEZ — hüküm bağlamdan gelir. Dersin kendi cümlesiyle: liste okunur,
-// sayılmaz.
+// KURULUM PAKETLERİ (15.09.2026'dan beri). Ders dört emir paketini sayıyla
+// verir ve bu sürüm onları çizer: dönüş barı (2.1/11.1: uç + 1 tick stop
+// giriş, karşı uç − 1 tick koruyucu stop), ikinci giriş H2/L2 (2.9 + 6.4),
+// kırılım modu (2.5: kalıbın iki yanına stop) ve bant kenarı (4.5/4.6/4.12:
+// yalnız uç üçte birde, bant ≥ 3 × stop, 1R hedef bandın içinde, ortalama
+// süzgeci) — ayrıca 2.7'nin "başarısız dönüş" girişi. Paket bir SEVİYE
+// KÜMESİDİR (giriş · stop · 1R · 2R), hüküm değil: hangi paketin hangi
+// rejimde geçerli olduğunu alt panel söyler, alınıp alınmayacağını okur.
+//
+// ÖLÇÜLDÜ VE BURAYA YAZILDI, çünkü bir indikatörün sayısı okurun elinde
+// olmalı: bu paketlerin mekanik backtest'i (site/tools/brooks_backtest.py,
+// 1 sa/4 sa/günlük 13 seri + Yahoo 5–15 dk beş FX serisi) hiçbir
+// yapılandırmada MALİYET SONRASI yayımlanabilir bir kenar vermedi; 5 dk'da
+// maliyetsiz artı görünen ortalama, medyanı 2,6 pip olan en küçük riskli
+// işlemlerden geliyordu ve yarım pip maliyette kayboluyordu. Sayılar
+// sayfadaki tabloda. İndikatör bir sinyal üreticisi değil, dersin okuma
+// sırasını ve emir yerlerini ekrana taşıyan bir yardımcıdır.
+//
+// BAR SAYIMI 15.09.2026'da dersin tanımına çekildi: high 2, geri
+// çekilmenin İKİNCİ bacağının ilk yüksek-zirve barıdır; iki sayım arasında
+// zirvesi öncekini aşmayan en az bir bar gerekir. Eski sayaç ardışık her
+// yükselen barı sayıyordu ve etiketlerin %88'i tavan H4'tü.
+//
+// SADE ÖNTANIMLILAR (ölçülerek): bar boyama yalnız güçlü trend barlarında
+// (beş kademe seçenek), bar sayımı ve kalıp etiketleri kapalı (kutu ve
+// alarm zaten taşıyor), kalite etiketinin rengi always-in ile HİZAYI
+// taşır, ortalamanın rengi yön filtresinin yasağını taşır, gap etiketi ve
+// dönüş üçgeni ayrı anahtarda.
 //
 //@version=6
 indicator("Brooks · Fiyat Hareketi", shorttitle="Brooks FH", overlay = true,
@@ -36,13 +61,14 @@ g2 = "Hareketli ortalama (Bölüm 7)"
 maUzunluk    = input.int(20, "EMA uzunluğu", minval = 2, group = g2, tooltip = "Ders: 20 barlık EMA. Brooks bu seçimin sihirli olmadığını söyler; önemli olan çoğunluğun AYNI çizgiye bakmasıdır.")
 gapEsik      = input.int(20, "Gap bar sayacı eşiği", minval = 5, group = g2, tooltip = "Ders: ortalamaya dokunmayan ≥ 20 ardışık bar bir kurulumdur")
 yonPencere   = input.int(10, "Yön filtresi penceresi", minval = 4, group = g2)
+pencere      = input.int(70, "Bant penceresi (bar) — bant kenarı paketi", minval = 10, maxval = 300, group = g2, tooltip = "Bant kenarı paketi bandı son bu kadar barın yüksek/düşüğü sayar; rejim panosunun penceresiyle aynı (dersin Şekil 30'u: 70 bar).")
 yonEsik      = input.int(7,  "Yön filtresi eşiği",     minval = 2, group = g2, tooltip = "Ders: son 10 barın 7'si ortalamanın bir yanındaysa KARŞI yön işlemi aranmaz")
 
 g3 = "Sinyal barı (Bölüm 2)"
 kapanisPenc  = input.int(8, "Kapanış tersine çevirme penceresi", minval = 2, group = g3, tooltip = "Ders: kapanış son ~8 barın kapanışının ötesinde")
 ucPenc       = input.int(5, "Uç tersine çevirme penceresi",      minval = 2, group = g3, tooltip = "Ders: uç son ~5 barın ucunun ötesinde")
 ortusmeEsik  = input.float(0.75, "Örtüşme eşiği", minval = 0.3, maxval = 0.95, step = 0.05, group = g3, tooltip = "Ders: önceki barın %75'inden fazlası örtülüyorsa tek bar değil İKİ BARLIK dönüş okunur")
-asgariKalite = input.int(2, "Etiketlenecek asgari kalite (0–4)", minval = 0, maxval = 4, group = g3, tooltip = "0 her dönüş barını etiketler ve grafiği doldurur — ölçüldü: barların yarıdan fazlası asgari dönüş barı koşulunu sağlıyor. Varsayılan 2; dersin 'ideal nitelikler' listesine yaklaşan kurulumlar 3 ve 4'tür.")
+asgariKalite = input.int(2, "Etiketlenecek asgari kalite (1–4)", minval = 1, maxval = 4, group = g3, tooltip = "1 her dönüş barını etiketler ve grafiği doldurur — ölçüldü: barların yarıdan fazlası asgari dönüş barı koşulunu sağlıyor (0 ile 1 özdeşti, 0 kaldırıldı). Varsayılan 2; dersin 'ideal nitelikler' listesine yaklaşan kurulumlar 3 ve 4'tür.")
 
 g5 = "Bölüm 1.3 · trendleşme ve göreli gövde"
 trendlesmeEsik = input.int(3, "Trendleşme asgari bar sayısı", minval = 2, group = g5, tooltip = "Ders: 'Asgari eşik her üçünde de üç bar veya üç salınımdır.'")
@@ -73,12 +99,16 @@ g4 = "Gösterim"
 kutuKip   = input.string("Tam",     "Durum kutusu", options = ["Tam", "Özet", "Kapalı"], group = g4, tooltip = "Özet kipi yalnız DÖRT ADIMLIK okuma sırasını gösterir: rejim → yön → yasak → kurulum. Ayrıntı satırları gizlenir.")
 kutuYeri  = input.string("Sağ üst", "Kutunun yeri", options = ["Sağ üst", "Sağ alt", "Sol üst", "Sol alt", "Orta sağ"], group = g4)
 kutuBoyut = input.string("Küçük",   "Kutu yazı boyutu", options = ["Minik", "Küçük", "Normal"], group = g4)
-barBoya      = input.bool(true,  "Barları sınıfına göre boya",   group = g4)
+barBoyaKip   = input.string("Yalnız güçlü trend barı", "Bar boyama", options = ["Yalnız güçlü trend barı", "Beş kademe", "Kapalı"], group = g4, tooltip = "Ölçüldü: beş kademe her barı boyuyor ve ardışık renk değişimi 100 barda 72; yalnız güçlü trend barı 30'a indiriyor. Güçlü trend barı always-in'in girdisidir, öbür kademeler öntanımlı mumun zaten gösterdiği yönü tekrar eder.")
 aiZemin      = input.bool(true,  "Always-in zemini",             group = g4)
 sinyalGoster = input.bool(true,  "Sinyal barı ve kalite skoru",  group = g4)
-sayimGoster  = input.bool(true,  "Bar sayımı (H1–H4 / L1–L4)",   group = g4)
+sayimGoster  = input.bool(false, "Bar sayımı etiketleri (H1–H4 / L1–L4)", group = g4, tooltip = "Öntanımlı kapalı: sayım kutuda ve H2/L2 kurulum işaretinde zaten var.")
 maGoster     = input.bool(true,  "EMA ve gap bar sayacı",        group = g4)
-kalipGoster  = input.bool(true,  "Kırılım modu kalıpları (ii·iii·ioi·oio·oo)", group = g4)
+kalipGoster  = input.bool(false, "Kırılım modu kalıp etiketleri (ii·iii·ioi·oio·oo)", group = g4, tooltip = "Öntanımlı kapalı: ölçüldü, 100 barda 17 öğe ve hiçbir okuma adımının girdisi değil; kalıp kutuda ve alarmda var, son barın iki taraflı seviyeleri 'emir seviyeleri' anahtarıyla çizilir.")
+kurulumGoster = input.bool(true, "Kurulum işaretleri (H2/L2 · başarısız dönüş · bant kenarı)", group = g4)
+seviyeGoster = input.bool(true,  "Son barın emir seviyeleri (giriş · stop · 1R · 2R)", group = g4, tooltip = "Yalnız kapanmış SON bar için, öncelik sırasıyla tek paket: kırılım modu > bant kenarı > ikinci giriş > başarısız dönüş > dönüş barı.")
+ucgenGoster  = input.bool(true,  "Always-in dönüş üçgeni",       group = g4)
+gapGoster    = input.bool(false, "Gap bar sayacı etiketi",       group = g4)
 
 // Ev paleti
 cMurekkep = color.new(#1a1a1a, 0)
@@ -169,7 +199,6 @@ bgcolor(aiZemin and aiLong  ? color.new(cMavi,   94) : aiZemin and aiShort ? col
 //  Bölüm 7 · Hareketli ortalama
 // ─────────────────────────────────────────────────────────────────────────
 ema = ta.ema(close, maUzunluk)
-plot(maGoster ? ema : na, "EMA", color = cGri, linewidth = 2)
 
 maDokundu = low <= ema and high >= ema
 
@@ -183,6 +212,10 @@ ustteSayi = math.sum(close > ema ? 1 : 0, yonPencere)
 altta     = math.sum(close < ema ? 1 : 0, yonPencere)
 yalnizAl  = ustteSayi >= yonEsik
 yalnizSat = altta     >= yonEsik
+
+// Ortalamanın RENGİ yasağı taşır: ③ yasak barların %79'unda aktif ve
+// grafikte hiç işareti yoktu; ortalama zaten her barda çizili, öğe eklemeden.
+plot(maGoster ? ema : na, "EMA (rengi yön filtresi)", color = yalnizAl ? cMavi : yalnizSat ? cClaret : cGri, linewidth = 2)
 
 // Ters tarafta ardışık iki kapanış (Ders 7.5①) — güçlü trendin imzasının BOZULMASI
 tersIkiKapanis = (aiLong and close < ema and close[1] < ema) or (aiShort and close > ema and close[1] > ema)
@@ -239,32 +272,85 @@ kaliteAyi  = (n1Ayi  ? 1 : 0) + (n2Ayi  ? 1 : 0) + (n3 ? 1 : 0) + (n5Ayi  ? 1 : 
 //  çizgisi kırılımı olmalıdır." Trend çizgisi çizimi bir yorum işidir;
 //  sayaç bu koşulu SORMAZ, o yüzden sayaç bir kurulum değil bir SAYAÇTIR.
 // ─────────────────────────────────────────────────────────────────────────
+//  DERSİN SAYIMI (15.09.2026): high 2 İKİNCİ bacağın ilk yüksek-zirve
+//  barıdır; iki sayım arasında zirvesi öncekini aşmayan en az bir bar
+//  gerekir (bekle bayrağı). Eski sürüm ardışık her yükselen barı sayıyordu.
+//  Python eşi: brooks_referans.FiyatPaneli._sayim_makinesi.
 var int  hSayac = 0
 var int  lSayac = 0
 var float gcZirve = na          // geri çekilmenin başladığı zirve
 var float gcDip   = na
+var bool bekleH = false         // sonraki sayım için araya "aşamayan" bar gerekiyor
+var bool bekleL = false
+string hEtiket = na
+string lEtiket = na
 
 if aiDondu
     hSayac := 0
     lSayac := 0
     gcZirve := na
     gcDip   := na
+    bekleH  := false
+    bekleL  := false
 
 if aiLong
     if na(gcZirve) or high > gcZirve
         gcZirve := high          // trend sürüyor, sayım sıfırlanır
         hSayac  := 0
+        bekleH  := false
     else if high > high[1]
-        hSayac := hSayac + 1     // geri çekilme içinde bir bacak bitti
+        if not bekleH
+            hSayac  := hSayac + 1     // geri çekilmenin bir bacağı bitti
+            bekleH  := true
+            hEtiket := "H" + str.tostring(math.min(hSayac, 4))
+    else
+        bekleH := false
 if aiShort
     if na(gcDip) or low < gcDip
         gcDip  := low
         lSayac := 0
+        bekleL := false
     else if low < low[1]
-        lSayac := lSayac + 1
+        if not bekleL
+            lSayac  := lSayac + 1
+            bekleL  := true
+            lEtiket := "L" + str.tostring(math.min(lSayac, 4))
+    else
+        bekleL := false
 
-hEtiket = hSayac > 0 and high > high[1] and aiLong  ? "H" + str.tostring(math.min(hSayac, 4)) : na
-lEtiket = lSayac > 0 and low  < low[1]  and aiShort ? "L" + str.tostring(math.min(lSayac, 4)) : na
+// ─────────────────────────────────────────────────────────────────────────
+//  Bölüm 2 · 6 · 11 · KURULUM PAKETLERİ — giriş uç + 1 tick (stop emri),
+//  koruyucu stop karşı uç − 1 tick; risk = menzil + 2 tick. Python eşi:
+//  brooks_referans.Kurulumlar. Rejimi bu dosya SORMAZ (alt panel söyler).
+// ─────────────────────────────────────────────────────────────────────────
+tick      = syminfo.mintick
+girisBoga = high + tick
+stopBoga  = low  - tick
+girisAyi  = low  - tick
+stopAyi   = high + tick
+riskPaket = girisBoga - stopBoga
+
+// 2.9 + 6.4 · ikinci giriş: always-in yönünde H2 / L2 barı
+ikinciBoga = aiLong  and not na(hEtiket) and hEtiket == "H2"
+ikinciAyi  = aiShort and not na(lEtiket) and lEtiket == "L2"
+
+// 2.7 · başarısız dönüş: trend içindeki KARŞI dönüş barının ters tarafından giriş.
+//  Karşı barın kalitesi asgariKalite'yi geçmeli: süzgeçsiz hâli barların
+//  yarısında ateşler (ölçüldü: 5 dk'da 100 barda 53–57) ve dersin "her barın
+//  ötesine körü körüne stop" yasağına düşer.
+basarisizBoga = aiLong  and ayiDonus  and kaliteAyi  >= asgariKalite
+basarisizAyi  = aiShort and bogaDonus and kaliteBoga >= asgariKalite
+
+// 4.5 / 4.6 / 4.12 · bant kenarı: uç üçte bir · bant ≥ 3 × stop · 1R sığar · HO süzgeci
+bantTavan  = ta.highest(high, pencere)
+bantTaban  = ta.lowest(low, pencere)
+bantYuk    = bantTavan - bantTaban
+bantKonum  = bantYuk > 0 ? (close - bantTaban) / bantYuk : 0.5
+emaAltiPay = math.sum(close < ema ? 1 : 0, pencere) / pencere
+bantBoga = bantYuk > 0 and bantKonum <= 1.0 / 3 and bogaDonus and emaAltiPay <= 0.5 and
+   bantYuk >= 3 * riskPaket and girisBoga + riskPaket <= bantTavan
+bantAyi  = bantYuk > 0 and bantKonum >= 2.0 / 3 and ayiDonus and (1 - emaAltiPay) <= 0.5 and
+   bantYuk >= 3 * riskPaket and girisAyi - riskPaket >= bantTaban
 
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -498,9 +584,10 @@ iptalAd = ustKapanis >= iptalKapanis ? "ayı dönüşü arayışı İPTAL" :
 // ─────────────────────────────────────────────────────────────────────────
 //  Çizim
 // ─────────────────────────────────────────────────────────────────────────
-barrenk = not barBoya ? na :
+barrenk = barBoyaKip == "Kapalı" ? na :
    gucluBoga ? cMavi :
    gucluAyi  ? cClaret :
+   barBoyaKip != "Beş kademe" ? na :
    doji      ? cGri :
    bogaGovde ? color.new(cMavi, 55) :
    ayiGovde  ? color.new(cClaret, 55) : cGri
@@ -514,19 +601,56 @@ f_dusenler(a1, a2, a3, a5) =>
     d := d + (a5 ? "" : (d == "" ? "" : ", ") + "yeni uç")
     d == "" ? "dördü de tutuyor" : "düşen: " + d
 
-if sinyalGoster and bogaDonus and kaliteBoga >= asgariKalite and kaliteBoga > 0 and not yalnizSat
-    label.new(bar_index, low, str.tostring(kaliteBoga) + "/4", yloc = yloc.belowbar,
-       style = label.style_label_up, color = color.new(cMavi, 80), textcolor = cMurekkep, size = size.tiny,
-       tooltip = "Boğa sinyal barı · canlı kalite " + str.tostring(kaliteBoga) + "/4" +
-       "\n" + f_dusenler(n1Boga, n2Boga, n3, n5Boga) +
-       "\nÖrtüşme: %" + str.tostring(math.round(ortusme * 100)) + (ikiBarlikDonus ? " → İKİ BARLIK dönüş oku" : ""))
+// Kalite etiketinin RENGİ hizayı taşır: always-in ile aynı yön mavi/claret,
+// karşı yön gri. Ölçüldü: etiketlerin %38'i hizalı, %38'i karşı, %24'ü
+// yönsüz — okur üçünü aynı renkte görüyordu.
+f_paket(float giris, float stop) =>
+    "\nGiriş " + str.tostring(giris, format.mintick) + " · stop " + str.tostring(stop, format.mintick) +
+       " · 1R " + str.tostring(giris + (giris - stop), format.mintick) + " · 2R " + str.tostring(giris + 2 * (giris - stop), format.mintick)
 
-if sinyalGoster and ayiDonus and kaliteAyi >= asgariKalite and kaliteAyi > 0 and not yalnizAl
+if sinyalGoster and bogaDonus and kaliteBoga >= asgariKalite and not yalnizSat
+    label.new(bar_index, low, str.tostring(kaliteBoga) + "/4", yloc = yloc.belowbar,
+       style = label.style_label_up, color = color.new(aiLong ? cMavi : cGri, 80), textcolor = cMurekkep, size = size.tiny,
+       tooltip = "Boğa sinyal barı · canlı kalite " + str.tostring(kaliteBoga) + "/4" + (aiLong ? " · always-in ile hizalı" : aiShort ? " · always-in'e KARŞI" : "") +
+       "\n" + f_dusenler(n1Boga, n2Boga, n3, n5Boga) +
+       "\nÖrtüşme: %" + str.tostring(math.round(ortusme * 100)) + (ikiBarlikDonus ? " → İKİ BARLIK dönüş oku" : "") +
+       f_paket(girisBoga, stopBoga))
+
+if sinyalGoster and ayiDonus and kaliteAyi >= asgariKalite and not yalnizAl
     label.new(bar_index, high, str.tostring(kaliteAyi) + "/4", yloc = yloc.abovebar,
-       style = label.style_label_down, color = color.new(cClaret, 80), textcolor = cMurekkep, size = size.tiny,
-       tooltip = "Ayı sinyal barı · canlı kalite " + str.tostring(kaliteAyi) + "/4" +
+       style = label.style_label_down, color = color.new(aiShort ? cClaret : cGri, 80), textcolor = cMurekkep, size = size.tiny,
+       tooltip = "Ayı sinyal barı · canlı kalite " + str.tostring(kaliteAyi) + "/4" + (aiShort ? " · always-in ile hizalı" : aiLong ? " · always-in'e KARŞI" : "") +
        "\n" + f_dusenler(n1Ayi, n2Ayi, n3, n5Ayi) +
-       "\nÖrtüşme: %" + str.tostring(math.round(ortusme * 100)) + (ikiBarlikDonus ? " → İKİ BARLIK dönüş oku" : ""))
+       "\nÖrtüşme: %" + str.tostring(math.round(ortusme * 100)) + (ikiBarlikDonus ? " → İKİ BARLIK dönüş oku" : "") +
+       f_paket(girisAyi, stopAyi))
+
+// Kurulum işaretleri: H2/L2 ikinci giriş, başarısız dönüş, bant kenarı.
+if kurulumGoster and ikinciBoga
+    label.new(bar_index, low, "H2", yloc = yloc.belowbar, style = label.style_label_up,
+       color = color.new(cMavi, 60), textcolor = cMurekkep, size = size.tiny,
+       tooltip = "İkinci giriş (2.9 + 6.4): boğa trendinde geri çekilmenin ikinci bacağı." + f_paket(girisBoga, stopBoga))
+if kurulumGoster and ikinciAyi
+    label.new(bar_index, high, "L2", yloc = yloc.abovebar, style = label.style_label_down,
+       color = color.new(cClaret, 60), textcolor = cMurekkep, size = size.tiny,
+       tooltip = "İkinci giriş (2.9 + 6.4): ayı trendinde geri çekilmenin ikinci bacağı." + f_paket(girisAyi, stopAyi))
+if kurulumGoster and bantBoga
+    label.new(bar_index, low, "bant", yloc = yloc.belowbar, style = label.style_label_up,
+       color = color.new(cMavi, 60), textcolor = cMurekkep, size = size.tiny,
+       tooltip = "Bant kenarı (4.6): bandın alt üçte birinde dönüş barı; bant " + str.tostring(bantYuk, format.mintick) +
+       " ≥ 3 × stop, 1R bandın içinde. ALT PANEL BANT DEMİYORSA ALINMAZ." + f_paket(girisBoga, stopBoga))
+if kurulumGoster and bantAyi
+    label.new(bar_index, high, "bant", yloc = yloc.abovebar, style = label.style_label_down,
+       color = color.new(cClaret, 60), textcolor = cMurekkep, size = size.tiny,
+       tooltip = "Bant kenarı (4.6): bandın üst üçte birinde dönüş barı; bant " + str.tostring(bantYuk, format.mintick) +
+       " ≥ 3 × stop, 1R bandın içinde. ALT PANEL BANT DEMİYORSA ALINMAZ." + f_paket(girisAyi, stopAyi))
+if kurulumGoster and basarisizBoga and not yalnizSat
+    label.new(bar_index, high, "↑", yloc = yloc.abovebar, style = label.style_none,
+       textcolor = cMavi, size = size.small,
+       tooltip = "Başarısız dönüş (2.7): boğa trendinde ayı dönüş barı; ÜSTÜNE alış stop, altına koruyucu stop. Alt uç aynı barda önce geçilirse emir sayılmaz." + f_paket(girisBoga, stopBoga))
+if kurulumGoster and basarisizAyi and not yalnizAl
+    label.new(bar_index, low, "↓", yloc = yloc.belowbar, style = label.style_none,
+       textcolor = cClaret, size = size.small,
+       tooltip = "Başarısız dönüş (2.7): ayı trendinde boğa dönüş barı; ALTINA satış stop, üstüne koruyucu stop." + f_paket(girisAyi, stopAyi))
 
 if sayimGoster and not na(hEtiket)
     label.new(bar_index, high, hEtiket, yloc = yloc.abovebar, style = label.style_none,
@@ -546,10 +670,50 @@ if kalipGoster and kalipAd != ""
     line.new(bar_index - kalipBar + 1, kalipTepe, bar_index + 2, kalipTepe, color = color.new(cMavi, 40), style = line.style_dotted)
     line.new(bar_index - kalipBar + 1, kalipDip,  bar_index + 2, kalipDip,  color = color.new(cClaret, 40), style = line.style_dotted)
 
-plotshape(aiDondu and aiLong,  "Always-in → long",  shape.triangleup,   location.belowbar, cMavi,   size = size.small)
-plotshape(aiDondu and aiShort, "Always-in → short", shape.triangledown, location.abovebar, cClaret, size = size.small)
+plotshape(ucgenGoster and aiDondu and aiLong,  "Always-in → long",  shape.triangleup,   location.belowbar, cMavi,   size = size.small)
+plotshape(ucgenGoster and aiDondu and aiShort, "Always-in → short", shape.triangledown, location.abovebar, cClaret, size = size.small)
 
-if maGoster and gapSayac == gapEsik
+// ── Son barın emir seviyeleri: öncelik sırasıyla TEK paket ───────────────
+//  kırılım modu (iki taraflı) > bant kenarı > ikinci giriş > başarısız
+//  dönüş > dönüş barı (kalite ≥ asgari, yasak yok). Çizgiler son bardan
+//  üç bar ileriye; her barda yeniden kurulur.
+var line lGiris = na
+var line lStop  = na
+var line l1R    = na
+var line l2R    = na
+var label lAd   = na
+paketAd  = kalipAd != "" ? "kırılım modu · " + kalipAd :
+   bantBoga ? "bant kenarı · alış" : bantAyi ? "bant kenarı · satış" :
+   ikinciBoga ? "ikinci giriş · H2" : ikinciAyi ? "ikinci giriş · L2" :
+   basarisizBoga and not yalnizSat ? "başarısız dönüş · alış" : basarisizAyi and not yalnizAl ? "başarısız dönüş · satış" :
+   bogaDonus and kaliteBoga >= asgariKalite and not yalnizSat and (kaliteBoga >= kaliteAyi or yalnizAl) ? "dönüş barı · alış " + str.tostring(kaliteBoga) + "/4" :
+   ayiDonus  and kaliteAyi  >= asgariKalite and not yalnizAl ? "dönüş barı · satış " + str.tostring(kaliteAyi) + "/4" : ""
+paketBoga = kalipAd != "" ? true :
+   bantBoga or ikinciBoga or (basarisizBoga and not yalnizSat) ? true :
+   bantAyi or ikinciAyi or (basarisizAyi and not yalnizAl) ? false :
+   bogaDonus and kaliteBoga >= asgariKalite and not yalnizSat and (kaliteBoga >= kaliteAyi or yalnizAl)
+paketGiris = kalipAd != "" ? kalipTepe + tick : paketBoga ? girisBoga : girisAyi
+paketStop  = kalipAd != "" ? kalipDip  - tick : paketBoga ? stopBoga  : stopAyi
+paketRisk  = math.abs(paketGiris - paketStop)
+
+if barstate.islast
+    line.delete(lGiris)
+    line.delete(lStop)
+    line.delete(l1R)
+    line.delete(l2R)
+    label.delete(lAd)
+    if seviyeGoster and paketAd != ""
+        cPaket = kalipAd != "" ? cGri : paketBoga ? cMavi : cClaret
+        lGiris := line.new(bar_index, paketGiris, bar_index + 3, paketGiris, color = cPaket, width = 2)
+        lStop  := line.new(bar_index, paketStop,  bar_index + 3, paketStop,  color = cPaket, style = line.style_dashed)
+        if kalipAd == ""
+            yonIm = paketBoga ? 1 : -1
+            l1R := line.new(bar_index, paketGiris + yonIm * paketRisk,     bar_index + 3, paketGiris + yonIm * paketRisk,     color = color.new(cPaket, 50), style = line.style_dotted)
+            l2R := line.new(bar_index, paketGiris + yonIm * 2 * paketRisk, bar_index + 3, paketGiris + yonIm * 2 * paketRisk, color = color.new(cPaket, 50), style = line.style_dotted)
+        lAd := label.new(bar_index + 3, paketGiris, paketAd + (kalipAd != "" ? "  (üst: alış stop · alt: satış stop)" : "  (kalın giriş · kesik stop · noktalı 1R/2R)"),
+           style = label.style_label_left, color = color.new(cPaket, 85), textcolor = cMurekkep, size = size.tiny)
+
+if gapGoster and gapSayac == gapEsik
     label.new(bar_index, aiLong ? low : high, str.tostring(gapEsik) + " gap bar",
        yloc = aiLong ? yloc.belowbar : yloc.abovebar, style = label.style_none,
        textcolor = cGri, size = size.tiny)
@@ -571,7 +735,7 @@ f_yer(string s) =>
 f_boyut(string s) =>
     s == "Minik" ? size.tiny : s == "Normal" ? size.normal : size.small
 
-var table kutu = table.new(f_yer(kutuYeri), 3, 17, border_width = 1)
+var table kutu = table.new(f_yer(kutuYeri), 3, 18, border_width = 1)
 
 // Bölüm başlığı: kutuyu okunur yapan şey satır sayısı değil, GRUPLANMASI.
 f_baslik(int satir, string metin, string ipucu) =>
@@ -586,7 +750,7 @@ f_satir(int satir, string no, string ad, string deger, color renk) =>
     table.cell(kutu, 2, satir, deger, text_size = f_boyut(kutuBoyut), text_color = renk, text_halign = text.align_left)
 
 if barstate.islast and kutuKip != "Kapalı"
-    table.clear(kutu, 0, 0, 2, 16)
+    table.clear(kutu, 0, 0, 2, 17)
 
     // ── OKUMA SIRASI ─────────────────────────────────────────────────────
     f_baslik(0, "OKUMA SIRASI", "Ders bu sırayı dayatır: önce rejim, sonra yön, sonra yasak, en son kurulum. " +
@@ -602,36 +766,46 @@ if barstate.islast and kutuKip != "Kapalı"
 
     kurBoga = bogaDonus and kaliteBoga > 0 and not yalnizSat
     kurAyi  = ayiDonus  and kaliteAyi  > 0 and not yalnizAl
-    kurMetin = kurBoga and kurAyi ? "iki yönlü — " + str.tostring(kaliteBoga) + "/4 boğa · " + str.tostring(kaliteAyi) + "/4 ayı" :
-       kurBoga ? str.tostring(kaliteBoga) + "/4 boğa" :
-       kurAyi  ? str.tostring(kaliteAyi)  + "/4 ayı"  : "kurulum yok"
-    hizali = (kurBoga and aiLong) or (kurAyi and aiShort)
-    f_satir(4, "④", "Kurulum", kurMetin + (hizali ? "  ✓ yönle hizalı" : (kurBoga or kurAyi) ? "  ⚠ yönle hizasız" : ""),
-       hizali ? cYaziMavi : (kurBoga or kurAyi) ? cYaziKzl : cYaziGri)
+    // ④ artık PAKET adıyla konuşur: hangi kurulum, hangi yönde, hizalı mı.
+    kurMetin = paketAd != "" ? paketAd :
+       kurBoga and kurAyi ? "dönüş barı iki yönlü — " + str.tostring(kaliteBoga) + "/4 boğa · " + str.tostring(kaliteAyi) + "/4 ayı (eşiğin altında)" :
+       kurBoga ? "dönüş barı " + str.tostring(kaliteBoga) + "/4 boğa (eşiğin altında)" :
+       kurAyi  ? "dönüş barı " + str.tostring(kaliteAyi)  + "/4 ayı (eşiğin altında)"  : "kurulum yok"
+    hizali = kalipAd == "" and paketAd != "" and ((paketBoga and aiLong) or (not paketBoga and aiShort))
+    karsi  = kalipAd == "" and paketAd != "" and ((paketBoga and aiShort) or (not paketBoga and aiLong))
+    f_satir(4, "④", "Kurulum", kurMetin + (hizali ? "  ✓ yönle hizalı" : karsi ? "  ⚠ yöne KARŞI" : ""),
+       hizali ? cYaziMavi : karsi ? cYaziKzl : cYaziGri)
+    // Emir satırı: paketin dört seviyesi. Kırılım modunda iki giriş, hedef yok (yön bilinmez).
+    emirMetin = paketAd == "" ? "—" :
+       kalipAd != "" ? "alış stop " + str.tostring(paketGiris, format.mintick) + " · satış stop " + str.tostring(paketStop, format.mintick) :
+       "giriş " + str.tostring(paketGiris, format.mintick) + " · stop " + str.tostring(paketStop, format.mintick) +
+          " · 1R " + str.tostring(paketGiris + (paketBoga ? 1 : -1) * paketRisk, format.mintick) +
+          " · 2R " + str.tostring(paketGiris + (paketBoga ? 2 : -2) * paketRisk, format.mintick)
+    f_satir(5, "", "Emir", emirMetin, paketAd == "" ? cYaziGri : cYaziAna)
 
     if kutuKip == "Tam"
         // ── BU BAR ───────────────────────────────────────────────────────
-        f_baslik(5, "BU BAR", "Barın kendi ölçüleri. Kapanışın yeri gövde oranından bile bilgi vericidir; %50 berabere.")
-        f_satir(6, "", "Sınıf", (gucluTrendBari ? "güçlü trend" : trendBari ? "trend" : doji ? "doji" : "ara")
+        f_baslik(6, "BU BAR", "Barın kendi ölçüleri. Kapanışın yeri gövde oranından bile bilgi vericidir; %50 berabere.")
+        f_satir(7, "", "Sınıf", (gucluTrendBari ? "güçlü trend" : trendBari ? "trend" : doji ? "doji" : "ara")
            + (govdeGuclu ? " · gövde güçlü" : "") + (tirasAd != "—" ? " · " + tirasAd : ""), cYaziAna)
-        f_satir(7, "", "Kapanışın yeri", "%" + str.tostring(math.round(kapanisYeri * 100)),
+        f_satir(8, "", "Kapanışın yeri", "%" + str.tostring(math.round(kapanisYeri * 100)),
            kapanisYeri > 0.5 ? cYaziMavi : kapanisYeri < 0.5 ? cYaziKzl : cYaziGri)
-        f_satir(8, "", "Boy · mikro", barBoyuAd + " · " + mikroCift, cYaziAna)
-        f_satir(9, "", "Orta nokta ölçütü", ortaNoktaBoga ? "boğa geçti" : ortaNoktaAyi ? "ayı geçti" : "—",
+        f_satir(9, "", "Boy · mikro", barBoyuAd + " · " + mikroCift, cYaziAna)
+        f_satir(10, "", "Orta nokta ölçütü", ortaNoktaBoga ? "boğa geçti" : ortaNoktaAyi ? "ayı geçti" : "—",
            ortaNoktaBoga ? cYaziMavi : ortaNoktaAyi ? cYaziKzl : cYaziGri)
 
         // ── BAĞLAM ───────────────────────────────────────────────────────
-        f_baslik(10, "BAĞLAM", "Barın etrafı. Çevirme sayacı bir GÜÇ ölçüsüdür, hüküm değil: " +
+        f_baslik(11, "BAĞLAM", "Barın etrafı. Çevirme sayacı bir GÜÇ ölçüsüdür, hüküm değil: " +
            "en üst kademenin 'always-in çeviren kırılım' hükmü ölçüldü ve tutmadı (kesinlik %1,05).")
-        f_satir(11, "", "Çevirme (kap·uç)", str.tostring(cevirmeKap) + " · " + str.tostring(cevirmeUcSay)
+        f_satir(12, "", "Çevirme (kap·uç)", str.tostring(cevirmeKap) + " · " + str.tostring(cevirmeUcSay)
            + "  " + cevirmeKademe, cYaziAna)
-        f_satir(12, "", "Trendleşme k·z·d", str.tostring(diziKapanis) + " · " + str.tostring(diziZirve)
+        f_satir(13, "", "Trendleşme k·z·d", str.tostring(diziKapanis) + " · " + str.tostring(diziZirve)
            + " · " + str.tostring(diziDip) + (trendlesiyor ? "  ⚑" : ""), cYaziAna)
-        f_satir(13, "", "Ortalama", "gap " + str.tostring(gapSayac) + (gapSayac >= gapEsik ? " ⚑" : "")
+        f_satir(14, "", "Ortalama", "gap " + str.tostring(gapSayac) + (gapSayac >= gapEsik ? " ⚑" : "")
            + (tersIkiKapanis ? " · TERS İKİ KAPANIŞ" : ""), tersIkiKapanis ? cYaziKzl : cYaziAna)
-        f_satir(14, "", "Sayım · mikro kanal",
+        f_satir(15, "", "Sayım · bant konumu",
            (aiLong ? "H" + str.tostring(math.min(hSayac, 4)) : aiShort ? "L" + str.tostring(math.min(lSayac, 4)) : "—")
-           + " · " + str.tostring(mikroKanal) + " bar", cYaziAna)
+           + " · bantta %" + str.tostring(math.round(bantKonum * 100)) + " · mikro kanal " + str.tostring(mikroKanal), cYaziAna)
 
         // ── KALIP VE UYARI ───────────────────────────────────────────────
         kalipMetin = (kalipAd != "" ? kalipAd + " · kırılım modu" : govdeIcBar ? "yalnız gövdeler ii" : "")
@@ -643,9 +817,9 @@ if barstate.islast and kutuKip != "Kapalı"
         // Bu bölüm yalnız SÖYLEYECEK BİR ŞEY VARKEN çıkar. Her barda boş bir
         // "—" satırı basmak, kutuyu okunur yapmak için harcanan yeri geri alır.
         if kalipMetin != "" or iptalAd != "—"
-            f_baslik(15, "KALIP · UYARI", "Kırılım modunda yön BİLİNMEZ: iki tarafa da emir konur. " +
+            f_baslik(16, "KALIP · UYARI", "Kırılım modunda yön BİLİNMEZ: iki tarafa da emir konur. " +
                "Beş bar iptal kuralı bir ÜST SINIRDIR — geçmek dönüş kurulumunu öldürür.")
-            f_satir(16, "", kalipMetin == "" ? "—" : kalipMetin, iptalAd,
+            f_satir(17, "", kalipMetin == "" ? "—" : kalipMetin, iptalAd,
                iptalAd != "—" ? cYaziKzl : cYaziAna)
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -658,3 +832,6 @@ alertcondition(tersIkiKapanis,      "Ters tarafta iki kapanış","Brooks FH: tre
 alertcondition(kalipAd != "",       "Kırılım modu kalıbı",     "Brooks FH: ii/iii/ioi/oio/oo — iki tarafa da emir")
 alertcondition(ikiBarDonus,         "İki barlık dönüş",        "Brooks FH: giriş HER İKİ barın ötesine konur")
 alertcondition(iptalAd != "—",      "Beş bar iptal kuralı",    "Brooks FH: eski ucun ötesinde beş kapanış — dönüş arayışı iptal")
+alertcondition(ikinciBoga or ikinciAyi,     "İkinci giriş (H2/L2)", "Brooks FH: geri çekilmenin ikinci bacağı — paket seviyeleri kutuda")
+alertcondition(bantBoga or bantAyi,         "Bant kenarı",          "Brooks FH: bandın uç üçte birinde dönüş barı — alt panel BANT demiyorsa alınmaz")
+alertcondition(basarisizBoga or basarisizAyi, "Başarısız dönüş",    "Brooks FH: trend içindeki karşı dönüş barı — ters tarafından giriş paketi")

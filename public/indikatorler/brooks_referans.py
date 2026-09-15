@@ -109,6 +109,8 @@ SABIT_FH: dict[str, float | int] = {
     "momentumBar": 6,       # "altı bar boyunca boğa kapanışı yok"
     # Bölüm 8A.6 · beş bar iptal kuralı
     "iptalKapanis": 5,      # eski ucun ötesinde ≥ 5 KAPANIŞ → dönüş arayışı iptal
+    # Bölüm 4 · bant kenarı paketi (Kurulumlar.bant_kenari) — rejim panosuyla aynı pencere
+    "pencere": 70,
 }
 
 # ── Tanım seçimleri: ders bir SAYI VERMİYOR ───────────────────────────────
@@ -208,8 +210,6 @@ PINE_KARSILIGI: dict[str, str] = {
     # Bölüm 4.9 · rejim panosu
     "barbwire": "barbwire",
     "olcu_goreli": "siraOrtusme",
-    # Bölüm 6.4 · dersin sayımı (geri çekilme bacağı arasında)
-    "bar_sayimi_ders": "hDers",
     # Kurulumlar (Bölüm 2 · 6 · 11 emir paketleri) — fiyat paneli dosyasında
     "donus": "kurBoga",
     "ikinci_giris": "ikinciBoga",
@@ -225,6 +225,13 @@ PINE_DISI: dict[str, str] = {
     "durum": "Pine'da tablo hücreleri; tek bir değişkeni yok",
     "kirp": "yalnız geleceğe bakma sınamasının aracı",
     "olcu": "rejim panosunun karşılığı ayrı dosyada, ayrı kapıda",
+    "bar_sayimi_eski": "15.09.2026'ya kadarki sayaç; Pine'dan kaldırıldı, yalnız "
+                       "eski kusurun büyüklüğünü ölçmek için duruyor (kendini_sina ⑧)",
+    "_sayim_makinesi": "iç durum makinesi; okura giden üç görünümü bar_sayimi · "
+                       "bar_sayaci · bar_sayaci_ham",
+    "_paket": "Kurulumlar'ın iç yardımcısı: uç ± tick paketi",
+    "BANT_YONU": "sınıf sabiti — beş ölçünün hangi tarafının bant olduğu; Pine'da "
+                 "aynı bilgi i1–i5 karşılaştırmalarının yönünde",
     "bar_sayaci_ham": "Pine `hSayac`ı tavansız TUTAR ama kutuya min(hSayac,4) "
                       "basar; ham değer okura hiçbir yerde gösterilmez. Burada "
                       "yalnız 'etiket dörtte durdu, sayaç sürüyor' iddiasını "
@@ -262,7 +269,9 @@ def olcu_kapsami(pine_fh: Path, pine_rp: Path) -> list[str]:
     ve tek çıkış yolu onu muafiyete yazmaktı — denetimin kendi kapsamı,
     ölçtüğü sözleşmeyi daraltıyordu. Artık her sınıf KENDİ dosyasına karşı
     sınanıyor."""
-    kaynak = {FiyatPaneli: pine_fh, RejimPanosu: pine_rp}
+    # Kurulumlar da fiyat paneli dosyasına karşı sınanır: dersin emir paketleri
+    # Pine'da çizilmiyorsa sayfadaki kod sayfadaki açıklamayı karşılamaz.
+    kaynak = {FiyatPaneli: pine_fh, RejimPanosu: pine_rp, Kurulumlar: pine_fh}
     metin = {s: y.read_text(encoding="utf-8") for s, y in kaynak.items()}
     eksik: list[str] = []
 
@@ -311,9 +320,10 @@ def pine_ile_karsilastir(pine_fh: Path, pine_rp: Path) -> list[str]:
             elif abs(float(p[k]) - float(v)) > 1e-9:
                 ayrik.append(f"{ad}: '{k}' Pine {p[k]} ≠ Python {v}")
         for k in p:
-            if k not in beyan and k not in ("barBoya", "aiZemin", "sinyalGoster",
-                                            "sayimGoster", "maGoster", "kalipGoster",
-                                            "asgariKalite"):
+            if k not in beyan and k not in ("aiZemin", "sinyalGoster", "sayimGoster",
+                                            "maGoster", "kalipGoster", "asgariKalite",
+                                            "kurulumGoster", "seviyeGoster", "ucgenGoster",
+                                            "gapGoster"):
                 ayrik.append(f"{ad}: '{k}' Pine'da var, Python'da YOK")
     return ayrik
 
@@ -559,13 +569,11 @@ class FiyatPaneli:
         return "serbest"
 
     # ── Bölüm 6 · Bar sayımı ───────────────────────────────────────────────
-    def bar_sayimi(self) -> list[str]:
-        """H1–H4 / L1–L4. Pine'daki `var int hSayac`/`lSayac` karşılığı.
-
-        Rejim filtresi dersten: boğa trendinde `low` sayılmaz, ayıda `high`.
-        DIŞARIDA KALAN: ders 'high 1 ile high 2 arasında en az küçücük bir
-        trend çizgisi kırılımı olmalı' der; trend çizgisi çizmek bir yorum
-        işidir. Sayaç onu SORMAZ — bu yüzden sayaç bir kurulum değil sayaçtır."""
+    def bar_sayimi_eski(self) -> list[str]:
+        """15.09.2026'ya kadarki sayaç — ARTIK PINE'DA YOK, yalnız farkı ölçmek
+        için duruyor: zirvesi öncekini aşan HER barı sayıyordu, iki ardışık
+        yükselen bar H1·H2 oluyordu ve 1.297 etiketin %88'i tavan H4'tü.
+        Dersin sayımı `bar_sayimi`de; kendini_sina ⑧ ikisinin farkını sınar."""
         yon, _, _ = self.always_in()
         h = l = 0
         gc_zirve = gc_dip = None
@@ -590,92 +598,29 @@ class FiyatPaneli:
             out.append(etiket)
         return out
 
-    def bar_sayaci(self) -> list[str]:
-        """Pine satır 598: durum kutusunun bastığı SAYAÇ — etiket değil.
+    def _sayim_makinesi(self) -> list[tuple[int, int, str]]:
+        """Bölüm 6.4'ün sayımı, Pine `hSayac`/`lSayac`/`hEtiket` ile aynı durum
+        makinesi. Döner: her bar için (h, l, etiket).
 
-        `bar_sayimi` grafikteki ETİKETİN eşidir (Pine `hEtiket`/`lEtiket`) ve
-        yalnız barın yeni bir zirve/dip yaptığı barda doludur. Kutu ise
-        always-in'in yönü varken HER barda sayacın o anki değerini yazar:
-            aiLong ? "H"+min(hSayac,4) : aiShort ? "L"+min(lSayac,4) : "—"
-        İkisi 4.574 barın 2.017'sinde (%44,1) ayrışıyor — etiketi kutuya
-        basmak, always-in LONG iken "—" yazmak demektir ve okur sayacın
-        sıfırlandığını sanır. İki ölçü ayrı isimlerle durur, çünkü ikisi de
-        Pine'da ayrı ayrı var ve ikisi de okura ayrı yerde görünüyor."""
-        yon, _, _ = self.always_in()
-        h = l = 0
-        gc_zirve = gc_dip = None
-        out: list[str] = []
-        for i in range(len(self.s)):
-            if i > 0 and yon[i] != yon[i - 1]:
-                h = l = 0
-                gc_zirve = gc_dip = None
-            if yon[i] == 1:
-                if gc_zirve is None or self.s.h[i] > gc_zirve:
-                    gc_zirve, h = self.s.h[i], 0
-                elif i > 0 and self.s.h[i] > self.s.h[i - 1]:
-                    h += 1
-            elif yon[i] == -1:
-                if gc_dip is None or self.s.l[i] < gc_dip:
-                    gc_dip, l = self.s.l[i], 0
-                elif i > 0 and self.s.l[i] < self.s.l[i - 1]:
-                    l += 1
-            out.append(f"H{min(h, 4)}" if yon[i] == 1
-                       else f"L{min(l, 4)}" if yon[i] == -1 else "—")
-        return out
+        Ders sayımı BACAKLA kurar: high 1 geri çekilmede zirvesi öncekini aşan
+        ilk bar; geri çekilme SÜRERSE (zirvesi öncekini aşmayan bir bar daha
+        gelirse) ve yeniden bir bar öncekini aşarsa o bar high 2. Yani iki
+        sayım arasında en az bir "aşamayan" bar olmalı. Yeni bir trend
+        zirvesi sayımı sıfırlar; always-in dönüşü de. Rejim filtresi dersten:
+        boğa trendinde low sayılmaz, ayıda high.
 
-    def bar_sayaci_ham(self) -> list[int]:
-        """`hSayac`/`lSayac`ın TAVANSIZ hâli — işaretli (boğa +, ayı −).
-
-        Pine sayacı tavansız TUTAR ama kutuya `min(hSayac, 4)` basar; yani
-        "H4" üç bar üst üste görünebilir ve iç sayaç 4 · 5 · 6 olabilir.
-        Tavanlı hâli (`bar_sayaci`) okura giden metin; bu ise o metnin
-        ARKASINDAKİ sayı. Ayrı duruyor çünkü "etiket dörtte durdu ama sayaç
-        sürüyor" iddiası ancak tavansız değerle ÖLÇÜLEBİLİR — tavanlı diziyle
-        bakan biri üç barda da 4 görür ve iddiayı kendi eliyle çürütür."""
-        yon, _, _ = self.always_in()
-        h = l = 0
-        gc_zirve = gc_dip = None
-        out: list[int] = []
-        for i in range(len(self.s)):
-            if i > 0 and yon[i] != yon[i - 1]:
-                h = l = 0
-                gc_zirve = gc_dip = None
-            if yon[i] == 1:
-                if gc_zirve is None or self.s.h[i] > gc_zirve:
-                    gc_zirve, h = self.s.h[i], 0
-                elif i > 0 and self.s.h[i] > self.s.h[i - 1]:
-                    h += 1
-            elif yon[i] == -1:
-                if gc_dip is None or self.s.l[i] < gc_dip:
-                    gc_dip, l = self.s.l[i], 0
-                elif i > 0 and self.s.l[i] < self.s.l[i - 1]:
-                    l += 1
-            out.append(h if yon[i] == 1 else -l if yon[i] == -1 else 0)
-        return out
-
-    def bar_sayimi_ders(self) -> list[str]:
-        """Bölüm 6.4'ün sayımı: H2, İKİNCİ bacağın ilk yüksek-zirve barıdır.
-
-        `bar_sayimi` (Pine `hSayac`) zirvesi öncekini aşan HER barı sayar;
-        iki ardışık yükselen bar H1 ve H2 diye etiketlenir. Ölçüldü
-        (15.09.2026, 13 seri): 1.297 etiketin %88'i tavan "H4"tü — sayaç bir
-        geri çekilmenin BACAKLARINI değil yükselen barları sayıyordu. Ders
-        ise sayımı bacakla kurar: high 1 geri çekilmede zirvesi öncekini
-        aşan ilk bar; geri çekilme SÜRERSE (zirvesi öncekini aşmayan bir bar
-        daha gelirse) ve yeniden bir bar öncekini aşarsa o bar high 2.
-        Yani iki sayım arasında en az bir "aşamayan" bar olmalı. Yeni bir
-        trend zirvesi sayımı sıfırlar; always-in dönüşü de.
+        Ölçüldü (15.09.2026, 13 seri): eski sayaç zirvesi öncekini aşan HER
+        barı sayıyordu — iki ardışık yükselen bar H1·H2 oluyor, 1.297
+        etiketin %88'i tavan H4'e düşüyordu (`bar_sayimi_eski`).
 
         DIŞARIDA KALAN, dersin kendi cümlesiyle: 'high 1 ile high 2 arasında
         en az küçücük bir trend çizgisi kırılımı olmalıdır' — çizgi çizmek
-        yorum işidir ve sayaç onu sormaz.
-
-        Çıktı: yalnız SAYIM BARINDA dolu ("H1"…"H4", "L1"…"L4"), gerisi ""."""
+        yorum işidir ve sayaç onu sormaz."""
         yon, _, _ = self.always_in()
         h = l = 0
         gc_zirve = gc_dip = None
         bekle_h = bekle_l = False        # sonraki sayım için araya "aşamayan" bar gerekiyor mu
-        out: list[str] = []
+        out: list[tuple[int, int, str]] = []
         for i in range(len(self.s)):
             if i > 0 and yon[i] != yon[i - 1]:
                 h = l = 0
@@ -702,8 +647,36 @@ class FiyatPaneli:
                         etiket = f"L{min(l, 4)}"
                 else:
                     bekle_l = False
-            out.append(etiket)
+            out.append((h if yon[i] == 1 else 0, l if yon[i] == -1 else 0, etiket))
         return out
+
+    def bar_sayimi(self) -> list[str]:
+        """Grafikteki ETİKET (Pine `hEtiket`/`lEtiket`): yalnız sayım barında
+        dolu ("H1"…"H4", "L1"…"L4"), gerisi ""."""
+        return [e for _, _, e in self._sayim_makinesi()]
+
+    def bar_sayaci(self) -> list[str]:
+        """Pine'daki durum kutusunun bastığı SAYAÇ — etiket değil.
+
+        `bar_sayimi` grafikteki ETİKETİN eşidir ve yalnız sayım barında
+        doludur. Kutu ise always-in'in yönü varken HER barda sayacın o anki
+        değerini yazar:
+            aiLong ? "H"+min(hSayac,4) : aiShort ? "L"+min(lSayac,4) : "—"
+        İki ölçü ayrı isimlerle durur, çünkü ikisi de Pine'da ayrı ayrı var
+        ve ikisi de okura ayrı yerde görünüyor."""
+        yon, _, _ = self.always_in()
+        return [f"H{min(h, 4)}" if yon[i] == 1 else f"L{min(l, 4)}" if yon[i] == -1 else "—"
+                for i, (h, l, _) in enumerate(self._sayim_makinesi())]
+
+    def bar_sayaci_ham(self) -> list[int]:
+        """`hSayac`/`lSayac`ın TAVANSIZ hâli — işaretli (boğa +, ayı −).
+
+        Pine sayacı tavansız TUTAR ama kutuya `min(hSayac, 4)` basar; "etiket
+        dörtte durdu ama sayaç sürüyor" iddiası ancak tavansız değerle
+        ÖLÇÜLEBİLİR."""
+        yon, _, _ = self.always_in()
+        return [h if yon[i] == 1 else -l if yon[i] == -1 else 0
+                for i, (h, l, _) in enumerate(self._sayim_makinesi())]
 
     # ── Bölüm 1.2 · Kapanışın menzil içindeki yeri ─────────────────────────
     def kapanis_yeri(self, i: int) -> float:
@@ -1228,7 +1201,7 @@ class Kurulumlar:
         self.fp = FiyatPaneli(s, sabit, tanim)
         self.rp = RejimPanosu(s)
         self.ai, _, _ = self.fp.always_in()
-        self.sayim = self.fp.bar_sayimi_ders()
+        self.sayim = self.fp.bar_sayimi()
 
     def _paket(self, i: int, yon: int) -> dict:
         s, t = self.s, self.tick
@@ -1347,7 +1320,7 @@ def gelecege_bakma_sinamasi(s: Seri, adim: int = 1, bas: int = 120) -> list[str]
     hata: list[str] = []
     tick = tick_tahmini(s)
     fp_tam, rp_tam, ku_tam = FiyatPaneli(s), RejimPanosu(s), Kurulumlar(s, tick)
-    sayim_tam = fp_tam.bar_sayimi_ders()
+    sayim_tam = fp_tam.bar_sayimi()
     for i in range(bas, len(s), adim):
         kirp = s.kirp(i + 1)
         tam = fp_tam.durum(i)
@@ -1363,7 +1336,7 @@ def gelecege_bakma_sinamasi(s: Seri, adim: int = 1, bas: int = 120) -> list[str]
         rp_k = RejimPanosu(kirp)
         if rp_tam.olcu_goreli(i) != rp_k.olcu_goreli(i):
             hata.append(f"göreli rejim i={i}: tam ≠ kırpık")
-        if sayim_tam[i] != FiyatPaneli(kirp).bar_sayimi_ders()[i]:
+        if sayim_tam[i] != FiyatPaneli(kirp).bar_sayimi()[i]:
             hata.append(f"dersin sayımı i={i}: tam {sayim_tam[i]} ≠ kırpık")
         ku_k = Kurulumlar(kirp, tick)
         for ad, f_t, f_k in (("donus", lambda j: (ku_tam.donus(j, True), ku_tam.donus(j, False)),
@@ -1473,7 +1446,7 @@ def kendini_sina() -> list[str]:
         (12.25, 12.48, 12.2, 12.45),   # 11: H2
     ]
     fp8 = FiyatPaneli(seri(b8))
-    ders, eski = fp8.bar_sayimi_ders(), fp8.bar_sayimi()
+    ders, eski = fp8.bar_sayimi(), fp8.bar_sayimi_eski()
     if ders[8] != "H1" or ders[9] != "" or ders[11] != "H2":
         hata.append(f"⑧ dersin sayımı H1(8) · —(9) · H2(11) beklerdi; {ders[6:]}")
     if eski[9] != "H2":
