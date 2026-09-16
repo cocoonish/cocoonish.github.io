@@ -107,8 +107,12 @@ import durumKutusu from '../../../public/indikatorler/durum_kutusu.html?raw';
       </tr>
       <tr>
         <td>Baştan bilinmesi gereken</td>
-        <td><b>Kutu oluşmakta olan barı da yazar:</b> karar kapanmış bardan okunur.
-        Alt panelin göreli kipi 280 barlık tarihçe ister; dolana kadar hüküm "—".
+        <td><b>İndikatör kapanmamış bar hakkında hiçbir şey söylemez:</b> etiket, bar
+        boyaması, zemin ve üçgen yalnız bar kapanınca basılır; kutu ile emir çizgileri
+        son kapanmış sinyal barını ve o barın şu an çalışan emrini gösterir. Dersin
+        mekaniği de budur ve backtest aynı konvansiyonla ölçüldü. "Bar disiplini"
+        girdisi kapatılırsa canlı barın anlık hâli görünür ve her sayı bar bitene kadar
+        oynar. Alt panelin göreli kipi 280 barlık tarihçe ister; dolana kadar hüküm "—".
         Betikler TradingView'de derlenmedi; bu sayfa sekiz statik derleme ölçütünden
         geçirir, yapıştırana kadar "derleniyor" bir beklentidir. İki panelin ikisi de
         grafikte olmadan okuma sırası kurulamaz.</td>
@@ -163,7 +167,8 @@ always-in yönünü boyar (mavi long, claret short); üçgen yönün döndüğü
 Ortalamanın rengi yön filtresinin yasağıdır: mavi "yalnız al", claret "yalnız sat", gri
 serbest. Kalite etiketi (n/4) kapanmış dönüş barının kaç ideal niteliği taşıdığını yazar ve
 rengi always-in ile hizayı: hizalıysa renkli, karşıysa gri. Kurulum işaretleri dersin
-paketleridir — H2/L2 ikinci giriş, ok başarısız dönüş girişi, "bant" bant kenarı. Son
+paketleridir — H2/L2 ikinci giriş, ok başarısız dönüş girişi, "bant" bant kenarı. Beşinin
+beşi de yalnız **kapanmış** barda basılır. Son kapanmış
 barın sağındaki çizgiler o barın öncelikli paketinin seviyeleridir: giriş, stop, 1R ve 2R; kırılım
 modunda yalnız iki çizgi, alış stop ve satış stop — yön dolana kadar bilinmediği için hedef çizgisi
 çizilmez; dersin hedefi kalıbın boyu kadar ölçülmüş harekettir.
@@ -190,6 +195,28 @@ dakikalık FX'te barların %19–24'ünde `BANT`, %54–59'unda `ara`, %22–24'
 mutlak hükümde de aynı). Pano son 70 barı **tarif eder** — bantlı mı, trendli mi — ve dersin
 kuralınca hangi paket ailesinin geçerli olduğunu söyler; yön ya da kenar ilan etmez.
 Ders (mutlak) kipi seçenek olarak durur.
+
+### Kapanmamış bar: indikatör onun hakkında konuşmaz
+
+Oluşmakta olan barın yükseği, düşüğü ve kapanışı **final değildir** — bar bitene kadar yürürler,
+dolayısıyla onlardan türeyen her hüküm de yürür. Bir dönüş barı ölçütü kapanışa bakar, giriş
+seviyesi barın ucuna; ikisi de bar içinde defalarca değişebilir. İç bar ölçütü barın ilk anında
+yapısal olarak doğrudur, çünkü henüz önceki barın aralığından çıkılmamıştır: kırılım modu paket
+önceliğinin birincisi olduğu için kutu neredeyse her barın başında "kırılım modu" der ve sonra
+vazgeçer. Aynı sebeple bant kenarının "bant ≥ 3 × stop" ve "1R banda sığar" şartları barın
+başında bedavaya geçer, bar büyüdükçe zorlaşır.
+
+**Kural tek cümle: kapanmamış bir bar hakkında hiçbir şey söylenmez.** Etiketler, bar boyaması,
+always-in zemini, üçgen, alt panelin eğrileri ve zemini yalnız bar kapandığında basılır. Kutu ile
+emir çizgileri son **kapanmış** sinyal barına demirlenir ve o barın emri, tam da emrin çalıştığı
+bar boyunca ekranda durur. Bu bir görünüm tercihi değil, dersin kendi mekaniği: sinyal barı
+kapanır, emir onun ucunun bir tick ötesine konur, bir bar ömrü vardır. Yayımlanan backtest de
+aynı konvansiyonla ölçüldü, yani kutuda okuduğunuz paket ile tablodaki sayıların ölçtüğü paket
+aynı nesnedir.
+
+Davranış "Bar disiplini · Yalnız kapanmış bar" girdisiyle kapatılabilir; kapatılırsa canlı barın
+anlık hâli görünür ve ekrandaki her sayı bar bitene kadar oynar. **Alarmlar bu girdiden
+bağımsızdır ve her koşulda bar kapanışına kilitlidir**, çünkü gönderilmiş bir alarm geri alınamaz.
 
 ## 2 · Okuma sırası: dört adım, sonra emir
 
@@ -433,8 +460,12 @@ gösterir ki okur onu kendisi eklesin.
 
 ## 6 · Alarmlar ve ayarlar
 
-**Alarmlar.** İki betik TradingView'in alarm penceresine hazır koşullar bırakır; hepsi kapanmış bar
-üzerinden hesaplandığı için alarm `Bar kapanışı` seçeneğiyle kurulmalıdır.
+**Alarmlar.** İki betik TradingView'in alarm penceresine hazır koşullar bırakır. On üç koşulun on üçü de
+**bar kapanışına kilitlidir** ve bu, "Bar disiplini" ayarından bağımsızdır: gönderilmiş bir alarm geri
+alınamaz, o yüzden kapanmamış barda doğup kapanışta yok olabilecek bir koşul hiç ateşlenmemelidir.
+Kırılım modu kalıbı barın ilk anında yapısal olarak doğrudur, gap eşiği bir eşitlik sınamasıdır; ikisi de
+tam bu biçimdir. Alarmı yine de `Bar kapanışı` seçeneğiyle kurmak doğrudur, ama koşul artık buna
+bağımlı değil.
 
 | Panel | Koşul | Ne zaman |
 |---|---|---|
@@ -898,7 +929,8 @@ soldan sağa koşar. Pine o döngüyü gizler — Python göstermek zorunda.
 | `ta.highest(close[1], 8)` | `max(s.c[i-8 : i])` | pencere **i−1'de biter** |
 | `math.sum(x ? 1 : 0, 10)` | `pencere_toplam(...)` | pencere **i'yi içerir** |
 | `ta.percentrank(x, 280)` | `olcu_goreli(i)` | önceki 280 barın kaçı ≤ bugünkü değer; bugün hariç |
-| `barstate.islast` | `i == len(s) - 1` | |
+| `barstate.isconfirmed` | (her bar) | replikasyonun **her barı kapanmıştır**; Pine'da yalnız kapanış anında doğru |
+| `barstate.islast` | `i == len(s) - 1` | **denk değil**: Pine'da gerçek zamanda kapanmamış bardır. Kutu ve emir çizgileri bu yüzden ona değil, son kapanmış bara demirlenir |
 | `label.new` · `plotshape` | döndürülen sözlük | çizim yok, ölçüm var |
 
 **Üç tuzak.** İki pencere sınırı aynı değil: `ta.highest(close[1], 8)` şimdiki barı içermez, `math.sum`

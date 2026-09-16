@@ -39,7 +39,17 @@ Aşağıdaki her satır bu tek farkın bir sonucudur.
     ta.lowest(low[1], 5)          min(s.l[i-5 : i])
     math.sum(x ? 1 : 0, 10)       sum(...  i-9 .. i)        pencere i'yi İÇERİR
     na(x)                         x is None
-    barstate.islast               i == len(s) - 1
+    barstate.isconfirmed          (her bar)                 replikasyonun HER
+                                                            barı kapanmıştır;
+                                                            Pine'da yalnız
+                                                            kapanışta true
+    barstate.islast               i == len(s) - 1           DENK DEĞİL: Pine'da
+                                                            gerçek zamanda
+                                                            KAPANMAMIŞ bardır.
+                                                            Kutu ve emir
+                                                            çizgileri bu yüzden
+                                                            `cizimBari`ye
+                                                            demirlenir
     label.new / plotshape         döndürülen sözlük         çizim yok, ölçüm var
     alertcondition               —                          ölçüm karşılığı yok
 
@@ -320,10 +330,15 @@ def pine_ile_karsilastir(pine_fh: Path, pine_rp: Path) -> list[str]:
             elif abs(float(p[k]) - float(v)) > 1e-9:
                 ayrik.append(f"{ad}: '{k}' Pine {p[k]} ≠ Python {v}")
         for k in p:
+            # Pine'a özgü girdiler: neyin ÇİZİLDİĞİNİ seçerler, bir eşik
+            # taşımazlar. `yalnizKapali` de buraya girer ve gerekçesi ayrı:
+            # replikasyonun canlı bar kavramı YOKTUR — `Seri` tanımı gereği
+            # kapanmış barlardır, yani bu girdinin Python'da karşılığı
+            # olamaz, eksikliği bir ayrışma değil bir SINIR farkıdır.
             if k not in beyan and k not in ("aiZemin", "sinyalGoster", "sayimGoster",
                                             "maGoster", "kalipGoster", "asgariKalite",
                                             "kurulumGoster", "seviyeGoster", "ucgenGoster",
-                                            "gapGoster"):
+                                            "gapGoster", "yalnizKapali"):
                 ayrik.append(f"{ad}: '{k}' Pine'da var, Python'da YOK")
     return ayrik
 

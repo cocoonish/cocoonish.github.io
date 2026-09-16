@@ -52,6 +52,9 @@ indicator("Brooks · Fiyat Hareketi", shorttitle="Brooks FH", overlay = true,
 // ─────────────────────────────────────────────────────────────────────────
 //  Girdiler — varsayılanlar dersin sabitler tablosundan
 // ─────────────────────────────────────────────────────────────────────────
+g0 = "Bar disiplini"
+yalnizKapali = input.bool(true, "Yalnız kapanmış bar", group = g0, tooltip = "Canlı barın yüksek/düşük/kapanışı FİNAL DEĞİLDİR: bar bitene kadar yürür, yani ondan türeyen her hüküm de yürür. Açıkken bu betik kapanmamış bar hakkında HİÇBİR ŞEY söylemez — etiket, bar boyaması, üçgen ve zemin yalnız bar kapanınca basılır; kutu ile emir çizgileri son KAPANMIŞ sinyal barını ve o barın ŞU AN çalışan emrini gösterir. Dersin mekaniği de budur: sinyal barı kapanır, emir bir sonraki bara konur. Yayımlanan backtest aynı konvansiyonla ölçüldü. Kapatılırsa canlı barın anlık hâli görünür ve ekrandaki her sayı bar bitene kadar oynar.")
+
 g1 = "Bar sınıfı (Bölüm 1)"
 trendGovde   = input.float(0.50, "Trend barı: gövde/menzil ≥",        minval = 0.1, maxval = 0.9, step = 0.05, group = g1, tooltip = "Ders: gövde ≥ menzilin ~%50'si")
 gucluGovde   = input.float(0.75, "Güçlü trend barı: gövde/menzil ≥",  minval = 0.5, maxval = 1.0, step = 0.05, group = g1, tooltip = "Ders: güçlüsünde ~%75+")
@@ -106,9 +109,30 @@ sayimGoster  = input.bool(false, "Bar sayımı etiketleri (H1–H4 / L1–L4)", 
 maGoster     = input.bool(true,  "EMA ve gap bar sayacı",        group = g4)
 kalipGoster  = input.bool(false, "Kırılım modu kalıp etiketleri (ii·iii·ioi·oio·oo)", group = g4, tooltip = "Öntanımlı kapalı: ölçüldü, 100 barda 17 öğe ve hiçbir okuma adımının girdisi değil; kalıp kutuda ve alarmda var, son barın iki taraflı seviyeleri 'emir seviyeleri' anahtarıyla çizilir.")
 kurulumGoster = input.bool(true, "Kurulum işaretleri (H2/L2 · başarısız dönüş · bant kenarı)", group = g4)
-seviyeGoster = input.bool(true,  "Son barın emir seviyeleri (giriş · stop · 1R · 2R)", group = g4, tooltip = "Yalnız kapanmış SON bar için, öncelik sırasıyla tek paket: kırılım modu > bant kenarı > ikinci giriş > başarısız dönüş > dönüş barı.")
+seviyeGoster = input.bool(true,  "Son barın emir seviyeleri (giriş · stop · 1R · 2R)", group = g4, tooltip = "Son KAPANMIŞ bar için, öncelik sırasıyla tek paket: kırılım modu > bant kenarı > ikinci giriş > başarısız dönüş > dönüş barı.")
 ucgenGoster  = input.bool(true,  "Always-in dönüş üçgeni",       group = g4)
 gapGoster    = input.bool(false, "Gap bar sayacı etiketi",       group = g4)
+
+// ─────────────────────────────────────────────────────────────────────────
+//  BAR DİSİPLİNİ — bu betiğin canlı bar hakkındaki sözü
+// ─────────────────────────────────────────────────────────────────────────
+//  Ders emri şöyle kurar: sinyal barı KAPANIR, emir onun ucunun bir tick
+//  ötesine konur ve BİR BAR ömrü vardır. Yani canlı bar bir sinyal barı
+//  değildir; kapanmış sinyal barının emrinin ÇALIŞTIĞI bardır. Yayımlanan
+//  backtest de tam bunu ölçer (sinyal barı i kapanmış, dolum i+1'de).
+//
+//  `barstate.islast` BUNU VERMEZ: o "grafikteki son bar" demektir ve gerçek
+//  zamanda kapanmamış bardır. Kapanmışlığı soran tek şey
+//  `barstate.isconfirmed`tir.
+//
+//  Kural tek cümle: KAPANMAMIŞ BİR BAR HAKKINDA HİÇBİR ŞEY SÖYLENMEZ.
+//  Etiket, bar boyaması, zemin ve üçgen o barda basılmaz; kutu ve emir
+//  çizgileri son kapanmış bara demirlenir (aşağıda `cizimBari`).
+kapanmis = barstate.isconfirmed or not yalnizKapali
+// Kutu ve çizgiler son KAPANMIŞ barda kurulur. Veriyi kaydırmak yerine
+// ÇİZİM ANI kaydırılır: son iki bar aday, `kapanmis` olmayan düşer. Böylece
+// canlı barda hiçbir şey yeniden yazılmaz — eskisi yerinde durur.
+cizimBari = bar_index >= last_bar_index - 1 and kapanmis
 
 // Ev paleti
 cMurekkep = color.new(#1a1a1a, 0)
@@ -193,7 +217,7 @@ aiLong  = ai ==  1
 aiShort = ai == -1
 aiDondu = ai != ai[1] and not na(ai[1])
 
-bgcolor(aiZemin and aiLong  ? color.new(cMavi,   94) : aiZemin and aiShort ? color.new(cClaret, 94) : na, title = "Always-in zemini")
+bgcolor(kapanmis and aiZemin and aiLong  ? color.new(cMavi,   94) : kapanmis and aiZemin and aiShort ? color.new(cClaret, 94) : na, title = "Always-in zemini")
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Bölüm 7 · Hareketli ortalama
@@ -598,7 +622,7 @@ barrenk = barBoyaKip == "Kapalı" ? na :
    doji      ? cGri :
    bogaGovde ? color.new(cMavi, 55) :
    ayiGovde  ? color.new(cClaret, 55) : cGri
-barcolor(barrenk, title = "Bar sınıfı")
+barcolor(kapanmis ? barrenk : na, title = "Bar sınıfı")
 
 f_dusenler(a1, a2, a3, a5) =>
     string d = ""
@@ -615,7 +639,7 @@ f_paket(float giris, float stop) =>
     "\nGiriş " + str.tostring(giris, format.mintick) + " · stop " + str.tostring(stop, format.mintick) +
        " · 1R " + str.tostring(giris + (giris - stop), format.mintick) + " · 2R " + str.tostring(giris + 2 * (giris - stop), format.mintick)
 
-if sinyalGoster and bogaDonus and kaliteBoga >= asgariKalite and not yalnizSat
+if sinyalGoster and kapanmis and bogaDonus and kaliteBoga >= asgariKalite and not yalnizSat
     label.new(bar_index, low, str.tostring(kaliteBoga) + "/4", yloc = yloc.belowbar,
        style = label.style_label_up, color = color.new(aiLong ? cMavi : cGri, 80), textcolor = cMurekkep, size = size.tiny,
        tooltip = "Boğa sinyal barı · canlı kalite " + str.tostring(kaliteBoga) + "/4" + (aiLong ? " · always-in ile hizalı" : aiShort ? " · always-in'e KARŞI" : "") +
@@ -623,7 +647,7 @@ if sinyalGoster and bogaDonus and kaliteBoga >= asgariKalite and not yalnizSat
        "\nÖrtüşme: %" + str.tostring(math.round(ortusme * 100)) + (ikiBarlikDonus ? " → İKİ BARLIK dönüş oku" : "") +
        f_paket(girisBoga, stopBoga))
 
-if sinyalGoster and ayiDonus and kaliteAyi >= asgariKalite and not yalnizAl
+if sinyalGoster and kapanmis and ayiDonus and kaliteAyi >= asgariKalite and not yalnizAl
     label.new(bar_index, high, str.tostring(kaliteAyi) + "/4", yloc = yloc.abovebar,
        style = label.style_label_down, color = color.new(aiShort ? cClaret : cGri, 80), textcolor = cMurekkep, size = size.tiny,
        tooltip = "Ayı sinyal barı · canlı kalite " + str.tostring(kaliteAyi) + "/4" + (aiShort ? " · always-in ile hizalı" : aiLong ? " · always-in'e KARŞI" : "") +
@@ -632,41 +656,41 @@ if sinyalGoster and ayiDonus and kaliteAyi >= asgariKalite and not yalnizAl
        f_paket(girisAyi, stopAyi))
 
 // Kurulum işaretleri: H2/L2 ikinci giriş, başarısız dönüş, bant kenarı.
-if kurulumGoster and ikinciBoga
+if kurulumGoster and kapanmis and ikinciBoga
     label.new(bar_index, low, "H2", yloc = yloc.belowbar, style = label.style_label_up,
        color = color.new(cMavi, 60), textcolor = cMurekkep, size = size.tiny,
        tooltip = "İkinci giriş (2.9 + 6.4): boğa trendinde geri çekilmenin ikinci bacağı." + f_paket(girisBoga, stopBoga))
-if kurulumGoster and ikinciAyi
+if kurulumGoster and kapanmis and ikinciAyi
     label.new(bar_index, high, "L2", yloc = yloc.abovebar, style = label.style_label_down,
        color = color.new(cClaret, 60), textcolor = cMurekkep, size = size.tiny,
        tooltip = "İkinci giriş (2.9 + 6.4): ayı trendinde geri çekilmenin ikinci bacağı." + f_paket(girisAyi, stopAyi))
-if kurulumGoster and bantBoga
+if kurulumGoster and kapanmis and bantBoga
     label.new(bar_index, low, "bant", yloc = yloc.belowbar, style = label.style_label_up,
        color = color.new(cMavi, 60), textcolor = cMurekkep, size = size.tiny,
        tooltip = "Bant kenarı (4.6): bandın alt üçte birinde dönüş barı; bant " + str.tostring(bantYuk, format.mintick) +
        " ≥ 3 × stop, 1R bandın içinde. ALT PANEL BANT DEMİYORSA ALINMAZ." + f_paket(girisBoga, stopBoga))
-if kurulumGoster and bantAyi
+if kurulumGoster and kapanmis and bantAyi
     label.new(bar_index, high, "bant", yloc = yloc.abovebar, style = label.style_label_down,
        color = color.new(cClaret, 60), textcolor = cMurekkep, size = size.tiny,
        tooltip = "Bant kenarı (4.6): bandın üst üçte birinde dönüş barı; bant " + str.tostring(bantYuk, format.mintick) +
        " ≥ 3 × stop, 1R bandın içinde. ALT PANEL BANT DEMİYORSA ALINMAZ." + f_paket(girisAyi, stopAyi))
-if kurulumGoster and basarisizBoga and not yalnizSat
+if kurulumGoster and kapanmis and basarisizBoga and not yalnizSat
     label.new(bar_index, high, "↑", yloc = yloc.abovebar, style = label.style_none,
        textcolor = cMavi, size = size.small,
        tooltip = "Başarısız dönüş (2.7): boğa trendinde ayı dönüş barı; ÜSTÜNE alış stop, altına koruyucu stop. Alt uç aynı barda önce geçilirse emir sayılmaz." + f_paket(girisBoga, stopBoga))
-if kurulumGoster and basarisizAyi and not yalnizAl
+if kurulumGoster and kapanmis and basarisizAyi and not yalnizAl
     label.new(bar_index, low, "↓", yloc = yloc.belowbar, style = label.style_none,
        textcolor = cClaret, size = size.small,
        tooltip = "Başarısız dönüş (2.7): ayı trendinde boğa dönüş barı; ALTINA satış stop, üstüne koruyucu stop." + f_paket(girisAyi, stopAyi))
 
-if sayimGoster and not na(hEtiket)
+if sayimGoster and kapanmis and not na(hEtiket)
     label.new(bar_index, high, hEtiket, yloc = yloc.abovebar, style = label.style_none,
        textcolor = cMavi, size = size.tiny)
-if sayimGoster and not na(lEtiket)
+if sayimGoster and kapanmis and not na(lEtiket)
     label.new(bar_index, low, lEtiket, yloc = yloc.belowbar, style = label.style_none,
        textcolor = cClaret, size = size.tiny)
 
-if kalipGoster and kalipAd != ""
+if kalipGoster and kapanmis and kalipAd != ""
     label.new(bar_index, high, kalipAd, yloc = yloc.abovebar, style = label.style_label_down,
        color = color.new(cGri, 80), textcolor = cMurekkep, size = size.tiny,
        tooltip = "Kırılım modu · kalıp bir YATAY BANTTIR, yön bilinmez." +
@@ -677,8 +701,8 @@ if kalipGoster and kalipAd != ""
     line.new(bar_index - kalipBar + 1, kalipTepe, bar_index + 2, kalipTepe, color = color.new(cMavi, 40), style = line.style_dotted)
     line.new(bar_index - kalipBar + 1, kalipDip,  bar_index + 2, kalipDip,  color = color.new(cClaret, 40), style = line.style_dotted)
 
-plotshape(ucgenGoster and aiDondu and aiLong,  "Always-in → long",  shape.triangleup,   location.belowbar, cMavi,   size = size.small)
-plotshape(ucgenGoster and aiDondu and aiShort, "Always-in → short", shape.triangledown, location.abovebar, cClaret, size = size.small)
+plotshape(ucgenGoster and kapanmis and aiDondu and aiLong,  "Always-in → long",  shape.triangleup,   location.belowbar, cMavi,   size = size.small)
+plotshape(ucgenGoster and kapanmis and aiDondu and aiShort, "Always-in → short", shape.triangledown, location.abovebar, cClaret, size = size.small)
 
 // ── Son barın emir seviyeleri: öncelik sırasıyla TEK paket ───────────────
 //  kırılım modu (iki taraflı) > bant kenarı > ikinci giriş > başarısız
@@ -703,7 +727,10 @@ paketGiris = kalipAd != "" ? kalipTepe + tick : paketBoga ? girisBoga : girisAyi
 paketStop  = kalipAd != "" ? kalipDip  - tick : paketBoga ? stopBoga  : stopAyi
 paketRisk  = math.abs(paketGiris - paketStop)
 
-if barstate.islast
+// Çizgiler son KAPANMIŞ barda kurulur ve canlı bar boyunca YERİNDE DURUR.
+// Eskiden kapı `barstate.islast` idi: emir seviyeleri, emrin gerçekten
+// konulabildiği tek barın ilk tick'inde siliniyordu.
+if cizimBari
     line.delete(lGiris)
     line.delete(lStop)
     line.delete(l1R)
@@ -720,7 +747,7 @@ if barstate.islast
         lAd := label.new(bar_index + 3, paketGiris, paketAd + (kalipAd != "" ? "  (üst: alış stop · alt: satış stop)" : "  (kalın giriş · kesik stop · noktalı 1R/2R)"),
            style = label.style_label_left, color = color.new(cPaket, 85), textcolor = cMurekkep, size = size.tiny)
 
-if gapGoster and gapSayac == gapEsik
+if gapGoster and kapanmis and gapSayac == gapEsik
     label.new(bar_index, aiLong ? low : high, str.tostring(gapEsik) + " gap bar",
        yloc = aiLong ? yloc.belowbar : yloc.abovebar, style = label.style_none,
        textcolor = cGri, size = size.tiny)
@@ -756,12 +783,16 @@ f_satir(int satir, string no, string ad, string deger, color renk) =>
     table.cell(kutu, 1, satir, ad,    text_size = f_boyut(kutuBoyut), text_color = cYaziGri, text_halign = text.align_left)
     table.cell(kutu, 2, satir, deger, text_size = f_boyut(kutuBoyut), text_color = renk, text_halign = text.align_left)
 
-if barstate.islast and kutuKip != "Kapalı"
+if cizimBari and kutuKip != "Kapalı"
     table.clear(kutu, 0, 0, 2, 17)
 
     // ── OKUMA SIRASI ─────────────────────────────────────────────────────
-    f_baslik(0, "OKUMA SIRASI", "Ders bu sırayı dayatır: önce rejim, sonra yön, sonra yasak, en son kurulum. " +
-       "Sıra bozulursa 'doğru kurulumu yanlış günde almak' olur — dersin en pahalı hatası.")
+    f_baslik(0, yalnizKapali ? "OKUMA SIRASI · son kapanmış bar" : "OKUMA SIRASI · CANLI BAR",
+       "Ders bu sırayı dayatır: önce rejim, sonra yön, sonra yasak, en son kurulum. " +
+       "Sıra bozulursa 'doğru kurulumu yanlış günde almak' olur — dersin en pahalı hatası." +
+       "\nKutu KAPANMIŞ bir barı anlatır: aşağıdaki emir o barın ucundan kurulur ve şu an, " +
+       "bu canlı barda çalışır. 'Bar disiplini' kapatılırsa kutu kapanmamış barı yazar ve " +
+       "her sayı bar bitene kadar oynar.")
 
     f_satir(1, "①", "Rejim", "alt panele bak", cYaziGri)
 
@@ -831,15 +862,24 @@ if barstate.islast and kutuKip != "Kapalı"
                iptalAd != "—" ? cYaziKzl : cYaziAna)
 
 // ─────────────────────────────────────────────────────────────────────────
-//  Uyarılar — hepsi KAPANMIŞ bar üzerinden
+//  Uyarılar
 // ─────────────────────────────────────────────────────────────────────────
-alertcondition(aiDondu and aiLong,  "Always-in long'a döndü",  "Brooks FH: always-in LONG")
-alertcondition(aiDondu and aiShort, "Always-in short'a döndü", "Brooks FH: always-in SHORT")
-alertcondition(gapSayac == gapEsik, "Gap bar eşiği",           "Brooks FH: ortalamaya dokunmayan bar sayısı eşiğe ulaştı")
-alertcondition(tersIkiKapanis,      "Ters tarafta iki kapanış","Brooks FH: trendin karakteri değişmiş olabilir")
-alertcondition(kalipAd != "",       "Kırılım modu kalıbı",     "Brooks FH: ii/iii/ioi/oio/oo — iki tarafa da emir")
-alertcondition(ikiBarDonus,         "İki barlık dönüş",        "Brooks FH: giriş HER İKİ barın ötesine konur")
-alertcondition(iptalAd != "—",      "Beş bar iptal kuralı",    "Brooks FH: eski ucun ötesinde beş kapanış — dönüş arayışı iptal")
-alertcondition(ikinciBoga or ikinciAyi,     "İkinci giriş (H2/L2)", "Brooks FH: geri çekilmenin ikinci bacağı — paket seviyeleri kutuda")
-alertcondition(bantBoga or bantAyi,         "Bant kenarı",          "Brooks FH: bandın uç üçte birinde dönüş barı — alt panel BANT demiyorsa alınmaz")
-alertcondition(basarisizBoga or basarisizAyi, "Başarısız dönüş",    "Brooks FH: trend içindeki karşı dönüş barı — ters tarafından giriş paketi")
+//  HEPSİ KAPANMIŞ BAR ÜZERİNDEN ve bu, "Bar disiplini" girdisinden BAĞIMSIZ
+//  olarak böyle: gönderilmiş bir alarm geri alınamaz. Kapanmamış barda doğup
+//  kapanışta yok olan bir koşul — kırılım modu kalıbı barın ilk tick'inde
+//  yapısal olarak DOĞRUDUR, gap eşiği bir EŞİTLİK sınamasıdır — okura
+//  grafikte karşılığı olmayan bir emir tarif eder.
+//
+//  Bu satır bir zamanlar yalnız YORUMDU: "hepsi KAPANMIŞ bar üzerinden"
+//  yazıyordu ve tek bir `barstate.isconfirmed` yoktu. Garanti artık her
+//  koşulun İÇİNDE ve `pine_denetle` onu sorar.
+alertcondition(barstate.isconfirmed and aiDondu and aiLong,  "Always-in long'a döndü",  "Brooks FH: always-in LONG")
+alertcondition(barstate.isconfirmed and aiDondu and aiShort, "Always-in short'a döndü", "Brooks FH: always-in SHORT")
+alertcondition(barstate.isconfirmed and gapSayac == gapEsik, "Gap bar eşiği",           "Brooks FH: ortalamaya dokunmayan bar sayısı eşiğe ulaştı")
+alertcondition(barstate.isconfirmed and tersIkiKapanis,      "Ters tarafta iki kapanış","Brooks FH: trendin karakteri değişmiş olabilir")
+alertcondition(barstate.isconfirmed and kalipAd != "",       "Kırılım modu kalıbı",     "Brooks FH: ii/iii/ioi/oio/oo — iki tarafa da emir")
+alertcondition(barstate.isconfirmed and ikiBarDonus,         "İki barlık dönüş",        "Brooks FH: giriş HER İKİ barın ötesine konur")
+alertcondition(barstate.isconfirmed and iptalAd != "—",      "Beş bar iptal kuralı",    "Brooks FH: eski ucun ötesinde beş kapanış — dönüş arayışı iptal")
+alertcondition(barstate.isconfirmed and (ikinciBoga or ikinciAyi),     "İkinci giriş (H2/L2)", "Brooks FH: geri çekilmenin ikinci bacağı — paket seviyeleri kutuda")
+alertcondition(barstate.isconfirmed and (bantBoga or bantAyi),         "Bant kenarı",          "Brooks FH: bandın uç üçte birinde dönüş barı — alt panel BANT demiyorsa alınmaz")
+alertcondition(barstate.isconfirmed and (basarisizBoga or basarisizAyi), "Başarısız dönüş",    "Brooks FH: trend içindeki karşı dönüş barı — ters tarafından giriş paketi")

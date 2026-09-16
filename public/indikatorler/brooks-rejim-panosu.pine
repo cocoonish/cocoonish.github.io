@@ -35,6 +35,9 @@
 //@version=6
 indicator("Brooks · Rejim Panosu", shorttitle="Brooks RP", overlay = false)
 
+g0 = "Bar disiplini"
+yalnizKapali = input.bool(true, "Yalnız kapanmış bar", group = g0, tooltip = "Canlı barın yüksek/düşük/kapanışı FİNAL DEĞİLDİR; beş ölçünün beşi de ondan besleniyor ve hüküm bar içinde BANT ile trend arasında defalarca gidip gelebilir. Açıkken pano kapanmamış bar hakkında hiçbir şey söylemez: eğriler, zemin ve hüküm son KAPANMIŞ barda durur. Kapatılırsa canlı barın anlık hâli görünür.")
+
 g1 = "Pencere"
 pencere    = input.int(70, "Ölçüm penceresi (bar)", minval = 10, maxval = 300, tooltip = "Ders Şekil 30'da bant 70 bar sürüyor ve dört tanı sayısı o pencerede ölçülüyor.", group = g1)
 maUzunluk  = input.int(20, "EMA uzunluğu", minval = 2, group = g1)
@@ -108,7 +111,10 @@ ortusmeOran = math.sum(ortusmeBar ? 1 : 0, pencere) / pencere
 dojiOran = math.sum(doji ? 1 : 0, pencere) / pencere
 
 // ③ Ortalama kesişme sayısı
-kesti    = (close > ema and close[1] <= ema) or (close < ema and close[1] >= ema)
+// Kesişme, her barın KENDİ ortalamasına göre sorulur: önceki kapanış ÖNCEKİ
+// ema'nın hangi tarafındaydı. İki tarafı da bugünkü ema ile kıyaslamak,
+// ortalama yürürken sahte kesişme üretir ve replikasyonla AYRIŞIR.
+kesti    = (close > ema and close[1] <= ema[1]) or (close < ema and close[1] >= ema[1])
 kesisme  = math.sum(kesti ? 1 : 0, pencere)
 
 // ④ Net / aralık
@@ -134,6 +140,9 @@ azamiDizi = ta.highest(dizi, pencere)
 //  VE sonraki barın aralığı içindeyse üç barı barbwire say."
 //
 //  "Sonraki bar" geleceğe bakmak DEĞİL: kalıp üçüncü barında adlandırılır,
+//  ve o üçüncü bar gerçek zamanda KAPANMAMIŞ bardır — bu yüzden işaret
+//  yalnız bar kapanınca basılır (`kapanmis`), yoksa kalıp bar içinde
+//  doğup kaybolur.
 //  yani ortadaki bar [1], komşuları [2] ve [0]. Üçü de kapanmıştır.
 //
 //  NİÇİN ÖNEMLİ — dersin en sinsi tuzağı: "Barbwire içindeki bir dönüş
@@ -163,7 +172,29 @@ siraKesisme = ta.percentrank(kesisme,     tarihce) / 100
 siraNet     = ta.percentrank(-netAralik,  tarihce) / 100
 siraDizi    = ta.percentrank(-azamiDizi,  tarihce) / 100
 goreli = esikKipi == "Göreli"
-hazir  = not goreli or not na(siraOrtusme)   // tarihçe dolmadan hüküm yok
+// Isınma kapısı İKİ kipte de sorulur. Eskiden yalnız göreli kipe bakıyordu
+// (`not goreli or …`), yani ders kipinde yapısal olarak hep açıktı — oysa
+// replikasyon her iki kipte de pencere dolmadan None döner. Ayrıca göreli
+// kipin kapısı beş ölçüden yalnız birine bakıyordu ve seçtiği ölçü EMA'ya
+// bağlı OLMAYAN tek ölçüydü; ema penceresi de ayrıca sorulur.
+hazir  = (not goreli or not na(siraOrtusme)) and not na(ema) and not na(ema[pencere - 1])
+// Ölçüldü (öntanımlı pencere 70 · tarihçe 280 · ma 20): replikasyonun kapısı
+// bar 88'de, göreli sıra bar 368'de açılıyor; iki `ema` sınaması "pencere
+// dolu" şartını da kapsar (69 + 19 = 88), o yüzden ayrıca sorulmuyor.
+
+// ── BAR DİSİPLİNİ ────────────────────────────────────────────────────────
+//  Beş ölçünün beşi de canlı barın o anki değerine bakar; pencere gerçek
+//  zamanda "70 kapanmış bar" değil, 69 kapanmış artı 1 CANLI bardır. Hüküm
+//  tek bir ölçünün eşiği geçmesiyle kelime değiştirdiği için (1↔2 sınırı
+//  trend↔ara, 3↔4 sınırı ara↔BANT) canlı barda bu sınırlar defalarca
+//  geçilebilir. Okuma sırasının BİRİNCİ adımı bu panodur; birinci adımın
+//  bar içinde yalpalaması bütün sırayı bozar.
+//
+//  Kural fiyat panelindekiyle aynı: KAPANMAMIŞ BİR BAR HAKKINDA HİÇBİR ŞEY
+//  SÖYLENMEZ. Eğriler ve zemin o barda çizilmez, hüküm son kapanmış barda
+//  durur. Eşik çizgileri SABİTTİR, bir bar ölçmezler; onlar kesilmez.
+kapanmis = barstate.isconfirmed or not yalnizKapali
+cizimBari = bar_index >= last_bar_index - 1 and kapanmis
 
 // ── Bant işaretleri (yalnız ÖLÇÜLEBİLİR maddeler) ────────────────────────
 i1 = goreli ? siraOrtusme >= goreliPay : ortusmeOran >= ortusmePay
@@ -178,17 +209,17 @@ bantIsareti = (i1 ? 1 : 0) + (i2 ? 1 : 0) + (i3 ? 1 : 0) + (i4 ? 1 : 0) + (i5 ? 
 //  eşiğin üstündeyse o ölçü "son tarihçeye göre bantlı". Mutlak kipte ham
 //  değerler ve dersin üç eşiği çizilir (eskisi gibi). Net/aralık sırası
 //  ters ölçüdür: yüksek sıra = düşük net/aralık = bant.
-plot(goreli ? siraOrtusme : ortusmeOran, "Örtüşme (göreli: sıra)", color = cClaret,   linewidth = 2)
-plot(goreli ? siraDoji    : dojiOran,    "Doji (göreli: sıra)",    color = cMavi,     linewidth = 2)
-plot(goreli ? siraNet     : netAralik,   "Net/aralık (göreli: bantlılık sırası)", color = cMurekkep, linewidth = 2)
+plot(kapanmis ? (goreli ? siraOrtusme : ortusmeOran) : na, "Örtüşme (göreli: sıra)", color = cClaret,   linewidth = 2)
+plot(kapanmis ? (goreli ? siraDoji    : dojiOran)    : na,    "Doji (göreli: sıra)",    color = cMavi,     linewidth = 2)
+plot(kapanmis ? (goreli ? siraNet     : netAralik)   : na,   "Net/aralık (göreli: bantlılık sırası)", color = cMurekkep, linewidth = 2)
 plot(goreli ? goreliPay : na, "göreli eşik", color = color.new(cGri, 40), linewidth = 1)
 plot(goreli ? na : ortusmePay, "örtüşme eşiği (mutlak)", color = color.new(cClaret, 60), linewidth = 1)
 plot(goreli ? na : dojiPay,    "doji eşiği (mutlak)",    color = color.new(cMavi, 60),   linewidth = 1)
 plot(goreli ? na : netEsik,    "net/aralık eşiği (mutlak)", color = color.new(cMurekkep, 70), linewidth = 1)
 
-bgcolor(hazir and bantIsareti >= 4 ? color.new(cGri, 82) : hazir and bantIsareti >= 3 ? color.new(cGri, 91) : na,
+bgcolor(kapanmis and hazir and bantIsareti >= 4 ? color.new(cGri, 82) : na,
    title = "Bant rejimi zemini")
-plotshape(barbwire, "Barbwire", shape.xcross, location.top, cClaret, size = size.tiny)
+plotshape(kapanmis and barbwire, "Barbwire", shape.xcross, location.top, cClaret, size = size.tiny)
 
 // ── Durum tablosu ────────────────────────────────────────────────────────
 //  HÜKÜM EN ÜSTTE. Okuma sırasının birinci adımı bu panodur ve panonun
@@ -213,7 +244,7 @@ f_satir(int satir, string ad, string deger, string isaret, color renk) =>
     table.cell(t, 1, satir, deger,  text_size = f_boyut(kutuBoyut), text_color = cYaziAna, text_halign = text.align_right)
     table.cell(t, 2, satir, isaret, text_size = f_boyut(kutuBoyut), text_color = renk)
 
-if barstate.islast and kutuKip != "Kapalı"
+if cizimBari and kutuKip != "Kapalı"
     table.clear(t, 0, 0, 2, 8)
 
     rejimAd  = not hazir ? "—" : bantIsareti >= 4 ? "BANT" : bantIsareti <= 1 ? "trend" : "ara"
@@ -258,6 +289,6 @@ if barstate.islast and kutuKip != "Kapalı"
            str.tostring(math.round(math.max(0.0, math.min(bwKesOnce, bwKesSonra)) / math.max(bwOrtaMenzil, syminfo.mintick), 2)),
            barbwire ? "VAR ⚠" : "—", barbwire ? cYaziKzl : cYaziGri)
 
-alertcondition(ta.crossover(bantIsareti, 3.5),  "Bant rejimine geçiş",  "Brooks RP: ölçülebilir bant işaretleri 4'e çıktı")
-alertcondition(ta.crossunder(bantIsareti, 1.5), "Bant rejiminden çıkış","Brooks RP: ölçülebilir bant işaretleri 1'e indi")
-alertcondition(barbwire, "Barbwire", "Brooks RP: barbwire — dönüş barı burada dönüş barı gibi işlev GÖRMEZ")
+alertcondition(barstate.isconfirmed and hazir and ta.crossover(bantIsareti, 3.5),  "Bant rejimine geçiş",  "Brooks RP: ölçülebilir bant işaretleri 4'e çıktı")
+alertcondition(barstate.isconfirmed and hazir and ta.crossunder(bantIsareti, 1.5), "Bant rejiminden çıkış","Brooks RP: ölçülebilir bant işaretleri 1'e indi")
+alertcondition(barstate.isconfirmed and barbwire, "Barbwire", "Brooks RP: barbwire — dönüş barı burada dönüş barı gibi işlev GÖRMEZ")
