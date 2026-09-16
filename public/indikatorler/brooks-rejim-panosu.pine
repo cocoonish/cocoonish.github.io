@@ -251,7 +251,11 @@ if cizimBari and kutuKip != "Kapalı"
     rejimUst = not hazir ? cYaziGri : bantIsareti >= 4 ? cYaziKzl : bantIsareti <= 1 ? cYaziMavi : cYaziGri
     // Ders bu üç hâle ayrı ayrı NE YAPILACAĞINI söyler; kutu o cümleyi taşır,
     // yoksa okur "4/5" sayısından kendi kuralını uydurur.
-    rejimNot = not hazir ? "tarihçe doluyor · " + str.tostring(tarihce) + " bar gerekir" :
+    // Okura yazılan ısınma sayısı ÖLÇÜLMÜŞ olanıdır, `tarihce`nin kendisi
+    // değil: göreli sıra, `pencere` dolduktan SONRA `tarihce` bar ister
+    // (69 + 280 = 349); ders kipinde bağlayan şey ema'dır (69 + 19 = 88).
+    // Kutu "280 bar" diyordu ve okur ısınmayı olduğundan kısa sanıyordu.
+    rejimNot = not hazir ? "tarihçe doluyor · " + str.tostring(pencere - 1 + (goreli ? tarihce : maUzunluk)) + " bar gerekir" :
        bantIsareti >= 4 ? "uçlarda bant kenarı · ortada emir yok · H2/L2 yalnız uçta" :
        bantIsareti <= 1 ? "geri çekilme kurulumları (H2/L2, dönüş barı) · fade edilmez" :
        "pano karar vermez · hangi tarafa yakın olduğunu söyler"
