@@ -1,0 +1,136 @@
+---
+/* ─────────────────────────────────────────────────────────────
+   TTO · Yapı ve Momentum — ölçüm tabloları, SAYILAR ÖLÇÜM DOSYASINDAN.
+
+   Tek kaynak site/src/data/yapi_backtest.json (Aktarılacak Projeler/
+   Indikator/backtest.py çıktısı). Üç kip:
+     kip="olasilik"  — olay taban oranları, zaman dilimine göre, N ve %95
+     kip="paket"     — kurulum paketleri (hedef, süzgeç seçilir)
+     kip="diverjans" — kullanıcı tablosunun 25 satırı: iddia ve ölçülen
+   Sayfaya elle sayı yazılmaz — elle yazılan sayı bir sonraki ölçümde
+   sessizce eskir. Biçim tek sözleşmeden (lib/bicim).
+   ───────────────────────────────────────────────────────────── */
+import veri from '../data/yapi_backtest.json';
+import { sayi } from '../lib/bicim';
+
+interface Props {
+  kip: 'olasilik' | 'paket' | 'diverjans';
+  hedef?: 1 | 2;
+  suzgec?: 'yok' | 'konum' | 'trend' | 'itki';
+  tf?: string;
+}
+const { kip, hedef = 2, suzgec = 'yok', tf = '1h' } = Astro.props;
+type Satir = Record<string, any>;
+const TFLER = ['5m', '15m', '1h', '4h', '1d'];
+const TF_AD: Record<string, string> = { '5m': '5 dk', '15m': '15 dk', '1h': '1 sa', '4h': '4 sa', '1d': 'günlük' };
+const PAKET_AD: Record<string, string> = {
+  sweep_mss_fvg: 'sweep → MSS → FVG (CE limit)', ob_retest: 'OB retest (MT limit)', prz: 'harmonik PRZ (teyit)',
+  diverjans: 'diverjans tablosu (SL/TP tablo)', bos_devam: 'BOS devam (kırılım)',
+};
+const OLCU_AD: [string, string][] = [
+  ['bos_t1', 'BOS → 0,618·aralık hedefi, seviye geri alınmadan'],
+  ['bos_t2', 'BOS → 1,0·aralık hedefi'],
+  ['choch_devam', 'CHoCH → yeni yönde BOS, geri dönüşten önce'],
+  ['mss_devam', 'MSS → yeni yönde BOS'],
+  ['sweep_tepki', 'sweep → 1 ATR ters hareket, 1 ATR devamdan önce'],
+  ['sweep_displacement3', 'sweep → 3 barda displacement'],
+  ['fvg_ce50', 'FVG: 50 barda CE\'ye dokunuş'],
+  ['fvg_dolu50', 'FVG: 50 barda tam dolum'],
+  ['fvg_ters50', 'FVG: 50 barda ters dönme (IFVG)'],
+  ['fvg_ce_tepki', 'FVG CE\'den 1 ATR tepki, dolumdan önce'],
+  ['ob_tepki', 'OB ilk dokunuşta 1 ATR tepki, kırılmadan önce'],
+  ['esit_sweep', 'eşit tepe/dip: 50 barda süpürüldü'],
+  ['esit_run', 'eşit tepe/dip: 50 barda koşuldu (kapanışla)'],
+  ['esit_testyok', 'eşit tepe/dip: 50 barda test yok'],
+  ['prz_tamamlanma', 'PRZ: fiyat bölgeye geldi'],
+  ['prz_teyit', 'PRZ\'ye gelenin dönüş mumu vermesi'],
+  ['prz_t1', 'PRZ teyit → T1, stoptan önce'],
+];
+const yz = (o: Satir | undefined) => (!o || o.oran === null || o.oran === undefined ? '—' : '%' + sayi(100 * o.oran, 1));
+const ca = (o: Satir | undefined) => (!o || o.oran === null || o.oran === undefined ? '' : `${sayi(100 * o.ca_alt, 0)}–${sayi(100 * o.ca_ust, 0)}`);
+const r = (v: number | null | undefined, o = 2) => (v === null || v === undefined ? '—' : sayi(v, o, true));
+const paketler: Satir[] = (veri as any).paket_toplam.filter((p: Satir) => p.suzgec === suzgec && (p.hedef_R === hedef || p.paket === 'diverjans'));
+const div: Satir[] = ((veri as any).diverjans[tf] ?? []).slice().sort((a: Satir, b: Satir) => a.satir - b.satir);
+const az = (n: number) => n < 30;
+---
+
+{kip === 'olasilik' && (
+  <div class="bt-kap">
+    <table class="bt">
+      <thead>
+        <tr><th>Olay → soru</th>{TFLER.map((t) => <th>{TF_AD[t]}</th>)}</tr>
+      </thead>
+      <tbody>
+        {OLCU_AD.map(([k, ad]) => (
+          <tr>
+            <td>{ad}</td>
+            {TFLER.map((t) => {
+              const o = (veri as any).olasilik[t]?.toplam?.[k];
+              return <td class={o && az(o.n) ? 'az' : ''}>{yz(o)}<span class="alt">{o ? `n ${sayi(o.n, 0)} · ${ca(o)}` : ''}</span></td>;
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
+{kip === 'paket' && (
+  <div class="bt-kap">
+    <table class="bt">
+      <thead>
+        <tr><th>Zaman dilimi · paket</th><th>N</th><th>Kazanma</th><th>Brüt ort. R</th><th>Spread sonrası</th><th>Rastgele giriş</th><th>Aynı derinlikte rastgele limit</th><th>İlk / ikinci yarı</th><th>Seri ≥ 95. yüzdelik (giriş · seviye)</th><th>Risk medyanı</th></tr>
+      </thead>
+      <tbody>
+        {TFLER.map((t) =>
+          paketler.filter((p) => p.tf === t).map((p) => (
+            <tr class={az(p.n) ? 'az' : ''}>
+              <td>{TF_AD[t]} · {PAKET_AD[p.paket]}</td>
+              <td>{sayi(p.n, 0)}</td>
+              <td>{az(p.n) ? '—' : '%' + sayi(100 * p.kazanma, 1)}</td>
+              <td>{az(p.n) ? '—' : r(p.ort_R)}</td>
+              <td>{az(p.n) ? '—' : r(p.net_ort_R)}</td>
+              <td>{az(p.n) ? '—' : r(p.rastgele_ort_R)}</td>
+              <td>{p.rastgele_seviye_ort_R === null || p.rastgele_seviye_ort_R === undefined ? '—' : r(p.rastgele_seviye_ort_R)}</td>
+              <td>{az(p.n) ? '—' : `${r(p.ilk_yari_ort_R)} / ${r(p.ikinci_yari_ort_R)}`}</td>
+              <td>{p.seri_ustu_rastgele}/{p.seri} · {p.rastgele_seviye_ort_R === null || p.rastgele_seviye_ort_R === undefined ? '—' : `${p.seri_ustu_rastgele_seviye}/${p.seri}`}</td>
+              <td>{p.risk_atr_p50 === null || p.risk_atr_p50 === undefined ? '—' : sayi(p.risk_atr_p50, 2) + ' ATR'}</td>
+            </tr>
+          )),
+        )}
+      </tbody>
+    </table>
+  </div>
+)}
+
+{kip === 'diverjans' && (
+  <div class="bt-kap">
+    <table class="bt">
+      <thead>
+        <tr><th>Satır · koşul</th><th>SL · TP (ATR)</th><th>Kaynak iddiası</th><th>Ölçülen ({TF_AD[tf]})</th><th>N</th><th>%95 aralık</th></tr>
+      </thead>
+      <tbody>
+        {div.map((d) => (
+          <tr class={az(d.n) ? 'az' : ''}>
+            <td>#{d.satir} · {['', 'düzenli boğa', 'düzenli ayı', 'gizli boğa', 'gizli ayı'][d.tip]} · BB dilimi {d.bb} · RSI dilimi {d.rsi} · {d.trend === 0 ? 'trend fark etmez' : d.trend === 1 ? 'yükseliş' : 'düşüş'}</td>
+            <td>{sayi(d.sl, 1)} · {sayi(d.tp, 1)}</td>
+            <td>%{sayi(d.iddia, 1)}</td>
+            <td>{az(d.n) ? '—' : '%' + sayi(100 * d.oran, 1)}</td>
+            <td>{sayi(d.n, 0)}</td>
+            <td>{az(d.n) ? 'N < 30' : ca(d)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
+<style>
+  .bt-kap { overflow-x: auto; margin: 1.25rem 0; }
+  .bt { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.76rem; }
+  .bt th, .bt td { padding: 0.3rem 0.45rem; border-bottom: 1px solid var(--ink-30, #d8d4cc); text-align: right; white-space: nowrap; vertical-align: top; }
+  .bt th:first-child, .bt td:first-child { text-align: left; white-space: normal; min-width: 14rem; }
+  .bt thead th { font-weight: 600; color: var(--ink-60, #6f6f6f); border-bottom-width: 2px; white-space: normal; }
+  .bt tr.az td, .bt td.az { color: var(--ink-60, #6f6f6f); }
+  .bt .alt { display: block; font-size: 0.66rem; color: var(--ink-60, #6f6f6f); }
+</style>

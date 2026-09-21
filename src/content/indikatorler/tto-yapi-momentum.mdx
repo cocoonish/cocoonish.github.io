@@ -1,0 +1,396 @@
+---
+title: 'TTO · Yapı ve Momentum — SMC, harmonik ve diverjansı tek ekranda okuma rehberi'
+description: 'İki parçalı TradingView indikatörü ve kullanım rehberi: fiyat paneli onaylı swing yapısını (BOS · CHoCH · MSS, hepsi gövde kapanışıyla), dealing range ve OTE bölgesini, likidite havuzlarını ve süpürmeleri, displacement''lı FVG ve order block''ları, harmonik PRZ''yi ve kullanıcının 25 satırlık RSI diverjans tablosunu çizer; kurulum kutusu son kapanmış barın emir paketini ve o paketin bu zaman diliminde ölçülmüş olasılığını yazar. Alt panel momentumu göreli sırayla okur: itki (gövde/ATR), RSI sırası, Bollinger konumu, diverjans. Her sayı 15 enstrüman × beş zaman dilimi × 560 bin kapanmış barda ölçüldü ve tabloda N ve güven aralığıyla durur: BOS hedefi üç kırılımın birinde geliyor, sweep sonrası dönüş yazı tura, FVG dörtte üç dolar, PRZ teyidinden sonra T1 üçte ikide gelir; beş emir paketinin hiçbiri aynı geometride rastgele girişi maliyet sonrası yayımlanabilir biçimde yenmiyor.'
+pubDate: 2026-09-21
+tags: ['indikatör', 'pine script', 'tradingview', 'smc', 'harmonik', 'diverjans', 'likidite', 'backtest', 'teknik-analiz']
+durum: 'aktif'
+ozet: 'SMC yapısı, likidite havuzları, FVG/OB, harmonik PRZ ve RSI diverjansını iki panelde çizer; kurulum kutusu son kapanmış barın emir paketini ve o paketin ölçülmüş olasılığını yazar. Rehber: ekran nasıl okunur, momentum nasıl yorumlanır, ne zaman ne düşünülür. Backtest dürüst: taban oranlar tabloda, paketlerin hiçbiri maliyet sonrası aynı geometrideki rastgele emri yenmiyor.'
+seviye: 'ileri'
+kaynakDers: 'smc-teknik-analiz'
+pine: 'v6'
+parcalar:
+  - panel: 'fiyat'
+    ad: 'TTO · Yapı'
+    dosya: '/indikatorler/tto-yapi.pine'
+  - panel: 'alt'
+    ad: 'TTO · Momentum'
+    dosya: '/indikatorler/tto-momentum.pine'
+---
+
+import KodKutusu from '../../components/KodKutusu.astro';
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import YapiBacktest from '../../components/YapiBacktest.astro';
+import kodYapi from '../../../public/indikatorler/tto-yapi.pine?raw';
+import kodMomentum from '../../../public/indikatorler/tto-momentum.pine?raw';
+
+<div class="yonetici">
+  <span class="etiket">Kısa yol — bu indikatörle ne yapılır, ne yapılmaz</span>
+
+  <p class="tez">İki dosya tek sistemdir: fiyat paneli <b>nereyi</b> söyler (yapı, bölge,
+  havuz, FVG, order block, harmonik PRZ), alt panel <b>ne kadar güçle</b> (itki, RSI sırası,
+  diverjans). Kurulum kutusu son <b>kapanmış</b> barın emir paketini — giriş, stop, hedef —
+  ve o paketin bu zaman diliminde <b>ölçülmüş</b> olasılığını yazar. Ölçüldü ve burada
+  yazıyor: taban oranlar okuma kararını değiştirecek kadar netken, beş emir paketinin
+  hiçbiri aynı emir geometrisindeki rastgele girişi maliyet sonrası yayımlanabilir biçimde
+  yenmiyor. Bu sayfa size "ne zaman al" demez; <b>neye hangi sırayla bakacağınızı, emri
+  nereye koyacağınızı ve sayıların ne söyleyip ne söylemediğini</b> anlatır.</p>
+
+  <table>
+    <tbody>
+      <tr>
+        <td>Sırayla neye bakarım</td>
+        <td><b>1.</b> Kutunun ① satırı: yapı YÜKSELİŞ mi DÜŞÜŞ mü, son olay BOS mu CHoCH mu MSS mi.
+        <b>2.</b> ② satırı: fiyat dealing range'in DISCOUNT yarısında mı PREMIUM yarısında mı, OTE bandında mı.
+        <b>3.</b> ③ satırı: yakınlarda adlandırılmış bir havuz süpürüldü mü.
+        <b>4.</b> ④ satırı: hangi paket, hangi yönde, hangi emir tipi (limit mi piyasa mı).
+        <b>5.</b> Alt panel: itki sırası yüksek mi, RSI kendi tarihçesine göre nerede, diverjans var mı.
+        Dört adım aynı yöne bakmıyorsa emir yok.</td>
+      </tr>
+      <tr>
+        <td>Hangi paket ne zaman</td>
+        <td>Yapı yeni döndüyse (MSS) ve bacakta FVG varsa <b>sweep → MSS → FVG</b>; kırılım bacağı taze bir
+        blok bıraktıysa <b>OB retest</b>; PRZ'ye gelen fiyat dönüş mumu verdiyse <b>harmonik</b>;
+        diverjans tabloyla eşleştiyse <b>diverjans</b>; hiçbiri yoksa ve kırılım gövdeyle geldiyse
+        <b>BOS devam</b>. Öncelik bu sıradadır, kutu tek paket yazar.</td>
+      </tr>
+      <tr>
+        <td>Ne beklemeliyim (ölçüldü)</td>
+        <td>BOS'tan sonra 0,618 aralık hedefi kırılım geri alınmadan önce <b>üç kırılımın birinde</b> gelir (5 dk %28,5 → günlük %37,1).
+        Sweep sonrası 1 ATR dönüş <b>yazı tura</b>dır. Displacement'lı FVG 50 barda <b>dörtte üç</b> dolar.
+        Fiyat PRZ'ye gelirse üçte ikisi dönüş mumu verir ve o zaman T1 stoptan önce <b>üçte iki</b> ihtimalle gelir — ama T1 yakın, stop uzaktır; paket R'si sıfır civarı.</td>
+      </tr>
+      <tr>
+        <td>Ne yapılmaz</td>
+        <td>Kapanmamış barın etiketine, kutusuna ya da çizgisine bakılmaz — betik onları basmaz.
+        Kaynak dosyadaki "isabet %63,6" satırına güvenilmez: aynı satır arşivde %26–28 ölçüldü.
+        OB retest'in brüt artı ortalamasına "kenar" denmez: aynı derinlikteki rastgele limit aynı sayıyı veriyor.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <ul class="rakamlar">
+    <li><b>560 bin</b><span>kapanmış bar · 15 enstrüman · 5 zaman dilimi</span></li>
+    <li><b>%28–37</b><span>BOS sonrası 0,618 hedefi, geri alınmadan</span></li>
+    <li><b>%47–50</b><span>sweep sonrası 1 ATR dönüş: yazı tura</span></li>
+    <li><b>%70–76</b><span>FVG'nin 50 barda tam dolması</span></li>
+    <li><b>%57–72</b><span>PRZ teyidinden sonra T1, stoptan önce</span></li>
+    <li><b>0</b><span>maliyet sonrası rastgeleyi yenen paket</span></li>
+  </ul>
+
+**Kim için.** Sizin gibi 5 dakikalıkta işlem yapıp 1 saatlik, 4 saatlik ve günlükte bağlam
+arayanlar için. Kurallar her zaman diliminde aynı; sayılar dilime göre ayrı ölçüldü ve kutu
+grafiğin dilimini kendisi seçer.
+
+**İki dosya, tek sistem.** TradingView bir indikatörü ya fiyatın üstüne ya ayrı panele koyar.
+Bu yüzden kod iki dosyadır; ama okuma sırası ikisini birden ister.
+
+</div>
+
+## 1 · Kurulum ve ekran
+
+Pine editörüne önce "TTO · Yapı"yı, sonra "TTO · Momentum"u yapıştırın (kod bu sayfanın
+sonunda, indirilebilir). Öntanımlılar üç kümeden gelir ve karıştırılmaz: derslerin kendi
+sayıları, sizin indikatörünüzden aynen taşınan sayılar, ve dersin sayı vermediği yerlerde
+bizim tanım seçimlerimiz (ayrı grupta, her biri açık).
+
+| Ayar | Öntanımlı | Kaynak · neden |
+|---|---|---|
+| Swing fraktalı k | 3 (7 bar) | SMC dersi 2.1; dersin EUR/USD 1 saatlik örneği k = 3. Pivot k bar sonra onaylanır: onay gecikmesi, repaint değil |
+| Diverjans pivotu | 1 | sizin dosyanız (L = R = 1); RSI 14, EMA 50, Bollinger 20 / 2 de oradan |
+| Displacement | gövde/menzil ≥ 0,60 ve menzil ≥ 1,5 × son 10 bar | SMC 4.1 |
+| FVG boşluğu | ≥ 0,5 × ATR(14) | SMC 4.2 (Şekil 49); altı zayıf |
+| Eşit tepe/dip toleransı | 0,15 × ATR(14) | SMC 3.2 |
+| Sweep aşımı | ≥ 0,10 × ATR(14) | tanım seçimi: ders "1 pip ya da 0,3 × ATR(1 dk)" der |
+| MSS sweep penceresi | 10 bar | tanım seçimi: ders "kısa süre önce" der |
+| PRZ yayılımı | ≤ %10 XA | harmonik ders 3.3: %3 sıkı, %5–8 kabul; %10 son sınır |
+| Stop tamponu | 0,25 × ATR(14) | SMC 7.1 aralığının alt ucu |
+| Göreli sıra penceresi | 280 bar | Brooks v2 ile aynı sözleşme |
+
+<GrafikEmbed src="/indikatorler/tto_01_fiyat_paneli.html" baslik="Fiyat paneli grafikte ne çizer — dealing range, EQ, OTE bandı, BOS / CHoCH / MSS, FVG ve OB kutuları, PRZ, sweep işaretleri" no="01" kaynak="EUR/USD · 1 saatlik" genis />
+
+**Fiyat panelinde altı katman vardır.** Noktalı çizgiler dealing range'in iki ucu, gri
+çizgi EQ; zemin fiyat EQ'nun altındaysa yeşilimsi (discount), üstündeyse claret (premium).
+Altın bant OTE 0,62–0,79 geri çekilme bölgesidir ve yalnız yapı kurulunca çizilir. Siyah
+düz çizgi BOS, altın kesik CHoCH, claret kalın MSS — üçü de kırılan seviyeyi kırılım barına
+kadar götürür ve **hepsi gövde kapanışıyla** ilan edilir; fitil aşımı kırılım değil
+sweep'tir ve çarpıyla işaretlenir. Mor kutu displacement'lı FVG (CE'ye dokununca koyulaşır,
+dolunca griye döner), mavi kutu yapı kıran bacağın order block'u (ilk dokunuşta
+soluklaşır, gövde kapanışı uzak kenarı geçince biter), altın kutu harmonik PRZ. Önceki gün
+ve hafta yüksek/düşüğü ince yatay çizgilerdir; süpürülünce ya da koşulunca kutu bunu ③
+satırında söyler.
+
+<GrafikEmbed src="/indikatorler/tto_02_momentum_paneli.html" baslik="Alt panel ekranda ne çizer — RSI ve göreli sırası, itki histogramı, displacement barları, diverjans işaretleri" no="02" kaynak="EUR/USD · 1 saatlik" genis />
+
+**Alt panel iki ölçü, bir işaret çizer.** RSI(14) siyah, RSI'nın son 280 bara göre
+yüzdelik sırası mavi; itki histogramı barın gövdesinin ATR'ye oranının yine 280 barlık
+sırasıdır — altın sütun sıra ≥ %80. Claret baklava SMC'nin displacement eşiğini karşılayan
+bardır. Üçgenler sizin kuralınızla bulunan RSI diverjanslarıdır; numara 25 satırlık
+tablonun hangi satırına düştüğünü söyler, numarasız üçgen tabloda karşılığı olmayan
+diverjanstır.
+
+### Kapanmamış bar: indikatör onun hakkında konuşmaz
+
+Oluşmakta olan barın yükseği, düşüğü ve kapanışı final değildir. Bir BOS gövde kapanışıyla
+tanımlandığı için canlı barda "kırıldı" görünüp kapanışta geri gelebilir; bir sweep canlı
+barda run'a, bir run sweep'e dönebilir; PRZ'ye "giriş" fitille olduğu için barın ortasında
+doğup kapanışta hâlâ doğrudur ama dönüş mumu teyidi ancak kapanışta bilinir. **Kural tek
+cümle: kapanmamış bir bar hakkında hiçbir şey söylenmez.** Etiketler, kutular, zemin ve alt
+panelin çizgileri yalnız bar kapandığında basılır; kurulum kutusu ve emir çizgileri son
+**kapanmış** bara demirlenir. Yayımlanan backtest de aynı konvansiyonla ölçüldü: sinyal barı
+kapanmış bardır, emir bir sonraki barda çalışır. Davranış "Bar disiplini" girdisiyle
+kapatılabilir; **alarmlar bu girdiden bağımsızdır ve her koşulda bar kapanışına kilitlidir**,
+çünkü gönderilmiş bir alarm geri alınamaz.
+
+Üst zaman dilimi seviyeleri (önceki gün ve hafta yüksek/düşüğü) kapanmış önceki dönemden
+gelir; bu deyim sızıntısızdır ve repaint etmez. Sizin dosyanızdaki günlük ve haftalık
+Supertrend satırları buraya alınmadı: ofsetsiz istendiği için canlı barda oluşmakta olan
+günlük barın yönünü döndürüyor, geçmişe bakınca değişiyordu.
+
+## 2 · Okuma sırası: dört adım, sonra alt panel, sonra emir
+
+<GrafikEmbed src="/indikatorler/tto_03_okuma_sirasi.html" baslik="Okuma sırası tek bir karar barında: yapı → konum → likidite → kurulum, sonra alt panelin iki ölçüsü" no="03" kaynak="EUR/USD · 1 saatlik" />
+
+**① Yapı.** Kutu YÜKSELİŞ ya da DÜŞÜŞ der ve son olayı adıyla yazar. BOS trend yönünde
+onaylı bir swing'in gövdeyle aşılmasıdır ve yapıyı değiştirmez; CHoCH korunan karşı swing'in
+gövdeyle kırılmasıdır ve yapıyı çevirir; MSS, CHoCH'un dört koşullu hâlidir — kırılım
+bacağında displacement var, kırılımdan önceki on barda adlandırılmış bir havuz süpürülmüş.
+Ders CHoCH'u yalnız uyarı sayar, MSS'yi kurulum başlangıcı; ölçüm ikisini de yazı turaya
+yakın buldu (yeni yönde BOS, geri dönüşten önce: CHoCH %47–50, MSS %46–53). Yani ① satırı
+size yönü değil **referans çerçevesini** verir: hangi seviye korunuyor, hangi aralık geçerli.
+
+**② Konum.** Dealing range son kırılan dip ile kırılım tepesidir (düşüşte aynası); EQ
+ortası. Fiyat discount'taysa alış kurulumları, premium'daysa satış kurulumları aranır; OTE
+0,62–0,79 bandı geri çekilmenin "derin ama kırılmamış" bölgesidir. Ölçüm bu süzgecin paket
+sonuçlarını ayırmadığını gösterdi (aşağıda, tablo); yine de ilk adımda durur, çünkü
+kutunun yazdığı paketlerin çoğu tanımı gereği zaten doğru taraftadır.
+
+**③ Likidite.** Havuz, stopların biriktiği adlandırılabilir seviyedir: önceki gün ve hafta
+yüksek/düşüğü, onaylı swing'ler, eşit tepe ve dipler (fark ≤ 0,15 ATR). Fitil ötesine
+geçip kapanış geride kalırsa **sweep**, kapanış da ötedeyse **run**. Ölçüm: eşit tepe ve
+diplerin 50 bar içinde %31–33'ü süpürülüyor, %38–52'si koşuluyor, %23–30'u test edilmiyor —
+yani havuz gerçekten mıknatıs (dörtte üçüne fiyat geliyor) ama süpürme mi kırılım mı,
+gelene kadar bilinmiyor. Sweep sonrası 1 ATR'lik dönüşün 1 ATR'lik devamdan önce gelme
+oranı bütün dilimlerde %47–50, sweep'i üç barda displacement izleme oranı %10–14. Sweep bir
+**bağlam** bilgisidir, tek başına sinyal değildir; MSS'nin koşullarından biri olarak
+işe yarar.
+
+**④ Kurulum.** Kutu tek paket yazar ve emir tipini söyler. Limit paketlerde giriş fiyatın
+seviyeye gelmesini bekler (gelmezse işlem yoktur — ölçümde emirlerin %20–40'ı dolmadı);
+piyasa paketlerinde emir bir sonraki barın açılışında çalışır.
+
+**Alt panel.** İtki sırası yüksekse (≥ %80) hareket güçlüdür: aynı yönde geri çekilme
+aranır, karşı işlem değil. İtki düşükse kırılım devamı için kanıt yoktur. RSI'nın mutlak
+değeri sizin tablonuzun dilimlerini besler; göreli sırası "bu enstrümanda bu değer alışılmış
+mı" sorusuna cevaptır — sabit 70/30 çizgisi enstrümana göre kayar. Diverjans varsa ve
+tabloyla eşleşiyorsa kutu satır numarasını ve kaynak yüzdesini yazar; **kaynak yüzdesi
+ölçüm değildir**, ölçülen değer bu sayfadadır.
+
+## 3 · Beş kurulum paketi ve emir mekaniği
+
+<GrafikEmbed src="/indikatorler/tto_04_kurulumlar.html" baslik="Beş kurulum paketi gerçek barlarda: sinyal barı, giriş, stop ve hedef çizgileri; başlıkta işlemin sonucu" no="04" kaynak="EUR/USD · 1 saatlik" genis />
+
+| Paket | Tetik (kapanmış barda) | Giriş | Stop | Hedef | Kaynak |
+|---|---|---|---|---|---|
+| Sweep → MSS → FVG | MSS; bacakta aynı yönde FVG; on barda ters yönde sweep | FVG CE'ye limit | sweep ucu ∓ 0,25 ATR | 2R | SMC 6.1–6.3, K1–K15 |
+| OB retest | BOS / CHoCH / MSS bacağının order block'u | bloğun ortasına (MT) limit | fitil ucu ∓ 0,25 ATR | 2R | SMC 4.4 |
+| Harmonik PRZ | fiyat PRZ'ye girdi ve yön lehine gövdeli kapanış verdi | teyit kapanışı, piyasa | kalıbın geçersizlik oranı ∓ 0,25 ATR | T1 0,382 AD · T2 0,618 AD | harmonik 6.3–6.5 |
+| Diverjans | RSI diverjansı tabloyla eşleşti | onay kapanışı, piyasa | satırın SL çarpanı × ATR | satırın TP çarpanı × ATR | sizin dosyanız |
+| BOS devam | BOS gövdeyle geldi | kırılım kapanışı, piyasa | korunan karşı swing | kırılan seviye ± 0,618 aralık | sizin dosyanızın Target 1'i |
+
+**Stop yapıdan, hedef ölçüden.** Dört pakette stop bir yapıya bağlıdır (sweep ucu, blok
+fitili, kalıp geçersizliği, korunan swing) ve tampon 0,25 ATR'dir; hedef ya sabit R ya
+kalıbın kendi hedefidir. Diverjans paketinde her ikisi sizin tablonuzdaki ATR çarpanlarıdır
+— o çarpanlar kaynak dosyada yazılı ama hiç okunmuyordu; burada okunuyor ve ölçülüyor.
+
+<GrafikEmbed src="/indikatorler/tto_05_harmonik_ornek.html" baslik="Harmonik PRZ nasıl kurulur: X-A-B-C onaylanınca üç sayıdan bölge, sonra teyit, stop ve iki hedef" no="05" kaynak="EUR/USD · 1 saatlik" />
+
+**PRZ önceden çizilir.** C pivotu onaylandığı bar, kalıbın XA oranı, C'nin derinliğine göre
+seçilen BC katı ve AB=CD sayısı kümelenirse (yayılım ≤ %10 XA) bölge kurulur; fiyat henüz
+oradaysa değildir. Bu, harmonik çerçevenin öbür yöntemlere karşı tek gerçek avantajıdır:
+alarm bölgeye varmadan kurulabilir. Tanınan kalıplar Gartley, Bat, Alt Bat, Butterfly,
+Crab, Deep Crab, Cypher ve Shark; bantlar dersin tarayıcı bantlarıdır, Alt Bat'in BC bandı
+ile Deep Crab'in bantları katalogdan türetildi (ders tarayıcısı vermiyor). Ölçüm: çizilen
+PRZ'lerin %31–42'sine fiyat geliyor, gelenlerin %61–72'si dönüş mumu veriyor, teyitten sonra
+T1 stoptan önce %57–72 geliyor. Paket R'si buna rağmen sıfır civarı, çünkü T1 D'den A'ya
+yolun 0,382'sidir ve stop kalıbın ötesindedir: risk ödülün iki katından fazla.
+
+## 4 · Momentumu nasıl okumalı
+
+Alt panel bir yön tahmini yapmaz; Brooks panosunda ölçüldüğü gibi göreli rejim hükmünün
+ileriye dönük öngürü gücü yoktu. Panelin işi üç soruya cevaptır ve üçü de kapanmış barda
+bilinir.
+
+**İtki ne kadar güçlü?** Gövde/ATR'nin 280 barlık sırası. Yüksek itki barı (sıra ≥ %80)
+yapı olayıyla çakışıyorsa kırılım "displacement'lı"dır — SMC'nin MSS için istediği şey.
+Yüksek itki barından hemen sonra karşı işlem aranmaz; geri çekilme beklenir (FVG CE, OB
+ortası, OTE). Düşük itkiyle gelen kırılım (sıra < %20) ölçümde en sık geri alınan
+kırılımdır; BOS devam paketini o barlarda kurmamak için kutu itkiyi yanına yazar.
+
+**RSI nerede?** Mutlak değer tablonuzun dilimidir (30 / 40 / 50 / 60 / 70); göreli sıra
+"bu değer bu enstrümanda son 280 barın yüzde kaçından yüksek" sorusudur. İkisini birlikte
+okuyun: RSI 65 bir enstrümanda sıra %95, başkasında %60 olabilir.
+
+**Diverjans var mı?** Sizin kuralınız aynen çalışır: ardışık iki ham pivotta fiyat ve RSI
+ters yönde; fiyat ve RSI pivot barında, Bollinger dilimi, RSI dilimi ve trend onay barında.
+Tabloyla eşleşen diverjans kutuya satır numarasıyla düşer. Ölçüm bölümünde göreceğiniz gibi
+tablonun sıralaması arşivde tutmuyor; diverjansı **bağlam** olarak okuyun (bir PRZ'de ya da
+OTE'de diverjans, teyidin bir parçasıdır), tek başına tetik olarak değil.
+
+## 5 · Ne zaman ne düşünmeli
+
+Aşağıdaki senaryolar kutunun satırlarından türer; her birinin karşısındaki oran bu
+sayfanın ölçümüdür, ders iddiası değil.
+
+| Ekranda ne var | Ne düşünmeli | Ölçülen |
+|---|---|---|
+| ① YÜKSELİŞ, son olay BOS, ② discount, ③ yakın sweep yok | Trend sağlam, geri çekilme bekleniyor; limit için taze OB ya da FVG CE aranır, piyasa emri kovalamaz | BOS sonrası 0,618 hedefi geri alınmadan üçte bir; OB ilk dokunuşta 1 ATR tepki %52–57 |
+| ① DÜŞÜŞ, son olay CHoCH ↑ (yapı yeni döndü), displacement yok | Uyarı, kurulum değil; ders de öyle der. MSS'ye dönüşmesi için sweep + displacement gerekir | CHoCH sonrası yeni yönde BOS %47–50: yazı tura |
+| ③ PDH süpürüldü, sonraki barda displacement, ④ MSS | Dersin klasik zinciri: FVG CE'ye limit, stop sweep ucu | sweep'i üç barda displacement izleme %10–14; MSS sonrası devam %46–53 |
+| ② premium %85, ④ kutu alış paketi yazdı | Konum ve paket çelişiyor: paket kurulur ama boyut yarıya iner ya da atlanır | konum süzgeci paket sonucunu ayırmadı (tablo) |
+| PRZ çizildi, fiyat henüz gelmedi | Alarm kurulur, emir kurulmaz; bölgeye gelmeden geçersizleşme %5–9, hiç gelmeme %55–65 | PRZ'ye gelme %31–42 |
+| PRZ'de dönüş mumu, alt panelde diverjans | Teyit güçlü; T1 yakın olduğu için kısmi kâr T1'de, kalan T2'de | teyit → T1 %57–72; paket R ≈ 0 |
+| İtki sırası %95, BOS ↑ | Kovalama yok: FVG bırakılmışsa CE'ye limit, yoksa bekle | FVG 50 barda CE'ye dokunuş %79–83, tam dolum %70–76 |
+| İtki sırası %10, BOS ↑ | Zayıf kırılım; geri alınma olasılığı yüksek, BOS devam paketi kurulmaz | BOS devam paketi brüt R −0,01 … −0,07 |
+| Diverjans #0 (kaynak %63,6) | Kaynak yüzdesine değil ölçülene bakılır: %26–28 | tablo, Bölüm 6 |
+| Kutu "son KAPANMIŞ bar" yerine "canlı" yazıyor | Bar disiplini kapatılmış: ekrandaki her sayı bar bitene kadar oynar; açın | — |
+
+## 6 · Ölçülen olasılıklar
+
+Yöntem: 15 enstrüman (yedi FX majörü, EUR/GBP, EUR/CHF, DXY, XU100, SPX, NDX, WTI, altın)
+× 5 dk, 15 dk, 1 sa, 4 sa ve günlük; 5 ve 15 dakikalık seriler Yahoo Finance'in verdiği
+son on iki hafta, saatlik iki yıl, 4 saatlik ve günlük saatlikten kurulmuş (Yahoo'nun günlük
+FX barında gövde yok). Toplam 560 bin kapanmış bar; her olay bu sayfadaki Pine'ın Python
+eşiyle bulundu ve olayın barından sonraki 50 barda sorusu soruldu. N < 30 hücre gri.
+
+<GrafikEmbed src="/indikatorler/tto_06_olasiliklar.html" baslik="Ölçülen taban oranlar zaman dilimine göre, %95 güven aralığıyla; kesik çizgi yazı tura" no="06" kaynak="15 enstrüman · 560 bin bar" genis />
+
+<YapiBacktest kip="olasilik" />
+
+<GrafikEmbed src="/indikatorler/tto_07_fvg_prz_yasam.html" baslik="FVG'nin 50 bardaki akıbeti ve çizilen PRZ'lerin hunisi: gelme → teyit → T1" no="07" kaynak="15 enstrüman · 560 bin bar" genis />
+
+**Okuma.** Üç sayı okuma kararını değiştirir. BOS'tan sonra "hedef gelir" varsayımı
+üçte bir doğrudur — kırılımı kovalayan emir, üçte ikisinde seviyenin geri alınmasını görür.
+FVG'ler dolar: dörtte üçü 50 bar içinde tamamen. Havuzlar mıknatıstır: eşit tepe ve
+diplerin dörtte üçüne fiyat gelir. Buna karşılık **yön** soran her oran yazı turaya yakın:
+sweep sonrası dönüş, CHoCH ve MSS sonrası devam, FVG CE'den tepki, OB'den tepki (OB biraz
+üstünde, %52–57). Bu, indikatörün neyi iyi yaptığını söyler: nereye bakılacağını; neyi
+yapmadığını: yönü.
+
+## 7 · Backtest: paketler mekanik olarak ne üretiyor
+
+Her paket ölçüldü; her satırın altına iki cetvel kondu. **Rastgele giriş**: aynı seride,
+aynı sayıda, aynı yön dağılımında, aynı stop ve hedef mesafesinde rastgele barlarda piyasa
+emri (30 koşu). **Aynı derinlikte rastgele limit**: limit paketleri için asıl soru yerdir —
+emrin geometrisi (sinyal kapanışından limite mesafe, risk, hedef) rastgele bir bara taşınır.
+Maliyet perakende spread varsayımıdır (EUR/USD 1,2 pip gidiş-dönüş, altın 0,35 dolar gibi;
+ölçülmedi, varsayım). Risk < 0,3 ATR emirler ölçüme girmez; aynı barda stop ve hedef →
+stop.
+
+<GrafikEmbed src="/indikatorler/tto_08_paketler.html" baslik="Kurulum paketlerinin backtest sonucu: brüt ve spread sonrası ortalama R, rastgele giriş tabanıyla" no="08" kaynak="15 enstrüman · 560 bin bar" genis />
+
+<YapiBacktest kip="paket" hedef={2} suzgec="yok" />
+
+<GrafikEmbed src="/indikatorler/tto_09_ob_rastgele_seviye.html" baslik="OB retest ile aynı derinlikte rastgele limit: kenar bloğun yerinde değil, geri çekilmeyi limitle almanın kendisinde" no="09" kaynak="15 enstrüman · 560 bin bar" genis />
+
+**Ne buldu.** Beş paketten yalnız OB retest her zaman diliminde rastgele girişi yeniyor
+(brüt +0,20 … +0,27 R, iki yarı tutarlı, 1 saatlikte 15 serinin 13'ü rastgelenin 95.
+yüzdeliğinin üstünde). Ama aynı derinlikteki rastgele limit de aynı sayıyı veriyor
+(+0,20 … +0,28 R) ve seviye kıyasında 95. yüzdeliği geçen seri 15'te en çok 2. Yani ölçülen
+şey bloğun yeri değil, bir geri çekilmeyi limitle almanın kısa vadeli ortalamaya dönüşüdür;
+risk medyanı 0,6 ATR olduğu için spread bunu 5 ve 15 dakikalıkta eksiye çeviriyor (−0,80 ve
+−0,29 R), 1 saatlikte sıfırlıyor (+0,03), 4 saatlik ve günlükte bırakıyor (+0,16 ve +0,19)
+— ama orada da rastgele seviyeden farksız. Sweep → MSS → FVG 1 saatlikte küçük artı
+(+0,13 brüt, +0,06 net, n = 198) ve rastgele seviyeyle ayrışmıyor; 4 saatlikte eksi.
+Harmonik PRZ, diverjans ve BOS devam her dilimde sıfır civarı.
+
+**Ne bulmadı.** Hiçbir süzgeç — konum (discount'ta alış), yapı yönüyle hizalanma, yüksek
+itki — paketlerin sonucunu ayırmıyor; süzgeç emir sayısını değiştiriyor, ortalamayı değil.
+Bu Brooks panosunda da ölçülmüştü. Ve "her zaman diliminde çalışmalı" sorusu için: taban
+oranlar dilimden dilime birkaç puan kayıyor, sıralama değişmiyor; paketlerin işareti de
+değişmiyor. Kural taşınabilir, kenar taşınacak bir şey değil.
+
+<GrafikEmbed src="/indikatorler/tto_10_diverjans.html" baslik="Diverjans tablosunun 25 satırı: kaynak iddiası ve aynı SL/TP çarpanıyla arşivde ölçülen isabet" no="10" kaynak="1 saatlik ve 5 dakikalık · N ≥ 30 satırlar" genis />
+
+<YapiBacktest kip="diverjans" tf="1h" />
+
+**Tablo hakkında.** Kaynak dosyanızdaki 25 satır (diverjans türü × Bollinger dilimi × RSI
+dilimi × trend) yorum satırında %63,6'dan %50,0'a azalan bir isabet listesi taşıyor;
+örneklem, dönem ve yöntem yazılı değil ve 432 hücrelik bir ızgaradan seçilmiş en iyiler
+görünümünde. Aynı satırlar aynı SL/TP çarpanlarıyla ölçüldü: en iyi iddialı satır (#0,
+gizli boğa, Bollinger üst dilim, RSI ≥ 70, yükseliş) 1 saatlikte %25,6 (n = 309), 5
+dakikalıkta %28,1 (n = 192); ikinci grup (#6, #7) %32–43. Satırların çoğu %50 çizgisinin
+etrafında, iddia sırasıyla ölçülen sıra arasında ilişki yok. Tablo indikatörde duruyor —
+sizin kuralınız — ama kutu yanına ölçülen değeri yazıyor.
+
+## 8 · Alarmlar ve ayarlar
+
+Fiyat panelinde dokuz alarm: BOS, CHoCH, MSS, sweep, yeni FVG, PRZ tamamlandı, PRZ teyit,
+tabloyla eşleşen diverjans, yeni kurulum. Alt panelde dört: displacement barı, yüksek itki,
+tabloyla eşleşen diverjans, herhangi bir diverjans. On üçü de bar kapanışına kilitlidir ve
+"Bar disiplini" girdisinden etkilenmez. Pratik kurulum: "PRZ tamamlandı" ve "MSS" alarmı
+kurup ekranı kapatın; alarm gelince kutunun dört satırını okuyun.
+
+Gösterim girdileriyle FVG ve OB kutularının sayısı (öntanımlı 12), swing üçgenleri,
+diverjans etiketleri ve kurulum çizgileri kapatılıp açılır. Öntanımlılar ekranı boş
+tutacak biçimde seçildi: swing üçgenleri kapalı (kutu ve olay çizgileri zaten taşıyor),
+diverjans etiketi yalnız tabloyla eşleşende.
+
+## Ek A · Kurallar ve kaynakları
+
+**Swing.** 2k + 1 barlık fraktal, kesin eşitsizlik (eşit tepe swing değil, havuz). Pine'ın
+yerleşik pivot fonksiyonuyla aynı; eşitlikte ne döndürdüğü yalnız TradingView'de ölçülür ve
+bu sayfadan doğrulanamadı — parite kapısı bunu göremez. Onaylı swing'ler almaşmalı dizide
+tutulur (sizin dosyanızın kuralı): aynı türden ikinci swing yalnız daha uçtaysa öncekini
+günceller.
+
+**BOS · CHoCH · MSS.** SMC dersi 2.5–2.6. Kırılım yalnız **onaylı** swing'e karşı sorulur;
+koşan uca karşı sorulunca trend içinde her yeni kapanış BOS sayılıyordu (ölçüldü: 823
+sahte olay). MSS'nin dört koşulu: korunan swing, displacement, gövde, öncesinde sweep.
+
+**Dealing range, EQ, OTE.** SMC 2.7–2.8. Aralık kırılan dip ile kırılım tepesidir; tepe
+onaylı swing gelene kadar koşan uçtur.
+
+**Havuzlar ve sweep.** SMC 3.1–3.3, 14.3. Önceki gün ve hafta burada UTC güne göre; Pine'da
+borsanın günüdür ve ikisi FX'te farklı saatte başlar — parite kapısının göremediği ikinci
+fark, adıyla yazılı.
+
+**FVG ve OB.** SMC 4.2–4.4. FVG dört durumludur (taze, CE, dolu, ters); OB yumuşak okulla
+tutulur (gövde kapanışı uzak kenarı geçmedikçe canlı, ilk dokunuşta taze düşer) — ders iki
+okul arasında seçim yapmaz, deftere yazılmasını ister.
+
+**Harmonik.** Ders 9.3 tarayıcı bantları; PRZ ideal üç sayıdan (ders 3.3; dersin sayısal
+örneği 40,43–40,51 birebir yeniden üretiliyor). Bant uçlarından kurulan PRZ bölgeyi şişirip
+Gartley'nin B bandını paylaşan Crab'i aynı C'de sahte aday yapıyordu.
+
+**Diverjans.** Sizin dosyanız 165–242: ham pivotlar, ardışık çift, pivot barında fiyat ve
+RSI, onay barında dilimler. Tablo 25 satır, birebir.
+
+**Momentum.** Göreli sıra Brooks v2 sözleşmesi (percentrank, 280 bar).
+
+## Ek B · Tanım seçimleri — ders sayı vermiyor
+
+Sweep aşımı 0,10 ATR(14); MSS sweep penceresi 10 bar; PRZ yayılımı %10 XA; stop tamponu
+0,25 ATR; PRZ'de teyit bekleme 12 bar; yüksek itki sırası %80. Altısı da girdide açık,
+ayrı grupta.
+
+## Ne ölçmez, ne bilmiyoruz
+
+- **Pine hiç derlenmedi.** On statik ölçüt geçiyor; derleyici bu depoda yok. TradingView'e
+  yapıştırılana kadar "derleniyor" bir beklentidir.
+- 5 ve 15 dakikalık örneklem on iki haftadır ve tek mevsimdir; oranlar iki yarıda tutarlı
+  ama bir yaz döneminin oranıdır.
+- Spread varsayımdır; kayma ve haber saatleri modellenmedi. Kill zone ve seans süzgeçleri
+  ölçülmedi (arşiv saat damgalı, ölçülebilir; bu sürümde yok).
+- Harmonik kalıplardan 5-0, Three Drives, Nen Star ve Swan'lar tanınmıyor.
+- SMT diverjansı, COT, günlük/haftalık Supertrend süzgeci yok.
+- Yahoo 5 dakikalık EUR/USD, AUD/USD ve NZD/USD barlarının üçte biri gövdesiz (kaba
+  kotasyon); bar anatomisine dayanan ölçüler o serilerde zayıftır, yapı ve havuz ölçüleri
+  değil.
+- Eşit tepe barlarında Pine pivot fonksiyonu ile replikasyon ayrışabilir; PDH/PDL gün
+  sınırı FX'te iki sistemde farklıdır.
+
+## Kod
+
+<KodKutusu kod={kodYapi} dosya="/indikatorler/tto-yapi.pine" baslik="Fiyat paneli · TTO · Yapı" />
+
+<KodKutusu kod={kodMomentum} dosya="/indikatorler/tto-momentum.pine" baslik="Alt panel · TTO · Momentum" />
