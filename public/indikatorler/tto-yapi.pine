@@ -17,7 +17,8 @@
 //
 // EŞİKLER ÜÇ KÜMEDİR. gS: derslerin kendi sayıları (SMC 2.1 · 3.2 · 3.3 ·
 // 4.1 · 4.2; harmonik 9.3 bantları). gK: kullanıcının kendi indikatöründen
-// aynen taşınan sayılar (pivot L=R=1, RSI 14, EMA 50, BB 20/2, tablo).
+// aynen taşınan sayılar (pivot L=R=1, RSI 14, EMA 50, BB 20/2, tablo);
+// gR: yine kullanıcı dosyasından trend bağlamı (Supertrend 10/3, EMA 20·50·200).
 // gT: derslerin SAYI VERMEDİĞİ yerlerde bizim TANIM SEÇİMİMİZ (sweep aşımı,
 // MSS sweep penceresi, PRZ yayılımı, tampon) — ayrı grupta, her biri açık.
 //
@@ -35,10 +36,28 @@
 // önceki dönemden gelir — bu deyim sızıntısız ve repaint etmez; haftalık ve
 // aylık grafikte "önceki gün/hafta" tanımı tutmadığı için o havuzlar orada
 // KAPALIDIR (havuzAktif).
-// ÇİZİM TAVANI. Kutular defterle sınırlı (OB · FVG ≤ azamiKutu, PRZ ≤ 40);
-// yapı olayı çizgi/etiketleri ve diverjans etiketleri silinmez ve 500'den
-// (max_lines_count / max_labels_count, Pine'ın üst sınırı) sonra EN ESKİSİ
-// kendiliğinden düşer — uzun tarihçede eski olaylar görünmez, kural değil sınır.
+// SADE GÖRÜNÜM (22.09.2026, kullanıcı: "çok karışık"). DEFTER (kural) ile
+// GÖSTERİM ayrıdır: FVG/OB/PRZ defteri azamiKutu'ya kadar tutulur ve ölçüm
+// oradan okur; ekranda yalnız CANLI kutular ve tür başına son `kutuSon`
+// (öntanımlı 3) görünür, dolmuş FVG · biten OB · düşen PRZ öntanımlı GİZLİ
+// (`gecmisGoster` soluk kenarlıkla gösterir). Bütün kutuların rengi TEK
+// yerden yazılır (görünürlük geçişi). Yapı olayı çizgi/etiketleri KUYRUKTA:
+// son `olaySon` (öntanımlı 2 — kullanıcı dosyasının bosToShow'u) kalır,
+// eskisi silinir. Premium/discount zemini öntanımlı kapalı; PDH/PDL yalnız
+// gün içi grafikte çizilir (günlük grafikte "önceki gün" bir önceki bardır).
+// Diverjans etiketleri silinmez ve 500'den (max_labels_count) sonra en eskisi
+// kendiliğinden düşer — kural değil sınır.
+//
+// TEMA. Mürekkep, grafiğin ÖN PLAN rengidir (chart.fg_color): koyu temada
+// açık, açık temada koyu; kutu zemini chart.bg_color'dan. Mürekkep dolgulu
+// etiketin yazısı arka plan rengiyle basılır — iki temada da okunur.
+//
+// TREND BAĞLAMI. Kullanıcı dosyasından Supertrend (ATR 10 · çarpan 3; yön
+// −1 yükseliş yeşil, 1 düşüş claret) ve EMA 20 · 50 · 200 (1 açık, 2–3
+// kapalı) çizilir; günlük ve haftalık Supertrend yönü kutuda ve KAPANMIŞ
+// önceki dönemden gelir ([1] + lookahead_on — PDH/PDL ile aynı deyim,
+// repaint etmez). Bunlar GÖSTERİMDİR, süzgeç değil: backtest `st` ve `ema`
+// süzgeçlerini ölçer ve sonucu sayfa yazar (6. bölüm).
 //
 // REPLİKASYONLA SÖZLEŞME. Her kural Aktarılacak Projeler/Indikator/
 // yapi_referans.py ile aynı tanımdadır ve ölçüm oradan gelir: OB araması
@@ -84,6 +103,18 @@ przAzami     = input.float(0.10, "PRZ yayılımı ≤ XA ×", minval = 0.02, max
 tamponAtr    = input.float(0.25, "Stop tamponu (ATR ×)", minval = 0.0, maxval = 1.0, step = 0.05, group = gT, tooltip = "SMC 7.1: spread + 0,25–1,0 × ATR(14); alt uç seçildi.")
 przBekleme   = input.int(12, "PRZ'de teyit bekleme (bar)", minval = 2, maxval = 50, group = gT)
 
+gR = "Trend bağlamı (kullanıcı dosyası: Supertrend 10/3 · EMA 20/50/200) — görünüm, süzgeç değil"
+stGoster   = input.bool(true, "Supertrend", group = gR, inline = "st")
+stAtr      = input.int(10, "ATR", minval = 1, group = gR, inline = "st")
+stKat      = input.float(3.0, "çarpan", minval = 0.1, step = 0.1, group = gR, inline = "st")
+ema1Goster = input.bool(true, "EMA 1", group = gR, inline = "e1")
+ema1N      = input.int(20, "periyot", minval = 1, maxval = 500, group = gR, inline = "e1")
+ema2Goster = input.bool(false, "EMA 2", group = gR, inline = "e2")
+ema2N      = input.int(50, "periyot", minval = 1, maxval = 500, group = gR, inline = "e2")
+ema3Goster = input.bool(false, "EMA 3", group = gR, inline = "e3")
+ema3N      = input.int(200, "periyot", minval = 1, maxval = 500, group = gR, inline = "e3")
+mtfGoster  = input.bool(true, "Günlük ve haftalık Supertrend yönü kutuda (kapanmış önceki dönem)", group = gR)
+
 g4 = "Gösterim"
 yapiGoster   = input.bool(true, "Yapı olayları (BOS · CHoCH · MSS)", group = g4)
 swingGoster  = input.bool(false, "Swing noktaları", group = g4)
@@ -93,11 +124,15 @@ fvgGoster    = input.bool(true, "FVG kutuları", group = g4)
 obGoster     = input.bool(true, "Order block kutuları (yalnız canlı)", group = g4)
 przGoster    = input.bool(true, "Harmonik PRZ", group = g4)
 divGoster    = input.bool(true, "Diverjans etiketi (yalnız tabloyla eşleşen)", group = g4)
-kutuKip      = input.string("Tam", "Kurulum kutusu", options = ["Tam", "Özet", "Kapalı"], group = g4)
+kutuKip      = input.string("Özet", "Kurulum kutusu", options = ["Tam", "Özet", "Kapalı"], group = g4, tooltip = "Özet: yapı · trend · konum · likidite · kurulum · emir · bar. Tam: defter sayıları ve ölçülmüş olasılıklar da.")
 kutuYeri     = input.string("Sağ üst", "Kutunun yeri", options = ["Sağ üst", "Sağ alt", "Sol üst", "Sol alt"], group = g4)
 seviyeGoster = input.bool(true, "Son kurulumun seviyeleri (giriş · stop · hedef)", group = g4)
 kzGoster     = input.bool(false, "Kill zone gölgesi (Londra 02:00–05:00 · NY AM 07:00–10:00, New York saati)", group = g4, tooltip = "Ders 5.2 pencereleri; yalnız gün içi dilimlerde (≤ 1 sa) çizilir. Bu bir SÜZGEÇ değil okuma yardımıdır: ölçümde kill zone'daki sinyal barının paketlerin ortalamasını tutarlı bir yöne oynatmadığı görüldü (sayfadaki seans tablosu). Öntanımlı kapalı.")
-azamiKutu    = input.int(40, "Defterde tutulan azami FVG/OB", minval = 2, maxval = 100, group = g4, tooltip = "Görünüm değil KURAL defteri: dolunca en eski kayıt kutusuyla birlikte düşer ve bir daha sorulmaz. Replikasyon sınırsız tutar; sınır ancak defter dolarsa ayrışma yaratır.")
+azamiKutu    = input.int(40, "Defterde tutulan azami FVG / OB / PRZ (tür başına)", minval = 2, maxval = 100, group = g4, tooltip = "Görünüm değil KURAL defteri: dolunca en eski kayıt kutusuyla birlikte düşer ve bir daha sorulmaz. Replikasyon sınırsız tutar; sınır ancak defter dolarsa ayrışma yaratır.")
+olaySon      = input.int(2, "Gösterilen yapı olayı (son N)", minval = 1, maxval = 50, group = g4, tooltip = "Kullanıcı dosyası bosToShow = 2. Eski olayın çizgisi ve etiketi silinir — görünüm, defter değil.")
+kutuSon      = input.int(3, "Görünen canlı FVG / OB / PRZ (tür başına son N)", minval = 1, maxval = 40, group = g4, tooltip = "Defter azamiKutu'ya kadar tutulur ve ölçüm oradan okur; ekranda yalnız canlı olanların en yenileri.")
+gecmisGoster = input.bool(false, "Dolmuş FVG · biten OB · düşen PRZ'yi soluk göster", group = g4)
+zeminGoster  = input.bool(false, "Discount / premium zemini", group = g4)
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Bar disiplini ve palet
@@ -124,7 +159,9 @@ kzNyAm   = gunIci and not na(time(timeframe.period, "0700-1000", "America/New_Yo
 // Sayı yazımı: ondalık VİRGÜL, eksi U+2212 (site sözleşmesi); Pine'ın str.tostring'i nokta ve ASCII tire basar
 f_sayi(float v, string bicim) => str.replace_all(str.replace_all(str.tostring(v, bicim), ".", ","), "-", "−")
 
-cMurekkep = color.new(#1a1a1a, 0)
+// Tema: mürekkep grafiğin ÖN PLAN rengidir (koyu temada açık, açıkta koyu); kutu zemini arka plandan
+cMurekkep = chart.fg_color
+cZemin    = chart.bg_color
 cClaret   = color.new(#8c2f39, 0)
 cMavi     = color.new(#2f5d8c, 0)
 cYesil    = color.new(#3a7d44, 0)
@@ -152,6 +189,21 @@ bbBasis = ta.sma(close, bbN)
 bbSd    = ta.stdev(close, bbN)
 bbYarim = bbK * bbSd
 bbPos   = bbYarim > 0 ? (close - bbBasis) / bbYarim : 0.0
+
+// Trend bağlamı — kullanıcı dosyası (Supertrend 10/3 · EMA 20/50/200); replikasyon: yapi_referans.supertrend
+[stSev, stYon] = ta.supertrend(stKat, stAtr)
+ema1 = ta.ema(close, ema1N)
+ema2 = ta.ema(close, ema2N)
+ema3 = ta.ema(close, ema3N)
+f_stYon() =>
+    [s_, d_] = ta.supertrend(stKat, stAtr)
+    d_
+// Günlük/haftalık yön KAPANMIŞ önceki dönemden: [1] + lookahead_on (PDH/PDL deyimi); haftalık/aylık
+// grafikte "D" düşük dilim olur (havuzAktif) → gösterilmez. İstek koşulsuz, maske sonra.
+stYonGham = request.security(syminfo.tickerid, "D", f_stYon()[1], lookahead = barmerge.lookahead_on)
+stYonHham = request.security(syminfo.tickerid, "W", f_stYon()[1], lookahead = barmerge.lookahead_on)
+stYonG = havuzAktif ? stYonGham : na
+stYonH = havuzAktif ? stYonHham : na
 
 // Üst zaman dilimi seviyeleri — KAPANMIŞ önceki dönem, sızıntısız deyim
 [pdh, pdl] = request.security(syminfo.tickerid, "D", [high[1], low[1]], lookahead = barmerge.lookahead_on)
@@ -354,6 +406,7 @@ var obY = array.new<int>()
 var obF = array.new<float>()    // fitil (stop referansı)
 var obE = array.new<int>()      // olay barı
 var obTz = array.new<bool>()    // taze
+var obCanli = array.new<bool>() // gövde kapanışı uzak kenarı geçmedi (görünürlük için; ölçüm okumaz)
 var obKutu = array.new<box>()
 
 f_obEkle(int yon, int bas) =>
@@ -374,6 +427,7 @@ f_obEkle(int yon, int bas) =>
         array.push(obF, yon > 0 ? low[obBar] : high[obBar])
         array.push(obE, bar_index)
         array.push(obTz, true)
+        array.push(obCanli, true)
         array.push(obKutu, box.new(bar_index - obBar, ust, bar_index + 20, alt, border_color = obGoster ? cMavi : na, bgcolor = obGoster ? color.new(cMavi, 85) : na, border_width = 1))
         if array.size(obA) > azamiKutu
             box.delete(array.shift(obKutu))
@@ -383,6 +437,11 @@ f_obEkle(int yon, int bas) =>
             array.shift(obF)
             array.shift(obE)
             array.shift(obTz)
+            array.shift(obCanli)
+
+// Yapı olayı çizimleri kuyrukta: son olaySon kalır (sade görünüm; silinen çizim GC'ye de kalmaz)
+var olayL = array.new<line>()
+var olayE = array.new<label>()
 
 // Olay hükmü DÖNDÜRÜLÜR: Pine bir kullanıcı fonksiyonunun genel değişkeni
 // `:=` ile değiştirmesine izin vermez ("Cannot modify global variable");
@@ -408,9 +467,14 @@ f_olay(string tur, int yon, float sev, int kirilanBar) =>
     if tur == "CHoCH" and dispVar and sweepOnce
         t := "MSS"
     if yapiGoster and kapanmis
-        // xloc.bar_index ile çizim 10.000 bardan geriye gidemez (çalışma zamanı hatası)
-        line.new(math.max(kirilanBar, bar_index - 9000), sev, bar_index, sev, color = t == "BOS" ? cMurekkep : t == "MSS" ? cClaret : cAltin, style = t == "BOS" ? line.style_solid : line.style_dashed, width = t == "MSS" ? 2 : 1)
-        label.new(bar_index, sev, t, style = yon > 0 ? label.style_label_down : label.style_label_up, color = color.new(t == "MSS" ? cClaret : cMurekkep, 20), textcolor = color.white, size = size.tiny)
+        // xloc.bar_index ile çizim 10.000 bardan geriye gidemez (çalışma zamanı hatası);
+        // kuyruk: son olaySon olay kalır, eskisi silinir. Mürekkep dolgulu etiketin
+        // yazısı arka plan rengiyle — iki temada da okunur.
+        array.push(olayL, line.new(math.max(kirilanBar, bar_index - 9000), sev, bar_index, sev, color = t == "BOS" ? cMurekkep : t == "MSS" ? cClaret : cAltin, style = t == "BOS" ? line.style_solid : line.style_dashed, width = t == "MSS" ? 2 : 1))
+        array.push(olayE, label.new(bar_index, sev, t, style = yon > 0 ? label.style_label_down : label.style_label_up, color = color.new(t == "MSS" ? cClaret : cMurekkep, 20), textcolor = t == "MSS" ? color.white : cZemin, size = size.tiny))
+        if array.size(olayL) > olaySon
+            line.delete(array.shift(olayL))
+            label.delete(array.shift(olayE))
     f_obEkle(yon, bas)
     t
 
@@ -600,16 +664,8 @@ if kapanmis and atr > 0
                         array.set(fD, j, 1)
                 dd = array.get(fD, j)
                 bx = array.get(fKutu, j)
-                // durum renkleri de görünürlük girdisinden geçer: kapalı kutu
-                // durum değiştirdiği barda yeniden görünür olamaz
-                if dd >= 2
-                    box.set_right(bx, bar_index)
-                    box.set_bgcolor(bx, fvgGoster ? color.new(cGri, 90) : na)
-                    box.set_border_color(bx, fvgGoster ? color.new(cGri, 40) : na)
-                else
-                    box.set_right(bx, bar_index + 1)
-                    if dd == 1
-                        box.set_bgcolor(bx, fvgGoster ? color.new(cMor, 88) : na)
+                // renk burada değil, görünürlük geçişinde (aşağıda): defter ile gösterim ayrı
+                box.set_right(bx, dd >= 2 ? bar_index : bar_index + 1)
     // yeni FVG
     if disp[1]
         if low > high[2] and low - high[2] >= fvgAtr * atr
@@ -642,7 +698,8 @@ if kapanmis and atr > 0
     m = array.size(obA)
     if m > 0
         for j = 0 to m - 1
-            if array.get(obE, j) < bar_index
+            // biten OB bir daha sorulmaz (sağ kenarı kapandığı barda kalır); renk görünürlük geçişinde
+            if array.get(obE, j) < bar_index and array.get(obCanli, j)
                 yon = array.get(obY, j)
                 alt = array.get(obA, j)
                 ust = array.get(obU, j)
@@ -650,14 +707,13 @@ if kapanmis and atr > 0
                 bitti = yon > 0 ? close < alt : close > ust
                 if bitti
                     box.set_right(bx, bar_index)
-                    box.set_bgcolor(bx, na)
-                    box.set_border_color(bx, obGoster ? color.new(cGri, 60) : na)
+                    array.set(obCanli, j, false)
+                    array.set(obTz, j, false)   // uzak kenarı geçen kapanış tanım gereği dokunuştur; biten OB "taze" sayılmaz
                 else
                     box.set_right(bx, bar_index + 1)
                     dokundu = yon > 0 ? low <= ust : high >= alt
                     if dokundu and array.get(obTz, j)
                         array.set(obTz, j, false)
-                        box.set_bgcolor(bx, obGoster ? color.new(cMavi, 93) : na)
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Harmonik PRZ — dersin tarayıcı bantları; PRZ ideal üç sayıdan
@@ -703,7 +759,8 @@ f_przEkle(string ad, int yon, float lo, float hi, float stop, float t1, float t2
         array.push(pzX, xBar)
         array.push(pzTb, -1)
         array.push(pzKutu, box.new(bar_index, hi, bar_index + 30, lo, border_color = przGoster ? cAltin : na, bgcolor = przGoster ? color.new(cAltin, 85) : na, text = przGoster ? ad : "", text_size = size.tiny, text_color = cAltin, text_halign = text.align_left))
-        if array.size(pzAd) > 40
+        // PRZ defteri de aynı tavanı okur: tek sayı iki yere yazılınca ikinci yer sessizce ayrışır
+        if array.size(pzAd) > azamiKutu
             box.delete(array.shift(pzKutu))
             array.shift(pzAd)
             array.shift(pzY)
@@ -830,8 +887,6 @@ if kapanmis
                 if d == 0
                     if gecersiz
                         array.set(pzD, j, 3)
-                        box.set_border_color(bx, przGoster ? color.new(cGri, 50) : na)
-                        box.set_bgcolor(bx, na)
                     else
                         girdi = yon > 0 ? low <= array.get(pzU, j) : high >= array.get(pzA, j)
                         if girdi
@@ -845,13 +900,9 @@ if kapanmis
                                 przTeyitIdx := j
                         else if bar_index - array.get(pzC, j) > math.max(20, 2 * (array.get(pzCp, j) - array.get(pzX, j)))
                             array.set(pzD, j, 4)
-                            box.set_border_color(bx, przGoster ? color.new(cGri, 50) : na)
-                            box.set_bgcolor(bx, na)
                 else
                     if gecersiz
                         array.set(pzD, j, 3)
-                        box.set_border_color(bx, przGoster ? color.new(cGri, 50) : na)
-                        box.set_bgcolor(bx, na)
                     else if (yon > 0 ? donusMumBoga : donusMumAyi)
                         array.set(pzD, j, 2)
                         przTeyitBu := true
@@ -859,12 +910,55 @@ if kapanmis
                         przTeyitIdx := j
                     else if bar_index - array.get(pzTb, j) > przBekleme
                         array.set(pzD, j, 4)
-                        box.set_border_color(bx, przGoster ? color.new(cGri, 50) : na)
-                        box.set_bgcolor(bx, na)
                 if array.get(pzD, j) <= 1
                     box.set_right(bx, bar_index + 1)
                 else
                     box.set_right(bx, bar_index)
+
+// ─────────────────────────────────────────────────────────────────────────
+//  Görünürlük — SADE görünüm. Defter (kural) dokunulmaz; yalnız renk: CANLI
+//  kutular tür başına son kutuSon; dolmuş FVG · biten OB · geçersiz/kaçan PRZ gizli
+//  (gecmisGoster soluk kenarlık). Bütün kutuların rengi TEK yerden yazılır.
+// ─────────────────────────────────────────────────────────────────────────
+f_kutuRenk(box bx, bool canli, bool icinde, bool turGoster, color dolu, color kenar) =>
+    if turGoster and canli and icinde
+        box.set_bgcolor(bx, dolu)
+        box.set_border_color(bx, kenar)
+    else if turGoster and not canli and gecmisGoster
+        box.set_bgcolor(bx, na)
+        box.set_border_color(bx, color.new(cGri, 70))
+    else
+        box.set_bgcolor(bx, na)
+        box.set_border_color(bx, na)
+
+if kapanmis
+    nF = array.size(fA)
+    if nF > 0
+        sayF = 0
+        for j = nF - 1 to 0
+            canliF = array.get(fD, j) < 2
+            if canliF
+                sayF += 1
+            f_kutuRenk(array.get(fKutu, j), canliF, sayF <= kutuSon, fvgGoster, color.new(cMor, array.get(fD, j) == 1 ? 88 : 80), color.new(cMor, 30))
+    nO = array.size(obA)
+    if nO > 0
+        sayO = 0
+        for j = nO - 1 to 0
+            canliO = array.get(obCanli, j)
+            if canliO
+                sayO += 1
+            f_kutuRenk(array.get(obKutu, j), canliO, sayO <= kutuSon, obGoster, color.new(cMavi, array.get(obTz, j) ? 85 : 93), cMavi)
+    nP = array.size(pzAd)
+    if nP > 0
+        sayP = 0
+        for j = nP - 1 to 0
+            // teyit edilen PRZ (2) de görünür kalır — kurulum ilan edildiği barda sebebi ekrandan çekilmemeli; yalnız geçersiz (3) ve kaçan (4) gizli
+            canliP = array.get(pzD, j) <= 2
+            if canliP
+                sayP += 1
+            gorunurP = przGoster and canliP and sayP <= kutuSon
+            f_kutuRenk(array.get(pzKutu, j), canliP, sayP <= kutuSon, przGoster, color.new(cAltin, 85), cAltin)
+            box.set_text(array.get(pzKutu, j), gorunurP ? array.get(pzAd, j) : "")
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Diverjans — kullanıcı tablosu (HAM pivotlar; fiyat/RSI pivotta, dilimler onayda)
@@ -1064,39 +1158,48 @@ plot(aralikGoster ? eq : na, "EQ", color = color.new(cGri, 30), style = plot.sty
 pOteA = plot(aralikGoster ? oteA : na, "OTE alt", color = na)
 pOteU = plot(aralikGoster ? oteU : na, "OTE üst", color = na)
 fill(pOteA, pOteU, color = aralikGoster ? color.new(cAltin, 85) : na, title = "OTE bandı")
-plot(havuzGoster and havuzAktif ? pdh : na, "PDH", color = color.new(cClaret, 40), style = plot.style_linebr, linewidth = 1)
-plot(havuzGoster and havuzAktif ? pdl : na, "PDL", color = color.new(cYesil, 40), style = plot.style_linebr, linewidth = 1)
+plot(havuzGoster and havuzAktif and timeframe.isintraday ? pdh : na, "PDH", color = color.new(cClaret, 40), style = plot.style_linebr, linewidth = 1)
+plot(havuzGoster and havuzAktif and timeframe.isintraday ? pdl : na, "PDL", color = color.new(cYesil, 40), style = plot.style_linebr, linewidth = 1)
 plot(havuzGoster and havuzAktif ? pwh : na, "PWH", color = color.new(cClaret, 20), style = plot.style_circles, linewidth = 1)
 plot(havuzGoster and havuzAktif ? pwl : na, "PWL", color = color.new(cYesil, 20), style = plot.style_circles, linewidth = 1)
 plotshape(kapanmis and havuzGoster and sweepBu, "Sweep", shape.xcross, location.abovebar, cAltin, size = size.tiny)
 plotshape(kapanmis and swingGoster and not na(ph), "Swing H", shape.triangledown, location.abovebar, color.new(cGri, 30), size = size.tiny, offset = -kSwing)
 plotshape(kapanmis and swingGoster and not na(pl), "Swing L", shape.triangleup, location.belowbar, color.new(cGri, 30), size = size.tiny, offset = -kSwing)
-bgcolor(kapanmis and aralikGoster and aralikVar ? (konum < 50 ? cZeminAl : cZeminSat) : na, title = "Discount / premium zemini")
+bgcolor(kapanmis and zeminGoster and aralikVar ? (konum < 50 ? cZeminAl : cZeminSat) : na, title = "Discount / premium zemini")
+// Trend bağlamı — kullanıcı dosyasının renk sözleşmesi: yön −1 (yükseliş) yeşil, 1 (düşüş) claret
+plot(stGoster and stYon < 0 ? stSev : na, "Supertrend ↑", color = cYesil, linewidth = 2, style = plot.style_linebr)
+plot(stGoster and stYon > 0 ? stSev : na, "Supertrend ↓", color = cClaret, linewidth = 2, style = plot.style_linebr)
+plot(ema1Goster ? ema1 : na, "EMA 1", color = cMavi, linewidth = 1)
+plot(ema2Goster ? ema2 : na, "EMA 2", color = cAltin, linewidth = 1)
+plot(ema3Goster ? ema3 : na, "EMA 3", color = color.new(cMurekkep, 30), linewidth = 1)
 bgcolor(kapanmis and kzGoster and (kzLondra or kzNyAm) ? color.new(cAltin, 92) : na, title = "Kill zone (Londra · NY AM)")
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Kurulum kutusu
 // ─────────────────────────────────────────────────────────────────────────
-// Kutunun yeri GENEL kapsamda, girdiden seçilir: table.new `simple string`
-// ister ve bir kullanıcı fonksiyonunun dönüş niteleyicisi derleyiciye kalır
+// Kutunun yeri girdiden seçilir. table.new'in position parametresi v6 referansında
+// `series string`tir; genel kapsamda ve `var` ile tek kez kurulması derleyici şartı
+// değil, tablonun bir kez yaratılması içindir.
 kutuPos = kutuYeri == "Sağ üst" ? position.top_right : kutuYeri == "Sağ alt" ? position.bottom_right : kutuYeri == "Sol üst" ? position.top_left : position.bottom_left
-var table kutu = table.new(kutuPos, 2, 12, border_width = 1, frame_color = color.new(cGri, 60), border_color = color.new(cGri, 85))
+var table kutu = table.new(kutuPos, 2, 13, border_width = 1, frame_color = color.new(cGri, 60), border_color = color.new(cGri, 85), bgcolor = color.new(cZemin, 15))
 
 f_satir(int r, string a, string b, color cb) =>
     table.cell(kutu, 0, r, a, text_color = cGri, text_size = size.small, text_halign = text.align_left)
     table.cell(kutu, 1, r, b, text_color = cb, text_size = size.small, text_halign = text.align_left)
+f_ok(float d) => d < 0 ? "↑" : d > 0 ? "↓" : "—"
 
 if cizimBari and kutuKip != "Kapalı"
     tfi = f_tfIdx()
-    table.clear(kutu, 0, 0, 1, 11)
+    table.clear(kutu, 0, 0, 1, 12)
     rejim = trend > 0 ? "YÜKSELİŞ" : trend < 0 ? "DÜŞÜŞ" : "kurulmadı"
     f_satir(0, "① Yapı", rejim + (sonOlay != "" ? " · son " + sonOlay + (sonOlayYon > 0 ? " ↑" : " ↓") + " (" + str.tostring(bar_index - sonOlayBar) + " bar)" : ""), trend > 0 ? cYesil : trend < 0 ? cClaret : cGri)
-    f_satir(1, "② Konum", aralikVar ? (konum < 50 ? "DISCOUNT %" : "PREMIUM %") + str.tostring(math.round(konum)) + (close >= oteA and close <= oteU ? " · OTE içinde" : "") : "aralık yok", aralikVar ? (konum < 50 ? cYesil : cClaret) : cGri)
-    f_satir(2, "③ Likidite", sonSweepBar > bar_index - 30 ? sonSweepAd + " süpürüldü (" + str.tostring(bar_index - sonSweepBar) + " bar önce)" : "yakın sweep yok", cMurekkep)
-    f_satir(3, "④ Kurulum", kurBar > bar_index - 50 ? kurAd + (kurYon > 0 ? " · ALIŞ" : " · SATIŞ") + " (" + str.tostring(bar_index - kurBar) + " bar)" : "yok", kurBar > bar_index - 50 ? (kurYon > 0 ? cYesil : cClaret) : cGri)
+    f_satir(1, "Trend", "Supertrend " + f_ok(stYon) + " · EMA" + str.tostring(ema1N) + (close > ema1 ? " üstü" : " altı") + (mtfGoster and havuzAktif ? " · günlük " + f_ok(stYonG) + " · haftalık " + f_ok(stYonH) : ""), stYon < 0 ? cYesil : cClaret)
+    f_satir(2, "② Konum", aralikVar ? (konum < 50 ? "DISCOUNT %" : "PREMIUM %") + str.tostring(math.round(konum)) + (close >= oteA and close <= oteU ? " · OTE içinde" : "") : "aralık yok", aralikVar ? (konum < 50 ? cYesil : cClaret) : cGri)
+    f_satir(3, "③ Likidite", sonSweepBar > bar_index - 30 ? sonSweepAd + " süpürüldü (" + str.tostring(bar_index - sonSweepBar) + " bar önce)" : "yakın sweep yok", cMurekkep)
+    f_satir(4, "④ Kurulum", kurBar > bar_index - 50 ? kurAd + (kurYon > 0 ? " · ALIŞ" : " · SATIŞ") + " (" + str.tostring(bar_index - kurBar) + " bar)" : "yok", kurBar > bar_index - 50 ? (kurYon > 0 ? cYesil : cClaret) : cGri)
     if kurBar > bar_index - 50 and not na(kurGiris)
-        f_satir(4, "Emir", (kurLimit ? "limit " : "piyasa ") + f_sayi(kurGiris, format.mintick) + " · stop " + f_sayi(kurStop, format.mintick) + " · hedef " + f_sayi(kurHedef, format.mintick), cMurekkep)
-        f_satir(5, "Not", kurNot, cGri)
+        f_satir(5, "Emir", (kurLimit ? "limit " : "piyasa ") + f_sayi(kurGiris, format.mintick) + " · stop " + f_sayi(kurStop, format.mintick) + " · hedef " + f_sayi(kurHedef, format.mintick), cMurekkep)
+        f_satir(6, "Not", kurNot, cGri)
     if kutuKip == "Tam"
         acikF = 0
         n = array.size(fA)
@@ -1118,12 +1221,12 @@ if cizimBari and kutuKip != "Kapalı"
                 if array.get(pzD, j) <= 1
                     bekP += 1
                     przAdlar := przAdlar + (przAdlar == "" ? "" : ", ") + array.get(pzAd, j)
-        f_satir(6, "FVG · OB", "açık FVG " + str.tostring(acikF) + " · taze OB " + str.tostring(tazeO), cMurekkep)
-        f_satir(7, "PRZ", bekP > 0 ? przAdlar : "yok", bekP > 0 ? cAltin : cGri)
+        f_satir(7, "FVG · OB", "açık FVG " + str.tostring(acikF) + " · taze OB " + str.tostring(tazeO), cMurekkep)
+        f_satir(8, "PRZ", bekP > 0 ? przAdlar : "yok", bekP > 0 ? cAltin : cGri)
         // N kutuda okura görünür (başlık "sayfada N ile durur" der; kutu da söylemeli) — binlik yuvarlama, biçim dizgesi riski yok
-        f_satir(8, "Ölçülen (" + array.get(tfAd, tfi) + " kovası · N ≈ " + str.tostring(math.round(array.get(olN, tfi) / 1000)) + " bin bar)", "BOS→T1 " + f_yuzde(array.get(olBosT1, tfi)) + " · MSS devam " + f_yuzde(array.get(olMssDevam, tfi)) + " · sweep tepki " + f_yuzde(array.get(olSweep, tfi)), cMurekkep)
-        f_satir(9, "", "FVG CE tepki " + f_yuzde(array.get(olFvgTepki, tfi)) + " · OB tepki " + f_yuzde(array.get(olObTepki, tfi)) + " · PRZ→T1 " + f_yuzde(array.get(olPrzT1, tfi)), cMurekkep)
-        f_satir(10, "Bar", yalnizKapali ? "son KAPANMIŞ bar" : "canlı (oynak)", yalnizKapali ? cGri : cClaret)
+        f_satir(9, "Ölçülen (" + array.get(tfAd, tfi) + " kovası · N ≈ " + str.tostring(math.round(array.get(olN, tfi) / 1000)) + " bin bar)", "BOS→T1 " + f_yuzde(array.get(olBosT1, tfi)) + " · MSS devam " + f_yuzde(array.get(olMssDevam, tfi)) + " · sweep tepki " + f_yuzde(array.get(olSweep, tfi)), cMurekkep)
+        f_satir(10, "", "FVG CE tepki " + f_yuzde(array.get(olFvgTepki, tfi)) + " · OB tepki " + f_yuzde(array.get(olObTepki, tfi)) + " · PRZ→T1 " + f_yuzde(array.get(olPrzT1, tfi)), cMurekkep)
+    f_satir(11, "Bar", yalnizKapali ? "son KAPANMIŞ bar" : "canlı (oynak)", yalnizKapali ? cGri : cClaret)
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Alarmlar — hepsi KAPANMIŞ bar üzerinden
