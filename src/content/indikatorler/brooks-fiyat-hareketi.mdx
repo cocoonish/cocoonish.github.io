@@ -238,7 +238,8 @@ kurulum. "Doğru kurulumu yanlış günde almak" dersin en pahalı hatasıdır v
 4. **Kurulum (④).** Kutu hangi paketin geçerli olduğunu adıyla yazar ve hizasını:
    "✓ yönle hizalı" ya da "⚠ yöne KARŞI". Karşı ise skor kaç olursa olsun cevap hayırdır.
    Aynı barda birden çok paket geçerliyse öncelik: kırılım modu → bant kenarı → ikinci
-   giriş → başarısız dönüş → dönüş barı.
+   giriş → başarısız dönüş → dönüş barı. Dönüş barı iki yönde birden geçerliyse kalitesi
+   yüksek olan; kaliteler eşitse paket yok — yön bilinmez, backtest de o barda emir saymaz.
 5. **Emir.** Kutunun "Emir" satırı ve son barın çizgileri: giriş · stop · 1R · 2R (kırılım modunda
    alış stop · satış stop).
    Sinyal barı kapanmadan emir yok.
@@ -257,7 +258,7 @@ tick. Değişen, sinyal barının **ne olduğu** ve **hangi rejimde** okunduğu.
 
 | Paket | Sinyal barı | Ne zaman | Bölüm |
 |---|---|---|---|
-| Dönüş barı | kapanışı açılışının ya da orta noktasının ötesinde bar; kalite 0–4 | rejim `BANT` değil, always-in ile hizalı, yasak yok, kalite ≥ 2 | 2.1 · 2.2 · 11.1 |
+| Dönüş barı | kapanışı açılışının ya da orta noktasının ötesinde bar; kalite 0–4 | rejim `BANT` değil, always-in ile hizalı, yasak yok, kalite ≥ 2; iki yönlü eşit kalite → paket yok | 2.1 · 2.2 · 11.1 |
 | İkinci giriş H2/L2 | geri çekilmenin ikinci bacağını bitiren bar | boğa trendinde H2, ayı trendinde L2; bantta yalnız uçta | 2.9 · 6.4 |
 | Kırılım modu | ii · iii · ioi · oio · oo — kalıp bir yatay banttır | her yerde; kalıbın üstüne alış stop, altına satış stop, dolan taraf pozisyon, öbürü koruyucu stop | 2.5 |
 | Başarısız dönüş | trend içindeki **karşı** dönüş barı (kalite ≥ 2) | trend yönünde, karşı barın ters ucundan; aynı barda iki uç da geçildiyse emir sayılmaz | 2.7 |
@@ -367,7 +368,8 @@ fiyat adımından ölçülür; tick'siz paket koşturulmaz.
 rejim, always-in, yön filtresi, barbwire süzgeci, kalite ≥ 2), aynı bileşim rejimsiz, ve her paket
 tek başına: dönüş barı (göreli rejimde, ders kipinde, kalite ≥ 3 ile), ikinci giriş, kırılım modu
 (yalnız bantta, her yerde), başarısız dönüş, bant kenarı (yalnız bantta), süzgeçsiz dönüş barı
-(kalite ≥ 1, hiçbir katman yok). Aynı barda birden çok paket geçerliyse öncelik 2. bölümdeki sıra.
+(kalite ≥ 1, hiçbir katman yok). Aynı barda birden çok paket geçerliyse öncelik 2. bölümdeki sıra;
+eşit kaliteli iki dönüş barı adayı emir sayılmaz.
 
 **Beş ölçü, her satırda.** N işlem sayısı; kazanma oranı; ortalama R (net kâr, risk birimiyle);
 ortalama R'nin bootstrap **%95 aralığı** (1 saatlik ve üstü sette 1.000, 5 dakikalık sette 300

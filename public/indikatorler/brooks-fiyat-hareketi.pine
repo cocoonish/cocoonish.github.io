@@ -706,23 +706,34 @@ plotshape(ucgenGoster and kapanmis and aiDondu and aiShort, "Always-in → short
 
 // ── Son barın emir seviyeleri: öncelik sırasıyla TEK paket ───────────────
 //  kırılım modu (iki taraflı) > bant kenarı > ikinci giriş > başarısız
-//  dönüş > dönüş barı (kalite ≥ asgari, yasak yok). Çizgiler son bardan
-//  üç bar ileriye; her barda yeniden kurulur.
+//  dönüş > dönüş barı (kalite ≥ asgari, yasak yok; iki yönlü eşit kalite →
+//  paket yok). Çizgiler son bardan üç bar ileriye; her barda yeniden kurulur.
 var line lGiris = na
 var line lStop  = na
 var line l1R    = na
 var line l2R    = na
 var label lAd   = na
+// Dönüş barı adayları: kalite ≥ asgari ve yön yasağı yok. İki aday birden
+// varsa kalitesi YÜKSEK olan kazanır; kaliteler EŞİTSE paket YOK — yayımlanan
+// backtest'in kuralı (iki aday aynı kalitede → emir yok). Ders bu hâl için
+// bir şey söylemez; iki yöne aynı güçle bakan bar "yön bilinmez" hâlidir ve
+// tablodaki sayılar o kuralla ölçüldü. Bir ölçüm aracının GÖSTERDİĞİ kural,
+// ölçtüğü kuralın kendisi olmalıdır; boğayı seçen eski hâl keyfîydi.
+donusAdayBoga = bogaDonus and kaliteBoga >= asgariKalite and not yalnizSat
+donusAdayAyi  = ayiDonus  and kaliteAyi  >= asgariKalite and not yalnizAl
+donusBogaSec  = donusAdayBoga and (not donusAdayAyi or kaliteBoga > kaliteAyi)
+donusAyiSec   = donusAdayAyi  and (not donusAdayBoga or kaliteAyi > kaliteBoga)
+donusBeraber  = donusAdayBoga and donusAdayAyi and kaliteBoga == kaliteAyi
 paketAd  = kalipAd != "" ? "kırılım modu · " + kalipAd :
    bantBoga ? "bant kenarı · alış" : bantAyi ? "bant kenarı · satış" :
    ikinciBoga ? "ikinci giriş · H2" : ikinciAyi ? "ikinci giriş · L2" :
    basarisizBoga and not yalnizSat ? "başarısız dönüş · alış" : basarisizAyi and not yalnizAl ? "başarısız dönüş · satış" :
-   bogaDonus and kaliteBoga >= asgariKalite and not yalnizSat and (kaliteBoga >= kaliteAyi or yalnizAl) ? "dönüş barı · alış " + str.tostring(kaliteBoga) + "/4" :
-   ayiDonus  and kaliteAyi  >= asgariKalite and not yalnizAl ? "dönüş barı · satış " + str.tostring(kaliteAyi) + "/4" : ""
+   donusBogaSec ? "dönüş barı · alış " + str.tostring(kaliteBoga) + "/4" :
+   donusAyiSec  ? "dönüş barı · satış " + str.tostring(kaliteAyi) + "/4" : ""
 paketBoga = kalipAd != "" ? true :
    bantBoga or ikinciBoga or (basarisizBoga and not yalnizSat) ? true :
    bantAyi or ikinciAyi or (basarisizAyi and not yalnizAl) ? false :
-   bogaDonus and kaliteBoga >= asgariKalite and not yalnizSat and (kaliteBoga >= kaliteAyi or yalnizAl)
+   donusBogaSec
 paketGiris = kalipAd != "" ? kalipTepe + tick : paketBoga ? girisBoga : girisAyi
 paketStop  = kalipAd != "" ? kalipDip  - tick : paketBoga ? stopBoga  : stopAyi
 paketRisk  = math.abs(paketGiris - paketStop)
@@ -806,6 +817,7 @@ if cizimBari and kutuKip != "Kapalı"
     kurAyi  = ayiDonus  and kaliteAyi  > 0 and not yalnizAl
     // ④ artık PAKET adıyla konuşur: hangi kurulum, hangi yönde, hizalı mı.
     kurMetin = paketAd != "" ? paketAd :
+       donusBeraber ? "dönüş barı iki yönlü — " + str.tostring(kaliteBoga) + "/4 boğa · " + str.tostring(kaliteAyi) + "/4 ayı, eşit kalite → emir yok" :
        kurBoga and kurAyi ? "dönüş barı iki yönlü — " + str.tostring(kaliteBoga) + "/4 boğa · " + str.tostring(kaliteAyi) + "/4 ayı (eşiğin altında)" :
        kurBoga ? "dönüş barı " + str.tostring(kaliteBoga) + "/4 boğa (eşiğin altında)" :
        kurAyi  ? "dönüş barı " + str.tostring(kaliteAyi)  + "/4 ayı (eşiğin altında)"  : "kurulum yok"

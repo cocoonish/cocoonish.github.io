@@ -3,10 +3,13 @@
    TTO · Yapı ve Momentum — ölçüm tabloları, SAYILAR ÖLÇÜM DOSYASINDAN.
 
    Tek kaynak site/src/data/yapi_backtest.json (Aktarılacak Projeler/
-   Indikator/backtest.py çıktısı). Üç kip:
+   Indikator/backtest.py çıktısı). Dört kip:
      kip="olasilik"  — olay taban oranları, zaman dilimine göre, N ve %95
      kip="paket"     — kurulum paketleri (hedef, süzgeç seçilir)
      kip="diverjans" — kullanıcı tablosunun 25 satırı: iddia ve ölçülen
+     kip="seans"     — süzgeçsiz paketlerin işlemleri sinyal barının NY
+                       seansına göre (kova adları ve sırası ölçüm dosyasının
+                       künyesinden; ikinci liste tutulmaz)
    Sayfaya elle sayı yazılmaz — elle yazılan sayı bir sonraki ölçümde
    sessizce eskir. Biçim tek sözleşmeden (lib/bicim).
    ───────────────────────────────────────────────────────────── */
@@ -14,9 +17,9 @@ import veri from '../data/yapi_backtest.json';
 import { sayi } from '../lib/bicim';
 
 interface Props {
-  kip: 'olasilik' | 'paket' | 'diverjans';
+  kip: 'olasilik' | 'paket' | 'diverjans' | 'seans';
   hedef?: 1 | 2;
-  suzgec?: 'yok' | 'konum' | 'trend' | 'itki';
+  suzgec?: 'yok' | 'konum' | 'trend' | 'itki' | 'kz';
   tf?: string;
 }
 const { kip, hedef = 2, suzgec = 'yok', tf = '1h' } = Astro.props;
@@ -52,6 +55,11 @@ const r = (v: number | null | undefined, o = 2) => (v === null || v === undefine
 const paketler: Satir[] = (veri as any).paket_toplam.filter((p: Satir) => p.suzgec === suzgec && (p.hedef_R === hedef || p.paket === 'diverjans'));
 const div: Satir[] = ((veri as any).diverjans[tf] ?? []).slice().sort((a: Satir, b: Satir) => a.satir - b.satir);
 const az = (n: number) => n < 30;
+// seans kipi: kovalar ve adları ölçüm dosyasının künyesinden (Y.SEANSLAR · Y.SEANS_AD)
+const KOVA: string[] = [...Object.keys((veri as any).kunye.seanslar ?? {}), 'diger', 'kz', 'kz_disi'];
+const KOVA_AD: Record<string, string> = { ...((veri as any).kunye.seans_ad ?? {}), kz: 'Kill zone (Londra + NY AM)', kz_disi: 'Kill zone dışı' };
+const GUN_ICI = TFLER.filter((t) => ((veri as any).seans_toplam ?? []).some((p: Satir) => p.tf === t));
+const seans: Satir[] = ((veri as any).seans_toplam ?? []).filter((p: Satir) => p.hedef_R === hedef || p.paket === 'diverjans');
 ---
 
 {kip === 'olasilik' && (
@@ -95,6 +103,30 @@ const az = (n: number) => n < 30;
               <td>{az(p.n) ? '—' : `${r(p.ilk_yari_ort_R)} / ${r(p.ikinci_yari_ort_R)}`}</td>
               <td>{p.seri_ustu_rastgele}/{p.seri} · {p.rastgele_seviye_ort_R === null || p.rastgele_seviye_ort_R === undefined ? '—' : `${p.seri_ustu_rastgele_seviye}/${p.seri}`}</td>
               <td>{p.risk_atr_p50 === null || p.risk_atr_p50 === undefined ? '—' : sayi(p.risk_atr_p50, 2) + ' ATR'}</td>
+            </tr>
+          )),
+        )}
+      </tbody>
+    </table>
+  </div>
+)}
+
+{kip === 'seans' && (
+  <div class="bt-kap">
+    <table class="bt">
+      <thead>
+        <tr><th>Zaman dilimi · paket</th>{KOVA.map((k) => <th>{KOVA_AD[k] ?? k}</th>)}</tr>
+      </thead>
+      <tbody>
+        {GUN_ICI.map((t) =>
+          seans.filter((p) => p.tf === t).map((p) => (
+            <tr>
+              <td>{TF_AD[t]} · {PAKET_AD[p.paket]}</td>
+              {KOVA.map((k) => {
+                const o = p.seans?.[k];
+                const var_ = o && o.n > 0;
+                return <td class={!var_ || az(o.n) ? 'az' : ''}>{var_ ? r(o.ort_R) : '—'}<span class="alt">{var_ ? `n ${sayi(o.n, 0)}` : ''}</span></td>;
+              })}
             </tr>
           )),
         )}

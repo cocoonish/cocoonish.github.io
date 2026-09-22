@@ -92,6 +92,7 @@ divGoster    = input.bool(true, "Diverjans etiketi (yalnız tabloyla eşleşen)"
 kutuKip      = input.string("Tam", "Kurulum kutusu", options = ["Tam", "Özet", "Kapalı"], group = g4)
 kutuYeri     = input.string("Sağ üst", "Kutunun yeri", options = ["Sağ üst", "Sağ alt", "Sol üst", "Sol alt"], group = g4)
 seviyeGoster = input.bool(true, "Son kurulumun seviyeleri (giriş · stop · hedef)", group = g4)
+kzGoster     = input.bool(false, "Kill zone gölgesi (Londra 02:00–05:00 · NY AM 07:00–10:00, New York saati)", group = g4, tooltip = "Ders 5.2 pencereleri; yalnız gün içi dilimlerde (≤ 1 sa) çizilir. Bu bir SÜZGEÇ değil okuma yardımıdır: ölçümde kill zone'daki sinyal barının paketlerin ortalamasını tutarlı bir yöne oynatmadığı görüldü (sayfadaki seans tablosu). Öntanımlı kapalı.")
 azamiKutu    = input.int(40, "Defterde tutulan azami FVG/OB", minval = 2, maxval = 100, group = g4, tooltip = "Görünüm değil KURAL defteri: dolunca en eski kayıt kutusuyla birlikte düşer ve bir daha sorulmaz. Replikasyon sınırsız tutar; sınır ancak defter dolarsa ayrışma yaratır.")
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -107,6 +108,14 @@ cizimBari = bar_index >= last_bar_index - 1 and kapanmis
 havuzAktif = not (timeframe.isweekly or timeframe.ismonthly)
 yeniGun    = timeframe.change("D")
 yeniHafta  = timeframe.change("W")
+// Seanslar — ders 5.2 tablosu, New York saati. Yalnız GÖLGE, süzgeç değil:
+// ölçüm kill zone'daki sinyalin paket ortalamasını tutarlı yöne oynatmadığını
+// söyledi (sayfa, seans tablosu). Pencere dizgeleri yapi_referans.SEANSLAR
+// tablosundan türer; duman ⑫ iki tarafı karşılaştırır. Bar birden çok seansa
+// yayılan dilimlerde (> 1 sa) soru anlamsız — çizilmez.
+gunIci   = timeframe.isintraday and timeframe.multiplier <= 60
+kzLondra = gunIci and not na(time(timeframe.period, "0200-0500", "America/New_York"))
+kzNyAm   = gunIci and not na(time(timeframe.period, "0700-1000", "America/New_York"))
 
 // Sayı yazımı: ondalık VİRGÜL (site sözleşmesi); Pine'ın str.tostring'i nokta basar
 f_sayi(float v, string bicim) => str.replace_all(str.tostring(v, bicim), ".", ",")
@@ -1040,6 +1049,7 @@ plotshape(kapanmis and havuzGoster and sweepBu, "Sweep", shape.xcross, location.
 plotshape(kapanmis and swingGoster and not na(ph), "Swing H", shape.triangledown, location.abovebar, color.new(cGri, 30), size = size.tiny, offset = -kSwing)
 plotshape(kapanmis and swingGoster and not na(pl), "Swing L", shape.triangleup, location.belowbar, color.new(cGri, 30), size = size.tiny, offset = -kSwing)
 bgcolor(kapanmis and aralikGoster and aralikVar ? (konum < 50 ? cZeminAl : cZeminSat) : na, title = "Discount / premium zemini")
+bgcolor(kapanmis and kzGoster and (kzLondra or kzNyAm) ? color.new(cAltin, 92) : na, title = "Kill zone (Londra · NY AM)")
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Kurulum kutusu
