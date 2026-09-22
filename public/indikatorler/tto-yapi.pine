@@ -5,8 +5,9 @@
 // NE ÇİZER. Onaylı swing'ler (2k+1 fraktal, kesin eşitsizlik), yapı olayları
 // (BOS · CHoCH · MSS — hepsi GÖVDE kapanışıyla; fitil aşımı sweep'tir),
 // dealing range (EQ, premium/discount, OTE 0,62–0,79), likidite havuzları
-// (önceki gün/hafta H/L, swing'ler, eşit tepe/dip) ve akıbetleri (sweep ·
-// run), displacement'lı FVG'ler (taze → CE → dolu → ters), order block'lar
+// (önceki gün/hafta H/L, swing'ler, eşit tepe/dip) ve akıbetleri (sweep
+// işaretlenir, run defterde tutulur), displacement'lı FVG'ler (taze → CE →
+// dolu → ters), order block'lar
 // (yumuşak okul), harmonik PRZ (Gartley · Bat · Alt Bat · Butterfly · Crab ·
 // Deep Crab · Cypher · Shark — dersin tarayıcı bantları, PRZ ideal üç
 // sayıdan; C onaylandığı bar ÖNCEDEN çizilir), RSI diverjansı (kullanıcının
@@ -28,10 +29,21 @@
 // yok; yeniden ölçülen değer yanında.
 //
 // BAR DİSİPLİNİ. Kapanmamış bar hakkında hiçbir şey söylenmez: her etiket,
-// kutu ve çizgi son KAPANMIŞ barda kurulur (`kapanmis`, `cizimBari`); on
-// üç alarmın hepsi `barstate.isconfirmed` ister. Üst zaman dilimi seviyeleri
+// kutu ve çizgi son KAPANMIŞ barda kurulur (`kapanmis`, `cizimBari`); dokuz
+// alarmın hepsi `barstate.isconfirmed` ister. Üst zaman dilimi seviyeleri
 // `request.security(..., [high[1], low[1]], lookahead_on)` ile KAPANMIŞ
-// önceki dönemden gelir — bu deyim sızıntısız ve repaint etmez.
+// önceki dönemden gelir — bu deyim sızıntısız ve repaint etmez; haftalık ve
+// aylık grafikte "önceki gün/hafta" tanımı tutmadığı için o havuzlar orada
+// KAPALIDIR (havuzAktif).
+//
+// REPLİKASYONLA SÖZLEŞME. Her kural Aktarılacak Projeler/Indikator/
+// yapi_referans.py ile aynı tanımdadır ve ölçüm oradan gelir: OB araması
+// bacağın başlangıç barını da tarar (en çok 200 bar geriye); MSS için sweep
+// yönüne göre ayrı tutulur; Sweep → MSS → FVG paketi bacaktaki EN ESKİ
+// FVG'ye limit koyar ve stopu sweep barından kırılıma kadar bacağın ucundan
+// alır; PRZ kaçış penceresi PİVOT barlarından ölçülür; eşit tepe/dip eskiden
+// yeniye ilk tutanı alır. Bilinen fark: aynı barda hem dip hem tepe pivotu
+// onaylanırsa bu dosya TEPE diverjansını gösterir, ölçüm ikisini de sayar.
 //
 //@version=6
 indicator("TTO · Yapı", shorttitle="TTO Yapı", overlay = true,
@@ -80,13 +92,24 @@ divGoster    = input.bool(true, "Diverjans etiketi (yalnız tabloyla eşleşen)"
 kutuKip      = input.string("Tam", "Kurulum kutusu", options = ["Tam", "Özet", "Kapalı"], group = g4)
 kutuYeri     = input.string("Sağ üst", "Kutunun yeri", options = ["Sağ üst", "Sağ alt", "Sol üst", "Sol alt"], group = g4)
 seviyeGoster = input.bool(true, "Son kurulumun seviyeleri (giriş · stop · hedef)", group = g4)
-azamiKutu    = input.int(12, "Ekranda tutulan azami FVG/OB", minval = 2, maxval = 40, group = g4)
+azamiKutu    = input.int(40, "Defterde tutulan azami FVG/OB", minval = 2, maxval = 100, group = g4, tooltip = "Görünüm değil KURAL defteri: dolunca en eski kayıt kutusuyla birlikte düşer ve bir daha sorulmaz. Replikasyon sınırsız tutar; sınır ancak defter dolarsa ayrışma yaratır.")
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Bar disiplini ve palet
 // ─────────────────────────────────────────────────────────────────────────
 kapanmis  = barstate.isconfirmed or not yalnizKapali
 cizimBari = bar_index >= last_bar_index - 1 and kapanmis
+
+// Üst zaman dilimi havuzları yalnız gün içi ve günlük grafikte anlamlıdır:
+// haftalık/aylık grafikte "D" ve "W" isteği DÜŞÜK dilim olur, "önceki
+// gün/hafta" sözleşmesi tutmaz. Dönem değişimi DEĞER kıyasıyla değil takvimle
+// sorulur — iki günün tepesi birebir aynı çıkarsa yeni gün hiç sorulmazdı.
+havuzAktif = not (timeframe.isweekly or timeframe.ismonthly)
+yeniGun    = timeframe.change("D")
+yeniHafta  = timeframe.change("W")
+
+// Sayı yazımı: ondalık VİRGÜL (site sözleşmesi); Pine'ın str.tostring'i nokta basar
+f_sayi(float v, string bicim) => str.replace_all(str.tostring(v, bicim), ".", ",")
 
 cMurekkep = color.new(#1a1a1a, 0)
 cClaret   = color.new(#8c2f39, 0)
@@ -128,7 +151,6 @@ var swF = array.new<float>()   // fiyat
 var swB = array.new<int>()     // pivot barı
 var swT = array.new<int>()     // +1 H · −1 L
 var swO = array.new<int>()     // onay barı
-var swA = array.new<bool>()    // havuz olarak alındı mı (sweep/run)
 
 ph = ta.pivothigh(high, kSwing, kSwing)
 pl = ta.pivotlow(low, kSwing, kSwing)
@@ -146,7 +168,7 @@ f_havuzEkle(string ad, float sev, int yon) =>
     array.push(hvY, yon)
     array.push(hvB, bar_index)
     array.push(hvD, 0)
-    if array.size(hvF) > 60
+    if array.size(hvF) > 200
         array.shift(hvT)
         array.shift(hvF)
         array.shift(hvY)
@@ -162,32 +184,29 @@ f_swingEkle(float fiyat, int barNo, int tur) =>
             array.set(swF, n - 1, fiyat)
             array.set(swB, n - 1, barNo)
             array.set(swO, n - 1, bar_index)
-            array.set(swA, n - 1, false)
             eklendi := true
     else
         array.push(swF, fiyat)
         array.push(swB, barNo)
         array.push(swT, tur)
         array.push(swO, bar_index)
-        array.push(swA, false)
         eklendi := true
         if array.size(swF) > 80
             array.shift(swF)
             array.shift(swB)
             array.shift(swT)
             array.shift(swO)
-            array.shift(swA)
     if eklendi
         f_havuzEkle(tur > 0 ? "SWH" : "SWL", fiyat, tur)
-        // eşit tepe/dip: aynı türden son beş swing'le fark ≤ esitAtr × ATR
+        // eşit tepe/dip: aynı türden önceki beş swing'le fark ≤ esitAtr × ATR —
+        // ESKİDEN yeniye ilk tutan (replikasyonla aynı sıra)
         m = array.size(swF)
         if atr > 0 and m >= 2
-            bulundu = false
-            for j = m - 2 to math.max(0, m - 6)
-                if not bulundu and array.get(swT, j) == tur and math.abs(array.get(swF, j) - fiyat) <= esitAtr * atr
+            for j = math.max(0, m - 6) to m - 2
+                if array.get(swT, j) == tur and math.abs(array.get(swF, j) - fiyat) <= esitAtr * atr
                     sev = tur > 0 ? math.max(array.get(swF, j), fiyat) : math.min(array.get(swF, j), fiyat)
                     f_havuzEkle(tur > 0 ? "EQH" : "EQL", sev, tur)
-                    bulundu := true
+                    break
     eklendi
 
 yeniSwing = false
@@ -204,19 +223,25 @@ f_sonSwing(int tur) =>
     idx = -1
     if n > 0
         for j = n - 1 to 0
-            if idx < 0 and array.get(swT, j) == tur
+            if array.get(swT, j) == tur
                 idx := j
+                break
     idx
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Havuz akıbeti — PDH/PDL/PWH/PWL ve defterdekiler: sweep mi run mı
 // ─────────────────────────────────────────────────────────────────────────
-var int sonSweepBar = -1000
-var int sonSweepYon = 0
+// Sweep defteri YÖNE GÖRE: MSS ve paket "kırılımdan ÖNCE ters yönde sweep"
+// sorar; replikasyon pencere içindeki HERHANGİ bir ters yönlü sweep'e bakar.
+// Pencerede o yönde bir sweep varsa o yönün SON sweep'i de penceredir — yani
+// yön başına son barı tutmak aynı soruya aynı cevabı verir.
+var int swBarUst = -1000      // son BSL sweep'i (üst havuz: PDH · PWH · SWH · EQH)
+var int swBarAlt = -1000      // son SSL sweep'i (alt havuz: PDL · PWL · SWL · EQL)
+var string swAdUst = ""
+var string swAdAlt = ""
+var int sonSweepBar = -1000   // kutu ③: en son sweep, yönden bağımsız
 var string sonSweepAd = ""
-var float sonSweepUc = na
 sweepBu = false
-runBu = false
 
 f_akibet(float sev, int yon) =>
     // 0 hiç · 1 sweep · 2 run
@@ -233,69 +258,39 @@ f_akibet(float sev, int yon) =>
             r := 1
     r
 
-// Üst zaman dilimi havuzları tek defterde tutulmaz; dönem değişince durumu sıfırlanır
-var int pdhD = 0
-var int pdlD = 0
-var int pwhD = 0
-var int pwlD = 0
-if pdh != pdh[1]
-    pdhD := 0
-if pdl != pdl[1]
-    pdlD := 0
-if pwh != pwh[1]
-    pwhD := 0
-if pwl != pwl[1]
-    pwlD := 0
+// Üst zaman dilimi havuzları tek defterde tutulmaz; dönem değişince akıbeti
+// sıfırlanır ve yeni dönemin İLK barı da sorulur (o bar önceki günün tepesini
+// süpürebilir — replikasyon aynı barı sorar)
+var htfD = array.from(0, 0, 0, 0)          // PDH · PDL · PWH · PWL: 0 açık · 1 sweep · 2 run
+if yeniGun
+    array.set(htfD, 0, 0)
+    array.set(htfD, 1, 0)
+if yeniHafta
+    array.set(htfD, 2, 0)
+    array.set(htfD, 3, 0)
+htfSev = array.from(pdh, pdl, pwh, pwl)
+htfYon = array.from(1, -1, 1, -1)
+htfAd  = array.from("PDH", "PDL", "PWH", "PWL")
 
 if kapanmis and atr > 0
-    if pdhD == 0 and not na(pdh)
-        r = f_akibet(pdh, 1)
-        if r > 0
-            pdhD := r
-            if r == 1
-                sweepBu := true
-                sonSweepBar := bar_index
-                sonSweepYon := 1
-                sonSweepAd := "PDH"
-                sonSweepUc := high
-            else
-                runBu := true
-    if pdlD == 0 and not na(pdl)
-        r = f_akibet(pdl, -1)
-        if r > 0
-            pdlD := r
-            if r == 1
-                sweepBu := true
-                sonSweepBar := bar_index
-                sonSweepYon := -1
-                sonSweepAd := "PDL"
-                sonSweepUc := low
-            else
-                runBu := true
-    if pwhD == 0 and not na(pwh)
-        r = f_akibet(pwh, 1)
-        if r > 0
-            pwhD := r
-            if r == 1
-                sweepBu := true
-                sonSweepBar := bar_index
-                sonSweepYon := 1
-                sonSweepAd := "PWH"
-                sonSweepUc := high
-            else
-                runBu := true
-    if pwlD == 0 and not na(pwl)
-        r = f_akibet(pwl, -1)
-        if r > 0
-            pwlD := r
-            if r == 1
-                sweepBu := true
-                sonSweepBar := bar_index
-                sonSweepYon := -1
-                sonSweepAd := "PWL"
-                sonSweepUc := low
-            else
-                runBu := true
+    if havuzAktif
+        for j = 0 to 3
+            sev = array.get(htfSev, j)
+            if array.get(htfD, j) == 0 and not na(sev)
+                yon = array.get(htfYon, j)
+                r = f_akibet(sev, yon)
+                if r > 0
+                    array.set(htfD, j, r)
+                    if r == 1
+                        sweepBu := true
+                        sonSweepBar := bar_index
+                        sonSweepAd := array.get(htfAd, j)
+                        if yon > 0
+                            swBarUst := bar_index
+                            swAdUst := array.get(htfAd, j)
+                        else
+                            swBarAlt := bar_index
+                            swAdAlt := array.get(htfAd, j)
     // defter: swing ve eşit tepe/dip havuzları (bu barda oluşanlar sorulmaz)
     n = array.size(hvF)
     if n > 0
@@ -308,11 +303,13 @@ if kapanmis and atr > 0
                     if r == 1
                         sweepBu := true
                         sonSweepBar := bar_index
-                        sonSweepYon := yon
                         sonSweepAd := array.get(hvT, j)
-                        sonSweepUc := yon > 0 ? high : low
-                    else
-                        runBu := true
+                        if yon > 0
+                            swBarUst := bar_index
+                            swAdUst := array.get(hvT, j)
+                        else
+                            swBarAlt := bar_index
+                            swAdAlt := array.get(hvT, j)
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Yapı — BOS · CHoCH · MSS (gövde kapanışı; yalnız ONAYLI swing'e karşı)
@@ -331,8 +328,6 @@ var string sonOlay = ""
 var int sonOlayYon = 0
 var int sonOlayBar = -1000
 var float sonOlaySev = na
-var bool sonOlayDisp = false
-var bool sonOlaySweep = false
 olayBu = ""          // bu barda olay
 olayBuYon = 0
 
@@ -341,19 +336,19 @@ var obA = array.new<float>()    // alt (gövde)
 var obU = array.new<float>()    // üst
 var obY = array.new<int>()
 var obF = array.new<float>()    // fitil (stop referansı)
-var obB = array.new<int>()      // OB barı
 var obE = array.new<int>()      // olay barı
 var obTz = array.new<bool>()    // taze
 var obKutu = array.new<box>()
 
 f_obEkle(int yon, int bas) =>
-    // bacakta displacement'tan önceki son ZIT renkli mum: geriye tara
+    // bacakta displacement'tan önceki son ZIT renkli mum: bu bardan bacağın
+    // başlangıç barına (dahil) kadar geriye tara, en çok 200 bar
     obBar = -1
     for j = 0 to math.min(bar_index - bas, 200)
-        if obBar < 0
-            zit = yon > 0 ? close[j] < open[j] : close[j] > open[j]
-            if zit
-                obBar := j
+        zit = yon > 0 ? close[j] < open[j] : close[j] > open[j]
+        if zit
+            obBar := j
+            break
     if obBar >= 0
         alt = math.min(open[obBar], close[obBar])
         ust = math.max(open[obBar], close[obBar])
@@ -361,7 +356,6 @@ f_obEkle(int yon, int bas) =>
         array.push(obU, ust)
         array.push(obY, yon)
         array.push(obF, yon > 0 ? low[obBar] : high[obBar])
-        array.push(obB, bar_index - obBar)
         array.push(obE, bar_index)
         array.push(obTz, true)
         array.push(obKutu, box.new(bar_index - obBar, ust, bar_index + 20, alt, border_color = obGoster ? cMavi : na, bgcolor = obGoster ? color.new(cMavi, 85) : na, border_width = 1))
@@ -371,10 +365,12 @@ f_obEkle(int yon, int bas) =>
             array.shift(obU)
             array.shift(obY)
             array.shift(obF)
-            array.shift(obB)
             array.shift(obE)
             array.shift(obTz)
 
+// Olay hükmü DÖNDÜRÜLÜR: Pine bir kullanıcı fonksiyonunun genel değişkeni
+// `:=` ile değiştirmesine izin vermez ("Cannot modify global variable");
+// genel kayıt çağrı yerinde, genel kapsamda yazılır.
 f_olay(string tur, int yon, float sev, int kirilanBar) =>
     // kırılım bacağı: kırılan swing'in karşı ucundan (son ters swing) bu bara
     bas = kirilanBar
@@ -386,22 +382,19 @@ f_olay(string tur, int yon, float sev, int kirilanBar) =>
         d = yon > 0 ? dispBoga[j] : dispAyi[j]
         if d
             dispVar := true
-    sweepOnce = sonSweepBar >= bar_index - sweepPencere and sonSweepBar < bar_index and sonSweepYon == -yon
+            break
+    // kırılımdan ÖNCE ters yönde sweep: o yönün son sweep'i pencerede mi (bu bar hariç)
+    sb = yon > 0 ? swBarAlt : swBarUst
+    sweepOnce = sb >= bar_index - sweepPencere and sb < bar_index
     t = tur
     if tur == "CHoCH" and dispVar and sweepOnce
         t := "MSS"
-    sonOlay := t
-    sonOlayYon := yon
-    sonOlayBar := bar_index
-    sonOlaySev := sev
-    sonOlayDisp := dispVar
-    sonOlaySweep := sweepOnce
-    olayBu := t
-    olayBuYon := yon
     if yapiGoster and kapanmis
-        line.new(kirilanBar, sev, bar_index, sev, color = t == "BOS" ? cMurekkep : t == "MSS" ? cClaret : cAltin, style = t == "BOS" ? line.style_solid : line.style_dashed, width = t == "MSS" ? 2 : 1)
+        // xloc.bar_index ile çizim 10.000 bardan geriye gidemez (çalışma zamanı hatası)
+        line.new(math.max(kirilanBar, bar_index - 9000), sev, bar_index, sev, color = t == "BOS" ? cMurekkep : t == "MSS" ? cClaret : cAltin, style = t == "BOS" ? line.style_solid : line.style_dashed, width = t == "MSS" ? 2 : 1)
         label.new(bar_index, sev, t, style = yon > 0 ? label.style_label_down : label.style_label_up, color = color.new(t == "MSS" ? cClaret : cMurekkep, 20), textcolor = color.white, size = size.tiny)
     f_obEkle(yon, bas)
+    t
 
 if kapanmis
     n = array.size(swF)
@@ -431,7 +424,13 @@ if kapanmis
     else if trend != 0 and not na(pHf) and not na(pLf)
         if trend > 0
             if pHonay and close > pHf
-                f_olay("BOS", 1, pHf, pHb)
+                tBos = f_olay("BOS", 1, pHf, pHb)
+                sonOlay := tBos
+                sonOlayYon := 1
+                sonOlayBar := bar_index
+                sonOlaySev := pHf
+                olayBu := tBos
+                olayBuYon := 1
                 li = f_sonSwing(-1)
                 if li >= 0 and array.get(swB, li) > pHb
                     pLf := array.get(swF, li)
@@ -443,7 +442,13 @@ if kapanmis
                 pHb := bar_index
                 pHonay := false
             else if close < pLf
-                f_olay("CHoCH", -1, pLf, pLb)
+                tCh = f_olay("CHoCH", -1, pLf, pLb)
+                sonOlay := tCh
+                sonOlayYon := -1
+                sonOlayBar := bar_index
+                sonOlaySev := pLf
+                olayBu := tCh
+                olayBuYon := -1
                 trend := -1
                 hi = f_sonSwing(1)
                 if hi >= 0 and array.get(swB, hi) > pLb
@@ -458,7 +463,13 @@ if kapanmis
                 bacakBas := pHb
         else
             if pLonay and close < pLf
-                f_olay("BOS", -1, pLf, pLb)
+                tBos = f_olay("BOS", -1, pLf, pLb)
+                sonOlay := tBos
+                sonOlayYon := -1
+                sonOlayBar := bar_index
+                sonOlaySev := pLf
+                olayBu := tBos
+                olayBuYon := -1
                 hi = f_sonSwing(1)
                 if hi >= 0 and array.get(swB, hi) > pLb
                     pHf := array.get(swF, hi)
@@ -470,7 +481,13 @@ if kapanmis
                 pLb := bar_index
                 pLonay := false
             else if close > pHf
-                f_olay("CHoCH", 1, pHf, pHb)
+                tCh = f_olay("CHoCH", 1, pHf, pHb)
+                sonOlay := tCh
+                sonOlayYon := 1
+                sonOlayBar := bar_index
+                sonOlaySev := pHf
+                olayBu := tCh
+                olayBuYon := 1
                 trend := 1
                 li = f_sonSwing(-1)
                 if li >= 0 and array.get(swB, li) > pHb
@@ -536,9 +553,6 @@ var fD = array.new<int>()     // 0 taze · 1 ce · 2 dolu · 3 ters
 var fB = array.new<int>()
 var fKutu = array.new<box>()
 fvgBu = 0
-sonFvgCe = float(na)
-sonFvgAlt = float(na)
-sonFvgUst = float(na)
 
 if kapanmis and atr > 0
     // durumlar (bu barın fiyatıyla; bu barda oluşan sorulmaz)
@@ -635,8 +649,9 @@ var pzS = array.new<float>()   // stop
 var pzT1 = array.new<float>()
 var pzT2 = array.new<float>()
 var pzD = array.new<int>()     // 0 bekliyor · 1 tamam · 2 teyit · 3 geçersiz · 4 kaçtı
-var pzC = array.new<int>()     // çizim barı
-var pzX = array.new<int>()     // X barı
+var pzC = array.new<int>()     // çizim barı (C onaylandığı bar)
+var pzCp = array.new<int>()    // C PİVOT barı — kaçış penceresi pivot barlarından ölçülür (replikasyonla aynı)
+var pzX = array.new<int>()     // X pivot barı
 var pzTb = array.new<int>()    // tamam barı
 var pzKutu = array.new<box>()
 przTeyitBu = false
@@ -644,7 +659,7 @@ przTamamBu = false
 string przTeyitAd = ""
 int przTeyitIdx = -1
 
-f_przEkle(string ad, int yon, float lo, float hi, float stop, float t1, float t2, int xBar) =>
+f_przEkle(string ad, int yon, float lo, float hi, float stop, float t1, float t2, int xBar, int cBar) =>
     // aynı C için aynı kalıp bir kez
     var_ok = true
     n = array.size(pzAd)
@@ -652,6 +667,7 @@ f_przEkle(string ad, int yon, float lo, float hi, float stop, float t1, float t2
         for j = 0 to n - 1
             if array.get(pzAd, j) == ad and array.get(pzC, j) == bar_index
                 var_ok := false
+                break
     if var_ok
         array.push(pzAd, ad)
         array.push(pzY, yon)
@@ -662,10 +678,11 @@ f_przEkle(string ad, int yon, float lo, float hi, float stop, float t1, float t2
         array.push(pzT2, t2)
         array.push(pzD, 0)
         array.push(pzC, bar_index)
+        array.push(pzCp, cBar)
         array.push(pzX, xBar)
         array.push(pzTb, -1)
         array.push(pzKutu, box.new(bar_index, hi, bar_index + 30, lo, border_color = przGoster ? cAltin : na, bgcolor = przGoster ? color.new(cAltin, 85) : na, text = przGoster ? ad : "", text_size = size.tiny, text_color = cAltin, text_halign = text.align_left))
-        if array.size(pzAd) > 12
+        if array.size(pzAd) > 40
             box.delete(array.shift(pzKutu))
             array.shift(pzAd)
             array.shift(pzY)
@@ -676,6 +693,7 @@ f_przEkle(string ad, int yon, float lo, float hi, float stop, float t1, float t2
             array.shift(pzT2)
             array.shift(pzD)
             array.shift(pzC)
+            array.shift(pzCp)
             array.shift(pzX)
             array.shift(pzTb)
 
@@ -688,7 +706,7 @@ f_enYakin(float a, float b, float c, float hedef) =>
     dc = math.abs(c - hedef)
     da <= db and da <= dc ? a : db <= dc ? b : c
 
-f_klasik(string ad, float b0, float b1, float bc0, float bc1, float ideal, float stopKat, float rB, float rC, int yon, float Af, float Xf, float Cf, float xa, float ab, float bc, int xBar) =>
+f_klasik(string ad, float b0, float b1, float bc0, float bc1, float ideal, float stopKat, float rB, float rC, int yon, float Af, float Xf, float Cf, float xa, float ab, float bc, int xBar, int cBar) =>
     if rB >= b0 and rB <= b1
         dXa = Af - yon * ideal * xa
         rBc = ad == "Gartley" ? (rC >= 0.786 ? 1.27 : 1.618) : math.min(math.max(f_bcKat(rC), bc0), bc1)
@@ -701,7 +719,7 @@ f_klasik(string ad, float b0, float b1, float bc0, float bc1, float ideal, float
             dRef = yon > 0 ? hi : lo
             t1 = dRef + yon * 0.382 * math.abs(Af - dRef)
             t2 = dRef + yon * 0.618 * math.abs(Af - dRef)
-            f_przEkle(ad, yon, lo, hi, stop, t1, t2, xBar)
+            f_przEkle(ad, yon, lo, hi, stop, t1, t2, xBar, cBar)
 
 f_harmonikTara() =>
     n = array.size(swF)
@@ -713,6 +731,7 @@ f_harmonikTara() =>
         Xt = array.get(swT, n - 4)
         At = array.get(swT, n - 3)
         xBar = array.get(swB, n - 4)
+        cBar = array.get(swB, n - 1)
         if Xt == array.get(swT, n - 2) and At == array.get(swT, n - 1) and Xt != At
             yon = Xt < 0 ? 1 : -1
             xa = math.abs(Af - Xf)
@@ -723,12 +742,12 @@ f_harmonikTara() =>
                 rC = bc / ab
                 cAsti = yon > 0 ? Cf > Af : Cf < Af
                 if not cAsti and rC >= 0.382 and rC <= 0.886
-                    f_klasik("Gartley",   0.588, 0.648, 1.13, 1.70, 0.786, 1.00, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar)
-                    f_klasik("Bat",       0.36,  0.52,  1.60, 2.70, 0.886, 1.00, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar)
-                    f_klasik("Alt Bat",   0.30,  0.40,  2.00, 3.618, 1.13, 1.272, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar)
-                    f_klasik("Butterfly", 0.75,  0.82,  1.60, 2.70, 1.27, 1.618, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar)
-                    f_klasik("Crab",      0.36,  0.65,  2.50, 3.70, 1.618, 2.00, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar)
-                    f_klasik("Deep Crab", 0.85,  0.92,  2.24, 3.618, 1.618, 2.00, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar)
+                    f_klasik("Gartley",   0.588, 0.648, 1.13, 1.70, 0.786, 1.00, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar, cBar)
+                    f_klasik("Bat",       0.36,  0.52,  1.60, 2.70, 0.886, 1.00, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar, cBar)
+                    f_klasik("Alt Bat",   0.30,  0.40,  2.00, 3.618, 1.13, 1.272, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar, cBar)
+                    f_klasik("Butterfly", 0.75,  0.82,  1.60, 2.70, 1.27, 1.618, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar, cBar)
+                    f_klasik("Crab",      0.36,  0.65,  2.50, 3.70, 1.618, 2.00, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar, cBar)
+                    f_klasik("Deep Crab", 0.85,  0.92,  2.24, 3.618, 1.618, 2.00, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar, cBar)
                 // Cypher: C, A'yı 1,272–1,414 XA aşar; D = 0,786 XC
                 if cAsti and rB >= 0.382 and rB <= 0.618
                     xc = math.abs(Cf - Xf)
@@ -742,7 +761,7 @@ f_harmonikTara() =>
                             lo := dXc
                             hi := dXc
                         dRef = yon > 0 ? hi : lo
-                        f_przEkle("Cypher", yon, lo, hi, Xf, dRef + yon * 0.382 * math.abs(Cf - dRef), dRef + yon * 0.618 * math.abs(Cf - dRef), xBar)
+                        f_przEkle("Cypher", yon, lo, hi, Xf, dRef + yon * 0.382 * math.abs(Cf - dRef), dRef + yon * 0.618 * math.abs(Cf - dRef), xBar, cBar)
             // Shark (0-X-A-B-C): son dört swing 0, X, A, B; B X'i aşar
             Of = Xf
             Xs = Af
@@ -764,7 +783,7 @@ f_harmonikTara() =>
                     if lo < hi
                         stop = Xs - yonS * 1.13 * ox
                         dRef = yonS > 0 ? hi : lo
-                        f_przEkle("Shark", yonS, lo, hi, stop, dRef + yonS * 0.382 * math.abs(Bs - dRef), dRef + yonS * 0.618 * math.abs(Bs - dRef), xBar)
+                        f_przEkle("Shark", yonS, lo, hi, stop, dRef + yonS * 0.382 * math.abs(Bs - dRef), dRef + yonS * 0.618 * math.abs(Bs - dRef), xBar, cBar)
 
 f_donusMumu(int yon) =>
     m = high - low
@@ -798,7 +817,7 @@ if kapanmis
                                 przTeyitBu := true
                                 przTeyitAd := array.get(pzAd, j)
                                 przTeyitIdx := j
-                        else if bar_index - array.get(pzC, j) > math.max(20, 2 * (array.get(pzC, j) - array.get(pzX, j)))
+                        else if bar_index - array.get(pzC, j) > math.max(20, 2 * (array.get(pzCp, j) - array.get(pzX, j)))
                             array.set(pzD, j, 4)
                             box.set_border_color(bx, color.new(cGri, 50))
                             box.set_bgcolor(bx, na)
@@ -846,10 +865,13 @@ var tabId  = array.from(63.6, 62.5, 61.5, 60.7, 60.7, 60.0, 60.0, 60.0, 57.9, 55
 f_tabloSatir(int tip, int bb, int rs, int tr) =>
     idx = -1
     for j = 0 to 24
-        if idx < 0 and array.get(tabTip, j) == tip and array.get(tabBb, j) == bb and array.get(tabRsi, j) == rs and (array.get(tabTr, j) == 0 or array.get(tabTr, j) == tr)
+        if array.get(tabTip, j) == tip and array.get(tabBb, j) == bb and array.get(tabRsi, j) == rs and (array.get(tabTr, j) == 0 or array.get(tabTr, j) == tr)
             idx := j
+            break
     idx
 
+// Aynı barda hem dip hem tepe pivotu onaylanırsa (dış bar) TEPE bloğu sonra
+// koştuğu için kazanır; ölçüm iki diverjansı da sayar (bilinen fark).
 divTip = 0
 divSatir = -1
 if kapanmis
@@ -883,19 +905,22 @@ if kapanmis
 // ─────────────────────────────────────────────────────────────────────────
 // OLASILIK-BAŞI
 var olBosT1    = array.from(0.285, 0.292, 0.334, 0.347, 0.371)
-var olMssDevam = array.from(0.460, 0.494, 0.473, 0.530, 0.476)
-var olSweep    = array.from(0.467, 0.485, 0.491, 0.493, 0.501)
+var olMssDevam = array.from(0.462, 0.492, 0.474, 0.540, 0.492)
+var olSweep    = array.from(0.467, 0.487, 0.489, 0.496, 0.491)
 var olFvgTepki = array.from(0.461, 0.480, 0.476, 0.488, 0.500)
-var olObTepki  = array.from(0.531, 0.556, 0.568, 0.569, 0.519)
+var olObTepki  = array.from(0.533, 0.556, 0.572, 0.573, 0.517)
 var olPrzT1    = array.from(0.660, 0.687, 0.701, 0.718, 0.567)
 var olDivIsabet = array.from(0.461, 0.466, 0.446, 0.471, 0.442)
 var olN         = array.from(208528, 69622, 213532, 56785, 11714)
-// ölçüm 2026-09-21 · bar sayısı zaman dilimine göre olN'de · N<30 hücre −1
+// ölçüm 2026-09-22 · bar sayısı zaman dilimine göre olN'de · N<30 hücre −1
 // OLASILIK-SON
 
+// Grafik dilimi beş ölçüm kovasına YUVARLANIR (30 dk → 1 sa kovası); kutu
+// kovanın adını yazar ki okur ölçülmemiş bir dilimde ölçüm yapıldığını sanmasın
 f_tfIdx() =>
     sn = timeframe.in_seconds()
     sn <= 300 ? 0 : sn <= 900 ? 1 : sn <= 3600 ? 2 : sn <= 14400 ? 3 : 4
+var tfAd = array.from("5 dk", "15 dk", "1 sa", "4 sa", "günlük")
 
 f_yuzde(float p) => p < 0 ? "ölçülmedi" : str.tostring(math.round(p * 100)) + " %"
 
@@ -914,6 +939,24 @@ var bool kurLimit = false
 
 if kapanmis
     tfi = f_tfIdx()
+    // Sweep → MSS → FVG adayı: bacaktaki EN ESKİ aynı yönlü FVG (son 10 bar) ve
+    // ters yön sweep'inin barından kırılıma kadar bacağın ucu (stop referansı) —
+    // ikisi de ölçümle aynı tanım. Aday bulunamazsa zincir alttaki paketlere iner.
+    ceB = float(na)
+    ucB = float(na)
+    if olayBu == "MSS"
+        nF = array.size(fA)
+        if nF > 0
+            for j = 0 to nF - 1
+                if array.get(fY, j) == olayBuYon and array.get(fB, j) >= bar_index - 10
+                    ceB := array.get(fC, j)
+                    break
+        sb = olayBuYon > 0 ? swBarAlt : swBarUst
+        if sb >= bar_index - sweepPencere and sb < bar_index
+            ucB := olayBuYon > 0 ? low : high
+            for j = 1 to bar_index - sb
+                ucB := olayBuYon > 0 ? math.min(ucB, low[j]) : math.max(ucB, high[j])
+    obYeni = array.size(obA) > 0 and array.get(obE, array.size(obA) - 1) == bar_index
     if przTeyitBu and przTeyitIdx >= 0
         y = array.get(pzY, przTeyitIdx)
         kurAd := "Harmonik " + przTeyitAd
@@ -923,25 +966,17 @@ if kapanmis
         kurHedef := array.get(pzT1, przTeyitIdx)
         kurBar := bar_index
         kurLimit := false
-        kurNot := "PRZ'de dönüş mumu · T1 0,382 AD · ölçülen T1: " + f_yuzde(array.get(olPrzT1, tfi))
-    else if olayBu == "MSS"
-        // bacaktaki FVG (son 10 barda, aynı yön)
-        n = array.size(fA)
-        ceB = float(na)
-        if n > 0
-            for j = n - 1 to 0
-                if na(ceB) and array.get(fY, j) == olayBuYon and array.get(fB, j) >= bar_index - 10
-                    ceB := array.get(fC, j)
-        if not na(ceB) and not na(sonSweepUc)
-            kurAd := "Sweep → MSS → FVG"
-            kurYon := olayBuYon
-            kurGiris := ceB
-            kurStop := sonSweepUc - olayBuYon * tamponAtr * atr
-            kurHedef := ceB + olayBuYon * 2.0 * math.abs(ceB - kurStop)
-            kurBar := bar_index
-            kurLimit := true
-            kurNot := sonSweepAd + " süpürüldü · FVG CE'ye limit · 2R · ölçülen MSS devamı: " + f_yuzde(array.get(olMssDevam, tfi))
-    else if (olayBu == "BOS" or olayBu == "CHoCH") and array.size(obA) > 0 and array.get(obE, array.size(obA) - 1) == bar_index
+        kurNot := "PRZ'de dönüş mumu · T1 0,382 AD · T2 0,618 AD " + f_sayi(array.get(pzT2, przTeyitIdx), format.mintick) + " · ölçülen T1: " + f_yuzde(array.get(olPrzT1, tfi))
+    else if olayBu == "MSS" and not na(ceB) and not na(ucB)
+        kurAd := "Sweep → MSS → FVG"
+        kurYon := olayBuYon
+        kurGiris := ceB
+        kurStop := ucB - olayBuYon * tamponAtr * atr
+        kurHedef := ceB + olayBuYon * 2.0 * math.abs(ceB - kurStop)
+        kurBar := bar_index
+        kurLimit := true
+        kurNot := (olayBuYon > 0 ? swAdAlt : swAdUst) + " süpürüldü · FVG CE'ye limit · 2R · ölçülen MSS devamı: " + f_yuzde(array.get(olMssDevam, tfi))
+    else if olayBu != "" and obYeni
         j = array.size(obA) - 1
         y = array.get(obY, j)
         mt = (array.get(obA, j) + array.get(obU, j)) / 2
@@ -962,7 +997,7 @@ if kapanmis
         kurHedef := close + y * array.get(tabTp, divSatir) * atr
         kurBar := bar_index
         kurLimit := false
-        kurNot := "kaynak iddiası " + str.tostring(array.get(tabId, divSatir)) + " % · ölçülen (tablo toplamı): " + f_yuzde(array.get(olDivIsabet, tfi))
+        kurNot := "kaynak iddiası " + f_sayi(array.get(tabId, divSatir), "0.0") + " % · ölçülen (tablo toplamı): " + f_yuzde(array.get(olDivIsabet, tfi))
     else if olayBu == "BOS" and aralikVar
         y = olayBuYon
         st = y > 0 ? pLf : pHf
@@ -997,10 +1032,10 @@ plot(aralikGoster ? eq : na, "EQ", color = color.new(cGri, 30), style = plot.sty
 pOteA = plot(aralikGoster ? oteA : na, "OTE alt", color = na)
 pOteU = plot(aralikGoster ? oteU : na, "OTE üst", color = na)
 fill(pOteA, pOteU, color = aralikGoster ? color.new(cAltin, 85) : na, title = "OTE bandı")
-plot(havuzGoster ? pdh : na, "PDH", color = color.new(cClaret, 40), style = plot.style_linebr, linewidth = 1)
-plot(havuzGoster ? pdl : na, "PDL", color = color.new(cYesil, 40), style = plot.style_linebr, linewidth = 1)
-plot(havuzGoster ? pwh : na, "PWH", color = color.new(cClaret, 20), style = plot.style_circles, linewidth = 1)
-plot(havuzGoster ? pwl : na, "PWL", color = color.new(cYesil, 20), style = plot.style_circles, linewidth = 1)
+plot(havuzGoster and havuzAktif ? pdh : na, "PDH", color = color.new(cClaret, 40), style = plot.style_linebr, linewidth = 1)
+plot(havuzGoster and havuzAktif ? pdl : na, "PDL", color = color.new(cYesil, 40), style = plot.style_linebr, linewidth = 1)
+plot(havuzGoster and havuzAktif ? pwh : na, "PWH", color = color.new(cClaret, 20), style = plot.style_circles, linewidth = 1)
+plot(havuzGoster and havuzAktif ? pwl : na, "PWL", color = color.new(cYesil, 20), style = plot.style_circles, linewidth = 1)
 plotshape(kapanmis and havuzGoster and sweepBu, "Sweep", shape.xcross, location.abovebar, cAltin, size = size.tiny)
 plotshape(kapanmis and swingGoster and not na(ph), "Swing H", shape.triangledown, location.abovebar, color.new(cGri, 30), size = size.tiny, offset = -kSwing)
 plotshape(kapanmis and swingGoster and not na(pl), "Swing L", shape.triangleup, location.belowbar, color.new(cGri, 30), size = size.tiny, offset = -kSwing)
@@ -1009,8 +1044,10 @@ bgcolor(kapanmis and aralikGoster and aralikVar ? (konum < 50 ? cZeminAl : cZemi
 // ─────────────────────────────────────────────────────────────────────────
 //  Kurulum kutusu
 // ─────────────────────────────────────────────────────────────────────────
-f_yer(string y) => y == "Sağ üst" ? position.top_right : y == "Sağ alt" ? position.bottom_right : y == "Sol üst" ? position.top_left : position.bottom_left
-var table kutu = table.new(f_yer(kutuYeri), 2, 12, border_width = 1, frame_color = color.new(cGri, 60), border_color = color.new(cGri, 85))
+// Kutunun yeri GENEL kapsamda, girdiden seçilir: table.new `simple string`
+// ister ve bir kullanıcı fonksiyonunun dönüş niteleyicisi derleyiciye kalır
+kutuPos = kutuYeri == "Sağ üst" ? position.top_right : kutuYeri == "Sağ alt" ? position.bottom_right : kutuYeri == "Sol üst" ? position.top_left : position.bottom_left
+var table kutu = table.new(kutuPos, 2, 12, border_width = 1, frame_color = color.new(cGri, 60), border_color = color.new(cGri, 85))
 
 f_satir(int r, string a, string b, color cb) =>
     table.cell(kutu, 0, r, a, text_color = cGri, text_size = size.small, text_halign = text.align_left)
@@ -1025,7 +1062,7 @@ if cizimBari and kutuKip != "Kapalı"
     f_satir(2, "③ Likidite", sonSweepBar > bar_index - 30 ? sonSweepAd + " süpürüldü (" + str.tostring(bar_index - sonSweepBar) + " bar önce)" : "yakın sweep yok", cMurekkep)
     f_satir(3, "④ Kurulum", kurBar > bar_index - 50 ? kurAd + (kurYon > 0 ? " · ALIŞ" : " · SATIŞ") + " (" + str.tostring(bar_index - kurBar) + " bar)" : "yok", kurBar > bar_index - 50 ? (kurYon > 0 ? cYesil : cClaret) : cGri)
     if kurBar > bar_index - 50 and not na(kurGiris)
-        f_satir(4, "Emir", (kurLimit ? "limit " : "piyasa ") + str.tostring(kurGiris, format.mintick) + " · stop " + str.tostring(kurStop, format.mintick) + " · hedef " + str.tostring(kurHedef, format.mintick), cMurekkep)
+        f_satir(4, "Emir", (kurLimit ? "limit " : "piyasa ") + f_sayi(kurGiris, format.mintick) + " · stop " + f_sayi(kurStop, format.mintick) + " · hedef " + f_sayi(kurHedef, format.mintick), cMurekkep)
         f_satir(5, "Not", kurNot, cGri)
     if kutuKip == "Tam"
         acikF = 0
@@ -1050,7 +1087,7 @@ if cizimBari and kutuKip != "Kapalı"
                     przAdlar := przAdlar + (przAdlar == "" ? "" : ", ") + array.get(pzAd, j)
         f_satir(6, "FVG · OB", "açık FVG " + str.tostring(acikF) + " · taze OB " + str.tostring(tazeO), cMurekkep)
         f_satir(7, "PRZ", bekP > 0 ? przAdlar : "yok", bekP > 0 ? cAltin : cGri)
-        f_satir(8, "Ölçülen (" + timeframe.period + ")", "BOS→T1 " + f_yuzde(array.get(olBosT1, tfi)) + " · MSS devam " + f_yuzde(array.get(olMssDevam, tfi)) + " · sweep tepki " + f_yuzde(array.get(olSweep, tfi)), cMurekkep)
+        f_satir(8, "Ölçülen (" + array.get(tfAd, tfi) + " kovası)", "BOS→T1 " + f_yuzde(array.get(olBosT1, tfi)) + " · MSS devam " + f_yuzde(array.get(olMssDevam, tfi)) + " · sweep tepki " + f_yuzde(array.get(olSweep, tfi)), cMurekkep)
         f_satir(9, "", "FVG CE tepki " + f_yuzde(array.get(olFvgTepki, tfi)) + " · OB tepki " + f_yuzde(array.get(olObTepki, tfi)) + " · PRZ→T1 " + f_yuzde(array.get(olPrzT1, tfi)), cMurekkep)
         f_satir(10, "Bar", yalnizKapali ? "son KAPANMIŞ bar" : "canlı (oynak)", yalnizKapali ? cGri : cClaret)
 

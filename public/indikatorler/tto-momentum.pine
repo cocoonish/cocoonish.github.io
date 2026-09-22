@@ -26,6 +26,12 @@
 // histogram, etiketler ve kutu `kapanmis` kapısından geçer; dört alarm
 // `barstate.isconfirmed` ister.
 //
+// BİLİNEN FARKLAR (replikasyon yapi_referans.py ile). Isınma: replikasyon,
+// 280 barlık pencerede tek bir eksik değer varsa sıra üretmez; Pine'ın
+// ta.percentrank'i pencerede na varken ne döndürdüğü derlenmeden ölçülemez —
+// ilk ~15 bar hüküm ayrışabilir. Aynı barda hem dip hem tepe pivotu
+// onaylanırsa bu dosya TEPE diverjansını gösterir, ölçüm ikisini de sayar.
+//
 //@version=6
 indicator("TTO · Momentum", shorttitle="TTO Mom", overlay = false, max_labels_count = 500)
 
@@ -63,6 +69,9 @@ cMavi     = color.new(#2f5d8c, 0)
 cYesil    = color.new(#3a7d44, 0)
 cAltin    = color.new(#b8860b, 0)
 cGri      = color.new(#8a8a8a, 0)
+
+// Sayı yazımı: ondalık VİRGÜL (site sözleşmesi); Pine'ın str.tostring'i nokta basar
+f_sayi(float v, string bicim) => str.replace_all(str.tostring(v, bicim), ".", ",")
 
 // ── ölçüler ───────────────────────────────────────────────────────────────
 atr     = ta.atr(atrN)
@@ -102,10 +111,13 @@ var tabId  = array.from(63.6, 62.5, 61.5, 60.7, 60.7, 60.0, 60.0, 60.0, 57.9, 55
 f_tabloSatir(int tip, int bb, int rs, int tr) =>
     idx = -1
     for j = 0 to 24
-        if idx < 0 and array.get(tabTip, j) == tip and array.get(tabBb, j) == bb and array.get(tabRsi, j) == rs and (array.get(tabTr, j) == 0 or array.get(tabTr, j) == tr)
+        if array.get(tabTip, j) == tip and array.get(tabBb, j) == bb and array.get(tabRsi, j) == rs and (array.get(tabTr, j) == 0 or array.get(tabTr, j) == tr)
             idx := j
+            break
     idx
 
+// Aynı barda hem dip hem tepe pivotu onaylanırsa (dış bar) TEPE bloğu sonra
+// koştuğu için kazanır; ölçüm iki diverjansı da sayar (bilinen fark).
 divTip = 0
 divSatir = -1
 var int sonDivBar = -1000
@@ -150,8 +162,10 @@ plotshape(kapanmis and disp, "Displacement barı", shape.diamond, location.botto
 bgcolor(kapanmis and hazir and siraItki >= ustSira ? color.new(cAltin, 88) : na, title = "Yüksek itki zemini")
 
 // ── durum kutusu ──────────────────────────────────────────────────────────
-f_yer(string y) => y == "Sağ üst" ? position.top_right : y == "Sağ alt" ? position.bottom_right : y == "Sol üst" ? position.top_left : position.bottom_left
-var table kutu = table.new(f_yer(kutuYeri), 2, 6, border_width = 1, frame_color = color.new(cGri, 60), border_color = color.new(cGri, 85))
+// Kutunun yeri GENEL kapsamda, girdiden seçilir: table.new `simple string`
+// ister ve bir kullanıcı fonksiyonunun dönüş niteleyicisi derleyiciye kalır
+kutuPos = kutuYeri == "Sağ üst" ? position.top_right : kutuYeri == "Sağ alt" ? position.bottom_right : kutuYeri == "Sol üst" ? position.top_left : position.bottom_left
+var table kutu = table.new(kutuPos, 2, 6, border_width = 1, frame_color = color.new(cGri, 60), border_color = color.new(cGri, 85))
 f_satir(int r, string a, string b, color cb) =>
     table.cell(kutu, 0, r, a, text_color = cGri, text_size = size.small, text_halign = text.align_left)
     table.cell(kutu, 1, r, b, text_color = cb, text_size = size.small, text_halign = text.align_left)
@@ -160,10 +174,18 @@ f_sinif(float sira) => sira >= ustSira ? "YÜKSEK" : sira <= 1 - ustSira ? "DÜ�
 if cizimBari and kutuGoster
     table.clear(kutu, 0, 0, 1, 5)
     if hazir
-        f_satir(0, "① İtki", "gövde " + str.tostring(itki, "0.00") + " ATR · sıra " + str.tostring(math.round(siraItki * 100)) + " % → " + f_sinif(siraItki) + (disp ? " · displacement" : ""), siraItki >= ustSira ? cAltin : cMurekkep)
-        f_satir(1, "② RSI", str.tostring(rsiV, "0.0") + " · sıra " + str.tostring(math.round(siraRsi * 100)) + " % → " + f_sinif(siraRsi) + " · dilim " + str.tostring(f_rsiDilim(rsiV)), cMurekkep)
-        f_satir(2, "③ Bollinger", "konum " + str.tostring(bbPos, "0.00") + " σ · dilim " + str.tostring(f_bbDilim(bbPos)), cMurekkep)
-        f_satir(3, "④ Diverjans", sonDivBar > bar_index - 30 ? (sonDivTip == 1 ? "düzenli boğa" : sonDivTip == 2 ? "düzenli ayı" : sonDivTip == 3 ? "gizli boğa" : "gizli ayı") + (sonDivSatir >= 0 ? " · tablo #" + str.tostring(sonDivSatir) + " (kaynak iddiası " + str.tostring(array.get(tabId, sonDivSatir)) + " %)" : " · tabloda yok") + " · " + str.tostring(bar_index - sonDivBar) + " bar önce" : "son 30 barda yok", sonDivBar > bar_index - 30 ? (sonDivTip == 1 or sonDivTip == 3 ? cYesil : cClaret) : cGri)
+        f_satir(0, "① İtki", "gövde " + f_sayi(itki, "0.00") + " ATR · sıra " + str.tostring(math.round(siraItki * 100)) + " % → " + f_sinif(siraItki) + (disp ? " · displacement" : ""), siraItki >= ustSira ? cAltin : cMurekkep)
+        f_satir(1, "② RSI", f_sayi(rsiV, "0.0") + " · sıra " + str.tostring(math.round(siraRsi * 100)) + " % → " + f_sinif(siraRsi) + " · dilim " + str.tostring(f_rsiDilim(rsiV)), cMurekkep)
+        f_satir(2, "③ Bollinger", "konum " + f_sayi(bbPos, "0.00") + " σ · dilim " + str.tostring(f_bbDilim(bbPos)), cMurekkep)
+        // tablo satırı yalnız GEÇERLİ indeksle okunur: `?:`'nin seçilmeyen dalı
+        // da değerlendirilirse array.get(-1) çalışma zamanı hatası olurdu
+        divMetin = "son 30 barda yok"
+        if sonDivBar > bar_index - 30
+            tabloM = " · tabloda yok"
+            if sonDivSatir >= 0
+                tabloM := " · tablo #" + str.tostring(sonDivSatir) + " (kaynak iddiası " + f_sayi(array.get(tabId, sonDivSatir), "0.0") + " %)"
+            divMetin := (sonDivTip == 1 ? "düzenli boğa" : sonDivTip == 2 ? "düzenli ayı" : sonDivTip == 3 ? "gizli boğa" : "gizli ayı") + tabloM + " · " + str.tostring(bar_index - sonDivBar) + " bar önce"
+        f_satir(3, "④ Diverjans", divMetin, sonDivBar > bar_index - 30 ? (sonDivTip == 1 or sonDivTip == 3 ? cYesil : cClaret) : cGri)
         okuma = siraItki >= ustSira and itkiYon != 0 ? (itkiYon > 0 ? "güçlü alıcı itkisi — geri çekilme aranır, karşı işlem değil" : "güçlü satıcı itkisi — geri çekilme aranır, karşı işlem değil") : siraItki <= 1 - ustSira ? "itki zayıf — kırılım devamı için kanıt yok" : "itki sıradan — hüküm fiyat panelinden"
         f_satir(4, "⑤ Okuma", okuma, cMurekkep)
     else
