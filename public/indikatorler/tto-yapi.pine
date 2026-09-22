@@ -25,7 +25,7 @@
 // (15 enstrüman × 5 zaman dilimi, Yahoo Finance, kapanmış barlar) bu
 // dosyadaki kurallarla ölçülmüştür ve sayfada N ve güven aralığıyla durur;
 // örneklem 5/15 dk'da yalnız 12 haftadır. Tablodaki "kaynak iddiası"
-// yüzdeleri (63,6 % …) kullanıcının dosyasından geliyor, örneklem ve yöntem
+// yüzdeleri (%63,6 …) kullanıcının dosyasından geliyor, örneklem ve yöntem
 // yok; yeniden ölçülen değer yanında.
 //
 // BAR DİSİPLİNİ. Kapanmamış bar hakkında hiçbir şey söylenmez: her etiket,
@@ -35,6 +35,10 @@
 // önceki dönemden gelir — bu deyim sızıntısız ve repaint etmez; haftalık ve
 // aylık grafikte "önceki gün/hafta" tanımı tutmadığı için o havuzlar orada
 // KAPALIDIR (havuzAktif).
+// ÇİZİM TAVANI. Kutular defterle sınırlı (OB · FVG ≤ azamiKutu, PRZ ≤ 40);
+// yapı olayı çizgi/etiketleri ve diverjans etiketleri silinmez ve 500'den
+// (max_lines_count / max_labels_count, Pine'ın üst sınırı) sonra EN ESKİSİ
+// kendiliğinden düşer — uzun tarihçede eski olaylar görünmez, kural değil sınır.
 //
 // REPLİKASYONLA SÖZLEŞME. Her kural Aktarılacak Projeler/Indikator/
 // yapi_referans.py ile aynı tanımdadır ve ölçüm oradan gelir: OB araması
@@ -75,7 +79,7 @@ bbK      = input.float(2.0, "Bollinger çarpanı", minval = 0.5, maxval = 4.0, s
 
 gT = "Tanım seçimleri — DERS SAYI VERMİYOR"
 asimAtr      = input.float(0.10, "Sweep için asgari fitil aşımı (ATR ×)", minval = 0.0, maxval = 1.0, step = 0.01, group = gT, tooltip = "SMC 14.3 '≥ max(1 pip, 0,3×ATR(1dk))' der; grafik zaman diliminde ATR(14)'ün onda biri bizim seçimimiz.")
-sweepPencere = input.int(10, "MSS için sweep penceresi (bar)", minval = 1, maxval = 50, group = gT, tooltip = "SMC 2.6: kırılımdan ÖNCE adlandırılmış havuz süpürülmüş olmalı; ders 'kısa süre önce' der, 10 bar bizim seçimimiz.")
+sweepPencere = input.int(10, "MSS için sweep penceresi (bar)", minval = 1, maxval = 50, group = gT, tooltip = "SMC 2.6: kırılımdan ÖNCE adlandırılmış havuz süpürülmüş olmalı; ders 'kısa süre önce' der, 10 bar bizim seçimimiz. Aynı pencere MSS displacement taraması için de tavandır.")
 przAzami     = input.float(0.10, "PRZ yayılımı ≤ XA ×", minval = 0.02, maxval = 0.2, step = 0.01, group = gT, tooltip = "Harmonik ders 3.3: ≤%3 sıkı, %5–8 kabul, üstü gevşek; %10 son sınırımız.")
 tamponAtr    = input.float(0.25, "Stop tamponu (ATR ×)", minval = 0.0, maxval = 1.0, step = 0.05, group = gT, tooltip = "SMC 7.1: spread + 0,25–1,0 × ATR(14); alt uç seçildi.")
 przBekleme   = input.int(12, "PRZ'de teyit bekleme (bar)", minval = 2, maxval = 50, group = gT)
@@ -117,8 +121,8 @@ gunIci   = timeframe.isintraday and timeframe.multiplier <= 60
 kzLondra = gunIci and not na(time(timeframe.period, "0200-0500", "America/New_York"))
 kzNyAm   = gunIci and not na(time(timeframe.period, "0700-1000", "America/New_York"))
 
-// Sayı yazımı: ondalık VİRGÜL (site sözleşmesi); Pine'ın str.tostring'i nokta basar
-f_sayi(float v, string bicim) => str.replace_all(str.tostring(v, bicim), ".", ",")
+// Sayı yazımı: ondalık VİRGÜL, eksi U+2212 (site sözleşmesi); Pine'ın str.tostring'i nokta ve ASCII tire basar
+f_sayi(float v, string bicim) => str.replace_all(str.replace_all(str.tostring(v, bicim), ".", ","), "-", "−")
 
 cMurekkep = color.new(#1a1a1a, 0)
 cClaret   = color.new(#8c2f39, 0)
@@ -207,8 +211,9 @@ f_swingEkle(float fiyat, int barNo, int tur) =>
             array.shift(swO)
     if eklendi
         f_havuzEkle(tur > 0 ? "SWH" : "SWL", fiyat, tur)
-        // eşit tepe/dip: aynı türden önceki beş swing'le fark ≤ esitAtr × ATR —
-        // ESKİDEN yeniye ilk tutan (replikasyonla aynı sıra)
+        // eşit tepe/dip: son BEŞ KAYIT içindeki aynı türden swing'lerle (dizi
+        // almaşık, yani en çok ikisi aynı türden) fark ≤ esitAtr × ATR —
+        // ESKİDEN yeniye ilk tutan (replikasyon `swingler[-6:-1]` ile aynı pencere)
         m = array.size(swF)
         if atr > 0 and m >= 2
             for j = math.max(0, m - 6) to m - 2
@@ -321,7 +326,9 @@ if kapanmis and atr > 0
                             swAdAlt := array.get(hvT, j)
 
 // ─────────────────────────────────────────────────────────────────────────
-//  Yapı — BOS · CHoCH · MSS (gövde kapanışı; yalnız ONAYLI swing'e karşı)
+//  Yapı — BOS · CHoCH · MSS (gövde kapanışı; BOS yalnız ONAYLI swing'e karşı,
+//  CHoCH bacağın korunan ucuna karşı — o uç koşan, onaysız bir dip/tepe
+//  olabilir; replikasyonla aynı sözleşme)
 // ─────────────────────────────────────────────────────────────────────────
 var int trend = 0
 var float pHf = na
@@ -381,7 +388,9 @@ f_obEkle(int yon, int bas) =>
 // `:=` ile değiştirmesine izin vermez ("Cannot modify global variable");
 // genel kayıt çağrı yerinde, genel kapsamda yazılır.
 f_olay(string tur, int yon, float sev, int kirilanBar) =>
-    // kırılım bacağı: kırılan swing'in karşı ucundan (son ters swing) bu bara
+    // kırılım bacağı: kırılan swing'in karşı ucundan (son ters swing) bu bara;
+    // displacement taraması en çok sweepPencere bar geriye bakar (bacak daha
+    // uzunsa gerisi sorulmaz) — replikasyonla aynı tavan
     bas = kirilanBar
     tersIdx = f_sonSwing(-yon)
     if tersIdx >= 0 and array.get(swB, tersIdx) > bas
@@ -552,7 +561,8 @@ oteA = aralikVar ? (trend > 0 ? arH - oteUst * (arH - arL) : arL + oteAlt * (arH
 oteU = aralikVar ? (trend > 0 ? arH - oteAlt * (arH - arL) : arL + oteUst * (arH - arL)) : na
 
 // ─────────────────────────────────────────────────────────────────────────
-//  FVG — üç bar, orta bar displacement; taze → CE → dolu → ters
+//  FVG — üç bar, orta bar displacement; taze → CE → dolu | ters (dolan bir
+//  boşluk bir daha sorulmaz; "ters" yalnız taze/CE'den gövde kapanışıyla)
 // ─────────────────────────────────────────────────────────────────────────
 var fA = array.new<float>()
 var fU = array.new<float>()
@@ -590,14 +600,16 @@ if kapanmis and atr > 0
                         array.set(fD, j, 1)
                 dd = array.get(fD, j)
                 bx = array.get(fKutu, j)
+                // durum renkleri de görünürlük girdisinden geçer: kapalı kutu
+                // durum değiştirdiği barda yeniden görünür olamaz
                 if dd >= 2
                     box.set_right(bx, bar_index)
-                    box.set_bgcolor(bx, color.new(cGri, 90))
-                    box.set_border_color(bx, color.new(cGri, 40))
+                    box.set_bgcolor(bx, fvgGoster ? color.new(cGri, 90) : na)
+                    box.set_border_color(bx, fvgGoster ? color.new(cGri, 40) : na)
                 else
                     box.set_right(bx, bar_index + 1)
                     if dd == 1
-                        box.set_bgcolor(bx, color.new(cMor, 88))
+                        box.set_bgcolor(bx, fvgGoster ? color.new(cMor, 88) : na)
     // yeni FVG
     if disp[1]
         if low > high[2] and low - high[2] >= fvgAtr * atr
@@ -639,13 +651,13 @@ if kapanmis and atr > 0
                 if bitti
                     box.set_right(bx, bar_index)
                     box.set_bgcolor(bx, na)
-                    box.set_border_color(bx, color.new(cGri, 60))
+                    box.set_border_color(bx, obGoster ? color.new(cGri, 60) : na)
                 else
                     box.set_right(bx, bar_index + 1)
                     dokundu = yon > 0 ? low <= ust : high >= alt
                     if dokundu and array.get(obTz, j)
                         array.set(obTz, j, false)
-                        box.set_bgcolor(bx, color.new(cMavi, 93))
+                        box.set_bgcolor(bx, obGoster ? color.new(cMavi, 93) : na)
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Harmonik PRZ — dersin tarayıcı bantları; PRZ ideal üç sayıdan
@@ -715,7 +727,7 @@ f_enYakin(float a, float b, float c, float hedef) =>
     dc = math.abs(c - hedef)
     da <= db and da <= dc ? a : db <= dc ? b : c
 
-f_klasik(string ad, float b0, float b1, float bc0, float bc1, float ideal, float stopKat, float rB, float rC, int yon, float Af, float Xf, float Cf, float xa, float ab, float bc, int xBar, int cBar) =>
+f_klasik(string ad, float b0, float b1, float bc0, float bc1, float ideal, float stopKat, float rB, float rC, int yon, float Af, float Cf, float xa, float ab, float bc, int xBar, int cBar) =>
     if rB >= b0 and rB <= b1
         dXa = Af - yon * ideal * xa
         rBc = ad == "Gartley" ? (rC >= 0.786 ? 1.27 : 1.618) : math.min(math.max(f_bcKat(rC), bc0), bc1)
@@ -751,12 +763,12 @@ f_harmonikTara() =>
                 rC = bc / ab
                 cAsti = yon > 0 ? Cf > Af : Cf < Af
                 if not cAsti and rC >= 0.382 and rC <= 0.886
-                    f_klasik("Gartley",   0.588, 0.648, 1.13, 1.70, 0.786, 1.00, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar, cBar)
-                    f_klasik("Bat",       0.36,  0.52,  1.60, 2.70, 0.886, 1.00, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar, cBar)
-                    f_klasik("Alt Bat",   0.30,  0.40,  2.00, 3.618, 1.13, 1.272, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar, cBar)
-                    f_klasik("Butterfly", 0.75,  0.82,  1.60, 2.70, 1.27, 1.618, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar, cBar)
-                    f_klasik("Crab",      0.36,  0.65,  2.50, 3.70, 1.618, 2.00, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar, cBar)
-                    f_klasik("Deep Crab", 0.85,  0.92,  2.24, 3.618, 1.618, 2.00, rB, rC, yon, Af, Xf, Cf, xa, ab, bc, xBar, cBar)
+                    f_klasik("Gartley",   0.588, 0.648, 1.13, 1.70, 0.786, 1.00, rB, rC, yon, Af, Cf, xa, ab, bc, xBar, cBar)
+                    f_klasik("Bat",       0.36,  0.52,  1.60, 2.70, 0.886, 1.00, rB, rC, yon, Af, Cf, xa, ab, bc, xBar, cBar)
+                    f_klasik("Alt Bat",   0.30,  0.40,  2.00, 3.618, 1.13, 1.272, rB, rC, yon, Af, Cf, xa, ab, bc, xBar, cBar)
+                    f_klasik("Butterfly", 0.75,  0.82,  1.60, 2.70, 1.27, 1.618, rB, rC, yon, Af, Cf, xa, ab, bc, xBar, cBar)
+                    f_klasik("Crab",      0.36,  0.65,  2.50, 3.70, 1.618, 2.00, rB, rC, yon, Af, Cf, xa, ab, bc, xBar, cBar)
+                    f_klasik("Deep Crab", 0.85,  0.92,  2.24, 3.618, 1.618, 2.00, rB, rC, yon, Af, Cf, xa, ab, bc, xBar, cBar)
                 // Cypher: C, A'yı 1,272–1,414 XA aşar; D = 0,786 XC
                 if cAsti and rB >= 0.382 and rB <= 0.618
                     xc = math.abs(Cf - Xf)
@@ -797,6 +809,11 @@ f_harmonikTara() =>
 f_donusMumu(int yon) =>
     m = high - low
     m > 0 and (yon > 0 ? close > open and close > close[1] and (close - open) / m >= 0.5 : close < open and close < close[1] and (open - close) / m >= 0.5)
+// `close[1]` taşıyan fonksiyon her barda, koşulsuz çağrılır (yalnız bir `if`
+// dalında çağrılırsa tarihçesi tutarsız kalır — derleyici uyarısı); döngü
+// hazır değeri okur.
+donusMumBoga = f_donusMumu(1)
+donusMumAyi  = f_donusMumu(-1)
 
 if kapanmis
     if yeniSwing
@@ -813,7 +830,7 @@ if kapanmis
                 if d == 0
                     if gecersiz
                         array.set(pzD, j, 3)
-                        box.set_border_color(bx, color.new(cGri, 50))
+                        box.set_border_color(bx, przGoster ? color.new(cGri, 50) : na)
                         box.set_bgcolor(bx, na)
                     else
                         girdi = yon > 0 ? low <= array.get(pzU, j) : high >= array.get(pzA, j)
@@ -821,28 +838,28 @@ if kapanmis
                             array.set(pzD, j, 1)
                             array.set(pzTb, j, bar_index)
                             przTamamBu := true
-                            if f_donusMumu(yon)
+                            if (yon > 0 ? donusMumBoga : donusMumAyi)
                                 array.set(pzD, j, 2)
                                 przTeyitBu := true
                                 przTeyitAd := array.get(pzAd, j)
                                 przTeyitIdx := j
                         else if bar_index - array.get(pzC, j) > math.max(20, 2 * (array.get(pzCp, j) - array.get(pzX, j)))
                             array.set(pzD, j, 4)
-                            box.set_border_color(bx, color.new(cGri, 50))
+                            box.set_border_color(bx, przGoster ? color.new(cGri, 50) : na)
                             box.set_bgcolor(bx, na)
                 else
                     if gecersiz
                         array.set(pzD, j, 3)
-                        box.set_border_color(bx, color.new(cGri, 50))
+                        box.set_border_color(bx, przGoster ? color.new(cGri, 50) : na)
                         box.set_bgcolor(bx, na)
-                    else if f_donusMumu(yon)
+                    else if (yon > 0 ? donusMumBoga : donusMumAyi)
                         array.set(pzD, j, 2)
                         przTeyitBu := true
                         przTeyitAd := array.get(pzAd, j)
                         przTeyitIdx := j
                     else if bar_index - array.get(pzTb, j) > przBekleme
                         array.set(pzD, j, 4)
-                        box.set_border_color(bx, color.new(cGri, 50))
+                        box.set_border_color(bx, przGoster ? color.new(cGri, 50) : na)
                         box.set_bgcolor(bx, na)
                 if array.get(pzD, j) <= 1
                     box.set_right(bx, bar_index + 1)
@@ -873,7 +890,8 @@ var tabId  = array.from(63.6, 62.5, 61.5, 60.7, 60.7, 60.0, 60.0, 60.0, 57.9, 55
 
 f_tabloSatir(int tip, int bb, int rs, int tr) =>
     idx = -1
-    for j = 0 to 24
+    // üst sınır tablonun kendisinden: elle yazılan 24, satır eklendiğinde sessizce eksik kalırdı
+    for j = 0 to array.size(tabTip) - 1
         if array.get(tabTip, j) == tip and array.get(tabBb, j) == bb and array.get(tabRsi, j) == rs and (array.get(tabTr, j) == 0 or array.get(tabTr, j) == tr)
             idx := j
             break
@@ -931,7 +949,7 @@ f_tfIdx() =>
     sn <= 300 ? 0 : sn <= 900 ? 1 : sn <= 3600 ? 2 : sn <= 14400 ? 3 : 4
 var tfAd = array.from("5 dk", "15 dk", "1 sa", "4 sa", "günlük")
 
-f_yuzde(float p) => p < 0 ? "ölçülmedi" : str.tostring(math.round(p * 100)) + " %"
+f_yuzde(float p) => p < 0 ? "ölçülmedi" : "%" + str.tostring(math.round(p * 100))   // site sözleşmesi: yüzde ÖNDE
 
 // ─────────────────────────────────────────────────────────────────────────
 //  KURULUM — son kapanmış barın emir paketi (öncelik: PRZ teyit > sweep→MSS→FVG
@@ -950,7 +968,9 @@ if kapanmis
     tfi = f_tfIdx()
     // Sweep → MSS → FVG adayı: bacaktaki EN ESKİ aynı yönlü FVG (son 10 bar) ve
     // ters yön sweep'inin barından kırılıma kadar bacağın ucu (stop referansı) —
-    // ikisi de ölçümle aynı tanım. Aday bulunamazsa zincir alttaki paketlere iner.
+    // ikisi de ölçümle aynı tanım. FVG penceresi (10) girdi DEĞİL, ölçümün sabiti
+    // (SABIT mss_fvg_pencere); sweepPencere girdisinden bağımsızdır ve duman ③
+    // iki yeri kıyaslar. Aday bulunamazsa zincir alttaki paketlere iner.
     ceB = float(na)
     ucB = float(na)
     if olayBu == "MSS"
@@ -1006,7 +1026,7 @@ if kapanmis
         kurHedef := close + y * array.get(tabTp, divSatir) * atr
         kurBar := bar_index
         kurLimit := false
-        kurNot := "kaynak iddiası " + f_sayi(array.get(tabId, divSatir), "0.0") + " % · ölçülen (tablo toplamı): " + f_yuzde(array.get(olDivIsabet, tfi))
+        kurNot := "kaynak iddiası %" + f_sayi(array.get(tabId, divSatir), "0.0") + " · ölçülen (tablo toplamı): " + f_yuzde(array.get(olDivIsabet, tfi))
     else if olayBu == "BOS" and aralikVar
         y = olayBuYon
         st = y > 0 ? pLf : pHf
@@ -1020,17 +1040,20 @@ if kapanmis
             kurLimit := false
             kurNot := "kırılım kapanışında · stop korunan swing · hedef 0,618 aralık · ölçülen T1: " + f_yuzde(array.get(olBosT1, tfi))
 
-// kurulum seviyeleri: son kapanmış barda çizilir, canlı barda yeniden yazılmaz
+// kurulum seviyeleri: son kapanmış barda çizilir, canlı barda yeniden yazılmaz.
+// Silme, yeniden çizimin koşulundan AYRI: kurulum 50 barı geçince kutu ④ "yok"
+// yazar, çizgiler de gitmelidir — aynı pencereyi iki gösterim birden konuşur.
 var line lGiris = na
 var line lStop = na
 var line lHedef = na
-if cizimBari and seviyeGoster and kurBar > bar_index - 50 and not na(kurGiris)
+if cizimBari and seviyeGoster
     line.delete(lGiris)
     line.delete(lStop)
     line.delete(lHedef)
-    lGiris := line.new(kurBar, kurGiris, bar_index + 5, kurGiris, color = cMurekkep, width = 2)
-    lStop  := line.new(kurBar, kurStop, bar_index + 5, kurStop, color = cClaret, style = line.style_dashed)
-    lHedef := line.new(kurBar, kurHedef, bar_index + 5, kurHedef, color = cYesil, style = line.style_dotted)
+    if kurBar > bar_index - 50 and not na(kurGiris)
+        lGiris := line.new(kurBar, kurGiris, bar_index + 5, kurGiris, color = cMurekkep, width = 2)
+        lStop  := line.new(kurBar, kurStop, bar_index + 5, kurStop, color = cClaret, style = line.style_dashed)
+        lHedef := line.new(kurBar, kurHedef, bar_index + 5, kurHedef, color = cYesil, style = line.style_dotted)
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Çizimler — dealing range, EQ, OTE, havuzlar, swing'ler, zemin
@@ -1068,7 +1091,7 @@ if cizimBari and kutuKip != "Kapalı"
     table.clear(kutu, 0, 0, 1, 11)
     rejim = trend > 0 ? "YÜKSELİŞ" : trend < 0 ? "DÜŞÜŞ" : "kurulmadı"
     f_satir(0, "① Yapı", rejim + (sonOlay != "" ? " · son " + sonOlay + (sonOlayYon > 0 ? " ↑" : " ↓") + " (" + str.tostring(bar_index - sonOlayBar) + " bar)" : ""), trend > 0 ? cYesil : trend < 0 ? cClaret : cGri)
-    f_satir(1, "② Konum", aralikVar ? (konum < 50 ? "DISCOUNT " : "PREMIUM ") + str.tostring(math.round(konum)) + " %" + (close >= oteA and close <= oteU ? " · OTE içinde" : "") : "aralık yok", aralikVar ? (konum < 50 ? cYesil : cClaret) : cGri)
+    f_satir(1, "② Konum", aralikVar ? (konum < 50 ? "DISCOUNT %" : "PREMIUM %") + str.tostring(math.round(konum)) + (close >= oteA and close <= oteU ? " · OTE içinde" : "") : "aralık yok", aralikVar ? (konum < 50 ? cYesil : cClaret) : cGri)
     f_satir(2, "③ Likidite", sonSweepBar > bar_index - 30 ? sonSweepAd + " süpürüldü (" + str.tostring(bar_index - sonSweepBar) + " bar önce)" : "yakın sweep yok", cMurekkep)
     f_satir(3, "④ Kurulum", kurBar > bar_index - 50 ? kurAd + (kurYon > 0 ? " · ALIŞ" : " · SATIŞ") + " (" + str.tostring(bar_index - kurBar) + " bar)" : "yok", kurBar > bar_index - 50 ? (kurYon > 0 ? cYesil : cClaret) : cGri)
     if kurBar > bar_index - 50 and not na(kurGiris)
@@ -1097,7 +1120,8 @@ if cizimBari and kutuKip != "Kapalı"
                     przAdlar := przAdlar + (przAdlar == "" ? "" : ", ") + array.get(pzAd, j)
         f_satir(6, "FVG · OB", "açık FVG " + str.tostring(acikF) + " · taze OB " + str.tostring(tazeO), cMurekkep)
         f_satir(7, "PRZ", bekP > 0 ? przAdlar : "yok", bekP > 0 ? cAltin : cGri)
-        f_satir(8, "Ölçülen (" + array.get(tfAd, tfi) + " kovası)", "BOS→T1 " + f_yuzde(array.get(olBosT1, tfi)) + " · MSS devam " + f_yuzde(array.get(olMssDevam, tfi)) + " · sweep tepki " + f_yuzde(array.get(olSweep, tfi)), cMurekkep)
+        // N kutuda okura görünür (başlık "sayfada N ile durur" der; kutu da söylemeli) — binlik yuvarlama, biçim dizgesi riski yok
+        f_satir(8, "Ölçülen (" + array.get(tfAd, tfi) + " kovası · N ≈ " + str.tostring(math.round(array.get(olN, tfi) / 1000)) + " bin bar)", "BOS→T1 " + f_yuzde(array.get(olBosT1, tfi)) + " · MSS devam " + f_yuzde(array.get(olMssDevam, tfi)) + " · sweep tepki " + f_yuzde(array.get(olSweep, tfi)), cMurekkep)
         f_satir(9, "", "FVG CE tepki " + f_yuzde(array.get(olFvgTepki, tfi)) + " · OB tepki " + f_yuzde(array.get(olObTepki, tfi)) + " · PRZ→T1 " + f_yuzde(array.get(olPrzT1, tfi)), cMurekkep)
         f_satir(10, "Bar", yalnizKapali ? "son KAPANMIŞ bar" : "canlı (oynak)", yalnizKapali ? cGri : cClaret)
 

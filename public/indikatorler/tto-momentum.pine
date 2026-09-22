@@ -19,12 +19,13 @@
 // p 0,19–0,94). Burada da momentum "şu anda ne kadar itki var, RSI kendi
 // tarihçesine göre nerede, diverjans var mı" sorularına cevaptır; ne
 // yapılacağını fiyat panelinin kurulum kutusu ve okurun planı söyler.
-// Diverjans tablosunun kaynak yüzdeleri (63,6 % …) kullanıcının dosyasından
+// Diverjans tablosunun kaynak yüzdeleri (%63,6 …) kullanıcının dosyasından
 // gelir, örneklem ve yöntem yok; yeniden ölçülen değer sayfadaki tabloda.
 //
 // BAR DİSİPLİNİ. Kapanmamış bar hakkında hiçbir şey söylenmez: çizgiler,
 // histogram, etiketler ve kutu `kapanmis` kapısından geçer; dört alarm
-// `barstate.isconfirmed` ister.
+// `barstate.isconfirmed` ister. Diverjans etiketleri silinmez ve 500'den
+// (max_labels_count, Pine'ın üst sınırı) sonra en eskisi kendiliğinden düşer.
 //
 // BİLİNEN FARKLAR (replikasyon yapi_referans.py ile). Isınma AYNI: Pine
 // referansı ta.percentrank için "na değerler hesaba dahildir ve sonuç na olur"
@@ -51,7 +52,7 @@ atrN        = input.int(14, "ATR uzunluğu", minval = 2, group = gS)
 dispGovde   = input.float(0.60, "Displacement: gövde/menzil ≥", minval = 0.3, maxval = 0.95, step = 0.05, group = gS)
 dispKat     = input.float(1.5, "Displacement: menzil ≥ kat × ort.", minval = 1.0, maxval = 3.0, step = 0.1, group = gS)
 dispPencere = input.int(10, "Displacement ortalama penceresi", minval = 3, maxval = 50, group = gS)
-tarihce     = input.int(280, "Göreli sıra penceresi (bar)", minval = 50, maxval = 1000, group = gS, tooltip = "Brooks v2 ile aynı: ta.percentrank, önceki 280 değerin yüzde kaçı bugünkünün altında.")
+tarihce     = input.int(280, "Göreli sıra penceresi (bar)", minval = 50, maxval = 1000, group = gS, tooltip = "Brooks v2 ile aynı: ta.percentrank, önceki 280 değerin yüzde kaçı bugünkünün altında ya da ona EŞİT (referans tanımı; replikasyonla aynı). Gövdesiz barda itki 0'dır ve sırası sıfır değil, önceki gövdesiz barların payıdır.")
 ustSira     = input.float(0.80, "Yüksek sıra eşiği", minval = 0.5, maxval = 0.99, step = 0.01, group = gS, tooltip = "TANIM SEÇİMİ: ders sayı vermiyor. Sıra ≥ 0,80 'tarihçesine göre yüksek', ≤ 0,20 'düşük' diye etiketlenir.")
 
 g4 = "Gösterim"
@@ -71,8 +72,8 @@ cYesil    = color.new(#3a7d44, 0)
 cAltin    = color.new(#b8860b, 0)
 cGri      = color.new(#8a8a8a, 0)
 
-// Sayı yazımı: ondalık VİRGÜL (site sözleşmesi); Pine'ın str.tostring'i nokta basar
-f_sayi(float v, string bicim) => str.replace_all(str.tostring(v, bicim), ".", ",")
+// Sayı yazımı: ondalık VİRGÜL, eksi U+2212 (site sözleşmesi); Pine'ın str.tostring'i nokta ve ASCII tire basar
+f_sayi(float v, string bicim) => str.replace_all(str.replace_all(str.tostring(v, bicim), ".", ","), "-", "−")
 
 // ── ölçüler ───────────────────────────────────────────────────────────────
 atr     = ta.atr(atrN)
@@ -90,7 +91,10 @@ itki    = atr > 0 ? govde / atr : na
 itkiYon = close > open ? 1 : close < open ? -1 : 0
 siraRsi  = ta.percentrank(rsiV, tarihce) / 100
 siraItki = ta.percentrank(itki, tarihce) / 100
-hazir    = not na(siraRsi) and not na(siraItki)
+// iki bacak AYRI kapıda: itki penceresine tek bir na girse (atr 0) RSI sırası 280 bar karanlığa düşmesin
+hazirRsi  = not na(siraRsi)
+hazirItki = not na(siraItki)
+hazir     = hazirRsi and hazirItki
 
 // ── diverjans (kullanıcı kuralı) ─────────────────────────────────────────
 phIc = ta.pivothigh(high, kIc, kIc)
@@ -111,7 +115,8 @@ var tabId  = array.from(63.6, 62.5, 61.5, 60.7, 60.7, 60.0, 60.0, 60.0, 57.9, 55
 
 f_tabloSatir(int tip, int bb, int rs, int tr) =>
     idx = -1
-    for j = 0 to 24
+    // üst sınır tablonun kendisinden: elle yazılan 24, satır eklendiğinde sessizce eksik kalırdı
+    for j = 0 to array.size(tabTip) - 1
         if array.get(tabTip, j) == tip and array.get(tabBb, j) == bb and array.get(tabRsi, j) == rs and (array.get(tabTr, j) == 0 or array.get(tabTr, j) == tr)
             idx := j
             break
@@ -157,10 +162,10 @@ hline(70, "RSI 70 (mutlak, tablo dilimi)", color = color.new(cGri, 80), linestyl
 hline(30, "RSI 30 (mutlak, tablo dilimi)", color = color.new(cGri, 80), linestyle = hline.style_dotted)
 plot(kapanmis and rsiGoster ? rsiV : na, "RSI", color = cMurekkep, linewidth = 2)
 // göreli sıra RSI ölçeğine taşınır (0–100) ki tek panelde okunsun
-plot(kapanmis and rsiGoster and hazir ? siraRsi * 100 : na, "RSI göreli sırası (×100)", color = color.new(cMavi, 30), linewidth = 1)
-plot(kapanmis and itkiGoster and hazir ? siraItki * 100 : na, "İtki göreli sırası (×100)", color = color.new(cAltin, 0), style = plot.style_columns, histbase = 0)
+plot(kapanmis and rsiGoster and hazirRsi ? siraRsi * 100 : na, "RSI göreli sırası (×100)", color = color.new(cMavi, 30), linewidth = 1)
+plot(kapanmis and itkiGoster and hazirItki ? siraItki * 100 : na, "İtki göreli sırası (×100)", color = color.new(cAltin, 0), style = plot.style_columns, histbase = 0)
 plotshape(kapanmis and disp, "Displacement barı", shape.diamond, location.bottom, color.new(cClaret, 0), size = size.tiny)
-bgcolor(kapanmis and hazir and siraItki >= ustSira ? color.new(cAltin, 88) : na, title = "Yüksek itki zemini")
+bgcolor(kapanmis and hazirItki and siraItki >= ustSira ? color.new(cAltin, 88) : na, title = "Yüksek itki zemini")
 
 // ── durum kutusu ──────────────────────────────────────────────────────────
 // Kutunun yeri GENEL kapsamda, girdiden seçilir: table.new `simple string`
@@ -175,8 +180,9 @@ f_sinif(float sira) => sira >= ustSira ? "YÜKSEK" : sira <= 1 - ustSira ? "DÜ�
 if cizimBari and kutuGoster
     table.clear(kutu, 0, 0, 1, 5)
     if hazir
-        f_satir(0, "① İtki", "gövde " + f_sayi(itki, "0.00") + " ATR · sıra " + str.tostring(math.round(siraItki * 100)) + " % → " + f_sinif(siraItki) + (disp ? " · displacement" : ""), siraItki >= ustSira ? cAltin : cMurekkep)
-        f_satir(1, "② RSI", f_sayi(rsiV, "0.0") + " · sıra " + str.tostring(math.round(siraRsi * 100)) + " % → " + f_sinif(siraRsi) + " · dilim " + str.tostring(f_rsiDilim(rsiV)), cMurekkep)
+        // yüzde işareti sayının ÖNÜNDE (site biçim sözleşmesi)
+        f_satir(0, "① İtki", "gövde " + f_sayi(itki, "0.00") + " ATR · sıra %" + str.tostring(math.round(siraItki * 100)) + " → " + f_sinif(siraItki) + (disp ? " · displacement" : ""), siraItki >= ustSira ? cAltin : cMurekkep)
+        f_satir(1, "② RSI", f_sayi(rsiV, "0.0") + " · sıra %" + str.tostring(math.round(siraRsi * 100)) + " → " + f_sinif(siraRsi) + " · dilim " + str.tostring(f_rsiDilim(rsiV)), cMurekkep)
         f_satir(2, "③ Bollinger", "konum " + f_sayi(bbPos, "0.00") + " σ · dilim " + str.tostring(f_bbDilim(bbPos)), cMurekkep)
         // tablo satırı yalnız GEÇERLİ indeksle okunur: `?:`'nin seçilmeyen dalı
         // da değerlendirilirse array.get(-1) çalışma zamanı hatası olurdu
@@ -184,17 +190,18 @@ if cizimBari and kutuGoster
         if sonDivBar > bar_index - 30
             tabloM = " · tabloda yok"
             if sonDivSatir >= 0
-                tabloM := " · tablo #" + str.tostring(sonDivSatir) + " (kaynak iddiası " + f_sayi(array.get(tabId, sonDivSatir), "0.0") + " %)"
+                tabloM := " · tablo #" + str.tostring(sonDivSatir) + " (kaynak iddiası %" + f_sayi(array.get(tabId, sonDivSatir), "0.0") + ")"
             divMetin := (sonDivTip == 1 ? "düzenli boğa" : sonDivTip == 2 ? "düzenli ayı" : sonDivTip == 3 ? "gizli boğa" : "gizli ayı") + tabloM + " · " + str.tostring(bar_index - sonDivBar) + " bar önce"
         f_satir(3, "④ Diverjans", divMetin, sonDivBar > bar_index - 30 ? (sonDivTip == 1 or sonDivTip == 3 ? cYesil : cClaret) : cGri)
         okuma = siraItki >= ustSira and itkiYon != 0 ? (itkiYon > 0 ? "güçlü alıcı itkisi — geri çekilme aranır, karşı işlem değil" : "güçlü satıcı itkisi — geri çekilme aranır, karşı işlem değil") : siraItki <= 1 - ustSira ? "itki zayıf — kırılım devamı için kanıt yok" : "itki sıradan — hüküm fiyat panelinden"
         f_satir(4, "⑤ Okuma", okuma, cMurekkep)
     else
-        f_satir(0, "Isınma", "göreli sıra için " + str.tostring(tarihce) + " bar gerekir", cGri)
+        // RSI ve ATR kendi ısınmasını taşır; sıra ancak o na'lar pencereden çıkınca doğar
+        f_satir(0, "Isınma", (hazirRsi ? "itki sırası" : hazirItki ? "RSI sırası" : "göreli sıra") + " için " + str.tostring(tarihce + math.max(rsiN, atrN)) + " bar gerekir", cGri)
     f_satir(5, "Bar", yalnizKapali ? "son KAPANMIŞ bar" : "canlı (oynak)", yalnizKapali ? cGri : cClaret)
 
 // ── alarmlar — hepsi KAPANMIŞ bar üzerinden ────────────────────────────────
 alertcondition(barstate.isconfirmed and disp, "Displacement barı", "TTO Momentum: displacement eşiklerini karşılayan bar kapandı")
-alertcondition(barstate.isconfirmed and hazir and siraItki >= ustSira, "Yüksek itki", "TTO Momentum: itki göreli sırası yüksek eşiği aştı")
+alertcondition(barstate.isconfirmed and hazirItki and siraItki >= ustSira, "Yüksek itki", "TTO Momentum: itki göreli sırası yüksek eşiği aştı")
 alertcondition(barstate.isconfirmed and divSatir >= 0, "Diverjans (tablo)", "TTO Momentum: tabloyla eşleşen RSI diverjansı")
 alertcondition(barstate.isconfirmed and divTip > 0, "Diverjans (herhangi)", "TTO Momentum: RSI diverjansı (tablo eşleşmesi aranmaz)")
