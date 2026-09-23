@@ -115,13 +115,32 @@ const enstruman = kayit?.enstruman
   ?? (b?.piyasa?.gruplar ?? []).reduce((n: number, g: any) => n + (g?.satirlar?.length ?? 0), 0);
 const haberSayisi = kayit?.haber ?? (b?.haberler?.haber?.length ?? 0);
 const olcumSaati = kayit?.olcumSaati || istanbulSaat(b.olusturma);
+
+// ── Piyasa fotoğrafının seans dağılımı. "Ölçülen seans" en TAZE satırın
+// seansıdır; 23.09.2026 sayısında elli bir satırın yirmi üçü bir seans geride
+// olduğu hâlde künye yalnız "22.09.2026 Salı kapanışı" diyordu. Dağılım
+// satırların kendi tarihinden sayılır — alanı taşımayan eski sayılarda da.
+// Sebep (kaynağın boş verdiği seans · son işlem fiyatından kurulan kapanış)
+// yalnız ölçüm katmanı onu yazdıysa söylenir; tahmin edilmez.
+const pSatirlar: any[] = (b?.piyasa?.gruplar ?? []).flatMap((g: any) => g?.satirlar ?? []).filter((s: any) => s?.tarih);
+const seansSay: [string, number][] = Object.entries(
+  pSatirlar.reduce((a: Record<string, number>, s: any) => ((a[s.tarih] = (a[s.tarih] ?? 0) + 1), a), {}),
+).sort((x, y) => y[0].localeCompare(x[0])) as [string, number][];
+const seansKarma = seansSay.length > 1;
+const kaynakBos: any[] = b?.piyasa?.seans_ozeti?.kaynak_bos ?? [];
+const sonIslemden: any[] = b?.piyasa?.seans_ozeti?.son_islemden ?? [];
+const adlar = (xs: any[]) => xs.map((x) => x.ad).join(', ');
+const gunler = (xs: string[]) => [...new Set(xs)].map((g) => tarihYaz(g)).join(', ');
 const kunye = [
   kayit ? { deger: `No ${kayit.sayiNo}`, etiket: 'Sayı', vurgu: true } : null,
   { deger: olcumSaati, etiket: 'Ölçüm', alt: olcumSaati ? 'İstanbul saati' : undefined },
   b.yorum_zamani ? { deger: tarihUzun(b.yorum_zamani), etiket: 'Yazı' } : null,
   { deger: String(enstruman), etiket: 'Enstrüman' },
   haberSayisi ? { deger: String(haberSayisi), etiket: 'Taranan haber' } : null,
-  b.piyasa?.kapanis_seansi ? { deger: String(b.piyasa.kapanis_seansi), etiket: 'Ölçülen seans' } : null,
+  b.piyasa?.kapanis_seansi ? {
+    deger: String(b.piyasa.kapanis_seansi), etiket: 'Ölçülen seans',
+    alt: seansKarma ? `${seansSay[0][1]} / ${pSatirlar.length} satır bu seansta` : undefined,
+  } : null,
   b.duzeltmeler?.length ? { deger: String(b.duzeltmeler.length), etiket: 'Düzeltme', href: '#duzeltmeler', vurgu: true } : null,
 ].filter(Boolean) as any[];
 
@@ -740,6 +759,22 @@ const bolumler = [
           <> Anlık görüntünün seansı: <strong>{b.piyasa.kapanis_seansi}</strong> —
           bülten daha sonraki bir günde okunuyorsa değişimler bu seansa aittir.</>
         )}
+        {seansKarma && (
+          <> Satırlar aynı seansa ait değil: {seansSay.map(([t, n]) => `${n} satır ${tarihYaz(t)}`).join(', ')}.
+          Geride kalan satır ya o piyasanın tatilini ya da kaynağın o seansı vermediğini
+          gösterir; “1 gün” her satırda kendi son iki kapanışının farkıdır.</>
+        )}
+        {sonIslemden.length > 0 && (
+          <> Kaynağın günlük barı boş geldiği için {adlar(sonIslemden)} satırlarının
+          {' '}{gunler(sonIslemden.map((x) => x.gun))} kapanışı, kaynağın aynı günkü son işlem
+          fiyatından alındı.</>
+        )}
+        {kaynakBos.length > 0 && (
+          <> Kaynak {adlar(kaynakBos)} için {gunler(kaynakBos.flatMap((x) => x.gunler))} kapanışını
+          bu ölçüm anında vermedi; bu satırlar kendi tarihiyle duruyor ve “1 gün” değişimleri
+          tek bir seansın hareketi değil — satır ya o seansın gerisinde kalıyor ya da değişim
+          o seansı da içine alıyor.</>
+        )}
       </p>
 
       {b.piyasa.tr_faizleri && b.piyasa.tr_faizleri.length > 0 && (
@@ -786,7 +821,11 @@ const bolumler = [
                     <td class="p-ad">
                       {r.ad}
                       {r.not && <span class="p-not">{r.not}</span>}
-                      <span class="p-tarih-ic">{tz(r.tarih)}</span>
+                      <span class="p-tarih-ic">
+                        {tz(r.tarih)}
+                        {r.onarim && <> · son işlem fiyatı</>}
+                        {r.eksik_seans?.length > 0 && <> · {gunler(r.eksik_seans)} kaynakta boş</>}
+                      </span>
                     </td>
                     <td class="sag p-son">
                       {tr(r.son, r.ondalik)}
