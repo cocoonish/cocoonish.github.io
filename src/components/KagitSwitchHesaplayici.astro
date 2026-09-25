@@ -1,0 +1,298 @@
+---
+/**
+ * Kâğıt switch hesaplayıcısı — Kâğıt ve TRY OIS Trading dersi, Bölüm 1.
+ *
+ * Sabit vadeli sıfır kuponlu kâğıt vekiliyle (TL piyasa konvansiyonu: yıllık
+ * bileşik, ACT/365) bir kâğıdı satıp başka vadeyi almanın üç ölçeklemesini
+ * yan yana kurar:
+ *   DV01-nötr       N_B = N_A · DV01_A / DV01_B
+ *   nakit-nötr      N_B = N_A · P_A / P_B
+ *   beta-ağırlıklı  N_B = N_A · DV01_A / (β · DV01_B)   (Δy_B ≈ β · Δy_A)
+ * ve eğri sabit kalırsa h gün sonunda iki bacağın fonlama üstü taşıma+roll'unu,
+ * switch'in net DV01'ini, nakit ihtiyacını ve başabaş spread değişimini verir.
+ *
+ * Fonlama TLREF'tir ve BASİT faizdir; bileşik kâğıt getirisiyle kıyas günlük
+ * bileşiklenmiş karşılığıyla yapılır: (1 + r/365)^h − 1.
+ *
+ * Vaka doğrulaması (dersin 22.09.2026 eğrisi, TLREF %36,4859 — 21.09.2026 fixingi,
+ *   dört basamakla yayımlandığı gibi; bileşik karşılığı %44,00 — ufuk 91 gün):
+ *   5y taşıma+roll −%3,13 · 2y −%0,38 · 7y −%3,92 (ölçüm katmanıyla birebir).
+ *
+ * Eğriyi yayınlar: window.kagitEgri + 'kagit-egri-guncellendi' olayı — aynı
+ * sayfadaki barbell–bullet aracı bunu tüketir.
+ */
+---
+
+<div class="hesap" id="kagit-switch">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı</span>
+    <span class="hesap-ad">Kâğıt Switch — Ölçekleme, Taşıma ve Başabaş</span>
+  </div>
+
+  <p class="hesap-yonerge">
+    Varsayılan eğri dersin 22.09.2026 DİBS sıfır kuponlu eğrisidir; noktaları kendi
+    kotasyonlarınızla değiştirebilirsiniz. Kâğıtlar sıfır kupon vekiliyle hesaplanır
+    (fiyat 100·(1+y)<sup>−T</sup>); kuponlu bir kâğıtta aynı mantık durasyon ve DV01'i
+    kendi nakit akışından alarak çalışır.
+  </p>
+
+  <div class="egri-kap">
+    <span class="etiket blok-baslik">Kâğıt eğrisi — yıllık bileşik %</span>
+    <div class="egri-girdiler" id="ks-egri"></div>
+    <div class="fon-satir">
+      <label><span class="etiket">Fonlama: TLREF (basit, %)</span>
+        <input type="number" id="ks-fon" value="36.4859" step="0.05" /></label>
+      <output class="ara-deger" id="ks-fon-etkin">—</output>
+    </div>
+  </div>
+
+  <div class="girdiler">
+    <label><span class="etiket">Satılan kâğıt A — vade (yıl)</span>
+      <input type="number" id="ks-ta" value="2" step="0.25" min="0.25" max="7" /></label>
+    <label><span class="etiket">Alınan kâğıt B — vade (yıl)</span>
+      <input type="number" id="ks-tb" value="5" step="0.25" min="0.25" max="7" /></label>
+    <label><span class="etiket">A nominali (mn TL)</span>
+      <input type="number" id="ks-n" value="100" step="10" min="1" /></label>
+    <label><span class="etiket">Ölçekleme</span>
+      <select id="ks-mod">
+        <option value="dv01" selected>DV01-nötr (eğim switch'i)</option>
+        <option value="nakit">Nakit-nötr (portföy yeniden dağılımı)</option>
+        <option value="beta">Beta-ağırlıklı (seviyeye nötr)</option>
+      </select></label>
+    <label><span class="etiket">β = Δy<sub>B</sub> / Δy<sub>A</sub></span>
+      <input type="number" id="ks-beta" value="0.69" step="0.01" min="0.05" max="3" /></label>
+    <label><span class="etiket">Ufuk (gün)</span>
+      <input type="number" id="ks-h" value="91" step="1" min="1" max="365" /></label>
+    <label><span class="etiket">Senaryo: Δy<sub>A</sub> (bp)</span>
+      <input type="number" id="ks-dya" value="0" step="5" /></label>
+    <label><span class="etiket">Senaryo: Δy<sub>B</sub> (bp)</span>
+      <input type="number" id="ks-dyb" value="-50" step="5" /></label>
+  </div>
+
+  <div class="tablo-kab">
+    <table>
+      <thead><tr><th>Bacak</th><th>Getiri</th><th>Fiyat</th><th>Mod. durasyon</th>
+        <th>Nominal (mn)</th><th>DV01 (TL/bp)</th><th>Taşıma+roll (mn TL)</th></tr></thead>
+      <tbody id="ks-tablo"></tbody>
+    </table>
+  </div>
+
+  <div class="saglama">
+    <div class="sag-satir">
+      <div><span class="etiket">Net DV01 (uzun B − kısa A)</span><output class="ara-deger" id="ks-net">—</output></div>
+      <div><span class="etiket">Nakit ihtiyacı</span><output class="ara-deger" id="ks-nakit">—</output></div>
+      <div><span class="etiket">Taşıma+roll farkı (ufuk)</span><output class="ara-deger" id="ks-fark">—</output></div>
+      <div><span class="etiket">Başabaş spread değişimi</span><output class="ara-deger" id="ks-basabas">—</output></div>
+      <div><span class="etiket">Senaryo P&amp;L</span><output class="ara-deger" id="ks-pnl">—</output></div>
+    </div>
+    <p class="mini-not" id="ks-yorum">—</p>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="ks-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Girdiler değişince canlı güncellenir; eğri aşağıdaki araca da akar.</span>
+  </div>
+
+  <p class="hesap-dip">
+    <b>Okuma:</b> DV01-nötr switch paralel kaymaya nötrdür ama Türkiye eğrisinde paralel kayma
+    nadirdir — kısa uç uzun uçtan fazla hareket eder. Beta-ağırlıklı ölçekleme bu ortalama
+    ilişkiye nötrler; nakit-nötr ölçekleme ise durasyonu bilerek değiştirir. Hangisini
+    seçtiğiniz, hangi riski <b>almak</b> istediğinizin cevabıdır.
+  </p>
+</div>
+
+<script>
+  import { sayi, yuzde as yuzdeBicim } from '../lib/bicim';
+  // Dersin 22.09.2026 eğrisi (TCMB DİBS gösterge değerlerinden sıfır kuponlu getiri).
+  const DUGUM: [number, string, number][] = [
+    [0.25, '3a', 38.01], [0.5, '6a', 37.52], [1, '1y', 39.51], [2, '2y', 40.41],
+    [3, '3y', 39.13], [5, '5y', 35.82], [7, '7y', 33.14],
+  ];
+
+  const kap = document.getElementById('ks-egri')!;
+  kap.innerHTML = DUGUM.map(
+    ([t, ad, v]) =>
+      `<label><span class="etiket">${ad}</span>` +
+      `<input type="number" data-t="${t}" value="${v}" step="0.05" /></label>`
+  ).join('');
+
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const sec = (id: string) => (document.getElementById(id) as HTMLSelectElement).value;
+  const yaz = (id: string, m: string) => ((document.getElementById(id) as HTMLElement).textContent = m);
+  // Sayı yazımı sitenin tek biçim sözleşmesinden (ondalık virgül, eksi U+2212,
+  // yüzde işareti önde: −%3,13). Yuvarlanınca sıfır olan değer işaretsiz yazılır.
+  const tr = (x: number, b = 2) => sayi(Math.abs(x) < 0.5 * 10 ** -b ? 0 : x, b);
+  const yuzde = (x: number, b = 2) => yuzdeBicim(Math.abs(x) < 0.5 * 10 ** -b ? 0 : x, b);
+
+  function egri(): (t: number) => number {
+    const s = [...kap.querySelectorAll('input')]
+      .map((el) => [parseFloat((el as HTMLInputElement).dataset.t!), parseFloat((el as HTMLInputElement).value)])
+      .sort((a, b) => a[0] - b[0]);
+    return (t: number) => {
+      if (t <= s[0][0]) return s[0][1];
+      if (t >= s[s.length - 1][0]) return s[s.length - 1][1];
+      for (let i = 0; i < s.length - 1; i++) {
+        if (t >= s[i][0] && t <= s[i + 1][0]) {
+          const w = (t - s[i][0]) / (s[i + 1][0] - s[i][0]);
+          return s[i][1] * (1 - w) + s[i + 1][1] * w;
+        }
+      }
+      return s[s.length - 1][1];
+    };
+  }
+
+  // 100 nominal başına fiyat, modifiye durasyon, DV01 ve h günlük taşıma+roll.
+  function bacak(T: number, oran: (t: number) => number, fon: number, h: number) {
+    const y = oran(T) / 100;
+    const P = 100 * Math.pow(1 + y, -T);
+    const D = T / (1 + y);
+    const dv01 = P * D * 1e-4;
+    const Th = Math.max(T - h / 365, 1 / 365);
+    const P1 = 100 * Math.pow(1 + oran(Th) / 100, -Th);
+    const f = Math.pow(1 + fon / 100 / 365, h) - 1;
+    const cr = P1 - P - P * f;   // 100 nominal başına TL
+    return { y: y * 100, P, D, dv01, cr };
+  }
+
+  function hesapla() {
+    const oran = egri();
+    const fon = oku('ks-fon');
+    const Ta = oku('ks-ta'), Tb = oku('ks-tb');
+    const Na = oku('ks-n') * 1e6;
+    const h = oku('ks-h');
+    const beta = oku('ks-beta');
+    const mod = sec('ks-mod');
+    if (!(Ta > 0 && Tb > 0 && Na > 0 && h > 0 && beta > 0 && isFinite(fon))) return;
+
+    yaz('ks-fon-etkin', 'bileşik karşılığı ' + yuzde((Math.pow(1 + fon / 100 / 365, 365) - 1) * 100));
+    const A = bacak(Ta, oran, fon, h);
+    const B = bacak(Tb, oran, fon, h);
+    let Nb: number;
+    if (mod === 'nakit') Nb = (Na * A.P) / B.P;
+    else if (mod === 'beta') Nb = (Na * A.dv01) / (beta * B.dv01);
+    else Nb = (Na * A.dv01) / B.dv01;
+
+    const dvA = (Na / 100) * A.dv01, dvB = (Nb / 100) * B.dv01;
+    const crA = (Na / 100) * A.cr, crB = (Nb / 100) * B.cr;
+    const net = dvB - dvA;
+    const nakit = (Nb / 100) * B.P - (Na / 100) * A.P;
+    const fark = crB - crA;                     // switch'in taşıma+roll kazancı
+    const basabas = dvB > 0 ? fark / dvB : NaN; // spread (y_B − y_A) bu kadar artarsa silinir
+    const pnl = fark - dvB * oku('ks-dyb') + dvA * oku('ks-dya');
+
+    const mn = (x: number, b = 1) => tr(x / 1e6, b);
+    const satir = (ad: string, x: ReturnType<typeof bacak>, N: number, dv: number, cr: number, yon: string) =>
+      `<tr><td>${ad} <span class="${yon === 'al' ? 'arti' : 'eksi'}">${yon === 'al' ? 'al' : 'sat'}</span></td>` +
+      `<td>%${tr(x.y)}</td><td>${tr(x.P, 3)}</td><td>${tr(x.D, 2)}</td>` +
+      `<td>${mn(N)}</td><td>${tr(dv, 0)}</td><td class="${cr < 0 ? 'eksi' : 'arti'}">${mn(cr, 2)}</td></tr>`;
+    (document.getElementById('ks-tablo') as HTMLElement).innerHTML =
+      satir(`A · ${tr(Ta, 2)}y`, A, Na, dvA, crA, 'sat') + satir(`B · ${tr(Tb, 2)}y`, B, Nb, dvB, crB, 'al');
+
+    yaz('ks-net', tr(net, 0) + ' TL/bp');
+    yaz('ks-nakit', (nakit >= 0 ? 'gerekir ' : 'serbest kalır ') + mn(Math.abs(nakit)) + ' mn TL');
+    yaz('ks-fark', (fark >= 0 ? '+' : '') + mn(fark, 2) + ' mn TL');
+    yaz('ks-basabas', isFinite(basabas) ? (basabas >= 0 ? '+' : '') + tr(basabas, 0) + ' bp' : '—');
+    yaz('ks-pnl', (pnl >= 0 ? '+' : '') + mn(pnl, 2) + ' mn TL');
+
+    const el = document.getElementById('ks-yorum') as HTMLElement;
+    const yonAd = Tb > Ta ? 'uzatma (extension)' : 'kısaltma';
+    const netNot = Math.abs(net) < 0.02 * dvA
+      ? 'Net DV01 ≈ 0: paralel kaymaya nötrsünüz, P&L eğimden gelir.'
+      : net > 0
+        ? `Net DV01 <b>+${tr(net, 0)} TL/bp</b>: switch aynı zamanda ${tr(net / (B.dv01 / 100) / 1e6, 1)} mn TL'lik B kâğıdı kadar <b>durasyon ekliyor</b>.`
+        : `Net DV01 <b>${tr(net, 0)} TL/bp</b>: switch aynı zamanda <b>durasyon azaltıyor</b>.`;
+    el.innerHTML =
+      `Bu bir vade <b>${yonAd}</b> switch'i. ${netNot} ` +
+      (fark >= 0
+        ? `Eğri sabit kalırsa switch ${h} günde <b>+${mn(fark, 2)} mn TL</b> taşıma+roll kazandırır; spread (B − A) ` +
+          `<b>${tr(basabas, 0)} bp</b> açılırsa bu kazanç silinir.`
+        : `Eğri sabit kalırsa switch ${h} günde <b>${mn(fark, 2)} mn TL</b> taşıma+roll kaybettirir; bunu kapatmak için ` +
+          `spread (B − A) ${h} günde en az <b>${tr(Math.abs(basabas), 0)} bp</b> daralmalı — switch bir yarış.`);
+
+    (window as any).kagitEgri = { oran, fon, bacak: (T: number, hh: number) => bacak(T, oran, fon, hh) };
+    document.dispatchEvent(new CustomEvent('kagit-egri-guncellendi'));
+  }
+
+  document.querySelectorAll('#kagit-switch input, #kagit-switch select').forEach((el) =>
+    el.addEventListener('input', hesapla)
+  );
+  const btn = document.getElementById('ks-hesapla')!;
+  btn.addEventListener('click', () => {
+    hesapla();
+    btn.classList.add('tamam');
+    btn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => { btn.classList.remove('tamam'); btn.textContent = 'Hesapla ↻'; }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .egri-kap {
+    padding: 0.9rem 1rem 0.4rem;
+    border-bottom: 1px solid var(--ink-15);
+  }
+  .blok-baslik {
+    color: var(--claret);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .egri-girdiler {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
+    gap: 0.4rem;
+  }
+  .egri-girdiler :global(input) {
+    width: 100%;
+  }
+  .fon-satir {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-top: 0.6rem;
+  }
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.7rem;
+    padding: 0.9rem 1rem 0.4rem;
+  }
+  .tablo-kab {
+    padding: 0.6rem 1rem;
+    overflow-x: auto;
+  }
+  .tablo-kab :global(.eksi) {
+    color: var(--claret);
+    font-variant-numeric: tabular-nums;
+  }
+  .tablo-kab :global(.arti) {
+    color: var(--teal);
+    font-variant-numeric: tabular-nums;
+  }
+  .saglama {
+    border-top: 1px solid var(--ink-15);
+    padding: 0.8rem 1rem 0.4rem;
+  }
+  .sag-satir {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin-bottom: 0.6rem;
+  }
+  .sag-satir .etiket {
+    display: block;
+    color: var(--ink-60);
+    font-size: 0.58rem;
+  }
+  .mini-not {
+    margin: 0.4rem 0 0;
+    font-size: 0.84rem;
+    font-style: italic;
+    color: var(--ink-70);
+    line-height: 1.55;
+  }
+  @media (max-width: 640px) {
+    .girdiler {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

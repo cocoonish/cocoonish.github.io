@@ -3,16 +3,22 @@
  * TRY OIS carry & roll hesaplayıcısı — TRY OIS dersinin merkezî mekaniği.
  * Ters eğride bir OIS pozisyonunun "eğri sabit" senaryodaki taşımasını
  * iki bileşene ayırır:
- *   fixing carry ≈ (K − TLREF) · h/365 · N        (yön: receiver; payer ters)
+ *   fixing carry = (K − F) · h/365 · N            (yön: receiver; payer ters)
+ *     F = [(1 + TLREF/365)^h − 1] · 365/h         (yüzen bacak dönem içinde
+ *                                                  GÜNLÜK BİLEŞİKLENİR)
  *   rolldown     ≈ (S_T − S_{T−h}) · A_{T−h} · N
  *   DV01         ≈ A_T · N · 1e−4
  * Başabaş: h ufkunda kısalan vadenin kotasyonu nereye inerse toplam sıfırlanır.
  *
- * Vaka doğrulaması (rehber §2.3): 500 mn 1y receive @35,25 · ufuk 92g · TLREF 39,95
- *   → A(1y)=0,8198 · A(9m)=0,6334 · DV01 40.990 · carry −5,9 · rolldown −3,0
- *   → toplam −9,0 mn · günlük −64 bin TL · başabaş 9m ≈ %33,4
- * Rehber değerleri: −5,9 / −3,0 / −9,0 / ~64 bin / ~33,50 — birebir eşleşiyor.
- * Payer tarafı tam ayna (+5,9 / +3,0 / +9,0), rehberdeki "payer +9,0 toplar" ile uyumlu.
+ * Yüzen bacağı bileşiklemeden (K − TLREF)·h/365 yazmak %40 seviyesinde 92 günde
+ * yüzen oranı ~206 bp eksik sayar (39,95 → dönem dilinde 42,01): taşıma
+ * −5,9 değil −8,5 mn çıkar. Fixing ile sabit oran aynı dile çevrilmeden
+ * kıyaslanmaz.
+ *
+ * Vaka doğrulaması (500 mn 1y receive @35,25 · ufuk 92g · TLREF 39,95):
+ *   → A(1y)=0,8198 · A(9m)=0,6334 · DV01 40.990 · F %42,01 · carry −8,52
+ *   → rolldown −3,04 · toplam −11,56 mn · günlük −93 bin TL · başabaş 9m %32,56
+ * Payer tarafı tam ayna. Değerler dersin ölçüm katmanıyla birebir.
  *
  * Eğriyi yayınlar: window.tryOisEgri + 'tryois-egri-guncellendi' olayı —
  * aynı sayfadaki fly ağırlık aracı bunu tüketir.
@@ -51,7 +57,7 @@
       <input type="number" id="oc-k" value="35.25" step="0.05" /></label>
     <label><span class="etiket">Ufuk h (gün)</span>
       <input type="number" id="oc-h" value="92" step="1" min="1" /></label>
-    <label><span class="etiket">Beklenen ort. TLREF (%)</span>
+    <label><span class="etiket">Beklenen ort. TLREF fixingi (%, gecelik)</span>
       <input type="number" id="oc-tlref" value="39.95" step="0.05" /></label>
     <label><span class="etiket">Kupon sıklığı</span>
       <select id="oc-frek">
@@ -65,6 +71,7 @@
     <div><span class="etiket">A(T) — annuity</span><output class="ara-deger" id="oc-at">—</output></div>
     <div><span class="etiket">A(T−h)</span><output class="ara-deger" id="oc-ath">—</output></div>
     <div><span class="etiket">DV01</span><output class="ara-deger" id="oc-dv01">—</output></div>
+    <div><span class="etiket">Yüzen oran F (dönem, bileşik)</span><output class="ara-deger" id="oc-f">—</output></div>
     <div><span class="etiket">T−h kotasyonu (eğriden)</span><output class="ara-deger" id="oc-sth">—</output></div>
   </div>
 
@@ -105,6 +112,8 @@
 </div>
 
 <script>
+  import { sayi } from '../lib/bicim';
+
   // Temsili eğri — ders §1.6. Kullanıcı düzenleyebilir.
   const PILLAR: [number, string, number][] = [
     [0.0833, '1m', 39.9], [0.1667, '2m', 39.45], [0.25, '3m', 38.95],
@@ -122,8 +131,8 @@
 
   const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
   const yaz = (id: string, m: string) => ((document.getElementById(id) as HTMLElement).textContent = m);
-  const tr = (x: number, b = 2) =>
-    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b }).replace('-', '−');
+  // Yuvarlanınca sıfır olan değer "−0,00" basılmaz.
+  const tr = (x: number, b = 2) => sayi(Math.abs(x) < 0.5 * 10 ** -b ? 0 : x, b);
 
   function egriOku(): [number, number][] {
     return [...kap.querySelectorAll('input')].map((el) => [
@@ -199,7 +208,11 @@
 
     // Receiver tabanı; payer için işaret ters.
     const yon = rec ? 1 : -1;
-    const carry = ((K - tlref) / 100) * (h / 365) * N * yon;
+    // Yüzen bacak dönem içinde günlük bileşiklenir: sabit fixing r için dönemin
+    // basit oranı F = [(1 + r/365)^h − 1]·365/h. Basit (K − r) yazılırsa %40'ta
+    // 92 günde yüzen bacak ~200 bp eksik sayılır.
+    const F = ((Math.pow(1 + tlref / 100 / 365, h) - 1) * 365) / h * 100;
+    const carry = ((K - F) / 100) * (h / 365) * N * yon;
     const roll = ((K - S_Th) / 100) * A_Th * N * yon;
     const toplam = carry + roll;
 
@@ -210,6 +223,7 @@
     yaz('oc-at', tr(A_T, 4));
     yaz('oc-ath', tr(A_Th, 4));
     yaz('oc-dv01', tr(dv01, 0) + ' TL/bp');
+    yaz('oc-f', '%' + tr(F));
     yaz('oc-sth', '%' + tr(S_Th));
 
     // --- Kupon takvimi: konvansiyonu görünür kıl ---
@@ -241,7 +255,7 @@
       `<td class="${v < 0 ? 'eksi' : 'arti'}">${mn(v)}</td><td class="not-h">${not}</td></tr>`;
 
     (document.getElementById('oc-tablo') as HTMLElement).innerHTML =
-      satir('Fixing carry', '(K − TLREF)·h/365·N', carry,
+      satir('Fixing carry', '(K − F)·h/365·N', carry,
             carry < 0 ? 'sabit bacak fixingin altında — ödersin' : 'sabit bacak fixingin üstünde — toplarsın') +
       satir('Rolldown', '(S_T − S_{T−h})·A_{T−h}·N', roll,
             roll < 0 ? 'vade kısaldıkça daha yüksek noktaya karşı marklanırsın' : 'vade kısaldıkça lehine marklanırsın') +

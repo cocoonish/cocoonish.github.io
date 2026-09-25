@@ -32,9 +32,13 @@ interface Props {
    */
   genis?: boolean;
   /**
-   * Açıkça verilirse KAZANIR. Verilmezse figürün kendi ilan ettiği yükseklik
-   * kullanılır — sabit 540px, kendi yüksekliğini yazan figürleri alttan
-   * kırpıyordu ve bunu hiçbir şey ölçmüyordu (bkz. lib/grafikOlcu.ts).
+   * Açıkça verilirse ALT SINIRDIR: figür kendi yüksekliğini daha büyük ilan
+   * ediyorsa figürünki geçer, yani çerçeve figürü kırpamaz. Verilmezse
+   * figürün kendi ilan ettiği yükseklik kullanılır — sabit 540px, kendi
+   * yüksekliğini yazan figürleri alttan kırpıyordu ve bunu hiçbir şey
+   * ölçmüyordu (bkz. lib/grafikOlcu.ts). Figürü yüksekliğini ilan eden bir
+   * hattın figüründe bu sayıyı yazmayın: satır sayısı veriye bağlıdır ve elle
+   * yazılan kopya bir gün eskir.
    */
   yukseklik?: number;
 }
@@ -134,9 +138,14 @@ if (proje) {
     font-size: 0.95rem;
     color: var(--ink-70);
   }
+  /* Satır KIRILABİLİR. Etiket nowrap iken iki kurumlu bir kaynak adı ya da
+     iki bacaklı bir damga telefon genişliğinde sayfanın tamamını yatay
+     taşırıyordu (390 px ekranda OVP analizi 887, Brooks rehberi 467 px);
+     tarih "22.09.2026" kendi içinde kırılmaz, kırılma yalnız boşlukta olur. */
   .grafik-veri {
     margin-left: auto;
-    white-space: nowrap;
+    min-width: 0;
+    overflow-wrap: break-word;
     color: var(--ink-50);
     font-variant-numeric: tabular-nums;
   }

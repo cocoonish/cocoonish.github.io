@@ -1,0 +1,310 @@
+---
+/**
+ * Barbell–bullet / fly ağırlık hesaplayıcısı — Kâğıt ve TRY OIS Trading
+ * dersi, Bölüm 3.
+ *
+ * Üç vadeli bir yapıyı (kısa kanat · gövde · uzun kanat) üç ağırlık kuralıyla
+ * kurar ve aynı yapının ne taşıdığını yan yana gösterir:
+ *   nakit + durasyon nötr (klasik tahvil barbell'i)
+ *       PD_1 = PD_g · (D_3 − D_2)/(D_3 − D_1) · PD_3 = PD_g · (D_2 − D_1)/(D_3 − D_1)
+ *   50:50 DV01 (swap fly'ı)        DV01_1 = DV01_3 = ½ · DV01_g
+ *   PCA-nötr                       DV01_1 = a · DV01_g · DV01_3 = b · DV01_g
+ *       a, b: seviye ve eğim yüklerini sıfırlayan 2×2 sistemin çözümü
+ * Yükler dersin ölçümüdür (DİBS sıfır kuponlu eğri, ay sonu değişimleri,
+ * 2013–2026); ara vadeler düğümler arası doğrusal.
+ *
+ * Konveksite (yıllık bileşik sıfır kupon): C = T(T+1)/(1+y)²; konveksite
+ * değeri ≈ ½ · ΔC · σ² · h/365 (σ yıllık). Taşıma+roll aynı sayfadaki kâğıt
+ * switch aracının eğrisinden ve fonlamasından gelir ('kagit-egri-guncellendi').
+ *
+ * Vaka doğrulaması (22.09.2026, 2y/5y/7y, nakit+durasyon nötr): ağırlıklar
+ * %41,1 / %58,9 · konveksite farkı +3,59 · taşıma+roll farkı +%0,66 (3 ay) ·
+ * σ 198 bp/ay'da konveksite değeri +%0,21 — ölçüm katmanıyla birebir.
+ */
+---
+
+<div class="hesap" id="barbell-bullet">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı</span>
+    <span class="hesap-ad">Fly — Barbell mı, Bullet mı? Ağırlık, Taşıma, Konveksite</span>
+  </div>
+
+  <p class="hesap-yonerge">
+    Eğri ve fonlama yukarıdaki kâğıt switch aracından gelir. Üç ağırlık kuralını değiştirip
+    aynı üç vadenin ne kadar <b>gizli seviye ve eğim</b> taşıdığını, taşımanın ve
+    konveksitenin hangi tarafa çalıştığını görün.
+  </p>
+
+  <div class="girdiler">
+    <label><span class="etiket">Kısa kanat (yıl)</span>
+      <input type="number" id="bb-t1" value="2" step="0.25" min="0.25" max="7" /></label>
+    <label><span class="etiket">Gövde (yıl)</span>
+      <input type="number" id="bb-t2" value="5" step="0.25" min="0.25" max="7" /></label>
+    <label><span class="etiket">Uzun kanat (yıl)</span>
+      <input type="number" id="bb-t3" value="7" step="0.25" min="0.25" max="7" /></label>
+    <label><span class="etiket">Ağırlık kuralı</span>
+      <select id="bb-kural">
+        <option value="nakit" selected>Nakit + durasyon nötr (tahvil)</option>
+        <option value="5050">50:50 DV01 (swap)</option>
+        <option value="pca">PCA-nötr (seviye + eğim)</option>
+      </select></label>
+    <label><span class="etiket">Yön</span>
+      <select id="bb-yon">
+        <option value="barbell" selected>Gövdeyi sat, kanatları al (barbell)</option>
+        <option value="bullet">Gövdeyi al, kanatları sat (bullet)</option>
+      </select></label>
+    <label><span class="etiket">Gövde nominali (mn TL)</span>
+      <input type="number" id="bb-n" value="100" step="10" min="1" /></label>
+    <label><span class="etiket">Oynaklık σ (bp/ay)</span>
+      <input type="number" id="bb-sigma" value="198" step="5" min="0" /></label>
+    <label><span class="etiket">Ufuk (gün)</span>
+      <input type="number" id="bb-h" value="91" step="1" min="1" max="365" /></label>
+  </div>
+
+  <div class="tablo-kab">
+    <table>
+      <thead><tr><th>Bacak</th><th>Yön</th><th>Nominal (mn)</th><th>Piyasa değeri (mn)</th>
+        <th>DV01 (TL/bp)</th><th>Konveksite</th><th>Taşıma+roll (mn TL)</th></tr></thead>
+      <tbody id="bb-tablo"></tbody>
+    </table>
+  </div>
+
+  <div class="saglama">
+    <p class="blok-baslik etiket">Yapı ne taşıyor?</p>
+    <div class="sag-satir">
+      <div><span class="etiket">Fly seviyesi (2×gövde − kanatlar)</span><output class="ara-deger" id="bb-fly">—</output></div>
+      <div><span class="etiket">Net DV01</span><output class="ara-deger" id="bb-net">—</output></div>
+      <div><span class="etiket">Net nakit</span><output class="ara-deger" id="bb-nakit">—</output></div>
+      <div><span class="etiket">Taşıma+roll farkı</span><output class="ara-deger" id="bb-cr">—</output></div>
+      <div><span class="etiket">Konveksite değeri (ufuk)</span><output class="ara-deger" id="bb-konv">—</output></div>
+    </div>
+    <p class="blok-baslik etiket">1σ aylık faktör hareketinde P&amp;L (derste ölçülen bileşenler)</p>
+    <div class="sag-satir">
+      <div><span class="etiket">Seviye</span><output class="ara-deger" id="bb-pc1">—</output></div>
+      <div><span class="etiket">Eğim</span><output class="ara-deger" id="bb-pc2">—</output></div>
+      <div><span class="etiket">Büküm</span><output class="ara-deger" id="bb-pc3">—</output></div>
+    </div>
+    <p class="mini-not" id="bb-yorum">—</p>
+  </div>
+
+  <div class="hesapla-satir">
+    <button class="hesapla-btn" id="bb-hesapla" type="button">Hesapla ↻</button>
+    <span class="canli-not">Kâğıt eğrisi değişince kendini yeniler.</span>
+  </div>
+
+  <p class="hesap-dip">
+    <b>Okuma:</b> bir fly'ın asıl riski üçüncü satırdır — büküm. Nakit ve durasyon nötr bir
+    barbell paralel kaymaya karşı kazançlıdır (konveksite), ama Türkiye eğrisinde kayma
+    nadiren paraleldir; seviye ve eğim satırları sıfırdan uzaksa yapı, üzerinde fly yazan
+    bir yön pozisyonudur.
+  </p>
+</div>
+
+<script>
+  import { sayi, yuzde as yuzdeBicim } from '../lib/bicim';
+  // Derste ölçülen bileşen yükleri (DİBS sıfır kuponlu eğri, ay sonu değişimleri,
+  // 2013-02 → 2026-09, 164 ay) ve bileşen skorlarının aylık σ'sı (bp).
+  const VADE = [0.25, 0.5, 1, 2, 3, 5, 7];
+  const YUK = [
+    [0.4733, 0.4388, 0.4178, 0.3926, 0.3503, 0.2831, 0.2277],   // seviye
+    [-0.7042, -0.2666, 0.117, 0.2938, 0.3282, 0.3293, 0.3418],  // eğim
+    [-0.446, 0.434, 0.4155, 0.2202, -0.0513, -0.3919, -0.4851], // büküm
+  ];
+  const SIGMA_PC = [546.2, 327.1, 142.8];
+  // Eğri aracı yoksa dersin 22.09.2026 eğrisi ve TLREF'i.
+  const YEDEK: [number, number][] = [[0.25, 38.01], [0.5, 37.52], [1, 39.51], [2, 40.41], [3, 39.13], [5, 35.82], [7, 33.14]];
+  const YEDEK_FON = 36.4859;
+
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const sec = (id: string) => (document.getElementById(id) as HTMLSelectElement).value;
+  const yaz = (id: string, m: string) => ((document.getElementById(id) as HTMLElement).textContent = m);
+  // Sayı yazımı sitenin tek biçim sözleşmesinden; yuvarlanınca sıfır olan değer
+  // işaretsiz yazılır ("−0 TL/bp" değil "0 TL/bp").
+  const sifirla = (x: number, b: number) => (Math.abs(x) < 0.5 * 10 ** -b ? 0 : x);
+  const tr = (x: number, b = 2) => sayi(sifirla(x, b), b);
+  const yuzde = (x: number, b = 2) => yuzdeBicim(sifirla(x, b), b, true);
+  const isaretli = (x: number, b = 2) => sayi(sifirla(x, b), b, true);
+
+  function ara(xs: number[], ys: number[], t: number): number {
+    if (t <= xs[0]) return ys[0];
+    if (t >= xs[xs.length - 1]) return ys[ys.length - 1];
+    for (let i = 0; i < xs.length - 1; i++) {
+      if (t >= xs[i] && t <= xs[i + 1]) {
+        const w = (t - xs[i]) / (xs[i + 1] - xs[i]);
+        return ys[i] * (1 - w) + ys[i + 1] * w;
+      }
+    }
+    return ys[ys.length - 1];
+  }
+
+  function kaynak() {
+    const e = (window as any).kagitEgri;
+    if (e && typeof e.oran === 'function') return { oran: e.oran as (t: number) => number, fon: e.fon as number };
+    return { oran: (t: number) => ara(YEDEK.map((p) => p[0]), YEDEK.map((p) => p[1]), t), fon: YEDEK_FON };
+  }
+
+  // 100 nominal başına: fiyat, mod. durasyon, konveksite, DV01, h günlük taşıma+roll (TL)
+  function kagit(T: number, oran: (t: number) => number, fon: number, h: number) {
+    const y = oran(T) / 100;
+    const P = 100 * Math.pow(1 + y, -T);
+    const D = T / (1 + y);
+    const C = (T * (T + 1)) / Math.pow(1 + y, 2);
+    const Th = Math.max(T - h / 365, 1 / 365);
+    const P1 = 100 * Math.pow(1 + oran(Th) / 100, -Th);
+    const f = Math.pow(1 + fon / 100 / 365, h) - 1;
+    return { y: y * 100, P, D, C, dv01: P * D * 1e-4, cr: P1 - P - P * f };
+  }
+
+  function hesapla() {
+    const { oran, fon } = kaynak();
+    const T1 = oku('bb-t1'), T2 = oku('bb-t2'), T3 = oku('bb-t3');
+    const Ng = oku('bb-n') * 1e6;
+    const s = oku('bb-sigma'), h = oku('bb-h');
+    const kural = sec('bb-kural');
+    const barbell = sec('bb-yon') === 'barbell';
+    const el = document.getElementById('bb-yorum') as HTMLElement;
+    if (!(T1 > 0 && T2 > T1 && T3 > T2 && Ng > 0 && h > 0 && s >= 0)) {
+      el.textContent = 'Vadeler kısa kanat < gövde < uzun kanat sırasında olmalı.';
+      return;
+    }
+    const k1 = kagit(T1, oran, fon, h), kg = kagit(T2, oran, fon, h), k3 = kagit(T3, oran, fon, h);
+    const MVg = (Ng / 100) * kg.P, DVg = (Ng / 100) * kg.dv01;
+
+    // kanat DV01'leri (TL/bp) kurala göre
+    let dv1: number, dv3: number;
+    if (kural === 'nakit') {
+      const mv1 = (MVg * (k3.D - kg.D)) / (k3.D - k1.D);
+      const mv3 = (MVg * (kg.D - k1.D)) / (k3.D - k1.D);
+      dv1 = mv1 * k1.D * 1e-4; dv3 = mv3 * k3.D * 1e-4;
+    } else if (kural === 'pca') {
+      const l = (i: number, t: number) => ara(VADE, YUK[i], t);
+      const det = l(0, T1) * l(1, T3) - l(0, T3) * l(1, T1);
+      const a = (l(0, T2) * l(1, T3) - l(0, T3) * l(1, T2)) / det;
+      const b = (l(0, T1) * l(1, T2) - l(0, T2) * l(1, T1)) / det;
+      dv1 = a * DVg; dv3 = b * DVg;
+    } else {
+      dv1 = 0.5 * DVg; dv3 = 0.5 * DVg;
+    }
+    const N1 = (dv1 / k1.dv01) * 100, N3 = (dv3 / k3.dv01) * 100;
+    const MV1 = (N1 / 100) * k1.P, MV3 = (N3 / 100) * k3.P;
+
+    // yön: barbell = gövde kısa (−), kanatlar uzun (+)
+    const sg = barbell ? -1 : 1, sk = -sg;
+    const netDV = sk * (dv1 + dv3) + sg * DVg;
+    const netNakit = sk * (MV1 + MV3) + sg * MVg;
+    const cr1 = (N1 / 100) * k1.cr, crg = (Ng / 100) * kg.cr, cr3 = (N3 / 100) * k3.cr;
+    const crNet = sk * (cr1 + cr3) + sg * crg;
+    // piyasa değeri ağırlıklı konveksite farkı (kanatlar − gövde), yön işaretiyle
+    const konvKanat = (MV1 * k1.C + MV3 * k3.C);
+    const konvFark = sk * konvKanat + sg * MVg * kg.C;          // TL · yıl²
+    const sYil = (s / 1e4) * Math.sqrt(12);
+    const konvDeger = 0.5 * konvFark * sYil * sYil * (h / 365);  // TL
+
+    // faktör P&L'i: uzun pozisyon getiri yükseldiğinde kaybeder → −DV01 · yük · σ
+    const pc = [0, 1, 2].map((i) =>
+      -(sk * (dv1 * ara(VADE, YUK[i], T1) + dv3 * ara(VADE, YUK[i], T3)) + sg * DVg * ara(VADE, YUK[i], T2)) * SIGMA_PC[i]);
+
+    const mn = (x: number, b = 1) => tr(x / 1e6, b);
+    const mnI = (x: number, b = 2) => isaretli(x / 1e6, b);   // işaretli: +0,14 · 0,00 · −0,02
+    const yonAd = (x: number) => (x > 0 ? '<span class="arti">al</span>' : '<span class="eksi">sat</span>');
+    const satir = (ad: string, k: ReturnType<typeof kagit>, N: number, MV: number, dv: number, cr: number, sgn: number) =>
+      `<tr><td>${ad} · %${tr(k.y)}</td><td>${yonAd(sgn)}</td><td>${mn(N)}</td><td>${mn(MV)}</td>` +
+      `<td>${tr(dv, 0)}</td><td>${tr(k.C, 2)}</td><td class="${sgn * cr < 0 ? 'eksi' : 'arti'}">${isaretli((sgn * cr) / 1e6, 2)}</td></tr>`;
+    (document.getElementById('bb-tablo') as HTMLElement).innerHTML =
+      satir(`Kısa kanat ${tr(T1, 2)}y`, k1, N1, MV1, dv1, cr1, sk) +
+      satir(`Gövde ${tr(T2, 2)}y`, kg, Ng, MVg, DVg, crg, sg) +
+      satir(`Uzun kanat ${tr(T3, 2)}y`, k3, N3, MV3, dv3, cr3, sk);
+
+    const fly = (2 * kg.y - k1.y - k3.y) * 100;
+    yaz('bb-fly', tr(fly, 0) + ' bp');
+    yaz('bb-net', tr(netDV, 0) + ' TL/bp');
+    yaz('bb-nakit', (netNakit > 0 ? 'gerekir ' : netNakit < 0 ? 'serbest kalır ' : '') + mn(Math.abs(netNakit)) + ' mn TL');
+    yaz('bb-cr', mnI(crNet) + ' mn TL · ' + yuzde((crNet / MVg) * 100));
+    yaz('bb-konv', mnI(konvDeger) + ' mn TL · ' + yuzde((konvDeger / MVg) * 100));
+    ['bb-pc1', 'bb-pc2', 'bb-pc3'].forEach((id, i) => yaz(id, mnI(pc[i]) + ' mn TL'));
+
+    // başabaş oynaklık: konveksite değeri taşıma farkını ne zaman kapatır?
+    const ihtiyac = -crNet;
+    let basabas = '';
+    if (konvFark !== 0 && ihtiyac / (0.5 * konvFark * (h / 365)) > 0) {
+      const sb = Math.sqrt(ihtiyac / (0.5 * konvFark * (h / 365))) / Math.sqrt(12) * 1e4;
+      basabas = ` Konveksite, taşıma farkını aylık <b>${tr(sb, 0)} bp</b> oynaklıkta kapatır.`;
+    }
+    const kazancOrani = Math.abs(pc[2]) > 0 ? Math.abs(crNet + konvDeger) / Math.abs(pc[2]) : NaN;
+    el.innerHTML =
+      (barbell ? 'Barbell: gövdeyi satıp kanatları aldınız. ' : 'Bullet: gövdeyi alıp kanatları sattınız. ') +
+      `Ufuk boyunca taşıma+roll <b>${mnI(crNet)} mn</b>, konveksite <b>${mnI(konvDeger)} mn</b>.` +
+      basabas +
+      ` Karşılığında taşıdığınız büküm riski 1σ aylık harekette <b>${mn(Math.abs(pc[2]), 2)} mn</b>` +
+      (isFinite(kazancOrani) ? ` — beklenen kazancın ~${tr(1 / Math.max(kazancOrani, 1e-9), 1)} katı.` : '.') +
+      (kural !== 'pca' && Math.abs(pc[0]) > 0.25 * Math.abs(pc[2])
+        ? ` <b>Uyarı:</b> seviye satırı büküm satırının dörtte birinden büyük — bu ağırlıkla yapı gizli bir seviye pozisyonu taşıyor; PCA-nötr kuralı deneyin.`
+        : '');
+  }
+
+  document.querySelectorAll('#barbell-bullet input, #barbell-bullet select').forEach((el) =>
+    el.addEventListener('input', hesapla)
+  );
+  document.addEventListener('kagit-egri-guncellendi', hesapla);
+  const btn = document.getElementById('bb-hesapla')!;
+  btn.addEventListener('click', () => {
+    hesapla();
+    btn.classList.add('tamam');
+    btn.textContent = 'Hesaplandı ✓';
+    setTimeout(() => { btn.classList.remove('tamam'); btn.textContent = 'Hesapla ↻'; }, 900);
+  });
+  hesapla();
+</script>
+
+<style>
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.7rem;
+    padding: 0.9rem 1rem 0.4rem;
+  }
+  .tablo-kab {
+    padding: 0.6rem 1rem;
+    overflow-x: auto;
+  }
+  .tablo-kab :global(.eksi) {
+    color: var(--claret);
+    font-variant-numeric: tabular-nums;
+  }
+  .tablo-kab :global(.arti) {
+    color: var(--teal);
+    font-variant-numeric: tabular-nums;
+  }
+  .saglama {
+    border-top: 1px solid var(--ink-15);
+    padding: 0.8rem 1rem 0.4rem;
+  }
+  .blok-baslik {
+    color: var(--claret);
+    display: block;
+    margin: 0.2rem 0 0.4rem;
+  }
+  .sag-satir {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin-bottom: 0.6rem;
+  }
+  .sag-satir .etiket {
+    display: block;
+    color: var(--ink-60);
+    font-size: 0.58rem;
+  }
+  .mini-not {
+    margin: 0.4rem 0 0;
+    font-size: 0.84rem;
+    font-style: italic;
+    color: var(--ink-70);
+    line-height: 1.55;
+  }
+  @media (max-width: 640px) {
+    .girdiler {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
