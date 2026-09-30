@@ -4,7 +4,7 @@
  *
  * Okur eski sayıya göre karar vermiş olabilir; düzeltme bu yüzden metnin
  * içinde kalır ("yayımlanan X yerine gerçek değer Y") ve burada bir kez daha,
- * tarihiyle listelenir. Kaynak yayının kendi kaydıdır (bülten, teknik analiz, analiz): yazan taraf bir
+ * tarihiyle listelenir. Kaynak yayının kendi kaydıdır (bülten, teknik analiz, analiz, pano): yazan taraf bir
  * düzeltme yaptığında sayının hangi alanda, neden ve neye değiştiğini bültene
  * yazar; bu sayfa o kayıtları toplar. Elle tutulan ikinci bir liste yoktur.
  */
@@ -53,6 +53,16 @@ for (const a of await getCollection('analiz')) {
       tarih: d.tarih, alan: String(d.alan), eski: String(d.eski ?? ''), yeni: String(d.yeni ?? ''),
       sebep: d.sebep ? String(d.sebep) : undefined,
       kaynak: { href: `/analiz/${a.id}/`, ad: `Analiz · ${a.data.title}` },
+    });
+  }
+}
+for (const p of await getCollection('projeler')) {
+  for (const d of ((p.data as any).duzeltmeler ?? []) as any[]) {
+    if (!d || !d.alan) continue;
+    kayitlar.push({
+      tarih: d.tarih, alan: String(d.alan), eski: String(d.eski ?? ''), yeni: String(d.yeni ?? ''),
+      sebep: d.sebep ? String(d.sebep) : undefined,
+      kaynak: { href: `/projeler/${p.id}/`, ad: `Pano · ${p.data.title}` },
     });
   }
 }

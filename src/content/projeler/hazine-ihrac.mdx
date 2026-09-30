@@ -2,11 +2,57 @@
 title: 'Hazine ihraç takvimi ve ihale analizi'
 description: 'Hazine iç borçlanmasının tam panosu: ihale bazlı veri seti üzerinde hacim/tür/maliyet/talep/vade analizi, strateji revizyon takibi, canlı ihraç takvimi ve ihale bazlı backtest — kullanım kılavuzuyla.'
 pubDate: 2026-07-15
-updatedDate: 2026-08-18
+updatedDate: 2026-09-30
 tags: ['hazine', 'tahvil', 'ihale']
 durum: 'aktif'
 kaynak: 'T.C. Hazine ve Maliye Bakanlığı'
 guncelleme: 'ihale dönemlerinde (aylık)'
+duzeltmeler:
+  - tarih: '2026-09-30'
+    alan: 'Ağırlıklı ortalama vade — gün sayımı (bütün aylar)'
+    eski: 'valörden itfaya gün / 365,25 · Eylül 2026: 4,48 yıl'
+    yeni: 'valörden itfaya gün / 365 · Eylül 2026: 4,49 yıl'
+    sebep: "Planlı ihraçların vadesi strateji takviminin gün sayısından gün/365 okunuyor; gerçekleşen vade de aynı cetvele çekildi. İhale verisi değişmeyen 75 ayın 28'inde fark en çok 0,01 yıl; kalan altı ayın farkı aşağıdaki kayıtlarda."
+  - tarih: '2026-09-30'
+    alan: 'Nisan 2023 ağırlıklı ortalama vade'
+    eski: '7,94 yıl'
+    yeni: '6,86 yıl'
+    sebep: "10.04.2023 TLREF'e endeksli tahvil ihalesi (14,8 milyar TL, 1785 gün) duyurudaki valör tarihi okunamadığı için ortalamaya girmemişti."
+  - tarih: '2026-09-30'
+    alan: 'Mart 2021 gerçekleşme · ağırlıklı ortalama vade'
+    eski: '%33,6 · 5,82 yıl'
+    yeni: '%58,0 · 5,40 yıl'
+    sebep: "23.03.2021'de yapılan iki ihale (TÜFE'ye ve TLREF'e endeksli, toplam 6,1 milyar TL) veri setinde yoktu."
+  - tarih: '2026-09-30'
+    alan: 'Ağustos 2020 ağırlıklı ortalama vade · üç aylık'
+    eski: '3,56 yıl · 3,71 yıl'
+    yeni: '4,06 yıl · 3,84 yıl'
+    sebep: "24.08.2020 değişken faizli tahvil ihalesinin (TRT050527T17) duyurusu itfayı aynı gün ihale edilen öbür tahvilin tarihiyle, 24.07.2024 diye yazıyordu. ISIN kodu ve aynı tahvilin öbür beş ihalesi 05.05.2027 diyor; ihalenin vadesi 3,91 değil 6,69 yıl. Eylül ve Ekim 2020 üç aylık ortalamaları da 4,08 → 4,24 ve 4,10 → 4,30 oldu."
+  - tarih: '2026-09-30'
+    alan: 'Aralık 2021 gerçekleşme · ağırlıklı ortalama vade'
+    eski: '%133,2 · 8,41 yıl'
+    yeni: '%157,9 · 7,38 yıl'
+    sebep: '13.12.2021 sabit kuponlu tahvil ihalesi (2,0 milyar TL) veri setinde yoktu.'
+  - tarih: '2026-09-30'
+    alan: 'Nisan 2020 gerçekleşme · ağırlıklı ortalama vade'
+    eski: '%110,7 · 2,95 yıl'
+    yeni: '%154,8 · 3,24 yıl'
+    sebep: "06.04.2020'de yapılan iki ihale (kuponsuz ve TÜFE'ye endeksli, toplam 12,6 milyar TL) duyuruda tarihler 06/04/2020 biçiminde yazıldığı için veri setine girmemişti."
+  - tarih: '2026-09-30'
+    alan: '21.01.2020 Hazine Bonosu ihalesi · Ocak 2020'
+    eski: 'gerçekleşme 1,999 milyon TL · fiyat 97.736 · Ocak 2020: %90,6 · 2,89 yıl'
+    yeni: 'gerçekleşme 1.999 milyon TL · fiyat 97,736 · Ocak 2020: %104,9 · 2,53 yıl'
+    sebep: 'Duyuru sayıları İngilizce biçimde (binlik virgül, ondalık nokta) yazıyordu ve Türkçe biçimde okunmuştu.'
+  - tarih: '2026-09-30'
+    alan: 'Ortalama aylık gerçekleşme oranı (bütün aylar)'
+    eski: '%99,5'
+    yeni: '%100,8'
+    sebep: 'Yukarıdaki dört ayın (Ocak ve Nisan 2020, Mart ve Aralık 2021) gerçekleşmesi eklenen ve düzeltilen ihalelerle değişti.'
+  - tarih: '2026-09-30'
+    alan: 'Şekil 09 notu — Temmuz 2026 vadesi'
+    eski: "WAM 4,13 yıldan 3,07 yıla indi"
+    yeni: 'Haziran 2,85 → Temmuz 3,07 yıl'
+    sebep: 'Not aylık serinin kendisiyle çelişiyordu; Temmuz vadesi düşmedi, yükseldi.'
 ---
 
 import GrafikEmbed from '../../components/GrafikEmbed.astro';
@@ -15,8 +61,8 @@ import VeriTablosu from '../../components/VeriTablosu.astro';
 
 Hazine'nin aylık iç borçlanma stratejisi ile fiilen gerçekleşen ihraçlar arasındaki
 fark, TL faiz piyasası için başlı başına bir sinyaldir. Bu proje ihale sonuçlarını ve
-planlanan takvimi otomatik toplar ve **Şubat 2020'den bu yana <Deger proje="hazine-ihrac" anahtar="n_ihale" ondalik={0}>462</Deger> ihaleyi** (toplam
-<Deger proje="hazine-ihrac" anahtar="toplam_mlr" ondalik={1}>7.443,8</Deger> milyar TL) analiz panosuna döker: hacim, tür kırılımı, maliyet,
+planlanan takvimi otomatik toplar ve **Ocak 2020'den bu yana <Deger proje="hazine-ihrac" anahtar="n_ihale" ondalik={0}>471</Deger> ihaleyi** (toplam
+<Deger proje="hazine-ihrac" anahtar="toplam_mlr" ondalik={1}>7.728,3</Deger> milyar TL) analiz panosuna döker: hacim, tür kırılımı, maliyet,
 talep, vade, strateji revizyonları, ileriye dönük tahmin ve backtest.
 
 ## Bu sayfa nasıl kullanılır? (iş akışı)
@@ -63,7 +109,7 @@ talep, vade, strateji revizyonları, ileriye dönük tahmin ve backtest.
 />
 
 **Şekil 01.** İhale kayıtları ay bazında toplanır, strateji hedefiyle eşlenir.
-<Deger proje="hazine-ihrac" anahtar="n_ay" ondalik={0}>80</Deger> gerçekleşmeli ayda ortalama gerçekleşme **%<Deger proje="hazine-ihrac" anahtar="gerceklesme_ort" ondalik={1}>99,5</Deger>**. Oranın kalıcı 1 altı seyri
+<Deger proje="hazine-ihrac" anahtar="n_ay" ondalik={0}>81</Deger> gerçekleşmeli ayda ortalama gerçekleşme **%<Deger proje="hazine-ihrac" anahtar="gerceklesme_ort" ondalik={1}>100,8</Deger>**. Oranın kalıcı 1 altı seyri
 programın yumuşak uygulandığını, 1 üstü sıçramalar ek finansman ihtiyacını gösterir.
 
 <div class="not">
@@ -91,7 +137,7 @@ aynı ayın ardışık dokümanlardaki **yönü**: yukarı revizyon ek finansman
 aşağı revizyon programın yumuşamasına işaret eder. Alt panel kümülatif
 hedef/gerçekleşen alanıdır — gelecek ayların hedefi de dahil olduğundan oran düşük
 görünür; doğru metrik üstteki
-**%<Deger proje="hazine-ihrac" anahtar="gerceklesme_ort" ondalik={1}>99,5</Deger>**'dir.
+**%<Deger proje="hazine-ihrac" anahtar="gerceklesme_ort" ondalik={1}>100,8</Deger>**'dir.
 Şeklin iki bacağı **iki ayrı saatte** biter, bu yüzden şeklin başındaki tarih **ikisini
 birden** yazar. Hedef bacağı — üstteki dolu barlar ve alttaki kümülatif hedef alanı —
 yürürlükteki strateji dokümanına kadar gelir ve o tarih dokümanın kayda girdiği günü
@@ -185,11 +231,23 @@ fiyat keşfinin zorlaştığı, marjinal alıcının uzaklaştığı ihaleler. H
 />
 
 **Şekil 09.** WAM: $\overline{V}_{ay} = \sum \text{NetSatış}_i V_i / \sum \text{NetSatış}_i$ —
-son ayda **<Deger proje="hazine-ihrac" anahtar="wam_son" ondalik={2}>3,82</Deger> yıl** (3 aylık ağırlıklı ort. <Deger proje="hazine-ihrac" anahtar="wam_3ay" ondalik={2}>3,28</Deger>). Uzayan WAM piyasanın
-duration hazmı, kısalan WAM temkin işaretidir. Temmuz 2026 koşusunda WAM 4,13'ten 3,07
-yıla indi; kırılım tek bir ihaleden değil, uzun sabit kuponlu ihraç payının düşüp
-TLREF endeksli/kısa bono payının artmasından geliyor — WAM'ı düşüren şeyin **kompozisyon**
-olduğunu doğrulamak için Şekil 10'daki tür bazında kutu grafiğine bakın.
+son ayda **<Deger proje="hazine-ihrac" anahtar="wam_son" ondalik={2}>4,49</Deger> yıl** (3 aylık ağırlıklı ort. <Deger proje="hazine-ihrac" anahtar="wam_3ay" ondalik={2}>3,77</Deger>).
+
+**Bu şekil nasıl hesaplanıyor.** Her ihalenin vadesi valörden itfaya **takvim günüdür**
+ve yıla 365 ile çevrilir: $V_i = (\text{itfa}_i - \text{valör}_i)/365$. Strateji
+belgesinin ihraç takvimi planlı ihraçların vadesini aynı biçimde, gün sayısıyla yazar
+("5 Yıl / 1785 Gün" = 4,89 yıl); plan ile gerçekleşen böylece aynı cetvelle ölçülür.
+Ağırlık ihalenin toplam net satışıdır (ihale + ROT). Üç aylık ortalama, üç takvim ayının
+$\sum \text{NetSatış}_i V_i$ toplamının $\sum \text{NetSatış}_i$'ye bölünmesidir —
+aylık ortalamaların ortalaması değil; ihale yapılmayan bir ay pencereyi dört aya
+yaymaz. Çubuk, ayın vadesi ölçülebilen ihalelerinin toplam net satışıdır; valör
+ya da itfa tarihi okunamayan bir ihale ortalamaya da, çubuğa da, ihale sayısına da
+girmez.
+
+Uzayan WAM piyasanın duration hazmı, kısalan WAM temkin işaretidir. Bir ayın
+WAM'ı tek bir uzun ihaleyle de, kompozisyonun kaymasıyla da (uzun sabit kuponlu
+payın düşüp TLREF endeksli ya da kısa bono payının artması) oynar — hangisi olduğunu
+ayırmak için Şekil 10'daki tür bazında kutu grafiğine bakın.
 
 <GrafikEmbed
   src="/projeler/hazine-ihrac/vade_dagilimi.html"
@@ -210,10 +268,10 @@ dağılımı** (tanım+vade eşleşmeli tarihsel paylar; beklenen teklif geçmi�
 
 **ROT bu sayıların içindedir.** Sayfadaki her "net satış" ve her teklif rakamı
 ihale bacağı **artı** rekabetçi olmayan teklifi (ROT) kapsar — kaynak sütunları
-ikisini birden taşıyor. Payı küçük de değil: <Deger proje="hazine-ihrac" anahtar="rot_n" ondalik={0}>463</Deger> ihalede
-medyan **%<Deger proje="hazine-ihrac" anahtar="rot_pay_medyan">49,5</Deger>**, çeyrekler arası
-%<Deger proje="hazine-ihrac" anahtar="rot_pay_alt">39,0</Deger>–%<Deger proje="hazine-ihrac" anahtar="rot_pay_ust">59,8</Deger>,
-son on iki ayda %<Deger proje="hazine-ihrac" anahtar="rot_pay_son12">51,6</Deger>; ROT'un sıfır olduğu
+ikisini birden taşıyor. Payı küçük de değil: <Deger proje="hazine-ihrac" anahtar="rot_n" ondalik={0}>471</Deger> ihalede
+medyan **%<Deger proje="hazine-ihrac" anahtar="rot_pay_medyan">49,6</Deger>**, çeyrekler arası
+%<Deger proje="hazine-ihrac" anahtar="rot_pay_alt">39,2</Deger>–%<Deger proje="hazine-ihrac" anahtar="rot_pay_ust">59,9</Deger>,
+son on iki ayda %<Deger proje="hazine-ihrac" anahtar="rot_pay_son12">52,0</Deger>; ROT'un sıfır olduğu
 ihale sayısı <Deger proje="hazine-ihrac" anahtar="rot_sifir_n" ondalik={0}>0</Deger>. Yani ihalelerin yarısına
 yakını fiyat teklifi verilmeden, ihalede oluşan ortalama fiyattan satılıyor.
 

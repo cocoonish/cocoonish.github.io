@@ -23,12 +23,24 @@ const ortakSema = z.object({
   onkosul: z.array(z.string()).default([]),
 });
 
+/** Yayımlanmış bir sayının düzeltme kaydı — bültenle aynı sözleşme; /duzeltmeler/ toplar.
+ *  Tek tanım: analiz ve proje (pano) aynı alanları taşır. */
+const duzeltmeSema = z
+  .array(z.object({
+    tarih: z.string(),
+    alan: z.string(),
+    eski: z.string(),
+    yeni: z.string(),
+    sebep: z.string().optional(),
+  }))
+  .default([]);
+
 const projeler = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/projeler' }),
   // Pano bir ölçüm yüzeyidir: künyesi kaynağını ve yayım ritmini yazar
   // (projeler/YAZIM.md). İkisi burada ZORUNLU — rehberin "zorunlu" dediği
   // şey şemada isteğe bağlıydı ve hiçbir kapı yokluğunu görmüyordu.
-  schema: ortakSema.extend({ kaynak: z.string().min(1), guncelleme: z.string().min(1) }),
+  schema: ortakSema.extend({ kaynak: z.string().min(1), guncelleme: z.string().min(1), duzeltmeler: duzeltmeSema }),
 });
 
 // İndikatörler: bir dersin öğrettiği yöntemin çalışan karşılığı. Ders değil,
@@ -75,15 +87,7 @@ const analiz = defineCollection({
      *  Yayın günüyle aynı olmak zorunda değil; ödemeler dengesi 6–8 hafta gecikir. */
     veriTarihi: z.coerce.date().optional(),
     /** Yayımlanmış bir sayının düzeltme kaydı — bültenle aynı sözleşme; /duzeltmeler/ toplar. */
-    duzeltmeler: z
-      .array(z.object({
-        tarih: z.string(),
-        alan: z.string(),
-        eski: z.string(),
-        yeni: z.string(),
-        sebep: z.string().optional(),
-      }))
-      .default([]),
+    duzeltmeler: duzeltmeSema,
   }),
 });
 
