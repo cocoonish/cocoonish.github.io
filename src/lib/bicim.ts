@@ -49,14 +49,18 @@ export function sayi(v: number, ondalik = 1, isaret = false): string {
   const m = v
     .toLocaleString('tr-TR', { minimumFractionDigits: ondalik, maximumFractionDigits: ondalik })
     .replace('-', '−');
+  // Yuvarlamadan sonra sıfır kalan değer işaretsiz yazılır: Intl −0,04'ü
+  // "−0,0" basıyordu; Python eşi (ortak/bicim.sayi) baştan beri işaretsiz.
+  if (/^−?[0.,]+$/.test(m) && !/[1-9]/.test(m)) return m.replace('−', '');
   return isaret && v > 0 ? `+${m}` : m;
 }
 
 /** Yüzde: işaret önde, % sayının önünde. yuzde(-1.884, 2) → "−%1,88". */
 export function yuzde(v: number, ondalik = 1, isaret = false): string {
   const govde = sayi(Math.abs(v), ondalik);
-  if (v < 0) return `−%${govde}`;
-  return `${isaret && v > 0 ? '+' : ''}%${govde}`;
+  const sifir = !/[1-9]/.test(govde); // "−%0,00" olmaz — Python eşiyle aynı kural
+  if (v < 0 && !sifir) return `−%${govde}`;
+  return `${isaret && v > 0 && !sifir ? '+' : ''}%${govde}`;
 }
 
 /** Birimli değişim: birim "%" ise yuzde(), değilse "sayı birim" ("−6,5 bp"). */
@@ -64,6 +68,18 @@ export function degisim(v: number, birim: string, ondalik = 2): string {
   const b = (birim || '').trim();
   if (b === '%') return yuzde(v, ondalik, true);
   return `${sayi(v, ondalik, true)}${b ? ` ${b}` : ''}`;
+}
+
+/**
+ * Birimli seviye: birim "%" ise yüzde ÖNDE ("%30,19"), değilse sayı ve arkada
+ * birim ("82,6 endeks", "+36 mn $"). Ana sayfa hat tablosu ile proje
+ * sayfasının veri durumu şeridi aynı yazımı buradan alır; ikisi "30,19 %"
+ * basıyordu.
+ */
+export function olcuYaz(v: number, birim: string, ondalik = 1, isaret = false): string {
+  const b = (birim || '').trim();
+  if (b === '%') return yuzde(v, ondalik, isaret);
+  return `${sayi(v, ondalik, isaret)}${b ? ` ${b}` : ''}`;
 }
 
 /**
@@ -161,6 +177,10 @@ export function gunFarki(a: Date, b: Date = new Date()): number {
 export function istanbulSaat(iso: string | null | undefined, biçim: 'saat' | 'tam' = 'saat'): string {
   if (!iso) return '';
   const s = iso.trim();
+  // SAAT TAŞIMAYAN DAMGADAN SAAT UYDURULMAZ. Eski bülten sayılarında yazı
+  // damgası yalnız tarih ("2026-08-26"); UTC gece yarısı sayılıp künyeye
+  // "03:00" basılıyordu — ölçümden önce, olmamış bir saat.
+  if (!/\d{2}:\d{2}/.test(s)) return '';
   const dilimli = /(Z|[+-]\d{2}:\d{2})$/.test(s);
   const d = new Date(dilimli ? s : `${s}Z`);
   if (isNaN(d.valueOf())) return '';
@@ -172,6 +192,19 @@ export function istanbulSaat(iso: string | null | undefined, biçim: 'saat' | 't
     day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul',
   }).format(d);
   return `${gun} ${saat}`;
+}
+
+/** Damganın İstanbul'daki günü ("YYYY-AA-GG"). Saatsiz damga kendi günüdür. */
+export function istanbulIsoGun(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const s = iso.trim();
+  if (!/\d{2}:\d{2}/.test(s)) return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : '';
+  const dilimli = /(Z|[+-]\d{2}:\d{2})$/.test(s);
+  const d = new Date(dilimli ? s : `${s}Z`);
+  if (isNaN(d.valueOf())) return '';
+  return new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Europe/Istanbul',
+  }).format(d);
 }
 
 /** Dilimsiz ISO damgayı UTC sayıp Date'e çevirir (RSS pubDate için). */

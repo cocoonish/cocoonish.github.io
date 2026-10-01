@@ -1,0 +1,19 @@
+---
+/**
+ * Büyük harf bağlamında basılan bir dizgeyi korumalı yazar: küçük Yunan harfi
+ * `.harf-koru` kabına, yabancı özel ad `lang="en"`e girer. Kural ve liste
+ * src/lib/harf.mjs'de (MDX gövdesi aynı kuraldan rehype eklentisiyle geçer).
+ * Etiket, künye ve tablo başlığı basan bileşenler dizgeyi bununla yazar.
+ */
+import { harfParcala } from '../lib/harf.mjs';
+
+interface Props {
+  metin: string;
+}
+const parcalar = harfParcala(Astro.props.metin);
+---
+{parcalar.map((p) =>
+  p.tur === 'yunan' ? <span class="harf-koru">{p.t}</span>
+  : p.tur === 'yabanci' ? <span lang="en">{p.t}</span>
+  : p.t
+)}

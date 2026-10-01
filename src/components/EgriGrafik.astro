@@ -44,6 +44,21 @@ const sonNokta = (d: (number | null)[]) => {
   for (let i = d.length - 1; i >= 0; i--) if (d[i] !== null) return { i, v: d[i] as number };
   return null;
 };
+// "bugün" adı bir önceki iş gününün kapanışını taşıyordu (01.10 sayısında
+// "bugün (30.09.2026)"); seri SON ölçümdür, tarihi yanında yazar. Eski sayılar
+// da adı kayıttan okuduğu için ad burada çevrilir.
+const adYaz = (ad: string) => (ad === 'bugün' ? 'son' : ad);
+// UÇ ETİKETLERİ ÇAKIŞMAZ: seriler aynı vadede bittiğinde etiketler ~1 px arayla
+// üst üste biniyordu (7 yıl: 33,54 · 33,47). Dikey sıraya dizilir, aralık en az
+// bir satır yüksekliği.
+const ETIKET_ARA = 12;
+const uclar = seriler.map((s: any, i: number) => {
+  const p = sonNokta(s.deger);
+  return p ? { i, x: px(p.i) + 10, y: py(p.v) + 3.5, ad: adYaz(s.ad) } : null;
+}).filter(Boolean) as { i: number; x: number; y: number; ad: string }[];
+[...uclar].sort((a, b2) => a.y - b2.y).forEach((u, k, dizi) => {
+  if (k > 0 && Math.abs(u.x - dizi[k - 1].x) < 60 && u.y - dizi[k - 1].y < ETIKET_ARA) u.y = dizi[k - 1].y + ETIKET_ARA;
+});
 ---
 
 {seriler.length > 0 && (
@@ -57,13 +72,13 @@ const sonNokta = (d: (number | null)[]) => {
               <line x1="0" y1="4" x2="18" y2="4" stroke={renk[i % renk.length]}
                     stroke-width="2" stroke-dasharray={i === 0 ? undefined : '5 3'} />
             </svg>
-            {s.ad} ({s.tarih})
+            {adYaz(s.ad)} ({s.tarih})
           </span>
         ))}
       </span>
     </figcaption>
     <svg viewBox={`0 0 ${W} ${H}`} class="egri-svg" role="img"
-         aria-label={`DİBS spot getiri eğrisi, ${seriler.map((s: any) => `${s.ad} ${s.tarih}`).join(' ve ')}`}>
+         aria-label={`DİBS spot getiri eğrisi, ${seriler.map((s: any) => `${adYaz(s.ad)} ${s.tarih}`).join(' ve ')}`}>
       {izgara.map((v) => (
         <>
           <line x1={G.sol} y1={py(v)} x2={W - G.sag} y2={py(v)} class="egri-izgara" />
@@ -82,18 +97,14 @@ const sonNokta = (d: (number | null)[]) => {
             v === null ? null : (
               <circle cx={px(j)} cy={py(v)} r="4" fill={renk[i % renk.length]}
                       stroke="var(--paper)" stroke-width="2">
-                <title>{`${s.ad} · ${egri.etiketler[j]} · %${v.toLocaleString('tr-TR')}`}</title>
+                <title>{`${adYaz(s.ad)} · ${egri.etiketler[j]} · %${v.toLocaleString('tr-TR')}`}</title>
               </circle>
             )
           ))}
-          {(() => {
-            const p = sonNokta(s.deger);
-            return p ? (
-              <text x={px(p.i) + 10} y={py(p.v) + 3.5} class="egri-etiket"
-                    fill={renk[i % renk.length]}>{s.ad}</text>
-            ) : null;
-          })()}
         </>
+      ))}
+      {uclar.map((u) => (
+        <text x={u.x} y={u.y} class="egri-etiket" fill={renk[u.i % renk.length]}>{u.ad}</text>
       ))}
     </svg>
   </figure>

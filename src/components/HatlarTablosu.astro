@@ -32,16 +32,25 @@ const satirlar = hatlar
   // girmez; boş bir satır, olmayan bir satırdan daha kötü bilgi verir.
   .filter((h) => h.olcu)
   .sort((a, b) => (a.yas ?? 9e9) - (b.yas ?? 9e9));
+
+// Değer ile birim ayrı öğe: telefonda birim değerin ALTINA iner. Tek nowrap
+// dizge ("230,8 mlr USD") 390 pikselde değer sütununu 142 piksele çıkarıyor,
+// tarih sütunu kabın dışına düşüp "29.09.202" diye kesiliyordu (320 px'te
+// 98 piksel gizli). olcuYaz sayıyı boşluksuz yazar; ilk boşluk birimi ayırır.
+const parca = (m: string) => {
+  const i = m.indexOf(' ');
+  return i < 0 ? { sayi: m, birim: '' } : { sayi: m.slice(0, i), birim: m.slice(i + 1) };
+};
 ---
 
-<div class="ht-sarici">
+<div class="ht-sarici" tabindex="0" role="region" aria-label="Kaydırılabilir tablo" data-kaydir>
   <table class="ht-tablo">
     <caption class="gorunmez">Veri hatları: manşet büyüklüğü, değeri ve o değerin kendi tarihi</caption>
     <thead>
       <tr>
         <th class="ht-hat" scope="col">Hat</th>
         <th class="ht-olcu" scope="col">Manşet büyüklüğü</th>
-        <th class="ht-deger" scope="col">Değer</th>
+        <th class="ht-deger sag" scope="col">Değer</th>
         <th class="ht-tarih" scope="col">Veri tarihi</th>
       </tr>
     </thead>
@@ -52,11 +61,14 @@ const satirlar = hatlar
             <td class="ht-hat">
               <a href={`/projeler/${h.slug}/`}>{h.baslik}</a>
               {h.durum === 'taslak' && <span class="ht-rozet">taslak</span>}
+              {/* Telefonda ölçü sütunu yok; değerin NEYİN değeri olduğu adın altında kalır. */}
+              <span class="ht-olcu-ic">{h.olcu}</span>
             </td>
             <td class="ht-olcu">{h.olcu}</td>
             <td class="ht-deger">
-              {h.deger ?? <span class="ht-yok">veri yok</span>}
-              {h.deger && h.birim && <span class="ht-birim">{h.birim}</span>}
+              {h.metin
+                ? <>{parca(h.metin).sayi}{parca(h.metin).birim && <span class="ht-birim"> {parca(h.metin).birim}</span>}</>
+                : <span class="ht-yok">veri yok</span>}
             </td>
             <td class="ht-tarih">
               {h.tarih || '—'}
@@ -73,8 +85,10 @@ const satirlar = hatlar
   /* Dar ekranda tablo SAYFAYI değil kendini kaydırır. */
   .ht-sarici {
     overflow-x: auto;
+    position: relative;
     border-top: 1px solid var(--ink);
   }
+  .ht-sarici:focus-visible { outline: 2px solid var(--claret); outline-offset: 2px; }
   .ht-tablo {
     width: 100%;
     border-collapse: collapse;
@@ -128,18 +142,17 @@ const satirlar = hatlar
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
+  /* Değer ve birim TEK hücrede ve sözleşmeyle yazılır ("%30,19", "82,6
+     endeks"); başlık da değerle aynı yana yaslanır. Başlık sola, değer sağa
+     yaslıyken sütun taranamıyordu. */
   .ht-deger {
     text-align: right;
     font-size: 1rem;
     font-weight: 500;
     padding-right: 1.4rem;
   }
-  .ht-birim {
-    font-size: 0.64rem;
-    color: var(--ink-50);
-    margin-left: 0.35rem;
-    letter-spacing: 0.04em;
-  }
+  thead th.sag { text-align: right; padding-right: 1.4rem; }
+  .ht-olcu-ic { display: none; }
   .ht-yok {
     font-size: 0.7rem;
     color: var(--ink-50);
@@ -159,10 +172,34 @@ const satirlar = hatlar
 
   /* Telefonda üç sütun da kırılmaz olunca değer ekran dışına düşüyordu;
      kaydırma son çare, önce hat adı kırılır ve tarih küçülür. */
+  /* 768 pikselde kırılmayan hat adı tabloyu kabından 28 piksel taşırıyor ve
+     tarih "29.09.202" diye kesiliyordu. */
+  @media (max-width: 900px) {
+    .ht-hat a { white-space: normal; }
+  }
   @media (max-width: 640px) {
     .ht-olcu { display: none; }
+    .ht-olcu-ic {
+      display: block; margin-top: 0.15rem;
+      font-size: 0.78rem; line-height: 1.3; color: var(--ink-70);
+    }
     .ht-hat a { white-space: normal; }
+    thead th.sag { padding-right: 0.8rem; }
     .ht-deger { padding-right: 0.8rem; font-size: 0.92rem; }
+    .ht-birim { display: block; font-size: 0.75rem; color: var(--ink-70); line-height: 1.2; }
     .ht-tarih { font-size: 0.72rem; }
+  }
+  /* TELEFON TABANI (≤640 px): meta etiket en az 0,75rem, sayı en az 0,8125rem.
+     Ölçüldü (390 px): 12 pikselin altındaki karakter payı ana sayfada %24,1 — en yoğun
+     katmanlar not, tarih ve konum satırlarıydı; sayı hücreleri zaten 13,4 px. */
+  @media (max-width: 640px) {
+    .ht-tarih { font-size: 0.8125rem; }
+    .ht-yas, .ht-olcu-ic, .ht-rozet { font-size: 0.75rem; }
+  }
+  /* En dar telefonlar (≤360 px): sütun arası boşluk yarıya iner. 320
+     pikselde tarih sütunu kabın 33 piksel dışında kalıyordu. */
+  @media (max-width: 360px) {
+    thead th, tbody td { padding-right: 0.5rem; }
+    thead th.sag, .ht-deger { padding-right: 0.5rem; }
   }
 </style>

@@ -29,6 +29,7 @@ import { kicker } from '../lib/bolumler';
 </Base>
 
 <script>
+  import { yabanciMi } from '../lib/harf.mjs';
   type Kayit = {
     tur: string;
     url: string;
@@ -40,7 +41,7 @@ import { kicker } from '../lib/bolumler';
 
   // Tür etiketleri: başlık gezinmesiyle aynı sözcükler.
   const TUR_AD: Record<string, string> = {
-    proje: 'Proje', arastirma: 'Ders', analiz: 'Analiz', bulten: 'Bülten', teknik: 'Teknik',
+    proje: 'Proje', arastirma: 'Ders', analiz: 'Analiz', indikator: 'İndikatör', bulten: 'Bülten', teknik: 'Teknik',
   };
   const girdi = document.getElementById('arama-girdi') as HTMLInputElement;
   const durum = document.getElementById('arama-durum')!;
@@ -115,7 +116,7 @@ import { kicker } from '../lib/bolumler';
       <article class="sonuc yuksel" style="--d:${i * 40}ms">
         <div class="ust">
           <span class="etiket tur ${k.tur}">${TUR_AD[k.tur] ?? 'Ders'}</span>
-          ${k.tags.map((t: string) => `<span class="etiket tag">#${kacis(t)}</span>`).join('')}
+          ${k.tags.map((t: string) => `<span class="etiket tag"${yabanciMi(t) ? ' lang="en"' : ''}>#${kacis(t)}</span>`).join('')}
         </div>
         <h3><a href="${k.url}">${kacis(k.title)}</a></h3>
         <p>${parcaBul(k, kelimeler[0])}</p>

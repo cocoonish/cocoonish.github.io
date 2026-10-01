@@ -65,7 +65,10 @@ const dolu = hucreler.filter((h) => h && h.deger);
     display: flex;
     flex-direction: column;
     gap: 0.12rem;
-    min-width: 0;
+    /* Hücre en uzun SÖZCÜĞÜNDEN dar olamaz: `min-width: 0` ile `anywhere`
+       birlikte tarihi karakter ortasından bölüyordu ("29.09.202 / 6 Salı
+       kapanışı"). Sığmayan hücre satırını değiştirir, sözcüğü bölmez. */
+    min-width: min-content;
   }
   .deger {
     font-family: var(--font-mono);
@@ -75,7 +78,7 @@ const dolu = hucreler.filter((h) => h && h.deger);
     color: var(--ink);
     letter-spacing: -0.01em;
     text-decoration: none;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
   a.deger:hover { color: var(--claret); }
   .deger.vurgu { color: var(--claret); }

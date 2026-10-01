@@ -7,6 +7,7 @@ import Base from '../../layouts/Base.astro';
 import BultenGovde from '../../components/BultenGovde.astro';
 import { bultenler } from '../../lib/yayinlar';
 import { hatSayfalari } from '../../lib/hatSayfa';
+import { ayniGunYayimlar } from '../../lib/ayniGun';
 
 // Öne çıkanlar hattın ADINI basar ve sayfasına bağlar; ikisini de
 // lib/hatSayfa çözer — panosu olmayan hat (ölçümünü bir yazıya besleyen)
@@ -17,6 +18,7 @@ const son = hepsi[0];
 const sonGunluk = hepsi.find((x) => !x.haftalik);
 const sonHaftalik = hepsi.find((x) => x.haftalik);
 const arsiv = hepsi.slice(1, 12);
+const ayniGun = son ? await ayniGunYayimlar(son.tarih) : [];
 ---
 
 <Base
@@ -42,14 +44,14 @@ const arsiv = hepsi.slice(1, 12);
         <a href="/bulten/rss.xml" class="nav-oge rss-link" title="RSS beslemesi">RSS</a>
         <a href="/bulten/arsiv/" class="nav-oge arsiv-link">Tüm arşiv ({hepsi.length})</a>
       </nav>
-      <BultenGovde b={son.b} kayit={son} hatSayfa={hatSayfa} />
+      <BultenGovde b={son.b} kayit={son} hatSayfa={hatSayfa} oncekiB={hepsi[1]?.b ?? null} ayniGun={ayniGun} />
       <section class="arsiv">
         <h2>Önceki sayılar <a class="tumu" href="/bulten/arsiv/">tümü →</a></h2>
         {arsiv.length > 0 ? (
           <ul>
             {arsiv.map((x) => (
               <li>
-                <a href={x.href}><span class="no">No {x.sayiNo}</span> {x.trTarih}</a>
+                <a href={x.href}><span class="no">Sayı {x.sayiNo}</span> {x.trTarih}</a>
                 {x.haftalik && <span class="rozet">haftaya bakış</span>}
                 <span class="ozet">{x.aciklama}</span>
               </li>

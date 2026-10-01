@@ -11,16 +11,22 @@
   --paper-3: #e4dbc7;
   --ink: #211b12;
   --ink-70: rgba(33, 27, 18, 0.72);
-  --ink-50: rgba(33, 27, 18, 0.52);
+  /* --ink-50 fiilen bir METİN rengidir: 103 kullanımının 100'ü `color`
+     (yaş, birim, tablo başlığı, künye alt satırı). 0,52 alfada kâğıtta
+     3,39:1 veriyordu ve WCAG AA küçük metin eşiği (4,5) altındaydı; sitenin
+     en küçük metinleri tam bu renkteydi. 0,64 üç zeminde de AA geçer
+     (kâğıt 4,89 · paper-2 4,71 · paper-3 4,51). */
+  --ink-50: rgba(33, 27, 18, 0.64);
   --ink-30: rgba(33, 27, 18, 0.3);
   --ink-15: rgba(33, 27, 18, 0.15);
   --claret: #8e1f2f;
   --claret-dark: #6d1322;
   --gold: #9a7327;
   --teal: #1d5c5c;
-  /* Metinde kullanılabilir en soluk mürekkep (≈4,6:1): tarih ve kaynak notları.
+  /* Tarih ve kaynak notlarının mürekkebi: kâğıtta 5,21, paper-3'te 4,78:1 —
+     üç zeminde de AA (0,62 alfada paper-2 ve paper-3'te eşiğin altındaydı).
      --ink-30 yalnız çizgi ve kenarlıkta; metinde kullanılmaz. */
-  --ink-60: rgba(33, 27, 18, 0.62);
+  --ink-60: rgba(33, 27, 18, 0.66);
   /* Anlam jetonları: yön ve uyarı renkleri tek yerde. */
   --pozitif: #0f766e;
   --negatif: var(--claret);
@@ -141,6 +147,12 @@ main:focus {
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
+/* BÜYÜK HARF DÖNÜŞÜMÜNDEN KORUNAN METİN. Küçük Yunan harfi büyüğüne dönünce
+   başka bir büyüklüğün adı olur (σ standart sapma → Σ toplam, β → Β); KaTeX
+   çıktısı da aynı dönüşümü devralıyordu. Sarma işi src/lib/harf.mjs'de (MDX
+   gövdesi rehype eklentisinden geçer, bileşenler kabı kendi basar); kapı
+   sayfa sınavının 27. ölçütü. Yabancı özel ad `lang="en"` ile korunur. */
+.harf-koru, .katex { text-transform: none; }
 
 .rozet {
   font-family: var(--font-mono);
@@ -819,4 +831,11 @@ main:focus {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* TELEFON TABANI (≤640 px): mono meta etiketler en az 0,75rem. Ölçüldü
+   (390 px): ana sayfada 12 pikselin altındaki karakter payı %24,1 — kart
+   künyeleri, tarih satırları ve kicker'lar 11 piksel basılıyordu. */
+@media (max-width: 640px) {
+  .etiket, .kayit .sira, .kayit .tarih, .kayit .alt { font-size: 0.75rem; }
 }

@@ -61,9 +61,9 @@ function tarihten(yol: string): string {
 export const bultenYazilmis = (b: any): boolean => b?.gundem_kaynagi === 'yazili';
 export const teknikYazilmis = (t: any): boolean => !!t?.yazili;
 
-/** Bültenin okura giden tek cümlelik özeti: önce "ne oldu", yoksa yorumun ilk cümlesi. */
+/** Bültenin okura giden tek cümlelik özeti: önce sayının manşeti, sonra "ne oldu", yoksa yorumun ilk cümlesi. */
 export function bultenAciklama(b: any): string {
-  const kaynak = b?.ozet?.ne_oldu || b?.yorum || '';
+  const kaynak = b?.manset || b?.ozet?.ne_oldu || b?.yorum || '';
   const m = ozetle(kaynak, 220);
   if (m) return m;
   return b?.haftalik

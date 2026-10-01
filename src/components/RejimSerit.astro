@@ -13,6 +13,7 @@
  * gerilim görünür kalır — sayfanın asıl anlattığı şey o gerilim.
  */
 import type { RejimSatiri } from '../lib/anaSayfa';
+import { rejimHane, rejimFark, REJIM_FARK_BIRIMI } from '../lib/anaSayfa';
 import { sayi, yuzde } from '../lib/bicim';
 
 interface Props {
@@ -24,9 +25,23 @@ const { satirlar, vurgu = [] } = Astro.props;
 
 const bicim = (s: RejimSatiri) => {
   if (s.deger === null) return '—';
-  if (s.birim === '%') return yuzde(s.deger, 1);
-  if (s.birim === 'puan') return sayi(s.deger, s.ad.includes('eğim') ? 2 : 1, true);
-  return sayi(s.deger, 1);
+  const n = rejimHane(s);
+  if (s.birim === '%') return yuzde(s.deger, n);
+  if (s.birim === 'puan') return sayi(s.deger, n, true);
+  return sayi(s.deger, n);
+};
+// Önceki ölçüme göre fark — yalnız HAREKET varsa. Dokuz satırın yedisinin
+// altında "değişmedi" yazmak, hareket eden satırı kalabalıkta gizliyordu.
+// Bir oranın farkı PUANDIR; değerin kendi birimiyle okunur. Önceki ölçüm
+// yoksa fark uydurulmaz.
+// Birim tablodan türer (REJIM_FARK_BIRIMI): "%24,7" altında çıplak "−3,2"
+// "−%3,2" diye okunuyordu; farkın ne olduğu yalnız title'daydı (dokunmatikte ve
+// ekran okuyucuda görünmez), o yüzden görünmez bir önek de basılır.
+const farkYaz = (s: RejimSatiri): string | null => {
+  const f = rejimFark(s);
+  if (f === null || f === 0) return null;
+  const b = REJIM_FARK_BIRIMI[s.birim] ?? s.birim;
+  return `${sayi(f, rejimHane(s), true)}${b ? ` ${b}` : ''}`;
 };
 ---
 
@@ -34,10 +49,18 @@ const bicim = (s: RejimSatiri) => {
   {
     satirlar.map((s) => (
       <li class:list={['rj-satir', vurgu.includes(s.ad) && 'rj-vurgulu']}>
-        <span class="rj-ad">{s.ad}</span>
+        {/* Manşette kullanılan satır yalnız soldaki bordo çizgiyle işaretliydi;
+            renkten bağımsız ve ekran okuyucuya da okunan bir etiket. */}
+        <span class="rj-ad">
+          {s.ad}
+          {vurgu.includes(s.ad) && <span class="rj-manset">manşet</span>}
+        </span>
         <span class="rj-deger">
           {bicim(s)}
           {s.birim !== '%' && s.deger !== null && <span class="rj-birim">{s.birim}</span>}
+          {farkYaz(s) && (
+            <span class="rj-fark" title="Bir önceki ölçüme göre"><span class="gorunmez">önceki ölçüme göre </span>{farkYaz(s)}</span>
+          )}
         </span>
         <span class="rj-etiket">{s.etiket}</span>
         <span class="rj-hesap">{s.hesap}</span>
@@ -83,6 +106,15 @@ const bicim = (s: RejimSatiri) => {
     line-height: 1.3;
     color: var(--ink);
   }
+  .rj-manset {
+    margin-left: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--claret);
+    vertical-align: 0.1em;
+  }
   .rj-deger {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
@@ -90,6 +122,13 @@ const bicim = (s: RejimSatiri) => {
     font-weight: 500;
     text-align: right;
     white-space: nowrap;
+  }
+  .rj-fark {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--ink-70);
+    margin-top: 0.1rem;
   }
   .rj-birim {
     font-size: 0.66rem;
@@ -136,5 +175,11 @@ const bicim = (s: RejimSatiri) => {
     .rj-konum {
       grid-column: 1 / -1;
     }
+  }
+  /* TELEFON TABANI (≤640 px): meta etiket en az 0,75rem, sayı en az 0,8125rem.
+     Ölçüldü (390 px): 12 pikselin altındaki karakter payı ana sayfada %24,1 — en yoğun
+     katmanlar not, tarih ve konum satırlarıydı; sayı hücreleri zaten 13,4 px. */
+  @media (max-width: 640px) {
+    .rj-etiket, .rj-birim, .rj-fark, .rj-konum, .rj-manset { font-size: 0.75rem; }
   }
 </style>

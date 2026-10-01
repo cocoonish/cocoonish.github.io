@@ -1,4 +1,5 @@
 ---
+import HarfMetin from '../components/HarfMetin.astro';
 import Base from './Base.astro';
 import DersKunyesi from '../components/DersKunyesi.astro';
 import VeriDurumu from '../components/VeriDurumu.astro';
@@ -59,18 +60,22 @@ const {
   veriZamani = null,
 } = Astro.props;
 
-// 'ders' etiketi bütün derslerde var; ayırt etmediği için künye satırında gösterilmez.
-// Kicker'da en çok DÖRT etiket: on etiketli bir yazının kicker'ı iki satıra
-// taşıyor ve başlığın önünü kapatıyordu. Kalanı yazının sonunda listelenir.
-const gorunenEtiketler = tags.filter((t) => t !== 'ders');
-const kickerEtiketler = gorunenEtiketler.slice(0, 4);
-
 // Künye kicker'ında görünen tür adı — başlık gezinmesiyle aynı sözcük ('Dersler').
 const TUR_ETIKET: Record<string, string> = {
   proje: 'Proje',
   arastirma: 'Ders',
   analiz: 'Analiz',
+  indikator: 'İndikatör',
 };
+const turAdi = TUR_ETIKET[tur] ?? 'Ders';
+
+// Tür adıyla aynı etiket ('ders', 'indikatör') ayırt etmediği için künye
+// satırında gösterilmez — kicker "İNDİKATÖR · İNDİKATÖR" diye başlıyordu.
+// Kicker'da en çok DÖRT etiket: on etiketli bir yazının kicker'ı iki satıra
+// taşıyor ve başlığın önünü kapatıyordu. Kalanı yazının sonunda listelenir.
+const turKucuk = turAdi.toLocaleLowerCase('tr');
+const gorunenEtiketler = tags.filter((t) => t !== 'ders' && t.toLocaleLowerCase('tr') !== turKucuk);
+const kickerEtiketler = gorunenEtiketler.slice(0, 4);
 
 // Lede: yazarın tek cümlelik tezi varsa o; yoksa açıklama. Tez varsa uzun
 // açıklama künyenin altında 'Kapsam' paragrafı olarak normal boyutta kalır —
@@ -91,14 +96,14 @@ const kapsam = ozet && description && description !== ozet ? description : null;
   <article>
     <header class="makale-baslik yuksel">
       <p class="kicker etiket">
-        {TUR_ETIKET[tur] ?? 'Ders'}
+        {turAdi}
         {grupAdi && (
           <>
             {' · '}
             {grupHref ? <a href={grupHref}>{grupAdi}</a> : grupAdi}
           </>
         )}
-        {kickerEtiketler.length > 0 && ` · ${kickerEtiketler.join(' · ')}`}
+        {kickerEtiketler.map((t) => <>{' · '}<HarfMetin metin={t} /></>)}
       </p>
       <h1>{title}</h1>
       <p class="ozet">{lede}</p>
@@ -164,7 +169,7 @@ const kapsam = ozet && description && description !== ozet ? description : null;
     {gorunenEtiketler.length > kickerEtiketler.length && (
       <p class="etiket-listesi">
         <span class="etiket">Etiketler</span>
-        {gorunenEtiketler.map((t) => <span class="etiket-oge">{t}</span>)}
+        {gorunenEtiketler.map((t) => <span class="etiket-oge"><HarfMetin metin={t} /></span>)}
       </p>
     )}
     <slot name="son" />

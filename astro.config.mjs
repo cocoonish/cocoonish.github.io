@@ -4,6 +4,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import { rehypeHarfKoru } from './src/lib/harf.mjs';
 
 // https://astro.build/config
 export default defineConfig({
@@ -29,6 +30,9 @@ export default defineConfig({
     // ("gövde", "bütçe", "çıkış") varsayılan 'warn' kipinde şikâyet eder ama
     // doğru render eder. Türkçe bir sitede bu uyarı her derlemede onlarca satır
     // gürültü üretip GERÇEK KaTeX hatalarını görünmez kılıyordu.
-    rehypePlugins: [[rehypeKatex, { strict: false }]],
+    // rehypeHarfKoru KaTeX'ten SONRA: küçük Yunan harfini ve yabancı özel adı
+    // büyük harf dönüşümünden korur (σ → Σ, "TRADİNGVİEW"); kural ve gerekçe
+    // src/lib/harf.mjs'de, kapısı sayfa sınavının 27. ölçütünde.
+    rehypePlugins: [[rehypeKatex, { strict: false }], rehypeHarfKoru],
   },
 });

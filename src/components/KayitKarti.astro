@@ -1,4 +1,5 @@
 ---
+import HarfMetin from './HarfMetin.astro';
 import { tarihUzun, isoGun, ozetle } from '../lib/bicim';
 
 interface Props {
@@ -18,10 +19,12 @@ interface Props {
   ekBilgi?: string[];
   /** 'proje' kartında 'Canlı' rozeti anlamlı (pano tazeleniyor); analiz tarihli metindir, rozet basılmaz. */
   tur?: 'proje' | 'analiz';
+  /** Konu etiketleri (#…) basılsın mı. Ana sayfada basılmaz: karar bilgisi taşımıyor. */
+  etiketler?: boolean;
 }
 
 const { href, sira, title, description, ozet, tags = [], durum, guncelleme,
-        pubDate, updatedDate, gecikme = 0, ekBilgi = [], tur = 'proje' } = Astro.props;
+        pubDate, updatedDate, gecikme = 0, ekBilgi = [], tur = 'proje', etiketler = true } = Astro.props;
 const siraNo = `No ${String(sira).padStart(2, '0')}`;
 // Kart metni: yazarın tek cümlelik tezi; yoksa açıklamanın ilk cümleleri.
 // 1.200 karakterlik bir açıklamayı karta basmak kartı okunmaz yapıyordu.
@@ -53,7 +56,7 @@ const guncelGoster = guncel && guncel !== yayim ? guncel : null;
     {guncelGoster && <span>güncellendi {guncelGoster}</span>}
     {ekBilgi.map((e) => <span class="ek">{e}</span>)}
     {tur === 'proje' && guncelleme && <span>↻ {guncelleme}</span>}
-    {tags.slice(0, 4).map((t) => <span>#{t}</span>)}
-    {tags.length > 4 && <span class="ek">+{tags.length - 4}</span>}
+    {etiketler && tags.slice(0, 4).map((t) => <span>#<HarfMetin metin={t} /></span>)}
+    {etiketler && tags.length > 4 && <span class="ek">+{tags.length - 4}</span>}
   </div>
 </article>

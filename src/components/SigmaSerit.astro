@@ -12,7 +12,7 @@
  * Kutupluluk üç ayrı işaretle taşınıyor — çubuğun yönü, sayının işareti ve
  * renk — yani hiçbir okur için yalnız renge bağlı değil. Nötr orta eksen gri.
  */
-import { sayi } from '../lib/bicim';
+import { sayi, degisim, olcuYaz } from '../lib/bicim';
 
 interface Props {
   hareketler: any[];
@@ -26,12 +26,17 @@ const pencereAd = haftalik ? 'haftalık' : 'günlük';
 const tabanAd = haftalik ? '20 haftalık' : '20 günlük';
 
 const veri = hareketler.filter((x: any) => typeof x?.sigma === 'number');
-const enCok = Math.max(1.5, ...veri.map((x: any) => Math.abs(x.sigma)));
-const SATIR = 26, BAR = 13, AD = 190, EKSEN = 34;
+// EKSEN EŞİĞİ İÇERİR: en büyük |σ| eşiğin altındayken ±2σ çizgisi çizim
+// alanının, hatta sütunun dışına düşüyordu. Ölçek en az eşiğin biraz ötesine
+// kadar uzanır; eşik çizgisi her sayıda görünür.
+const enCok = Math.max(esik * 1.1, ...veri.map((x: any) => Math.abs(x.sigma)));
+// ETİKET PAYI ÇUBUĞUN DIŞINDA AYRILIR: en uzun eksi çubuğun değer etiketi
+// enstrüman adının üstüne biniyordu ("BIST Sınai" ile "−1,5σ" iç içe).
+const SATIR = 26, BAR = 13, AD = 190, EKSEN = 34, ETIKET = 44;
 const W = 640, H = veri.length * SATIR + 22;
 const yariGenislik = (W - AD - EKSEN) / 2;
 const merkez = AD + yariGenislik;
-const uzunluk = (z: number) => (Math.abs(z) / enCok) * (yariGenislik - 6);
+const uzunluk = (z: number) => (Math.abs(z) / enCok) * (yariGenislik - ETIKET);
 ---
 
 {veri.length > 0 && (
@@ -55,7 +60,8 @@ const uzunluk = (z: number) => (Math.abs(z) / enCok) * (yariGenislik - 6);
             <text x={AD - 12} y={y + BAR / 2 + 3.5} class="sigma-ad">{x.ad}</text>
             <rect x={negatif ? merkez - u : merkez} y={y} width={Math.max(u, 1)} height={BAR} rx="4"
                   fill={negatif ? 'var(--negatif)' : 'var(--pozitif)'}>
-              <title>{`${x.ad}: ${sayi(x.deger, 2, true)}${x.birim} · ${sayi(x.sigma, 1, true)}σ (${pencereAd} σ ${sayi(x.oynaklik, 2)}${x.birim})`}</title>
+              {/* İpucu da biçim sözleşmesiyle: "−2,40%" değil "−%2,40". */}
+              <title>{`${x.ad}: ${degisim(x.deger, x.birim, x.birim === 'bp' ? 1 : 2)} · ${sayi(x.sigma, 1, true)}σ (${pencereAd} σ ${olcuYaz(x.oynaklik, x.birim, 2)})`}</title>
             </rect>
             <text x={negatif ? merkez - u - 7 : merkez + u + 7} y={y + BAR / 2 + 3.5}
                   class:list={['sigma-deger', { sag: negatif }]}>
@@ -73,16 +79,20 @@ const uzunluk = (z: number) => (Math.abs(z) / enCok) * (yariGenislik - 6);
 
 <style>
   .sigma-figur { margin: 0 0 1.2rem; }
+  /* Telefonda 640 birimlik çizim 355 piksele ölçekleniyor ve yazılar ~6 pikselde
+     okunmuyordu; altındaki tablo aynı satırları σ ile birlikte veriyor. */
+  @media (max-width: 640px) { .sigma-figur { display: none; } }
   .sigma-figur figcaption {
     font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-70);
-    text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.4rem;
+    letter-spacing: 0.02em; margin-bottom: 0.4rem;
   }
   .sigma-svg { width: 100%; height: auto; display: block; overflow: visible; }
   .sigma-merkez { stroke: var(--ink-30); stroke-width: 1.5; }
-  .sigma-esik { stroke: var(--ink-15); stroke-width: 1; stroke-dasharray: 3 3; }
+  .sigma-esik { stroke: var(--ink-30); stroke-width: 1; stroke-dasharray: 3 3; }
   .sigma-ad { font-family: var(--font-mono); font-size: 11px; fill: var(--ink); text-anchor: end; }
   .sigma-deger { font-family: var(--font-mono); font-size: 10.5px; fill: var(--ink-70); }
   .sigma-deger.sag { text-anchor: end; }
-  .sigma-eksen { font-family: var(--font-mono); font-size: 9.5px; fill: var(--ink-30); }
+  /* Eksen yazısı METİNDİR: --ink-30 metinde kullanılmaz (1,90:1). */
+  .sigma-eksen { font-family: var(--font-mono); font-size: 9.5px; fill: var(--ink-60); }
   .orta { text-anchor: middle; }
 </style>

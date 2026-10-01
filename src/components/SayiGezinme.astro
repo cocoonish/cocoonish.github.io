@@ -18,13 +18,18 @@ const { konum, bolumHref, onceki = null, sonraki = null } = Astro.props;
 ---
 
 {konum === 'ust' ? (
+  // Önceki/sonraki bağı üstte de durur: yalnız sayfanın dibindeydi ve günlerce
+  // aşağıdan bülten okuyan biri için 40 ekran kaydırma demekti.
   <p class="geri">
+    {onceki && <><a href={onceki.href} rel="prev">← Sayı {onceki.sayiNo}</a> · </>}
     <a href={bolumHref}>güncel sayı</a> · <a href={`${bolumHref}arsiv/`}>arşiv</a> · <a href={`${bolumHref}rss.xml`}>RSS</a>
+    {sonraki && <> · <a href={sonraki.href} rel="next">Sayı {sonraki.sayiNo} →</a></>}
   </p>
 ) : (
   <nav class="gezinme" aria-label="Önceki ve sonraki sayı">
-    {onceki ? <a href={onceki.href} class="onceki" rel="prev">← No {onceki.sayiNo} · {onceki.trTarih}</a> : <span />}
-    {sonraki ? <a href={sonraki.href} class="sonraki" rel="next">No {sonraki.sayiNo} · {sonraki.trTarih} →</a> : <span />}
+    {/* Tek adlandırma: "Sayı 34" — kicker, künye ve ana sayfa da öyle yazar. */}
+    {onceki ? <a href={onceki.href} class="onceki" rel="prev">← Sayı {onceki.sayiNo} · {onceki.trTarih}</a> : <span />}
+    {sonraki ? <a href={sonraki.href} class="sonraki" rel="next">Sayı {sonraki.sayiNo} · {sonraki.trTarih} →</a> : <span />}
   </nav>
 )}
 

@@ -17,10 +17,9 @@ import KayitKarti from '../components/KayitKarti.astro';
 import RejimSerit from '../components/RejimSerit.astro';
 import HatlarTablosu from '../components/HatlarTablosu.astro';
 import { dersleriTopla } from '../lib/dersListesi';
-import { SEVIYE_ETIKET } from '../lib/dersGruplari';
-import { sonBulten, sayi } from '../lib/anaSayfa';
+import { sonBulten, sayi, OLAGANDISI_SIGMA, sigmaBasligi } from '../lib/anaSayfa';
 import { kartlar as analizKartlari } from '../lib/analizListesi';
-import { istanbulSaat, degisim } from '../lib/bicim';
+import { istanbulSaat, degisim, olcuYaz, tarihYaz, isoGun, istanbulGunu } from '../lib/bicim';
 import { bultenler, teknikler } from '../lib/yayinlar';
 
 const sirala = <T extends { data: { pubDate: Date; durum: string } }>(liste: T[]) =>
@@ -40,17 +39,17 @@ const hatlar = projeler.map((p) => ({
   durum: p.data.durum,
 }));
 const vurgu = b.manset?.parcalar.map((r) => r.ad) ?? [];
-// σ eşiği: bültenin yazı katmanına verdiği eşikle aynı. Ana sayfada yalnız
-// gerçekten olağandışı olanlar görünür, sıralamanın tamamı değil.
+// Ana sayfa listesi 1,3σ üstünü gösterir (sıralamanın tamamı değil).
+// "Olağandışı" başlığının eşiği ayrıdır ve tek tanımdır (OLAGANDISI_SIGMA, 2σ):
+// eski yorum 1,3σ'yı "yazı katmanına verilen eşikle aynı" diye anlatıyordu,
+// oysa YAZIM.md 2σ diyor.
 const olagandisi = b.sigma.filter((s) => Math.abs(s.sigma) >= 1.3).slice(0, 5);
 // Olağandışılığın penceresi son bültenin kipini izler: hafta içi gün, pazar
 // haftaya bakış yayımlandığında HAFTA. Başlık ve oynaklık etiketi sabit
 // "günlük" yazıyordu ve pazar günü haftalık oynaklıkları "20g" diye
 // etiketliyordu (30.08.2026).
 const sigmaHaftalik = b.sigmaKip === 'haftalik';
-const sigmaBaslik = sigmaHaftalik
-  ? 'Haftanın olağandışı hareketleri'
-  : 'Günün olağandışı hareketleri';
+const sigmaBaslik = sigmaBasligi(olagandisi.map((s) => s.sigma), sigmaHaftalik);
 const oynaklikEtiketi = sigmaHaftalik ? '20h oynaklık' : '20g oynaklık';
 // Ölçüm damgası koşucuda UTC ile atılıyor ve dilim taşımıyor; okura İstanbul
 // saati yazılır (eskiden ham "04:30" basılıyordu — 07:30'un UTC hâli).
@@ -69,32 +68,84 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
   {
     b.var ? (
       <section class="ana-ust yuksel">
-        <p class="ana-kunye">
-          <span>{b.trTarih}</span>
-          <span>{b.gun}</span>
-          {sayiNo && <span>Sayı {sayiNo}</span>}
-          {olcumSaati && <span>ölçüm {olcumSaati}'da kuruldu</span>}
-          <span>{hatlar.length} hat</span>
-          <span>{b.enstruman} enstrüman</span>
-        </p>
-        {b.manset ? (
-          <h1 class="ana-manset">{b.manset.metin}</h1>
-        ) : (
-          <h1 class="ana-manset">Türkiye makrosunu ölçülmüş verilerle okumak.</h1>
-        )}
-        <p class="ana-manset-alt">
-          Yukarıdaki cümle bir yorum değil: rejim panosunun iki satırından kuruldu ve
-          ikisi de aşağıda kendi hesabıyla duruyor. Türkiye makro verisi her sabah
-          yeniden ölçülüyor, her sayı kendi tarihini taşıyor.
-          <a class="ana-bulten-bag" href={b.bultenHref}>
-            {b.bultenYazili
-              ? (b.bultenHaftalik ? 'Haftaya bakış →' : 'Günün bülteni →')
-              : (b.bultenTrTarih ? `Son yazılmış sayı · ${b.bultenTrTarih} →` : 'Bülten →')}
-          </a>
-          {sonTeknik && (
-            <a class="ana-bulten-bag" href={sonTeknik.href}>Haftalık teknik analiz · No {sonTeknik.sayiNo} →</a>
+        <div class="ana-bas">
+          {/* İlk ekranda uzun tarih dört kez geçiyordu (üst şerit, künye, takvim
+              başlığı, bülten bağı). Künye tarihi kısa ve saatle birlikte yazar;
+              ek saate göre değiştiği için ("07:20'de") ek kullanılmaz. */}
+          <p class="ana-kunye">
+            <span>ölçüm {tarihYaz(b.tarih)}{olcumSaati && ` · ${olcumSaati}`}</span>
+            {sayiNo && <span>Sayı {sayiNo}</span>}
+            <span>{hatlar.length} hat</span>
+            <span>{b.enstruman} enstrüman</span>
+          </p>
+          {b.manset ? (
+            <h1 class="ana-manset">{b.manset.metin}</h1>
+          ) : (
+            <h1 class="ana-manset">Türkiye makrosunu ölçülmüş verilerle okumak.</h1>
           )}
-        </p>
+          {/* Manşetin altında sitenin kendi kuruluşunu anlatan bir paragraf
+              duruyordu ("Yukarıdaki cümle bir yorum değil…"); okurun kararını
+              değiştirmiyordu. Yerinde yayınlara giden bağlar var. */}
+          <ul class="ana-yayinlar">
+            <li>
+              <a href={b.bultenHref}>
+                <span class="ay-tur">{b.bultenHaftalik ? 'Haftaya bakış' : 'Günlük bülten'}</span>
+                <span class="ay-ad">{b.bultenYazili
+                  ? `${b.bultenTrTarih}${sonYazili ? ` · Sayı ${sonYazili.sayiNo}` : ''}`
+                  : (b.bultenTrTarih ? `Son yazılmış sayı · ${b.bultenTrTarih}` : 'Bülten arşivi')}</span>
+              </a>
+            </li>
+            {sonTeknik && (
+              <li>
+                <a href={sonTeknik.href}>
+                  <span class="ay-tur">Haftalık teknik analiz</span>
+                  <span class="ay-ad">Sayı {sonTeknik.sayiNo}</span>
+                </a>
+              </li>
+            )}
+            {analizler[0] && (
+              <li>
+                <a href={`/analiz/${analizler[0].yazi.id}/`}>
+                  <span class="ay-tur">Son analiz</span>
+                  <span class="ay-ad">{analizler[0].yazi.data.title}</span>
+                </a>
+              </li>
+            )}
+          </ul>
+        </div>
+        {(b.takvimGunu.length > 0 || b.siradaki.length > 0) && (
+          <aside class="ana-gun" aria-label="Takvim">
+            {b.takvimGunu.length > 0 && (
+              <>
+                <h2 class="ag-baslik etiket">{isoGun(istanbulGunu()) === b.tarih ? 'Bugün' : b.trTarih} · takvim · saatler TSİ</h2>
+                <ol class="ag-liste">
+                  {b.takvimGunu.map((k) => (
+                    <li class:list={{ birinci: k.onem === 1 }}>
+                      <span class="ag-saat">{k.saat || '—'}</span>
+                      <span class="ag-ulke">{k.ulke}</span>
+                      <span class="ag-olay">{k.olay}</span>
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )}
+            {b.siradaki.length > 0 && (
+              <>
+                <h2 class="ag-baslik etiket">Sıradaki birinci derece veriler</h2>
+                <ol class="ag-liste">
+                  {b.siradaki.map((k) => (
+                    <li>
+                      <span class="ag-saat">{k.trTarih.replace(/ \d{4}$/, '')}</span>
+                      <span class="ag-ulke">{k.ulke}</span>
+                      <span class="ag-olay">{k.olay}</span>
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )}
+            <a class="ag-tumu" href={`${b.bultenHref}#takvim`}>Takvimin tamamı →</a>
+          </aside>
+        )}
       </section>
     ) : (
       <section class="ana-ust yuksel">
@@ -121,10 +172,8 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
           </a>
         </div>
         <p class="bolum-giris yuksel" style="--d: 100ms">
-          Gösterge şeridi seviyeyi verir; bu pano seviyelerin <b>birlikte</b> ne anlama
-          geldiğini. Her satır iki ölçülen büyüklüğün farkıdır, hesabı yanında yazar ve
-          etiketi açıkça ilan edilmiş bir eşikten gelir — okur katılmadığı yerde kendi
-          çizgisini çekebilsin diye.
+          Her satır iki ölçülen büyüklüğün farkı; etiket, hesabın yanında yazan açık bir
+          eşikten gelir. Değer hareket ettiyse altında bir önceki ölçüme göre farkı yazar.
         </p>
         <div class="yuksel" style="--d: 140ms">
           <RejimSerit satirlar={b.rejim} vurgu={vurgu} />
@@ -144,21 +193,24 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
           </a>
         </div>
         <p class="bolum-giris yuksel" style="--d: 100ms">
-          Hareketler kendi oynaklıklarına bölünerek sıralanır: bir varlığın
-          {sigmaHaftalik ? ' haftalık değişimi, son 20 haftanın' : ' günlük değişimi, son 20 günün'}
-          standart sapmasının kaç katı? Yüzdesi küçük bir hareket olağandışı, büyük bir
-          hareket sıradan olabilir — ham yüzde bunu söylemez.
+          {sigmaHaftalik ? 'Haftalık değişim, son 20 haftanın' : 'Günlük değişim, son 20 günün'}
+          standart sapmasına bölünür: yüzdesi küçük bir hareket olağandışı, büyük bir
+          hareket sıradan olabilir.
+          {Math.max(...olagandisi.map((s) => Math.abs(s.sigma))) < OLAGANDISI_SIGMA &&
+            " Bu listede 2σ'yı aşan hareket yok; 1,3σ üstündekiler gösteriliyor."}
         </p>
         <ul class="sg-liste yuksel" style="--d: 140ms">
           {olagandisi.map((s) => (
             <li>
               <span class="sg-ad">{s.ad}</span>
+              {/* bp satırında birim iki kez basılıyordu: degisim() "bp"yi zaten
+                  yazıyor, ardından ayrı bir "bp" etiketi geliyordu. */}
               <span class="sg-deger">
-                {yuzdeliYaz(s.deger, s.birim)}
+                {s.birim === 'bp' ? sayi(s.deger, 1, true) : yuzdeliYaz(s.deger, s.birim)}
                 {s.birim === 'bp' && <span class="sg-birim">bp</span>}
               </span>
-              <span class="sg-sigma">{sayi(s.sigma, 1, true)}σ</span>
-              <span class="sg-oynaklik">{oynaklikEtiketi} {sayi(s.oynaklik, 2)}</span>
+              <span class:list={['sg-sigma', { arti: s.sigma > 0, eksi: s.sigma < 0 }]}>{sayi(s.sigma, 1, true)}σ</span>
+              <span class="sg-oynaklik">{oynaklikEtiketi} {olcuYaz(s.oynaklik, s.birim, 2)}</span>
             </li>
           ))}
         </ul>
@@ -173,9 +225,9 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
       <a class="tumu" href="/projeler/">Tümü →</a>
     </div>
     <p class="bolum-giris yuksel" style="--d: 100ms">
-      Her hat kendi kaynağından besleniyor ve kendi ritminde tazeleniyor. Tarih sütunu
-      hattın değil, <b>yanındaki büyüklüğün</b> saatini gösterir: aynı dosyada günlük bir
-      seri ile aylık bir seri yan yana durabilir ve ikisi aynı güne ait değildir.
+      Her hat kendi kaynağından, kendi yayım ritminde tazelenir. Tarih sütunu
+      <b>yanındaki büyüklüğün</b> tarihidir: aynı hatta günlük ve aylık seriler yan yana
+      durur ve aynı güne ait değildir.
     </p>
     <div class="yuksel" style="--d: 140ms">
       <HatlarTablosu hatlar={hatlar} />
@@ -196,9 +248,11 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
           Tek bir piyasa gelişmesini mekanizmasına, tarihsel emsaline ve fiyat etkisine
           kadar açan uzun yazılar.
         </p>
-        <div class="kayit-izgara">
+        {/* İki sütun: üç sütunlu genel ızgarada dört kart 3 + 1 diziliyor,
+            dördüncü kart tek başına bir satır açıyordu. */}
+        <div class="kayit-izgara ana-analiz">
           {analizler.map((k, i) => (
-            <KayitKarti href={`/analiz/${k.yazi.id}/`} sira={k.no} gecikme={120 + i * 60} {...k.yazi.data} ekBilgi={k.ekBilgi} tur="analiz" />
+            <KayitKarti href={`/analiz/${k.yazi.id}/`} sira={k.no} gecikme={120 + i * 60} {...k.yazi.data} ekBilgi={k.ekBilgi} tur="analiz" etiketler={false} />
           ))}
         </div>
       </section>
@@ -232,21 +286,9 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
                 {g.dersler.length} ders · {g.toplamSure}
               </span>
             </div>
-            <p class="konu-aciklama">{g.grup.aciklama}</p>
-            <ol class="konu-dersler">
-              {g.dersler.map((d) => (
-                <li>
-                  <a class="ders-ad" href={d.href}>
-                    {d.data.title}
-                  </a>
-                  {d.data.ozet && <span class="ders-ozet">{d.data.ozet}</span>}
-                  <span class="ders-olcu">
-                    {d.olcuMetni}
-                    {d.data.seviye && ` · ${SEVIYE_ETIKET[d.data.seviye]} seviye`}
-                  </span>
-                </li>
-              ))}
-            </ol>
+            {/* Ana sayfa manşettir, katalog değil: her konu tek satır (ad ·
+                ders sayısı · süre). Tam liste açıklamalarıyla /arastirma/
+                sayfasında; ana sayfanın yarısını katalog kaplıyordu. */}
           </section>
         ))
       }
@@ -259,10 +301,66 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
      Manşet ölçüden kurulduğu için üstünde künye durur: tarih, gün, ölçümün
      kurulduğu saat, hat ve enstrüman sayısı. Okur daha kaydırmadan hem
      tazeliği hem ölçeği görür. */
+  /* İlk ekran iki sütun: solda manşet ve yayınlar, sağda ölçüm gününün
+     takvimi. Blok 58ch'e kilitliyken 1360 pikselde sağ yarı boş kalıyordu ve
+     "bugün ne var" sorusunun cevabı ana sayfada hiç yoktu. */
   .ana-ust {
     padding: 2.6rem 0 0.5rem;
-    max-width: 58ch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem 3.2rem;
   }
+  .ana-bas { max-width: 40rem; }
+  @media (min-width: 1000px) {
+    .ana-ust { grid-template-columns: minmax(0, 1.6fr) minmax(17rem, 1fr); align-items: start; }
+  }
+
+  .ana-yayinlar {
+    list-style: none; margin: 1.3rem 0 0; padding: 0;
+    display: grid; gap: 0; border-top: 1px solid var(--ink-30);
+  }
+  .ana-yayinlar li { border-bottom: 1px dotted var(--ink-15); }
+  .ana-yayinlar a {
+    display: grid; grid-template-columns: 11.5rem minmax(0, 1fr); gap: 0.2rem 1rem;
+    align-items: baseline; padding: 0.55rem 0; text-decoration: none;
+  }
+  .ana-yayinlar a:hover .ay-ad { color: var(--claret); }
+  .ay-tur {
+    font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--claret);
+  }
+  .ay-ad { font-size: 1rem; line-height: 1.35; color: var(--ink); }
+  .ay-ad::after { content: ' →'; color: var(--claret); }
+  @media (max-width: 640px) {
+    .ana-yayinlar a { grid-template-columns: 1fr; }
+  }
+
+  .ana-gun {
+    border-top: 2px solid var(--ink);
+    padding-top: 0.7rem;
+  }
+  .ag-baslik {
+    display: block; margin: 0 0 0.45rem; font-size: 0.7rem; color: var(--ink-70);
+  }
+  .ag-baslik:not(:first-child) { margin-top: 1.2rem; }
+  .ag-liste { list-style: none; margin: 0; padding: 0; }
+  .ag-liste li {
+    display: grid; grid-template-columns: 4.6rem 2.6rem minmax(0, 1fr); gap: 0 0.6rem;
+    align-items: baseline; padding: 0.38rem 0; border-bottom: 1px dotted var(--ink-15);
+    font-size: 0.9rem; line-height: 1.35;
+  }
+  .ag-liste li.birinci .ag-olay { font-weight: 600; }
+  .ag-saat, .ag-ulke {
+    font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-70);
+    white-space: nowrap; font-variant-numeric: tabular-nums;
+  }
+  .ag-ulke { color: var(--claret); }
+  .ag-tumu {
+    display: inline-block; margin-top: 0.7rem; font-family: var(--font-mono);
+    font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
+    text-decoration: none; color: var(--claret);
+  }
+  .ag-tumu:hover { text-decoration: underline; text-underline-offset: 0.25em; }
   .ana-kunye {
     display: flex;
     flex-wrap: wrap;
@@ -326,6 +424,11 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
     text-underline-offset: 0.25em;
   }
 
+  .ana-analiz { grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 820px) {
+    .ana-analiz { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
   /* ── Ortak bölüm girişi ────────────────────────────────────── */
   .bolum-giris {
     max-width: 66ch;
@@ -374,12 +477,16 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
     color: var(--ink-50);
     margin-left: 0.25rem;
   }
-  /* σ bordo: sayfadaki asıl bilgi bu sütun — ham yüzde değil. */
+  /* σ sayfadaki asıl bilgi — ham yüzde değil. Renk YÖNÜ taşır, bültenle aynı
+     sözleşme: artı yeşil, eksi bordo. İşaretten bağımsız bordo, +2σ'lık bir
+     yükselişi de "düşüş" renginde gösterirdi. */
   .sg-sigma {
     font-size: 1rem;
     font-weight: 600;
-    color: var(--claret);
+    color: var(--ink);
   }
+  .sg-sigma.arti { color: var(--pozitif); }
+  .sg-sigma.eksi { color: var(--claret); }
   .sg-oynaklik {
     font-family: var(--font-mono);
     font-size: 0.66rem;
@@ -400,15 +507,14 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
   /* ── Dersler bölümü ────────────────────────────────────────── */
   .konu-bloklari {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    /* min(…, 100%): 320 piksellik ekranda 330 piksellik en dar sütun kaba
+       sığmıyor ve sayfa yana kayıyordu (WCAG yeniden akış). */
+    grid-template-columns: repeat(auto-fit, minmax(min(330px, 100%), 1fr));
     gap: 2rem 2.5rem;
   }
   .konu-blok {
     border-top: 1px solid var(--ink-30);
-    padding-top: 0.9rem;
-  }
-  .konu-ust {
-    margin-bottom: 0.55rem;
+    padding: 0.8rem 0 0.2rem;
   }
   .konu-no {
     font-family: var(--font-mono);
@@ -439,56 +545,10 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
     text-transform: uppercase;
     color: var(--ink-50);
   }
-  .konu-aciklama {
-    margin: 0 0 0.9rem;
-    font-size: 0.94rem;
-    line-height: 1.55;
-    color: var(--ink-70);
-  }
-  .konu-dersler {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    counter-reset: ders;
-  }
-  .konu-dersler li {
-    counter-increment: ders;
-    position: relative;
-    padding: 0.55rem 0 0.6rem 1.8rem;
-    border-top: 1px dotted var(--ink-15);
-  }
-  .konu-dersler li::before {
-    content: counter(ders, decimal-leading-zero);
-    position: absolute;
-    left: 0;
-    top: 0.72rem;
-    font-family: var(--font-mono);
-    font-size: 0.64rem;
-    font-weight: 600;
-    color: var(--claret);
-  }
-  .ders-ad {
-    display: block;
-    font-family: var(--font-display);
-    font-variation-settings: 'opsz' 20;
-    font-size: 1.02rem;
-    font-weight: 560;
-    line-height: 1.3;
-    text-decoration: none;
-  }
-  .ders-ozet {
-    display: block;
-    margin-top: 0.2rem;
-    font-size: 0.9rem;
-    line-height: 1.45;
-    color: var(--ink-70);
-  }
-  .ders-olcu {
-    display: block;
-    margin-top: 0.3rem;
-    font-family: var(--font-mono);
-    font-size: 0.64rem;
-    letter-spacing: 0.05em;
-    color: var(--ink-50);
+  /* TELEFON TABANI (≤640 px): meta etiket en az 0,75rem, sayı en az 0,8125rem.
+     Ölçüldü (390 px): 12 pikselin altındaki karakter payı ana sayfada %24,1 — en yoğun
+     katmanlar not, tarih ve konum satırlarıydı; sayı hücreleri zaten 13,4 px. */
+  @media (max-width: 640px) {
+    .ag-baslik, .konu-olcu { font-size: 0.75rem; }
   }
 </style>

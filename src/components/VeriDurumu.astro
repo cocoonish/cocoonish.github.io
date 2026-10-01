@@ -97,6 +97,7 @@ const uyari = typeof o?.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
     data-vd-anahtar={tanim?.anahtar}
     data-vd-ondalik={tanim?.ondalik}
     data-vd-isaret={tanim?.isaret ? '1' : undefined}
+    data-vd-birim={tanim?.birim || undefined}
     data-vd-tarih-alani={tanim?.tarihAlani}
     role="note"
     aria-label="Veri durumu"
@@ -105,7 +106,7 @@ const uyari = typeof o?.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
     {m.olcu && (
       <span class="vd-parca vd-manset">
         <span class="vd-ad">manşet</span>
-        <b data-vd-manset>{m.deger ?? '—'}{m.deger && m.birim ? ` ${m.birim}` : ''}</b>
+        <b data-vd-manset>{m.metin ?? '—'}</b>
         <span class="vd-yas">
           {m.olcu} · <span data-vd-manset-tarih>{m.tarih || '—'}</span>
           {' '}<span data-vd-manset-yas>{yasMetni(m.yas)}</span>
@@ -146,7 +147,7 @@ const uyari = typeof o?.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
   // Sayfa açılınca aynı dosya yeniden okunur: derleme ile ziyaret arasında
   // hat koşmuşsa manşet, tarih, yaş ve hüküm güncellenir. Kurallar sunucu
   // tarafındakiyle AYNI kaynaktan (lib/bicim, lib/anaSayfa sözleşmesi).
-  import { sayi, tariheCevir, tarihYaz, yasMetni, gunFarki } from '../lib/bicim';
+  import { olcuYaz, tariheCevir, tarihYaz, yasMetni, gunFarki } from '../lib/bicim';
 
   const yasHesapla = (s: unknown): number | null => {
     const d = tariheCevir(s);
@@ -169,8 +170,10 @@ const uyari = typeof o?.uyari_sayisi === 'number' ? o.uyari_sayisi : null;
       if (anahtar && typeof o[anahtar] === 'number' && Number.isFinite(o[anahtar])) {
         const mEl = el.querySelector('[data-vd-manset]');
         const ondalik = parseInt(el.dataset.vdOndalik ?? '1', 10);
-        const birim = mEl?.textContent?.replace(/^[^ ]+ ?/, '') ?? '';
-        if (mEl) mEl.textContent = `${sayi(o[anahtar], ondalik, el.dataset.vdIsaret === '1')}${birim ? ` ${birim}` : ''}`;
+        // Birim metinden sökülmez, tanımdan okunur: yüzde ÖNDE yazıldığı için
+        // "ilk sözcükten sonrası birimdir" varsayımı artık tutmaz.
+        const birim = el.dataset.vdBirim ?? '';
+        if (mEl) mEl.textContent = olcuYaz(o[anahtar], birim, ondalik, el.dataset.vdIsaret === '1');
         const alan = el.dataset.vdTarihAlani;
         const mt = (alan && typeof o[alan] === 'string' && o[alan])
           || (typeof o[`${anahtar}_tarih`] === 'string' && o[`${anahtar}_tarih`])

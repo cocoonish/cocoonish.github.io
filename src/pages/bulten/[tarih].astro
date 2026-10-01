@@ -3,6 +3,7 @@ import Base from '../../layouts/Base.astro';
 import BultenGovde from '../../components/BultenGovde.astro';
 import SayiGezinme from '../../components/SayiGezinme.astro';
 import { bultenler, type BultenKaydi } from '../../lib/yayinlar';
+import { ayniGunYayimlar } from '../../lib/ayniGun';
 import { hatSayfalari } from '../../lib/hatSayfa';
 
 export async function getStaticPaths() {
@@ -27,6 +28,9 @@ const b = kayit.b;
 // slug'a ya da 404'e düşmesin.
 const hatSayfa = await hatSayfalari();
 const tur = kayit.haftalik ? 'Haftaya bakış' : 'Günlük bülten';
+// AYNI GÜN yayımlananlar: 30.09 bülteni aynı gün çıkan borçlanma analizine,
+// pazar sayısı aynı günün teknik sayısına gövdede hiç bağ vermiyordu.
+const ayniGun = await ayniGunYayimlar(kayit.tarih);
 ---
 
 <Base
@@ -36,7 +40,7 @@ const tur = kayit.haftalik ? 'Haftaya bakış' : 'Günlük bülten';
   yayinTarihi={kayit.olcumZamani}
   guncellemeTarihi={kayit.yaziTarihi || kayit.olcumZamani}
 >
-  <SayiGezinme konum="ust" bolumHref="/bulten/" />
-  <BultenGovde b={b} kayit={kayit} hatSayfa={hatSayfa} />
+  <SayiGezinme konum="ust" bolumHref="/bulten/" onceki={onceki} sonraki={sonraki} />
+  <BultenGovde b={b} kayit={kayit} hatSayfa={hatSayfa} oncekiB={onceki?.b ?? null} ayniGun={ayniGun} />
   <SayiGezinme konum="alt" bolumHref="/bulten/" onceki={onceki} sonraki={sonraki} />
 </Base>

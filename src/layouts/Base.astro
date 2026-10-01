@@ -159,5 +159,37 @@ if (yapisalVeri) yapisal.push({ '@context': 'https://schema.org', ...yapisalVeri
       <slot />
     </main>
     <Footer />
+    <script>
+      // KAYDIRMA KABI YALNIZ KAYARKEN odak durağıdır. Kap sunucuda sekme
+      // durağı olarak basılır (betik yoksa dar ekranda tablo klavyeyle yine
+      // kaydırılabilsin, WCAG 2.1.1); betik kaymayan kaptan tabindex ve
+      // bölge rolünü kaldırır ve adı tablonun kendi başlığından kurar.
+      // Masaüstünde bir bültende 18 özdeş "Kaydırılabilir tablo" durağı
+      // vardı ve hiçbiri kaymıyordu.
+      const kaplar = [...document.querySelectorAll<HTMLElement>('[data-kaydir]')];
+      const ayarla = () => {
+        for (const k of kaplar) {
+          if (k.scrollWidth > k.clientWidth + 1) {
+            const baslik = k.querySelector('caption')?.textContent?.trim();
+            k.setAttribute('tabindex', '0');
+            k.setAttribute('role', 'region');
+            k.setAttribute('aria-label', baslik ? `${baslik} (kaydırılabilir)` : 'Kaydırılabilir tablo');
+          } else {
+            k.removeAttribute('tabindex');
+            k.removeAttribute('role');
+            k.removeAttribute('aria-label');
+          }
+        }
+      };
+      if (kaplar.length) {
+        ayarla();
+        if ('ResizeObserver' in window) {
+          const g = new ResizeObserver(() => ayarla());
+          kaplar.forEach((k) => g.observe(k));
+        } else {
+          addEventListener('resize', ayarla, { passive: true });
+        }
+      }
+    </script>
   </body>
 </html>
