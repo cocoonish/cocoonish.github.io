@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
    Site bölümleri — TEK kaynak.
 
-   Başlıktaki gezinme "01 Bülten · 02 Teknik · 03 Analiz …" derken liste
+   Başlıktaki gezinme "01 Bülten · 02 Analiz · 03 Projeler …" derken liste
    sayfalarının kicker'ları başka numaralar yazıyordu: Analiz "02 — Bölüm",
    Projeler "03 — Bölüm", Dersler ve Arama "04 — Bölüm", Hakkında "03 —
    Bölüm". Üç yer elle tutulduğu için sessizce ayrışmıştı. Numara, ad, adres
@@ -19,6 +19,9 @@ export interface Bolum {
   gezinme: boolean;
   /** RSS beslemesi varsa yolu. */
   rss?: string;
+  /** Yayını sona ermiş bölüm: sayfaları kendi adreslerinde durur; gezinmede,
+   *  alt bilginin yayın kolonunda ve besleme listesinde görünmez. */
+  arsiv?: boolean;
 }
 
 export const BOLUMLER: Bolum[] = [
@@ -27,32 +30,35 @@ export const BOLUMLER: Bolum[] = [
     aciklama: 'Hafta içi her sabah günlük, pazar akşamı haftaya bakış: ölçülen piyasa, takvim ve günün okuması.',
   },
   {
-    no: '02', ad: 'Teknik', href: '/teknik/', gezinme: true, rss: '/teknik/rss.xml',
-    aciklama: 'Haftalık teknik analiz: altı enstrüman, üç zaman dilimi, ölçüme dayalı senaryolar.',
-  },
-  {
-    no: '03', ad: 'Analiz', href: '/analiz/', gezinme: true, rss: '/analiz/rss.xml',
+    no: '02', ad: 'Analiz', href: '/analiz/', gezinme: true, rss: '/analiz/rss.xml',
     aciklama: 'Tek bir piyasa gelişmesini mekanizmasına, emsaline ve fiyat etkisine kadar açan uzun yazılar.',
   },
   {
-    no: '04', ad: 'Projeler', href: '/projeler/', gezinme: true,
+    no: '03', ad: 'Projeler', href: '/projeler/', gezinme: true,
     aciklama: 'Kendi kaynağından beslenen, kendi ritminde tazelenen veri panoları; her sayı kendi tarihini taşır.',
   },
   {
-    no: '05', ad: 'Dersler', href: '/arastirma/', gezinme: true,
+    no: '04', ad: 'Dersler', href: '/arastirma/', gezinme: true,
     aciklama: 'Faiz, kur, opsiyon ve teknik analiz üzerine ders formatında uzun notlar.',
   },
   {
-    no: '06', ad: 'İndikatörler', href: '/indikatorler/', gezinme: true,
+    no: '05', ad: 'İndikatörler', href: '/indikatorler/', gezinme: true,
     aciklama: 'Derslerde öğretilen yöntemlerin TradingView karşılığı: kaynağı açık, eşiği dersten gelen Pine Script indikatörleri.',
   },
   {
-    no: '07', ad: 'Hakkında', href: '/hakkinda/', gezinme: true,
+    no: '06', ad: 'Hakkında', href: '/hakkinda/', gezinme: true,
     aciklama: 'Sitenin amacı, yayın ilkeleri, yayın takvimi ve düzeltme politikası.',
   },
   {
-    no: '08', ad: 'Arama', href: '/arama/', gezinme: true,
+    no: '07', ad: 'Arama', href: '/arama/', gezinme: true,
     aciklama: 'Başlık, etiket ve metinlerde tam metin arama.',
+  },
+  // Haftalık teknik analiz 27.09.2026 sayısıyla sona erdi (01.10.2026, kullanıcı
+  // kararı). Beş sayı kendi adreslerinde arşivde duruyor; bölüm gezinmeden ve
+  // besleme listesinden çıktı, numarası sona alındı ki gezinmede boşluk kalmasın.
+  {
+    no: '08', ad: 'Teknik arşivi', href: '/teknik/', gezinme: false, rss: '/teknik/rss.xml', arsiv: true,
+    aciklama: 'Haftalık teknik analizin 30 Ağustos–27 Eylül 2026 arasında yayımlanan beş sayısı; yayın 27 Eylül 2026 sayısıyla sona erdi.',
   },
 ];
 
@@ -70,5 +76,5 @@ export function kicker(href: string): string {
 /** Beslemesi olan bölümler (Base.astro <link rel="alternate"> için). */
 export const BESLEMELER = [
   { ad: 'TTO Trading — tüm yayınlar', href: '/rss.xml' },
-  ...BOLUMLER.filter((b) => b.rss).map((b) => ({ ad: `TTO Trading — ${b.ad}`, href: b.rss! })),
+  ...BOLUMLER.filter((b) => b.rss && !b.arsiv).map((b) => ({ ad: `TTO Trading — ${b.ad}`, href: b.rss! })),
 ];

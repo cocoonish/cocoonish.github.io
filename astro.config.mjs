@@ -19,7 +19,8 @@ export default defineConfig({
         const m = item.url.match(/\/(bulten|teknik)\/(\d{4}-\d{2}-\d{2})\/$/);
         if (m) return { ...item, lastmod: `${m[2]}T00:00:00Z`, changefreq: 'never' };
         if (/\/(bulten|teknik)\/$|\/$/.test(item.url) && !/\/(analiz|projeler|arastirma)\//.test(item.url))
-          return { ...item, changefreq: item.url.endsWith('/teknik/') ? 'weekly' : 'daily' };
+          // /teknik/ arşivdir (yayın 27.09.2026 sayısıyla sona erdi): değişmez.
+          return { ...item, changefreq: item.url.endsWith('/teknik/') ? 'never' : 'daily' };
         return item;
       },
     }),

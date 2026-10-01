@@ -1,12 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
 import { BOLUMLER, kicker } from '../lib/bolumler';
-import { bultenler, teknikler } from '../lib/yayinlar';
+import { bultenler } from '../lib/yayinlar';
 import { getCollection } from 'astro:content';
 import yayinTakvimi from '../data/yayin_takvimi.json';
 
 const nBulten = bultenler().length;
-const nTeknik = teknikler().length;
 const nAnaliz = (await getCollection('analiz')).length;
 const nProje = (await getCollection('projeler')).length;
 const nDers = (await getCollection('arastirma')).length;
@@ -37,7 +36,6 @@ const takvim = (yayinTakvimi as any).yayinlar.map((y: any) => {
       <p class="ozet">Türkiye makrosunu ölçülmüş verilerle okumak: bir arşiv, bir laboratuvar ve bir yayın organının kesişimi.</p>
       <div class="makale-meta">
         <span><b>Bülten</b> {nBulten} sayı</span>
-        <span><b>Teknik</b> {nTeknik} sayı</span>
         <span><b>Analiz</b> {nAnaliz} yazı</span>
         <span><b>Proje</b> {nProje} pano</span>
         <span><b>Ders</b> {nDers}</span>
@@ -110,7 +108,7 @@ const takvim = (yayinTakvimi as any).yayinlar.map((y: any) => {
       <p>
         Tablodaki saatler zamanlanmış koşuların hedef saatidir: yazı daha erken biterse
         sayı daha erken çıkar, koşucu gecikirse sarkabilir.
-        Bülten ve teknik analiz yalnız yazı katmanı tamamlandığında yayımlanır; ölçüm
+        Bülten yalnız yazı katmanı tamamlandığında yayımlanır; ölçüm
         hazır olsa da yorumu yazılmamış bir sayı siteye çıkmaz. Bu yüzden bir sabah sayı
         gecikirse sayfa bir önceki tam sayıyı gösterir, yarım bir taslağı değil.
       </p>
@@ -135,8 +133,8 @@ const takvim = (yayinTakvimi as any).yayinlar.map((y: any) => {
 
       <h2>Takip</h2>
       <p>
-        Bütün yayınlar <a href="/rss.xml">RSS</a> ile izlenebilir; bülten, teknik analiz ve
-        analiz için ayrı beslemeler alt bilgide listelenir.
+        Bütün yayınlar <a href="/rss.xml">RSS</a> ile izlenebilir; bülten ve analiz için ayrı
+        beslemeler alt bilgide listelenir.
       </p>
 
       <h2>Sorumluluk notu</h2>

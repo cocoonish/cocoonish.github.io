@@ -3,7 +3,8 @@ import { getCollection } from 'astro:content';
 import { bultenler, teknikler } from '../lib/yayinlar';
 import { rssBelgesi, RSS_BASLIK, type BeslemeOgesi } from '../lib/rss';
 
-/** Tüm yayınlar tek beslemede: bülten, teknik analiz, analiz yazıları. */
+/** Tüm yayınlar tek beslemede: bülten, analiz yazıları ve teknik analiz arşivinin
+ *  (yayın 27.09.2026 sayısıyla sona erdi) beş sayısı. */
 export async function GET({ site }: APIContext) {
   const ogeler: BeslemeOgesi[] = [];
   for (const k of bultenler())
@@ -25,7 +26,7 @@ export async function GET({ site }: APIContext) {
   return new Response(
     rssBelgesi(site, {
       baslik: 'TTO Trading — tüm yayınlar',
-      aciklama: 'Türkiye makro ve piyasa araştırmaları: günlük bülten, haftalık teknik analiz ve analiz yazıları.',
+      aciklama: 'Türkiye makro ve piyasa araştırmaları: günlük bülten, haftaya bakış ve analiz yazıları.',
       yol: '/rss.xml',
       ogeler: ogeler.slice(0, 60),
     }),

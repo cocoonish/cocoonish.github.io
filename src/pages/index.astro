@@ -20,7 +20,7 @@ import { dersleriTopla } from '../lib/dersListesi';
 import { sonBulten, sayi, OLAGANDISI_SIGMA, sigmaBasligi } from '../lib/anaSayfa';
 import { kartlar as analizKartlari } from '../lib/analizListesi';
 import { istanbulSaat, degisim, olcuYaz, tarihYaz, isoGun, istanbulGunu } from '../lib/bicim';
-import { bultenler, teknikler } from '../lib/yayinlar';
+import { bultenler } from '../lib/yayinlar';
 
 const sirala = <T extends { data: { pubDate: Date; durum: string } }>(liste: T[]) =>
   liste
@@ -57,7 +57,6 @@ const olcumSaati = istanbulSaat(b.olusturma);
 // Yazılmış son sayının numarası (ölçülen katman yazıdan bağımsızdır; numara
 // yalnız yazılmış sayılar arasında sayılır, o yüzden ayrı okunur).
 const sonYazili = bultenler()[0];
-const sonTeknik = teknikler()[0];
 const sayiNo = sonYazili && sonYazili.tarih === b.tarih ? sonYazili.sayiNo : null;
 
 // Yüzde ÖNDE, bp ARKADA — kural lib/bicim'de tek yerde.
@@ -95,14 +94,6 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
                   : (b.bultenTrTarih ? `Son yazılmış sayı · ${b.bultenTrTarih}` : 'Bülten arşivi')}</span>
               </a>
             </li>
-            {sonTeknik && (
-              <li>
-                <a href={sonTeknik.href}>
-                  <span class="ay-tur">Haftalık teknik analiz</span>
-                  <span class="ay-ad">Sayı {sonTeknik.sayiNo}</span>
-                </a>
-              </li>
-            )}
             {analizler[0] && (
               <li>
                 <a href={`/analiz/${analizler[0].yazi.id}/`}>

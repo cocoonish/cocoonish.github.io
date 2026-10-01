@@ -13,13 +13,12 @@
  */
 import { SITE_TITLE, SITE_TAGLINE } from '../consts';
 import { BOLUMLER } from '../lib/bolumler';
-import { bultenler, teknikler } from '../lib/yayinlar';
+import { bultenler } from '../lib/yayinlar';
 
 
 const yol = Astro.url.pathname;
 const linkler = BOLUMLER.filter((b) => b.gezinme);
 const son = bultenler()[0];
-const sonTeknik = teknikler()[0];
 // Okur zaten o sayıdaysa "Son bülten" bağı bulunduğu sayfayı tekrar eder.
 const burada = (href: string) => yol.replace(/\/+$/, '') === href.replace(/\/+$/, '');
 ---
@@ -36,9 +35,6 @@ const burada = (href: string) => yol.replace(/\/+$/, '') === href.replace(/\/+$/
             <a class="son-bulten" href={son.href}>
               {son.haftalik ? 'Son haftaya bakış' : 'Son bülten'} · {son.trTarih}
             </a>
-          )}
-          {sonTeknik && !burada(sonTeknik.href) && (
-            <a class="son-bulten son-teknik" href={sonTeknik.href}>Son teknik · {sonTeknik.trTarih}</a>
           )}
         </span>
       ) : (
@@ -108,9 +104,6 @@ const burada = (href: string) => yol.replace(/\/+$/, '') === href.replace(/\/+$/
     color: var(--claret);
   }
   .son-yayinlar { display: inline-flex; gap: 1.2rem; }
-  @media (max-width: 760px) {
-    .son-teknik { display: none; }
-  }
   .baslik-satir {
     display: flex;
     align-items: flex-end;

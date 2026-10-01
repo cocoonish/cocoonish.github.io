@@ -10,8 +10,9 @@ const yil = new Date().getFullYear();
 // olan bölüm bir YAYIN, olmayan bir KAYNAKTIR. Liste elle tutulduğunda yeni bir
 // bölüm başlık gezinmesinde çıkıp alt bilgide çıkmıyordu ve hiçbir yer bunu
 // söylemiyordu — "İndikatörler" eklenirken tam bu oldu.
-const yayinlar = BOLUMLER.filter((b) => b.rss);
-const kaynaklar = BOLUMLER.filter((b) => !b.rss && b.href !== '/hakkinda/');
+// Yayını sona ermiş bölüm (arsiv) yayın değildir, kaynaktır: sayfaları durur.
+const yayinlar = BOLUMLER.filter((b) => b.rss && !b.arsiv);
+const kaynaklar = BOLUMLER.filter((b) => (!b.rss || b.arsiv) && b.href !== '/hakkinda/');
 ---
 
 <footer>

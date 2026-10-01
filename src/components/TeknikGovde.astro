@@ -1,11 +1,12 @@
 ---
 /**
- * Haftalık teknik analiz bülteninin gövdesi — çok zaman dilimli.
+ * Haftalık teknik analiz bülteninin gövdesi — çok zaman dilimli. ARŞİV:
+ * yayın 27.09.2026 sayısıyla sona erdi (kullanıcı kararı, 01.10.2026); beş
+ * yayımlanmış sayı bu bileşenle basılmaya devam eder.
  *
- * Ölçülen katman teknik/olc.py'den gelir (1 saatlik / 4 saatlik / günlük
- * dilimlerde göstergeler, seviyeler, yapı ölçümü, grafikler); yorum katmanı
- * bir Claude oturumunca yazılır ve teknik/yaz.py kapısından geçer — andığı
- * her sayı ölçümde birebir vardır.
+ * Ölçülen katman o zaman teknik/olc.py'den geliyordu (kaldırıldı; git
+ * geçmişinde); yorum katmanı yayımlandığı gün yazıldı. Arşive bundan sonra
+ * yalnız düzeltme kaydı yazılır (teknik/yaz.py).
  */
 import GrafikEmbed from './GrafikEmbed.astro';
 import Kunye from './Kunye.astro';
@@ -51,6 +52,13 @@ for (const e of b.enstrumanlar ?? [])
   for (const d of ['s1', 's4', 'gun'])
     if (e.grafikler?.[d]) grafikNo.set(`${e.slug}:${d}`, String(++sayac).padStart(2, '0'));
 
+// Her sayının grafikleri KENDİ klasöründe durur (/teknik/<tarih>/…). Ölçüm
+// koşusu figürleri tarihsiz bir yola yazıyordu ve her pazar bir öncekinin
+// üzerine yazdığı için arşivdeki her sayı en son haftanın grafiğini gösterirdi;
+// yayın sona erince sayılar yayımlandıkları haftanın figürleriyle donduruldu.
+// Kayıttaki yol olduğu gibi kalır (ölçülen katmana dokunulmaz), çeviri burada.
+const tarihliGrafik = (src: string) => src.replace(/^\/teknik\/(?!\d{4}-\d{2}-\d{2}\/)/, `/teknik/${b.tarih}/`);
+
 const DILIMLER = [
   { kod: 's1', ad: '1 saatlik' },
   { kod: 's4', ad: '4 saatlik' },
@@ -89,6 +97,8 @@ const kisaZaman = (t: string | null) => {
   <header class="kunye">
     <p class="etiket kicker">Haftalık teknik analiz{kayit && <span class="kicker-sayi"> · Sayı {kayit.sayiNo}</span>}</p>
     <h1>{b.tr_tarih}</h1>
+    <p class="arsiv-not">Haftalık teknik analiz 27 Eylül 2026 sayısıyla sona erdi. Bu sayı
+      yayımlandığı haftanın ölçümü ve grafikleriyle arşivde duruyor.</p>
     <Kunye hucreler={kunye} genis etiket="Sayı künyesi" />
     <p class="metodoloji">
       Her enstrüman üç zaman diliminde (1 saatlik, 4 saatlik, günlük) ayrı ayrı
@@ -283,7 +293,7 @@ const kisaZaman = (t: string | null) => {
           (d, j) =>
             e.grafikler?.[d.kod] && (
               <GrafikEmbed
-                src={e.grafikler[d.kod]}
+                src={tarihliGrafik(e.grafikler[d.kod])}
                 baslik={`${e.ad} — ${d.ad.toLowerCase()} mum, SMA50/200, regresyon kanalı, pivot seviyeleri, RSI, MACD`}
                 no={grafikNo.get(`${e.slug}:${d.kod}`) ?? String(i * 3 + j + 1).padStart(2, '0')}
               />
@@ -324,6 +334,8 @@ const kisaZaman = (t: string | null) => {
     padding-left: 0.8rem; max-width: 46rem;
   }
   .giris { font-size: 1.02rem; max-width: 46rem; margin: 1.4rem 0 2rem; }
+  .arsiv-not { font-size: 0.92rem; color: var(--ink-60); max-width: 46rem; margin: 0.2rem 0 1rem;
+    border-left: 2px solid var(--claret); padding-left: 0.7rem; }
   .enstruman { border-top: 1px solid var(--ink-30); padding-top: 1.4rem; margin-top: 2.2rem; }
   .baslik { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
   .baslik h2 { font-family: var(--font-display); margin: 0; }
