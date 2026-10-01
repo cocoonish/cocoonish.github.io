@@ -54,8 +54,19 @@ export async function GET() {
     tags: [k.haftalik ? 'haftaya bakış' : 'günlük'],
     // Biçim 3'te olguların TEK evi manşet ve `ozet.ne_oldu`dur; okuma onları
     // yeniden saymaz — dışarıda kalınca TMSF/ÖTV aramada hiçbir sayfa bulmuyordu.
-    govde: duzMetin([k.b.manset, k.b.ozet?.ne_oldu, k.b.ozet?.ne_bekleniyor, k.b.yorum,
-                     ...Object.values(k.b.gundem ?? {})].filter(Boolean).join(' ')).slice(0, 6000),
+    // Haftalık sayının sınırı ve SIRASI ayrı (01.10.2026): 6–9 bin kelimelik
+    // haftaya bakış ~50 bin karakter. Okumayı senaryolardan önce koyunca rehber
+    // aralığının ortasında senaryolar 12.000'in DIŞINDA kalıyordu (risk 12.111.
+    // karakterde başlıyor). Senaryolar okumadan önce gelir: rehberin üst
+    // uçlarında bile (manşet + 10 madde + 1.000 kelime risk) önek ~11.000
+    // karakter, yani senaryoların tamamı aranır; okuma kalan payla kesilir,
+    // öbür bölümler aranmaz. Endeks yılda ~300 KB büyür (günlükler aynı).
+    govde: duzMetin((k.haftalik
+      ? [k.b.manset, k.b.ozet?.ne_oldu, k.b.gundem?.risk, k.b.yorum,
+         ...Object.entries(k.b.gundem ?? {}).filter(([id]) => id !== 'risk').map(([, v]) => v)]
+      : [k.b.manset, k.b.ozet?.ne_oldu, k.b.ozet?.ne_bekleniyor, k.b.yorum,
+         ...Object.values(k.b.gundem ?? {})]).filter(Boolean).join(' '))
+      .slice(0, k.haftalik ? 12000 : 6000),
   }));
   const teknikKayitlari = teknikler().map((k) => ({
     tur: 'teknik',

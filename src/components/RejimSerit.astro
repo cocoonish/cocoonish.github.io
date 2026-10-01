@@ -20,8 +20,10 @@ interface Props {
   satirlar: RejimSatiri[];
   /** Manşette anılan satırlar — şeritte de işaretlenir. */
   vurgu?: string[];
+  /** Farkın kıyas noktası (haftalık sayıda bir önceki haftalık sayı). */
+  kiyas?: string;
 }
-const { satirlar, vurgu = [] } = Astro.props;
+const { satirlar, vurgu = [], kiyas = 'önceki ölçüme göre' } = Astro.props;
 
 const bicim = (s: RejimSatiri) => {
   if (s.deger === null) return '—';
@@ -59,7 +61,7 @@ const farkYaz = (s: RejimSatiri): string | null => {
           {bicim(s)}
           {s.birim !== '%' && s.deger !== null && <span class="rj-birim">{s.birim}</span>}
           {farkYaz(s) && (
-            <span class="rj-fark" title="Bir önceki ölçüme göre"><span class="gorunmez">önceki ölçüme göre </span>{farkYaz(s)}</span>
+            <span class="rj-fark" title={'Bir ' + kiyas}><span class="gorunmez">{kiyas} </span>{farkYaz(s)}</span>
           )}
         </span>
         <span class="rj-etiket">{s.etiket}</span>

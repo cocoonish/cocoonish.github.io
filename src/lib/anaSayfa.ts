@@ -88,6 +88,9 @@ export interface AnaSayfaVerisi {
   enstruman: number;
   hatSayisi: number;
   rejim: RejimSatiri[];
+  /** Rejim farkının kıyası, okura yazımı ("önceki ölçüme göre" · haftalık sayıda
+   *  "önceki haftalık sayıya göre") — RejimSerit'in `kiyas` girdisi. */
+  rejimKiyas: string;
   sigma: SigmaSatiri[];
   /**
    * σ listesinin kıyas penceresi: 'gunluk' | 'haftalik'. Ana sayfa başlığı ve
@@ -406,6 +409,7 @@ export function sonBulten(): AnaSayfaVerisi {
     enstruman: 0,
     hatSayisi: 0,
     rejim: [],
+    rejimKiyas: 'önceki ölçüme göre',
     sigma: [],
     sigmaKip: 'gunluk',
     manset: null,
@@ -435,9 +439,19 @@ export function sonBulten(): AnaSayfaVerisi {
 
   // Önceki ölçüm: bir önceki bülten dosyası. Aynı ad taşıyan satırın değeri
   // `onceki` olur; dosya ya da satır yoksa fark hiç yazılmaz.
-  const onceki = dosyalar.length > 1
-    ? oku<Record<string, any>>(path.join(BULTEN_DIZIN, dosyalar[dosyalar.length - 2]))
-    : null;
+  // Biçim 3 HAFTALIK sayıda kıyas bir önceki YAZILMIŞ haftalık sayıdır — haftalık
+  // sayfanın kendi rejim şeridiyle aynı nokta (yayinlar.rejimKiyasi). Cuma
+  // günlüğüne bakınca pazar günü ana sayfa ile haftalık sayı aynı satır için
+  // ters yönlü fark basıyordu (01.10.2026).
+  let onceki: Record<string, any> | null = null;
+  if (b.haftalik && Number(b.surum ?? 2) >= 3) {
+    for (let i = dosyalar.length - 2; i >= 0; i--) {
+      const aday = oku<Record<string, any>>(path.join(BULTEN_DIZIN, dosyalar[i]));
+      if (aday?.haftalik && aday?.gundem_kaynagi === 'yazili') { onceki = aday; break; }
+    }
+  } else if (dosyalar.length > 1) {
+    onceki = oku<Record<string, any>>(path.join(BULTEN_DIZIN, dosyalar[dosyalar.length - 2]));
+  }
   const oncekiDeger = new Map<string, number>(
     (Array.isArray(onceki?.rejim) ? (onceki!.rejim as any[]) : [])
       .filter((r: any) => r && typeof r.deger === 'number')
@@ -472,6 +486,7 @@ export function sonBulten(): AnaSayfaVerisi {
     enstruman,
     hatSayisi: Object.keys(HAT_MANSET).length,
     rejim,
+    rejimKiyas: b.haftalik && Number(b.surum ?? 2) >= 3 ? 'önceki haftalık sayıya göre' : 'önceki ölçüme göre',
     sigma,
     sigmaKip: b?.piyasa?.en_cok_hareket?.sigma_kip ?? 'gunluk',
     manset: mansetKur(rejim),

@@ -105,6 +105,20 @@ export function bultenler(): BultenKaydi[] {
   return _bultenler;
 }
 
+/** Rejim panosunun farkının kıyas sayısı. Biçim 3 HAFTALIK sayıda bir önceki
+ *  haftalık sayı (pano "hafta içindeki yönü" göstersin; cuma günlüğüne göre fark
+ *  bir haftalık sayıda cuma→pazar farkıdır ve 27.09'da enflasyon risk priminin
+ *  haftalık yönünü TERS gösteriyordu), öbür sayılarda bir önceki sayı. Biçim 2
+ *  arşivinde kıyas değişmez: yayımlanmış sayının fark sütunu yayımlandığı gibi kalır. */
+export function rejimKiyasi(kayit: BultenKaydi): BultenKaydi | null {
+  const hepsi = bultenler();
+  const i = hepsi.findIndex((x) => x.tarih === kayit.tarih);
+  if (i < 0) return null;
+  const once = hepsi.slice(i + 1);
+  const haftalik3 = kayit.haftalik && Number(kayit.b?.surum ?? 2) >= 3;
+  return (haftalik3 ? once.find((x) => x.haftalik) : once[0]) ?? null;
+}
+
 let _teknikler: TeknikKaydi[] | null = null;
 
 /** Yazılmış teknik sayılar, EN YENİSİ başta. */

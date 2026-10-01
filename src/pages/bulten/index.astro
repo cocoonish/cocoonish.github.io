@@ -5,7 +5,7 @@
  */
 import Base from '../../layouts/Base.astro';
 import BultenGovde from '../../components/BultenGovde.astro';
-import { bultenler } from '../../lib/yayinlar';
+import { bultenler, rejimKiyasi } from '../../lib/yayinlar';
 import { hatSayfalari } from '../../lib/hatSayfa';
 import { ayniGunYayimlar } from '../../lib/ayniGun';
 
@@ -44,7 +44,7 @@ const ayniGun = son ? await ayniGunYayimlar(son.tarih) : [];
         <a href="/bulten/rss.xml" class="nav-oge rss-link" title="RSS beslemesi">RSS</a>
         <a href="/bulten/arsiv/" class="nav-oge arsiv-link">Tüm arşiv ({hepsi.length})</a>
       </nav>
-      <BultenGovde b={son.b} kayit={son} hatSayfa={hatSayfa} oncekiB={hepsi[1]?.b ?? null} ayniGun={ayniGun} />
+      <BultenGovde b={son.b} kayit={son} hatSayfa={hatSayfa} oncekiB={rejimKiyasi(son)?.b ?? null} ayniGun={ayniGun} />
       <section class="arsiv">
         <h2>Önceki sayılar <a class="tumu" href="/bulten/arsiv/">tümü →</a></h2>
         {arsiv.length > 0 ? (
