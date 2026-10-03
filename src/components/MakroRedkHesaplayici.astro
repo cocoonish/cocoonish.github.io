@@ -1,0 +1,185 @@
+---
+/**
+ * REDK dengesi ve çıpa terimi — Makrodan Kura ve Faize dersi, Bölüm 7 (Araç 3).
+ *   sapma      x = ln(REDK / denge)                 (artı: ortalamaya göre pahalı TL; TCMB yönü)
+ *   h ay sonra E[x_h] = ρ^h · x
+ *   yarı ömür  ln 0,5 / ln ρ
+ *   A'ya doğru yıllık çekim = q'nun bir yıllık beklenen değişimi = −(ρ^12 − 1) · x
+ *              (artı: TL'nin reel değer kaybı). A çıpanın kendisidir (Bölüm 1: lim E q); bu
+ *              çıktı çıpanın seviyesi değil, ona doğru beklenen bir yıllık harekettir.
+ * ρ aylık özbağlanım katsayısıdır; seçenekler Bölüm 7'nin ölçümünden (medyan-yansız, %90 aralığının
+ * iki ucu, sıradan en küçük kareler). Bu bir çekim terimidir, yön ve zamanlama tahmini değildir:
+ * aralığın üst ucu 1'e dayanır (çekim yok).
+ * Taşıma kıyası: yıllık çekim REEL faiz farkıyla (B bloğu, R) kıyaslanır, nominal taşımayla DEĞİL.
+ * Dolar cinsinden taşımanın fazla getirisi i − i* − Δs = (i − π) − (i* − π*) − Δq (Bölüm 7, Türkiye
+ * paragrafı): çekim Δq ile yarışan kalem reel faiz farkıdır. Nominal taşıma (i − i*) ≈ R + enflasyon
+ * farkı; enflasyon farkını reel kuru sabit tutan nominal değer kaybı zaten yer, yani çekimi nominal
+ * taşımayla kıyaslamak harcanmış bir tamponu taşımanın lehine sayar (açılışta bir aylık nominal taşıma
+ * %2,74 en küçük kareler çekimini −%2,67 "küçük" gösterir; reel karşılığı ~%1,3 onu aşar). İkisi de
+ * yıllık: çekim bir yıllık beklenen değişim, R bir yıllık beklenen reel faiz farkı.
+ * R Taylor aracından gelir (zincirin yukarısı; giriş: Taylor → Borç → REDK → Kur); Taylor olayı yalnız
+ * yorum satırını yeniden yazar, bu aracın olayını yeniden yayınlamaz (Kur aracındaki elle girilmiş
+ * sapma ezilmesin). Taylor durumu yoksa açılış R'si (arac.json → kur.R; Taylor'ın açılış girdileriyle).
+ * Zincir: 'makro-redk-guncellendi' olayıyla Kurun üç bloğu aracına akar; o araç YALNIZ sapmayı okur,
+ * kalıcılık ve yıllık çekim ona akmaz.
+ */
+import A from '../data/makro-kur-ve-faiz/arac.json';
+const r = A.redk;
+const k = A.kur;
+// Üst uç 1'e dayanıyorsa o seçenek dönüş yok demektir; "en yavaş dönüş" yalnız ρ < 1 iken doğru.
+const ustAd = r.rho_ust >= 1 ? 'dönüş yok, ρ = 1' : 'en yavaş dönüş';
+---
+
+<div class="hesap" id="makro-redk" data-rho-alt={r.rho_alt} data-rho-ust={r.rho_ust} data-r={k.R}>
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı 3</span>
+    <span class="hesap-ad">REDK Dengesi — Çıpa Terimi (A Bloğu)</span>
+  </div>
+
+  <p class="hesap-yonerge">
+    TCMB reel efektif kurunun dengeden sapmasını ve kalıcılığa göre beklenen sönümünü hesaplar.
+    Varsayılanlar {r.tarih_metin} ölçümüdür. Kalıcılık seçimini değiştirin: aynı sapma, aralığın
+    iki ucunda çok farklı bir çekim üretir.
+  </p>
+
+  <div class="girdiler">
+    <label><span class="etiket">Güncel REDK (TÜFE bazlı)</span>
+      <input type="number" id="mr-redk" value={r.redk} step="0.5" /></label>
+    <label><span class="etiket">Denge</span>
+      <select id="mr-denge-sec">
+        <option value={r.denge_tam} selected>1994–2026 ortalaması</option>
+        <option value={r.denge_2003}>2003–2026 ortalaması</option>
+        <option value="elle">Elle</option>
+      </select></label>
+    <label><span class="etiket">Denge REDK</span>
+      <input type="number" id="mr-denge" value={r.denge_tam} step="0.5" /></label>
+    <label><span class="etiket">Kalıcılık <span class="harf-koru">ρ</span> (aylık)</span>
+      <select id="mr-rho-sec">
+        <option value={r.rho_mu} selected>medyan-yansız kestirim</option>
+        <option value={r.rho_alt}>%90 aralığının alt ucu (hızlı dönüş)</option>
+        <option value={r.rho_ust}>%90 aralığının üst ucu ({ustAd})</option>
+        <option value={r.rho_ols}>sıradan en küçük kareler (aşağı yanlı)</option>
+        <option value="elle">Elle</option>
+      </select></label>
+    <label><span class="etiket"><span class="harf-koru">ρ</span></span>
+      <input type="number" id="mr-rho" value={r.rho_mu} step="0.001" min="0" max="1" /></label>
+    <label><span class="etiket">Ufuk (ay)</span>
+      <input type="number" id="mr-h" value="12" step="1" min="1" /></label>
+  </div>
+
+  <div class="saglama">
+    <div class="sag-satir">
+      <div><span class="etiket">Sapma (log, %)</span><output class="ara-deger" id="mr-sapma">—</output></div>
+      <div><span class="etiket">Yarı ömür</span><output class="ara-deger" id="mr-yo">—</output></div>
+      <div><span class="etiket">Ufuk sonu beklenen sapma</span><output class="ara-deger" id="mr-son">—</output></div>
+      <div><span class="etiket">A'ya doğru yıllık çekim: <span class="harf-koru">q</span>'nun beklenen değişimi</span><output class="ara-deger" id="mr-a">—</output></div>
+    </div>
+    <p class="mini-not" id="mr-yorum">—</p>
+  </div>
+</div>
+
+<script>
+  const kab = document.getElementById('makro-redk') as HTMLElement;
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const yaz = (id: string, m: string) => ((document.getElementById(id) as HTMLElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b }).replace('-', '−');
+  const yz = (x: number, b = 2, arti = false) => (x < 0 ? '−' : arti && x > 0 ? '+' : '') + '%' + tr(Math.abs(x), b);
+  const tr4 = (x: number) => (x === 1 ? '1' : tr(x, 4));
+
+  // Python eşi (dogrula.py): aynı üç formül.
+  const sapmaHesap = (redk: number, denge: number) => Math.log(redk / denge) * 100;
+  const yariOmur = (rho: number) => (rho > 0 && rho < 1 ? Math.log(0.5) / Math.log(rho) : Infinity);
+  const aBlok = (rho: number, sapma: number) => -(Math.pow(rho, 12) - 1) * sapma;
+
+  // Ölçülen %90 aralığı (Bölüm 7): seçilen ρ bunun dışındaysa yorum bunu söyler.
+  const RHO_ALT = parseFloat(kab.dataset.rhoAlt || 'NaN'), RHO_UST = parseFloat(kab.dataset.rhoUst || 'NaN');
+  const puan = (x: number, b = 2) => (x > 0 ? '+' : '') + tr(x, b) + ' puan';
+  // Reel faiz farkı R (B bloğu): Taylor aracından; Taylor durumu yoksa açılış değeri.
+  let rTaylor = parseFloat(kab.dataset.r || 'NaN');
+  let sonDurum: { x: number; a: number; rho: number; yo: number } | null = null;
+
+  function yorumYaz(x: number, a: number, rho: number, yo: number) {
+    const parca: string[] = [];
+    if (rho >= 1) parca.push(`ρ = 1 seçildi: sapma kalıcıdır, yıllık çekim sıfırdır.`);
+    else if (x > 0) parca.push(`TL ortalamaya göre <b>pahalı</b>: çekim reel değer kaybı yönünde.`);
+    else if (x < 0) parca.push(`TL ortalamaya göre <b>ucuz</b>: çekim reel değer kazancı yönünde.`);
+    else parca.push(`REDK dengede: çekim yoktur.`);
+    if (rho < 1 && a !== 0) {
+      parca.push(`Seçilen ρ ile yıllık çekim ${yz(a, 2, true)}.`);
+      if (isFinite(rTaylor)) {
+        const R = rTaylor;
+        const yon = a < 0 ? 'lehine' : 'aleyhine';
+        parca.push(R > 0
+          ? `Dolar cinsinden taşımanın beklenen fazla getirisi kabaca reel faiz farkı eksi çekimdir; Taylor aracındaki ` +
+            `reel faiz farkı ${puan(R)}: çekim taşımanın ${yon} çalışır ve ${Math.abs(a) < R ? 'reel faiz farkından küçüktür' : 'reel faiz farkını aşar'}.`
+          : `Taylor aracındaki reel faiz farkı ${puan(R)}: taşımanın reel getirisi çekimden önce de artı değildir; ` +
+            `çekim taşımanın ${yon} çalışır.`);
+      }
+    }
+    if (isFinite(RHO_ALT) && isFinite(RHO_UST) && (rho < RHO_ALT || rho > RHO_UST))
+      parca.push(`Seçilen ρ ölçülen %90 aralığının (${tr4(RHO_ALT)} – ${tr4(RHO_UST)}) dışındadır.`);
+    if (rho < 1 && isFinite(yo) && yo >= 12)
+      parca.push(`Yarı ömrü yıllarla ölçülen bir çekim haftalık bir görüşün gerekçesi olamaz.`);
+    (document.getElementById('mr-yorum') as HTMLElement).innerHTML = parca.join(' ');
+  }
+
+  function hesapla() {
+    const redk = oku('mr-redk'), denge = oku('mr-denge'), rho = oku('mr-rho'), h = Math.max(1, Math.round(oku('mr-h')));
+    if (!(redk > 0 && denge > 0 && rho >= 0 && rho <= 1)) return;
+    const x = sapmaHesap(redk, denge);
+    const yo = yariOmur(rho);
+    const son = Math.pow(rho, h) * x;
+    const a = aBlok(rho, x);
+    yaz('mr-sapma', yz(x, 1, true));
+    yaz('mr-yo', isFinite(yo) ? `${tr(yo, 0)} ay (${tr(yo / 12, 1)} yıl)` : rho >= 1 ? 'sonsuz (ρ = 1)' : 'bir aydan kısa (ρ = 0)');
+    yaz('mr-son', yz(son, 1, true));
+    yaz('mr-a', yz(a, 2, true) + ' / yıl');
+    sonDurum = { x, a, rho, yo };
+    yorumYaz(x, a, rho, yo);
+    const durum = { sapma: x, aBlok: a, rho, yariOmurAy: yo };
+    (window as any).makroDurum = Object.assign((window as any).makroDurum || {}, { redk: durum });
+    document.dispatchEvent(new CustomEvent('makro-redk-guncellendi', { detail: durum }));
+  }
+
+  for (const [sec, hedef] of [['mr-denge-sec', 'mr-denge'], ['mr-rho-sec', 'mr-rho']]) {
+    (document.getElementById(sec) as HTMLSelectElement).addEventListener('change', (e) => {
+      const v = (e.target as HTMLSelectElement).value;
+      if (v !== 'elle') (document.getElementById(hedef) as HTMLInputElement).value = v;
+      hesapla();
+    });
+  }
+  document.querySelectorAll('#makro-redk input').forEach((el) => el.addEventListener('input', hesapla));
+  // Taylor değişince yalnız yorum yeniden yazılır; bu aracın olayı yeniden yayınlanmaz.
+  document.addEventListener('makro-taylor-guncellendi', (e: Event) => {
+    const t = (e as CustomEvent).detail;
+    if (t && isFinite(t.R)) rTaylor = t.R;
+    if (sonDurum) yorumYaz(sonDurum.x, sonDurum.a, sonDurum.rho, sonDurum.yo);
+  });
+  const d0 = (window as any).makroDurum || {};
+  if (d0.taylor && isFinite(d0.taylor.R)) rTaylor = d0.taylor.R;
+  hesapla();
+</script>
+
+<style>
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.7rem;
+    padding: 0.9rem 1rem 0.4rem;
+  }
+  .saglama {
+    border-top: 1px solid var(--ink-15);
+    padding: 0.8rem 1rem;
+  }
+  .sag-satir {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 0.6rem;
+  }
+  @media (max-width: 720px) {
+    .girdiler {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

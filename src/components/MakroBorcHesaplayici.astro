@@ -1,0 +1,157 @@
+---
+/**
+ * Borç dinamiği — Makrodan Kura ve Faize dersi, Bölüm 6 (Araç 2).
+ *   d_{t+1} = [d_t · (1 + i) + α · d_t · ε] / (1 + g) − pb
+ *   pb*     = d · (i − g + α · ε) / (1 + g)        (borcu sabit tutan faiz dışı fazla)
+ * i örtük nominal faiz (faiz gideri / önceki stok), g nominal büyüme, α döviz cinsi pay,
+ * ε yıllık TL değer kaybı, pb faiz dışı fazla (% GSYH, açık eksi). Kur etkisi yalnız anapara
+ * üzerindendir; döviz faizinin kur farkı ikinci derecedendir ve dışarıda bırakılır.
+ * Blanchard koşulu: i − g < 0 ise kartopu borcu küçültür (faiz dışı açık bir ölçüye kadar sürdürülebilir).
+ * EM risk primi katsayısına VARSAYILAN KONMAZ: alan boştur; doldurulursa C bloğuna akar.
+ * Taylor aracını dinler: kural faizi örtük faize tam geçseydi pb* ne olurdu (uzun dönem karşılaştırması).
+ * Zincir: 'makro-taylor-guncellendi' → bu araç → 'makro-borc-guncellendi'.
+ */
+import A from '../data/makro-kur-ve-faiz/arac.json';
+const b = A.borc;
+---
+
+<div class="hesap" id="makro-borc">
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı 2</span>
+    <span class="hesap-ad">Borç Dinamiği — Kartopu, Kur ve Faiz Dışı Fazla</span>
+  </div>
+
+  <p class="hesap-yonerge">
+    Merkezi yönetim borç stokunun GSYH'ye oranını yıllık adımlarla ilerletir. Varsayılanlar
+    {b.tarih_metin} ölçümüdür. Değer kaybı girdisini 0'dan büyütmek kur şokunun borca etkisini,
+    faiz dışı fazlayı değiştirmek mali dönüşün etkisini gösterir.
+  </p>
+
+  <div class="girdiler">
+    <label><span class="etiket">Borç / GSYH <span class="harf-koru">d</span> (%)</span>
+      <input type="number" id="mb-d" value={b.d} step="0.5" /></label>
+    <label><span class="etiket">Döviz cinsi pay <span class="harf-koru">α</span> (%)</span>
+      <input type="number" id="mb-alfa" value={b.alfa} step="1" /></label>
+    <label><span class="etiket">Örtük nominal faiz <span class="harf-koru">i</span> (%)</span>
+      <input type="number" id="mb-i" value={b.i} step="0.5" /></label>
+    <label><span class="etiket">Nominal büyüme <span class="harf-koru">g</span> (%)</span>
+      <input type="number" id="mb-g" value={b.g} step="0.5" /></label>
+    <label><span class="etiket">Faiz dışı fazla <span class="harf-koru">pb</span> (% GSYH)</span>
+      <input type="number" id="mb-pb" value={b.pb} step="0.1" /></label>
+    <label><span class="etiket">Yıllık TL değer kaybı <span class="harf-koru">ε</span> (%)</span>
+      <input type="number" id="mb-e" value="0" step="5" /></label>
+    <label><span class="etiket">Ufuk (yıl)</span>
+      <input type="number" id="mb-h" value="5" step="1" min="1" max="15" /></label>
+    <label class="genis"><span class="etiket">İsteğe bağlı: borcun risk primine etkisi (bp / borç puanı)</span>
+      <input type="number" id="mb-prim" placeholder="boş — varsayılan yok" step="1" /></label>
+  </div>
+
+  <div class="tablo-kab">
+    <table>
+      <thead><tr><th>Yıl</th><th>d (% GSYH)</th><th>kartopu (puan)</th><th>kur etkisi (puan)</th><th>faiz dışı fazla (puan)</th></tr></thead>
+      <tbody id="mb-tablo"></tbody>
+    </table>
+  </div>
+
+  <div class="saglama">
+    <div class="sag-satir">
+      <div><span class="etiket">Borcu sabit tutan fazla <span class="harf-koru">pb*</span></span><output class="ara-deger" id="mb-pbs">—</output></div>
+      <div><span class="etiket"><span class="harf-koru">i − g</span></span><output class="ara-deger" id="mb-ig">—</output></div>
+      <div><span class="etiket">Ufuk sonu <span class="harf-koru">d</span></span><output class="ara-deger" id="mb-son">—</output></div>
+      <div><span class="etiket">%20 tek seferlik değer kaybının <span class="harf-koru">d</span> etkisi</span><output class="ara-deger" id="mb-sok">—</output></div>
+    </div>
+    <p class="mini-not" id="mb-yorum">—</p>
+    <p class="mini-not" id="mb-taylor">—</p>
+  </div>
+</div>
+
+<script>
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const yaz = (id: string, m: string) => ((document.getElementById(id) as HTMLElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b }).replace('-', '−');
+  const yz = (x: number, b = 2) => (x < 0 ? '−' : '') + '%' + tr(Math.abs(x), b);
+  const puan = (x: number, b = 2) => (x > 0 ? '+' : '') + tr(x, b) + ' puan';
+
+  // Python eşi (dogrula.py): aynı iki formül.
+  function adim(d: number, i: number, g: number, alfa: number, e: number, pb: number) {
+    const kartopu = (d * (i - g)) / (1 + g);
+    const kur = (alfa * d * e) / (1 + g);
+    return { d: d + kartopu + kur - pb, kartopu, kur };
+  }
+  const pbYildiz = (d: number, i: number, g: number, alfa: number, e: number) => (d * (i - g + alfa * e)) / (1 + g);
+
+  let sonTaylor: any = null;
+
+  function hesapla() {
+    const d0 = oku('mb-d'), alfa = oku('mb-alfa') / 100, i = oku('mb-i') / 100, g = oku('mb-g') / 100;
+    const pb = oku('mb-pb'), e = oku('mb-e') / 100, H = Math.max(1, Math.min(15, Math.round(oku('mb-h'))));
+    if (![d0, alfa, i, g, pb, e].every(isFinite)) return;
+    let d = d0, satir = `<tr><td>0</td><td><b>${tr(d0, 1)}</b></td><td>—</td><td>—</td><td>—</td></tr>`;
+    for (let t = 1; t <= H; t++) {
+      const s = adim(d, i, g, alfa, e, pb);
+      satir += `<tr><td>${t}</td><td><b>${tr(s.d, 1)}</b></td><td>${tr(s.kartopu, 2)}</td><td>${tr(s.kur, 2)}</td><td>${tr(-pb, 2)}</td></tr>`;
+      d = s.d;
+    }
+    (document.getElementById('mb-tablo') as HTMLElement).innerHTML = satir;
+    const pbs = pbYildiz(d0, i, g, alfa, e);
+    yaz('mb-pbs', yz(pbs) + ' GSYH');
+    yaz('mb-ig', puan((i - g) * 100));
+    yaz('mb-son', yz(d));
+    yaz('mb-sok', puan(alfa * d0 * 0.2));
+    (document.getElementById('mb-yorum') as HTMLElement).innerHTML =
+      (i < g
+        ? `i − g eksi: kartopu borcu <b>küçültüyor</b>. Bugünkü faiz dışı dengeyle (${yz(pb)}) borç ${d < d0 ? 'düşüyor' : 'yükseliyor'}.`
+        : `i − g artı: kartopu borcu <b>büyütüyor</b>; borcu sabit tutmak için ${yz(pbs)} faiz dışı fazla gerekir.`) +
+      ` Gerçek faiz düşük, büyüme yüksek olduğu sürece bu koşul kolay sağlanır; enflasyonun nominal büyümeyi şişirdiği yıllarda kolaylık geçicidir.`;
+    const prim = oku('mb-prim');
+    const primEk = isFinite(prim) ? prim * (d - d0) : null;
+    if (sonTaylor) {
+      const iT = sonTaylor.kural / 100;
+      (document.getElementById('mb-taylor') as HTMLElement).innerHTML =
+        `Taylor aracındaki kural faizi (${yz(sonTaylor.kural)}) örtük faize tam geçseydi pb* = <b>${yz(pbYildiz(d0, iT, g, alfa, e))}</b> olurdu ` +
+        `(örtük faiz stok yenilendikçe yavaş değişir; bu bir uzun dönem kıyasıdır).`;
+    }
+    const durum = { d0, dSon: d, pbYildiz: pbs, iEksiG: (i - g) * 100, primEkBp: primEk };
+    (window as any).makroDurum = Object.assign((window as any).makroDurum || {}, { borc: durum });
+    document.dispatchEvent(new CustomEvent('makro-borc-guncellendi', { detail: durum }));
+  }
+
+  document.addEventListener('makro-taylor-guncellendi', (e: Event) => {
+    sonTaylor = (e as CustomEvent).detail;
+    hesapla();
+  });
+  document.querySelectorAll('#makro-borc input').forEach((el) => el.addEventListener('input', hesapla));
+  sonTaylor = ((window as any).makroDurum || {}).taylor || null;
+  hesapla();
+</script>
+
+<style>
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.7rem;
+    padding: 0.9rem 1rem 0.4rem;
+  }
+  .girdiler .genis {
+    grid-column: span 2;
+  }
+  .tablo-kab {
+    padding: 0.6rem 1rem;
+    overflow-x: auto;
+  }
+  .saglama {
+    border-top: 1px solid var(--ink-15);
+    padding: 0.8rem 1rem;
+  }
+  .sag-satir {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 0.6rem;
+  }
+  @media (max-width: 720px) {
+    .girdiler {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

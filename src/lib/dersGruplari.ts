@@ -79,8 +79,10 @@ export const GRUPLAR: DersGrubu[] = [
     aciklama:
       'Türkiye piyasalarının otuz yedi yılı, epizot epizot: kırılganlığın nerede ' +
       'biriktiği, şokun hangi sırayla dolaştığı ve politikanın hangi kolu çektiği — ' +
-      'gerçek veriyle. Kural cümleleri göreli dille, epizot ölçümleri çıpalı tarihle.',
-    slugSirasi: ['turkiye-piyasa-tarihi'],
+      've bir makro haberin (bütçe, büyüme, enflasyon, reel kur, dış denge) faize ve ' +
+      'kura hangi terimden ulaştığı, gelişmiş ve gelişmekte olan ekonomilerde ayrı ayrı. ' +
+      'Gerçek veriyle; kural cümleleri göreli dille, ölçümler çıpalı tarihle.',
+    slugSirasi: ['turkiye-piyasa-tarihi', 'makro-kur-ve-faiz'],
     etiketler: ['makro', 'kriz', 'tcmb', 'tarih', 'türkiye', 'rezerv', 'enflasyon'],
   },
   {

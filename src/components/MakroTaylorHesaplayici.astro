@@ -1,0 +1,160 @@
+---
+/**
+ * Taylor kuralı ve reel faiz farkı — Makrodan Kura ve Faize dersi, Bölüm 3 (Araç 1).
+ *   kural faizi  i_T = r* + π + (φπ − 1)(π − π*) + φy · açık
+ *   reel faiz    r = (1 + i_b)/(1 + π) − 1    (Fisher, yıllık bileşik faizle: TL politika faizi bir haftalık
+ *                repo, i_b = (1 + i/52)^52 − 1; dolar gecelik, i_b = (1 + i/360)^365 − 1)
+ *   kotasyon dili (1 + i)/(1 + π) − 1 de yanında basılır: sitenin ex-ante reel faizi bu dildedir.
+ *   B bloğu      R = r_TL − r_yabancı          (kurun üç bloğundaki reel faiz farkı)
+ *   ∂E[r]/∂π = φπ − 1: 1 puanlık enflasyon sürprizi beklenen reel faizi (φπ − 1) puan oynatır.
+ * Varsayılan girdiler dersin ölçüm dosyasından (arac.json); sayılar yayım gününün ölçümüdür.
+ * Zincir: 'makro-taylor-guncellendi' olayıyla Borç ve Kurun üç bloğu araçlarına akar; REDK aracı R'yi
+ * yalnız yorum satırındaki taşıma kıyası için okur.
+ * Doğrulama (dogrula.py, Python eşi): aynı girdilerle kural faizi ve R birebir.
+ */
+import A from '../data/makro-kur-ve-faiz/arac.json';
+const t = A.taylor;
+---
+
+<div class="hesap" id="makro-taylor"
+  data-pi-anket={t.pi_anket} data-pi-gercek={t.pi_gerceklesen}
+  data-acik-alt={t.acik_alt} data-acik-ust={t.acik_ust}>
+  <div class="hesap-ust">
+    <span class="etiket">Hesap Aracı 1</span>
+    <span class="hesap-ad">Taylor Kuralı ve Reel Faiz Farkı</span>
+  </div>
+
+  <p class="hesap-yonerge">
+    Kural faizini ve iki ülkenin beklenen reel faizini hesaplar. Varsayılanlar {t.tarih_metin}
+    ölçümüdür: enflasyon beklentisi anketten, çıktı açığı Bölüm 3'ün bandının ortasından.
+    Çıktı açığı ölçülmez, bant olarak verilir — bandın iki ucunu da deneyin.
+  </p>
+
+  <div class="girdiler">
+    <label><span class="etiket">Enflasyon ölçüsü</span>
+      <select id="mt-olcu">
+        <option value="anket" selected>Anket, 12 ay sonrası beklenti</option>
+        <option value="gercek">Gerçekleşen, yıllık</option>
+        <option value="elle">Elle</option>
+      </select></label>
+    <label><span class="etiket">Enflasyon <span class="harf-koru">π</span> (%)</span>
+      <input type="number" id="mt-pi" value={t.pi_anket} step="0.1" /></label>
+    <label><span class="etiket">Hedef <span class="harf-koru">π*</span> (%)</span>
+      <input type="number" id="mt-hedef" value={t.pi_hedef} step="0.5" /></label>
+    <label><span class="etiket">Doğal reel faiz <span class="harf-koru">r*</span> (%)</span>
+      <input type="number" id="mt-rstar" value={t.r_yildiz} step="0.5" /></label>
+    <label><span class="etiket">Enflasyon katsayısı <span class="harf-koru">φ<sub>π</sub></span></span>
+      <input type="number" id="mt-phipi" value={t.phi_pi} step="0.1" /></label>
+    <label><span class="etiket">Açık katsayısı <span class="harf-koru">φ<sub>y</sub></span></span>
+      <input type="number" id="mt-phiy" value={t.phi_y} step="0.1" /></label>
+    <label><span class="etiket">Çıktı açığı (puan)</span>
+      <input type="number" id="mt-acik" value={t.acik_orta} step="0.25" /></label>
+    <label><span class="etiket">Politika faizi (%)</span>
+      <input type="number" id="mt-pol" value={t.politika} step="0.25" /></label>
+    <label><span class="etiket">Yabancı politika faizi (%)</span>
+      <input type="number" id="mt-iy" value={t.i_yabanci} step="0.25" /></label>
+    <label><span class="etiket">Yabancı enflasyon (%; açılışta son yıllık TÜFE)</span>
+      <input type="number" id="mt-piy" value={t.pi_yabanci} step="0.1" /></label>
+  </div>
+
+  <div class="saglama">
+    <div class="sag-satir">
+      <div><span class="etiket">Kural faizi</span><output class="ara-deger" id="mt-kural">—</output></div>
+      <div><span class="etiket">Politika − kural</span><output class="ara-deger" id="mt-fark">—</output></div>
+      <div><span class="etiket">Beklenen reel faiz (TL, bileşik)</span><output class="ara-deger" id="mt-r">—</output></div>
+      <div><span class="etiket">Aynısı kotasyon dilinde</span><output class="ara-deger" id="mt-rk">—</output></div>
+      <div><span class="etiket">Yabancı reel faiz</span><output class="ara-deger" id="mt-ry">—</output></div>
+      <div><span class="etiket">Reel faiz farkı R (B bloğu)</span><output class="ara-deger" id="mt-R">—</output></div>
+    </div>
+    <p class="mini-not" id="mt-yorum">—</p>
+  </div>
+
+  <p class="hesap-dip">
+    <b>Bant, nokta değil.</b> Açığın bandı {t.acik_alt_metin} ile {t.acik_ust_metin} arasındadır (sırasıyla HP
+    süzgecinin {t.acik_uclar_metin} sürümleri) ve r* için %0, %2 ve %4 denenir; aşağıdaki satır bu altı
+    bileşimin en düşük ve en yüksek kural faizini verir. Kurun terimi araçta yoktur: türetimi Bölüm 3'te;
+    δ ölçülmediği için katsayı konmadı.
+  </p>
+  <p class="mini-not" id="mt-bant">—</p>
+</div>
+
+<script>
+  const kab = document.getElementById('makro-taylor') as HTMLElement;
+  const oku = (id: string) => parseFloat((document.getElementById(id) as HTMLInputElement).value);
+  const yaz = (id: string, m: string) => ((document.getElementById(id) as HTMLElement).textContent = m);
+  const tr = (x: number, b = 2) =>
+    x.toLocaleString('tr-TR', { minimumFractionDigits: b, maximumFractionDigits: b }).replace('-', '−');
+  const yz = (x: number, b = 2) => (x < 0 ? '−' : '') + '%' + tr(Math.abs(x), b);
+  const puan = (x: number, b = 2) => (x > 0 ? '+' : '') + tr(x, b) + ' puan';
+
+  // Python eşi (dogrula.py) aynı üç fonksiyondur.
+  const kural = (rs: number, pi: number, hedef: number, phipi: number, phiy: number, acik: number) =>
+    rs + pi + (phipi - 1) * (pi - hedef) + phiy * acik;
+  const reel = (i: number, pi: number) => ((1 + i / 100) / (1 + pi / 100) - 1) * 100;
+  const haftalikBilesik = (i: number) => (Math.pow(1 + i / 100 / 52, 52) - 1) * 100;
+  const gecelikBilesik360 = (i: number) => (Math.pow(1 + i / 100 / 360, 365) - 1) * 100;
+
+  function hesapla() {
+    const pi = oku('mt-pi'), hedef = oku('mt-hedef'), rs = oku('mt-rstar');
+    const phipi = oku('mt-phipi'), phiy = oku('mt-phiy'), acik = oku('mt-acik');
+    const pol = oku('mt-pol'), iy = oku('mt-iy'), piy = oku('mt-piy');
+    if (![pi, hedef, rs, phipi, phiy, acik, pol, iy, piy].every(isFinite)) return;
+    const iT = kural(rs, pi, hedef, phipi, phiy, acik);
+    const r = reel(haftalikBilesik(pol), pi), ry = reel(gecelikBilesik360(iy), piy), R = r - ry;
+    const rk = reel(pol, pi);
+    yaz('mt-kural', yz(iT));
+    yaz('mt-fark', puan(pol - iT));
+    yaz('mt-r', yz(r));
+    yaz('mt-rk', yz(rk));
+    yaz('mt-ry', yz(ry));
+    yaz('mt-R', puan(R));
+    const egim = phipi - 1;
+    (document.getElementById('mt-yorum') as HTMLElement).innerHTML =
+      `φπ − 1 = <b>${tr(egim, 2)}</b>: 1 puanlık yukarı enflasyon sürprizi, politika kurala göre tepki verirse, ` +
+      `beklenen reel faizi <b>${puan(egim)}</b> değiştirir. ` +
+      (egim > 0
+        ? `Taylor ilkesi işliyor: kötü enflasyon haberi reel faizi yükseltir, kur için B bloğu destekleyici.`
+        : `Taylor ilkesi bozulmuş: kötü enflasyon haberi reel faizi düşürür; kur için B bloğu aleyhte ve C bloğu (prim) devreye girebilir.`);
+    const ACIKLAR = [parseFloat(kab.dataset.acikAlt || 'NaN'), parseFloat(kab.dataset.acikUst || 'NaN')];
+    const bant: number[] = [];
+    for (const a of ACIKLAR.filter(isFinite)) for (const rr of [0, 2, 4]) bant.push(kural(rr, pi, hedef, phipi, phiy, a));
+    yaz('mt-bant', bant.length
+      ? `Bant (açık iki uç × r* 0/2/4): ${yz(Math.min(...bant))} – ${yz(Math.max(...bant))}; politika faizi ${yz(pol)}.`
+      : '—');
+    const durum = { kural: iT, politika: pol, pi, r, ry, R, iYabanci: iy, piYabanci: piy };
+    (window as any).makroDurum = Object.assign((window as any).makroDurum || {}, { taylor: durum });
+    document.dispatchEvent(new CustomEvent('makro-taylor-guncellendi', { detail: durum }));
+  }
+
+  (document.getElementById('mt-olcu') as HTMLSelectElement).addEventListener('change', (e) => {
+    const v = (e.target as HTMLSelectElement).value;
+    const kaynak = v === 'anket' ? kab.dataset.piAnket : v === 'gercek' ? kab.dataset.piGercek : null;
+    if (kaynak) (document.getElementById('mt-pi') as HTMLInputElement).value = kaynak;
+    hesapla();
+  });
+  document.querySelectorAll('#makro-taylor input').forEach((el) => el.addEventListener('input', hesapla));
+  hesapla();
+</script>
+
+<style>
+  .girdiler {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.7rem;
+    padding: 0.9rem 1rem 0.4rem;
+  }
+  .saglama {
+    border-top: 1px solid var(--ink-15);
+    padding: 0.8rem 1rem;
+  }
+  .sag-satir {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 0.6rem;
+  }
+  @media (max-width: 720px) {
+    .girdiler {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
