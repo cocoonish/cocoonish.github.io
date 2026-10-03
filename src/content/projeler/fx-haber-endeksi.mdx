@@ -1,12 +1,38 @@
 ---
 title: 'FX haber-duyarlılık endeksi'
-description: 'FinBERT ile skorlanan haber akışından 15 varlıklık duyarlılık endeksi: kullanım kılavuzu, rejim dedektörü, fiyat karşılaştırması, korelasyon analizi ve manşet akışı.'
+description: 'FinBERT ile skorlanan haber akışından 15 varlıklık duyarlılık endeksi: kullanım kılavuzu, rejim dedektörü, fiyat karşılaştırması, örnek dışı kalibrasyon karnesi (tepki ve öngörü) ve manşet akışı.'
 pubDate: 2026-07-15
-updatedDate: 2026-08-27
+updatedDate: 2026-10-03
 tags: ['fx', 'sentiment', 'nlp']
 durum: 'aktif'
 kaynak: 'GDELT + Google News RSS + piyasa verisi'
 guncelleme: 'hafta içi her sabah (anlık endeks ve fiyat karşılaştırması); pazartesi (rejim ve korelasyon panelleri, kapanan hafta)'
+duzeltmeler:
+  - tarih: '2026-10-03'
+    alan: 'Şekil 09 · varlık başına korelasyon (22.07.2026 kalibrasyonu)'
+    eski: 'BIST 100 +0,54 · GBP/USD +0,53 · gümüş +0,43 (geçmiş 5 günlük getiriyle 20 günlük yuvarlanan korelasyonların ortalaması; parametre aynı veride seçilmiş)'
+    yeni: 'sonraki 5 günle örnek dışı ρ: en yüksek USD/JPY +0,23 (plasebo p 0,050); 15 varlığın ortalaması +0,008, plasebo p 0,450'
+    sebep: "Eski sayılar endeksi o güne kadar BİTEN 5 günlük getiriyle kıyaslıyordu, yani haber tonunun geçen haftanın fiyatını ne kadar yansıttığını ölçüyordu, sonraki haftayı değil; parametre de aynı veriye bakılarak seçilmişti. Yansıma bugün metallerde, S&P 500'de ve BIST 100'de belirgin (gümüş +0,69, altın +0,64, S&P 500 +0,60), dövizlerin çoğunda değil. Sonraki 5 günü öngörme ise parametre yalnız geçmişle seçilip plasebo ile sınandığında şanstan ayırt edilemiyor."
+  - tarih: '2026-10-03'
+    alan: 'Şekil 09 · seçilen getiri ufku'
+    eski: "15 varlığın 14'ü 5 günlük ufku seçti (istisna USD/SEK): haber tonu haftayı fiyatlar"
+    yeni: 'ufuk seçilmiyor: ana ufuk 5 gün, ikincisi 1 gün; ikisinde de 15 varlığın ortak sınaması şanstan ayrışmıyor (plasebo p 0,450 · 0,262)'
+    sebep: "Ufuk, geçmiş getiriyle kurulan korelasyonu büyüten değere göre seçiliyordu. 5 günlük geçmiş getiri haber akışının biriktiği pencereyle örtüşür; döviz dışı varlıklarda ayrıca endeks kapanıştan bir seans önce kesildiği için 1 günlük geçmiş getirinin çoğu endeksten sonra gerçekleşiyordu. İkisi de 5 günü büyük gösteriyordu; hiçbiri bir öngörü bulgusu değildi."
+  - tarih: '2026-10-03'
+    alan: 'Şekil 09 · kazanan parametrelerde 1 günlük gecikme (7 varlık)'
+    eski: 'USD/JPY, GBP/USD, USD/CAD, USD/NOK, S&P 500, ABD 2 yıllık, BIST 100: gecikme 1 gün'
+    yeni: 'gecikme yok: endeks fiyatın kapanış anına kadar yayımlanmış haberden kurulur'
+    sebep: "0 ve 1 günlük gecikme seçim ölçüsünde aynı sonucu veriyordu; '1 gün' ölçülmüş bir değer değil, eşit sonuçlar arasında kalan seçenekti."
+  - tarih: '2026-10-03'
+    alan: 'Şekil 04 · örnek ölçü'
+    eski: 'EUR/USD r = +0,18 (n = 66): ilişki pozitif ama zayıf'
+    yeni: "EUR/USD ρ = −0,05 (n = 51, p 0,715); 15 varlığın 9'unda artı, hiçbiri %5 düzeyinde anlamlı değil"
+    sebep: "Dövizde getiri haftanın son işlem gününün BAŞINDAN ölçülüyordu (günlük döviz barının kapanışı günün başıdır), haftalık endeks ise pazar gecesine kadar uzanıyordu: endeks, getirisinin ilk gününün haberlerini de taşıyordu. Nokta artık haftanın son kapanış anındaki endeks, getiri o kapanıştan sonra başlıyor."
+  - tarih: '2026-10-03'
+    alan: 'Şekil 05 · 1 ve 5 günlük ufuk'
+    eski: 'haber tonu ertesi günü değil, haftayı fiyatlar; tek istisna USD/CAD (1 gün +0,09, 5 gün −0,07)'
+    yeni: "1 günlük ortalamalar −0,15 ile +0,12, 5 günlükler −0,31 ile +0,20 arasında; USD/CAD 1 gün +0,12, 5 gün +0,20. 5 günlük çizginin plasebo bandının dışında kaldığı günlerin payı 15 varlığın ortalamasında %16,5 (varlıklar arasında %7,7 ile %33,2); bu fark sınanmadı"
+    sebep: 'Eski şekil gece yarısında kesilen, z-skorlanmış ve yumuşatılmış günlük seriyi kullanıyordu; döviz dışı varlıklarda bu seri kapanıştan bir seans gerideydi. Şekil artık kapanış anındaki ham endeksi kullanıyor ve yirmi günlük pencerede şansın ürettiği salınımın genişliğini gölge olarak çiziyor.'
 ---
 
 import GrafikEmbed from '../../components/GrafikEmbed.astro';
@@ -15,23 +41,26 @@ import Deger from '../../components/Deger.astro';
 Fiyat haberden önce mi hareket eder, sonra mı? Bu proje soruyu ölçülebilir hale getirir:
 dokuz majör parite ve altı ek enstrüman (altın, gümüş, S&P 500, UST 2Y/10Y, BIST 100)
 için haber akışını toplar, finans-özel bir dil modeliyle skorlar ve varlık başına tek
-bir **duyarlılık endeksi** üretir. Bu sayfa, projenin Streamlit panelindeki *bütün*
+bir **duyarlılık endeksi** üretir. Bu sayfa, projenin etkileşimli panelindeki *bütün*
 katmanları içerir ve her birinin nasıl okunacağını anlatır.
 
 ## Bu sayfa nasıl kullanılır? (iş akışı)
 
 Endeks tek başına bir al-sat sinyali değildir; katmanlar belirli bir sırayla okunur:
 
-1. **Hava durumuyla başla** — Şekil 06-07 (rejim): akış Risk-On mu, Risk-Off mu?
-   Rejim, tekil sinyallerin bağlamıdır: Risk-Off'ta riskli parite alım sinyali iskonto edilir.
+1. **Hava durumuyla başla** — Şekil 06-07 (rejim): haber akışı Risk-On mu, Risk-Off mu?
+   Rejim, tek tek varlıkların okumasına bağlam verir: Risk-Off'ta riskli bir paritedeki
+   olumlu ton, akışın geneline karşı duran bir okumadır.
 2. **Son okumaya bak** — Şekil 01: hangi varlıkta ton aşırı? ±0,50'yi aşan değerler
-   (Aşırı Alıcı/Satıcı) ya güçlü momentum ya doygunluk demektir; tek gün değil,
-   Şekil 02'deki bant geçişleriyle birlikte değerlendirilir.
-3. **Fiyatla hizala** — Şekil 03: duyarlılık kümesi fiyat kırılımından önce mi
-   geliyordu? Varlık bazında bu görsel teyit, sinyale güvenin ilk filtresidir.
-4. **İstatistiksel güveni ölç** — Şekil 04 (saçılım) o varlıkta ilişkinin genel gücünü,
-   Şekil 05 (yuvarlanan korelasyon) ilişkinin *şu sıralar* çalışıp çalışmadığını verir.
-   Korelasyonun rejimle birlikte kaybolduğu dönemler normaldir — pozisyon boyutu buna göre.
+   (Aşırı Alıcı/Satıcı) haber akışının tek yöne yığıldığını gösterir; fiyat için ne
+   söylediği ayrıca ölçülür (Şekil 09). Tek gün değil, Şekil 02'deki bant geçişleriyle
+   birlikte değerlendirilir.
+3. **Fiyatla hizala** — Şekil 03: haber tonu fiyatın önünde mi gidiyor, arkasından
+   mı geliyor? Çıplak gözle görülen öncülük çoğu zaman tesadüftür; ölçüsü Şekil 09'dadır.
+4. **Ölçüye bak** — Şekil 09 (karne) iki soruyu ayrı ayrı cevaplar: endeks geçen
+   günlerin fiyatını ne kadar *yansıtıyor* (tepki) ve sonraki günlerin fiyatını
+   *öngörüyor* mu (örnek dışı). Şekil 04 ve 05 öngörü sorusunu haftalık ve yuvarlanan
+   pencerede sorar; Şekil 05'teki gölge, şansın üretebileceği salınımın genişliğidir.
 5. **Manşetleri doğrula** — Şekil 10: skoru süren gerçek başlıklar ne diyor? Tek
    kaynaklı/klikbait kümeleri elle ayıklamanın yeri burasıdır.
 
@@ -41,12 +70,15 @@ Endeks tek başına bir al-sat sinyali değildir; katmanlar belirli bir sırayla
 | --- | --- | --- |
 | Makale skoru | Tek başlığın FinBERT çıktısı, $[-1,+1]$ | +0,8 = güçlü olumlu ton; tahvillerde ("faiz inecek" = fiyat pozitif) alımda terslenmiş |
 | Endeks değeri | Varlığın ağırlıklı toplulaştırılmış skoru | −0,10/+0,10 arası nötr (gürültü) bandı |
-| Kategori | Eşiklenmiş etiket: ±0,10 Alıcı/Satıcı, ±0,50 Aşırı | seviye değil *bant geçişi* sinyaldir |
+| Kategori | Eşiklenmiş etiket: ±0,10 Alıcı/Satıcı, ±0,50 Aşırı | tek okuma değil *bant geçişi* izlenir: haber akışının yön değiştirdiği yer |
 | Yön birleştirme | USD-bazlı paritelerin (USDJPY, USDCHF…) terslenmesi | çapraz-varlık hesapların ortak makro yönü (USD zayıf = pozitif) |
 | Sepet spread'i | güv. liman − risk sepeti ort. duyarlılığı (20g) | > +0,15 Risk-Off · < −0,10 Risk-On |
 | Ort. korelasyon | tüm varlık çiftlerinin 20g duyarlılık korelasyon ort. | yüksek = tek tema piyasayı ele geçirmiş |
 | PC1 | duyarlılık matrisinin birinci temel bileşeni | ortak faktörün gücü/yönü |
-| Optimizasyon korelasyonu | endeks ↔ 5g ileri getiri ilişkisinin in-sample gücü | model karnesi; canlı performans değil |
+| Kapanış anı | fiyatın ve endeksin okunduğu an: dövizde New York 17:00 (saatlik bar), öbürlerinde kendi borsasının kapanışı | endeks yalnız o ana kadar yayımlanmış haberden kurulur |
+| Tepki ρ | endeks ile o kapanışta BİTEN 5 günün getirisi arasında Spearman ρ | haber tonu geçen haftanın fiyatını ne kadar yansıtıyor |
+| Öngörü ρ (örnek dışı) | endeks ile o kapanıştan SONRAKİ 5 günün getirisi; parametre seçimi yalnız geçmiş veriyle | endeksin bir sonraki haftayı söyleyip söylemediği |
+| Plasebo p | getiri serisi zamanda dairesel kaydırılarak aynı hesabın onlarca kez tekrarı; p, gerçek sonuca eşit ya da ondan büyük çıkan sonuçların payıdır (gerçek sonuç da sayılarak) | 0,05 ve altı şansla açıklanması zor demektir; en küçük değeri çekiliş sayısıyla sınırlıdır |
 
 ## Bu sayfada İKİ saat var
 
@@ -55,9 +87,9 @@ saate ait olduğunu kendi altyazısında yazar.
 
 | Katman | Kaynak | Ritim | Şu anki uç |
 | --- | --- | --- | --- |
-| Anlık endeks, tarihçe, manşetler (Şekil 01–02, 10) | canlı haber akışı, 7 günlük pencere | hafta içi her sabah | <Deger proje="fx-haber-endeksi" anahtar="_tarih" ondalik={1}>03.09.2026</Deger> |
-| Rejim, korelasyon, fiyat karşılaştırması (Şekil 03, 05–08) | GDELT haftalık arşivi | hafta kapanınca (pazartesi) | <Deger proje="fx-haber-endeksi" anahtar="veri_sonu" ondalik={1}>30.08.2026</Deger> |
-| Optimizasyon karnesi (Şekil 09) | parametre kalibrasyonu | elle, seyrek | <Deger proje="fx-haber-endeksi" anahtar="opt_kalibrasyon" ondalik={1}>22.07.2026</Deger> |
+| Anlık endeks, tarihçe, manşetler (Şekil 01–02, 10) | canlı haber akışı, 7 günlük pencere | hafta içi her sabah | <Deger proje="fx-haber-endeksi" anahtar="_tarih" ondalik={1}>02.10.2026</Deger> |
+| Rejim, korelasyon, fiyat karşılaştırması (Şekil 03, 05–08) | GDELT haftalık arşivi | hafta kapanınca (pazartesi) | <Deger proje="fx-haber-endeksi" anahtar="veri_sonu" ondalik={1}>27.09.2026</Deger> |
+| Kalibrasyon karnesi (Şekil 09) | parametre kalibrasyonu ve ölçüsü | elle, seyrek | <Deger proje="fx-haber-endeksi" anahtar="kal_tarih" ondalik={1}>03.10.2026</Deger> |
 
 Yani manşetler bugünün, rejim panelleri kapanan haftanındır. İkisi aynı gün
 olmaz ve olmaması bir arıza değildir — ama hangisinin hangi güne ait olduğu
@@ -71,16 +103,17 @@ olmaz ve olmaması bir arıza değildir — ama hangisinin hangi güne ait oldu�
   no="01"
 />
 
-Son pipeline koşusunun endeks değerleri, sıralı yatay bar: pozitifler teal, negatifler
-bordo; etiket kategori eşiklerinden. Son okumada uçlar: <Deger proje="fx-haber-endeksi" anahtar="ust1_ad" ondalik={1}>ABD 2Y</Deger> **<Deger proje="fx-haber-endeksi" anahtar="ust1_deger" ondalik={2} isaret={true}>+0,46</Deger>** (<Deger proje="fx-haber-endeksi" anahtar="ust1_kat" ondalik={1}>Alıcı</Deger>) ve
-<Deger proje="fx-haber-endeksi" anahtar="ust2_ad" ondalik={1}>ABD 10Y</Deger> <Deger proje="fx-haber-endeksi" anahtar="ust2_deger" ondalik={2} isaret={true}>+0,20</Deger> bir yanda, <Deger proje="fx-haber-endeksi" anahtar="alt1_ad" ondalik={1}>USD/CHF</Deger> **<Deger proje="fx-haber-endeksi" anahtar="alt1_deger" ondalik={2} isaret={true}>−0,64</Deger>** (<Deger proje="fx-haber-endeksi" anahtar="alt1_kat" ondalik={1}>Aşırı Satıcı</Deger>) ve <Deger proje="fx-haber-endeksi" anahtar="alt2_ad" ondalik={1}>BIST 100</Deger> <Deger proje="fx-haber-endeksi" anahtar="alt2_deger" ondalik={2} isaret={true}>−0,37</Deger> diğer yanda.
-Hover her varlığın **skorlu makale sayısını** da gösterir (toplam <Deger proje="fx-haber-endeksi" anahtar="makale_toplam" ondalik={0}>3.449</Deger>; en az
-kapsanan varlık <Deger proje="fx-haber-endeksi" anahtar="az_ad" ondalik={1}>USD/SEK</Deger> ile <Deger proje="fx-haber-endeksi" anahtar="az_makale" ondalik={0}>133</Deger> makale) — az makaleli varlığın endeksi
+Son koşunun endeks değerleri, sıralı yatay bar: pozitifler teal, negatifler
+bordo; etiket kategori eşiklerinden. Son okumada uçlar: <Deger proje="fx-haber-endeksi" anahtar="ust1_ad" ondalik={1}>ABD 2Y</Deger> **<Deger proje="fx-haber-endeksi" anahtar="ust1_deger" ondalik={2} isaret={true}>+0,16</Deger>** (<Deger proje="fx-haber-endeksi" anahtar="ust1_kat" ondalik={1}>Alıcı</Deger>) ve
+<Deger proje="fx-haber-endeksi" anahtar="ust2_ad" ondalik={1}>USD/CAD</Deger> <Deger proje="fx-haber-endeksi" anahtar="ust2_deger" ondalik={2} isaret={true}>+0,10</Deger> bir yanda, <Deger proje="fx-haber-endeksi" anahtar="alt1_ad" ondalik={1}>USD/CHF</Deger> **<Deger proje="fx-haber-endeksi" anahtar="alt1_deger" ondalik={2} isaret={true}>−1,00</Deger>** (<Deger proje="fx-haber-endeksi" anahtar="alt1_kat" ondalik={1}>Aşırı Satıcı</Deger>) ve <Deger proje="fx-haber-endeksi" anahtar="alt2_ad" ondalik={1}>NZD/USD</Deger> <Deger proje="fx-haber-endeksi" anahtar="alt2_deger" ondalik={2} isaret={true}>−0,52</Deger> diğer yanda.
+Hover her varlığın **skorlu makale sayısını** da gösterir (toplam <Deger proje="fx-haber-endeksi" anahtar="makale_toplam" ondalik={0}>3.276</Deger>; en az
+kapsanan varlık <Deger proje="fx-haber-endeksi" anahtar="az_ad" ondalik={1}>USD/SEK</Deger> ile <Deger proje="fx-haber-endeksi" anahtar="az_makale" ondalik={0}>103</Deger> makale) — az makaleli varlığın endeksi
 daha gürültülüdür, kategoriyi buna göre iskonto edin. Koşudan koşuya ters dönüşler de
-olağandır: en düşük okumadaki <Deger proje="fx-haber-endeksi" anahtar="alt1_ad" ondalik={1}>USD/CHF</Deger> bir önceki snapshot'ta (<Deger proje="fx-haber-endeksi" anahtar="alt1_onceki_tarih" ondalik={1}>04.08.2026</Deger>)
-<Deger proje="fx-haber-endeksi" anahtar="alt1_onceki_deger" ondalik={2} isaret={true}>+0,52</Deger> idi — <Deger proje="fx-haber-endeksi" anahtar="alt1_donus_bp" ondalik={0}>116</Deger> bp'lik dönüş. Bu büyüklükte bir sıçrama iki
-koşu arasında haber akışının gerçekten döndüğü anlamına gelebilir; ama makale sayısı
-düşükse ya da tek kaynak ağırlıklıysa örneklem gürültüsüdür. Kategori etiketi tek
+olağandır: <Deger proje="fx-haber-endeksi" anahtar="alt1_donus_cumle" ondalik={1}>En düşük okumadaki USD/CHF bir önceki okumada (01.10.2026) +0,20 idi; iki okuma arasındaki fark 1,20 (endeks −1 ile +1 arasında).</Deger> İki koşu arasındaki büyük bir
+sıçrama haber akışının gerçekten döndüğü anlamına gelebilir; ama makale sayısı
+düşükse ya da tek kaynak ağırlıklıysa örneklem gürültüsüdür. İki okuma yalnız aynı
+kalibrasyonun parametreleriyle kurulmuşsa kıyaslanır; kalibrasyon değiştiği gün fark
+haberi değil modeli ölçer ve o gün kıyas yazılmaz. Kategori etiketi tek
 başına okunmaz; makale sayısı ve tarihçe (Şekil 02) ile birlikte okunur.
 
 ## Şekil 02 — Endeks tarihçesi
@@ -114,27 +147,65 @@ w_i = \underbrace{e^{-\lambda\, \text{yaş}_i}}_{\text{zaman azalımı}} \times
 \qquad \lambda = \frac{\ln 2}{\text{yarı ömür (gün)}}
 $$
 
-Varsayılan yarı ömür 2 gün; kaynak ağırlıkları kalibreli (Google 1,0 · Finviz 0,9 ·
-Reddit 0,7).
+Varsayılan yarı ömür 2 gün; kaynak ağırlıkları sabit (Google 1,0 · Finviz 0,9 ·
+Reddit 0,7) ve kalibrasyona girmez.
 
 **4 — Toplulaştırma.** Dört alternatif; varlık başına hangisinin kullanılacağını
-optimizasyon seçer:
+kalibrasyon kuralı belirler (adım 5):
 
 | Yöntem | Formül / fikir |
 | --- | --- |
-| weighted_mean | $\sum w_i s_i / \sum w_i$ — temel çizgi |
+| Ağırlıklı ortalama | $\sum w_i s_i / \sum w_i$ — temel çizgi |
 | Boğa/ayı oranı | $(W^+ - W^-)/(W^+ + W^-)$ — yön saymacası |
-| intensity_ratio | pozitif/negatif **yoğunluk** oranı — şiddet duyarlı |
-| directional_strength | yalnız güçlü sinyalli makaleler — gürültü filtresi |
+| Yoğunluk oranı | pozitif/negatif **yoğunluk** oranı — şiddet duyarlı |
+| Yön gücü | yalnız güçlü sinyalli makaleler — gürültü filtresi |
 
-Opsiyonel katmanlar: skor dönüşümü (raw/tanh/sign), nötr bant filtresi, momentum,
-hacim normalizasyonu.
+İsteğe bağlı katmanlar: skor dönüşümü (ham skor · tanh dönüşümü · kök büyütmesi),
+nötr bant filtresi, momentum, hacim normalizasyonu.
 
-**5 — Parametre optimizasyonu.** Grid search: kombinasyonlar taranır, endeksin 5 günlük
-ileri getiriyle korelasyonunu maksimize eden set `optimized_params.json`'a yazılır.
+**5 — Kalibrasyon ve karnesi.** Toplulaştırma, yarı ömür, skor dönüşümü, nötr filtre
+ve momentumdan kurulan <Deger proje="fx-haber-endeksi" anahtar="kal_izgara" ondalik={0}>192</Deger> aday parametre setinin her biri için endeks,
+son 52 haftanın her işlem gününde **fiyatın kapanış anında** yeniden kurulur — yalnız o
+ana kadar yayımlanmış haberle, normalizasyon ve yumuşatma olmadan: Şekil 01'deki
+sayıyla aynı formül ve parametre, ama haftalık arşivin haberleriyle. Kapanış anı dövizde New York 17:00'dir ve saatlik bardan
+okunur: Yahoo'nun kapanmış günlük döviz barındaki "kapanış" alanı günün başındaki
+fiyattır, günün sonundaki değil. Öbür varlıklarda kendi borsasının kapanışıdır.
 
-**6 — Günlük seri ve rejim.** Rejim/korelasyon analizleri için makalelerden **günlük**
-seri kurulur: 7 günlük pencere, zaman ağırlığı, z-skor normalizasyonu + EMA yumuşatma.
+Ölçü iki yönlüdür:
+
+$$
+\text{tepki: } \rho\big(E_D,\; P_D/P_{D-5}-1\big)
+\qquad
+\text{öngörü: } \rho\big(E_D,\; P_{D+5}/P_D-1\big)
+$$
+
+$E_D$ endeksin $D$ kapanışındaki değeri, $\rho$ Spearman sıra korelasyonu. Öngörü
+**örnek dışı** ölçülür: ilk 100 işlem günü eğitimdir, sonra her 21 günde bir parametre
+yalnız geçmişe bakılarak yeniden seçilir ve seçilen setin değeri bir sonraki 21 günde
+okunur; eğitimin son 5 günü atılır, çünkü onların hedefi test dönemine taşar. Sonucun
+şansla açıklanıp açıklanamayacağı **plasebo** ile sınanır: getiri serisi zamanda
+dairesel kaydırılır ve seçim dahil bütün yordam her kaydırmada yeniden koşar
+(aile sınamasında <Deger proje="fx-haber-endeksi" anahtar="kal_aile_k" ondalik={0}>39</Deger> çekiliş, en küçük p <Deger proje="fx-haber-endeksi" anahtar="kal_p_taban" ondalik={3}>0,025</Deger>; varlık başına
+sınamalarda çekiliş sayısı serinin uzunluğuyla biraz değişir). Bütün varlıkların ortalaması
+için aynı kaydırma hepsine birden uygulanır (**aile sınaması**), böylece varlıklar arası
+ortak hareket şansın içinde kalır. Bir de yalnız fiyattan kurulan rakip var — geçmiş
+günlük getirilerin üstel ortalaması, hem devam hem dönüş yönünde, aynı yürüyen
+pencereden — çünkü haber tonu geçen haftanın fiyatını yansıtıyorsa, sonraki haftayı
+öngören şey haberin kendisi değil fiyatın kendi devamı ya da geri dönüşü olabilir.
+
+Kural bu karnenin ölçümünden önce koda yazıldı ve ölçümden sonra değiştirilmedi.
+Aynı veride daha kaba bir ön ölçüm (ilk %70'te seçim, son %30'da sınama) kuraldan önce
+yapılmıştı: 15 varlığın 5'inde örnek dışı ρ artı, yalnız birinde plasebo p 0,05'in
+altındaydı. Kural şöyle: aile sınaması p ≤ 0,05 ise, örnek dışı ρ'su hem sıfırın
+hem yalnız fiyattan kurulan rakibin üstünde olan varlık kendi kalibre parametresini
+alır; öbür her varlık tek, önceden yazılmış varsayılanla kurulur
+(<Deger proje="fx-haber-endeksi" anahtar="kal_varsayilan" ondalik={1}>yön gücü · yarı ömür 2 gün · ham skor · nötr filtre yok · momentum yok</Deger>). Son ölçümün
+hükmü Şekil 09'un altında.
+
+**6 — Günlük seri ve rejim.** Rejim ve çapraz korelasyon panelleri (Şekil 03, 06–08)
+için makalelerden ayrıca **günlük** bir seri kurulur: 7 günlük pencere, zaman ağırlığı,
+z-skor normalizasyonu + EMA yumuşatma. Bu seri varlıkları ortak bir ölçeğe getirir;
+Şekil 04, 05 ve 09 onu değil, kapanış anındaki ham endeksi kullanır.
 
 ## Şekil 03 — Fiyat ve endeks yan yana
 
@@ -146,24 +217,30 @@ seri kurulur: 7 günlük pencere, zaman ağırlığı, z-skor normalizasyonu + E
 />
 
 Sol eksende günlük kapanış, sağ eksende $[-1,+1]$ günlük duyarlılık (teal/bordo bar).
-Bar kümelerinin renk değiştirdiği bölgelerle fiyat kırılımlarını hizalayın —
-duyarlılığın öncülük ettiği epizotlar çıplak gözle seçilir; istatistiksel özet Şekil
-04-05'tedir.
+Bar kümelerinin renk değiştirdiği bölgelerle fiyat kırılımlarını hizalayın. Göz,
+duyarlılığın fiyattan önce döndüğü epizotları kolayca seçer, arkasından geldiği
+epizotları atlar; hangisinin daha sık olduğu Şekil 09'un iki çubuğunda ölçülüdür.
 
 ## Şekil 04 — Duyarlılık → getiri saçılımı
 
 <GrafikEmbed
   src="/projeler/fx-haber-endeksi/duyarlilik_getiri.html"
-  baslik="Haftalık duyarlılık vs izleyen 5 iş günü getirisi — varlık seçmeli saçılım"
+  baslik="Haftanın son kapanışındaki endeks ve ertesi haftanın getirisi — varlık seçmeli saçılım"
   no="04"
   yukseklik={620}
 />
 
-Her nokta bir hafta: x = bakış-ileri içermeyen haftalık endeks, y = izleyen 5 iş günü
-getirisi; OLS trend + Pearson $r/p/n$ kutusu. Örnek: EUR/USD $r=+0{,}18$ ($n=66$). Dürüst yorum: ham haftalık seride ilişki pozitif ama zayıf — endeks
-filtre katmanıdır, tek başına kural değil.
+Her nokta bir hafta: x = haftanın son işlem gününün kapanış anındaki endeks, y = o
+kapanıştan ertesi haftanın son işlem günü kapanışına getiri. Tatille kısalan haftada
+da gözlemler örtüşmez. Kutudaki Spearman ρ ve p o varlığın kendi ölçüsüdür; parametresi
+kalibrasyonla seçilmiş bir varlıkta "seçim sonrası" yazar, çünkü o varlığın parametresi
+aynı verinin bir kısmına bakılarak seçildi. Son ölçü <Deger proje="fx-haber-endeksi" anahtar="s04_varlik" ondalik={0}>15</Deger> varlıkta: ρ'su artı
+olan varlık <Deger proje="fx-haber-endeksi" anahtar="s04_pozitif" ondalik={0}>9</Deger>, %5 düzeyinde anlamlı olan <Deger proje="fx-haber-endeksi" anahtar="s04_anlamli" ondalik={0}>0</Deger>, medyan ρ
+<Deger proje="fx-haber-endeksi" anahtar="s04_medyan" ondalik={2} isaret={true}>+0,01</Deger> (en uzun seride <Deger proje="fx-haber-endeksi" anahtar="s04_hafta" ondalik={0}>51</Deger> hafta). On beş varlıkta
+tesadüfen anlamlı çıkması beklenen sayı yaklaşık birdir; tek bir varlıktaki
+"anlamlı" sonuç bu yüzden tek başına bir şey söylemez.
 
-## Şekil 05 — Yuvarlanan korelasyon: sinyal ŞU ANDA çalışıyor mu?
+## Şekil 05 — Yuvarlanan korelasyon: ilişki zaman içinde nasıl salınıyor?
 
 <GrafikEmbed
   src="/projeler/fx-haber-endeksi/yuvarlanan_korelasyon.html"
@@ -172,15 +249,18 @@ filtre katmanıdır, tek başına kural değil.
   yukseklik={520}
 />
 
-Şekil 04 ilişkinin *ortalamasını* verir; bu şekil **zamana yayılımını** — ve artık
-iki ufku birden: her varlıkta **1 günlük** (altın rengi, noktalı) ve **5 günlük**
-(petrol yeşili, düz) ileri getiriyle 20 günlük yuvarlanan Pearson korelasyonu.
-Dashboard'daki 1g-vs-5g karşılaştırma tablosunun grafik hâlidir. Genel örüntü:
-1g ortalamaları sıfıra yapışıktır, 5g ufku hem daha güçlü hem daha oynaktır —
-haber tonu ertesi günü değil, haftayı fiyatlar; tek istisna USD/CAD (1g +0,09 vs
-5g −0,07). Sıfır etrafında salınım normaldir; sinyalin "açık" olduğu dönemleri
-pozisyon büyüklüğüne çevirmek, sabit boyut kullanmaktan iyidir. Korelasyonun çöktüğü
-dönemler çoğunlukla rejim değişimiyle çakışır (Şekil 07 ile yan yana okuyun).
+Şekil 04 ilişkinin *ortalamasını* verir; bu şekil **zamana yayılımını**: her varlıkta
+kapanış anındaki endeks ile **sonraki 1 günün** (altın rengi, noktalı) ve **sonraki 5
+günün** (petrol yeşili, düz) getirisi arasında 20 günlük yuvarlanan Pearson korelasyonu.
+Gölge, aynı hesabın plasebo aralığıdır: getiri zamanda kaydırılarak tekrarlanır ve her
+günün %5–%95 aralığı çizilir. Yirmi günlük bir pencerede şansın kendisi geniş salınım
+üretir; çizginin bandın içinde kalan iniş çıkışları "sinyal açıldı/kapandı" diye
+okunamaz. Son ölçüde <Deger proje="fx-haber-endeksi" anahtar="s05_varlik" ondalik={0}>15</Deger> varlıkta 1 günlük ortalamalar <Deger proje="fx-haber-endeksi" anahtar="s05_1g_min" ondalik={2} isaret={true}>−0,15</Deger>
+ile <Deger proje="fx-haber-endeksi" anahtar="s05_1g_max" ondalik={2} isaret={true}>+0,12</Deger>, 5 günlükler <Deger proje="fx-haber-endeksi" anahtar="s05_5g_min" ondalik={2} isaret={true}>−0,31</Deger> ile <Deger proje="fx-haber-endeksi" anahtar="s05_5g_max" ondalik={2} isaret={true}>+0,20</Deger> arasında;
+5 günlük çizginin bandın dışında kaldığı günlerin payı 15 varlığın ortalamasında
+%<Deger proje="fx-haber-endeksi" anahtar="s05_bant_disi" ondalik={1}>16,5</Deger>. Şansın beklediği pay her gün için %10'dur, ama ardışık günler aynı
+pencereyi paylaştığı için bu fark sınanmış bir sonuç değildir ve aile sınamasının
+hükmünü değiştirmez.
 
 ## Şekil 06-08 — Rejim dedektörü
 
@@ -220,7 +300,7 @@ makro yön: USD zayıflığı = pozitif):
 - **PC1** — 60 günlük penceredeki ortak faktör; işaretli skoru genel tonun yönünü,
   açıklanan varyans payı gücünü verir.
 
-Güncel okuma: **<Deger proje="fx-haber-endeksi" anahtar="rejim" ondalik={1}>Transitioning</Deger>** — sepet spread'i <Deger proje="fx-haber-endeksi" anahtar="spread" ondalik={3}>−0,040</Deger> · ortalama korelasyon <Deger proje="fx-haber-endeksi" anahtar="ort_korelasyon" ondalik={3}>−0,025</Deger> · PC1 payı <Deger proje="fx-haber-endeksi" anahtar="pc1" ondalik={3}>0,274</Deger> (veri: <Deger proje="fx-haber-endeksi" anahtar="veri_sonu" ondalik={1}>23.08.2026</Deger> — bu üç büyüklüğün saati
+Güncel okuma: **<Deger proje="fx-haber-endeksi" anahtar="rejim" ondalik={1}>Transitioning</Deger>** — sepet spread'i <Deger proje="fx-haber-endeksi" anahtar="spread" ondalik={3}>−0,001</Deger> · ortalama korelasyon <Deger proje="fx-haber-endeksi" anahtar="ort_korelasyon" ondalik={3}>0,054</Deger> · PC1 payı <Deger proje="fx-haber-endeksi" anahtar="pc1" ondalik={3}>0,285</Deger> (veri: <Deger proje="fx-haber-endeksi" anahtar="veri_sonu" ondalik={1}>27.09.2026</Deger> — bu üç büyüklüğün saati
 hattın koşu saati değil, haftalık önbelleğin ucudur).
 
 Isı haritası (Şekil 08) aynı matrisin çift-çift halidir: hangi varlıkların haber tonu
@@ -234,7 +314,8 @@ birlikte hareket ediyor? Yıldızlı etiketler terslenen pariteleri işaretler.
   yakın çıkardı — piyasa öyle davrandığından değil, işaretler birbirini yediğinden.
   Yönler birleştirildiğinde sayı tema konsantrasyonunu gerçekten ölçüyor. Bunu Şekil
   09'daki duyarlılık-getiri korelasyonuyla karıştırmayın: buradaki varlıkların
-  <em>birbiriyle</em>, oradaki endeksin <em>gelecek getiriyle</em> korelasyonudur.
+  <em>birbiriyle</em>, oradaki endeksin fiyatın <em>geçmiş ve sonraki</em> getirisiyle
+  korelasyonudur.
 </div>
 
 <div class="not">
@@ -243,28 +324,39 @@ birlikte hareket ediyor? Yıldızlı etiketler terslenen pariteleri işaretler.
   (Aşırı). Grafiklerdeki bant gölgelemesi de etiketler de aynı eşiklerden türetiliyor,
   yani bir noktanın bandın neresinde durduğu ile ona verilen ad tanımı gereği
   ayrışamaz. Pratik sonucu: nötr bant sandığınızdan dardır (±0,10), yani bir varlığın kategori
-  değiştirmesi kolaydır — sinyal olarak <em>bant geçişini</em> değil, geçişin
+  değiştirmesi kolaydır — tek başına <em>bant geçişini</em> değil, geçişin
   makale sayısıyla desteklenip desteklenmediğini okuyun.
 </div>
 
-## Şekil 09 — Optimizasyonun karnesi
+## Şekil 09 — Kalibrasyonun karnesi: tepki ve öngörü
 
 <GrafikEmbed
   src="/projeler/fx-haber-endeksi/optimizasyon.html"
-  baslik="Varlık başına optimize edilmiş duyarlılık-getiri korelasyonu"
+  baslik="Kalibrasyonun karnesi — haber tonu fiyatı izliyor mu, öngörüyor mu"
   no="09"
 />
 
-Grid search'ün varlık başına ulaştığı korelasyon (günlük seri, 20g yuvarlanan ort.,
-5g getiri ufku): <Deger proje="fx-haber-endeksi" anahtar="opt1_ad" ondalik={1}>BIST 100</Deger> **<Deger proje="fx-haber-endeksi" anahtar="opt1_kor" ondalik={2} isaret={true}>+0,54</Deger>**, <Deger proje="fx-haber-endeksi" anahtar="opt2_ad" ondalik={1}>GBP/USD</Deger> **<Deger proje="fx-haber-endeksi" anahtar="opt2_kor" ondalik={2} isaret={true}>+0,53</Deger>**, <Deger proje="fx-haber-endeksi" anahtar="opt3_ad" ondalik={1}>gümüş</Deger> **<Deger proje="fx-haber-endeksi" anahtar="opt3_kor" ondalik={2} isaret={true}>+0,43</Deger>** liderler;
-hover kazanan parametreleri gösterir. Bu değerler *in-sample*'dır — canlı performans
-beklentisi değil, hangi varlıkta haber-fiyat bağının güçlü olduğunun sıralamasıdır.
-Grid search **<Deger proje="fx-haber-endeksi" anahtar="opt_kalibrasyon" ondalik={1}>22.07.2026</Deger>** kalibrasyonundan geliyor: <Deger proje="fx-haber-endeksi" anahtar="opt_varlik" ondalik={0}>15</Deger> varlığın
-**<Deger proje="fx-haber-endeksi" anahtar="opt_5g" ondalik={0}>14</Deger>'ü 5 günlük ufku** seçti (istisna: <Deger proje="fx-haber-endeksi" anahtar="opt_istisna" ondalik={1}>USD/SEK</Deger>), yani "haber tonu haftayı fiyatlar"
-bulgusu parametre seçimine de yansıyor. Önceki kalibrasyon 13.04.2026 tarihliydi ve
-daha kısa bir veri penceresine oturuyordu; sıralama o turda GBP/USD-altın-S&P
-şeklindeydi. Sıralamanın kalibrasyondan kalibrasyona bu kadar oynaması, in-sample
-korelasyon sıralamasına ne kadar güvenilmesi gerektiğinin kendi ölçüsüdür.
+Her varlıkta iki çubuk. Teal çubuk **tepki**: kapanış anındaki endeks ile o kapanışta
+biten 5 günün getirisi arasında Spearman ρ — haber tonu geçen haftanın fiyatını ne
+kadar yansıtıyor. Bordo çubuk **öngörü**: aynı endeks ile sonraki 5 günün getirisi
+arasında, parametre seçimi yalnız geçmiş veriyle yapılarak ölçülen örnek dışı ρ. İkisi
+aynı ölçekte durur; aradaki fark bu sayfanın asıl bulgusudur.
+
+Son kalibrasyon (<Deger proje="fx-haber-endeksi" anahtar="kal_tarih" ondalik={1}>03.10.2026</Deger>, <Deger proje="fx-haber-endeksi" anahtar="kal_varlik" ondalik={0}>15</Deger> varlık): en güçlü tepki
+<Deger proje="fx-haber-endeksi" anahtar="tepki1_ad" ondalik={1}>gümüş</Deger> <Deger proje="fx-haber-endeksi" anahtar="tepki1_rho" ondalik={2} isaret={true}>+0,69</Deger> (plasebo p <Deger proje="fx-haber-endeksi" anahtar="tepki1_p" ondalik={3}>0,024</Deger>), ardından
+<Deger proje="fx-haber-endeksi" anahtar="tepki2_ad" ondalik={1}>altın</Deger> <Deger proje="fx-haber-endeksi" anahtar="tepki2_rho" ondalik={2} isaret={true}>+0,64</Deger> ve <Deger proje="fx-haber-endeksi" anahtar="tepki3_ad" ondalik={1}>S&P 500</Deger> <Deger proje="fx-haber-endeksi" anahtar="tepki3_rho" ondalik={2} isaret={true}>+0,60</Deger>; tepkisi
+%5 düzeyinde anlamlı varlık sayısı <Deger proje="fx-haber-endeksi" anahtar="tepki_anlamli" ondalik={0}>5</Deger>. Öngörü tarafında en yüksek örnek
+dışı ρ <Deger proje="fx-haber-endeksi" anahtar="ongoru1_ad" ondalik={1}>USD/JPY</Deger> <Deger proje="fx-haber-endeksi" anahtar="ongoru1_rho" ondalik={2} isaret={true}>+0,23</Deger> (plasebo p <Deger proje="fx-haber-endeksi" anahtar="ongoru1_p" ondalik={3}>0,050</Deger>);
+%5 düzeyinde anlamlı varlık sayısı <Deger proje="fx-haber-endeksi" anahtar="ongoru_anlamli" ondalik={0}>1</Deger>, şansın beklediği sayı
+<Deger proje="fx-haber-endeksi" anahtar="ongoru_beklenen" ondalik={2}>0,75</Deger>. Örnek dışı ρ'su yalnız fiyattan kurulan rakibi geçen varlık sayısı
+<Deger proje="fx-haber-endeksi" anahtar="ongoru_rakip_ustu" ondalik={0}>5</Deger>; aile ortalamasına giren varlıklardan <Deger proje="fx-haber-endeksi" anahtar="kal_aile_pozitif" ondalik={0}>8</Deger> tanesinde
+örnek dışı ρ artı. <Deger proje="fx-haber-endeksi" anahtar="kal_hukum_cumle" ondalik={1}>Aile sınaması geçmedi: 15 varlığın sonraki 5 günle örnek dışı ρ ortalaması +0,008, plasebo p 0,450. Kural gereği bütün varlıklar tek, önceden yazılmış varsayılan parametreyle kuruluyor.</Deger>
+
+Hover her varlıkta hükmü, plasebo p'leri, seçimsiz varsayılanın ve yalnız fiyattan
+kurulan rakibin ρ'sunu, yürüyen pencerenin katlarından kaçının artı çıktığını yazar.
+Kural kodda sabit olduğu için karne bir sıralama değildir: bir varlığın burada
+öne çıkması, o varlıkta haberin bir sonraki haftayı söylediği anlamına gelmez —
+ancak aile sınaması ve rakip kıyası birlikte geçerse gelir.
 
 ## Şekil 10 — Manşet akışı: skorların arkasındaki haberler
 
@@ -282,15 +374,20 @@ kümesinin sürdüğüne bakın — tek kaynaklı tekrar zinciri mi, geniş taba
 ## Sınırlar ve dürüst kullanım
 
 - Endeks **haber tonunu** ölçer, pozisyonlanmayı veya akışı değil; fiyatla ilişkisi
-  varlıktan varlığa ve dönemden döneme değişir (Şekil 05).
-- Optimizasyon in-sample'dır; aşırı-uyum riski Şekil 04'ün ham korelasyonlarıyla
-  kıyaslanarak izlenir.
+  varlıktan varlığa değişir. 03.10.2026 kalibrasyonunda geçen haftanın fiyatını
+  belirgin biçimde yansıttığı yerler metaller, S&P 500, BIST 100 ve AUD/USD; öbür
+  sekiz paritede tepki zayıf, dördünde eksi (Şekil 09).
+- **Tepki öngörü değildir.** Tepki çubuğu uzun olan bir varlıkta haber çoğunlukla
+  fiyatı anlatıyordur: gümüş yükseldikten sonra "gümüş yükseldi" başlıkları artar ve
+  endeks fiyatın arkasından gelir. Bir sonraki hafta için ne söylediği ayrı ve örnek
+  dışı ölçülür (Şekil 09); örneklem içinde en iyi parametreyi seçip aynı veride ölçmek,
+  aranan ilişki olmasa da yüksek bir ρ bulur.
 - **İki farklı veri ufku var, karıştırmayın.** Endeks seviyesi (Şekil 01) ve manşetler
   her koşuda tazelenir; rejim/korelasyon/saçılım panelleri ise 52 haftalık *geçmiş haber
-  önbelleğinden* hesaplanır. Önbelleğin şu anki ucu **<Deger proje="fx-haber-endeksi" anahtar="veri_sonu" ondalik={1}>16.08.2026</Deger>** — bu damga
-  web çıktısı üretiminin rejim özetinden okunur ve kendiliğinden ilerlemez: haber tarihçesini yeniden çeken tam koşu
-  koşulmadığı sürece o tarihte donar ve rejim etiketi eskimiş bir korelasyon yapısını
-  yansıtmaya başlar. Şekil 06'nın başlığındaki "veri sonu" damgasıyla karşılaştırın.
+  önbelleğinden* hesaplanır. Arşivin şu anki ucu **<Deger proje="fx-haber-endeksi" anahtar="veri_sonu" ondalik={1}>27.09.2026</Deger>**. Arşiv haftada
+  bir ilerler; o haftanın koşusu düşerse bu tarihte kalır ve rejim etiketi eskimiş bir
+  korelasyon yapısını yansıtmaya başlar. Şekil 06'nın başlığındaki "veri sonu"
+  damgasıyla karşılaştırın.
 
   Pratikte bu, **aynı sayfada iki tarih** görmek demektir ve ikisi de doğrudur.
   Sebebi şu: sayfayı **iki ayrı haber toplama** besliyor ve makaleleri
@@ -317,24 +414,23 @@ kümesinin sürdüğüne bakın — tek kaynaklı tekrar zinciri mi, geniş taba
   her sayı kendi tarihini taşır: bir büyüklüğün üzerine gelin, ipucunda o
   büyüklüğün — hattın değil — saati yazar.
 
-  Günün okumasında olağandışı bir şey varsa **bülten onu kendisi bildirir**:
-  ölçüm katmanı en olağandışı üç hareketi sıralar, bülteninin "Haber tonu"
-  bölümüne basar ve denetim o hareketler metinde anılmadan bülteni yayına
-  bırakmaz. Sıralama eşikle değil büyüklükle yapılır — sabit eşik ölçüldü ve
-  işlemedi: snapshot'tan snapshot'a on beş varlığın dokuz-on ikisi kategori
-  değiştiriyor, yani eşik her gün on sahte olay üretirdi.
-- **Kalibrasyon tarihi ile veri tarihi ayrıdır.** Endeksler <Deger proje="fx-haber-endeksi" anahtar="opt_kalibrasyon" ondalik={1}>22.07.2026</Deger> kalibrasyonunun
-  parametreleriyle kuruluyor, veri ise <Deger proje="fx-haber-endeksi" anahtar="veri_sonu" ondalik={1}>16.08.2026</Deger>'ya kadar. Bu bilinçli: parametreler
+  Günün okumasında olağandışı bir hareket varsa **bülten onu kendisi bildirir**:
+  hareket, o varlığın okumadan okumaya oynaklığıyla (σ) ölçülür ve yalnız büyük
+  olanlar anılır. Kategori değişimi ölçü olarak kullanılmaz: okumadan okumaya on beş
+  varlığın dokuz-on ikisi kategori değiştirir, yani her gün onlarca sahte olay
+  üretirdi.
+- **Kalibrasyon tarihi ile veri tarihi ayrıdır.** Son okuma <Deger proje="fx-haber-endeksi" anahtar="endeks_kalibrasyon" ondalik={1}>22.07.2026</Deger> kalibrasyonunun
+  parametreleriyle kuruldu, haftalık arşiv ise <Deger proje="fx-haber-endeksi" anahtar="veri_sonu" ondalik={1}>27.09.2026</Deger> tarihinde bitiyor. Bu bilinçli: parametreler
   her veri tazelemesinde yeniden aranırsa tarihçedeki her nokta farklı bir modelden
-  gelir ve seri kendi içinde kıyaslanamaz hale gelir. Önbellek %5 büyüdüğü için
-  yeniden kalibrasyon yapılmadı; kalibrasyon, veri penceresi anlamlı ölçüde
-  kaydığında yenilenir.
-- Rejim tarihçesi (Şekil 08) yeni birikmeye başladı: pipeline her koşuda rejimi
-  endeks tarihçesine yazıyor, ama şu an elde yalnız <Deger proje="fx-haber-endeksi" anahtar="snapshot_sayisi" ondalik={0}>6</Deger> koşu var.
-  Bu seri istatistiksel olarak yorumlanabilir hale gelene dek (birkaç düzine koşu)
-  panele *trend* diye bakmayın; tek tek noktalar olarak okuyun.
-- **Endeks tarihçesi parametre rejimi karıştırır.** Her snapshot, o gün geçerli olan
-  optimize parametrelerle kurulmuştur; 13.04 ve 22.07 kalibrasyonları farklıdır.
-  Dolayısıyla Şekil 02'deki seviye farkları kısmen haber tonundan, kısmen parametre
-  değişiminden gelir. Kalibrasyonlar arası karşılaştırmayı kategori/bant düzeyinde
-  yapın, ondalık düzeyinde değil.
+  gelir ve seri kendi içinde kıyaslanamaz hale gelir. Kalibrasyon elle ve seyrek
+  yenilenir; yenilendiğinde karnenin tarihi değişir ve Şekil 02, yeni parametrelerle
+  kurulan ilk okumayı dikey bir çizgiyle işaretler.
+- Rejim tarihçesi (Şekil 07) haftalık arşivin günlük serisinden kurulur ve 20 ile 60
+  günlük pencerelerle hesaplanır; ardışık günler pencerelerinin büyük kısmını paylaştığı
+  için birbirinden bağımsız değildir. Panele trend diye bakarken bunu hesaba katın.
+- **Endeks tarihçesi birden çok kalibrasyonu yan yana taşır.** Her okuma, o gün
+  geçerli olan parametrelerle kurulmuştur ve Şekil 02 kalibrasyonun değiştiği günü
+  dikey bir çizgiyle işaretler. Çizginin iki yanındaki seviye farkı kısmen haber
+  tonundan, kısmen parametre değişiminden gelir; okumadan okumaya fark ve oynaklık bu
+  yüzden yalnız aynı kalibrasyonun okumaları arasında hesaplanır. Kalibrasyonlar arası
+  karşılaştırmayı kategori/bant düzeyinde yapın, ondalık düzeyinde değil.
