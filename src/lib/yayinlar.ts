@@ -105,6 +105,30 @@ export function bultenler(): BultenKaydi[] {
   return _bultenler;
 }
 
+export interface BultenSayisi {
+  tarih: string;         // YYYY-MM-DD (dosya adı)
+  yazili: boolean;       // yayın kapısı: yazılmış sayı okura çıktı
+  b: any;
+}
+
+let _sayilar: BultenSayisi[] | null = null;
+
+/** BÜTÜN bülten sayıları — yazılmış ya da yazılmamış — ESKİDEN YENİYE.
+ *  Yayın kapısının dışındaki tek okuyucu ölçülen katmanın kendisidir: işlem
+ *  fikirlerinin karnesi (`fikir_karne`) her ölçümde kurulur ve sayı okura
+ *  çıkmasa da bir ölçümdür (lib/tradeler). Okura giden metin — fikrin tanımı,
+ *  yazarın kapanış emri — yine yalnız yazılmış sayıdan okunur. */
+export function bultenSayilari(): BultenSayisi[] {
+  if (_sayilar) return _sayilar;
+  _sayilar = Object.entries(bultenDosyalari)
+    .map(([yol, m]: [string, any]) => {
+      const b = (m as any).default ?? m;
+      return { tarih: tarihten(yol), yazili: bultenYazilmis(b), b };
+    })
+    .sort((a, b) => (a.tarih < b.tarih ? -1 : 1));
+  return _sayilar;
+}
+
 /** Rejim panosunun farkının kıyas sayısı. Biçim 3 HAFTALIK sayıda bir önceki
  *  haftalık sayı (pano "hafta içindeki yönü" göstersin; cuma günlüğüne göre fark
  *  bir haftalık sayıda cuma→pazar farkıdır ve 27.09'da enflasyon risk priminin

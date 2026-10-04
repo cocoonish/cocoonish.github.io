@@ -1,0 +1,227 @@
+---
+/**
+ * Tradeler — bültenin işlem fikirlerinin defteri: neden açıldı, ne durumda,
+ * kapandıysa nasıl kapandı, kârla mı zararla mı.
+ *
+ * Kullanıcı (04.10.2026): "bu trade idealar da sadece verilmekle kalınmamalı,
+ * takip edilmeli … neden bunların açıldığı, ne durumda olduğu, kapandıysa neden
+ * kapandığı, kâr mı zarar mı nasıl kapandığı tutulmalı".
+ *
+ * Defter yayımlanmış sayıların KENDİSİDİR (lib/tradeler): tanım yazılmış
+ * sayının `fikirler`inden, durum ve takip her sayının `fikir_karne`sinden,
+ * erken kapanış emri `fikir_kapat`tan. Sayfa hiçbir sonucu yeniden hesaplamaz;
+ * etiket, birim yazımı, uyarı ve yöntem metni bülten bölümüyle ORTAK
+ * (lib/fikir). Sayım (açık, kapanan, kazanç oranı, ortalama) en son karnenin
+ * `sayim`ından okunur — tanımı Python'da tek yerde (fikir.karne); karnesi
+ * olmayan bir defterde sayım satırı basılmaz.
+ */
+import Base from '../../layouts/Base.astro';
+import TradeKart from '../../components/TradeKart.astro';
+import { kicker, bolumBul } from '../../lib/bolumler';
+import { defter, type Trade } from '../../lib/tradeler';
+import { FIKIR_UYARI, FIKIR_YONTEM, FIKIR_KAPANMIS, sayiMi, fkR } from '../../lib/fikir';
+import { tarihYaz, yuzde } from '../../lib/bicim';
+
+const BOLUM = bolumBul('/tradeler/');
+const { tradeler, sayim, sayimTarih, karneHataTarih } = defter();
+const tz = (t: unknown): string => (typeof t === 'string' && t ? tarihYaz(t) : '');
+const metin = (s: unknown): string => String(s ?? '').trim();
+
+// SIRA: açık ve karnesiz fikirler en yeni açılış başta; kapananlar en yeni
+// kapanış başta (okur önce son hareketi görür). Aynı günün fikirleri bülten
+// kartlarının sırasıyla (kimliğin sıra numarası, sayısal: "-10" "-2"den sonra).
+const sira = (a: Trade, b: Trade) => a.kimlik.localeCompare(b.kimlik, 'tr', { numeric: true });
+const acilisa = (a: Trade, b: Trade) => metin(b.f.acilis).localeCompare(metin(a.f.acilis)) || sira(a, b);
+const kapanisa = (a: Trade, b: Trade) =>
+  metin(b.f.kapanis_tarih ?? b.f.son_tarih).localeCompare(metin(a.f.kapanis_tarih ?? a.f.son_tarih)) || sira(a, b);
+const acik = tradeler.filter((t) => t.grup === 'acik').sort(acilisa);
+const kapanan = tradeler.filter((t) => t.grup === 'kapanan').sort(kapanisa);
+// Karnesi tutulmayanlarda açıklar önce, kapanmışlar (erken kapanan, ufku dolan) sonra.
+const karnesizAcik = (t: Trade) => (FIKIR_KAPANMIS.has(String(t.son?.durum ?? '')) ? 1 : 0);
+const karnesiz = tradeler.filter((t) => t.grup === 'olculemez')
+  .sort((a, b) => karnesizAcik(a) - karnesizAcik(b) || (karnesizAcik(a) ? kapanisa(a, b) : acilisa(a, b)));
+
+// SAYIM — en son karnenin sayımı. Kapananların dökümü sayımın taşıdığı
+// anahtarlardan; sayım bir durumu ayrı saymıyorsa (bugün vade, ölçülemedi ve
+// karnesiz ufuk ayrı sayılmıyor) kalan "öbür" adıyla toplanır, uydurulmaz.
+const s: any = sayim ?? {};
+const sn = (k: string): number | null => (sayiMi(s[k]) ? s[k] : null);
+const dokum: string[] = [];
+if (sayim) {
+  const kalem: [string, string][] = [
+    ['hedef', 'hedefte'], ['stop', 'stopta'], ['sure', 'ufuk doldu'], ['geri_cekildi', 'erken kapandı'],
+    ['vade', 'vadesinde'], ['giriste_gecersiz', 'girişte geçersiz'], ['olculemedi', 'ölçülemedi'],
+    ['sure_olculemez', 'karnesiz, ufku doldu'],
+  ];
+  let ayri = 0;
+  for (const [k, ad] of kalem) {
+    const n = sn(k);
+    if (n === null) continue;
+    ayri += n;
+    if (n > 0) dokum.push(`${ad} ${n}`);
+  }
+  const top = sn('kapanan');
+  // Sayımın ayrı saymadığı bir durum (eski bir karnede) kalırsa adı uydurulmaz.
+  if (top !== null && top - ayri > 0) dokum.push(`öbür ${top - ayri}`);
+}
+const olculen = sn('olculen_kapanan');
+const kazanan = sn('kazanan');
+const oran = olculen && kazanan !== null ? yuzde((100 * kazanan) / olculen, 0) : null;
+---
+
+<Base title="Tradeler" description={BOLUM?.aciklama ?? 'Bültenin işlem fikirlerinin defteri.'}>
+  <header class="liste-baslik yuksel">
+    <p class="etiket kicker">{kicker('/tradeler/')}</p>
+    <h1>Tradeler</h1>
+    <p class="alt">
+      Bültenin piyasa okumasından türeyen işlem fikirleri burada bir defter olarak durur. Her
+      fikir bir bülten sayısında açılır ve o sayının kartına bağlıdır: neden açıldığı, bugün ne
+      durumda olduğu, kapandıysa nasıl ve hangi sonuçla kapandığı. Karne mekanik tutulur:
+      referans seviye ölçümden gelir, takip yayımdan sonraki ilk kapanıştan başlar, hedef, stop
+      ve ufuk kapanış bazında sorulur, yazılmış bir kapanış bir daha değişmez.
+    </p>
+  </header>
+
+  <p class="tr-uyari">{FIKIR_UYARI}</p>
+
+  {tradeler.length === 0 ? (
+    <p class="bos">Henüz açılmış bir işlem fikri yok; bülten ilk fikri açtığı gün defter burada başlar.</p>
+  ) : (
+    <>
+      <nav class="tr-gez" aria-label="Defterin bölümleri">
+        <a href="#acik">Açık</a>
+        <a href="#kapanan">Kapanan</a>
+        {karnesiz.length > 0 && <a href="#karnesiz">Karnesi tutulmayan</a>}
+        <a href="#yontem">Karnenin yöntemi</a>
+      </nav>
+
+      {karneHataTarih && (
+        <p class="tr-hata">{tz(karneHataTarih)} ölçümünde karne kurulamadı; durumlar bir önceki ölçümden.</p>
+      )}
+
+      {sayim && (
+        <section class="tr-ozet" aria-label="Sayım">
+          <dl class="tr-sayim">
+            <div>
+              <dt>Açık</dt>
+              <dd>{sn('acik') ?? '—'}</dd>
+              {sn('olculemez_acik') ? <span class="tr-alt">ayrıca karnesi tutulmayan {sn('olculemez_acik')}</span> : null}
+            </div>
+            <div><dt>Kapanan</dt><dd>{sn('kapanan') ?? '—'}</dd></div>
+            <div>
+              <dt>Kazançla kapanan</dt>
+              <dd>{olculen ? `${kazanan ?? '—'} / ${olculen}` : '—'}</dd>
+              <span class="tr-alt">{oran ? `oran ${oran}` : 'ölçülen sonuçla kapanan fikir yok'}</span>
+            </div>
+            {sn('n_r') ? (
+              <div>
+                <dt>Ortalama sonuç · R</dt>
+                <dd>{sn('n_r') && sayiMi(s.ortalama_r) ? fkR(s.ortalama_r) : '—'}</dd>
+                <span class="tr-alt">fikir {sn('n_r')} · stop mesafesi cinsinden</span>
+              </div>
+            ) : null}
+          </dl>
+          {dokum.length > 0 && <p class="tr-dokum">Kapananlar: {dokum.join(' · ')}.</p>}
+          <p class="tr-dokum-not">
+            Sayım {tz(sayimTarih)} ölçümünden; o ölçümden sonra açılan fikirler sayıma ilk karneleriyle
+            girer. Kazanç oranı ve ortalama yalnız sonucu ölçülen kapanmış fikirlerden kurulur; ortalama
+            R cinsindendir (sonucun stop mesafesine oranı), böylece baz puanla ve yüzdeyle ölçülen yapılar
+            aynı ölçüde toplanır. Opsiyon fikirleri (prim ölçülmediği için), karnesi tutulmayan fikirler,
+            girişle aynı kapanışta geri çekilen fikirler ve taşıması ölçülemeyen dolar/TL sonucu bu orana ve
+            ortalamaya girmez.
+          </p>
+        </section>
+      )}
+
+      <section class="tr-bolum" id="acik" aria-labelledby="acik-baslik">
+        <h2 id="acik-baslik">Açık tradeler</h2>
+        {acik.length === 0
+          ? <p class="bos">Şu an açık trade yok.</p>
+          : <div class="tr-liste">{acik.map((t) => <TradeKart t={t} />)}</div>}
+      </section>
+
+      <section class="tr-bolum" id="kapanan" aria-labelledby="kapanan-baslik">
+        <h2 id="kapanan-baslik">Kapanan tradeler</h2>
+        {kapanan.length === 0
+          ? <p class="bos">Henüz kapanan trade yok.</p>
+          : <div class="tr-liste">{kapanan.map((t) => <TradeKart t={t} />)}</div>}
+      </section>
+
+      {karnesiz.length > 0 && (
+        <section class="tr-bolum" id="karnesiz" aria-labelledby="karnesiz-baslik">
+          <h2 id="karnesiz-baslik">Karnesi tutulmayanlar</h2>
+          <p class="tr-bolum-not">
+            Elimizde fiyatı olmayan bir enstrümana dayanan fikirler; açıldıkları gün yayımlanır, ufukları
+            izlenir, sonuçla karneye girmez.
+          </p>
+          <div class="tr-liste">{karnesiz.map((t) => <TradeKart t={t} />)}</div>
+        </section>
+      )}
+    </>
+  )}
+
+  <details class="tr-yontem" id="yontem">
+    <summary>Karnenin yöntemi</summary>
+    <p>{FIKIR_YONTEM}</p>
+  </details>
+</Base>
+
+<style>
+  .liste-baslik { padding: 3rem 0 1.6rem; max-width: 52ch; }
+  .kicker { color: var(--claret); margin: 0 0 0.8rem; }
+  h1 {
+    font-family: var(--font-display); font-variation-settings: 'opsz' 72;
+    font-size: clamp(2.2rem, 5vw, 3rem); font-weight: 540; letter-spacing: -0.02em;
+    line-height: 1.05; margin: 0 0 0.9rem;
+  }
+  .alt { font-size: 1.08rem; color: var(--ink-70); margin: 0; line-height: 1.55; }
+  .tr-uyari {
+    font-size: 0.8rem; line-height: 1.5; color: var(--ink-70); max-width: var(--olcu-metin);
+    margin: 0 0 1.4rem; padding: 0.55rem 0.75rem; border: 1px solid var(--ink-30);
+    background: color-mix(in srgb, var(--ink) 3%, transparent);
+  }
+  .bos { color: var(--ink-70); font-style: italic; margin: 0 0 1rem; }
+  .tr-gez {
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; margin: 0 0 1.4rem;
+    padding-bottom: 0.6rem; border-bottom: 1px solid var(--ink-30);
+    font-family: var(--font-mono); font-size: 0.76rem;
+  }
+  .tr-gez a { text-decoration: none; border-bottom: 1px solid var(--ink-30); }
+  .tr-gez a:hover { color: var(--claret); border-bottom-color: var(--claret); }
+  .tr-hata { font-size: 0.85rem; color: var(--uyari); margin: 0 0 1rem; }
+  .tr-ozet { margin: 0 0 2.2rem; }
+  /* SAYIM ŞERİDİ: kalem sayısı sabit değil (R ortalaması gelince altı); ayraçlar
+     konumdan bağımsız — her kalemin sol ve üst çizgisi 1 px dışarı taşar, kap
+     kırpar, yani satır başındaki ve ilk satırdaki çizgi görünmez. */
+  .tr-sayim {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); margin: 0;
+    border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink-30); overflow: hidden;
+  }
+  .tr-sayim > div {
+    padding: 0.5rem 0.8rem 0.6rem; min-width: 0; margin: -1px 0 0 -1px;
+    border-left: 1px solid var(--ink-15); border-top: 1px solid var(--ink-15);
+  }
+  .tr-sayim dt { font-size: 0.74rem; font-weight: 600; color: var(--ink-70); margin: 0 0 0.2rem; }
+  .tr-sayim dd {
+    margin: 0; font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+    font-size: 1.15rem; line-height: 1.3;
+  }
+  .tr-alt { display: block; font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-60); margin-top: 0.15rem; line-height: 1.4; }
+  .tr-dokum { font-size: 0.86rem; color: var(--ink-70); margin: 0.7rem 0 0.3rem; max-width: var(--olcu-metin); }
+  .tr-dokum-not { font-size: 0.8rem; color: var(--ink-70); margin: 0; line-height: 1.5; max-width: var(--olcu-metin); }
+  .tr-bolum { margin: 0 0 2.6rem; }
+  .tr-bolum h2 {
+    font-family: var(--font-display); font-size: 1.4rem; font-weight: 560;
+    margin: 0 0 1rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--ink);
+  }
+  .tr-bolum-not { font-size: 0.86rem; color: var(--ink-70); margin: -0.4rem 0 1rem; max-width: var(--olcu-metin); line-height: 1.5; }
+  .tr-liste { display: grid; gap: 1.8rem; }
+  .tr-yontem { margin: 0 0 2rem; font-size: 0.82rem; color: var(--ink-70); max-width: var(--olcu-metin); }
+  .tr-yontem summary { cursor: pointer; font-family: var(--font-mono); font-size: 0.76rem; width: fit-content; }
+  .tr-yontem summary:hover { color: var(--claret); }
+  .tr-yontem[open] summary { margin-bottom: 0.4rem; }
+  .tr-yontem p { margin: 0; line-height: 1.55; }
+  @media (max-width: 400px) {
+    .tr-sayim { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>

@@ -1,0 +1,380 @@
+---
+/**
+ * Tradeler defterinin tek kaydı — açık, kapanmış ya da karnesi tutulmayan.
+ *
+ * Kart üç soruyu sırayla cevaplar: NE (başlık, yapı, kazanç yönü), NE DURUMDA
+ * (referans → fiili giriş → son → sonuç; kapanmışsa nasıl ve hangi sonuçla
+ * kapandı) ve NEDEN (gerekçe, görüşü ne bozar). Takip tablosu katlıdır: kaydın
+ * göründüğü her ölçüm, kapanışa kadar.
+ *
+ * Bütün sayılar ölçülen katmandan (lib/tradeler → `fikir_karne`) gelir ve
+ * olduğu gibi basılır; yazım lib/fikir'den, bülten bölümüyle ortak. Başlığın
+ * çapası `trade-<kimlik>` — sayfa sınavı (25e) her yazılmış fikrin
+ * başlığını bu öğede arar; kimlik okura basılmaz.
+ */
+import type { Trade } from '../lib/tradeler';
+import {
+  FIKIR_SINIF, FIKIR_TUR, FIKIR_DURUM, FIKIR_KAPANIS_NEDEN,
+  sayiMi, fkSeviye, fkSonuc, fkYon, kalanYaz, fkKullanimParca, noktali, sonucHukmu,
+  FIKIR_SONUCSUZ, GIRIS_BEKLENIYOR, GIRIS_BEKLENIYOR_NE, fkR, opsiyonSonucNotu, tasimaAyrisimi,
+  FIKIR_KAPANMIS, tasimaOlculemediNotu, UFUK_BEKLENIYOR, UFUK_BEKLENIYOR_NOT,
+} from '../lib/fikir';
+import { tarihYaz, yuzde, sayi } from '../lib/bicim';
+
+interface Props { t: Trade }
+const { t } = Astro.props;
+
+const tz = (x: unknown): string => (typeof x === 'string' && x ? tarihYaz(x) : '');
+const metin = (x: unknown): string => String(x ?? '').trim();
+
+const f = t.f;
+const k = t.son;
+const grup = t.grup;
+const opsiyon = f.tur === 'opsiyon';
+const durum = metin(k?.durum);
+const kapanmis = grup === 'kapanan';
+const karnesiz = grup === 'olculemez';
+// Karnesi tutulmayan fikir de KAPANIR (yazarın erken kapanışı, ufku): grubu
+// türünden gelir ama durumu kapanmıştır. Eskiden rozet her hâlde "açık" diyordu ve
+// erken kapatılmış bir fikrin sebebi hiçbir yerde basılmıyordu (inceleme 04.10.2026).
+const karnesizKapali = karnesiz && FIKIR_KAPANMIS.has(durum);
+
+// Künye: sınıf · tür · açılış · ufuk/vade (açıkta) ya da kapanış (kapanmışta) · senaryo.
+const ust = [
+  FIKIR_SINIF[metin(f.sinif)] ?? '',
+  karnesiz ? '' : FIKIR_TUR[metin(f.tur)] ?? '',
+  f.acilis ? `açılış ${tz(f.acilis)}` : '',
+  kapanmis || karnesizKapali
+    ? (f.kapanis_tarih ? `kapanış ${tz(f.kapanis_tarih)}` : '')
+    : (f.ufuk ? `${opsiyon ? 'vade' : 'ufuk'} ${tz(opsiyon ? (f.opsiyon?.vade ?? f.ufuk) : f.ufuk)}` : ''),
+  metin(f.senaryo),
+].filter(Boolean).join(' · ');
+
+// Durum rozeti ve bayraklar (makine alanından değil, anlamından).
+const rozet = karnesiz
+  ? (karnesizKapali ? FIKIR_DURUM[durum] ?? durum : 'açık · karnesi tutulmuyor')
+  : FIKIR_DURUM[durum] ?? FIKIR_DURUM.acik;
+const bayrak: string[] = [];
+if (!karnesiz && !kapanmis) {
+  if (!k) bayrak.push('karne ilk ölçümde başlar');
+  else if (k.giris_bekleniyor) bayrak.push(GIRIS_BEKLENIYOR);
+  if (t.cikisBekleniyor) bayrak.push('çıkış emri verildi');
+  if (k?.degerlenmedi) bayrak.push('son ölçümde değerlenmedi');
+  if (k?.ufuk_bekleniyor) bayrak.push(UFUK_BEKLENIYOR);
+}
+const devir = Array.isArray(k?.devir) && k.devir.length > 0
+  ? `Son değer giriş kontratı cinsinden (vade devri ${k.devir.map((d: string) => tz(d)).join(', ')}).`
+  : '';
+const kul = fkKullanimParca(f);
+
+// Kapanmış fikrin hükmü ve nasıl kapandığı.
+const hukum = kapanmis ? sonucHukmu(f) : null;
+const sonucsuz = FIKIR_SONUCSUZ.has(durum) || !sayiMi(f.sonuc);
+const nasil = (() => {
+  if (!kapanmis) return '';
+  if (durum === 'geri_cekildi') {
+    const sebep = metin(f.sebep ?? t.erken?.sebep);
+    const cikis = f.giris_oncesi
+      ? 'Çıkış emri fiili girişle aynı kapanışa düştü; yapı hiç taşınmadı.'
+      : 'Çıkış, kapatan sayının yayımından sonraki ilk kapanıştır.';
+    return sebep ? `Yazar erken kapattı. Gerekçesi: ${noktali(sebep)} ${cikis}` : `Yazar erken kapattı. ${cikis}`;
+  }
+  return FIKIR_KAPANIS_NEDEN[durum] ?? '';
+})();
+const sonucYazi = (() => {
+  if (!kapanmis) return '';
+  if (sonucsuz) {
+    return durum === 'giriste_gecersiz' ? 'Sonuç yok: yapı kurulamadı.'
+      : f.giris_oncesi ? 'Sonuç yok: yapı hiç taşınmadı.' : 'Sonuç yok.';
+  }
+  if (opsiyon) return `${yuzde(f.sonuc, 2)} — ${opsiyonSonucNotu(f)}`;
+  return fkSonuc(f.sonuc, f);
+})();
+
+// Takip satırının sonucu ve durumu.
+const takipSonuc = (x: any): string => {
+  if (!x) return '—';
+  if (x.tur === 'opsiyon') {
+    if (sayiMi(x.ic_deger)) return `içsel ${yuzde(x.ic_deger, 2)}`;
+    if (sayiMi(x.sonuc)) return `${x.sonuc_turu === 'odeme' ? 'ödeme' : 'içsel'} ${yuzde(x.sonuc, 2)}`;
+    return '—';
+  }
+  return fkSonuc(x.sonuc, x.birim ? x : f);
+};
+const takipDurum = (x: any): string => {
+  const d = FIKIR_DURUM[metin(x?.durum)] ?? '—';
+  const ek = [x?.giris_bekleniyor && 'giriş bekleniyor', x?.cikis_bekleniyor && 'çıkış emri verildi',
+    x?.degerlenmedi && 'değerlenmedi', x?.ufuk_bekleniyor && UFUK_BEKLENIYOR].filter(Boolean);
+  return ek.length ? `${d} · ${ek.join(' · ')}` : d;
+};
+const tasima = tasimaAyrisimi(k);
+const takipGoster = !karnesiz && t.takip.length > 0;
+const bagsizVar = t.takip.some((x) => !x.href);
+---
+
+<article class:list={['tr-kart', { kapanmis, karnesiz }]}>
+  <h3 class="tr-baslik" id={`trade-${t.kimlik}`}>
+    {t.acildigi ? <a href={t.acildigi.href}>{f.baslik}</a> : <span>{f.baslik}</span>}
+  </h3>
+  {ust && <p class="tr-ust">{ust}</p>}
+
+  {kapanmis ? (
+    <p class="tr-sonuc">
+      {hukum && <span class:list={['tr-hukum', hukum.sinif]}>{hukum.etiket}</span>}
+      {hukum
+        ? <span class:list={['tr-deg', 'tr-buyuk', fkYon(f.sonuc)]}>{sonucYazi}</span>
+        : <span class="tr-sonuc-metin">{sonucYazi}</span>}
+      {hukum && fkR(f.sonuc_r) && <span class="tr-r">{fkR(f.sonuc_r)}</span>}
+      <span class="tr-rozet">{rozet}</span>
+    </p>
+  ) : (
+    <p class="tr-durum">
+      <span class="tr-rozet">{rozet}</span>
+      {bayrak.map((x) => <span class="tr-bayrak">{x}</span>)}
+      {t.sonOlcum && !karnesiz && <span class="tr-olcum">son ölçüm {tz(t.sonOlcum)}</span>}
+    </p>
+  )}
+
+  {kapanmis && nasil && <p class="tr-metin"><span class="tr-et">Nasıl kapandı.</span> {nasil}</p>}
+  {kapanmis && metin(f.not) && <p class="tr-not">{noktali(f.not)}</p>}
+
+  {karnesiz ? (
+    <>
+      {f.enstruman && <p class="tr-satir"><span class="tr-et">Enstrüman:</span> {f.enstruman}</p>}
+      <p class="tr-satir tr-karnesiz-not">Karnesi tutulmuyor: {noktali(f.olculemez_sebep || 'elimizde fiyatı yok')}</p>
+      {sayiMi(k?.kalan_gun) && k.kalan_gun >= 0 && <p class="tr-not">Ufka {kalanYaz(k.kalan_gun)} ({tz(t.sonOlcum)} ölçümünde).</p>}
+      {durum === 'geri_cekildi' && (
+        <p class="tr-metin"><span class="tr-et">Nasıl kapandı.</span> Yazar erken kapattı{f.kapanis_tarih ? ` (${tz(f.kapanis_tarih)})` : ''}.{metin(f.sebep ?? t.erken?.sebep) ? ` Gerekçesi: ${noktali(metin(f.sebep ?? t.erken?.sebep))}` : ''}</p>
+      )}
+      {durum === 'sure_olculemez' && <p class="tr-metin"><span class="tr-et">Nasıl kapandı.</span> {FIKIR_KAPANIS_NEDEN.sure_olculemez}</p>}
+      {!karnesizKapali && t.erken && (
+        <p class="tr-not tr-not-uyari">
+          Kapanış emri <a href={t.erken.href}>{tz(t.erken.sayi)} sayısında</a> verildi{t.erken.sebep ? `: ${noktali(t.erken.sebep)}` : '.'}
+        </p>
+      )}
+    </>
+  ) : (
+    <>
+      {!kapanmis && f.yapi_metni && <p class="tr-satir"><span class="tr-et">Yapı:</span> {f.yapi_metni}</p>}
+      {!kapanmis && f.yon_metni && <p class="tr-satir"><span class="tr-et">Kazanç yönü:</span> {f.yon_metni}</p>}
+      <dl class="tr-serit" aria-label={`${f.baslik}: referans, giriş ve son değer`}>
+        <div>
+          <dt>{opsiyon ? 'Dayanak referansı' : 'Referans'}</dt>
+          <dd>{fkSeviye(f.giris, f)}{f.giris_tarih && <span class="tr-alt">{tz(f.giris_tarih)} kapanışı</span>}</dd>
+        </div>
+        <div>
+          <dt>{durum === 'giriste_gecersiz' ? 'Giriş kapanışı' : 'Fiili giriş'}</dt>
+          {sayiMi(k?.giris_fiili)
+            ? <dd>{fkSeviye(k.giris_fiili, f)}{k.giris_fiili_tarih && <span class="tr-alt">{tz(k.giris_fiili_tarih)} kapanışı</span>}</dd>
+            : <dd class="tr-dd-metin">{kapanmis ? 'olmadı' : k?.degerlenmedi ? 'değerlenmedi' : k ? 'bekleniyor' : 'ilk ölçümde'}<span class="tr-alt">{k?.degerlenmedi && !kapanmis ? 'bu ölçümde' : GIRIS_BEKLENIYOR_NE}</span></dd>}
+        </div>
+        {durum === 'giriste_gecersiz' ? (
+          <>
+            <div><dt>Hedef</dt><dd>{fkSeviye(f.hedef, f)}</dd></div>
+            <div><dt>Stop</dt><dd>{fkSeviye(f.stop, f)}</dd></div>
+          </>
+        ) : (
+          <>
+            <div>
+              <dt>{kapanmis ? (opsiyon ? 'Dayanak çıkış' : 'Çıkış') : (opsiyon ? 'Dayanak son' : 'Son')}</dt>
+              {sayiMi(k?.son)
+                ? <dd>{fkSeviye(k.son, f)}{k.son_tarih && <span class="tr-alt">{tz(k.son_tarih)} kapanışı</span>}</dd>
+                : <dd>—</dd>}
+            </div>
+            {kapanmis ? (
+              opsiyon
+                ? <div><dt>Kullanım fiyatı</dt><dd>{kul.parca.map((x: string, i: number) => <>{i > 0 && kul.ayrac}<span class="nb">{x}</span></>)}<span class="tr-alt">vade {tz(f.opsiyon?.vade ?? f.ufuk)} · prim ölçülmedi</span></dd></div>
+                : <div><dt>Hedef · stop</dt><dd><span class="nb">{fkSeviye(f.hedef, f)}</span> · <span class="nb">{fkSeviye(f.stop, f)}</span></dd></div>
+            ) : (
+              <div>
+                <dt>{opsiyon ? 'İçsel değer' : 'Sonuç'}</dt>
+                {opsiyon
+                  ? <dd>{sayiMi(k?.ic_deger) ? yuzde(k.ic_deger, 2) : '—'}<span class="tr-alt">prim ve zaman değeri hariç</span></dd>
+                  : <dd><span class:list={['tr-deg', fkYon(k?.sonuc)]}>{fkSonuc(k?.sonuc, f)}</span>{fkR(k?.sonuc_r) && <span class="tr-alt">{fkR(k.sonuc_r)}</span>}</dd>}
+              </div>
+            )}
+          </>
+        )}
+      </dl>
+      {!kapanmis && (
+        <dl class="tr-serit tr-serit-ikincil" aria-label={`${f.baslik}: seviyeler ve kalan süre`}>
+          {opsiyon ? (
+            <>
+              <div><dt>Kullanım fiyatı</dt><dd>{kul.parca.map((x: string, i: number) => <>{i > 0 && kul.ayrac}<span class="nb">{x}</span></>)}</dd></div>
+              <div><dt>Vade</dt><dd>{tz(f.opsiyon?.vade ?? f.ufuk) || '—'}</dd></div>
+              <div><dt>Prim</dt><dd class="tr-dd-metin">ölçülmedi</dd></div>
+            </>
+          ) : (
+            <>
+              <div><dt>Hedef</dt><dd>{fkSeviye(f.hedef, f)}</dd></div>
+              <div><dt>Stop</dt><dd>{fkSeviye(f.stop, f)}</dd></div>
+              <div><dt>Getiri/risk</dt><dd>{sayiMi(f.getiri_risk) ? sayi(f.getiri_risk, 2) : '—'}</dd></div>
+            </>
+          )}
+          <div>
+            <dt>Kalan</dt>
+            <dd>
+              {sayiMi(k?.kalan_gun) ? kalanYaz(k.kalan_gun) : (f.ufuk ? tz(opsiyon ? (f.opsiyon?.vade ?? f.ufuk) : f.ufuk) : '—')}
+              <span class="tr-alt">{sayiMi(k?.kalan_gun) && t.sonOlcum ? `${tz(t.sonOlcum)} ölçümünde` : 'ufuk günü'}</span>
+            </dd>
+          </div>
+        </dl>
+      )}
+      {!kapanmis && k?.degerlenmedi && <p class="tr-not tr-not-uyari">Son ölçümde değerlenmedi: {noktali(k.degerlenmedi)}{sayiMi(k?.giris_fiili) && k?.son_tarih ? ` Değerler ${tz(k.son_tarih)} kapanışına kadar ölçülenler.` : ''}</p>}
+      {!kapanmis && k?.ufuk_bekleniyor && <p class="tr-not">{UFUK_BEKLENIYOR_NOT}</p>}
+      {tasima && <p class="tr-not">Sonucun ayrışımı: spot {tasima.spot} · taşıma {tasima.tasima}. Hedef ve stop spot kapanışında sorulur.</p>}
+      {k?.tasima_olculemedi && <p class="tr-not tr-not-uyari">{tasimaOlculemediNotu(kapanmis)}</p>}
+      {devir && <p class="tr-not">{devir}</p>}
+      {f.enstruman && (
+        <p class="tr-not">Enstrüman: {f.enstruman}. Karne {f.yapi_metni || 'ölçülebilir bacaklar'} ile vekil olarak tutulur; enstrümanla vekil arasındaki fark ölçülmez.</p>
+      )}
+      {!kapanmis && t.erken && (
+        <p class="tr-not tr-not-uyari">
+          Çıkış emri <a href={t.erken.href}>{tz(t.erken.sayi)} sayısında</a> verildi{t.erken.sebep ? `: ${noktali(t.erken.sebep)}` : '.'} Çıkış o sayının yayımından sonraki ilk kapanıştır.
+        </p>
+      )}
+    </>
+  )}
+
+  {(() => {
+    const neden = (
+      <>
+        {kapanmis && f.yapi_metni && <p class="tr-satir"><span class="tr-et">Yapı:</span> {f.yapi_metni}</p>}
+        {kapanmis && f.yon_metni && <p class="tr-satir"><span class="tr-et">Kazanç yönü:</span> {f.yon_metni}</p>}
+        {kapanmis && !opsiyon && (sayiMi(f.getiri_risk) || f.ufuk) && (
+          <p class="tr-satir"><span class="tr-et">Plan:</span> {[sayiMi(f.getiri_risk) ? `getiri/risk ${sayi(f.getiri_risk, 2)}` : '', f.ufuk ? `ufuk ${tz(f.ufuk)}` : ''].filter(Boolean).join(' · ')}</p>
+        )}
+        {metin(f.gerekce)
+          ? <p class="tr-metin"><span class="tr-et">Neden açıldı.</span> {f.gerekce}</p>
+          : !t.tanim && <p class="tr-metin">Fikrin açıldığı bülten sayısı arşivde bulunamadı; gerekçesi ve görüşü neyin bozacağı yalnız o sayıda yazılıydı.</p>}
+        {metin(f.ne_bozar) && <p class="tr-metin"><span class="tr-et">Görüşü ne bozar.</span> {f.ne_bozar}</p>}
+      </>
+    );
+    return kapanmis || karnesiz
+      ? <details class="tr-ayrinti"><summary>{karnesiz ? 'Gerekçe' : 'Ayrıntı ve gerekçe'}</summary>{neden}</details>
+      : neden;
+  })()}
+
+  {takipGoster && (
+    <details class="tr-takip">
+      <summary>Takip · {t.takip.length} ölçüm</summary>
+      <div class="tr-kaydir" tabindex="0" role="region" aria-label={`${f.baslik}: takip tablosu, kaydırılabilir`}>
+        <table class="tr-tablo" aria-label={`${f.baslik}: ölçüm ölçüm takip`}>
+          <thead><tr>
+            <th scope="col">Ölçüm</th>
+            <th scope="col" class="sag">{opsiyon ? 'Dayanak' : 'Son değer'}</th>
+            <th scope="col" class="sag">Sonuç</th>
+            <th scope="col">Durum</th>
+          </tr></thead>
+          <tbody>
+            {t.takip.map((x) => (
+              <tr>
+                <td class="tr-mono">{x.href ? <a href={x.href}>{tz(x.tarih)}</a> : tz(x.tarih)}</td>
+                <td class="sag tr-mono">
+                  {sayiMi(x.kayit.son) ? fkSeviye(x.kayit.son, x.kayit.birim ? x.kayit : f) : '—'}
+                  {x.kayit.son_tarih && <span class="tr-alt">{tz(x.kayit.son_tarih).slice(0, 5)} kapanışı</span>}
+                </td>
+                <td class="sag"><span class:list={['tr-deg', x.kayit.tur === 'opsiyon' ? {} : fkYon(x.kayit.sonuc)]}>{takipSonuc(x.kayit)}</span>{fkR(x.kayit.sonuc_r) && <span class="tr-alt">{fkR(x.kayit.sonuc_r)}</span>}</td>
+                <td class="tr-durum-hucre">{takipDurum(x.kayit)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {bagsizVar && <p class="tr-not">Bağı olmayan tarihte bülten yayımlanmadı; karne o gün de ölçüldü.</p>}
+    </details>
+  )}
+</article>
+
+<style>
+  .tr-kart { padding-left: 0.9rem; border-left: 2px solid var(--claret); min-width: 0; }
+  .tr-kart.kapanmis { border-left-color: var(--ink-30); }
+  .tr-kart.karnesiz { border-left-color: var(--ink-30); border-left-style: dashed; }
+  /* Büyük harf dönüşümü YOK: başlıklar "OIS" gibi yabancı adlar taşır (sayfa sınavı 27). */
+  .tr-baslik {
+    font-family: var(--font-display); font-size: 1.12rem; font-weight: 560; letter-spacing: 0;
+    color: var(--ink); margin: 0 0 0.25rem; line-height: 1.3; overflow-wrap: anywhere;
+  }
+  .tr-baslik a { color: inherit; text-decoration-color: var(--ink-30); }
+  .tr-baslik a:hover { color: var(--claret); text-decoration-color: var(--claret); }
+  .tr-ust { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-60); margin: 0 0 0.5rem; line-height: 1.5; }
+  .tr-durum, .tr-sonuc {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 0.55rem;
+    margin: 0 0 0.6rem; font-size: 0.85rem;
+  }
+  .tr-rozet {
+    font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-70);
+    border: 1px solid var(--ink-30); padding: 0.05rem 0.4rem;
+  }
+  .tr-bayrak {
+    font-family: var(--font-mono); font-size: 0.68rem; color: var(--uyari);
+    border: 1px solid var(--uyari); padding: 0.05rem 0.4rem;
+  }
+  .tr-olcum { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-60); }
+  .tr-hukum {
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; padding: 0.08rem 0.45rem;
+    border: 1px solid currentColor;
+  }
+  .tr-hukum.kar { color: var(--pozitif); }
+  .tr-hukum.zarar { color: var(--claret); }
+  .tr-hukum.basabas { color: var(--ink-70); }
+  .tr-buyuk { font-size: 1rem; font-weight: 600; }
+  .tr-r { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 0.8rem; color: var(--ink-70); }
+  .tr-sonuc-metin { font-style: italic; color: var(--ink-70); }
+  .tr-satir { margin: 0 0 0.25rem; font-size: 0.95rem; line-height: 1.5; max-width: var(--olcu-metin); }
+  .tr-et { font-weight: 600; color: var(--ink); }
+  .tr-karnesiz-not { color: var(--uyari); }
+  .tr-metin { margin: 0 0 0.4rem; font-size: 0.95rem; line-height: 1.55; color: var(--ink-70); max-width: var(--olcu-metin); }
+  .tr-not { margin: 0 0 0.3rem; font-size: 0.82rem; line-height: 1.5; color: var(--ink-70); max-width: var(--olcu-metin); }
+  .tr-not-uyari { color: var(--uyari); }
+  /* SEVİYE ŞERİDİ: dört kalem geniş ekranda yan yana, telefonda ikişer (bülten
+     kartının sözleşmesi — tablo olarak basıldığında dar ekranda kalemlerin
+     biri hep görünmezdi). */
+  .tr-serit {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 40rem;
+    margin: 0.55rem 0 0.6rem; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink-30);
+  }
+  .tr-serit-ikincil { border-top-color: var(--ink-30); margin-top: -0.6rem; }
+  .tr-serit > div { padding: 0.35rem 0.7rem 0.45rem 0; min-width: 0; }
+  .tr-serit > div + div { padding-left: 0.7rem; border-left: 1px solid var(--ink-15); }
+  .tr-serit dt { font-size: 0.74rem; font-weight: 600; color: var(--ink-70); margin: 0 0 0.15rem; }
+  .tr-serit dd {
+    margin: 0; font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+    font-size: 0.9rem; line-height: 1.35; overflow-wrap: anywhere;
+  }
+  .tr-serit dd.tr-dd-metin { font-family: var(--font-body); font-style: italic; color: var(--ink-70); }
+  .tr-alt { display: block; font-family: var(--font-mono); font-style: normal; font-size: 0.68rem; color: var(--ink-60); margin-top: 0.1rem; }
+  .tr-deg { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-70); white-space: nowrap; }
+  .tr-deg.arti { color: var(--pozitif); }
+  .tr-deg.eksi { color: var(--claret); }
+  .nb { white-space: nowrap; }
+  details.tr-ayrinti, details.tr-takip { margin: 0.35rem 0 0.2rem; }
+  details.tr-ayrinti summary, details.tr-takip summary {
+    cursor: pointer; font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-70);
+    width: fit-content;
+  }
+  details.tr-ayrinti summary:hover, details.tr-takip summary:hover { color: var(--claret); }
+  details[open] > summary { margin-bottom: 0.4rem; }
+  /* Takip tablosu kendi kabında kayar, sayfa kaymaz; kap konumlu olduğu için
+     içindeki gizli öğeler sayfaya göre yerleşmez. */
+  .tr-kaydir { overflow-x: auto; position: relative; max-width: 40rem; }
+  .tr-kaydir:focus-visible { outline: 2px solid var(--claret); outline-offset: 2px; }
+  table.tr-tablo { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  table.tr-tablo th {
+    text-align: left; font-weight: 600; font-size: 0.72rem; color: var(--ink-70);
+    padding: 0 0.6rem 0.3rem 0; border-bottom: 1px solid var(--ink); vertical-align: bottom;
+  }
+  table.tr-tablo td {
+    padding: 0.3rem 0.6rem 0.3rem 0; border-bottom: 1px solid var(--ink-15); vertical-align: top;
+  }
+  table.tr-tablo .sag { text-align: right; }
+  .tr-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tr-durum-hucre { color: var(--ink-70); }
+  @media (max-width: 640px) {
+    .tr-kart { padding-left: 0.7rem; }
+    .tr-serit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tr-serit > div + div:nth-child(3) { padding-left: 0; border-left: 0; }
+    .tr-serit > div:nth-child(n+3) { border-top: 1px solid var(--ink-15); }
+    table.tr-tablo { font-size: 0.74rem; }
+  }
+</style>

@@ -29,35 +29,42 @@ export const BOLUMLER: Bolum[] = [
     no: '01', ad: 'Bülten', href: '/bulten/', gezinme: true, rss: '/bulten/rss.xml',
     aciklama: 'Hafta içi her sabah günlük, pazar akşamı haftaya bakış: ölçülen piyasa, takvim ve günün okuması.',
   },
+  // İşlem fikirlerinin defteri bültenden doğar, o yüzden hemen ardında
+  // (04.10.2026). Numaralar yalnız bu listede yazılı; başlık, alt bilgi, 404,
+  // hakkında ve kicker'lar buradan okur — kaydırma başka hiçbir dosyaya dokunmaz.
   {
-    no: '02', ad: 'Analiz', href: '/analiz/', gezinme: true, rss: '/analiz/rss.xml',
+    no: '02', ad: 'Tradeler', href: '/tradeler/', gezinme: true,
+    aciklama: 'Bültenin okumasından türeyen işlem fikirlerinin defteri: neden açıldı, ne durumda, nasıl kapandı, kârla mı zararla mı — karne ölçülen katmandan, kapanış bazında.',
+  },
+  {
+    no: '03', ad: 'Analiz', href: '/analiz/', gezinme: true, rss: '/analiz/rss.xml',
     aciklama: 'Tek bir piyasa gelişmesini mekanizmasına, emsaline ve fiyat etkisine kadar açan uzun yazılar.',
   },
   {
-    no: '03', ad: 'Projeler', href: '/projeler/', gezinme: true,
+    no: '04', ad: 'Projeler', href: '/projeler/', gezinme: true,
     aciklama: 'Kendi kaynağından beslenen, kendi ritminde tazelenen veri panoları; her sayı kendi tarihini taşır.',
   },
   {
-    no: '04', ad: 'Dersler', href: '/arastirma/', gezinme: true,
+    no: '05', ad: 'Dersler', href: '/arastirma/', gezinme: true,
     aciklama: 'Faiz, kur, opsiyon ve teknik analiz üzerine ders formatında uzun notlar.',
   },
   {
-    no: '05', ad: 'İndikatörler', href: '/indikatorler/', gezinme: true,
+    no: '06', ad: 'İndikatörler', href: '/indikatorler/', gezinme: true,
     aciklama: 'Derslerde öğretilen yöntemlerin TradingView karşılığı: kaynağı açık, eşiği dersten gelen Pine Script indikatörleri.',
   },
   {
-    no: '06', ad: 'Hakkında', href: '/hakkinda/', gezinme: true,
+    no: '07', ad: 'Hakkında', href: '/hakkinda/', gezinme: true,
     aciklama: 'Sitenin amacı, yayın ilkeleri, yayın takvimi ve düzeltme politikası.',
   },
   {
-    no: '07', ad: 'Arama', href: '/arama/', gezinme: true,
+    no: '08', ad: 'Arama', href: '/arama/', gezinme: true,
     aciklama: 'Başlık, etiket ve metinlerde tam metin arama.',
   },
   // Haftalık teknik analiz 27.09.2026 sayısıyla sona erdi (01.10.2026, kullanıcı
   // kararı). Beş sayı kendi adreslerinde arşivde duruyor; bölüm gezinmeden ve
   // besleme listesinden çıktı, numarası sona alındı ki gezinmede boşluk kalmasın.
   {
-    no: '08', ad: 'Teknik arşivi', href: '/teknik/', gezinme: false, rss: '/teknik/rss.xml', arsiv: true,
+    no: '09', ad: 'Teknik arşivi', href: '/teknik/', gezinme: false, rss: '/teknik/rss.xml', arsiv: true,
     aciklama: 'Haftalık teknik analizin 30 Ağustos–27 Eylül 2026 arasında yayımlanan beş sayısı; yayın 27 Eylül 2026 sayısıyla sona erdi.',
   },
 ];

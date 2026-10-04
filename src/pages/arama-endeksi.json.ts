@@ -27,6 +27,14 @@ const KOK: Record<string, { tur: string; kok: string }> = {
   indikatorler: { tur: 'indikator', kok: 'indikatorler' },
 };
 
+// Bir sayının AÇTIĞI işlem fikirlerinin aranabilir metni: başlık ve gerekçe.
+const fikirMetni = (b: any): string =>
+  (Array.isArray(b?.fikirler) ? b.fikirler : [])
+    .filter((f: any) => f && typeof f === 'object')
+    .map((f: any) => [f.baslik, f.gerekce].filter((x) => typeof x === 'string' && x.trim()).join(' '))
+    .filter(Boolean)
+    .join(' ');
+
 export async function GET() {
   const eksik = Object.keys(collections).filter((ad) => !KOK[ad]);
   if (eksik.length) throw new Error(`arama endeksi: koleksiyon eşlemesi yok — ${eksik.join(', ')}`);
@@ -61,10 +69,17 @@ export async function GET() {
     // uçlarında bile (manşet + 10 madde + 1.000 kelime risk) önek ~11.000
     // karakter, yani senaryoların tamamı aranır; okuma kalan payla kesilir,
     // öbür bölümler aranmaz. Endeks yılda ~300 KB büyür (günlükler aynı).
+    //
+    // İŞLEM FİKİRLERİ (04.10.2026) yalnız AÇILDIKLARI sayıda aranır: başlık ve
+    // gerekçe, DİZGEYE çevrilerek (nesne listesi doğrudan birleştirilseydi
+    // "[object Object]" basardı). Yer: günlükte "Bu sabah"ın ardı, haftalıkta
+    // senaryoların ardı — sona eklenen metin 6.000/12.000 sınırında kesilirdi.
+    // Seviyeler ve karne aranmaz: karne sonraki sayılarda yeniden kurulan
+    // ölçülen bir alandır.
     govde: duzMetin((k.haftalik
-      ? [k.b.manset, k.b.ozet?.ne_oldu, k.b.gundem?.risk, k.b.yorum,
+      ? [k.b.manset, k.b.ozet?.ne_oldu, k.b.gundem?.risk, fikirMetni(k.b), k.b.yorum,
          ...Object.entries(k.b.gundem ?? {}).filter(([id]) => id !== 'risk').map(([, v]) => v)]
-      : [k.b.manset, k.b.ozet?.ne_oldu, k.b.ozet?.ne_bekleniyor, k.b.yorum,
+      : [k.b.manset, k.b.ozet?.ne_oldu, fikirMetni(k.b), k.b.ozet?.ne_bekleniyor, k.b.yorum,
          ...Object.values(k.b.gundem ?? {})]).filter(Boolean).join(' '))
       .slice(0, k.haftalik ? 12000 : 6000),
   }));
