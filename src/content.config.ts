@@ -32,6 +32,10 @@ const duzeltmeSema = z
     eski: z.string(),
     yeni: z.string(),
     sebep: z.string().optional(),
+    /** İsteğe bağlı: düzeltmeyi X'e de götüren hedef gönderi (defter anahtarı,
+     *  "analiz:<slug>") ve kısa metin — tweet/duzeltme.py okur, sayfa BASMAZ. */
+    gonderi: z.string().optional(),
+    gonderi_metni: z.string().optional(),
   }))
   .default([]);
 
