@@ -14,7 +14,8 @@
  * günlere aittir; burada gösterilen, tabloda yazan büyüklüğün tarihidir.
  */
 import { hatManseti } from '../lib/anaSayfa';
-import { yasMetni } from '../lib/bicim';
+import { tariheCevir, yasMetni } from '../lib/bicim';
+import { tazelikSirasi } from '../lib/projeDizini';
 
 interface Giris {
   slug: string;
@@ -31,7 +32,17 @@ const satirlar = hatlar
   // Ölçüsü tanımlı olmayan (henüz manşet büyüklüğü seçilmemiş) hat tabloya
   // girmez; boş bir satır, olmayan bir satırdan daha kötü bilgi verir.
   .filter((h) => h.olcu)
-  .sort((a, b) => (a.yas ?? 9e9) - (b.yas ?? 9e9));
+  // Projeler sayfasıyla AYNI karşılaştırıcı: verisi en yeni olan üstte, eşit
+  // tarihte başlık sırası (lib/projeDizini). Ayrı bir kural iki yerde eşit
+  // tarihli hatları farklı sırada basıyordu.
+  .sort((a, b) =>
+    tazelikSirasi({ gun: tariheCevir(a.tarih), baslik: a.baslik }, { gun: tariheCevir(b.tarih), baslik: b.baslik }),
+  );
+
+// Tarayıcı yaşı yalnız GÜN damgasında yeniden hesaplar (aylık damgada yaş yok).
+// Düzenli ifade burada durur: şablonun öznitelik ifadesindeki `{2}` gibi
+// süslü parantezleri Astro derleyicisi ifade sınırı sanıyor.
+const TAM_GUN = /^\d{2}\.\d{2}\.\d{4}$/;
 
 // Değer ile birim ayrı öğe: telefonda birim değerin ALTINA iner. Tek nowrap
 // dizge ("230,8 mlr USD") 390 pikselde değer sütununu 142 piksele çıkarıyor,
@@ -72,7 +83,12 @@ const parca = (m: string) => {
             </td>
             <td class="ht-tarih">
               {h.tarih || '—'}
-              {yasMetni(h.yas) && <span class="ht-yas">{yasMetni(h.yas)}</span>}
+              {yasMetni(h.yas) && (
+                <span class="ht-yas"
+                  data-ht-yas={TAM_GUN.test(h.tarih ?? '') ? h.tarih : undefined}>
+                  {yasMetni(h.yas)}
+                </span>
+              )}
             </td>
           </tr>
         ))
@@ -203,3 +219,16 @@ const parca = (m: string) => {
     thead th.sag, .ht-deger { padding-right: 0.5rem; }
   }
 </style>
+
+<script>
+  // Yaş derleme anında yazılır ve yeniden derleme olmayan günlerde (hafta
+  // sonu) kayar; sayfa açılınca aynı tarihten aynı kuralla yeniden hesaplanır
+  // (KayitKarti ile aynı yol). Aylık damgada gün cinsinden yaş yazılmaz.
+  import { tariheCevir, gunFarki, yasMetni } from '../lib/bicim';
+  document.querySelectorAll<HTMLElement>('[data-ht-yas]').forEach((el) => {
+    const d = tariheCevir(el.dataset.htYas);
+    const y = d ? yasMetni(gunFarki(d)) : '';
+    if (y) el.textContent = y;
+    else el.remove();
+  });
+</script>

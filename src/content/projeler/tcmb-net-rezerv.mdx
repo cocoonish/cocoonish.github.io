@@ -2,11 +2,53 @@
 title: 'TCMB net rezerv takibi'
 description: 'Merkez Bankası rezervlerinin analitik bilançodan günlük takibi: piyasa tanımı, brüt kırılım, swap stoku ve altın fiyat etkisinden arındırılmış net döviz alımı.'
 pubDate: 2026-07-15
-updatedDate: 2026-08-20
+updatedDate: 2026-10-05
 tags: ['tcmb', 'rezerv', 'fx', 'altın']
 durum: 'aktif'
-kaynak: 'TCMB EVDS + IRFCL'
+kaynak: 'TCMB EVDS + IRFCL + Londra altın fiyatı (IGLN, SGLD)'
 guncelleme: 'her iş günü (analitik bilanço) + haftalık çapa'
+ritim: 'gunluk'
+duzeltmeler:
+  - tarih: '2026-10-05'
+    alan: "Çıpadan (27.02.2026) birikimli net döviz alımı, 01.10 etiketi"
+    eski: "−11,8 milyar USD"
+    yeni: "−11,5 milyar USD"
+    sebep: "Altın fiyatı BİST'in gün içi ağırlıklı ortalamasından okunuyordu; TCMB altını Londra sabah fiyatıyla değerliyor ve fiyat artık o saatten okunuyor."
+  - tarih: '2026-10-05'
+    alan: "Çıpadan birikimli altın fiyat etkisi, 01.10 etiketi"
+    eski: "−25,0 milyar USD"
+    yeni: "−25,3 milyar USD"
+    sebep: "Aynı sebep."
+  - tarih: '2026-10-05'
+    alan: "Son beş günün net döviz alımı (25.09 · 28.09 · 29.09 · 30.09 · 01.10)"
+    eski: "+0,6 · +1,2 · −1,4 · −2,4 · +0,3 milyar USD (toplam −1,8)"
+    yeni: "+1,3 · +0,8 · −1,3 · −1,7 · +0,2 milyar USD (toplam −0,9)"
+    sebep: "Aynı sebep. Bütün günlük seri değişti; Haziran–Ağustos 2026 etiketlerinde yeni ile eski değer arasındaki ortalama mutlak fark 0,4, en çok 1,6 milyar USD (iki günün tek değer olarak yazıldığı birleşik etiketler hariç). Londra'nın kapalı olduğu günlerde (İngiltere tatilleri, 30.01.2026) iki ya da üç günün akımı tatilden sonraki ilk etikete toplanıyor; 17.11.2023'ten bu yana daha önce dolu yayımlanan 22 etiket bu yüzden boş (ör. 28.08.2026: +3,1)."
+  - tarih: '2026-10-05'
+    alan: "Bayram arifesi yarım günü ve önceki günün akımı (27–28.10.2025, 18–19.03.2026)"
+    eski: "27.10 −1,9 · 28.10 +7,5; 18.03 −5,9 · 19.03 −1,4 milyar USD"
+    yeni: "27.10 +1,3 · 28.10 +0,3; 18.03 +1,4 · 19.03 −4,1 milyar USD"
+    sebep: "BİST'in kapalı olduğu yarım günlerde altın fiyatı bir önceki günden taşınıyordu, TCMB ise altını o gün de yeniden değerliyordu; yeniden değerleme önceki günün akımına sızıyordu. Fiyat artık Londra sabah fiyatından okunuyor; Londra o günlerde açık ve her gün kendi fiyatıyla ölçülüyor. Fiyat kaynağı değiştiği için iki günün toplamı da değişti."
+  - tarih: '2026-10-05'
+    alan: "Brüt rezervin altın / döviz kırılımı (02.10)"
+    eski: "altın 107,8 · döviz 59,3 milyar USD; altın payı %64,5"
+    yeni: "altın 106,9 · döviz 60,3 milyar USD; altın payı %63,9"
+    sebep: "Aynı sebep: kırılımda altın kalemi haftalık değerin fiyat oranıyla günlük yürütülmesidir ve fiyat artık Londra sabah fiyatı. Brüt rezerv değişmedi."
+  - tarih: '2026-10-05'
+    alan: "Birikimin başlangıç kapanışı"
+    eski: "26.02.2026 kapanışı"
+    yeni: "27.02.2026 kapanışı"
+    sebep: "Her akım etiketi o günün kapanışından bir sonraki iş gününün kapanışına kadarki hareketi taşır; birikimin ilk etiketi 27.02 olduğu için başlangıç noktası 27.02 kapanışıdır. Bu kayıt yalnız başlangıç tarihinin yazımını düzeltir."
+  - tarih: '2026-10-05'
+    alan: "Dış varlıklar (A02) ile resmî rezerv varlıkları arasındaki boşluk (Şekil 02 açıklaması)"
+    eski: "2,4–2,9 milyar USD"
+    yeni: "yıllık medyanla 2023–2025'te 2,0–2,2, 2026'da 2,2–3,1 milyar USD"
+    sebep: "Aralık yalnız 2025 sonuna ve 2026'ya uyuyordu; 2023'ten bu yana bütün günlerden yeniden ölçüldü."
+  - tarih: '2026-10-05'
+    alan: "Dış varlıklar (A02) ile Stand-By 2A'nın brüt döviz rezervi arasındaki boşluk (Şekil 06 açıklaması)"
+    eski: "2,0–2,5 milyar dolar"
+    yeni: "yıllık medyanla 2023–2025'te 1,8–1,9, 2026'da 2,2 milyar dolar"
+    sebep: "2023'ten bu yana haftalık gözlemlerin çoğu 2,0 milyar doların altında; aralık bütün haftalardan yeniden ölçüldü."
 ---
 
 import GrafikEmbed from '../../components/GrafikEmbed.astro';
@@ -28,7 +70,7 @@ kamu hesabı hareketi.
   kalemi (TP.AB.N06) ayrı bir tanımdır ve karşılaştırma serisi olarak
   Şekil&nbsp;06'da yan yana duruyor, çünkü Bloomberg/Reuters manşetlerinde çıkan sayı
   odur. İki ölçü de doğrudur; tanımları farklıdır ve piyasa tanımı
-  <Deger proje="tcmb-net-rezerv" anahtar="eski_fark" ondalik={1} isaret={true}>+1,8</Deger> milyar USD yukarıdadır.
+  <Deger proje="tcmb-net-rezerv" anahtar="eski_fark" ondalik={1} isaret={true}>+2,1</Deger> milyar USD yukarıdadır.
   <strong>Aynı isimli sayıları karşılaştırmadan önce tanımı eşitleyin.</strong>
 </div>
 
@@ -76,13 +118,13 @@ Swap stokunun nasıl kurulduğu Şekil 05'te.
 kurlarıyla TL'ye çevirerek yayımlar; ters çevirmede aynı kuru kullanmak dönüşümü
 kapatır. Bu bir *a priori* gerekçedir, hata istatistiğine bakılarak seçilmemiştir.
 Tercihin bedeli yine de her koşuda ölçülür: satış kuru kullanılsaydı seviye
-<Deger proje="tcmb-net-rezerv" anahtar="p_kur_varyant_fark" ondalik={2} isaret={true}>+0,13</Deger>
+<Deger proje="tcmb-net-rezerv" anahtar="p_kur_varyant_fark" ondalik={2} isaret={true}>+0,10</Deger>
 milyar USD kayardı. Bu, **kapatılmamış bir tanım farkıdır** ve kapatılmak yerine
 ilan edilir; makas açılıp fark eşiği aşarsa denetim satırında uyarı çıkar.
 
 Grafikteki eşkenar dörtgen işaretçiler IRFCL gözlemlerini, yani swap kaleminin resmen
 yayımlandığı günleri gösterir; pencerede
-<Deger proje="tcmb-net-rezerv" anahtar="irfcl_nokta" ondalik={0}>62</Deger> nokta var.
+<Deger proje="tcmb-net-rezerv" anahtar="irfcl_nokta" ondalik={0}>70</Deger> nokta var.
 Aralarındaki bölgede yabancı merkez bankası bacağı gözlenmez, taşınır (Şekil 05).
 
 **Sağ eksendeki çubuklar** serinin birinci farkıdır: rezerv akımının hangi güne
@@ -91,7 +133,7 @@ Arındırılmış hâli Şekil 04'tedir ve ikisi arasındaki fark tek bir günde
 bulabilir.
 
 Son <Deger proje="tcmb-net-rezerv" anahtar="pencere_gun" ondalik={0}>20</Deger> iş gününün mutlak değerce en büyük üç hareketi:
-**<Deger proje="tcmb-net-rezerv" anahtar="u1_etiket" ondalik={0}>05.08</Deger>** <Deger proje="tcmb-net-rezerv" anahtar="u1_delta" ondalik={1} isaret={true}>+4,1</Deger> · **<Deger proje="tcmb-net-rezerv" anahtar="u2_etiket" ondalik={0}>06.08</Deger>** <Deger proje="tcmb-net-rezerv" anahtar="u2_delta" ondalik={1} isaret={true}>+3,7</Deger> · **<Deger proje="tcmb-net-rezerv" anahtar="u3_etiket" ondalik={0}>11.08</Deger>** <Deger proje="tcmb-net-rezerv" anahtar="u3_delta" ondalik={1} isaret={true}>+3,5</Deger> milyar USD (ham değişim).
+**<Deger proje="tcmb-net-rezerv" anahtar="u1_etiket" ondalik={0}>17.09</Deger>** <Deger proje="tcmb-net-rezerv" anahtar="u1_delta" ondalik={1} isaret={true}>−5,5</Deger> · **<Deger proje="tcmb-net-rezerv" anahtar="u2_etiket" ondalik={0}>25.09</Deger>** <Deger proje="tcmb-net-rezerv" anahtar="u2_delta" ondalik={1} isaret={true}>−3,6</Deger> · **<Deger proje="tcmb-net-rezerv" anahtar="u3_etiket" ondalik={0}>30.09</Deger>** <Deger proje="tcmb-net-rezerv" anahtar="u3_delta" ondalik={1} isaret={true}>+2,9</Deger> milyar USD (ham değişim).
 
 ## Şekil 02 — Brüt rezervin altın / döviz kırılımı
 
@@ -114,7 +156,7 @@ $\text{TOPLAM}$ = TP.AB.TOPLAM (haftalık Cuma, **zaten milyon USD** — çapraz
 dönüşümü yok). $F$ = kullanılabilir son Cuma çapası, $F \le t-5$ takvim günü.
 
 **Neden çapa gerekiyor?** A02 (Dış Varlıklar) resmi rezerv varlıklarından sistematik
-olarak 2,4–2,9 milyar USD fazladır; rezerv tanımına girmeyen diğer döviz alacaklarını
+olarak fazladır (yıllık medyanla 2023–2025'te 2,0–2,2, 2026'da 2,2–3,1 milyar USD); rezerv tanımına girmeyen diğer döviz alacaklarını
 da içerir. Bu boşluk bir sabitle değil, her hafta tazelenen gerçek çapayla düşülür;
 hafta içi hareket analitik bilançodan gelir. Boşluğun kendisi ayrıca izlenir: ani ya
 da sürekli kayması, TL→USD dönüşümünün TCMB'nin değerleme kurundan ayrıştığı anlamına
@@ -134,27 +176,27 @@ $$
 \text{Altın}(t) = \frac{\text{C1}(F)}{1000} \times \frac{P(t)}{P(F)}, \qquad \text{Döviz}(t) = \text{Brüt}(t) - \text{Altın}(t)
 $$
 
-Bunun yapısal bir sebebi var: elimizdeki günlük fiyat serisinin ($P$) TCMB'nin haftalık
-değerleme kotasyonuna göre sistematik iskontosu $P(t)/P(F)$ oranında **sadeleşir**.
-Miktar × fiyat biçiminde o iskonto doğrudan seviyeye geçerdi.
+Bunun yapısal bir sebebi var: elimizdeki günlük fiyat serisi ($P$) ile TCMB'nin haftalık
+değerleme kotasyonu arasında kalan sistematik fark $P(t)/P(F)$ oranında **sadeleşir**.
+Miktar × fiyat biçiminde o fark doğrudan seviyeye geçerdi.
 
 **"Döviz" satırı saf döviz değildir.** IRFCL'in (1) döviz varlıkları + (2) IMF rezerv
 pozisyonu + (3) SDR toplamıdır. Ayrıca *artık* olarak hesaplandığı için altın
 kalemindeki her hata ters işaretle bu satıra yazılır — altın zaman zaman brütün dörtte
 üçüne çıktığında bu kalemin hata bandı belirgin genişler.
 
-Şu an: brüt **<Deger proje="tcmb-net-rezerv" anahtar="p_brut" ondalik={1}>187,3</Deger>** =
-altın **<Deger proje="tcmb-net-rezerv" anahtar="p_altin" ondalik={1}>109,9</Deger>** +
-döviz **<Deger proje="tcmb-net-rezerv" anahtar="p_doviz" ondalik={1}>77,5</Deger>** milyar USD
-(<Deger proje="tcmb-net-rezerv" anahtar="p_tarih" ondalik={0}>18.08.2026</Deger>).
+Şu an: brüt **<Deger proje="tcmb-net-rezerv" anahtar="p_brut" ondalik={1}>167,1</Deger>** =
+altın **<Deger proje="tcmb-net-rezerv" anahtar="p_altin" ondalik={1}>106,9</Deger>** +
+döviz **<Deger proje="tcmb-net-rezerv" anahtar="p_doviz" ondalik={1}>60,3</Deger>** milyar USD
+(<Deger proje="tcmb-net-rezerv" anahtar="p_tarih" ondalik={0}>02.10.2026</Deger>).
 
 ## Altın fiyat etkisinden arındırma
 
 Bu sayfanın en zor çıktısı seviye değil, **akım**dır. Brüt rezervin
-<Deger proje="tcmb-net-rezerv" anahtar="p_brut" ondalik={1}>187,3</Deger> milyar
-dolarının <Deger proje="tcmb-net-rezerv" anahtar="p_altin" ondalik={1}>109,9</Deger>
+<Deger proje="tcmb-net-rezerv" anahtar="p_brut" ondalik={1}>167,1</Deger> milyar
+dolarının <Deger proje="tcmb-net-rezerv" anahtar="p_altin" ondalik={1}>106,9</Deger>
 milyar doları altındır — yaklaşık
-<Deger proje="tcmb-net-rezerv" anahtar="alt_ons" ondalik={2}>24,95</Deger> milyon ons.
+<Deger proje="tcmb-net-rezerv" anahtar="alt_ons" ondalik={2}>25,55</Deger> milyon ons.
 Altın fiyatındaki %1'lik bir hareket, TCMB tek bir işlem yapmadan rezervi bir milyar
 doların üzerinde oynatır. Gerçek günlük döviz alımı da tam olarak aynı mertebededir.
 Yani **arındırma yapılmadan bu iki büyüklük birbirinden ayırt edilemez**; ham değişime
@@ -176,7 +218,7 @@ terimin nereye yazıldığıdır**. Dört standart seçenek vardır:
 
 | Yöntem | Fiyat etkisi | Artık (işlem) | Değerlendirme |
 | --- | --- | --- | --- |
-| **Laspeyres** | $Q_{t-1}\Delta P_t$ | $P_t\,\Delta Q_t$ | Çapraz terim miktara gider. ECB'nin rezerv değerleme kutusu ve IMF COFER'in "kur etkisinden arındırılmış paylar" hesabı bu formülü kullanır. **Seçilen.** |
+| **Laspeyres** | $Q_{t-1}\Delta P_t$ | $P_t\,\Delta Q_t$ | Çapraz terim miktara gider. ECB'nin rezerv değerleme kutusu bu formülü kullanır. **Seçilen.** |
 | Paasche | $Q_t\Delta P_t$ | $P_{t-1}\Delta Q_t$ | İşlemlerin dönemin **başında** yapıldığını varsayar; günlük veride savunulamaz. |
 | Bennet (Fisher'ın toplamsal karşılığı) | $\bar Q_t\Delta P_t$ | $\bar P_t\Delta Q_t$ | Çapraz terimi ikiye böler; "kaç dolar harcandı" sorusunun en doğru cevabı. Laspeyres'ten farkı tam olarak $\tfrac{1}{2}\Delta Q_t\Delta P_t$. |
 | Log / Divisia (Törnqvist) | — | — | Zincirleme tutarlı ve zarif, ama çıktısı **yüzdedir**. "Kaç milyar dolar aldı" sorusuna cevap veremez; dolara çevirmek için keyfî bir referans seviye seçmek gerekir. |
@@ -192,8 +234,9 @@ getirisi) ve net alımı toplam değişimden bu terimi çıkararak bulur — biz
 $\Gamma_t = Q_{t-1}\Delta P_t$'miz bunun altın için yazılmış hâlidir.
 
 **Seçim kritik değil, ama denetleniyor.** Bennet varyantı her koşuda ayrıca hesaplanır;
-iki yöntemin farkı günlük ortalamada 0,0001, en kötü günde 0,0091 milyar USD çıkıyor —
-yani ölçüm gürültüsünün yüzde biri. Denetim eşiği **oransaldır**: fark, o günkü fiyat
+iki yöntemin farkı günlük ortalamada 0,0008 milyar USD; en büyüğü 0,23 ile
+19.03.2026'da, TCMB'nin altın miktarının bir günde sert düştüğü gün (o günün fiyat
+etkisine oranı %2,1). Denetim eşiği **oransaldır**: fark, o günkü fiyat
 etkisinin %10'unu aşarsa (ve fiyat etkisi 0,05 milyar USD'lik tabanın üzerindeyse) bu
 bir yöntem tartışması değil, **miktar serisinde bozulma** işaretidir ve uyarı basar.
 Mutlak eşik kullanmak sakin günlerde her şeyi, sert günlerde hiçbir şeyi yakalardı.
@@ -227,6 +270,9 @@ dinamik değildir):
 
 Bu sayfada **yalnız $\Gamma$ arındırılır** (buna ek olarak akımdan kamu döviz mevduatı
 hareketi ve swap çapa revizyonu düşülür — ikisi de TCMB'nin piyasa işlemi değildir).
+$\Gamma$ varlık tarafındaki altının fiyat etkisidir; akım net pozisyondan kurulduğu için
+yükümlülük tarafındaki altın kalemlerinin yeniden değerlemesi akımda kalır (aşağıda,
+"Bilinen sınırlar").
 $\Pi$, $\Pi^{S}$ ve $\rho$ **arındırılmaz ve arındırılmadığı ilan edilir**: rezervin
 para kompozisyonu yayımlanmadığı için parite terimleri tahmin edilebilir ama
 hesaplanamaz, faiz geliri için de portföyün vade kırılımı yoktur. Tahmini bir ağırlıkla
@@ -250,8 +296,8 @@ $N$ altın bacağını tamamen dışarı atar, yalnız döviz kalır.
 İkisi de savunulabilir, bu yüzden **ikisi de yayımlanır**: Şekil 04'te barlar
 $N^{\text{fp}}$, açık daireler $N$'dir. Başrolde $N^{\text{fp}}$ durur, çünkü
 karşılaştırılacak tabloların tanımı odur. Son gün:
-$N^{\text{fp}} = $ <Deger proje="tcmb-net-rezerv" anahtar="ak_gunluk" ondalik={1} isaret={true}>+2,3</Deger>,
-$N = $ <Deger proje="tcmb-net-rezerv" anahtar="ak_gunluk_altin_haric" ondalik={1} isaret={true}>+2,3</Deger>
+$N^{\text{fp}} = $ <Deger proje="tcmb-net-rezerv" anahtar="ak_gunluk" ondalik={1} isaret={true}>+0,2</Deger>,
+$N = $ <Deger proje="tcmb-net-rezerv" anahtar="ak_gunluk_altin_haric" ondalik={1} isaret={true}>+0,2</Deger>
 milyar USD.
 
 ## Şekil 03 — Rezerv değişiminin ayrıştırılması
@@ -285,7 +331,7 @@ Bileşenler:
   basamak fonksiyonudur; yeni bir IRFCL gözlemi geldiğinde sıçrar. O sıçrama TCMB'nin
   o gün yaptığı bir işlem değil, **geç gelen bilgidir**; ayrı gösterilmezse "TCMB yarım
   milyar dolar aldı" diye okunur. Son etiketteki değeri
-  <Deger proje="tcmb-net-rezerv" anahtar="p_swap_revizyon" ondalik={2} isaret={true}>−0,00</Deger>
+  <Deger proje="tcmb-net-rezerv" anahtar="p_swap_revizyon" ondalik={2} isaret={true}>0,00</Deger>
   milyar USD.
 - $N$ **net döviz alımı** — geriye kalan artık.
 
@@ -317,23 +363,46 @@ işlemi değil. IRFCL'in altın satırı üçünü birlikte içerir (saflık eş
 hatasının mertebesi küçüktür: hafta içi gerçek $|\Delta Q| \le 0{,}2$ milyon ons ve
 haftalık $|\Delta P| \approx 80$ USD/ons ise tepe hata $\approx 8$ milyon USD/gün — ve
 Cuma çapasında tam kapanır. Kullanılan kademe her gün için kayda yazılır; şu an
-<Deger proje="tcmb-net-rezerv" anahtar="alt_ons_kaynak" ondalik={0}>tasima</Deger>.
+<Deger proje="tcmb-net-rezerv" anahtar="alt_ons_kaynak" ondalik={0}>son haftalık gözlemden taşındı</Deger>.
 
-### Fiyat serisi $P$ ve ima edilen fiyat testi
+### Fiyat serisi $P$: Londra sabah fiyatı
 
-$P$ = TP.ALTINPIYASA.AGORT03 (BİST Kıymetli Madenler, ağırlıklı ortalama, USD/ons, iş
-günü), **aynı gün**; tatillerde son değer taşınır ve o gün grafikte soluk çizilir. Kaynak
-her koşuda kayda yazılır: şu an
-<Deger proje="tcmb-net-rezerv" anahtar="alt_fiyat_kaynak" ondalik={0}>agort03</Deger>,
-fiyat <Deger proje="tcmb-net-rezerv" anahtar="alt_fiyat" ondalik={0}>4.389</Deger>
+TCMB altını analitik bilançoda her iş günü yeniden değerler ve kullandığı fiyat
+**Londra'nın sabah fiksingi saatindeki** (10:30) uluslararası fiyattır. Bu varsayılmadı,
+ölçüldü: dış varlıkların günlük değişimi saatlik altın fiyatlarıyla ortak bir
+regresyona sokulduğunda o saatin katsayısı $1{,}07$ ($t=8$), BİST'in gün içi ağırlıklı
+ortalamasınınki $0{,}13$ ($t=0{,}9$) çıkıyor.
+
+$P$ bu yüzden Londra'da işlem gören iki **fiziki altın** borsa ürününün — IGLN.L ve
+SGLD.L; pay başına belirli miktar saf altın taşırlar (yıllık ücret kadar yavaşça
+erir), vadeleri yoktur, yani vadeli
+kotasyonun devir günlerindeki sıçraması onlarda yapısal olarak olmaz — Londra saatiyle
+10:00 ve 11:00'de biten saatlik barlarının ortalamasından kurulur. Her ürünün fiyatı
+USD/ons'a TCMB'nin kendi değerleme fiyatıyla çevrilir: haftalık IRFCL gözlemlerinin ima
+ettiği fiyatın ürün fiyatına oranı, son 12 gözlemin medyanı; iki ürünün ortalaması
+alınır. Ölçek her hafta yeni gözlemle güncellenir ve bütün seriye uygulanır; haftalık
+kayması medyanda %0,02, ürünün yıllık yönetim ücretinden gelen erime ise yılda %0,11 —
+ikisi de fiyat etkisinde ihmal edilebilir. Ham ürün fiyatları günlük olarak birikir ve
+bir günün kaydı sonradan değişmez; onları USD/ons'a çeviren ölçek her hafta
+güncellendiği için geçmiş fiyat etkileri haftada bir küçük ölçüde yeniden yazılır.
+
+Kazanç ölçülebilir, ama kanıtın nerede durduğuna dikkat. Bu fiyatla kurulan seri, 17.11.2023'ten bu yana Londra'nın ve BİST'in ikisinin de kote edildiği 31 haftalık IRFCL gözleminde TCMB'nin yayımladığı değerleme fiyatından medyanda %0,12, en kötü haftada %0,41 sapıyor; aynı kuralla ölçeklenen BİST ortalaması aynı haftalarda %0,62 ve %5,0 (05.10.2026 ölçümü; ölçek her hafta yenilendiği için sayılar kayar). Ölçek aynı gözlemlerden kurulduğu için bu bir tutarlılık denetimidir, bağımsız bir kanıt değil. Bağımsız kanıt varlık tarafındadır: dış varlıkların günlük değişimi brüt altının bu fiyatla ölçülen fiyat etkisine **$1{,}13$ ile** ($t=22$, 17.11.2023'ten beri) tepki veriyor, BİST fiyatıyla aynı dönemde $0{,}81$ ile. Fark en çok 2024'te ($1{,}12$'ye karşı $0{,}19$); 2026'da iki fiyat yakın ($1{,}09$ ve $1{,}02$). 2026'da iki fiyatla da ölçülen 181 günde günlük akımın standart sapması BİST fiyatıyla $2{,}43$, Londra fiyatıyla $2{,}33$ milyar USD.
+
+Londra serisi kaynağın saatlik geçmişinin ulaştığı 17.11.2023'te başlar. Öncesi BİST
+ağırlıklı ortalamasının (TP.ALTINPIYASA.AGORT03) getirileriyle geriye uzatılır ve o
+dönemin akımı o fiyatın gürültüsünü taşır (aşağıda, "Bilinen sınırlar"). Londra'nın
+kapalı olduğu İngiltere tatillerinde ve kaynağın bir günü vermediği yerde (02.02.2026)
+fiyat taşınır; o gün grafikte soluk çizilir ve
+fiyatı taşınan günlerin akımı **tek değer olarak tatilden sonraki ilk etikete** yazılır,
+aradaki etiketler boş kalır (tek tatilde bir, Paskalya ve Noel'de iki etiket) — tek
+fiyatla birden çok günün değerlemesi ayrıştırılamaz, toplamı ise doğrudur. Blok bir ay
+ya da hafta sınırına düşerse (30.01 → 02.02.2026, 30.04 → 04.05.2026) ayın ya da haftanın
+son etiketinin hareketi sonrakinin toplamına geçer. BİST'in kapalı
+olduğu bayram arifesi yarım günlerinde Londra açıktır, o günler kendi fiyatıyla
+ölçülür (17.11.2023 öncesinin BİST döneminde arife günleri birleşik yazılır). Kaynak her koşuda kayda yazılır: şu an
+<Deger proje="tcmb-net-rezerv" anahtar="alt_fiyat_kaynak" ondalik={0}>Londra sabah fiyatı</Deger>,
+fiyat <Deger proje="tcmb-net-rezerv" anahtar="alt_fiyat" ondalik={0}>4.181</Deger>
 USD/ons.
-
-**Fiyat kaynağı varsayılmadı, ölçüldü.** Aday seriler günlük getiri düzeyinde
-karşılaştırıldı; ağırlıklı ortalama serisinin sapması, kapanış serisininkinin belirgin
-biçimde altında kaldı — üstelik oransal altın biçimiyle birlikte kullanıldığında bu
-serinin TCMB değerleme kotasyonuna göre sistematik iskontosu $P(t)/P(F)$ oranında
-sadeleşir. Dış bir piyasa verisi sağlayıcısına (vadeli altın kotasyonu) bağımlılık
-tamamen kaldırıldı: seri artık uçtan uca resmi kaynaklardan geliyor.
 
 Kaynağın doğruluğu her IRFCL gözleminde yeniden sınanır. Yayımlanan iki sayı fiyatı
 **ima eder**:
@@ -344,21 +413,24 @@ $$
 
 07.08.2026 için $107.345 / 24{,}953 = 4.301{,}89$ USD/ons. Bu testin çözünürlüğü
 şaşırtıcı derecede yüksektir: değer 1 milyon USD'ye, miktar 0,001 milyon onsa
-yuvarlanmıştır, toplam belirsizlik **±0,2 USD/ons**. Yani birbirinden 5 dolardan fazla
-ayrılan iki fiksing adayını kesin olarak ayırt eder — ve o gün ima edilen fiyat, Londra
-öğleden sonra fiksingiyle tutarlı, New York vadeli uzlaşmasıyla değil.
+yuvarlanmıştır, toplam belirsizlik **±0,2 USD/ons**: TCMB'nin o hafta kullandığı fiyatın
+kendisi bu hassasiyetle bilinir. Bizim Londra serimiz o fiyattan medyanda 3,5, en çok 12
+USD/ons ayrılır (05.10.2026 ölçümü); yani bu test birbirine birkaç dolar yakın iki fiksing
+adayını ayıramaz, uzak bir saatteki fiyatı ve bozulan bir beslemeyi yakalar. Değerleme
+saatinin kanıtı bu test değil, yukarıdaki varlık regresyonudur.
 
-**Zamanlama hatasının bedeli devasadır.** Günlük altın oynaklığı ~%1,3; iki referans
-saati arasındaki ~3,5 saatlik pencere günlük varyansın ~%15'ini taşır, yani ~%0,5 ≈ 21
+**Zamanlama hatasının bedeli devasadır.** Günlük altın oynaklığı ~%1,3; değerleme
+saatinden ~3,5 saat uzaktaki bir fiyat günlük varyansın ~%15'ini taşır, yani ~%0,5 ≈ 21
 USD/ons artık gürültü. 25 milyon ons tabanında bu **günde ~0,5 milyar USD sahte akım**
 demektir — gerçek günlük net döviz alımıyla aynı mertebede. Yanlış fiksing, ayrıştırmayı
 kullanışsız hâle getirir; sayfanın fiyat kaynağına bu kadar yer ayırmasının sebebi budur.
 
-Test aynı zamanda bir **sessiz bayatlama dedektörüdür**: fiyat beslemesi donarsa ya da
-TCMB değerleme referansını değiştirirse sapma büyür. Beklenen sapma ~%1,2 (farklı
-kotasyon saati), eşik %3. Son ölçüm: ima edilen
-<Deger proje="tcmb-net-rezerv" anahtar="alt_ima_fiyat" ondalik={0}>4.302</Deger> USD/ons,
-piyasa serisinden %<Deger proje="tcmb-net-rezerv" anahtar="alt_ima_sapma" ondalik={1}>0,3</Deger>
+Ölçek aynı gözlemlerden kurulduğu için bu test bağımsız bir doğrulama değil, bir
+**sessiz bayatlama dedektörüdür**: fiyat beslemesi donarsa, ürünün fiyatı altından
+ayrışırsa ya da TCMB değerleme referansını değiştirirse sapma büyür. Beklenen sapma %0,1
+mertebesinde, eşik %3. Son ölçüm: ima edilen
+<Deger proje="tcmb-net-rezerv" anahtar="alt_ima_fiyat" ondalik={0}>4.291</Deger> USD/ons,
+piyasa serisinden %<Deger proje="tcmb-net-rezerv" anahtar="alt_ima_sapma" ondalik={1}>0,0</Deger>
 farklı.
 
 ## Şekil 04 — Günlük net döviz alımı / satımı
@@ -375,34 +447,37 @@ farklı.
 
 <div class="not">
   <span class="etiket">Akım serisi neden seviyeden geride?</span>
-  <Deger proje="tcmb-net-rezerv" anahtar="ak_gecikme_cumle" ondalik={0}>Akım serisi seviye serisinin 2 seans gerisinde: altın fiyatı 27.08.2026 tarihinden beri ilerlemedi. Fiyat farkı ölçülemeyen günde fiyat etkisi de net alım da boş bırakılır; sıfır yazılmaz.</Deger>
+  <Deger proje="tcmb-net-rezerv" anahtar="ak_gecikme_cumle" ondalik={0}>Akım serisi seviye serisiyle aynı kapanışa kadar geliyor; ölçülemeyen seans yok.</Deger>
 </div>
 
 Şekil 03'ün akım bileşeni, günlük çözünürlükte. Dört şey önemli:
 
 **1 — Etiket konvansiyonu.** Değer, **etiketlenen günün kapanışından bir sonraki iş
 gününün kapanışına** kadarki hareketi gösterir. Yani
-"<Deger proje="tcmb-net-rezerv" anahtar="ak_tarih" ondalik={0}>17.08.2026</Deger>" satırı,
+"<Deger proje="tcmb-net-rezerv" anahtar="ak_tarih" ondalik={0}>01.10.2026</Deger>" satırı,
 o günün kapanışı ile
-<Deger proje="tcmb-net-rezerv" anahtar="ak_tarih_kapanis" ondalik={0}>18.08.2026</Deger>
+<Deger proje="tcmb-net-rezerv" anahtar="ak_tarih_kapanis" ondalik={0}>02.10.2026</Deger>
 kapanışı arasındaki net alımdır. Cuma etiketli değerler hafta sonunu da taşır, yani üç
 günlüktür.
 
 Bu konvansiyon *varsayılmadı, ölçüldü.* Serimizi bağımsız bir günlük referansa karşı
 −1 / 0 / +1 iş günü kaydırarak taradığımızda hata yalnız kaydırmasız hizada çöküyor
-(|ortalama hata| 0,45 milyar USD; ±1 günde 2,2). Aylık toplamda da aynı: Haziran 2026
-için etiket bazlı toplamımız 22,3, kapanış bazlı 21,3 — referans 22,3 diyor. Ara bir
-sürümde bu ters kurulmuştu; ölçüm düzeltti. Aylık toplamlar da bu yüzden **etiket
-bazlıdır**: ayın son etiketinin ertesi aya taşan hareketi ay içinde sayılır.
+(|ortalama hata| 0,45 milyar USD; ±1 günde 2,2; Haziran–Ağustos 2026, altın fiyatı BİST
+ağırlıklı ortalamasından okunurken ölçüldü); aylık toplamda da etiket bazlı toplam
+tutuyor, kapanış bazlı toplam tutmuyor. Aylık toplamlar bu yüzden **etiket bazlıdır**: ayın
+son etiketinin ertesi aya taşan hareketi ay içinde sayılır.
 
-**2 — Günlük rakamlar ölçüm gürültüsüyle aynı mertebede.** TCMB altını günlük piyasa
-fiyatıyla değil, haftanın son iş günü Londra kotasyonuyla değerler. Elimizdeki günlük
-seri o referansın birebir aynısı değil; 25 milyon ons tabanında günde
+**2 — Günlük rakamlar ölçüm gürültüsüyle aynı mertebede.** TCMB altını günlük
+bilançoda her gün yeniden değerler (dış varlıkların günlük değişimi, Londra sabah
+fiyatıyla ölçülen brüt fiyat etkisine $1{,}13$ ile tepki veriyor). Fiyatımız aynı saatten
+okunuyor ama TCMB'nin kotasyonunun kendisi değil; bu fark, döviz kompozisyonu ve kur
+çevrimiyle birlikte günde
 ±<Deger proje="tcmb-net-rezerv" anahtar="ak_gunluk_bant" ondalik={1}>0,4</Deger> milyar USD
-mertebesinde sahte akım üretir. Grafikteki gri şerit budur. **Şeridin içinde kalan bir
+mertebesinde sahte akım üretebilir (aşağıda, "Hata bütçesi"). Grafikteki gri şerit budur. **Şeridin içinde kalan bir
 günlük hareket, tek başına bir müdahale okuması taşımaz.** Anlamlı okuma haftalık ve
 aylık toplamlardadır; aylık ve daha uzun ufuklarda bu hata büyük ölçüde birbirini
-götürür.
+götürür. Altın cinsinden yükümlülüklerin yeniden değerlemesi bu kümede değildir; o
+altının yönüyle birikir (aşağıda, "Bilinen sınırlar").
 
 **3 — İki seri birden çizilir.** Dolu barlar $N^{\text{fp}}$ (altın fiyat etkisi hariç),
 açık daireler $N$ (altın tamamen hariç). İkisinin arası $\Lambda$'dır: ayrıldıkları
@@ -412,9 +487,9 @@ günlerde altın **miktarı** değişmiştir.
 bağlanır; son çapadan sonrası taşınır. Yeni bir haftalık gözlem geldiğinde o günler
 "taşıma"dan "ara değer"e döner, $Q(t)$ değişir, dolayısıyla $\Gamma(t)$ ve **zaten
 yayımlanmış olan net alım rakamı revize olur.** Grafikte o barlar soluk çizilir; şu an
-<Deger proje="tcmb-net-rezerv" anahtar="alt_gecici_gun" ondalik={0}>7</Deger> gün
+<Deger proje="tcmb-net-rezerv" anahtar="alt_gecici_gun" ondalik={0}>5</Deger> gün
 geçici durumda. Son miktar çapası:
-<Deger proje="tcmb-net-rezerv" anahtar="alt_son_capa" ondalik={0}>07.08.2026</Deger>.
+<Deger proje="tcmb-net-rezerv" anahtar="alt_son_capa" ondalik={0}>25.09.2026</Deger>.
 
 ## Arındırmanın okunması — günlük, birikimli, hata payı
 
@@ -445,7 +520,7 @@ Fark, **miktar birikimi ile fiyat patikası arasındaki kovaryanstır**: merkez 
 altın alırken altın da yükseliyorsa büyür. Çıpalı bir seride hangi sürümün
 yayımlandığını yazmak zorunludur. **Yayımlanan sürüm zincirlenmiş olandır**; tek hamle
 sürümü yalnız tanı olarak hesaplanır. Son koşuda
-$D_T = $ <Deger proje="tcmb-net-rezerv" anahtar="alt_zincirleme_dt" ondalik={2} isaret={true}>+1,40</Deger>
+$D_T = $ <Deger proje="tcmb-net-rezerv" anahtar="alt_zincirleme_dt" ondalik={2} isaret={true}>+1,01</Deger>
 milyar USD — bu, aynı zamanda miktar serisindeki ara değer hatasının ne kadar
 biriktiğinin duyarlı bir göstergesidir.
 
@@ -457,10 +532,10 @@ tercih edildiğinin sayısal gerekçesidir: sabit, sistematik hatayı görünmez
 yok etmez.
 
 **Çıpa.** Birikim
-<Deger proje="tcmb-net-rezerv" anahtar="ak_cipa" ondalik={0}>26.02.2026</Deger>
-kapanışından başlar (ilk etiket
-<Deger proje="tcmb-net-rezerv" anahtar="ak_cipa_etiket" ondalik={0}>27.02.2026</Deger>);
-tarih parametredir, kur şokunun hemen öncesindeki rezerv zirvesi seçilmiştir. Çıpa
+<Deger proje="tcmb-net-rezerv" anahtar="ak_cipa" ondalik={0}>27.02.2026</Deger>
+kapanışından başlar: ilk akım etiketi
+<Deger proje="tcmb-net-rezerv" anahtar="ak_cipa_etiket" ondalik={0}>27.02.2026</Deger>
+o kapanıştan bir sonraki iş gününün kapanışına kadarki hareketi taşır. Tarih parametredir, kur şokunun hemen öncesindeki rezerv zirvesi seçilmiştir. Çıpa
 değiştirilirse seri **kaydırılmaz, baştan hesaplanır** — yeniden tabanlama sessiz
 bayatlamanın en sinsi biçimidir.
 
@@ -532,7 +607,7 @@ sonucun işaretini belirleyen girdidir.
 
 | # | Belirsizlik kaynağı | Günlük (1σ, mn USD) | 6 aylık birikimli (mn USD) | Azaltma yolu |
 | --- | --- | --- | --- | --- |
-| 1 | Altın fiyat kaynağı / saat uyumsuzluğu | 50–500 | 0 (yansızsa) / 1.000–6.000 (yanlıysa) | İma edilen fiyat testi |
+| 1 | Altın fiyat kaynağı / saat uyumsuzluğu | 50–500 | 0 (yansızsa) / 1.000–6.000 (yanlıysa) | Değerleme saatinden okunan fiyat + ima edilen fiyat testi |
 | 2 | Altın miktarı hafta içi ara değeri | 8–16 | ~0 (Cuma'da kapanır) | Doğrusal ara değer + Cuma çapası |
 | 3 | Döviz kompozisyonu bilinmiyor | 28 (sakin) / 127 (sert) | 300–700 | Kısıtlı regresyon + SDR bacağını tam hesaplamak |
 | 4 | Faiz getirisi varsayımı (±100 bp) | 2 | ~350 | Ağırlıklı kısa faiz serisi |
@@ -548,7 +623,9 @@ milyar dolarlık bir tabanı vurur; binde birlik uyumsuzluk 187 milyon USD sahte
 TL kaynak yalnız **hafta içi fark** için kullanılır (Şekil 02).
 
 Toplam (bağımsızlık varsayımıyla, kabaca): günlük **±0,3–0,5**, haftalık **±0,5**,
-altı aylık birikimli **±1,5–2,5** milyar USD. Sayfadaki bantlar bu bütçeden türetilir —
+altı aylık birikimli **±1,5–2,5** milyar USD. Altın cinsinden yükümlülüklerin yeniden
+değerlemesi bu bütçede yoktur: ölçüm hatası değil, tanımın bir bileşenidir (aşağıda,
+"Bilinen sınırlar"). Sayfadaki bantlar bu bütçeden türetilir —
 bir referans seriye bakılarak seçilmiş değildir. Raporlama kuralı da buradan gelir:
 nokta tahmin tek başına yayımlanmaz; yanında bandı, hangi tanımın kullanıldığı
 ($N$ mi $N^{\text{fp}}$ mi), hangi fiyat referansının seçildiği ve son ima edilen fiyat
@@ -568,13 +645,14 @@ sapması durur.
 4. **Bandın içindeki günlük hareketi haber yapmak.** ±<Deger proje="tcmb-net-rezerv" anahtar="ak_gunluk_bant" ondalik={1}>0,4</Deger>
    milyar USD'lik şeridin içindeki bir bar, ölçüm gürültüsünden ayırt edilemez.
 5. **Sağ uçtaki barları kalıcı sanmak.** Son miktar çapasından sonraki günler revize
-   olur; şu an <Deger proje="tcmb-net-rezerv" anahtar="alt_gecici_gun" ondalik={0}>7</Deger>
+   olur; şu an <Deger proje="tcmb-net-rezerv" anahtar="alt_gecici_gun" ondalik={0}>5</Deger>
    gün bu durumda.
 6. **Swap çapa revizyonunu işlem sanmak.** Basamak, geç gelen bilgidir; Şekil 03'te
    ayrı bileşen olarak durmasının sebebi budur.
-7. **Birikimli rakamı "TCMB şu kadar aldı" diye okumak.** Birikimli sayı kendi
-   belirsizlik bandı mertebesindedir ve arındırılmayan faiz geliri yüzünden yukarı
-   yanlıdır (aşağıda, "Bilinen sınırlar").
+7. **Birikimli rakamı "TCMB şu kadar aldı" diye okumak.** Birikimli sayının bandı
+   ±<Deger proje="tcmb-net-rezerv" anahtar="ak_birikimli_bant" ondalik={1}>2,0</Deger> milyar USD'dir; arındırılmayan faiz geliri yüzünden yukarı
+   yanlıdır ve altın cinsinden yükümlülüklerin yeniden değerlemesini taşır: 01.10 itibarıyla
+   bu bileşen birikimli sayıyı +7–9 milyar USD yukarı çekiyor (aşağıda, "Bilinen sınırlar").
 
 ## Şekil 05 — Swap stoku ve kırılımı
 
@@ -603,22 +681,22 @@ yazılır ("alım yönlü" = TCMB vadede döviz satıyor) ve seviyeden çıkarı
 
 **Hassasiyet çapa tipine göre on kat ayrışır.** IRFCL iki frekansta gelir: ay sonu için
 EVDS aylık serisi (TP.DOVVARNC.K14 / K23), ay içi için haftalık PDF gözlemleri
-(`irfcl_gozlem.csv`). Haftalık çapaya oturan günlerde swap hariç serinin bağımsız bir
+(haftalık IRFCL arşivi). Haftalık çapaya oturan günlerde swap hariç serinin bağımsız bir
 referansa karşı sapması
 **±<Deger proje="tcmb-net-rezerv" anahtar="p_swap_bant_haftalik" ondalik={2}>0,02</Deger>
 milyar USD** (gürültü düzeyi); aylık çapaya oturan günlerde
 **±<Deger proje="tcmb-net-rezerv" anahtar="p_swap_bant_aylik" ondalik={2}>0,20</Deger>
 milyar USD** ve hata çapa yaşıyla birlikte büyür. Grafikte haftalık
-çapalı bölgeler gölgelidir. Serinin
-%<Deger proje="tcmb-net-rezerv" anahtar="p_swap_haftalik_oran" ondalik={0}>32</Deger>'si şu an
-haftalık çapaya dayanıyor; son gün için çapa tipi
+çapalı bölgeler gölgelidir. Şu an serinin haftalık çapaya dayanan payı
+%<Deger proje="tcmb-net-rezerv" anahtar="p_swap_haftalik_oran" ondalik={0}>34</Deger>;
+son gün için çapa tipi
 **<Deger proje="tcmb-net-rezerv" anahtar="p_swap_capa_tipi" ondalik={0}>haftalık</Deger>**
-(<Deger proje="tcmb-net-rezerv" anahtar="p_swap_capa_tarih" ondalik={0}>07.08.2026</Deger>).
+(<Deger proje="tcmb-net-rezerv" anahtar="p_swap_capa_tarih" ondalik={0}>25.09.2026</Deger>).
 
-Swap kaleminin en son resmen yayımlandığı gün: <Deger proje="tcmb-net-rezerv" anahtar="irfcl_tarih" ondalik={0}>07.08.2026</Deger>.
+Swap kaleminin en son resmen yayımlandığı gün: <Deger proje="tcmb-net-rezerv" anahtar="irfcl_tarih" ondalik={0}>25.09.2026</Deger>.
 
-Bu oran hattın bilinen en büyük doğruluk kaldıracıdır: haftalık arşiv doldukça swap
-kaleminin hatası bir mertebe küçülür.
+Bu pay hattın bilinen en büyük doğruluk kaldıracıdır: haftalık çapaya dayanan günlerde
+swap kaleminin hatası aylık çapaya dayananlardan bir mertebe küçüktür.
 
 ## Şekil 06 — İki net rezerv tanımı yan yana
 
@@ -639,7 +717,8 @@ $$
 $$
 
 Fark **tamamen varlık bacağındadır**: 2A, varlık tarafında daha dar bir tanım olan brüt
-döviz rezervini kullanır; A02 ile brüt rezerv arasındaki 2,0–2,5 milyar dolarlık boşluk,
+döviz rezervini kullanır; A02 ile bu brüt döviz rezervi (TP.AB.N07) arasındaki boşluk (yıllık medyanla
+2023–2025'te 1,8–1,9, 2026'da 2,2 milyar dolar),
 rezerv tanımına girmeyen diğer döviz alacaklarıdır. Yükümlülük bacakları 0,4 milyar USD
 içinde örtüşür — A14 ile |N09| Cuma günleri bin TL hassasiyetinde aynıdır.
 
@@ -657,59 +736,64 @@ içinde örtüşür — A14 ile |N09| Cuma günleri bin TL hassasiyetinde aynıd
 
 <div class="not">
   <span class="etiket">Denetim durumu</span>
-  Son koşuda <Deger proje="tcmb-net-rezerv" anahtar="uyari_sayisi" ondalik={0}>10</Deger> uyarı:
-  <Deger proje="tcmb-net-rezerv" anahtar="uyari_metni" ondalik={0}>denetim çıktısı yükleniyor…</Deger>.
+  Son koşuda <Deger proje="tcmb-net-rezerv" anahtar="uyari_sayisi" ondalik={0}>6</Deger> uyarı:
+  <Deger proje="tcmb-net-rezerv" anahtar="uyari_metni" ondalik={0}>ONS ÇAPASI REDDEDİLDİ (10.03.2023): IRFCL PDF'i 30,622 mn ons diyor; bu, ima edilen değerleme fiyatını 1.643 USD/ons yapıyor, oysa piyasa 1.847 (−%11,0, eşik %8). Fiyat farkıyla açıklanamaz — PDF düzeni değişmiş olabilir. O hafta kademe 2 (ima) çapası kullanılıyor. · ONS ÇAPASI REDDEDİLDİ (17.03.2023): IRFCL PDF'i 32,309 mn ons diyor; bu, ima edilen değerleme fiyatını 1.639 USD/ons yapıyor, oysa piyasa 1.941 (−%15,5, eşik %8). Fiyat farkıyla açıklanamaz — PDF düzeni değişmiş olabilir. O hafta kademe 2 (ima) çapası kullanılıyor. · ONS ÇAPASI REDDEDİLDİ (31.03.2023): IRFCL PDF'i 32,117 mn ons diyor; bu, ima edilen değerleme fiyatını 1.625 USD/ons yapıyor, oysa piyasa 1.992 (−%18,4, eşik %8). Fiyat farkıyla açıklanamaz — PDF düzeni değişmiş olabilir. O hafta kademe 2 (ima) çapası kullanılıyor. · ALTIN MİKTAR TANISI — 2 TARİHSEL çapada (son 8 çapanın dışında); en büyüğü 28.04.2023, 2,76 mlr USD. Ayrıntı koşu çıktısında. · ALTIN MİKTAR SIÇRAMASI — 4 TARİHSEL çapada (son 8 çapanın dışında); en büyüğü 27.03.2026, 16,41 mlr USD. Ayrıntı koşu çıktısında. · SWAP ÇAPA KAPSAMI DÜŞÜK: günlük serinin yalnız %34'i haftalık IRFCL çapasına dayanıyor (hedef %50); geri kalanı ay sonu çapasından taşınıyor. Haftalık arşiv doldurulduğunda bu kalemin hatası belirgin şekilde küçülür.</Deger>.
   Bu satır tazelik, yapısal kimlik ve çapraz kaynak denetimlerinin çıktısıdır; denetim
   çıktısının kendisi bayatsa burada o yazar.
 </div>
 
-**Seviye** (<Deger proje="tcmb-net-rezerv" anahtar="p_tarih" ondalik={0}>18.08.2026</Deger>,
-kur <Deger proje="tcmb-net-rezerv" anahtar="g_kur" ondalik={2}>47,81</Deger>):
-brüt **<Deger proje="tcmb-net-rezerv" anahtar="p_brut" ondalik={1}>187,3</Deger>** ·
-net dış varlık **<Deger proje="tcmb-net-rezerv" anahtar="p_net_dis" ondalik={1}>71,3</Deger>** ·
-toplam swap stoku <Deger proje="tcmb-net-rezerv" anahtar="p_swap" ondalik={1}>12,2</Deger>
-(yurt içi <Deger proje="tcmb-net-rezerv" anahtar="p_swap_yerli" ondalik={1}>−4,0</Deger>,
-yabancı MB <Deger proje="tcmb-net-rezerv" anahtar="p_swap_yabanci" ondalik={1}>16,2</Deger>) →
-**swap hariç net <Deger proje="tcmb-net-rezerv" anahtar="p_swap_haric" ondalik={1}>59,1</Deger>
+**Seviye** (<Deger proje="tcmb-net-rezerv" anahtar="p_tarih" ondalik={0}>02.10.2026</Deger>,
+kur <Deger proje="tcmb-net-rezerv" anahtar="g_kur" ondalik={2}>48,95</Deger>):
+brüt **<Deger proje="tcmb-net-rezerv" anahtar="p_brut" ondalik={1}>167,1</Deger>** ·
+net dış varlık **<Deger proje="tcmb-net-rezerv" anahtar="p_net_dis" ondalik={1}>55,6</Deger>** ·
+toplam swap stoku <Deger proje="tcmb-net-rezerv" anahtar="p_swap" ondalik={1}>15,9</Deger>
+(yurt içi <Deger proje="tcmb-net-rezerv" anahtar="p_swap_yerli" ondalik={1}>−0,6</Deger>,
+yabancı MB <Deger proje="tcmb-net-rezerv" anahtar="p_swap_yabanci" ondalik={1}>16,5</Deger>) →
+**swap hariç net <Deger proje="tcmb-net-rezerv" anahtar="p_swap_haric" ondalik={1}>39,7</Deger>
 milyar USD**. Karşılaştırma serisi (Stand-By 2A):
-<Deger proje="tcmb-net-rezerv" anahtar="eski_net" ondalik={1}>69,5</Deger>, tanım farkı
-<Deger proje="tcmb-net-rezerv" anahtar="eski_fark" ondalik={1} isaret={true}>+1,8</Deger>.
+<Deger proje="tcmb-net-rezerv" anahtar="eski_net" ondalik={1}>53,5</Deger>, tanım farkı
+<Deger proje="tcmb-net-rezerv" anahtar="eski_fark" ondalik={1} isaret={true}>+2,1</Deger>.
 
 **Altın girdileri:** fiyat
-<Deger proje="tcmb-net-rezerv" anahtar="alt_fiyat" ondalik={0}>4.389</Deger> USD/ons
-(kaynak <Deger proje="tcmb-net-rezerv" anahtar="alt_fiyat_kaynak" ondalik={0}>agort03</Deger>),
-miktar <Deger proje="tcmb-net-rezerv" anahtar="alt_ons" ondalik={2}>24,95</Deger> milyon ons
-(kaynak <Deger proje="tcmb-net-rezerv" anahtar="alt_ons_kaynak" ondalik={0}>tasima</Deger>).
+<Deger proje="tcmb-net-rezerv" anahtar="alt_fiyat" ondalik={0}>4.181</Deger> USD/ons
+(kaynak <Deger proje="tcmb-net-rezerv" anahtar="alt_fiyat_kaynak" ondalik={0}>Londra sabah fiyatı</Deger>),
+miktar <Deger proje="tcmb-net-rezerv" anahtar="alt_ons" ondalik={2}>25,55</Deger> milyon ons
+(kaynak <Deger proje="tcmb-net-rezerv" anahtar="alt_ons_kaynak" ondalik={0}>son haftalık gözlemden taşındı</Deger>).
 Yayımlanan altın değeri ÷ yayımlanan ons = ima edilen değerleme fiyatı
-<Deger proje="tcmb-net-rezerv" anahtar="alt_ima_fiyat" ondalik={0}>4.302</Deger> USD/ons, yani
-piyasa serisinden %<Deger proje="tcmb-net-rezerv" anahtar="alt_ima_sapma" ondalik={1}>0,3</Deger>
-farklı — bu fark **beklenir** (farklı kotasyon saati), izlenmesinin sebebi büyümesinin
-besleme sorununa işaret etmesidir.
+<Deger proje="tcmb-net-rezerv" anahtar="alt_ima_fiyat" ondalik={0}>4.291</Deger> USD/ons, yani
+piyasa serisinden %<Deger proje="tcmb-net-rezerv" anahtar="alt_ima_sapma" ondalik={1}>0,0</Deger>
+farklı — fiyat aynı gözlemlere ölçeklendiği için %0,1 mertebesinde bir fark beklenir;
+büyümesi beslemenin ya da değerleme referansının değiştiğine işaret eder.
 
-**Akım** (son etiket <Deger proje="tcmb-net-rezerv" anahtar="ak_tarih" ondalik={0}>17.08.2026</Deger>,
+**Akım** (son etiket <Deger proje="tcmb-net-rezerv" anahtar="ak_tarih" ondalik={0}>01.10.2026</Deger>,
 yani hareket o günün kapanışından
-<Deger proje="tcmb-net-rezerv" anahtar="ak_tarih_kapanis" ondalik={0}>18.08.2026</Deger>
+<Deger proje="tcmb-net-rezerv" anahtar="ak_tarih_kapanis" ondalik={0}>02.10.2026</Deger>
 kapanışına):
 
 | Ufuk | Net döviz alımı | Bant |
 | --- | --- | --- |
-| Günlük | <Deger proje="tcmb-net-rezerv" anahtar="ak_gunluk" ondalik={1} isaret={true}>+2,3</Deger> | ±<Deger proje="tcmb-net-rezerv" anahtar="ak_gunluk_bant" ondalik={1}>0,4</Deger> |
-| Son 5 işlem günü | <Deger proje="tcmb-net-rezerv" anahtar="ak_son5" ondalik={1} isaret={true}>+1,5</Deger> | ±<Deger proje="tcmb-net-rezerv" anahtar="ak_son5_bant" ondalik={1}>0,5</Deger> |
-| <Deger proje="tcmb-net-rezerv" anahtar="ak_ay_ad" ondalik={0}>Ağustos</Deger> ayı (<Deger proje="tcmb-net-rezerv" anahtar="ak_ay_gun" ondalik={0}>11</Deger> etiket) | <Deger proje="tcmb-net-rezerv" anahtar="ak_ay" ondalik={1} isaret={true}>+9,2</Deger> | ±<Deger proje="tcmb-net-rezerv" anahtar="ak_ay_bant" ondalik={1}>1,0</Deger> |
-| <Deger proje="tcmb-net-rezerv" anahtar="ak_cipa" ondalik={0}>26.02.2026</Deger> kapanışından birikimli | <Deger proje="tcmb-net-rezerv" anahtar="ak_birikimli" ondalik={1} isaret={true}>+3,2</Deger> | ±<Deger proje="tcmb-net-rezerv" anahtar="ak_birikimli_bant" ondalik={1}>2,0</Deger> |
+| Günlük | <Deger proje="tcmb-net-rezerv" anahtar="ak_gunluk" ondalik={1} isaret={true}>+0,2</Deger> | ±<Deger proje="tcmb-net-rezerv" anahtar="ak_gunluk_bant" ondalik={1}>0,4</Deger> |
+| Son 5 işlem günü | <Deger proje="tcmb-net-rezerv" anahtar="ak_son5" ondalik={1} isaret={true}>−0,9</Deger> | ±<Deger proje="tcmb-net-rezerv" anahtar="ak_son5_bant" ondalik={1}>0,5</Deger> |
+| <Deger proje="tcmb-net-rezerv" anahtar="ak_ay_ad" ondalik={0}>Ekim</Deger> ayı (<Deger proje="tcmb-net-rezerv" anahtar="ak_ay_gun" ondalik={0}>1</Deger> etiket) | <Deger proje="tcmb-net-rezerv" anahtar="ak_ay" ondalik={1} isaret={true}>+0,2</Deger> | ±<Deger proje="tcmb-net-rezerv" anahtar="ak_ay_bant" ondalik={1}>1,0</Deger> |
+| <Deger proje="tcmb-net-rezerv" anahtar="ak_cipa" ondalik={0}>27.02.2026</Deger> kapanışından birikimli | <Deger proje="tcmb-net-rezerv" anahtar="ak_birikimli" ondalik={1} isaret={true}>−11,5</Deger> | ±<Deger proje="tcmb-net-rezerv" anahtar="ak_birikimli_bant" ondalik={1}>2,0</Deger> |
 
 Son beş etiketin gün gün dökümü (milyar USD, altın fiyat etkisi hariç):
-<Deger proje="tcmb-net-rezerv" anahtar="ak_g1_etiket" ondalik={0}>11.08</Deger> **<Deger proje="tcmb-net-rezerv" anahtar="ak_g1" ondalik={1} isaret={true}>+0,1</Deger>** · <Deger proje="tcmb-net-rezerv" anahtar="ak_g2_etiket" ondalik={0}>12.08</Deger> **<Deger proje="tcmb-net-rezerv" anahtar="ak_g2" ondalik={1} isaret={true}>+0,0</Deger>** · <Deger proje="tcmb-net-rezerv" anahtar="ak_g3_etiket" ondalik={0}>13.08</Deger> **<Deger proje="tcmb-net-rezerv" anahtar="ak_g3" ondalik={1} isaret={true}>−1,1</Deger>** · <Deger proje="tcmb-net-rezerv" anahtar="ak_g4_etiket" ondalik={0}>14.08</Deger> **<Deger proje="tcmb-net-rezerv" anahtar="ak_g4" ondalik={1} isaret={true}>+0,1</Deger>** · <Deger proje="tcmb-net-rezerv" anahtar="ak_g5_etiket" ondalik={0}>17.08</Deger> **<Deger proje="tcmb-net-rezerv" anahtar="ak_g5" ondalik={1} isaret={true}>+2,3</Deger>**.
+<Deger proje="tcmb-net-rezerv" anahtar="ak_g1_etiket" ondalik={0}>25.09</Deger> **<Deger proje="tcmb-net-rezerv" anahtar="ak_g1" ondalik={1} isaret={true}>+1,3</Deger>** · <Deger proje="tcmb-net-rezerv" anahtar="ak_g2_etiket" ondalik={0}>28.09</Deger> **<Deger proje="tcmb-net-rezerv" anahtar="ak_g2" ondalik={1} isaret={true}>+0,8</Deger>** · <Deger proje="tcmb-net-rezerv" anahtar="ak_g3_etiket" ondalik={0}>29.09</Deger> **<Deger proje="tcmb-net-rezerv" anahtar="ak_g3" ondalik={1} isaret={true}>−1,3</Deger>** · <Deger proje="tcmb-net-rezerv" anahtar="ak_g4_etiket" ondalik={0}>30.09</Deger> **<Deger proje="tcmb-net-rezerv" anahtar="ak_g4" ondalik={1} isaret={true}>−1,7</Deger>** · <Deger proje="tcmb-net-rezerv" anahtar="ak_g5_etiket" ondalik={0}>01.10</Deger> **<Deger proje="tcmb-net-rezerv" anahtar="ak_g5" ondalik={1} isaret={true}>+0,2</Deger>**.
 
-Bütün rakamlar milyar USD. **Bantlar olmadan bu tabloyu okumayın:** birikimli rakam
-kendi belirsizlik bandı kadar büyüktür, yani işareti bile güvenli değildir. Aynı
+Bütün rakamlar milyar USD. **Bantlar olmadan bu tabloyu okumayın:** günlük rakam
+kendi bandıyla aynı mertebededir, birikimli rakamın bandı ise
+±<Deger proje="tcmb-net-rezerv" anahtar="ak_birikimli_bant" ondalik={1}>2,0</Deger> milyar USD'dir. Bu
+ölçüm hatasının bandıdır; altın cinsinden yükümlülüklerin yeniden değerlemesi tanımın
+parçasıdır ve bandın dışında durur: 01.10 itibarıyla birikimli sayının +7–9 milyar
+USD'si bu bileşendir (aşağıda, "Bilinen sınırlar"). Aynı
 pencerede altın fiyat etkisinin birikimi
-<Deger proje="tcmb-net-rezerv" anahtar="alt_fiyat_etkisi_birikimli" ondalik={1} isaret={true}>−20,1</Deger>
-milyar USD — arındırdığımız terim, cevabın kendisinden bir mertebe büyük. Son etiketin
+<Deger proje="tcmb-net-rezerv" anahtar="alt_fiyat_etkisi_birikimli" ondalik={1} isaret={true}>−25,3</Deger>
+milyar USD: fiyat kaynağındaki küçük bir oransal hata birikimli sayıyı doğrudan
+kaydırır. Son etiketin
 kendi fiyat etkisi
-<Deger proje="tcmb-net-rezerv" anahtar="alt_fiyat_etkisi_gunluk" ondalik={2} isaret={true}>−0,03</Deger>
+<Deger proje="tcmb-net-rezerv" anahtar="alt_fiyat_etkisi_gunluk" ondalik={2} isaret={true}>+0,77</Deger>
 milyar USD.
-<Deger proje="tcmb-net-rezerv" anahtar="ak_gecikme_cumle" ondalik={0}>Akım serisi seviye serisinin 2 seans gerisinde: altın fiyatı 27.08.2026 tarihinden beri ilerlemedi. Fiyat farkı ölçülemeyen günde fiyat etkisi de net alım da boş bırakılır; sıfır yazılmaz.</Deger>
+<Deger proje="tcmb-net-rezerv" anahtar="ak_gecikme_cumle" ondalik={0}>Akım serisi seviye serisiyle aynı kapanışa kadar geliyor; ölçülemeyen seans yok.</Deger>
 
 ## Doğrulama
 
@@ -728,9 +812,9 @@ kalır ve tarih hizası shift = 0'da en iyidir (±1 gün kaydırıldığında ha
 büyür). Bu, TOPLAM(F) çapası + A02/kur hafta içi hareketi + 5 gün gecikme
 zincirlemesinin doğru tanım olduğunun göstergesidir.
 
-**Arındırılmış akım da artık sınanıyor.** Sayfanın en iddialı çıktısı — altın fiyat
-etkisinden arındırılmış günlük net döviz alımı — uzun süre hiçbir bağımsız referansa
-karşı ölçülmemişti. Şimdi ölçülüyor. 47 işlem gününde:
+**Arındırılmış akımın bağımsız sınaması.** Sayfanın en iddialı çıktısı — altın fiyat
+etkisinden arındırılmış günlük net döviz alımı — Haziran–Ağustos 2026'nın 47 işlem
+gününde bağımsız bir günlük referansa karşı ölçüldü:
 
 | Kalem | n | Ortalama hata | \|Ortalama\| hata | Maksimum |
 | --- | --- | --- | --- | --- |
@@ -741,16 +825,18 @@ karşı ölçülmemişti. Şimdi ölçülüyor. 47 işlem gününde:
 | Altın / döviz kırılımı | 41 | +0,27 | **0,52** | 1,46 |
 | **Günlük net döviz alımı** | 47 | −0,02 | **0,45** | 1,76 |
 
-Milyar USD. Üç şey okunur: (i) seviye tarafı yuvarlama zemininde; (ii) swap kaleminin
+Milyar USD. Tablo altın fiyatı BİST ağırlıklı ortalamasından okunurken ölçüldü; Londra
+sabah fiyatıyla kurulan güncel seri bu tabloda yok.
+Üç şey okunur: (i) seviye tarafı yuvarlama zemininde; (ii) swap kaleminin
 hatası çapa tipiyle **on kat** ayrışıyor — sayfanın haftalık arşiv kapsamına bu kadar
-yer ayırmasının sebebi bu; (iii) günlük akımın hatası ilan ettiğimiz
+yer ayırmasının sebebi bu; (iii) günlük akımın ortalama mutlak hatası ilan ettiğimiz
 ±<Deger proje="tcmb-net-rezerv" anahtar="ak_gunluk_bant" ondalik={1}>0,4</Deger> milyar
-USD'lik bandın içinde — bant süslemesi değil, ölçülmüş büyüklük. Kırılım kalemi (altın
+USD'lik bantla aynı mertebede ve tek tek günlerde bandın dışına çıkabiliyor — bant
+süslemesi değil, ölçülmüş büyüklük. Kırılım kalemi (altın
 vs döviz) beklendiği gibi en zayıf halka; brüt tam tuttuğu için hata ikisi arasında ters
 işaretli salınıyor.
 
-Bu sayılar tahmin değil, her veri güncellemesinde yeniden koşan dört denetimin
-çıktısıdır: (i) günlük vekil serinin Cuma→Cuma geri-testi, (ii) swap kaleminde ara
+Tablo bir kez ölçüldü. Her veri güncellemesinde ise dört denetim yeniden koşar: (i) günlük vekil serinin Cuma→Cuma geri-testi, (ii) swap kaleminde ara
 değer ve basamak hatası taraması, (iii) haftalık rezerv arşivi ile aylık resmî
 veri arasında çapraz kıyas, (iv) altın fiyat etkisinden arındırma tanıları.
 Denetimlerden biri düşerse sayfa güncellenmez — eski grafikle taze metnin yan yana
@@ -764,18 +850,37 @@ gömmek olurdu.
 - **Faiz geliri (ρ) arındırılmıyor — yukarı yanlılık.** Rezerv portföyünün faiz geliri
   ve piyasa değeri değişimi bizim hesabımızda "TCMB döviz aldı" gibi görünür. Mertebesi
   yıllık <Deger proje="tcmb-net-rezerv" anahtar="ak_faiz_yanlilik_yillik" ondalik={1}>2,3</Deger>
-  milyar USD, **işareti pozitif ve sistematik**. Çıpadan bugüne bu, birikimli net alım
+  milyar USD, **işareti pozitif ve sistematik**. Altı aylık bir pencerede bu, birikimli net alım
   rakamının 1,0–1,3 milyar USD'lik kısmının işlem değil getiri olduğu anlamına gelir.
   Hesaplanmamasının sebebi portföyün vade ve enstrüman kırılımının yayımlanmamasıdır.
-  Tahmin doğrulanıyor: bağımsız referansın birikimli rakamı bizimkinden ortalama
-  **0,9 milyar USD aşağıda** — işaret ve mertebe, arındırmadığımız faiz geliri terimiyle
-  uyumlu. Bunu bir düzeltme katsayısıyla kapatmıyoruz; kapatmak, ölçmediğimiz bir şeyi
-  ölçmüş gibi yapmak olurdu.
+  Bunu bir düzeltme katsayısıyla kapatmıyoruz; kapatmak, ölçmediğimiz bir şeyi ölçmüş
+  gibi yapmak olurdu.
 - **Akım serisi revize olur.** Son miktar çapasından sonraki günlerin akımı geçicidir;
   yeni haftalık gözlem geldiğinde değişir. Grafikte soluk çizilir.
-- **Altın günlük piyasa fiyatıyla ölçülüyor**, TCMB'nin haftalık Londra kotasyonuyla
-  değil. Kırılımda günde yarım milyar dolar mertebesinde artık kalır; **brüt ve net
-  seviye bundan etkilenmez**, yalnız altın/döviz ayrımı ve günlük akım etkilenir.
+- **Altın Londra sabah fiyatıyla ölçülüyor ama TCMB'nin kotasyonunun kendisiyle değil.**
+  Fiyat iki fiziki altın ürününün Londra saatiyle 10:00 ve 11:00'de biten saatlik
+  barlarından kurulup TCMB'nin haftalık değerleme fiyatına ölçekleniyor; aradaki fark
+  kırılımda ve günlük akımda küçük bir artık bırakır, **brüt ve net seviye bundan
+  etkilenmez**.
+- **Altın cinsinden yükümlülüklerin yeniden değerlemesi akımda kalır.** TCMB'nin
+  yükümlülüklerinin bir kısmı altın cinsindendir — zorunlu karşılık altını, yurt içi ve
+  yurt dışı bankaların altını, Hazine'nin altını; 2026'da 8,5–10,4 milyon ons. Altın fiyat
+  etkisi piyasa tablolarının tanımıyla, **brüt** altınla düşülür; bu kalemlerin fiyatla
+  birlikte değişen değeri akımda kalır: bankaların altını net pozisyonu, kamu döviz
+  mevduatının içindeki Hazine altını ise akımdan düşülen kamu hareketini oynatır. Ölçüldü: 2026'da
+  günlük akımın altın fiyat etkisine eğimi $-0{,}28$ ($t=-3{,}7$) — altının sert
+  yükseldiği günlerde akım bir miktar düşük, sert düştüğü günlerde yüksek yazılır. Altın
+  hareketinin büyük olduğu bir günün tek barını bu payla okuyun. Etki birikimde de
+  durur ve altının yönüyle aynı tarafta toplanır: çıpadan bu yana altın düştüğü için bu
+  bileşen birikimli sayıyı yukarı çeker; 01.10 itibarıyla mertebesi +7–9 milyar USD
+  (eğim × birikimli fiyat etkisi $7{,}2$, yükümlülük kalemleriyle doğrudan
+  hesap $8{,}7$). Bu bir ölçüm hatası değil, tanımın içerdiği bir
+  bileşendir; birikimli bandın (±2,0) kapsamında değildir.
+- **17.11.2023 öncesinin akımı o fiyatın gürültüsünü taşır.** Londra fiyatının saatlik
+  geçmişi o güne kadar gidiyor; öncesi BİST ağırlıklı ortalamasıyla geriye uzatılır. O
+  dönemde günlük akımın altın fiyat etkisine eğimi $-0{,}88$ ($t=-7{,}1$), Londra
+  döneminde $-0{,}27$. Birikim (27.02.2026'dan) bundan etkilenmez; 2023'ün günlük akımı
+  etkilenir.
 - **Hafta içi altın miktar değişimi** hiçbir günlük resmi kaynakta yayımlanmaz; ancak
   haftalık çapada yakalanır.
 - **Parite (USD dışı kur) etkisi arındırılmamıştır.** Rezervin para kompozisyonu
@@ -789,14 +894,14 @@ gömmek olurdu.
 - **Net dış varlık baştan sona TL kaynaklıdır** (brüt rezervin aksine USD çapası
   yoktur). 8,9 trilyon TL'lik bir kalemde binde birlik kur uyumsuzluğu ~190 milyon
   USD sahte akım üretir. Alış/satış kuru tercihi ayrıca
-  <Deger proje="tcmb-net-rezerv" anahtar="p_kur_varyant_fark" ondalik={2} isaret={true}>+0,13</Deger>
+  <Deger proje="tcmb-net-rezerv" anahtar="p_kur_varyant_fark" ondalik={2} isaret={true}>+0,10</Deger>
   milyar USD'lik kapatılmamış bir seviye farkı bırakır (her koşuda ölçülür).
 - **ROM/zorunlu karşılık bloke hesabı yükümlülükten düşülmemiştir**; bazı "net rezerv"
   tanımları düşer.
 - **Doğrulama penceresi dardır.** Seviye ve kırılım hataları yalnız Haziran–Ağustos
   2026 aralığında, bağımsız bir günlük referansa karşı ölçülmüştür. Oynaklığın yüksek
-  olduğu rejimlerde (ör. Mart 2026 altın hareketi, günlük akımın ±9 milyar USD'ye
-  vurduğu günler) hata bandı **ölçülmemiştir**; o dönemlerin sayıları bu bantlarla
+  olduğu rejimlerde (ör. Mart–Nisan 2026: altın fiyat etkisinin bir günde 10 milyar
+  USD'yi, günlük akımın 8 milyar USD'yi aştığı günler) hata bandı **ölçülmemiştir**; o dönemlerin sayıları bu bantlarla
   değil, yöntemin kendisiyle savunulur.
 - **2023'ün negatif değerleri doğrudur.** Swap hariç net rezerv 2023 başında −43 milyar
   USD civarındaydı: TCMB'nin swap defteri o dönemde rezervin kendisinden büyüktü.

@@ -21,10 +21,17 @@ interface Props {
   tur?: 'proje' | 'analiz';
   /** Konu etiketleri (#…) basılsın mı. Ana sayfada basılmaz: karar bilgisi taşımıyor. */
   etiketler?: boolean;
+  /**
+   * Pano kartının TEK tarihi: verinin tarihi (lib/projeDizini). Verilirse üst
+   * satırda yayım günü yerine bu basılır, yayım ve metin güncelleme tarihleri
+   * basılmaz. Projeler sayfası veri tarihine göre dizilir; kart başka bir tarih
+   * gösterseydi sıra okura düzensiz görünürdü.
+   */
+  veri?: { tarih: string; iso: string; yas: string };
 }
 
 const { href, sira, title, description, ozet, tags = [], durum, guncelleme,
-        pubDate, updatedDate, gecikme = 0, ekBilgi = [], tur = 'proje', etiketler = true } = Astro.props;
+        pubDate, updatedDate, gecikme = 0, ekBilgi = [], tur = 'proje', etiketler = true, veri } = Astro.props;
 const siraNo = `No ${String(sira).padStart(2, '0')}`;
 // Kart metni: yazarın tek cümlelik tezi; yoksa açıklamanın ilk cümleleri.
 // 1.200 karakterlik bir açıklamayı karta basmak kartı okunmaz yapıyordu.
@@ -34,8 +41,8 @@ const kartMetni = ozet || ozetle(description, 240);
 // (bir sonraki çeyreğin büyüme analizi, bir sonraki ihalenin sökümü) listede
 // birbirinden ayırt edilemiyordu. Çözüm başlığa tarih yazmak DEĞİL — o, kartın
 // eksiğini her yazının başlığında tek tek onarmak olurdu.
-const yayim = pubDate ? tarihUzun(pubDate) : null;
-const guncel = updatedDate ? tarihUzun(updatedDate) : null;
+const yayim = pubDate && !veri ? tarihUzun(pubDate) : null;
+const guncel = updatedDate && !veri ? tarihUzun(updatedDate) : null;
 // Güncelleme yayımla aynı günse ikinci kez yazma.
 const guncelGoster = guncel && guncel !== yayim ? guncel : null;
 ---
@@ -46,7 +53,14 @@ const guncelGoster = guncel && guncel !== yayim ? guncel : null;
     {durum === 'taslak' && <span class="rozet rozet--taslak">Hazırlanıyor</span>}
     {durum === 'aktif' && tur === 'proje' && <span class="rozet rozet--aktif">Canlı</span>}
     {durum === 'arsiv' && <span class="rozet rozet--arsiv">Arşiv</span>}
-    {yayim && (
+    {veri ? (veri.tarih ? (
+      <>
+        <time class="tarih" datetime={veri.iso || undefined}>veri {veri.tarih}</time>
+        {veri.yas && <span class="tarih-yas" data-kart-yas={veri.iso}>· {veri.yas}</span>}
+      </>
+    ) : (
+      <span class="tarih">veri yok</span>
+    )) : yayim && (
       <time class="tarih" datetime={isoGun(pubDate)}>{yayim}</time>
     )}
   </div>
@@ -60,3 +74,16 @@ const guncelGoster = guncel && guncel !== yayim ? guncel : null;
     {etiketler && tags.length > 4 && <span class="ek">+{tags.length - 4}</span>}
   </div>
 </article>
+
+<script>
+  // Yaş derleme anında yazılır ve hafta sonu donar ("bugün" pazartesiye
+  // kadar "bugün" kalırdı). Sayfa açılınca aynı tarihten, aynı kuralla
+  // (lib/bicim) yeniden hesaplanır.
+  import { tariheCevir, gunFarki, yasMetni } from '../lib/bicim';
+  document.querySelectorAll<HTMLElement>('[data-kart-yas]').forEach((el) => {
+    const d = tariheCevir(el.dataset.kartYas);
+    const y = d ? yasMetni(gunFarki(d)) : '';
+    if (y) el.textContent = `· ${y}`;
+    else el.remove();
+  });
+</script>

@@ -3,21 +3,18 @@ import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import KayitKarti from '../../components/KayitKarti.astro';
 import { kicker, bolumBul } from '../../lib/bolumler';
-import { hatManseti } from '../../lib/anaSayfa';
-import { yasMetni } from '../../lib/bicim';
+import { projeDizini } from '../../lib/projeDizini';
 
-// Her kartta hattın manşet büyüklüğünün KENDİ tarihi: okur listeden hangi
-// panonun ne kadar taze olduğunu görür, sayfayı açmadan.
-const veriBilgisi = (slug: string): string[] => {
-  const h = hatManseti(slug);
-  if (!h.tarih) return [];
-  const yas = yasMetni(h.yas);
-  return [`veri ${h.tarih}${yas ? ` · ${yas}` : ''}`];
-};
+// Panolar yayım ritmine göre gruplanır (ön bilgideki `ritim`, lib/ritim.ts);
+// grup içinde verisi en yeni olan en üstte. Sıra anahtarı kartta basılan
+// tarihin kendisidir (lib/projeDizini). Sayfa sınavı 28 derlenmiş dizini okur:
+// her pano bir kez ve kendi grubunda, grup içinde tarih azalarak.
+const gruplar = projeDizini(await getCollection('projeler'));
+const toplam = gruplar.reduce((n, g) => n + g.kartlar.length, 0);
+const no = (i: number) => String(i + 1).padStart(2, '0');
 
-const projeler = (await getCollection('projeler'))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .sort((a, b) => (a.data.durum === 'arsiv' ? 1 : 0) - (b.data.durum === 'arsiv' ? 1 : 0));
+// Kart numarası sayfa boyunca ilerler (gruplar arasında sıfırlanmaz).
+let sayac = 0;
 ---
 
 <Base title="Projeler" description={bolumBul('/projeler/')?.aciklama ?? 'Kendi kaynağından beslenen, kendi ritminde tazelenen veri panoları.'}>
@@ -26,22 +23,60 @@ const projeler = (await getCollection('projeler'))
     <h1>Projeler</h1>
     <p class="alt">
       Her pano kendi kaynağından beslenir: veri çekilir, hesap yeniden koşulur,
-      grafik ve sayılar bu sayfalara işlenir. Kartta "veri" satırı panonun manşet
-      büyüklüğünün kendi tarihini, ↻ işareti yayım ritmini gösterir.
+      grafik ve sayılar bu sayfalara işlenir. Panolar yayım ritmine göre
+      gruplanır; grup içinde verisi en yeni olan pano en üstte durur. Kartın
+      köşesindeki "veri" tarihi panonun manşet büyüklüğünün kendi tarihidir,
+      ↻ işareti panonun ne sıklıkla tazelendiğini gösterir.
     </p>
   </header>
-  <div class="kayit-izgara">
-    {
-      projeler.map((p, i) => (
-        <KayitKarti href={`/projeler/${p.id}/`} sira={i + 1} gecikme={i * 60} {...p.data} ekBilgi={veriBilgisi(p.id)} />
-      ))
-    }
-  </div>
+
+  <nav class="ritim-haritasi yuksel" style="--d: 80ms" aria-label="Yayım ritmine göre gruplar">
+    <span class="etiket harita-baslik">Yayım ritmi · {toplam} pano</span>
+    <ul>
+      {
+        gruplar.map((g, gi) => (
+          <li>
+            <a href={`#${g.kod}`}>
+              <span class="harita-no">{no(gi)}</span>
+              <span class="harita-ad">{g.ad}</span>
+              <span class="harita-sayi">
+                {g.kartlar.length} pano{g.kartlar[0]?.tarih && ` · en yeni veri ${g.kartlar[0].tarih}`}
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  {
+    gruplar.map((g, gi) => (
+      <section class="grup" id={g.kod} data-ritim={g.kod}>
+        <div class="bolum-baslik yuksel" style={`--d: ${120 + gi * 40}ms`}>
+          <span class="no">{no(gi)}</span>
+          <h2>{g.ad}</h2>
+          <span class="grup-olcu">{g.kartlar.length} pano</span>
+        </div>
+        <p class="grup-aciklama yuksel" style={`--d: ${140 + gi * 40}ms`}>{g.aciklama}</p>
+        <div class="kayit-izgara">
+          {g.kartlar.map((k, i) => (
+            <KayitKarti
+              href={`/projeler/${k.proje.id}/`}
+              sira={++sayac}
+              gecikme={160 + gi * 40 + i * 50}
+              {...k.proje.data}
+              veri={k.veri}
+            />
+          ))}
+        </div>
+      </section>
+    ))
+  }
 </Base>
 
 <style>
   .liste-baslik {
-    padding: 3rem 0 2.2rem;
+    padding: 3rem 0 1.6rem;
     max-width: 52ch;
   }
   .kicker {
@@ -61,5 +96,91 @@ const projeler = (await getCollection('projeler'))
     font-size: 1.08rem;
     color: var(--ink-70);
     margin: 0;
+  }
+
+  /* ── Ritim haritası (Dersler sayfasının konu haritasıyla aynı dil) ── */
+  .ritim-haritasi {
+    margin: 1.2rem 0 0;
+    border-top: 1px solid var(--ink);
+    padding-top: 0.7rem;
+  }
+  .harita-baslik {
+    color: var(--claret);
+    display: block;
+    margin-bottom: 0.7rem;
+  }
+  .ritim-haritasi ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.4rem 2rem;
+  }
+  .ritim-haritasi a {
+    display: block;
+    text-decoration: none;
+    padding: 0.4rem 0 0.5rem;
+    border-bottom: 1px solid var(--ink-15);
+  }
+  .ritim-haritasi a:hover {
+    border-bottom-color: var(--claret);
+  }
+  .ritim-haritasi a:hover .harita-ad {
+    color: var(--claret);
+  }
+  .harita-no {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--claret);
+    margin-right: 0.5rem;
+  }
+  .harita-ad {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 30;
+    font-size: 1.02rem;
+    font-weight: 560;
+    line-height: 1.25;
+    transition: color 0.15s ease;
+  }
+  .harita-sayi {
+    display: block;
+    margin-top: 0.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+  }
+
+  /* ── Gruplar ───────────────────────────────────────────── */
+  .grup {
+    scroll-margin-top: 2rem;
+  }
+  /* Ölçü satırı sarar: dar ekranda başlıkla aynı satıra sığmazsa alta iner. */
+  .grup .bolum-baslik {
+    flex-wrap: wrap;
+    row-gap: 0.2rem;
+  }
+  .grup-olcu {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  .grup-aciklama {
+    max-width: 68ch;
+    margin: 0 0 1.2rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--ink-70);
+  }
+  /* Telefon tabanı: mono ölçü etiketleri en az 0,75rem (global.css ile aynı kural). */
+  @media (max-width: 640px) {
+    .harita-no, .harita-sayi, .grup-olcu { font-size: 0.75rem; }
   }
 </style>

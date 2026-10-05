@@ -1,5 +1,6 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { RITIMLER } from './lib/ritim';
 
 const ortakSema = z.object({
   title: z.string(),
@@ -44,7 +45,15 @@ const projeler = defineCollection({
   // Pano bir ölçüm yüzeyidir: künyesi kaynağını ve yayım ritmini yazar
   // (projeler/YAZIM.md). İkisi burada ZORUNLU — rehberin "zorunlu" dediği
   // şey şemada isteğe bağlıydı ve hiçbir kapı yokluğunu görmüyordu.
-  schema: ortakSema.extend({ kaynak: z.string().min(1), guncelleme: z.string().min(1), duzeltmeler: duzeltmeSema }),
+  // `ritim` Projeler sayfasının grubunu seçer (lib/ritim.ts); serbest metin olan
+  // `guncelleme`den türetilemez, o yüzden ayrı ve zorunlu bir alan. Sayfa sınavı
+  // (28) beyanı ölçüm katmanının ritim eşiğiyle kıyaslar.
+  schema: ortakSema.extend({
+    kaynak: z.string().min(1),
+    guncelleme: z.string().min(1),
+    ritim: z.enum(RITIMLER),
+    duzeltmeler: duzeltmeSema,
+  }),
 });
 
 // İndikatörler: bir dersin öğrettiği yöntemin çalışan karşılığı. Ders değil,
