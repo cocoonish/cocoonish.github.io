@@ -1,0 +1,164 @@
+---
+/**
+ * Seçim sonrası senaryo ağacı: cumhurbaşkanlığı seçimini kazanan aday
+ * meclisi fesheder mi, feshederse yeni meclis hangi aritmetiği üretir.
+ * Dallar anayasanın kurallarından (md. 12: 20–40 gün, bir yıl kuralı;
+ * md. 49: 289) türer; hangi dalın gerçekleşeceğine dair olasılık YAZILMAZ —
+ * ölçülmemiş bir olasılık, ölçülmüş gibi görünürdü.
+ *
+ * Ağaç dikey ve girintili çizilir (dosya gezgini gibi): telefonda yatay bir
+ * ağaç ya kaydırma ister ya yazıyı okunmaz küçültür. Her sonucun "planın
+ * meclis yolu" yazıyla verilir; şeridin tonu yalnız sırayı gösterir, değer
+ * yüklemez.
+ */
+import Diyagram from './Diyagram.astro';
+
+interface Props {
+  no?: string;
+}
+const { no } = Astro.props;
+
+const SONUCLAR = [
+  {
+    y: 212,
+    baslik: '1 · Salt çoğunluk (289 ve üstü)',
+    yol: 'planın meclis yolu: açık',
+    sinif: 'acik',
+    satirlar: [
+      'Bütçe Meclis\'ten geçer; Senato yasayı',
+      'geciktirir ama durduramaz. Anayasa',
+      'değişikliği olağan yolda Senato onayına bağlı.',
+    ],
+    ornek: 'Emsal: 1981 feshi, salt çoğunluk (meclis 491)',
+  },
+  {
+    y: 330,
+    baslik: '2 · Kimse 289\'a ulaşamaz',
+    yol: 'planın meclis yolu: dar',
+    sinif: 'dar',
+    satirlar: [
+      'Cumhurbaşkanının bloğu en büyük olsa da',
+      'olmasa da: her bütçede pazarlık ya da 49.3',
+      've gensoru riski. Bir yıl yeni fesih yok.',
+    ],
+    ornek: 'Emsal: 1988 feshi (275 sandalye); 2024 feshi',
+  },
+  {
+    y: 448,
+    baslik: '3 · Muhalefet çoğunluğu',
+    yol: 'planın meclis yolu: kapalı',
+    sinif: 'kapali',
+    satirlar: [
+      'Cohabitation: cumhurbaşkanı ile meclis',
+      'çoğunluğu karşıt kamplardan; bütçeyi',
+      'onların başbakanı yazar. Bir yıl fesih yok.',
+    ],
+    ornek: 'Emsal: 1997 feshi (dönem ortası), Chirac kaybetti',
+  },
+];
+const KUTU_Y = 108;
+---
+
+<Diyagram no={no} baslik="Seçim sonrası senaryo ağacı: fesih ve üç meclis sonucu" kaynak="Fransa Anayasası, md. 11, 12, 49 ve 89; emsallerin kaynakları Kaynakça'da">
+  <svg viewBox="0 0 360 626" role="img" aria-labelledby="fsa-baslik" aria-describedby="fsa-aciklama">
+    <title id="fsa-baslik">Seçim sonrası senaryo ağacı</title>
+    <desc id="fsa-aciklama">Varsayım: Le Pen Mayıs 2027'de cumhurbaşkanı seçilir. Meclisi hemen feshetmezse 2024'te seçilen meclisle yönetir ve her bütçe oylaması belirsiz kalır; fesih yetkisi sonra da elindedir. Feshederse 20 ile 40 gün içinde meclis seçimi yapılır ve üç sonuç çıkabilir. Bir: cumhurbaşkanının bloğu 577 sandalyenin en az 289'unu alır; planın meclisten geçme yolu açıktır, ama anayasa değişikliği olağan yolda yine Senato'nun onayına bağlıdır. İki: hiçbir blok 289'a ulaşamaz, cumhurbaşkanının bloğu en büyük olsa da olmasa da; yol dardır, her bütçede pazarlık ya da 49.3 ve gensoru riski vardır, bir yıl yeni fesih yapılamaz. Üç: muhalefet çoğunluğu, yani cohabitation; cumhurbaşkanı ile meclis çoğunluğu karşıt kamplardandır, bütçeyi meclis çoğunluğunun başbakanı yazar, yol kapalıdır ve bir yıl yeni fesih yapılamaz. Emsaller: 1981'de Mitterrand feshetti ve salt çoğunluk aldı (meclis o yıl 491 sandalyeydi); 1988'de feshetti ve sosyalist grup 275 sandalyede kaldı; 2024'te Macron'un feshi hiçbir bloğa çoğunluk vermedi; 1997'de Chirac döneminin ortasında feshetti ve seçimi kaybetti.</desc>
+
+    <!-- Kök -->
+    <rect x="8" y="6" width="344" height="46" rx="3" class="kutu kok" />
+    <text x="180" y="25" class="ad" text-anchor="middle">Varsayım: Le Pen Mayıs 2027'de</text>
+    <text x="180" y="43" class="ad" text-anchor="middle">cumhurbaşkanı seçilir</text>
+
+    <!-- Birinci omurga -->
+    <line x1="26" y1="52" x2="26" y2="170" class="omurga" />
+    <line x1="26" y1="94" x2="44" y2="94" class="omurga" />
+    <line x1="26" y1="170" x2="44" y2="170" class="omurga" />
+
+    <!-- Fesih yok -->
+    <rect x="44" y="64" width="308" height="64" rx="3" class="kutu" />
+    <text x="56" y="83" class="alt-ad">Meclisi hemen feshetmez</text>
+    <text x="56" y="102" class="kucuk">2024'te seçilen meclisle yönetir; her bütçe</text>
+    <text x="56" y="117" class="kucuk">ve gensoru belirsiz kalır; fesih sonra da mümkün.</text>
+
+    <!-- Fesih -->
+    <rect x="44" y="146" width="308" height="48" rx="3" class="kutu" />
+    <text x="56" y="165" class="alt-ad">Meclisi fesheder</text>
+    <text x="56" y="184" class="kucuk">20–40 gün içinde yeni meclis seçimi</text>
+
+    <!-- İkinci omurga -->
+    <line x1="62" y1="194" x2="62" y2={SONUCLAR[2].y + 30} class="omurga" />
+    {SONUCLAR.map((s) => <line x1="62" y1={s.y + 30} x2="80" y2={s.y + 30} class="omurga" />)}
+
+    {SONUCLAR.map((s) => (
+      <g>
+        <rect x="80" y={s.y} width="272" height={KUTU_Y} rx="3" class="kutu" />
+        <rect x="80" y={s.y} width="5" height={KUTU_Y} class={`serit ${s.sinif}`} />
+        <text x="94" y={s.y + 19} class="alt-ad">{s.baslik}</text>
+        <text x="94" y={s.y + 36} class={`yol ${s.sinif}`}>{s.yol}</text>
+        {s.satirlar.map((t, i) => (
+          <text x="94" y={s.y + 55 + i * 15} class="kucuk">{t}</text>
+        ))}
+        <text x="94" y={s.y + 99} class="emsal">{s.ornek}</text>
+      </g>
+    ))}
+
+    <text x="180" y="590" class="not" text-anchor="middle">Seçimi başka bir aday kazansa da</text>
+    <text x="180" y="606" class="not" text-anchor="middle">aynı meclis aritmetiği geçerlidir.</text>
+  </svg>
+</Diyagram>
+
+<style>
+  .kutu {
+    fill: var(--paper-2);
+    stroke: var(--ink-30);
+    stroke-width: 1;
+  }
+  .kutu.kok {
+    fill: var(--paper-3);
+  }
+  .omurga {
+    stroke: var(--ink-50);
+    stroke-width: 1.4;
+  }
+  .ad {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+    fill: var(--ink);
+  }
+  .alt-ad {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 13px;
+    fill: var(--ink);
+  }
+  .kucuk {
+    font-family: var(--font-body);
+    font-size: 11.5px;
+    fill: var(--ink-70);
+  }
+  .emsal {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 11.5px;
+    fill: var(--ink-60);
+  }
+  .not {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 12px;
+    fill: var(--ink-60);
+  }
+  .yol {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  /* Renk değer taşımaz: üç sonuç tek mürekkebin üç tonuyla ayrılır, anlamı
+     yazı taşır. Yeşil/kırmızı bir siyasi sonucu "iyi/kötü" diye boyardı. */
+  .serit.acik { fill: var(--ink); }
+  .serit.dar { fill: var(--ink-60); }
+  .serit.kapali { fill: var(--ink-30); }
+  .yol { fill: var(--ink-70); }
+</style>

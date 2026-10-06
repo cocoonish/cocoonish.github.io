@@ -1,0 +1,75 @@
+---
+/**
+ * Satır içi diyagram kabı — veri grafiği değil, ilişki şeması (kurumlar,
+ * senaryo ağacı). Künyesi GrafikEmbed'in künyesiyle aynı görünür ("Şekil NN",
+ * başlık, kaynak), böylece okur yazıdaki iki tür şekli aynı biçimde okur.
+ *
+ * İçerik bir SVG'dir ve slot'tan gelir; renkler sitenin tasarım jetonlarından
+ * (--paper, --ink, --claret, --teal) okunur, sabit renk yazılmaz. SVG'nin
+ * viewBox'ı telefon sütununa (~360 birim) göre çizilir: dar ekranda ölçek
+ * ~1, yani yazı boyutu çizildiği gibi okunur; geniş ekranda `azami` sınırı
+ * şemayı büyütmeden ortalar.
+ */
+interface Props {
+  no?: string;
+  baslik: string;
+  kaynak?: string;
+  /** Şemanın en geniş hâli, piksel. */
+  azami?: number;
+}
+const { no, baslik, kaynak, azami = 540 } = Astro.props;
+---
+
+<figure class="diyagram">
+  <figcaption>
+    <span class="etiket diyagram-no">{no ? `Şekil ${no}` : 'Şekil'}</span>
+    <span class="diyagram-baslik">{baslik}</span>
+    {kaynak && <span class="etiket diyagram-kaynak">{kaynak}</span>}
+  </figcaption>
+  <div class="tuval" style={`max-width:${azami}px`}>
+    <slot />
+  </div>
+</figure>
+
+<style>
+  .diyagram {
+    margin: 2.2em 0;
+    border: 1px solid var(--ink-30);
+    background: var(--paper);
+    box-shadow: 0 1px 0 var(--ink-15);
+  }
+  figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 0.9rem;
+    padding: 0.55rem 0.9rem;
+    border-bottom: 1px solid var(--ink-15);
+    background: var(--paper-2);
+  }
+  .diyagram-no {
+    color: var(--claret);
+    white-space: nowrap;
+  }
+  .diyagram-baslik {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink-70);
+  }
+  .diyagram-kaynak {
+    margin-left: auto;
+    min-width: 0;
+    overflow-wrap: break-word;
+    color: var(--ink-50);
+  }
+  .tuval {
+    margin: 0 auto;
+    padding: 0.9rem 0.6rem 0.7rem;
+  }
+  .tuval :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+</style>
