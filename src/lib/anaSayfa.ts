@@ -228,8 +228,15 @@ export function rejimFark(s: RejimSatiri): number | null {
   return f === 0 ? 0 : f;
 }
 
-/** Farkın birimi: bir oranın ve bir endeksin farkı PUANDIR. */
-export const REJIM_FARK_BIRIMI: Record<string, string> = { '%': 'puan', puan: 'puan', endeks: 'puan' };
+/**
+ * Farkın birimi: bir oranın ve bir endeksin farkı PUANDIR. Boş birim de bir
+ * endekstir: Reel efektif kur 01.10.2026'dan beri seviyeye "endeks" yazmamak
+ * için birimsiz geliyor ve tabloda karşılığı yoktu. Seri aylık olduğu için
+ * altı gün fark basılmadı; 07.10'da 103,9 → 104,3 olunca fark birimsiz "+0,4"
+ * çıktı ve yayın kapısı (sayfa sınavı 27) siteyi durdurdu. Her rejim biriminin
+ * burada karşılığı olduğunu `bulten/duman.py` sorar.
+ */
+export const REJIM_FARK_BIRIMI: Record<string, string> = { '%': 'puan', puan: 'puan', endeks: 'puan', '': 'puan' };
 
 /** Değer + birim: "+13,3 puan", "%29,5", "104,6 endeks". */
 function birimYaz(s: RejimSatiri): string {
@@ -237,7 +244,7 @@ function birimYaz(s: RejimSatiri): string {
   const n = rejimHane(s);
   if (s.birim === '%') return yuzde(s.deger, n);
   if (s.birim === 'puan') return `${sayi(s.deger, n, true)} puan`;
-  return `${sayi(s.deger, n)} ${s.birim}`;
+  return s.birim ? `${sayi(s.deger, n)} ${s.birim}` : sayi(s.deger, n);
 }
 
 /**
