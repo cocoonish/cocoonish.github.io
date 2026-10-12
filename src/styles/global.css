@@ -153,6 +153,9 @@ main:focus {
    gövdesi rehype eklentisinden geçer, bileşenler kabı kendi basar); kapı
    sayfa sınavının 27. ölçütü. Yabancı özel ad `lang="en"` ile korunur. */
 .harf-koru, .katex { text-transform: none; }
+/* İşaretli yüzde satır sonunda bölünmez: "−" ile "%15,1" iki satıra düşünce okur değeri artı
+   okuyordu. Kabı MDX gövdesinde rehype eklentisi kurar (src/lib/isaret.mjs). */
+.isaret-koru { white-space: nowrap; }
 
 .rozet {
   font-family: var(--font-mono);
@@ -459,6 +462,34 @@ main:focus {
   /* Geniş ekranda tablo yine tablo gibi davransın (hücre genişlikleri hizalansın) */
   .prose table {
     display: table;
+  }
+}
+/* Sayı tablosu (`<div class="sayi-tablo">` içindeki Markdown tablosu): değer hücreleri satır içinde
+   kırılmaz — dar ekranda "−%10,4" eksiyle yüzde arasından, "102,41 – 118,26" aralığın ortasından
+   bölünüyordu. Tablo kendi içinde yatay kayar (yukarıdaki display:block), satır adı yapışık kalır. */
+.prose .sayi-tablo td:not(:first-child),
+.prose .sayi-tablo th:not(:first-child) {
+  white-space: nowrap;
+}
+/* Sarılan sayı tablosu (`<div class="sayi-tablo sarilir">`): az sütunlu kıyas tablosunda değer hücresi
+   satır içinde kırılabilir. Kırılmayan hücre 390 pikselde kutunun dışına taşıyor, kıyasın ikinci
+   sütunu sayının ortasından kesiliyordu; okur yalnız birinci sütunun tamamını görüyordu. */
+.prose .sayi-tablo.sarilir td:not(:first-child),
+.prose .sayi-tablo.sarilir th:not(:first-child) {
+  white-space: normal;
+}
+/* Takvim tablosu (`<div class="takvim-tablo">`): tarih hücresi kırılmaz — göz tarihle ilerler. */
+.prose .takvim-tablo td:first-child {
+  white-space: nowrap;
+}
+@media (max-width: 759px) {
+  .prose .sayi-tablo td:first-child,
+  .prose .sayi-tablo th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 7.5rem;
+    background: var(--paper);
   }
 }
 .prose thead th {

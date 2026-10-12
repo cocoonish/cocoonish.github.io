@@ -5,6 +5,7 @@ import sitemap from '@astrojs/sitemap';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { rehypeHarfKoru } from './src/lib/harf.mjs';
+import { rehypeIsaretKoru } from './src/lib/isaret.mjs';
 
 // https://astro.build/config
 export default defineConfig({
@@ -34,6 +35,8 @@ export default defineConfig({
     // rehypeHarfKoru KaTeX'ten SONRA: küçük Yunan harfini ve yabancı özel adı
     // büyük harf dönüşümünden korur (σ → Σ, "TRADİNGVİEW"); kural ve gerekçe
     // src/lib/harf.mjs'de, kapısı sayfa sınavının 27. ölçütünde.
-    rehypePlugins: [[rehypeKatex, { strict: false }], rehypeHarfKoru],
+    // rehypeIsaretKoru: işaretli yüzde ("−%4,8") satır sonunda işaretinden
+    // ayrılmaz — dar ekranda okur değeri artı okuyordu (src/lib/isaret.mjs).
+    rehypePlugins: [[rehypeKatex, { strict: false }], rehypeHarfKoru, rehypeIsaretKoru],
   },
 });
