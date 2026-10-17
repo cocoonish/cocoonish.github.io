@@ -14,7 +14,7 @@ export interface DersOlcum {
   arac: number; // sayfaya gömülü interaktif hesap aracı sayısı
   bolum: number; // "## " başlık sayısı
   pratik: number; // <div class="pratik"> bloğu sayısı
-  alistirma: number; // <details> içindeki çözümlü alıştırma sayısı
+  alistirma: number; // çözümü katlanan alıştırma sayısı (<details><summary>Çözüm…)
   tablo: number; // markdown tablo satırı değil, tablo sayısı
 }
 
@@ -114,7 +114,9 @@ export function olc(govde: string | undefined): DersOlcum {
     arac: aracSay(g),
     bolum: bolumSay(g),
     pratik: say(g, /<div class="pratik"/g),
-    alistirma: say(g, /<details\b/g),
+    // Alıştırma, çözümü katlanan bloktur ("Çözüm" ya da "Çözüm adımları" özetli <details>). Her <details>'i saymak,
+    // katlanan bir başvuru tablosunu (ör. koşul kovalarının ayrıntısı) alıştırma diye karta yazardı.
+    alistirma: say(g, /<details\b[^>]*>\s*<summary\b[^>]*>\s*Çözüm/g),
     tablo: tabloSay(g),
   };
 }

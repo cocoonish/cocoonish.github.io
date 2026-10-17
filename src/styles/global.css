@@ -44,6 +44,9 @@
      Bu jeton 17px gövdede ~72 karaktere denk gelir (72 × 0,4199 × 17 ≈ 514px). */
   --olcu-metin: 32rem;
   --genislik: 1120px;
+  /* Kâğıt dokusu. Gövdenin zemini ve kendi zeminini boyayan öğeler (sayı tablosunun yapışık ilk
+     sütunu) aynı katmanı taşır: düz --paper, dokulu gövdenin üstünde açık renkli bir şerit olur. */
+  --doku: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.13 0 0 0 0 0.1 0 0 0 0 0.07 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 * {
@@ -58,7 +61,7 @@ body {
   margin: 0;
   background-color: var(--paper);
   /* ince kâğıt dokusu */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.13 0 0 0 0 0.1 0 0 0 0 0.07 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: var(--doku);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 1.0625rem;
@@ -466,10 +469,44 @@ main:focus {
 }
 /* Sayı tablosu (`<div class="sayi-tablo">` içindeki Markdown tablosu): değer hücreleri satır içinde
    kırılmaz — dar ekranda "−%10,4" eksiyle yüzde arasından, "102,41 – 118,26" aralığın ortasından
-   bölünüyordu. Tablo kendi içinde yatay kayar (yukarıdaki display:block), satır adı yapışık kalır. */
+   bölünüyordu. Kırılmayan hücreler tabloyu sütundan geniş yapabilir. Dar ekranda tablo kendi içinde
+   kayar (yukarıdaki display:block); geniş ekranda tablo yeniden tablo olur ve kaydırmayı KAP taşır.
+   Kap kaymadığında sekiz-dokuz sütunlu bir tablo 760–1440 pikselde sayfanın kendisini yana
+   kaydırıyordu. Tablonun dikey payı kaba taşınır: kaydırma kabının içindeki pay komşu paragrafın
+   payıyla birleşmez, pay tabloda kalsaydı tablonun üstü ve altı açılırdı. */
+.prose .sayi-tablo {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: calc(1.8 * 0.92rem) 0;
+}
+/* Geniş ekranda sütundan biraz geniş bir tablo, sayfa kabının iç kenarına kadar sağ boşluğa taşar ve
+   tamamı görünür; kaydırma ancak o pay da yetmezse başlar. Kap tablonun en dar genişliğini alır
+   (fit-content), sütundan dar değildir (min-width), payı sütunun sağındaki boşluktur: kabın iç
+   genişliği (.sarici) eksi ölçü, yarısı, eksi 1rem — 1rem, 100vw'nin kaydırma çubuğunu da
+   saymasının ve kenara yapışmamanın payıdır. */
+@media (min-width: 760px) {
+  .prose .sayi-tablo {
+    --tablo-pay: max(0px, (min(100vw, var(--genislik)) - 2 * clamp(1.1rem, 4vw, 2.5rem) - var(--olcu)) / 2 - 1rem);
+    width: fit-content;
+    min-width: 100%;
+    max-width: calc(100% + var(--tablo-pay));
+  }
+}
+.prose .sayi-tablo table {
+  margin: 0;
+}
 .prose .sayi-tablo td:not(:first-child),
 .prose .sayi-tablo th:not(:first-child) {
   white-space: nowrap;
+}
+/* Satır adı her genişlikte yapışıktır: kayan tabloda okur hangi satırı okuduğunu kaybetmez. Zemin
+   kâğıdın dokusuyla birlikte boyanır; düz renk, kaymayan tabloda da açık bir şerit gibi görünürdü. */
+.prose .sayi-tablo td:first-child,
+.prose .sayi-tablo th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--paper) var(--doku);
 }
 /* Sarılan sayı tablosu (`<div class="sayi-tablo sarilir">`): az sütunlu kıyas tablosunda değer hücresi
    satır içinde kırılabilir. Kırılmayan hücre 390 pikselde kutunun dışına taşıyor, kıyasın ikinci
@@ -485,11 +522,7 @@ main:focus {
 @media (max-width: 759px) {
   .prose .sayi-tablo td:first-child,
   .prose .sayi-tablo th:first-child {
-    position: sticky;
-    left: 0;
-    z-index: 1;
     min-width: 7.5rem;
-    background: var(--paper);
   }
 }
 .prose thead th {

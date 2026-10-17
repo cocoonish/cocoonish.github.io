@@ -97,11 +97,34 @@ export const GRUPLAR: DersGrubu[] = [
       'hiçbirinin içinde değil yanında durur.',
     slugSirasi: ['formul-kagidi'],
   },
+  {
+    id: 'fx-gunici',
+    no: '07',
+    baslik: 'FX gün içi stratejiler — backtest serisi',
+    aciklama:
+      'Gün içi FX işlem kitaplarının en çok anılan kurallarının dört majör paritede, 1 dakikalık ' +
+      'bid/ask verisiyle ve sonuçtan önce yazılmış bir hüküm kuralıyla sınandığı sekiz derslik hat: ' +
+      'veri ve işlem mekaniği, seans ve yapı kırılımları, fade, haber, akış, karşılaştırma ve ' +
+      'metodoloji. Her kural maliyetiyle ölçülür; çalışmayan kurala çalışmıyor denir.',
+    hat: true,
+    // Sıra tek tanımdan: Aktarılacak Projeler/FxGunici/adlar.py (DERS_SIRA); dogrula.py ikisini karşılaştırır.
+    slugSirasi: [
+      'fx-gunici-giris',
+      'fx-gunici-seans-kirilimlari',
+      'fx-gunici-yapi-kirilimlari',
+      'fx-gunici-fade',
+      'fx-gunici-haber',
+      'fx-gunici-akis',
+      'fx-gunici-karsilastirma',
+      'fx-gunici-metodoloji',
+    ],
+    etiketler: ['gun-ici'],
+  },
 ];
 
 export const DIGER_GRUP: DersGrubu = {
   id: 'diger',
-  no: '07',
+  no: '08',
   baslik: 'Diğer notlar',
   aciklama: 'Henüz bir hatta bağlanmamış tekil araştırma notları.',
 };
