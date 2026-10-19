@@ -1,0 +1,140 @@
+---
+title: 'FX Gün İçi Stratejiler 7: Süzgeçler — EMA20 ve Oynaklık Şartı Kuralları Kurtarır mı'
+description: "Kuralların üstüne altı süzgeç koyduk: günlük EMA20 yönünde işlem, 60 dakikalık trend yönünde işlem, oynaklık şartı, dar yapı ve ikili bileşimleri. Süzgeçler sonuçtan önce yazıldı; 132 sınamanın hiçbiri kuralı güvenilir biçimde kâra geçirmedi."
+pubDate: 2026-10-19
+tags: ['fx', 'gun-ici', 'backtest', 'strateji', 'ders', 'risk']
+durum: 'aktif'
+kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · önceden kayıt'
+ozet: "Bir kuralı yalnız günlük EMA20 yönünde ya da yalnız oynaklık yüksekken işlemek kazanma oranını ve sonucu biraz oynatıyor, kaybı kâra çevirmiyor. Altı süzgeç önceden yazıldı; 2018–2023'e bakarak seçilen süzgeçle 21 kural çalışmıyor, hiçbiri çalışıyor hükmü almadı."
+seviye: 'giris'
+onkosul:
+  - fx-gunici-sonuc
+  - fx-gunici-stop-hedef
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+
+Önceki ders stop ve hedefin kaybı kâra çevirmediğini gösterdi. Sık sorulan ikinci soru şu: kurala bir **süzgeç**
+eklesek? Örneğin yalnız fiyat günlük 20 günlük ortalamanın (EMA20) üstündeyken alsak, altındayken satsak. Ya da
+kırılımı yalnız piyasa yeterince oynakken işlesek. Bu ders altı süzgecin sonucunu veriyor.
+
+Kısa cevap: **hayır.** Süzgeçler sonuçtan önce yazıldı ve her kuralda 2018–2023'e bakarak biri seçildi. Seçilen
+süzgeçle 2024 → döneminde 0 kural çalışıyor, 1 kural zayıf,
+21 kural çalışmıyor.
+
+## Altı süzgeç
+
+Süzgeç bir işlemi ya tutar ya atar. Atılan işlemin yerine o gün başka bir sinyal aranmaz; kuralın geri kalanı (giriş,
+stop, hedef, saatler) önceden kayıtlı varsayılanında kalır. Her süzgeç yalnız giriş anında bilinen bilgiyi kullanır:
+bugünün kapanışı ya da bugünün oynaklığı süzgece girmez.
+
+| Süzgeç | İşlemi ne zaman tutar |
+| :--- | :--- |
+| Günlük EMA20 yönünde | Günlük kapanışların (FX günü New York 17:00'de, TSİ ABD yaz saatinde 00:00, kış saatinde 01:00 kapanır) 20 günlük üstel ortalaması, işlem gününden önceki son kapanışa kadar. Alış yalnız giriş fiyatı ortalamanın üstündeyse, satış yalnız altındaysa. |
+| 60 dakikalık trend yönünde | Girişten önce kapanan son 60 dakikalık mum, 60 dakikalık mumların EMA50'sinin işlem yönündeki tarafında kapanmış. |
+| Oynaklık yüksek | Önceki günlerin ATR'sinin son 252 işlem günündeki yüzdeliği en az 0,5: oynaklık kendi geçmişinin ortasında ya da üstünde. |
+| Dar yapı | Kuralın kendi yapısı (kırılan aralık, sinyal mumu, haber öncesi aralık…) ATR'ye göre küçük: aynı kural ve paritenin 2018–2023 işlemlerinin medyanından küçük ya da ona eşit. |
+| EMA20 + oynaklık | EMA20 ve oynaklık şartı birlikte. |
+| EMA20 + dar yapı | EMA20 ve dar yapı şartı birlikte. |
+
+Süzgeçler, eşikleri, seçim kuralı ve hüküm kuralı ayrı bir ön kayıtta yazıldı ve ön kayıt
+19.10.2026 günü, ölçüm kodundan önce depoya girdi. Bir not: 60 dakikalık trend, oynaklık
+ve yapının büyüklüğü bu serinin arşiv derslerinde koşul olarak zaten ölçülmüştü; onların kaba sonucu süzgeçler
+yazılmadan önce biliniyordu. Günlük EMA20 ise ilk kez burada ölçüldü.
+
+## Sonuç: kural kural
+
+| Kural | Süzgeçsiz, 2024 → (R) | Seçilen süzgeç | Seçilen, 2018–2023 (R) | Seçilen, 2024 → (R) | İşlem, 2024 → | Hüküm |
+| :--- | ---: | :--- | ---: | ---: | ---: | :--- |
+| Londra ORB | −0,06 | günlük EMA20 yönünde | −0,10 | −0,12 | 1.572 | çalışmıyor |
+| Asya aralığı | −0,06 | EMA20 + oynaklık | −0,05 | −0,02 | 419 | çalışmıyor |
+| NY IB 08:00 | −0,06 | günlük EMA20 yönünde | −0,05 | −0,08 | 1.547 | çalışmıyor |
+| NY IB 09:30 | −0,05 | EMA20 + oynaklık | −0,07 | −0,06 | 495 | çalışmıyor |
+| İç mum | −0,13 | EMA20 + oynaklık | −0,08 | −0,16 | 1.069 | çalışmıyor |
+| Sıkışma | −0,10 | oynaklık yüksek | −0,05 | −0,06 | 858 | çalışmıyor |
+| PDH/PDL | −0,19 | oynaklık yüksek | −0,13 | −0,13 | 653 | çalışmıyor |
+| Pivot kırılım | −0,16 | EMA20 + oynaklık | −0,13 | −0,10 | 415 | çalışmıyor |
+| Sahte ORB | −0,15 | EMA20 + oynaklık | −0,13 | −0,08 | 321 | çalışmıyor |
+| Sahte Asya | −0,17 | EMA20 + oynaklık | −0,19 | −0,17 | 230 | çalışmıyor |
+| Sahte PDH/PDL | −0,16 | EMA20 + oynaklık | −0,21 | −0,11 | 144 | çalışmıyor |
+| VWAP dönüş | −0,25 | EMA20 + oynaklık | −0,18 | −0,24 | 1.245 | çalışmıyor |
+| Pivot dönüş | −0,35 | 60 dakikalık trend yönünde | −0,16 | +0,33 | 98 | zayıf |
+| Fiksing dönüşü | −0,18 | EMA20 + oynaklık | −0,07 | −0,19 | 537 | çalışmıyor |
+| Fiksing momentumu | −0,30 | EMA20 + oynaklık | −0,12 | −0,20 | 607 | çalışmıyor |
+| Gün içi momentum | −0,14 | EMA20 + dar yapı | −0,12 | −0,20 | 865 | çalışmıyor |
+| VWAP çekilme | −0,27 | EMA20 + oynaklık | −0,26 | −0,33 | 369 | çalışmıyor |
+| N1 kırılım | −0,26 | EMA20 + oynaklık | −0,16 | −0,31 | 108 | çalışmıyor |
+| N2 fade | −0,04 | EMA20 + dar yapı | −0,003 | −0,04 | 37 | çalışmıyor |
+| N3 straddle | −0,16 | EMA20 + oynaklık | −0,16 | −0,16 | 104 | çalışmıyor |
+| N4 başarısız | −0,01 | süzgeçsiz | +0,04 | −0,01 | 43 | çalışmıyor |
+| N5 devam | −0,25 | oynaklık yüksek | −0,03 | −0,39 | 103 | çalışmıyor |
+
+_İşlem başına net sonuç (R), dört paritenin işlemleri birlikte, makas ve kayma düşülmüş. Süzgeç, yedi adayın (süzgeçsiz dahil) 2018–2023 Sharpe oranı en yüksek olanıdır; hüküm 2024 → döneminden verilir._
+
+<GrafikEmbed src="/arastirma/fx-gunici/kisa-suzgec.html" baslik="Süzgeçle de sonuç çoğunlukla eksi" no="01" kaynak="Dukascopy" />
+
+Şekilde her satır bir kural. Gri çizgi altı süzgecin 2024 → sonuçlarının aralığı. Çizgilerin çoğu baştan sona sıfırın
+solunda: altı süzgeçten herhangi birinin artı sonuç verdiği kural sayısı 4, bunlardan
+2018–2023'te de artı olan 0. Seçilen süzgeçlerin
+2024 → ortalaması işlem başına −0,13 R, süzgeçsiz kuralların ortalaması
+−0,16 R.
+Süzgeç ortalamada kaybı biraz küçültüyor; kâra çevirmiyor.
+
+**Pivot dönüşü**, 60 dakikalık trend yönünde süzgeciyle: 2024 →'de 98 işlemde işlem başına +0,33 R, kazanma oranı %43,9. Hüküm zayıf: %95 aralığının alt ucu −0,08 R, yani sonuç sıfırdan ayrılamıyor. Aynı ayar 2018–2023'te −0,16 R kaybettiriyordu: 7 adayın hepsi kaybettiriyordu ve seçim kuralı Sharpe oranı en az kötü olanı aldı. Bu süzgeç süzgeçsizin işlemlerinin yalnız %8 kadarını tutuyor; işlem azaldıkça günlük sonuç serisi seyrekleşir ve Sharpe oranı sıfıra yaklaşır. 2024 →'deki artı, 2018–2023'te görülmemiş bir sonuçtur.
+
+## Süzgeç süzgeç
+
+| Süzgeç | Tutulan işlem | Kazanma oranı farkı (puan) | Net sonuç farkı (R) | Sonucu iyileşen kural: 2018–2023 · 2024 → · ikisinde (22 kuralda) | 2024 →'de artıya geçen kural |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| Günlük EMA20 yönünde | %55 | +0,7 | −0,002 | 12 · 10 · 6 | 0 |
+| 60 dakikalık trend yönünde | %51 | −0,3 | −0,003 | 12 · 10 · 6 | 1 |
+| Oynaklık yüksek | %40 | +1,1 | +0,03 | 14 · 17 · 11 | 2 |
+| Dar yapı | %54 | −0,6 | −0,01 | 3 · 4 · 0 | 0 |
+| EMA20 + oynaklık | %21 | +0,4 | +0,01 | 13 · 13 · 7 | 2 |
+| EMA20 + dar yapı | %29 | −1,2 | −0,04 | 2 · 7 · 1 | 1 |
+
+_Farklar süzgeçsize göre, 2024 → döneminde, kural başına; tabloda kuralların medyanı. Tutulan işlem: süzgecin açtığı işlemlerin süzgeçsizin işlemlerine oranı._
+
+Tablodan okunanlar:
+
+- **Günlük EMA20 yönünde işlem** kazanma oranını medyanda yalnız +0,7
+  puan değiştiriyor, işlem başına sonucu −0,002 R.
+  Gün içi bir işlemin sonucu, fiyatın günlük ortalamanın hangi tarafında olduğuna neredeyse bağlı değil.
+- **Oynaklık şartı** sonucu en çok iyileştiren süzgeç: 22 kuralın
+  17 tanesinde 2024 →'de iyileşme, medyanda +0,028 R.
+  Ama iyileşmenin çoğu maliyetten geliyor: maliyetten önceki sonuç medyanda yalnız
+  +0,011 R değişiyor, oynak günlerde stop ise
+  1,21 kat geniş.
+  Aynı pip maliyeti geniş stopta riskin daha küçük bir parçası olur; önceki dersin dar stop tablosunun tersi. Kural
+  daha iyi yön bulmuyor, aynı maliyeti daha büyük bir hareketin üstüne yayıyor; ve yine de kaybettiriyor.
+- **Dar yapı** sonucu kötüleştiriyor: 2024 →'de iyileştirdiği kural sayısı yalnız 4.
+  Dar yapı dar stop demektir ve dar stopta maliyet büyür.
+- **İyileşme bir dönemden ötekine taşınmıyor.** Bir süzgecin 2018–2023'te bir kurala kazandırdığı ile 2024 →'de
+  kazandırdığı arasındaki sıra ilintisi EMA20'de 0,36, oynaklık şartında
+  −0,21, ikisi birlikte −0,22.
+  Geçmişte hangi kurala yaradığına bakarak süzgeç seçmek, bugün hangi kurala yarayacağını söylemiyor.
+
+## Şansla ne beklenir
+
+132 süzgeçli sonucu (22 kural × 6 süzgeç) 2024 →'de tek tek de ölçtük. Hiçbir süzgecin
+kazandırmadığı bir dünyada bile, %95 aralığının alt ucu şansla sıfırın üstüne çıkan yaklaşık
+3,3 sonuç beklenir. Gerçekte bu sayı 0;
+çoklu sınamaya göre düzeltilince (Benjamini–Hochberg) geçen sonuç sayısı 0.
+
+Parite parite bakınca tablo kalabalıklaşıyor ama sonuç değişmiyor: 528 kural × parite ×
+süzgeç hücresinin iki dönemde de en az 30 işlemle iki dönemde de artı olanı
+8. Bu kadar çok hücre denendiğinde birkaçının iki dönemde de şansla artı çıkması
+beklenir; hangileri olacağı önceden bilinemezdi.
+
+## Pratikte
+
+- **Süzgeç bir avantaj yaratmaz; işlemleri seçer.** Kuralın kendisi maliyetten önce kazandırmıyorsa, işlemlerin bir
+  kısmını atmak kalan kısmı kazandırmaz.
+- **Kazanma oranındaki küçük artışa aldanmayın.** EMA20 gibi bir süzgeç kazanma oranını bir iki puan oynatabilir;
+  işlem başına net sonuca bakın.
+- **"Oynaklık yüksekken işle" bir maliyet kuralıdır.** Geniş stop maliyetin payını küçültür; yön bilgisi eklemez. Aynı
+  sonucu stopu maliyetin birkaç katı uzağa koyarak da görürsünüz (önceki ders).
+- **Süzgeci önceden yazın.** Sonuca bakarak seçilen süzgeç, o sonucun şansını da seçer. Burada süzgeçler ve seçim kuralı
+  ölçümden önce yazıldı; yine de geçen tek sonuç zayıf kaldı.
+
+Sonraki ders: bir kuralı kendiniz denemek isterseniz kontrol listesi.

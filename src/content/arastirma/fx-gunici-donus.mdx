@@ -1,0 +1,179 @@
+---
+title: 'FX Gün İçi Stratejiler 4: Dönüş Kuralları — Sahte Kırılım, VWAP, Pivot ve Fiksing Sonrası'
+description: "Altı dönüş kuralı tek tek: açılış aralığının, Asya aralığının ve önceki günün tepe/dibinin sahte kırılımı, VWAP'a dönüş, pivottan dönüş ve fiksing sonrası dönüş. Her kural için sade tanım, backtest sonucu ve bütün stop/hedef bileşimlerinin 2024 sonrası sonucu."
+pubDate: 2026-10-19
+tags: ['fx', 'gun-ici', 'backtest', 'strateji', 'ders', 'donus']
+durum: 'aktif'
+kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · önceden kayıt'
+ozet: "Altı dönüş kuralının her biri sade tanımı, backtest sonucu ve stop × hedef tablosuyla. Hiçbir stop/hedef bileşimi bunlardan birini 2024 sonrasında artıya taşımıyor."
+seviye: 'giris'
+onkosul:
+  - fx-gunici-sonuc
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+
+Dönüş kuralları kırılımın tersine oynar: fiyat bir seviyenin dışına çıkıp geri dönerse, ya da ortalamasından çok
+uzaklaşırsa, geri döneceğine bahis girilir. Bu derste altı kural var ve her birinde aynı üç parça duruyor: kural, sonuç ve
+stop × hedef tablosu. Tabloların okunuşu bir önceki dersteki gibidir; mumlar varsayılanda 15 dakikalıktır.
+
+## Özet
+
+| Kural | Varsayılan | 2018–2023'ün en iyisi | Sonradan en iyi | Artı bileşim |
+| :--- | ---: | ---: | ---: | ---: |
+| Sahte ORB | −0,15 | −0,19 | −0,14 | 0 / 6 |
+| Sahte Asya | −0,17 | −0,26 | −0,17 | 0 / 6 |
+| Sahte PDH/PDL | −0,16 | −0,28 | −0,16 | 0 / 6 |
+| VWAP dönüş | −0,25 | −0,27 | −0,22 | 0 / 8 |
+| Pivot dönüş | −0,35 | −0,28 | −0,22 | 0 / 8 |
+| Fiksing dönüşü | −0,18 | −0,16 | −0,15 | 0 / 3 |
+
+_İşlem başına net R, 2024 →, dört parite birlikte, maliyetten sonra. "2018–2023'ün en iyisi": o dönemde en iyi çıkan stop/hedef bileşiminin 2024 → sonucu (bir trader'ın o gün seçebileceği). "Sonradan en iyi": 2024 →'e bakarak seçilen bileşim (önceden seçilemezdi). Son sütun: 2024 →'de artıda kalan stop/hedef bileşimi / tablodaki bileşim._
+
+<GrafikEmbed src="/arastirma/fx-gunici/kisa-aralik-donus.html" baslik="Stop ve hedef nerede olursa olsun — dönüş kuralları" no="01" kaynak="Dukascopy" />
+
+## Açılış aralığının sahte kırılımı
+
+- **Kural.** Londra açılış aralığı (ilk 15 dakika, TSİ İngiltere yaz saatinde 10:00–10:15, kış saatinde 11:00–11:15) çıkarılır. Bir mum aralığın
+  dışında kapanır, sonraki iki mumdan biri yeniden içeride kapanırsa kırılımın tersi yönünde girilir. Seviye başına günde
+  tek işlem, son giriş TSİ İngiltere yaz saatinde 16:00, kış saatinde 17:00.
+- **Varsayılan stop ve hedef.** Stop sahte kırılımın ucunda (kırılım mumundan dönüş mumuna kadarki en uç fiyat);
+  hedef 1R.
+
+**Sonuç (varsayılan ayar, dört parite birlikte).** 2024 →'de 1.682 işlem, kazanma oranı %44,6; kâra geçmek için gereken %51,7. İşlem başına −0,15 R (2018–2023'te −0,15 R). Parite parite hüküm: 4 çalışmıyor.
+
+<div class="sayi-tablo">
+
+| Hedef / stop | Sert | Kapanış |
+| :--- | ---: | ---: |
+| 1R | **−0,15 · %45** | −0,14 · %55 |
+| 2R | −0,16 · %31 | −0,17 · %40 |
+| Gün sonu | −0,19 · %19 | −0,24 · %26 |
+
+</div>
+
+_2024 →, dört parite birlikte, maliyetten sonra. Hücre: işlem başına net R · kazanma oranı. Kalın hücre kuralın varsayılan ayarı; öbür ayarlar (mum, saat, seviye) varsayılanda. "az": bir dönemde 30 işlemden az._
+
+**Stop ve hedefle çalışır hale gelir miydi?** 2018–2023'te en iyi çıkan stop/hedef bileşimi (stop sert, hedef gün sonu) o dönemde −0,06 R veriyordu; 2024 →'de −0,19 R. Sonradan bakınca bile tablodaki 6 bileşimin hiçbiri 2024 →'de artıda değil; en iyisi (stop kapanış, hedef 1R) −0,14 R. Bütün ayarlar serbest bırakılıp her paritede 2018–2023'ün en iyisi seçildiğinde 2024 →'de hüküm: 4 çalışmıyor.
+
+## Asya aralığının sahte kırılımı
+
+- **Kural.** Aynı kural, Asya aralığıyla (TSİ İngiltere yaz saatinde 02:00–10:00, kış saatinde 03:00–11:00). Son giriş TSİ İngiltere yaz saatinde 16:00, kış saatinde 17:00.
+- **Varsayılan stop ve hedef.** Stop sahte kırılımın ucunda; hedef 1R.
+
+**Sonuç (varsayılan ayar, dört parite birlikte).** 2024 →'de 1.196 işlem, kazanma oranı %43,7; kâra geçmek için gereken %51,9. İşlem başına −0,17 R (2018–2023'te −0,14 R). Parite parite hüküm: 4 çalışmıyor.
+
+<div class="sayi-tablo">
+
+| Hedef / stop | Sert | Kapanış |
+| :--- | ---: | ---: |
+| 1R | **−0,17 · %44** | −0,19 · %54 |
+| 2R | −0,22 · %29 | −0,28 · %39 |
+| Gün sonu | −0,26 · %19 | −0,35 · %26 |
+
+</div>
+
+_2024 →, dört parite birlikte, maliyetten sonra. Hücre: işlem başına net R · kazanma oranı. Kalın hücre kuralın varsayılan ayarı; öbür ayarlar (mum, saat, seviye) varsayılanda. "az": bir dönemde 30 işlemden az._
+
+**Stop ve hedefle çalışır hale gelir miydi?** 2018–2023'te en iyi çıkan stop/hedef bileşimi (stop sert, hedef gün sonu) o dönemde −0,10 R veriyordu; 2024 →'de −0,26 R. Sonradan bakınca bile tablodaki 6 bileşimin hiçbiri 2024 →'de artıda değil; en iyisi (stop sert, hedef 1R) −0,17 R. Bütün ayarlar serbest bırakılıp her paritede 2018–2023'ün en iyisi seçildiğinde 2024 →'de hüküm: 4 çalışmıyor.
+
+## Önceki günün tepe ve dibinin sahte kırılımı
+
+- **Kural.** Aynı kural, önceki FX gününün en yükseği ve en düşüğüyle. Pencere Londra açılışından New York öğleden
+  sonrasına (TSİ yazın 10:00 → 21:00, kışın 11:00 → 22:00, ara haftalarda 11:00 → 21:00).
+- **Varsayılan stop ve hedef.** Stop sahte kırılımın ucunda; hedef 1R.
+
+**Sonuç (varsayılan ayar, dört parite birlikte).** 2024 →'de 934 işlem, kazanma oranı %43,3; kâra geçmek için gereken %51,3. İşlem başına −0,16 R (2018–2023'te −0,18 R). Parite parite hüküm: 4 çalışmıyor.
+
+<div class="sayi-tablo">
+
+| Hedef / stop | Sert | Kapanış |
+| :--- | ---: | ---: |
+| 1R | **−0,16 · %43** | −0,16 · %54 |
+| 2R | −0,16 · %32 | −0,19 · %41 |
+| Gün sonu | −0,28 · %23 | −0,31 · %31 |
+
+</div>
+
+_2024 →, dört parite birlikte, maliyetten sonra. Hücre: işlem başına net R · kazanma oranı. Kalın hücre kuralın varsayılan ayarı; öbür ayarlar (mum, saat, seviye) varsayılanda. "az": bir dönemde 30 işlemden az._
+
+**Stop ve hedefle çalışır hale gelir miydi?** 2018–2023'te en iyi çıkan stop/hedef bileşimi (stop sert, hedef gün sonu) o dönemde −0,17 R veriyordu; 2024 →'de −0,28 R. Sonradan bakınca bile tablodaki 6 bileşimin hiçbiri 2024 →'de artıda değil; en iyisi (stop kapanış, hedef 1R) −0,16 R. Bütün ayarlar serbest bırakılıp her paritede 2018–2023'ün en iyisi seçildiğinde 2024 →'de hüküm: 4 çalışmıyor.
+
+## VWAP'a dönüş
+
+- **Kural.** VWAP, Londra açılışından beri hacim ağırlıklı ortalama fiyattır (hacim, veri sağlayıcının işlem hacmi). Fiyat VWAP'tan iki standart
+  sapmadan fazla uzaklaşıp yeniden bu bandın içinde kapanırsa VWAP yönünde girilir. Açılıştan sonraki ilk saat sinyal
+  alınmaz; son sinyal TSİ ABD yaz saatinde 23:00, kış saatinde 00:00.
+- **Varsayılan stop ve hedef.** Stop bant dışındaki gezintinin ucunda; hedef VWAP'ın kendisi.
+
+**Sonuç (varsayılan ayar, dört parite birlikte).** 2024 →'de 6.931 işlem, kazanma oranı %35,0; kâra geçmek için gereken %45,7. İşlem başına −0,25 R (2018–2023'te −0,22 R). Parite parite hüküm: 4 çalışmıyor.
+
+<div class="sayi-tablo">
+
+| Hedef / stop | Sert | Kapanış |
+| :--- | ---: | ---: |
+| VWAP | **−0,25 · %35** | −0,24 · %46 |
+| 1R | −0,23 · %41 | −0,22 · %53 |
+| 2R | −0,24 · %30 | −0,23 · %42 |
+| 12 mum sonra çık | −0,27 · %26 | −0,29 · %35 |
+
+</div>
+
+_2024 →, dört parite birlikte, maliyetten sonra. Hücre: işlem başına net R · kazanma oranı. Kalın hücre kuralın varsayılan ayarı; öbür ayarlar (mum, saat, seviye) varsayılanda. "az": bir dönemde 30 işlemden az._
+
+**Stop ve hedefle çalışır hale gelir miydi?** 2018–2023'te en iyi çıkan stop/hedef bileşimi (stop sert, hedef 12 mum sonra çık) o dönemde −0,21 R veriyordu; 2024 →'de −0,27 R. Sonradan bakınca bile tablodaki 8 bileşimin hiçbiri 2024 →'de artıda değil; en iyisi (stop kapanış, hedef 1R) −0,22 R. Bütün ayarlar serbest bırakılıp her paritede 2018–2023'ün en iyisi seçildiğinde 2024 →'de hüküm: 4 çalışmıyor.
+
+## Pivottan dönüş
+
+- **Kural.** Önceki günün yüksek, düşük ve kapanışından pivot (P), R1 ve S1 hesaplanır. Fiyat R1'e değip altında
+  kapanırsa satış, S1'e değip üstünde kapanırsa alış. Seviye başına günde tek işlem, pencere
+  TSİ yazın 10:00 → 21:00, kışın 11:00 → 22:00, ara haftalarda 11:00 → 21:00.
+- **Varsayılan stop ve hedef.** Stop sinyal mumunun seviyenin ötesindeki ucunda; hedef pivot (P).
+
+**Sonuç (varsayılan ayar, dört parite birlikte).** 2024 →'de 1.394 işlem, kazanma oranı %19,4; kâra geçmek için gereken %28,1. İşlem başına −0,35 R (2018–2023'te −0,30 R). Parite parite hüküm: 4 çalışmıyor.
+
+<div class="sayi-tablo">
+
+| Hedef / stop | Sert | Kapanış |
+| :--- | ---: | ---: |
+| Karşı pivot seviyesi | **−0,35 · %19** | −0,35 · %30 |
+| 1R | −0,33 · %37 | −0,28 · %57 |
+| 2R | −0,29 · %28 | −0,22 · %45 |
+| 12 mum sonra çık | −0,33 · %21 | −0,27 · %33 |
+
+</div>
+
+_2024 →, dört parite birlikte, maliyetten sonra. Hücre: işlem başına net R · kazanma oranı. Kalın hücre kuralın varsayılan ayarı; öbür ayarlar (mum, saat, seviye) varsayılanda. "az": bir dönemde 30 işlemden az._
+
+**Stop ve hedefle çalışır hale gelir miydi?** 2018–2023'te en iyi çıkan stop/hedef bileşimi (stop kapanış, hedef 1R) o dönemde −0,27 R veriyordu; 2024 →'de −0,28 R. Sonradan bakınca bile tablodaki 8 bileşimin hiçbiri 2024 →'de artıda değil; en iyisi (stop kapanış, hedef 2R) −0,22 R. Bütün ayarlar serbest bırakılıp her paritede 2018–2023'ün en iyisi seçildiğinde 2024 →'de hüküm: 4 çalışmıyor.
+
+## Fiksing sonrası dönüş
+
+- **Kural.** Londra fiksinginden (TSİ İngiltere yaz saatinde 18:00, kış saatinde 19:00) önceki son 15 dakikalık mumun tersi yönünde, fiksingde
+  girilir ve iki mum (30 dakika) sonra çıkılır. Fikir, fiksinge giden emir akışının bittiği anda fiyatın geri döneceğidir.
+- **Varsayılan stop ve hedef.** Stop yok, hedef yok: çıkış süreyle. Bu kuralda R, girişteki oynaklık (1 ATR) birimidir.
+
+**Sonuç (varsayılan ayar, dört parite birlikte).** 2024 →'de 2.886 işlem, kazanma oranı %42,5; kâra geçmek için gereken %54,1. İşlem başına −0,18 R (2018–2023'te −0,11 R). Parite parite hüküm: 4 çalışmıyor.
+
+<div class="sayi-tablo">
+
+| Stop | İşlem başına (R) · kazanma oranı |
+| :--- | ---: |
+| Stop yok | **−0,18 · %43** |
+| Sert | −0,15 · %41 |
+| Kapanış | −0,16 · %42 |
+
+</div>
+
+_2024 →, dört parite birlikte, maliyetten sonra. Hücre: işlem başına net R · kazanma oranı. Kalın hücre kuralın varsayılan ayarı; öbür ayarlar (mum, saat, seviye) varsayılanda. "az": bir dönemde 30 işlemden az. R birimi girişteki oynaklık (1 ATR); sert ve kapanış stopu girişten 1 ATR uzakta._
+
+**Stop ve hedefle çalışır hale gelir miydi?** 2018–2023'te en iyi çıkan stop/hedef bileşimi (stop kapanış) o dönemde −0,11 R veriyordu; 2024 →'de −0,16 R. Sonradan bakınca bile tablodaki 3 bileşimin hiçbiri 2024 →'de artıda değil; en iyisi (stop sert) −0,15 R. Bütün ayarlar serbest bırakılıp her paritede 2018–2023'ün en iyisi seçildiğinde 2024 →'de hüküm: 4 çalışmıyor.
+
+## Bu dersten çıkan
+
+- Altı dönüş kuralının hiçbiri varsayılan ayarıyla 2024 → döneminde kazandırmadı.
+- Kapanış stopu ve yakın hedef bu kuralların çoğunda kazanma oranını yükseltiyor; ama kazançlar küçüldüğü için sonuç
+  yine eksi. Stop ve hedef seçimi bu kuralların hiçbirini artıya taşımıyor.
+- 2018–2023'e bakarak seçilen stop/hedef de 2024 →'de eksi kaldı.
+
+Sonraki ders: akış ve haber kuralları.

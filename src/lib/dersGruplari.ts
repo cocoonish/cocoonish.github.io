@@ -102,23 +102,24 @@ export const GRUPLAR: DersGrubu[] = [
     no: '07',
     baslik: 'FX gün içi stratejiler — backtest serisi',
     aciklama:
-      'Gün içi FX işlem kitaplarının en çok anılan kurallarının dört majör paritede, 1 dakikalık ' +
-      'bid/ask verisiyle ve sonuçtan önce yazılmış bir hüküm kuralıyla sınandığı dokuz derslik hat: ' +
-      'veri ve işlem mekaniği, seans ve yapı kırılımları, fade, haber, akış, karşılaştırma, ' +
-      'metodoloji ve kuralların neden başarısız olduğu. Her kural maliyetiyle ölçülür; çalışmayan ' +
-      'kurala çalışmıyor denir.',
+      'Gün içi FX işlem kitaplarının en çok anılan kuralları dört majör paritede, gerçek alış-satış ' +
+      'fiyatıyla ve maliyet düşülerek sınandı. Sekiz kısa ders: hangi kural işe yarıyor, her kural adım ' +
+      'adım grafik üstünde (hangi saatte ne olursa ne yapılır), kurallar tek tek ' +
+      '(ne yapar, ne verdi, stop ve hedef nerede olsaydı ne değişirdi), stop ve hedefin aritmetiği, ' +
+      'süzgeçler (EMA20 yönü, oynaklık şartı), bir kuralı denemeden önce neye bakılmalı. ' +
+      'Ayrıntılı yöntem notları arşivde.',
     hat: true,
     // Sıra tek tanımdan: Aktarılacak Projeler/FxGunici/adlar.py (DERS_SIRA); dogrula.py ikisini karşılaştırır.
+    // Arşivdeki dokuz uzun ders (adlar.ARSIV_SIRA) listede görünmez.
     slugSirasi: [
-      'fx-gunici-giris',
-      'fx-gunici-seans-kirilimlari',
-      'fx-gunici-yapi-kirilimlari',
-      'fx-gunici-fade',
-      'fx-gunici-haber',
-      'fx-gunici-akis',
-      'fx-gunici-karsilastirma',
-      'fx-gunici-metodoloji',
-      'fx-gunici-neden-basarisiz',
+      'fx-gunici-sonuc',
+      'fx-gunici-nasil',
+      'fx-gunici-kirilim',
+      'fx-gunici-donus',
+      'fx-gunici-akis-haber',
+      'fx-gunici-stop-hedef',
+      'fx-gunici-suzgec',
+      'fx-gunici-kontrol',
     ],
     etiketler: ['gun-ici'],
   },

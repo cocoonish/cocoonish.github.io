@@ -1,0 +1,137 @@
+---
+title: 'FX Gün İçi Stratejiler 6: Stop ve Hedef — Kazanma Oranı Neden Kâr Getirmiyor'
+description: "Hedefi yaklaştırınca kazanma oranı yükselir, uzaklaştırınca düşer; kâr ise neredeyse hiç değişmez. 5.932 farklı stop ve hedef ayarında ölçülmüş sonuç, kâra geçmek için gereken kazanma oranının basit hesabı ve dar stopun gizli maliyeti."
+pubDate: 2026-10-19
+tags: ['fx', 'gun-ici', 'backtest', 'strateji', 'ders', 'risk']
+durum: 'aktif'
+kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · önceden kayıt'
+ozet: "Stop ve hedef, kazancı sık ve küçük mü yoksa seyrek ve büyük mü alacağınızı seçer; olmayan bir avantajı yaratmaz. 5.932 ayarın eşli kıyası: hedefi uzatmak kazanma oranını düşürüyor ama sonucu değiştirmiyor, stopu yaklaştırmak sonucu kötüleştiriyor."
+seviye: 'giris'
+onkosul:
+  - fx-gunici-sonuc
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+
+Önceki üç ders her kuralın stop/hedef tablosunu tek tek verdi. Bu ders aynı soruyu bütün kurallar için birlikte sorar
+ve arkasındaki aritmetiği anlatır.
+
+Bir işlem kuralının kazanma oranını yükseltmenin en kolay yolu hedefi yaklaştırmaktır: fiyatın 10 pip gitmesi 30 pip
+gitmesinden daha sık olur. Ama kazanma oranı kâr değildir. Bu ders, aynı kuralı farklı stop ve hedeflerle denediğimiz
+5.932 ayarın sonucuyla bunu gösteriyor ve kâra geçmek için gereken kazanma oranının basit hesabını
+veriyor.
+
+## Kâra geçmek için gereken kazanma oranı
+
+Bir kuralın kâra geçmesi için kazanma oranının şu eşiği aşması gerekir:
+
+$$\text{gereken kazanma oranı} = \frac{\text{ortalama kayıp}}{\text{ortalama kazanç} + \text{ortalama kayıp}}$$
+
+Hedef stop kadar uzaksa (1R) ve maliyet yoksa kazanç ile kayıp eşittir, gereken oran %50'dir. Hedef stopun iki katı
+uzaksa (2R) gereken oran üçte bire iner. Hedefi uzatmak gereken oranı düşürür, ama hedefe ulaşma sıklığı da düşer. İkisi
+birbirini götürür: fiyatın yönü hakkında bir bilginiz yoksa hiçbir stop–hedef bileşimi kazandırmaz.
+
+**Maliyet işin hesabını değiştirir.** Her işlemde makas ve kayma ödersiniz; kazanan işlem bu kadar az kazanır, kaybeden
+bu kadar çok kaybeder. Bu serinin işlemlerinde ölçülen medyan maliyet 1,6
+pip. Aşağıdaki tablo bu maliyetle, stop uzaklığına göre gereken kazanma oranını veriyor:
+
+| Stop uzaklığı | Maliyetin R'deki payı | Gereken, 1R hedef | Gereken, 2R hedef |
+| :--- | ---: | ---: | ---: |
+| 5 pip | %32 | %66,0 | %44,0 |
+| 10 pip | %16 | %58,0 | %38,7 |
+| 15 pip | %11 | %55,3 | %36,9 |
+| 20 pip | %8 | %54,0 | %36,0 |
+| 30 pip | %5 | %52,7 | %35,1 |
+
+_Maliyet, serinin işlemlerinde ölçülen medyan gidiş-dönüş maliyeti: 1,6 pip (makas + kayma). Maliyetsiz bir dünyada gereken oran 1R hedefte %50, 2R hedefte üçte birdir._
+
+Tablonun pratik dersi: **dar stop maliyeti büyütür.** Beş pip stoplu bir işlemde maliyet riskin üçte birine yaklaşır ve
+1R hedefle kâra geçmek için işlemlerin üçte ikisine yakını kazanmalıdır. Stop ne kadar genişse maliyet o kadar küçük bir
+pay olur.
+
+## Bir örnek: yalnız hedef değişiyor
+
+Londra açılış aralığı kırılımında (ORB) stop, giriş saati ve mum aynı kalsın, yalnız hedef değişsin. New York 16:55'teki
+gün sonu (TSİ ABD yaz saatinde 23:55, kış saatinde 00:55) "hedef yok" seçeneğinin çıkış anıdır.
+
+| Hedef | Kazanma oranı | İşlem başına (R) | İşlem |
+| :--- | ---: | ---: | ---: |
+| Yakın hedef (1R) | %47,9 | −0,07 | 723 |
+| Uzak hedef (2R) | %34,9 | −0,05 | 723 |
+| Hedef yok, gün sonunda çık | %26,8 | −0,05 | 723 |
+
+_Londra ORB, EUR/USD, 2024 →; stop, saat ve mum aynı, yalnız hedef değişiyor._
+
+Hedef uzadıkça kazanma oranı belirgin biçimde düşüyor; işlem başına sonuç ise üç hedefte de eksi ve birbirine yakın.
+
+## Bütün ayarlar: eşli kıyas
+
+Aynı soruyu bütün kurallar ve pariteler için sorduk. Her çiftte kural, parite ve öbür bütün ayarlar aynı; yalnız tek bir
+seçim değişiyor.
+
+| Değişiklik | Ayar çifti | Kazanma oranı | İşlem başına (R) | Sonucu iyileşen çift |
+| :--- | ---: | ---: | ---: | ---: |
+| Hedefi uzat (1R → 2R) | 1.826 | %46,7 → %37,8 | −0,16 → −0,17 | %43 |
+| Stopu kapanışa çevir (sert → kapanış) | 2.906 | %37,0 → %43,5 | −0,16 → −0,17 | %37 |
+| Stopu yaklaştır (karşı uç → orta) | 1.350 | %44,0 → %40,1 | −0,09 → −0,14 | %15 |
+
+_Her çift aynı kural, aynı parite ve aynı öbür ayarlar; yalnız satırdaki seçim değişiyor. Sayılar 2024 → dönemindeki çiftlerin medyanı._
+
+Üç sonuç okunuyor:
+
+- **Hedefi uzatmak** kazanma oranını −9,9 puan değiştiriyor, işlem başına sonucu
+  yalnız −0,006 R.
+  Kazanma oranı değişiyor, kâr değişmiyor.
+- **Kapanış stopu** (stop seviyesi aşıldığında beklemek, mum o seviyenin ötesinde kapanırsa çıkmak) kazanma oranını
+  +6,3 puan yükseltiyor; sonucu −0,011 R
+  değiştiriyor. Bedeli kuyrukta: kaybeden
+  işlemler içinde riskin iki katından fazla kaybedenlerin payı kapanış stopunda %22,
+  sert stopta %0.
+- **Stopu yaklaştırmak** sonucu −0,058 R kötüleştiriyor; sonucu iyileşen çiftlerin
+  payı yalnız %15.
+  Sebep yukarıdaki tablo: dar stopta maliyet riskin daha büyük bir parçası.
+
+Hedef türüne göre bütün ayarların özeti de aynı şeyi söylüyor:
+
+| Hedef türü | Ayar | Kazanma oranı | İşlem başına (R) | İki dönemde de artı |
+| :--- | ---: | ---: | ---: | ---: |
+| Yakın hedef (1R) | 1.826 | %46,7 | −0,16 | 4 |
+| Uzak hedef (2R) | 1.826 | %37,8 | −0,17 | 20 |
+| Hedefsiz (gün sonu ya da süre) | 1.994 | %36,3 | −0,17 | 59 |
+| Kurala özgü hedef | 286 | %41,7 | −0,24 | 2 |
+
+_Kazanma oranı ve R, 2024 → dönemindeki ayarların medyanı. "İki dönemde de artı": hem 2018–2023'te hem 2024 →'de işlem başına sonucu sıfırın üstünde olan ayar sayısı._
+
+<GrafikEmbed src="/arastirma/fx-gunici/kisa-stop-hedef.html" baslik="Kazanma oranı ne olursa olsun, sonuç çoğunlukla eksi" no="01" kaynak="Dukascopy" />
+
+Şekilde her nokta bir ayar. Noktalar yatayda geniş bir aralığa yayılıyor — kazanma oranı ayara göre çok değişiyor —
+ama 5.932 ayarın yalnız 491 tanesi sıfır çizgisinin üstünde. Sağa
+doğru bulut biraz yükseliyor: kazanma oranı %50'nin üstündeki 729 ayarın medyan sonucu
+−0,09 R, bütün ayarlarınki −0,17 R.
+Daha az kaybettiriyorlar, ama onlar da kazandırmıyor.
+
+## Yüksek kazanma oranının tuzağı
+
+2024 → döneminde kazanma oranı %60'ın üstünde olan 45 ayar var; bunların işlem
+başına medyan sonucu −0,11 R. Yüksek kazanma
+oranı çoğu zaman yakın hedefin işaretidir: küçük kazançlar sık gelir, arada gelen büyük kayıplar onları siler.
+
+## "En iyi ayarı seçmek" de işe yaramıyor
+
+Ayarların içinden 2018–2023'te en iyi çıkan 20 tanesini seçtik. O dönemde işlem başına ortalama
++0,27 R kazandırıyorlardı; 2024 →'de ortalama −0,22 R kaybettirdiler
+ve yalnız 6 tanesi artıda kaldı. Geçmişte en iyi görünen
+ayar, çoğu zaman o geçmişin şansını yakalamış ayardır. 5.932 ayarın
+85 tanesi iki dönemde de artıda; ama hangileri olacağı önceden bilinemiyordu ve
+çok sayıda ayar denendiğinde birkaçının şansla iki dönemde de artı çıkması beklenir.
+
+## Pratikte
+
+- **Hedefi kazanma oranına göre değil, maliyete göre seçin.** Yakın hedef maliyeti büyütür; uzak hedef kazanma oranını
+  düşürür. Avantaj yoksa ikisi de kaybettirir.
+- **Stopu maliyetin birkaç katı uzağa koyun.** Stop beş pip civarına indiğinde maliyet tek başına sonucu eksiye çeker.
+- **Kapanış stopunu bilerek kullanın.** Kazanma oranını yükseltir, ama ara sıra riskin iki katından fazla kaybettirir.
+- **Kazanma oranına değil, işlem başına net sonuca bakın.** Kazanma oranı ancak gereken oranla yan yana anlamlıdır.
+- **Stop ve hedef bir avantaj yaratmaz; var olanı paketler.** Önce kuralın maliyetten önce kazandırdığını görmek gerekir.
+
+Sonraki ders: kurala süzgeç eklemek (günlük EMA20, oynaklık şartı) sonucu değiştiriyor mu.

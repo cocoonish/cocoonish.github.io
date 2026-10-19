@@ -1,0 +1,138 @@
+---
+title: 'FX Gün İçi Stratejiler 1: Hangisi İşe Yarıyor? — 22 Kuralın Sonucu'
+description: "Gün içi FX işlem kitaplarının en çok anılan 22 kuralı dört majör paritede, gerçek alış-satış fiyatlarıyla ve maliyet düşülerek sınandı. Hangi kural ne kadar kazandırdı, kazanma oranı ne oldu, kâra geçmek için ne gerekiyordu — tek tabloda."
+pubDate: 2026-10-19
+tags: ['fx', 'gun-ici', 'backtest', 'strateji', 'ders']
+durum: 'aktif'
+kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · önceden kayıt'
+ozet: "22 gün içi kuralın hiçbiri maliyetten sonra güvenilir biçimde kazandırmıyor. Kuralların yön ve zaman tahmini maliyetten önce sıfıra yakın; ödenen makas ve kayma sonucu eksiye çeviriyor. Ders sonucu tek tabloda, kazanma oranı ve kâra geçmek için gereken kazanma oranıyla veriyor."
+seviye: 'giris'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+
+Bu seri tek bir soruya cevap verir: gün içi FX işlemlerinde sık önerilen kurallar, gerçek maliyetle uygulandığında para
+kazandırıyor mu? Kısa cevap: **hayır.** Sınanan 22 kuralın hiçbiri, dört paritenin
+hiçbirinde, maliyetten sonra güvenilir bir kazanç göstermedi. Bu ders sonucu sade bir tabloyla verir. İkinci ders her kuralın
+nasıl uygulandığını grafik üstünde adım adım gösterir (hangi saatte ne olursa ne yapılır). Sonraki üç ders kuralları
+tek tek sonuçlarıyla anlatır (kırılım, dönüş, akış ve haber): backtest ne verdi, stop ve hedef nerede olsaydı ne
+değişirdi. Altıncı ders stop ve hedefin genel aritmetiğini, yedincisi kurala süzgeç eklemenin (günlük EMA20 yönü,
+oynaklık şartı) sonucunu, sekizincisi bir kuralı kendiniz denemeden önceki kontrol listesini verir.
+
+## Ne sınandı
+
+- **Kurallar.** Gün içi işlem kitaplarında en çok geçen 22 kural: açılış aralığı ve
+  Asya aralığı kırılımları, önceki günün tepe ve dibi, pivot seviyeleri, sahte kırılımdan dönüş, VWAP'a dönüş, Londra
+  fiksingi çevresindeki işlemler, gün içi momentum ve beş haber kuralı.
+- **Piyasa.** EUR/USD, GBP/USD, USD/JPY ve AUD/USD; bir dakikalık gerçek alış ve satış fiyatları,
+  01.01.2018 – 15.10.2026.
+- **Maliyet.** Her işlem gerçek alış-satış farkını (makas) öder; ayrıca her dolumda 0,5 pip
+  kayma, haber anında ek 1,0 pip.
+- **Dürüstlük kuralı.** Kuralların varsayılan ayarları ve "işe yarıyor" demenin şartı, sonuçlar görülmeden yazıldı;
+  uygulamada sonradan değişen birkaç ayrıntının etkisi ayrıca ölçüldü ve varsayılan ayarların hiçbirinin hükmünü
+  değiştirmedi. Hüküm 2024 → döneminden
+  verilir; ayarlar o dönemin verisine bakılarak seçilmedi.
+
+## Sonuç
+
+Varsayılan ayarlarıyla 88 kural–parite bileşiminin 2024 → dönemindeki hükmü:
+0 çalışıyor, 6 zayıf,
+82 çalışmıyor. Bütün dönemde de sonuç aynı
+yönde: 0 çalışıyor, 5 zayıf,
+83 çalışmıyor.
+
+Hükmün üç kademesi şöyle okunur. **Çalışıyor:** maliyetten sonra işlem başına ortalama sonuç artı, %95 güven
+aralığının alt ucu sıfırın üstünde ve sonuç rastgele yönde açılan işlemlerin en az yüzde 95'inden iyi. **Zayıf:**
+ortalama artı ama bu üç şarttan biri tutmuyor — yani artı sonuç şanstan ayrılamıyor. **Çalışmıyor:** ortalama sıfır ya
+da eksi.
+
+Aşağıdaki tablo her kuralı dört paritenin işlemleri birlikte gösterir. Okuması kolay iki sayı var: **kazanma oranı**
+(kârla kapanan işlemlerin payı) ve **gereken kazanma oranı** (kuralın kazancı ve kaybının boyuna göre kâra geçmek
+için gereken pay). Kazanma oranı gerekenin altındaysa kural para kaybettirir; ne kadar altındaysa o kadar çok.
+
+| Kural | Kazanma oranı | Gereken | İşlem başına (R) | Dört paritede hüküm |
+| :--- | ---: | ---: | ---: | :--- |
+| N4 başarısız | %60,5 | %61,0 | −0,01 | 2 zayıf (az işlem) · 2 çalışmıyor (az işlem) |
+| Londra ORB | %25,4 | %26,9 | −0,06 | 1 zayıf · 3 çalışmıyor |
+| N2 fade | %43,2 | %45,1 | −0,04 | 1 zayıf · 3 çalışmıyor |
+| Asya aralığı | %48,1 | %51,0 | −0,06 | 1 zayıf · 3 çalışmıyor |
+| NY IB 08:00 | %40,3 | %43,7 | −0,06 | 4 çalışmıyor |
+| NY IB 09:30 | %44,4 | %48,4 | −0,05 | 4 çalışmıyor |
+| Sıkışma | %34,9 | %39,4 | −0,10 | 1 zayıf · 3 çalışmıyor |
+| İç mum | %35,2 | %40,8 | −0,13 | 4 çalışmıyor |
+| Pivot kırılım | %32,7 | %38,7 | −0,16 | 4 çalışmıyor |
+| PDH/PDL | %31,3 | %38,2 | −0,19 | 4 çalışmıyor |
+| Sahte ORB | %44,6 | %51,7 | −0,15 | 4 çalışmıyor |
+| Sahte PDH/PDL | %43,3 | %51,3 | −0,16 | 4 çalışmıyor |
+| Sahte Asya | %43,7 | %51,9 | −0,17 | 4 çalışmıyor |
+| Gün içi momentum ‡ | %42,8 | %51,2 | −0,14 | 4 çalışmıyor |
+| Pivot dönüş | %19,4 | %28,1 | −0,35 | 4 çalışmıyor |
+| VWAP çekilme | %29,5 | %39,2 | −0,27 | 4 çalışmıyor |
+| N3 straddle | %41,8 | %51,6 | −0,16 | 4 çalışmıyor |
+| N5 devam | %34,3 | %44,6 | −0,25 | 4 çalışmıyor |
+| VWAP dönüş | %35,0 | %45,7 | −0,25 | 4 çalışmıyor |
+| Fiksing dönüşü ‡ | %42,5 | %54,1 | −0,18 | 4 çalışmıyor |
+| N1 kırılım | %37,5 | %52,4 | −0,26 | 4 çalışmıyor |
+| Fiksing momentumu ‡ | %29,6 | %56,8 | −0,30 | 4 çalışmıyor |
+
+_2024 → dönemi, dört paritenin işlemleri birlikte, makas ve kayma düşülmüş. "Gereken" kazanma oranı, kuralın ortalama kazancı ve kaybının boyundan hesaplanır: kayıp / (kazanç + kayıp). Hüküm sütunu dört paritenin her biri için ayrı verilen hükmün sayımıdır. ‡ Stopsuz kural: R, girişteki oynaklık (ATR) birimidir._
+
+<GrafikEmbed src="/arastirma/fx-gunici/kisa-kurallar.html" baslik="Kazanma oranı ve kâra geçmek için gereken oran" no="01" kaynak="Dukascopy" />
+
+Tablodaki "R", işlemin riskidir: girişle stop arasındaki uzaklık. İşlem başına −0,10 R, her işlemde riske edilen
+tutarın onda birini kaybetmek demektir: riski bin dolar olan işlemlerde işlem başına ortalama yüz dolar.
+
+## Neden kaybediyorlar
+
+Sebep tek cümleye sığar: **kurallar fiyatın yönünü ve zamanını şanstan iyi tahmin etmiyor, ama her işlemde maliyet
+ödüyor.**
+
+- **Maliyetten önce sıfıra yakın.** Makas ve kayma düşülmeden işlem başına ortalama sonuç
+  +0,014 R. Bu, yazı tura atan bir kuraldan ayırt edilemez.
+- **Maliyet her işlemde.** Bir işlemin ortalama maliyeti 0,18 R: yaklaşık
+  0,7 pip makas ve 1,1
+  pip kayma. Sıfıra yakın bir kazançtan bu düşülünce sonuç eksiye döner.
+- **Dar stop maliyeti büyütür.** İşlemlerin medyan stop uzaklığı 11,5
+  pip, medyan maliyet 1,6 pip. Stop daraldıkça aynı pip maliyeti riskin
+  daha büyük bir parçası olur. İkinci ders bunu sayılarla gösteriyor.
+
+Kurallar "yanlış" değil; tutturdukları yön ve zaman, ödenen maliyeti karşılamaya yetmiyor. Bir kural ancak maliyetten
+büyük ve tekrar eden bir avantaj taşıyorsa kazandırır. Bu serideki kuralların hiçbirinde böyle bir avantaj ölçülmedi.
+
+## Dikkat çeken bir alt küme: ay sonu fiksingi
+
+Tabloda görünmeyen ama en çok dikkat çeken yer, Londra fiksingi momentumunun **yalnız ay sonu günlerindeki**
+işlemleri. Kural, fiksingden
+önceki beş dakikanın yönünde girer: Londra 15:50–15:55 mumuna bakar (TSİ İngiltere yaz saatinde 17:50–17:55, kış saatinde 18:50–18:55), 15:55'te
+girer (TSİ İngiltere yaz saatinde 17:55, kış saatinde 18:55) ve tam fiksingde, Londra 16:00'da çıkar (TSİ İngiltere yaz saatinde 18:00, kış saatinde 19:00).
+
+GBP/USD'de ay sonu işlemleri iki dönemde de artıda: 2018–2023'te 72
+işlemde işlem başına +0,30 R, 2024 →'de
+33 işlemde +0,38 R,
+kazanma oranı %66,7.
+Bunu bir kural saymak için üç sebeple erken:
+
+1. **Seçim sonradan yapıldı.** "Ay sonu" ayrımı, iki dönemin sonuçları görüldükten sonra öne çıktı. Çok sayıda alt küme
+   arasından sonradan seçilen bir kazanan, şansla bulunmuş olabilir.
+2. **İşlem az.** Ayda bir işlem, yılda yaklaşık 12 işlem eder. Bu kadar
+   az işlemle bir kazancın gerçek olduğunu göstermek yıllar sürer (sekizinci ders).
+3. **Pariteler aynı şeyi söylemiyor.** Ay sonu işlemleri 2024 →'de USD/JPY'de de artıda
+   (+0,31 R), EUR/USD'de sıfıra yakın
+   (−0,01 R), AUD/USD'de eksi
+   (−0,35 R).
+   Gerçek bir akış etkisi her paritede aynı yönde görünmeyebilir, ama bu dağınıklık şansla da uyumlu.
+
+Dürüst sınama, bu kuralı bugünden itibaren yazılı ayarlarıyla izlemektir; geçmiş veri bu soruyu daha fazla cevaplayamaz.
+
+## Özet
+
+- 22 kuralın hiçbiri, maliyetten sonra, güvenilir biçimde kazandırmıyor.
+- Kurallar maliyetten önce yaklaşık başabaş; kayıp neredeyse tamamen makas ve kaymadan geliyor.
+- Kazanma oranı tek başına bir şey söylemez; kâra geçmek için gereken oranla birlikte okunur.
+- İki ileriye dönük aday var — GBP/USD ay sonu fiksingi ve (beşinci derste) başarısız haber kırılımında süreyle çıkış;
+  ikisi de sonradan seçildi ve henüz kanıtlanmış değil.
+
+Sonraki ders: kurallar adım adım — hangi saatte ne olursa ne yapılır.
+
+Bu serinin ayrıntılı backtest notları — her kuralın tam tanımı, parametre ızgaraları, koşul analizleri ve yöntem —
+[arşivdeki dokuz derste](/arastirma/fx-gunici-giris/) duruyor.

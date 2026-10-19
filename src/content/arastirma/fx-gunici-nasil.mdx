@@ -1,0 +1,296 @@
+---
+title: 'FX Gün İçi Stratejiler 2: Adım Adım — Hangi Saatte Ne Olursa Ne Yapılır'
+description: "22 gün içi FX kuralının uygulanışı, grafik üstünde: hangi saatte hangi seviye işaretlenir, hangi mum kapanınca hangi yönde girilir, stop nereye konur, ne zaman çıkılır. Her kural için gerçek bir günün grafiği, adımlar numaralı, saatler TSİ."
+pubDate: 2026-10-19
+tags: ['fx', 'gun-ici', 'strateji', 'ders', 'uygulama']
+durum: 'aktif'
+kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · önceden kayıt'
+ozet: "22 kuralın her biri için adım adım uygulama: hangi saatte ne işaretlenir, hangi mum kapanınca hangi yönde girilir, stop nereye konur, ne zaman çıkılır. Her kural gerçek bir günün grafiğinde numaralı adımlarla gösteriliyor; saatler TSİ."
+seviye: 'giris'
+onkosul:
+  - fx-gunici-sonuc
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+
+Bu ders kuralların **nasıl uygulandığını** gösterir; sonuçları sonraki üç derstedir. Her kural için:
+
+- **Adımlar** — hangi saatte neye bakılır, hangi mum kapanınca hangi yönde girilir, stop nereye konur, ne zaman çıkılır.
+- **Grafik** — gerçek bir gün (EUR/USD), adımlar grafikte aynı numarayla işaretli. Saat ekseni TSİ'dir.
+- **Grafikteki gün** — o gün adımların her birinin saati ve fiyatı.
+
+Örnek günler, kuralın bütün adımları (hedef dahil) görünsün diye **kazanan** işlemlerden seçildi. Kuralın ortalama sonucu
+grafiğin alt yazısında yazılı ve neredeyse hepsinde eksi; örnek bir başarı öyküsü değil, uygulamanın resmi.
+
+Üç ortak kural her strateji için geçerli:
+
+- **Kapanışı bekle.** "Aralığın dışında" demek mumun dışarıda *kapanması* demektir; mum açıkken çizginin ötesine geçmek
+  sinyal değildir. Giriş, sinyal mumu kapanır kapanmaz yapılır.
+- **Günde tek işlem.** Kural o gün bir kez tetiklendiyse aynı gün ikinci sinyal alınmaz.
+- **Gün sonu.** Açık pozisyon en geç New York gününün sonunda (TSİ ABD yaz saatinde 23:55, kış saatinde 00:55) kapatılır.
+
+Bütün kurallarda mumlar varsayılan olarak 15 dakikalıktır; farklı olanlar adımlarda yazılı. Fiyat orta fiyattır;
+gerçek işlem makas ve kaymayla yapılır.
+
+## Kırılım kuralları
+
+### Londra açılış aralığı kırılımı (ORB)
+
+1. **Aralığı işaretle.** Londra açılışından sonraki ilk 15 dakikalık mumun (TSİ İngiltere yaz saatinde 10:00–10:15, kış saatinde 11:00–11:15) en
+   yükseğine ve en düşüğüne iki çizgi çek.
+2. **Kapanışı bekle, gir.** Sonraki mumlardan biri üst çizginin üstünde kapanırsa al, alt çizginin altında kapanırsa
+   sat. Stop aralığın öbür ucuna. Son giriş TSİ İngiltere yaz saatinde 14:00, kış saatinde 15:00; o saate kadar sinyal yoksa o gün işlem yok.
+3. **Çık.** Hedef yok: pozisyon stop gelmezse gün sonunda kapanır.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-orb.html" baslik="Adım adım — Londra ORB" no="01" kaynak="Dukascopy" />
+
+**Grafikteki gün** (11 Ağustos 2025, pazartesi; EUR/USD, 15 dakikalık mum). ① aralık · ② 10:15–10:30 TSİ mumu: aralığın dışında kapanış; mum kapanınca satış, 1,16537; stop 1,16659 (12,2 pip uzakta) · ③ 23:55 TSİ'de çıkış (gün sonu kapanışı): +34,3 pip, +2,81 R.
+
+### Asya aralığı kırılımı
+
+1. **Aralığı işaretle.** Asya seansının (TSİ İngiltere yaz saatinde 02:00–10:00, kış saatinde 03:00–11:00) en yükseği ve en düşüğü aralıktır.
+2. **Kapanışı bekle, gir.** Londra açılışından sonra aralığın dışında kapanan ilk mumun yönünde gir. Stop aralığın
+   ortasına. Son giriş TSİ İngiltere yaz saatinde 13:00, kış saatinde 14:00.
+3. **Çık.** Hedef 1R: girişten stop kadar uzakta. Stop ya da hedef, hangisi önce gelirse.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-asya.html" baslik="Adım adım — Asya aralığı" no="02" kaynak="Dukascopy" />
+
+**Grafikteki gün** (29 Temmuz 2024, pazartesi; EUR/USD, 15 dakikalık mum). ① Asya aralığı · ② 10:45–11:00 TSİ mumu: aralığın dışında kapanış; mum kapanınca satış, 1,08438; stop 1,086048 (16,68 pip uzakta); hedef 1,082712 · ③ 12:22 TSİ'de çıkış (hedef): +16,68 pip, +1,00 R.
+
+### New York sabah aralığı kırılımı
+
+1. **Aralığı işaretle.** New York'ta sabahın ilk saatinin (TSİ ABD yaz saatinde 15:00–16:00, kış saatinde 16:00–17:00) en yükseği ve en düşüğü.
+2. **Kapanışı bekle, gir.** Aralığın dışında kapanan ilk mumun yönünde gir. Stop aralığın öbür ucuna. Son giriş
+   TSİ ABD yaz saatinde 19:00, kış saatinde 20:00.
+3. **Çık.** Hedef yok: stop gelmezse gün sonunda kapanır.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-nyib_0800.html" baslik="Adım adım — New York sabah aralığı" no="03" kaynak="Dukascopy" />
+
+**Grafikteki gün** (1 Nisan 2024, pazartesi; EUR/USD, 15 dakikalık mum). ① ilk saatin aralığı · ② 16:30–16:45 TSİ mumu: aralığın dışında kapanış; mum kapanınca satış, 1,07763; stop 1,07858 (9,5 pip uzakta) · ③ 23:55 TSİ'de çıkış (gün sonu kapanışı): +33,1 pip, +3,48 R.
+
+### New York hisse açılışı aralığı kırılımı
+
+1. **Aralığı işaretle.** Hisse piyasası açılışından sonraki ilk saatin (TSİ ABD yaz saatinde 16:30–17:30, kış saatinde 17:30–18:30) en yükseği
+   ve en düşüğü.
+2. **Kapanışı bekle, gir.** Aralığın dışında kapanan ilk mumun yönünde gir. Stop aralığın öbür ucuna. Son giriş
+   TSİ ABD yaz saatinde 19:00, kış saatinde 20:00.
+3. **Çık.** Hedef yok: stop gelmezse gün sonunda kapanır.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-nyib_0930.html" baslik="Adım adım — New York hisse açılışı aralığı" no="04" kaynak="Dukascopy" />
+
+**Grafikteki gün** (30 Nisan 2024, salı; EUR/USD, 15 dakikalık mum). ① ilk saatin aralığı · ② 17:45–18:00 TSİ mumu: aralığın dışında kapanış; mum kapanınca satış, 1,06905; stop 1,071955 (29,05 pip uzakta) · ③ 23:55 TSİ'de çıkış (gün sonu kapanışı): +22,8 pip, +0,78 R.
+
+### İç mum kırılımı
+
+1. **Ana mumu işaretle.** Bir mum, bir öncekinin (ana mum) tamamen içinde kaldıysa iç mumdur; ana mumun tepesine ve
+   dibine çizgi çek. Yalnız Londra açılışından New York öğlesine kadar (TSİ yazın 10:00 → 19:00, kışın 11:00 → 20:00, ara haftalarda 11:00 → 19:00).
+2. **Kapanışı bekle, gir.** Sonraki üç mumdan biri ana mumun dışında kapanırsa o yönde gir; kapanmazsa kurulum iptal.
+   Stop ana mumun öbür ucuna.
+3. **Çık.** Hedef 2R: girişten stopun iki katı uzakta.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-icmum.html" baslik="Adım adım — İç mum" no="05" kaynak="Dukascopy" />
+
+**Grafikteki gün** (6 Kasım 2025, perşembe; EUR/USD, 15 dakikalık mum). ① ana mum · ② 14:30–14:45 TSİ mumu: ana mumun dışında kapanış; mum kapanınca alış, 1,15210; stop 1,15102 (10,8 pip uzakta); hedef 1,15426 · ③ 16:49 TSİ'de çıkış (hedef): +21,6 pip, +2,00 R.
+
+### Sıkışma kırılımı
+
+1. **Sıkışmayı bul.** Bollinger bantlarının ikisi de Keltner kanalının içine girdiyse piyasa sıkışmıştır. Bu en az altı
+   mum sürdüyse, sıkışma mumlarının en yükseği ile en düşüğü "kutu"dur.
+2. **Kapanışı bekle, gir.** Sıkışma bittikten sonraki beş mum içinde kutunun dışında kapanan ilk mumun yönünde gir. Stop
+   kutunun öbür ucuna. Son sinyal TSİ ABD yaz saatinde 23:00, kış saatinde 00:00.
+3. **Çık.** Hedef 2R.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-sikisma.html" baslik="Adım adım — Sıkışma" no="06" kaynak="Dukascopy" />
+
+**Grafikteki gün** (5 Ağustos 2026, çarşamba; EUR/USD, 15 dakikalık mum). ① sıkışma kutusu · ② 05:30–05:45 TSİ mumu: kutunun dışında kapanış; mum kapanınca alış, 1,15410; stop 1,152675 (14,25 pip uzakta); hedef 1,15695 · ③ 23:55 TSİ'de çıkış (gün sonu kapanışı): +10,9 pip, +0,76 R.
+
+### Önceki günün tepe ve dibinin kırılımı
+
+1. **Seviyeleri işaretle.** Bir önceki FX gününün (her gün TSİ ABD yaz saatinde 00:00, kış saatinde 01:00 başlar) en yükseği ve en düşüğü.
+2. **Kapanışı bekle, gir.** Londra açılışından sonra bu seviyelerden birini kesen ilk kapanışın yönünde gir (önceki mum
+   içeride, bu mum dışarıda kapanmalı). Stop sinyal mumunun öbür ucuna. Son giriş TSİ ABD yaz saatinde 21:00, kış saatinde 22:00.
+3. **Çık.** Hedef 2R.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-pdhl.html" baslik="Adım adım — Önceki günün tepe ve dibi" no="07" kaynak="Dukascopy" />
+
+**Grafikteki gün** (30 Ocak 2026, cuma; EUR/USD, 15 dakikalık mum). ① önceki günün tepesi ve dibi · ② 18:00–18:15 TSİ mumu: seviyeyi kesen kapanış; mum kapanınca satış, 1,18894; stop 1,19064 (17,0 pip uzakta); hedef 1,18554 · ③ 21:29 TSİ'de çıkış (hedef): +34,0 pip, +2,00 R.
+
+### Pivot kırılımı
+
+1. **Seviyeleri hesapla.** Önceki günün yüksek (Y), düşük (D) ve kapanışından (K): P = (Y + D + K) / 3, R1 = 2P − D,
+   S1 = 2P − Y.
+2. **Kapanışı bekle, gir.** Bir mum R1'i yukarı ya da S1'i aşağı keserek kapanırsa o yönde gir. Stop sinyal mumunun öbür
+   ucuna. Pencere TSİ yazın 10:00 → 21:00, kışın 11:00 → 22:00, ara haftalarda 11:00 → 21:00.
+3. **Çık.** Hedef 2R.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-pivot_kirilim.html" baslik="Adım adım — Pivot kırılımı" no="08" kaynak="Dukascopy" />
+
+**Grafikteki gün** (12 Ağustos 2026, çarşamba; EUR/USD, 15 dakikalık mum). ① R1 ve S1 · ② 19:15–19:30 TSİ mumu: seviyeyi kesen kapanış; mum kapanınca satış, 1,15311; stop 1,153595 (4,85 pip uzakta); hedef 1,15214 · ③ 21:00 TSİ'de çıkış (hedef): +9,7 pip, +2,00 R.
+
+## Dönüş kuralları
+
+### Açılış aralığının sahte kırılımı
+
+1. **Aralığı işaretle.** Londra açılışının ilk 15 dakikası (TSİ İngiltere yaz saatinde 10:00–10:15, kış saatinde 11:00–11:15), ORB'deki gibi.
+2. **Sahte kırılımı bekle, ters gir.** Bir mum aralığın dışında kapanır, ardından sonraki iki mumdan biri yeniden
+   içeride kapanırsa kırılımın **tersine** gir. Stop sahte kırılımın en uç noktasına. Son giriş
+   TSİ İngiltere yaz saatinde 16:00, kış saatinde 17:00.
+3. **Çık.** Hedef 1R.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-sahte_orb.html" baslik="Adım adım — Açılış aralığının sahte kırılımı" no="09" kaynak="Dukascopy" />
+
+**Grafikteki gün** (5 Mart 2024, salı; EUR/USD, 15 dakikalık mum). ① aralık · ② 14:45–15:00 TSİ mumu: aralığa geri dönen kapanış; mum kapanınca satış, 1,08493; stop 1,08536 (4,3 pip uzakta); hedef 1,08450 · ③ 16:28 TSİ'de çıkış (hedef): +4,3 pip, +1,00 R.
+
+### Asya aralığının sahte kırılımı
+
+1. **Aralığı işaretle.** Asya aralığı (TSİ İngiltere yaz saatinde 02:00–10:00, kış saatinde 03:00–11:00).
+2. **Sahte kırılımı bekle, ters gir.** Aynı kural: dışarıda kapanış, sonraki iki mumdan birinde içeride kapanış →
+   ters yönde giriş. Stop sahte kırılımın uç noktasına. Son giriş TSİ İngiltere yaz saatinde 16:00, kış saatinde 17:00.
+3. **Çık.** Hedef 1R.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-sahte_asya.html" baslik="Adım adım — Asya aralığının sahte kırılımı" no="10" kaynak="Dukascopy" />
+
+**Grafikteki gün** (23 Mayıs 2024, perşembe; EUR/USD, 15 dakikalık mum). ① Asya aralığı · ② 10:30–10:45 TSİ mumu: aralığa geri dönen kapanış; mum kapanınca alış, 1,08281; stop 1,08125 (15,6 pip uzakta); hedef 1,08437 · ③ 11:31 TSİ'de çıkış (hedef): +15,6 pip, +1,00 R.
+
+### Önceki günün tepe ve dibinin sahte kırılımı
+
+1. **Seviyeleri işaretle.** Önceki FX gününün en yükseği ve en düşüğü.
+2. **Sahte kırılımı bekle, ters gir.** Seviyenin dışında kapanış, sonraki iki mumdan birinde geri içeride kapanış →
+   ters yönde giriş. Stop sahte kırılımın uç noktasına. Pencere
+   TSİ yazın 10:00 → 21:00, kışın 11:00 → 22:00, ara haftalarda 11:00 → 21:00.
+3. **Çık.** Hedef 1R.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-sahte_pdhl.html" baslik="Adım adım — Önceki günün tepe ve dibinin sahte kırılımı" no="11" kaynak="Dukascopy" />
+
+**Grafikteki gün** (12 Şubat 2024, pazartesi; EUR/USD, 15 dakikalık mum). ① önceki günün tepesi ve dibi · ② 18:30–18:45 TSİ mumu: seviyeye geri dönen kapanış; mum kapanınca alış, 1,07634; stop 1,075595 (7,45 pip uzakta); hedef 1,077085 · ③ 19:13 TSİ'de çıkış (hedef): +7,45 pip, +1,00 R.
+
+### VWAP'a dönüş
+
+1. **VWAP'ı ve bandını çiz.** VWAP Londra açılışından beri hacim ağırlıklı ortalama fiyattır; bant VWAP'ın iki standart
+   sapma üstü ve altı. İlk saat sinyal alınmaz.
+2. **Banda geri dönüşü bekle, gir.** Fiyat bandın dışına çıkıp yeniden bandın içinde kapanırsa VWAP yönünde gir. Stop
+   bant dışındaki gezintinin en uç noktasına. Son sinyal TSİ ABD yaz saatinde 23:00, kış saatinde 00:00.
+3. **Çık.** Hedef VWAP: sinyal anındaki VWAP seviyesi.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-vwap_donus.html" baslik="Adım adım — VWAP'a dönüş" no="12" kaynak="Dukascopy" />
+
+**Grafikteki gün** (18 Aralık 2024, çarşamba; EUR/USD, 15 dakikalık mum). ① VWAP bandı · ② 20:00–20:15 TSİ mumu: bandın içine dönen kapanış; mum kapanınca alış, 1,04746; stop 1,046715 (7,45 pip uzakta); hedef 1,048855 · ③ 21:34 TSİ'de çıkış (hedef): +13,95 pip, +1,87 R.
+
+### Pivottan dönüş
+
+1. **Seviyeleri hesapla.** P, R1 ve S1, pivot kırılımındaki gibi.
+2. **Değip dönmesini bekle, gir.** Fiyat R1'e değip altında kapanırsa sat; S1'e değip üstünde kapanırsa al. Stop sinyal
+   mumunun seviyenin ötesindeki ucuna. Pencere TSİ yazın 10:00 → 21:00, kışın 11:00 → 22:00, ara haftalarda 11:00 → 21:00.
+3. **Çık.** Hedef pivot (P).
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-pivot_donus.html" baslik="Adım adım — Pivottan dönüş" no="13" kaynak="Dukascopy" />
+
+**Grafikteki gün** (21 Kasım 2025, cuma; EUR/USD, 15 dakikalık mum). ① R1, S1 ve P · ② 11:15–11:30 TSİ mumu: seviyeye değip geri kapanış; mum kapanınca satış, 1,15487; stop 1,155265 (3,95 pip uzakta); hedef 1,152668 · ③ 12:59 TSİ'de çıkış (hedef): +22,02 pip, +5,57 R.
+
+### Fiksing sonrası dönüş
+
+1. **Fiksinge giden mumu oku, ters gir.** Londra fiksinginden (TSİ İngiltere yaz saatinde 18:00, kış saatinde 19:00) önceki son 15 dakikalık mum
+   yükselerek kapandıysa fiksingde sat, düşerek kapandıysa al.
+2. **Çık.** Stop ve hedef yok: iki mum, yani 30 dakika sonra çık.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-fiks_donus.html" baslik="Adım adım — Fiksing sonrası dönüş" no="14" kaynak="Dukascopy" />
+
+**Grafikteki gün** (20 Şubat 2025, perşembe; EUR/USD, 15 dakikalık mum). ① 18:45–19:00 TSİ mumu: fiksinge giden mum; mum kapanınca satış, 1,04731 · ② 19:30 TSİ'de çıkış (zaman çıkışı): +5,6 pip, +0,66 R. Stopsuz kural: R birimi girişteki oynaklıktır (1 ATR).
+
+## Akış kuralları
+
+### Fiksing momentumu
+
+1. **Fiksingden önceki mumu oku, aynı yönde gir.** Fiksingden önceki 5 dakikalık mum
+   (TSİ İngiltere yaz saatinde 17:50–17:55, kış saatinde 18:50–18:55) yükselerek kapandıysa al, düşerek kapandıysa sat; giriş o mum kapanınca.
+2. **Çık.** Stop ve hedef yok: tam fiksingde (TSİ İngiltere yaz saatinde 18:00, kış saatinde 19:00) çık.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-fiks_momentum.html" baslik="Adım adım — Fiksing momentumu" no="15" kaynak="Dukascopy" />
+
+**Grafikteki gün** (4 Şubat 2026, çarşamba; EUR/USD, 5 dakikalık mum). ① 18:50–18:55 TSİ mumu: fiksingden önceki mum; mum kapanınca satış, 1,18027 · ② 19:00 TSİ'de çıkış (zaman çıkışı): +5,7 pip, +0,90 R. Stopsuz kural: R birimi girişteki oynaklıktır (1 ATR).
+
+### Londra açılışından New York öğleden sonrasına momentum
+
+1. **Londra'nın ilk saatini oku.** TSİ İngiltere yaz saatinde 10:00–11:00, kış saatinde 11:00–12:00 arasındaki 60 dakikalık mum yükselerek kapandıysa
+   yön alış, düşerek kapandıysa satıştır.
+2. **Öğlen gir.** O yönde TSİ ABD yaz saatinde 19:00, kış saatinde 20:00 gir.
+3. **Çık.** Stop ve hedef yok: TSİ ABD yaz saatinde 23:00, kış saatinde 00:00 çık.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-momentum.html" baslik="Adım adım — Gün içi momentum" no="16" kaynak="Dukascopy" />
+
+**Grafikteki gün** (17 Haziran 2025, salı; EUR/USD, 60 dakikalık mum). ① 10:00–11:00 TSİ: Londra'nın ilk saati · ② 19:00 TSİ'de satış, 1,15334 · ③ 23:00 TSİ'de çıkış (zaman çıkışı): +48,0 pip, +2,67 R. Stopsuz kural: R birimi girişteki oynaklıktır (1 ATR).
+
+### VWAP geri çekilmesi
+
+1. **Trendi bul, geri çekilmeyi bekle, gir.** Son 12 mumun hepsi VWAP'ın aynı yanında kapandıysa trend var. Fiyat VWAP'a
+   değip trend yönünde kapanırsa trend yönünde gir. Stop sinyal mumunun öbür ucuna. VWAP Londra açılışından
+   hesaplanır; ilk saat sinyal alınmaz, son sinyal TSİ ABD yaz saatinde 23:00, kış saatinde 00:00.
+2. **Çık.** Hedef 2R.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-vwap_cekilme.html" baslik="Adım adım — VWAP geri çekilmesi" no="17" kaynak="Dukascopy" />
+
+**Grafikteki gün** (8 Mayıs 2026, cuma; EUR/USD, 15 dakikalık mum). ① 15:00–15:15 TSİ mumu: VWAP'a değip trend yönünde kapanış; mum kapanınca alış, 1,17607; stop 1,17594 (1,3 pip uzakta); hedef 1,17633 · ② 15:17 TSİ'de çıkış (hedef): +2,6 pip, +2,00 R.
+
+## Haber kuralları
+
+Haber kurallarında mumlar 5 dakikalıktır ve açıklama anına hizalıdır: "ilk haber mumu" açıklamanın olduğu dakikada açılan
+mumdur. Sınanan olaylar ABD tarım dışı istihdam ve enflasyon verisi, Fed kararı ve basın toplantısı, Avrupa Merkez
+Bankası (EUR/USD) ve İngiltere Merkez Bankası (GBP/USD) kararlarıdır; saatleri takvimden alınır.
+
+### Haber kırılımı (N1)
+
+1. **İlk haber mumunu bekle, aynı yönde gir.** İlk haber mumu yükselerek kapandıysa al, düşerek kapandıysa sat; giriş o
+   mum kapanınca. Stop ilk haber mumunun öbür ucuna.
+2. **Çık.** Hedef 1R.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-n1.html" baslik="Adım adım — Haber kırılımı" no="18" kaynak="Dukascopy" />
+
+**Grafikteki gün** (29 Ekim 2025, çarşamba; EUR/USD, 5 dakikalık mum). Olay: FOMC kararı, 21:00 TSİ. ① 21:00–21:05 TSİ mumu: ilk haber mumu; mum kapanınca satış, 1,16387; stop 1,16512 (12,5 pip uzakta); hedef 1,16262 · ② 21:35 TSİ'de çıkış (hedef): +12,5 pip, +1,00 R.
+
+### Haber fade'i (N2)
+
+1. **Büyük hareketi ve dönüşü bekle, ters gir.** İlk haber mumu olağan oynaklığın (ATR) iki katından fazla hareket
+   ettiyse, sonraki üç mumdan biri ters yönde kapandığında hareketin tersine gir. Stop o ana kadarki hareketin ucuna.
+2. **Çık.** Hedef haberden önceki fiyat.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-n2.html" baslik="Adım adım — Haber fade'i" no="19" kaynak="Dukascopy" />
+
+**Grafikteki gün** (17 Eylül 2025, çarşamba; EUR/USD, 5 dakikalık mum). Olay: FOMC kararı, 21:00 TSİ. ① 21:10–21:15 TSİ mumu: ters yönde kapanan mum; mum kapanınca satış, 1,18925; stop 1,19187 (26,2 pip uzakta); hedef 1,18531 · ② 21:42 TSİ'de çıkış (hedef): +39,4 pip, +1,50 R.
+
+### Haber öncesi aralığın kırılımı — straddle (N3)
+
+1. **Aralığı işaretle.** Haberden önceki altı mumun (yarım saat) en yükseği ve en düşüğü.
+2. **Kapanışı bekle, gir.** Haberden sonra aralığın dışında kapanan ilk mumun yönünde gir (en geç altıncı mumda). Stop
+   aralığın öbür ucuna.
+3. **Çık.** Hedef 1R.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-n3.html" baslik="Adım adım — Straddle" no="20" kaynak="Dukascopy" />
+
+**Grafikteki gün** (12 Eylül 2024, perşembe; EUR/USD, 5 dakikalık mum). Olay: ECB kararı, 15:15 TSİ. ① haber öncesi aralık · ② 15:20–15:25 TSİ mumu: aralığın dışında kapanış; mum kapanınca alış, 1,10229; stop 1,101115 (11,75 pip uzakta); hedef 1,103465 · ③ 16:08 TSİ'de çıkış (hedef): +11,75 pip, +1,00 R.
+
+### Başarısız haber kırılımı (N4)
+
+1. **Aralığı işaretle.** Haberden önceki altı mumun en yükseği ve en düşüğü.
+2. **Geri dönüşü bekle, ters gir.** İlk haber mumu aralığın dışında kapanır, ikinci mum yeniden içeride kapanırsa ilk
+   hareketin tersine gir. Stop ilk iki mumun ucuna.
+3. **Çık.** Hedef aralığın öbür ucu.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-n4.html" baslik="Adım adım — Başarısız haber kırılımı" no="21" kaynak="Dukascopy" />
+
+**Grafikteki gün** (18 Mart 2026, çarşamba; EUR/USD, 5 dakikalık mum). Olay: FOMC kararı, 21:00 TSİ. ① haber öncesi aralık · ② 21:05–21:10 TSİ mumu: aralığa geri dönen ikinci mum; mum kapanınca satış, 1,15140; stop 1,15253 (11,3 pip uzakta); hedef 1,150455 · ③ 21:15 TSİ'de çıkış (hedef): +9,45 pip, +0,84 R.
+
+### Geri çekilme sonrası devam (N5)
+
+1. **İtkiyi ve geri çekilmeyi bekle, gir.** İlk haber mumu en az yarım ATR hareket ettiyse, sonraki altı mum içinde
+   fiyatın bu hareketin yarısını geri vermesini bekle; ardından ilk hareket yönünde kapanan ilk mumda gir. Stop geri
+   çekilmenin ucuna.
+2. **Çık.** Hedef ilk haber mumunun ucu.
+
+<GrafikEmbed src="/arastirma/fx-gunici/nasil-n5.html" baslik="Adım adım — Geri çekilme sonrası devam" no="22" kaynak="Dukascopy" />
+
+**Grafikteki gün** (17 Haziran 2026, çarşamba; EUR/USD, 5 dakikalık mum). Olay: FOMC basın toplantısı, 21:30 TSİ. ① 21:45–21:50 TSİ mumu: geri çekilmeden sonra itki yönünde kapanış; mum kapanınca satış, 1,15602; stop 1,15664 (6,2 pip uzakta); hedef 1,153565 · ② 22:02 TSİ'de çıkış (hedef): +24,55 pip, +3,96 R.
+
+## Bu dersten sonra
+
+Kuralların her birinin nasıl uygulandığını gördünüz. Sonraki üç ders aynı kuralların backtest sonucunu verir ve stop ile
+hedef başka yere konsaydı ne değişeceğini gösterir.

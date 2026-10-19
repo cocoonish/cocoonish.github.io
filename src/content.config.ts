@@ -8,7 +8,8 @@ const ortakSema = z.object({
   pubDate: z.coerce.date(),
   updatedDate: z.coerce.date().optional(),
   tags: z.array(z.string()).default([]),
-  // taslak → sitede "hazırlanıyor" rozetiyle görünür; arsiv → listede sona düşer
+  // taslak → sitede "hazırlanıyor" rozetiyle görünür; arsiv → ders (arastirma) listelerinde görünmez, adresi
+  // açık kalır; öbür koleksiyonlarda listede sona düşer
   durum: z.enum(['aktif', 'taslak', 'arsiv']).default('taslak'),
   kaynak: z.string().optional(), // veri kaynağı, ör. "TCMB EVDS + IRFCL"
   guncelleme: z.string().optional(), // güncelleme sıklığı, ör. "haftalık (Cuma)"

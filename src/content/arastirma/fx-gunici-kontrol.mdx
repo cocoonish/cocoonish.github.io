@@ -1,0 +1,123 @@
+---
+title: 'FX Gün İçi Stratejiler 8: Bir Kuralı Denemeden Önce — Kontrol Listesi'
+description: "Bir gün içi FX kuralını kendiniz sınamak ya da uygulamak istiyorsanız önce bakılacak altı şey: maliyetinizin pip karşılığı, stopun maliyete oranı, kazanma oranı yerine işlem başına net sonuç, kaç işlemin yeteceği, ayarların önceden yazılması ve ileriye dönük izleme."
+pubDate: 2026-10-19
+tags: ['fx', 'gun-ici', 'backtest', 'strateji', 'ders', 'risk']
+durum: 'aktif'
+kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · önceden kayıt'
+ozet: "Kuralların sonucunu önceki dersler anlattı; bu ders, bir kuralı kendiniz denemek isterseniz neye bakmanız gerektiğini sayılarla veriyor: maliyetin pip karşılığı, stopun maliyete oranı, net sonuç, gereken işlem sayısı, önceden yazılmış ayarlar ve adayların ileriye dönük izlenmesi."
+seviye: 'giris'
+onkosul:
+  - fx-gunici-sonuc
+  - fx-gunici-stop-hedef
+---
+
+Önceki dersler iki şey gösterdi: sınanan kuralların hiçbiri maliyetten sonra güvenilir biçimde kazandırmıyor, ve stop ile
+hedefi değiştirmek bunu değiştirmiyor. Bu ders bir adım geri çekilip pratik bir soru soruyor: bir kuralı kendiniz denemek
+ya da birinin önerdiği bir kuralı değerlendirmek isterseniz, neye bakmanız gerekir?
+
+## 1. Maliyetinizi pip olarak bilin
+
+Her işlem bir kez tam makas öder (yarısı girişte, yarısı çıkışta) ve her dolumda, yani girişte ve çıkışta, biraz kayma olur. Bu serinin sınamasında
+kullanılan maliyet:
+
+| Parite | Makas (medyan, pip) | Kayma (iki dolum, pip) | Bir işlemin maliyeti (pip) |
+| :--- | ---: | ---: | ---: |
+| EUR/USD | 0,3 | 1,0 | 1,3 |
+| GBP/USD | 0,9 | 1,0 | 1,9 |
+| USD/JPY | 0,4 | 1,0 | 1,4 |
+| AUD/USD | 1,0 | 1,0 | 2,0 |
+
+_Makas, 2018 → verisinin dakika dakika ölçülen medyanı; kayma modelin varsayımı: dolum başına 0,5 pip, haber penceresinde ayrıca 1,0 pip. Makas haber anında ve gün dönümünde birkaç katına çıkar; tablodaki sakin saatlerin maliyetidir._
+
+Kendi aracı kurumunuzun makası farklıdır; aynı saatte birkaç gün boyunca kendiniz not edin. Sınamada kullandığınız maliyet
+gerçekte ödediğinizden küçükse, sınama sonucu gerçekte olacağından iyi çıkar.
+
+## 2. Stopu maliyete göre koyun
+
+Aynı pip maliyeti, stop daraldıkça riskin daha büyük bir parçası olur. Serinin işlemleri stop uzaklığına göre üçe
+bölündüğünde:
+
+<div class="sayi-tablo">
+
+| Stop | Medyan stop (pip) | Maliyet (R) | İşlem başına net (R) |
+|---|---|---|---|
+| Dar | 7,1 | 0,24 | −0,25 |
+| Orta | 11,9 | 0,13 | −0,15 |
+| Geniş | 19,8 | 0,08 | −0,09 |
+
+</div>
+
+_2024 → dönemi, kuralların varsayılan ayarları; her kural–parite bileşiminin işlemleri kendi içinde stop uzaklığına göre
+üçe bölündü, hücre bileşimlerin medyanı._
+
+Geniş stoplu işlemler daha az kaybettiriyor,
+ama kazandırmıyor. Fark neredeyse tamamen maliyetten geliyor: pip
+cinsinden maliyet üç dilimde de birbirine yakın, R cinsinden ise dar stopta geniş stopun yaklaşık üç katı. Tablo bir
+seçim kuralı değildir: geniş stoplu işlemleri ayıklamak bir kuralı kazandırmaz, yalnız maliyetin nerede ağırlaştığını
+gösterir. Pratik kural: **stop,
+maliyetinizin en az birkaç katı uzakta olmalı.** Dar stop "riski küçültmez"; yalnız maliyeti büyütür.
+
+## 3. Kazanma oranına değil, işlem başına net sonuca bakın
+
+İkinci dersin ana sonucu: kazanma oranı stop ve hedefle istediğiniz yere çekilebilir, işlem başına net sonuç
+çekilemez. Bir kuralı değerlendirirken sorulacak tek soru şudur: **maliyet düşüldükten sonra, işlem başına ortalama kaç R
+kazandırıyor?** Kazanma oranı yalnız, kâra geçmek için gereken oranla yan yana yazıldığında bir şey söyler.
+
+## 4. Kaç işlem yeter?
+
+Gerçek bir kenar küçükse, onu şanstan ayırmak çok işlem ister. Aşağıdaki tablo, belli bir sıklıkla ve sürede işlem
+yapan bir kuralın, işlem başına en az ne kadar kazandırması gerektiğini gösteriyor ki sonuç şanstan ayırt edilebilsin:
+
+| Sıklık | 1 yıl | 3 yıl | 5 yıl | 10 yıl |
+| :--- | ---: | ---: | ---: | ---: |
+| Günde bir işlem | 0,19 | 0,11 | 0,08 | 0,06 |
+| Haftada bir işlem | 0,41 | 0,24 | 0,18 | 0,13 |
+| Ayda bir işlem | 0,86 | 0,49 | 0,38 | 0,27 |
+
+_Hücre: o sıklık ve sürede sıfırdan ayırt edilebilecek en küçük kenar, R / işlem. İşlem sonuçlarının oynaklığı serinin ölçülen değeri (1,19 R); %80 olasılıkla, tek yönlü %5 düzeyinde._
+
+Günde bir işlem yapan bir kural, bir yıllık kayıtla ancak işlem başına 0,19 R'lik
+bir kenarı gösterebilir; ayda bir işlem yapan bir kural için bu eşik 0,86 R.
+Bu serideki kuralların maliyetten önceki ortalama kenarı işlem başına +0,014 R; tablonun
+en küçük hücresinin bile çok altında.
+
+## 5. Ayarları önceden yazın, sonra bakın
+
+Bir kuralı denerken en kolay yanılgı, çok sayıda ayarı deneyip en iyisini seçmektir. Stop ve hedef dersinde bunu ölçtük: 2018–2023
+döneminde en iyi çıkan 20 ayar o dönemde işlem başına +0,27 R kazandırıyordu,
+2024 →'de ortalama −0,22 R kaybettirdi.
+Doğru sıra şudur: kuralı, stopu, hedefi, saatleri ve "işe yarıyor" demenin şartını **sonuca bakmadan** yazın; sonra bir
+kez sınayın. Sonucu gördükten sonra değiştirdiğiniz her ayar, sınamayı biraz daha az güvenilir yapar.
+
+## 6. Adayları ileriye dönük izleyin
+
+Serinin en belirgin adayı GBP/USD'de Londra fiksingi momentumunun ay sonu işlemleri (birinci ders); ikincisi başarısız
+haber kırılımında süreyle çıkış (beşinci ders). Birincisinin kuralı basit:
+ayın son iş günü Londra 15:50–15:55 mumunun (TSİ İngiltere yaz saatinde 17:50–17:55, kış saatinde 18:50–18:55) yönünde Londra 15:55'te
+(TSİ İngiltere yaz saatinde 17:55, kış saatinde 18:55) girilir, Londra 16:00'da (TSİ İngiltere yaz saatinde 18:00, kış saatinde 19:00) çıkılır. Bu alt küme sonuçlar
+görüldükten sonra seçildiği için geçmiş veri onu kanıtlayamaz. Geriye tek dürüst yol kalıyor: kuralı bugünden itibaren
+değiştirmeden izlemek.
+
+Bunun ne kadar süreceği de hesaplanabilir. Ayda bir işlemle, ölçülen kenar (+0,33 R)
+gerçek olsa bile onu güvenilir biçimde göstermek yaklaşık 7 yıl sürer;
+gerçek kenar bunun yarısıysa yaklaşık 29 yıl. Tek bir paritede ayda bir işlem,
+kısa sürede hüküm verecek bir sınama değildir.
+
+## Kontrol listesi
+
+Bir gün içi FX kuralını kullanmadan önce:
+
+1. **Maliyet.** Paritenin makasını ve kaymasını pip olarak biliyor musunuz? Sınama o maliyetle mi yapıldı?
+2. **Stop.** Stop, maliyetin en az birkaç katı uzakta mı?
+3. **Net sonuç.** İşlem başına sonuç maliyetten sonra artı mı? Kazanma oranına değil, buna bakın.
+4. **Örneklem dışı.** Sonuç, kuralın ayarlarını seçerken bakılmamış bir dönemde de artı mı?
+5. **İşlem sayısı.** Kayıt, o büyüklükte bir kenarı şanstan ayıracak kadar uzun mu?
+6. **Önceden yazım.** Kural, stop, hedef ve başarı şartı sonuca bakmadan mı yazıldı?
+7. **Kaynak.** Kenarın bir sebebi var mı: belli bir saatte tekrar eden bir akış, bir haber, bir maliyet avantajı?
+
+Bu serideki kuralların hiçbiri, dört paritenin hiçbirinde, üçüncü maddeyi güvenilir biçimde geçmedi. Listeyi geçen bir kural bulursanız, onu da önce küçük
+bir tutarla ve yazılı kurallarla izleyin.
+
+Bu serinin ayrıntılı backtest notları — her kuralın tam tanımı, parametre ızgaraları, koşul analizleri ve yöntem —
+[arşivdeki dokuz derste](/arastirma/fx-gunici-giris/) duruyor.

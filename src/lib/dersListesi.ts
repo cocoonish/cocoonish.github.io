@@ -54,9 +54,12 @@ export async function dersleriTopla(): Promise<{
   gruplar: DersGrupKaydi[];
   toplam: DersToplami;
 }> {
-  const ham = await getCollection('arastirma');
+  const hepsi = await getCollection('arastirma');
 
-  const baslikHaritasi = new Map(ham.map((e) => [e.id, e.data.title]));
+  // Ön koşul başlıkları bütün derslerden; listeler, gruplar ve toplamlar yalnız arşivde OLMAYANLARDAN.
+  // Arşivdeki ders listede görünmez, adresi açık kalır (bir dersin yerini kısa bir seri aldığında).
+  const baslikHaritasi = new Map(hepsi.map((e) => [e.id, e.data.title]));
+  const ham = hepsi.filter((e) => e.data.durum !== 'arsiv');
 
   const dersler: DersKaydi[] = ham.map((e) => ({
     slug: e.id,
