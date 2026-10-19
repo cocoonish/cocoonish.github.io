@@ -1,0 +1,1330 @@
+---
+title: 'FX Gün İçi Stratejiler 9: Neden Başarısız Oluyorlar — Maliyet, Şans ve Kullanılabilmenin Şartları'
+description: "Serinin 22 kuralı maliyetten sonra neden kaybediyor ve bir gün içi kuralın kullanılabilir sayılması için neyin ölçülmüş olması gerekiyor: isabet ile başabaş isabeti, kaybın yön, zamanlama ve maliyet paylarına ayrışımı, R'nin ölçeği, bir örneklemden ötekine taşınan şey, şansın ve seçimin payı, sık önerilen kurtarma yolları, kuralın kaldırabildiği en yüksek maliyet, ay sonu fiksingi ve ileriye dönük bir sınamanın gücü."
+pubDate: 2026-10-19
+tags: ['fx', 'gun-ici', 'backtest', 'strateji', 'ders']
+durum: 'aktif'
+kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · önceden kayıt · akademik literatür'
+ozet: "Kurallar kaybediyor, çünkü maliyetten önceki yön ve zamanlama bilgisi işlem başına yalnız +0,014 R ve ödenen maliyet 0,180 R; bir örneklemden ötekine taşınan şey kenar değil, maliyetin büyüklüğü. Ders bunun nasıl ölçüldüğünü ve bir kuralın kullanılabilir sayılması için hangi üç şartın birlikte gerektiğini anlatır: kuralın kaldırabildiği maliyetin ödenen maliyetin üstünde olması, kenarın bir kaynağa dayanması ve bunun görülmemiş veride, gücü önceden hesaplanmış bir sınamayla gösterilmesi."
+seviye: 'ileri'
+onkosul:
+  - fx-gunici-giris
+  - fx-gunici-karsilastirma
+  - fx-gunici-metodoloji
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+
+Önceki sekiz ders 22 kuralı 88 kural–parite
+bileşiminde ölçtü. Önceden kayıtlı hüküm kuralına göre sonuç, serinin birincil penceresinde (2024 →)
+0 çalışıyor, 6 zayıf ve
+82 çalışmıyor; ön kaydın istediği bütün dönemde 0
+çalışıyor, 5 zayıf ve 83 çalışmıyor.
+Bu ders iki soru sorar. Birincisi, kurallar neden kaybediyor? İkincisi, bir gün içi kuralın kullanılabilir sayılması
+için neyin ölçülmüş olması gerekir? İkinci sorunun cevabı bir tavsiye değildir. Ölçülebilir şartlardan ve bir sınama
+planından oluşur.
+
+Kısa cevap üç parçadır. **Maliyet.** Maliyetten önceki yön ve zamanlama bilgisi işlem başına yalnız
++0,014 R ve sıfırdan ayırt edilemiyor; ödenen maliyet 0,180
+R. Maliyetin 0,078 R'si verinin ölçülmüş bid/ask makası,
+0,102 R'si modelin varsaydığı kaymadır: dolum başına
+0,5 pip, haber penceresinde ek 1,0 pip. Sayılar örneklem dışındaki
+(2024 →) 84 bileşimin ortalamasıdır: N4 başarısız
+kuralının 4 bileşimi dışarıda, çünkü örneklem dışında
+20 işlemden azı var. **Taşınma.** Bir örneklemden ötekine
+taşınan şey kenar değil, maliyetin büyüklüğüdür: kuralların örneklem içi ve dışı sırası maliyette
+0,95, brütte 0,18
+korelasyonla taşınıyor. **Şart.** Maliyeti düşürmek gerekli ama yeterli değil, belli bir akışa dayanmak da gerekli ama
+yeterli değil. Serinin tek adayı ay sonu fiksingidir; dürüst sınaması görülmemiş veride ve gücü önceden hesaplanmış
+bir planla yapılır. Bu seride o sınama yapılmadı.
+
+Hükmün kaymaya duyarlılığı aynı yerde söylenmeli, çünkü maliyetin büyük kısmı bir varsayımdır. Örneklem dışında
+88 bileşimin yalnız makasla (kayma ve haber kayması sıfır)
+25 tanesi, temel kayma sıfırken (haber kayması yerinde)
+24 tanesi, temel senaryoda 6
+tanesi net artı. Bu 88 bileşimde ortalama maliyet içinde varsayılan
+kaymanın payı %58.
+Kayma hiç olmasaydı da bileşimlerin çoğu eksi kalırdı;
+yine de kaymanın gerçek büyüklüğü bu verinin ölçemediği bir şeydir (metodoloji dersi, "Ölçülmeyenler").
+
+### Bu dersteki sayıların dört türü
+
+Dersin sayıları dört türdendir ve her tablonun notu türünü yazar.
+
+- **Hüküm.** Önceden kayıtlı kuralla, sonuç görülmeden yazılmış ölçütlerle verilen sonuç: "çalışıyor", "zayıf",
+  "çalışmıyor". Bu derste yeni hüküm yoktur; hükümler karşılaştırma dersindekilerdir.
+- **Betimleme.** Bu dersin yeni ölçüleri. İlk sonuçların görüldüğü an 16.10.2026 10:23 UTC = TSİ 13:23; bu dersin bütün yeni
+  sayıları o andan sonra, iki pencere de görülmüşken kuruldu. Hiçbiri bir hükmü değiştirmez. Görülmüş pencerede kurulan bir
+  süzgeç, ayrıştırma ya da sıralama örneklem dışı sınama sayılmaz.
+- **Literatür.** Yayımlanmış çalışmaların bulguları, kaynağıyla. Her biri kaynağın metnine karşı doğrulandı. Derginin
+  kendi metni ya da özeti açılamadığında kullanılan sürüm (yazarın çalışma metni, kabul edilmiş metin, yayım öncesi
+  sürüm, başka bir sürümün özeti, üçüncü taraf bir sitedeki kopya) kaynakçada künyenin yanında yazılıdır. Doğrulanamayan
+  derse girmedi.
+- **Hipotez.** Ölçülmemiş ama ölçülebilir bir iddia. Adıyla "hipotez" diye yazılır.
+
+Ders üç kısımdır. Önce kuralların neden kaybettiği: beklentinin aritmetiği, kaybın ayrışımı ve ölçek. Sonra neden iyi
+göründükleri: maliyetten önceki sonuç, şansın ve seçimin payı, geriye bakan grafiğin görünüşü. En sonda hangi şartla
+kullanılabilecekleri: sık önerilen kurtarma yolları, kenarın kaynakları, yürütme, akış ve sınama şartları. Kapanışta
+bir kontrol listesi var.
+
+## Beklentinin aritmetiği
+
+Bir kuralın işlem başına beklentisi üç sayıdan kurulur: isabet $p$ (sonucu artı işlemlerin payı; sıfır sonuç kayıp
+sayılır), ortalama kazanç $\bar W$ ve ortalama kayıp $\bar L$ (eksi bir sayı). Hepsi R birimindedir:
+
+$$
+\begin{aligned}
+E &= p\,\bar W + (1-p)\,\bar L \\
+  &= (p - p^{*})\,\big(\bar W + |\bar L|\big), \\
+p^{*} &= \frac{|\bar L|}{\bar W + |\bar L|}.
+\end{aligned}
+$$
+
+$p^{*}$ **başabaş isabetidir**: isabet ona eşitse beklenti sıfırdır. İkinci yazım beklentiyi iki çarpana ayırır. Birinci
+çarpan isabetin başabaşa uzaklığıdır ("açık"); işareti beklentinin işaretidir. İkinci çarpan kazanç ile kaybın
+büyüklüklerinin toplamıdır ve bir puanlık isabetin değerini verir: $\partial E / \partial p = \bar W + |\bar L|$. İsabet
+tek başına bir şey söylemez. Yüksek isabetli bir kural, kazançları küçükse başabaşın altında kalabilir; düşük isabetli
+bir kural, kazançları büyükse üstünde kalabilir. Sorulacak soru "isabet kaç" değil, "isabet başabaşın ne kadar
+üstünde" sorusudur.
+
+Maliyet bu iki çarpana iki ayrı yoldan girer. Bir işlemin net sonucu, orta fiyattan orta fiyata ölçülen brüt
+sonucundan maliyetin R karşılığı kadar küçüktür: $r = r_{\text{brüt}} - c/R$. Burada $c$ gidiş-dönüş maliyeti ve $R$
+girişten stopa uzaklık, ikisi de pip cinsinden. Birinci yol başabaşı yükseltmektir: kazançlar $c/R$ kadar küçülür,
+kayıplar o kadar büyür, $p^{*}$ yukarı çıkar. Bu derste bu farka $\Delta p^{*} = p^{*}_{\text{net}} - p^{*}_{\text{brüt}}$
+denir. İkinci yol isabeti düşürmektir: orta fiyatta küçük bir artıyla kapanan işlem makastan sonra eksiye geçer. Bu fark
+$\Delta p = p_{\text{brüt}} - p_{\text{net}}$ olarak yazılır. Açık iki yoldan birden küçülür:
+
+$$
+p - p^{*} = \big(p_{\text{brüt}} - p^{*}_{\text{brüt}}\big) - \Delta p^{*} - \Delta p .
+$$
+
+Maliyetin R karşılığı işlem işlem değişir, çünkü $R$ değişir. Ortalaması $c \cdot E[1/R]$ olur ve Jensen eşitsizliğinden
+$E[1/R] \ge 1 / E[R]$ gelir. Bu yüzden riskleri farklı işlemlerden oluşan bir kuralda maliyeti ortalama riske göre
+hesaplamak onu küçük gösterir: stopu dar işlemler maliyetin orantısız payını taşır. Bunun ölçülmüş hâli ölçek
+bölümündedir.
+
+Son bir teori notu, bu dersin geri kalanının arkasında durur. Orta fiyat bir martingalse, yani yarının beklenen fiyatı
+bugünün fiyatıysa, sınırlı her durma kuralı için beklenen fiyat değişimi sıfırdır. Bu, Doob'un opsiyonel durma
+teoremidir. Stop, hedef, zaman çıkışı ve iz süren stop bu teoreme göre brüt beklenti yaratmaz; yalnız isabet ile
+kazanç–kayıp oranını başabaş eğrisi boyunca birbirine karşı takas eder. Simetrik bir rastgele yürüyüşte girişten
+$+a$ uzaklıkta hedef ve $-b$ uzaklıkta stop varsa hedefe önce değme olasılığı $b/(a+b)$ olur. 1R hedef ve 1R stop yarı
+yarıya kazanır, 2R hedef ve 1R stop üçte bir kazanır ve iki durumda da brüt beklenti sıfırdır. Bir çıkış kuralı
+beklentiyi ancak fiyat martingal değilse değiştirir. O zaman da değişikliği yaratan çıkış kuralı değil, fiyatın
+yapısıdır.
+
+<div class="pratik">
+  <span class="etiket">Pratik — beklentinin kuruluşu</span>
+
+**Londra ORB.** Örneklem dışında dört paritenin 2.875 işleminde isabet
+%25,4, ortalama kazanç +2,77 R,
+ortalama kayıp −1,02 R. Başabaş isabeti
+$|\bar L| / (\bar W + |\bar L|)$ = %26,9. Açık
+−1,5 puan; bunu kazanç ve kaybın toplamıyla
+(3,79 R) çarpınca işlem başına
+−0,057 R çıkar. Bu sayı kuralın ölçülmüş net beklentisinin ta kendisidir.
+Kuralın sorunu isabetinin düşük olması değil, isabetinin başabaşın
+1,5 puan altında kalmasıdır.
+
+**Fiksing momentumu.** Orta fiyattan bakıldığında bu kural başabaşın tam üstünde duruyor: brüt isabet
+%48,5, brüt başabaş
+%48,5. Maliyetten sonra isabet
+%29,6, başabaş isabeti
+%56,8. Açığın
+18,9 puanı isabetin düşmesinden,
+8,2 puanı başabaşın yükselmesinden
+geliyor. İsabetin bu
+kadar düşmesinin sebebi kuralın yapısı: işlem beş dakika sürer, ortalama hareket küçüktür ve işlemlerin büyük
+bölümü orta fiyatta sıfıra yakın bir sonuçla kapanır. Bu işlemleri makas eksiye iter.
+
+</div>
+
+Aynı ölçü bütün kurallarda:
+
+<div class="sayi-tablo">
+
+| Kural | İşlem | İsabet | Başabaş isabeti | Açık (puan) | Brüt açık (puan) | Δp* (puan) | Δp (puan) |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| N4 başarısız | 43 | %60,5 | %61,0 | −0,5 | +8,0 | +8,5 | 0,0 |
+| Londra ORB | 2.875 | %25,4 | %26,9 | −1,5 | +2,4 | +3,2 | +0,7 |
+| N2 fade | 266 | %43,2 | %45,1 | −1,9 | +6,2 | +7,3 | +0,8 |
+| Asya aralığı | 1.850 | %48,1 | %51,0 | −2,9 | +1,4 | +3,9 | +0,5 |
+| NY IB 08:00 | 2.628 | %40,3 | %43,7 | −3,4 | +1,6 | +1,9 | +3,1 |
+| NY IB 09:30 | 2.082 | %44,4 | %48,4 | −3,9 | +2,4 | +1,8 | +4,6 |
+| Sıkışma | 2.265 | %34,9 | %39,4 | −4,5 | −0,5 | +2,4 | +1,6 |
+| İç mum | 5.137 | %35,2 | %40,8 | −5,6 | −0,1 | +4,4 | +1,2 |
+| Pivot kırılım | 1.731 | %32,7 | %38,7 | −6,0 | +0,7 | +5,9 | +0,8 |
+| PDH/PDL | 1.708 | %31,3 | %38,2 | −7,0 | −0,1 | +6,3 | +0,5 |
+| Sahte ORB | 1.682 | %44,6 | %51,7 | −7,1 | +2,1 | +9,1 | 0,0 |
+| Sahte PDH/PDL | 934 | %43,3 | %51,3 | −8,0 | +0,9 | +8,3 | +0,6 |
+| Sahte Asya | 1.196 | %43,7 | %51,9 | −8,2 | +1,0 | +9,1 | +0,1 |
+| Gün içi momentum | 2.891 | %42,8 | %51,2 | −8,4 | −1,5 | +2,1 | +4,8 |
+| Pivot dönüş | 1.394 | %19,4 | %28,1 | −8,8 | +0,4 | +8,9 | +0,3 |
+| VWAP çekilme | 1.598 | %29,5 | %39,2 | −9,8 | +3,2 | +12,1 | +0,9 |
+| N3 straddle | 433 | %41,8 | %51,6 | −9,8 | −3,7 | +4,5 | +1,6 |
+| N5 devam | 251 | %34,3 | %44,6 | −10,3 | −1,1 | +9,2 | 0,0 |
+| VWAP dönüş | 6.931 | %35,0 | %45,7 | −10,7 | +1,0 | +10,5 | +1,2 |
+| Fiksing dönüşü | 2.886 | %42,5 | %54,1 | −11,6 | +1,0 | +4,2 | +8,3 |
+| N1 kırılım | 429 | %37,5 | %52,4 | −14,9 | −6,6 | +6,8 | +1,4 |
+| Fiksing momentumu | 2.883 | %29,6 | %56,8 | −27,2 | −0,1 | +8,2 | +18,9 |
+
+</div>
+
+_Tür: betimleme. 2024 →, önceden kayıtlı varsayılanlar; dört paritenin işlemleri birlikte. Başabaş isabeti p* = |ortalama kayıp| / (ortalama kazanç + |ortalama kayıp|); açık = isabet − p*, işlem başına beklentinin işaretini taşır. Brüt açık aynı ölçünün orta fiyattan orta fiyata hâli. Δp*: maliyetin başabaş isabetini yükseltmesi (net p* − brüt p*); Δp: maliyetin isabeti düşürmesi (brüt isabet − net isabet). Özdeşlik: açık = brüt açık − Δp* − Δp. Türetilmiş varsayılan: NY IB 08:00 (ön kayıtlı varsayılandan tek boyutu değiştirilerek)._
+
+<GrafikEmbed src="/arastirma/fx-gunici/neden-basabas.html" baslik="İsabet başabaş isabetine ne kadar uzak — maliyetten önce ve sonra" no="01" kaynak="Dukascopy" />
+
+Örneklem dışında 22 kuralın 22
+tanesinde isabet başabaşın altında; açığın medyanı −7,5 puan. Bu cümle
+"22 kuralın net sonucu eksi" cümlesiyle aynı şeyi söyler, çünkü açığın
+işareti beklentinin işaretidir. Bilgi sayımda değil açığın büyüklüğündedir. En küçük açık
+N4 başarısız kuralında, en büyüğü Fiksing momentumu
+kuralında. Orta fiyattan bakıldığında tablo başka bir şey söyler: aynı kuralların yalnız
+8 tanesi başabaşın altında ve brüt açığın medyanı
++0,9 puan. Maliyetsiz oyun yaklaşık adildir. Kayıp maliyetten doğar.
+Bileşim düzeyinde de aynı: 88 bileşimin
+82 tanesinde isabet başabaşın altında. Kalan bileşimler, tanım gereği,
+örneklem dışında net sonucu artı olanlardır.
+
+Maliyetin kendisi işlemden işleme az değişir. Örneklem dışındaki 44.093
+varsayılan işlemde gidiş-dönüş maliyetinin medyanı 1,6 pip; işlemlerin
+onda biri 1,15 pip'ten az, onda biri 2,1
+pip'ten çok öder. Maliyetin R karşılığı ise işlemin riskine göre değişir: maliyetin R'si ile $1/R$ arasındaki
+korelasyon 0,91 ve doğrunun eğimi
+1,53 pip. Bu eğim, serinin işlem başına etkin gidiş-dönüş maliyetidir.
+İşlemlerin medyan riski 11,5 pip; medyan maliyetin medyan riske
+oranı %14.
+
+Hesabın son parçası kaybın büyüklüğüdür. Kayıp 1 R'de durmaz. Kaydedilmiş bütün işlemlerde (her kuralın her paritedeki
+varsayılanı ve seçileni, bütün dönem) sert stopla çıkan 77.649 işlemin medyanı −1,04 R
+(en kötüsü −1,81 R): stop emri tetiklenince makası ve kaymayı da öder.
+Kapanış stopuyla çıkan 16.241 işlemde medyan
+−1,43 R; −2 R'nin ötesinde kapananların payı
+%22, çünkü stop yalnız mum kapanışında sorulur ve mum
+stopun ötesinde kapanabilir. Boşlukla dolan stopta medyan
+−1,09 R. Ortalama kayıp −1'in altına indikçe başabaş isabeti
+yükselir; kuralın yazılı stopu ile ödenen kayıp aynı şey değildir.
+
+**Alıştırma 1.** Asya aralığı kırılımının örneklem dışı havuzunda isabet
+%48,1, ortalama kazanç +0,93 R,
+ortalama kayıp −0,97 R. Başabaş isabeti, açık ve işlem başına beklenti
+nedir? İsabet bir puan yüksek olsaydı beklenti ne kadar değişirdi?
+
+<details>
+<summary>Çözüm</summary>
+
+Kazanç ile kaybın büyüklüklerinin toplamı 1,90 R. Başabaş isabeti
+kaybın büyüklüğünün bu toplama oranıdır: 0,97 /
+1,90 = %51,0
+(yuvarlanmamış değerlerle). Açık −2,9 puan. Beklenti açık ile
+kazanç–kayıp toplamının çarpımıdır:
+−0,056 R
+(yuvarlanmamış değerlerle); tablodaki ölçülmüş değer −0,056 R.
+
+Bir puanlık isabet beklentiye kazanç–kayıp toplamının yüzde birini ekler:
+0,019 R. Kuralın açığı kapanmak için
+2,9 puanlık bir isabet artışı
+ister.
+
+</details>
+
+## Kaybın ayrışımı
+
+Beklentinin aritmetiği kaybın ne kadar olduğunu söyler, nereden geldiğini söylemez. Bir işlemin net sonucunu üç parçaya
+ayırmak mümkün: yönü doğru seçmenin payı, işlemin açıldığı ve kapandığı anların payı ve maliyet. Ayırmanın aracı **ayna
+işlemdir**: gerçek işlemle aynı dakikada ters yönde açılan, stopu ve hedefi girişe aynı R uzaklığında duran, planlı
+çıkışını aynı dakikada yapan işlem. Ayna, rastgele yön sınamasının ters yönlü yarısıdır (karşılaştırma dersi, "Yön mü,
+zamanlama mı?").
+
+Yön payına $y$, zamanlama payına $z$, maliyete $c$ denirse:
+
+$$
+\begin{aligned}
+r &= y + z - c, \\
+r_{\text{ayna}} &= -y + z - c, \\
+y &= \tfrac{1}{2}\,\big(r - r_{\text{ayna}}\big), \\
+z &= \tfrac{1}{2}\,\big(r + r_{\text{ayna}}\big) + c .
+\end{aligned}
+$$
+
+$y$, yön değişince işaret değiştiren kısımdır: kural yönü yazı turadan iyi seçiyorsa artıdır. $z$, iki yönde de aynı
+kalan brüt kısımdır: girişin ve çıkışın zamanlaması, stop ile hedefin fiyatın yoluna verdiği tepki. Stopu ve hedefi
+olmayan, yalnız zamanla çıkan bir kuralda aynanın brüt sonucu gerçek işleminkinin tam tersidir ve $z$ sıfırdır. $c$
+makas ile kaymadır. İki payın toplamı $y + z$ işlemin orta fiyattan ölçülen brüt sonucudur.
+
+Ayrışım bir varsayımla kurulur: aynanın maliyeti gerçek işleminkine eşit sayılır. Hedefli kurallarda bu tam doğru
+değildir. Gerçek işlemin stopu bir piyasa emridir ve kayma öder; aynanın aynı seviyedeki çıkışı bir hedef emridir ve
+ödemez. O fark $z$'nin içine karışır. Bu yüzden $z$ bir kenar ölçüsü gibi okunmaz; ayrışımın asıl bilgisi $y$ ile
+$c$'nin kıyasıdır. Ayrışımın bir iç tutarlılık sınaması da var: rastgele yön dağılımının ortalaması tanım gereği gerçek
+işlem ile aynanın ortalamasıdır ve ölçülen en büyük fark 0,0067 R. Ayna,
+örneklem dışında en az 20 işlemi olan
+84 bileşimde kuruldu; kurulamayanlar tablonun notunda.
+
+Örneklem dışında 84 bileşimin ortalaması: yön payı
++0,004 R, zamanlama payı +0,010 R, maliyet
+0,180 R. Yön ile zamanlama birlikte +0,014 R
+ediyor: dersin başında "maliyetten önceki yön ve zamanlama bilgisi" denen sayı budur. Maliyetin
+0,078 R'si makas, 0,102 R'si kayma;
+pip olarak 0,67 ve 1,09,
+toplam 1,75 pip. Medyanlar aynı tabloyu verir: yön payı
++0,006, zamanlama payı +0,0003, maliyet
+0,152 R.
+
+Yön payının maliyetten büyük olduğu bileşim yalnız 2. Yön ile zamanlama birlikte
+maliyeti 4 bileşimde aşıyor ve bu sayı, aynası kurulan
+84 bileşim içinde örneklem dışında net sonucu artı olanların
+sayısıdır, çünkü $y + z - c$ net sonucun
+kendisidir. Aynası kurulamayan 4 bileşimin
+2 tanesi de net artı; dersin başındaki temel senaryonun
+6 net artı bileşimi bu ikisinin
+toplamıdır.
+
+Ayna da kaybediyor. 84 bileşimin 80
+tanesinde aynanın sonucu eksi ve 77 tanesinde gerçek işlem ile ayna
+birlikte eksi; bütün dönemde
+88 bileşimin hepsinde aynanın sonucu eksi. Sebep aritmetiktir: ayna aynı maliyeti öder ve yön payının işaretini çevirir, yani
+$r_{\text{ayna}} = r - 2y$. Yön payı küçük olduğu için kuralın tersi de kuralın kendisi gibi maliyete kaybeder; yön payı
+artı olan bir kuralda tersi daha da kötüdür.
+
+<div class="sayi-tablo">
+
+| Kural | İşlem | Yön payı | Zamanlama payı | Makas | Kayma | Net |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| N2 fade | 266 | +0,098 | +0,040 | −0,048 | −0,133 | −0,044 |
+| NY IB 09:30 | 2.082 | +0,016 | +0,014 | −0,035 | −0,045 | −0,050 |
+| Asya aralığı | 1.850 | +0,027 | 0,000 | −0,046 | −0,036 | −0,056 |
+| Londra ORB | 2.875 | +0,058 | +0,031 | −0,058 | −0,088 | −0,057 |
+| NY IB 08:00 | 2.628 | +0,010 | +0,017 | −0,037 | −0,048 | −0,059 |
+| Sıkışma | 2.265 | −0,031 | +0,021 | −0,037 | −0,055 | −0,103 |
+| İç mum | 5.137 | 0,000 | −0,001 | −0,063 | −0,068 | −0,133 |
+| Gün içi momentum ‡ | 2.891 | −0,024 | 0,000 | −0,044 | −0,069 | −0,138 |
+| Sahte ORB | 1.682 | +0,037 | +0,003 | −0,082 | −0,105 | −0,146 |
+| Pivot kırılım | 1.731 | −0,013 | +0,032 | −0,092 | −0,083 | −0,156 |
+| Sahte PDH/PDL | 934 | +0,032 | −0,015 | −0,101 | −0,076 | −0,159 |
+| N3 straddle | 433 | −0,064 | +0,005 | −0,025 | −0,078 | −0,162 |
+| Sahte Asya | 1.196 | +0,012 | +0,007 | −0,099 | −0,088 | −0,168 |
+| Fiksing dönüşü ‡ | 2.886 | +0,015 | 0,000 | −0,071 | −0,119 | −0,176 |
+| PDH/PDL | 1.708 | −0,035 | +0,031 | −0,081 | −0,103 | −0,187 |
+| VWAP dönüş | 6.931 | +0,030 | −0,009 | −0,130 | −0,138 | −0,247 |
+| N5 devam | 251 | −0,037 | +0,010 | −0,083 | −0,145 | −0,255 |
+| N1 kırılım | 429 | −0,105 | −0,007 | −0,024 | −0,127 | −0,262 |
+| VWAP çekilme | 1.598 | +0,057 | +0,026 | −0,187 | −0,168 | −0,272 |
+| Fiksing momentumu ‡ | 2.883 | −0,001 | 0,000 | −0,111 | −0,187 | −0,299 |
+| Pivot dönüş | 1.394 | +0,024 | −0,009 | −0,178 | −0,185 | −0,348 |
+
+</div>
+
+_Tür: betimleme. 2024 →; kural başına paritelerin işlem sayısıyla ağırlıklı ortalaması, R / işlem. Net = yön payı + zamanlama payı − makas − kayma (makas ve kayma tabloda eksi işaretle). Makas ölçülmüş bid/ask makasıdır, kayma modelin dolum başına varsaydığı maliyet. Tabloda yok: N4 başarısız (paritelerinin hepsinde örneklem dışında 20 işlemden az; ayna kurulmaz). ‡ Stopsuz kural: R girişteki ATR(14), bir risk değil ölçek birimi. Türetilmiş varsayılan: NY IB 08:00 (ön kayıtlı varsayılandan tek boyutu değiştirilerek)._
+
+<GrafikEmbed src="/arastirma/fx-gunici/neden-anatomi.html" baslik="Kaybın anatomisi — yön, zamanlama ve maliyet" no="02" kaynak="Dukascopy" />
+
+Tablo kural kural aynı şeyi söylüyor: yön ile zamanlama paylarının toplamı hiçbir kuralda maliyete
+ulaşmıyor. 2024 → penceresinde yön payı fade dersinin altı kuralının hepsinde artı (bütün dönemde dördünde), seans kırılımları dersinin dört kuralının hepsinde artı (bütün dönemde üçünde) ve yapı kırılımları dersinin dört kuralının hiçbirinde artı (bütün dönemde ikisinde). Geri dönüşe bahis giren fade kuralları ile devama bahis giren seans kırılımları aynı pencerede birlikte artı yön payı taşıyor; tablo bu yüzden gün içi fiyatın devam mı geri dönüş mü eğiliminde olduğunu ayırmaz. Yön payının en büyük olduğu kural N2 fade (266 işlem): +0,098 R, maliyeti 0,182 R; yön payı maliyetin %54 kadarını karşılıyor. Bu bir
+betimlemedir, aile hükmü değil: her kuralın yön payı kendi tablosunda, kendi aralığıyla okunur ve en büyüğü bile
+maliyeti karşılamıyor.
+
+İki haber kuralı bu ayrışımın ders kitabı örneğidir. N1 ilk haber mumunun yönünde girer, N2 tersine (yalnız büyük ilk
+hareketlerde ve bir teyit mumundan sonra). Örneklem dışında N1'in yön payı −0,105 R,
+N2'ninki +0,098 R: ilk mumun yönü bu pencerede devam etmekten çok geri döndü.
+Bütün dönemde işaretler aynı (N1 −0,079, N2 +0,054 R),
+ve iki pencerede de N2'nin artı yön payı kendi maliyetinin altında kalıyor.
+Bu pencerede haberin ilk dakikalarının tersine girmek doğru yönü seçmekti, ama o yönün değeri yine maliyete yetmedi.
+
+Yön payının değerli olup olmadığını rastgele yön sınaması da ayrıca söylüyor (karşılaştırma dersi).
+Örneklem dışında 84 bileşimin 4 tanesinde gerçek işlem rastgele yön dağılımının üst %5'inde; hiçbir kenarın olmadığı bir dünyada beklenen yaklaşık 4; bunların 2 tanesi net artı (Londra ORB USD/JPY ve Asya aralığı USD/JPY), 2 tanesinde brüt sonuç artı, net sonuç eksi. Bütün dönemde bu sayı 88 bileşimde 11 (beklenen 4,4); bunların biri net artı (N4 başarısız AUD/USD), 10 tanesinde brüt sonuç artı, net sonuç eksi. Yön seçiminin değeri sıfırdan ayırt edilebildiği bileşimlerin çoğunda maliyetten küçük; net artı kalan istisnaların hükmü karşılaştırma dersindedir.
+
+**Alıştırma 2.** Londra ORB'nin örneklem dışı havuzunda (dört paritenin işlemleri, işlem sayısıyla ağırlıklı) net sonuç
+−0,057 R, aynanın sonucu −0,173 R ve
+maliyet 0,146 R. Yön ve zamanlama paylarını bulun. Kuralı tersine çevirmek
+(her işlemde ters yönde girmek) işlem başına ne verirdi?
+
+<details>
+<summary>Çözüm</summary>
+
+Yön payı net ile aynanın farkının yarısıdır: (−0,057 −
+(−0,173)) / 2 = +0,058 R. Zamanlama
+payı ikisinin ortalamasına maliyetin eklenmesidir: (−0,057 +
+(−0,173)) / 2 + 0,146 =
++0,031 R. Kuralı tersine çevirmek aynanın kendisidir:
+−0,173 R. Kuralın kendisinden de kötü, çünkü yön payı artı ve ters çevrilince
+iki kez kaybedilir: $r - 2y$.
+
+</details>
+
+## Ölçek: maliyet R içinde ne kadar yer tutar
+
+Maliyet pip cinsinden ödenir, sonuç R cinsinden ölçülür. Bir işlemin maliyetinin R karşılığı
+$c_R = c_{\text{pip}} / R_{\text{pip}}$'dir: aynı makas, stopu yakın bir işlemde riskin büyük, stopu uzak bir işlemde
+küçük bir payıdır. Risk büyüdükçe $c_R$ sıfıra yaklaşır. Bunun pratik anlamı pozisyon büyüklüğündedir: her işlemde
+hesap para birimi cinsinden aynı risk alınırsa (1 R sabit), stopu iki kat uzak bir işlem yarım nominalle açılır ve
+makas para olarak yarıya iner. Sorulacak soru, riski büyüyen işlemlerin brüt sonucunun da aynı oranda korunup
+korunmadığıdır.
+
+Her bileşimin işlemleri kendi içinde riske göre üçe bölündü (dar, orta, geniş):
+
+<div class="sayi-tablo">
+
+| Üçte bir | Medyan risk (pip) | Brüt | Maliyet | Net | Maliyet (pip) |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| Dar | 7,1 | +0,038 | 0,238 | −0,246 | 1,64 |
+| Orta | 11,9 | +0,007 | 0,133 | −0,151 | 1,65 |
+| Geniş | 19,8 | +0,003 | 0,080 | −0,092 | 1,76 |
+
+</div>
+
+_Tür: betimleme. Örneklem dışı (2024 →), önceden kayıtlı varsayılanlar; R / işlem, hücre bileşimlerin medyanı. Her
+bileşimin işlemleri riske (stop uzaklığının pip karşılığı) göre sıralanıp üçe bölündü; bileşimde en az
+30 işlem (84 bileşim). Dilim
+sınırları pencerenin kendi işlemlerinden alındı ve işlem açılırken bilinmez: tablo bir süzgeç değil, maliyetin nerede
+yoğunlaştığının betimlemesidir. Hücreler medyan olduğu için toplanmaz: Net sütunu Brüt eksi Maliyet değildir._
+
+Net sonuç geniş üçte birde dar üçte birden iyi: 84 bileşimin
+69 tanesinde. Maliyetin R karşılığı geniş üçte birde hiçbir bileşimde
+dardan büyük değil, oysa pip cinsinden maliyet üç dilimde
+neredeyse aynı. Brütte tablo tersine döner: geniş üçte birin brüt sonucu dar üçte birinkini yalnız
+31 bileşimde aşıyor.
+Net sonucu iyileştiren şey riski büyük işlemlerin daha iyi bir yön ya da zamanlama taşıması değil; aynı makasın daha
+büyük bir riske bölünmesidir. Bütün dönemde (88 bileşim) aynı sayımlar
+78 (net), 32
+(brüt) ve 0 (maliyet).
+
+Aynı soru parametre ızgarasında da sorulabilir: öbür bütün parametreleri aynı kalıp yalnız bir parametresi değişen
+kombinasyon çiftleri (iki ucunda da örneklem dışında en az 100 işlem). Zaman dilimi 5
+dakikadan 60 dakikaya çıkan 1.430 çiftte örneklem dışı net R çiftlerin
+%91 kadarında artıyor (medyan fark +0,165 R),
+işlem başına net pip ise yalnız %51 kadarında (medyan fark
++0,01 pip). Stopun aralığın ortasından karşı ucuna taşındığı
+1.267 çiftte aynı tablo: net R çiftlerin
+%86 kadarında, net pip %51
+kadarında artıyor. Daha geniş bir mum ya da daha uzak bir stop R'yi büyütür, maliyetin R'deki payını küçültür; işlem
+başına kazanılan pip ise yazı tura gibi davranır. Izgaranın bütün satırlarında örneklem dışı net R'nin medyanı 5
+dakikalık mumlarda −0,242, 15 dakikalıkta −0,161,
+60 dakikalıkta −0,116 R: hepsi eksi ve mum büyüdükçe sıfıra yaklaşıyor.
+
+<GrafikEmbed src="/arastirma/fx-gunici/neden-olcek.html" baslik="Ölçek — R büyüdükçe maliyetin payı küçülür, brüt büyümez" no="03" kaynak="Dukascopy" />
+
+Çıkış kuralı da aynı hesabın içindedir. Izgarada yalnız hedef türünün değiştiği (1R, 2R, zaman ya da gün sonu)
+1.591 grupta isabet, grubun içinde medyanda
+12,3 puanlık bir aralıkta oynuyor; net R ise yalnız
+0,053 R'lik bir aralıkta (grupların onda birinde aralık
+0,16 R'yi aşıyor). Londra ORB'nin EUR/USD ızgarasında örneklem içinde 1R
+hedefli 32 kombinasyonun isabeti ortalama
+%50,1, 2R hedeflilerin %37,9,
+gün sonunda çıkanların %29,2; net R sırasıyla
+−0,106, −0,108 ve
+−0,078. Beklentinin aritmetiğindeki teorem ölçülmüş hâliyle: çıkış
+kuralı isabet ile kazanç–kayıp oranını birbirine karşı takas eder ve beklentiyi isabetten çok daha az oynatır. Stop
+kuralları üzerine literatürün sonucu bu teoremle çelişmez, ama koşuluyla okunmalıdır. Kaminski ve Lo (2014) stopu,
+birikimli zarar bir eşiğe ulaşınca portföyün maruziyetini azaltan bir politika olarak tanımlar: getiriler bağımsız ve
+aynı dağılımlıysa stopun beklenen getiriye katkısı her zaman eksidir, çünkü portföyü zaman zaman daha yüksek getirili
+varlıktan çıkarır; getirilerde süreklilik (momentum) varsa artı olabilir. Sürüklenmesiz bir fiyatta vazgeçilen getiri
+sıfırdır ve teoremin söylediği de budur. Bu bölüm bir süzgeç önermez. Geniş stop ya da büyük mum maliyetin R içindeki
+payını küçültür, kuralın kenarını değiştirmez.
+
+## Kenar var mıydı
+
+Maliyet her bileşimde aynı yönde çalışıyor; öyleyse kalan soru, maliyetten önce bir kenar olup olmadığıdır. Bunun üç
+ölçüsü var: brüt sonucun anlamlılığı, bileşimler arası farkların ne kadarının gerçek olduğu ve örneklem içinin örneklem
+dışını ne kadar öngördüğü.
+
+**Anlamlılık.** Kenarsız bir dünyada bileşim başına brüt ortalamanın t istatistiği yaklaşık standart normal dağılır:
+ortalaması sıfır, standart sapması bir, mutlak değeri 1,96'yı aşanlar yüzde beş. Örneklem dışında
+88 bileşimde t'nin ortalaması 0,19, standart
+sapması 1,08; mutlak değeri bu sınırı aşan bileşim
+2 (şansın beklediği 4,4), brüt sonucu
+artı olan bileşim 52 (yazı tura sınaması p
+0,11). Örneklem içinde aynı ölçüler daha iyi görünür: ortalama
+0,50, standart sapma 1,30, sınırı aşan
+12 bileşim, brütü artı 57 (p
+&lt; 0,01). Bileşimler aynı günleri paylaştığı için bu p değerleri bilgi içindir.
+
+**Güvenilirlik.** Bileşimlerin brüt ortalamaları birbirinden farklıdır; ama bu farkın bir kısmı yalnız örnekleme
+gürültüsüdür. Gözlenen yayılımın varyansından ortalama örnekleme varyansı çıkarılınca kalan pay, farkların gerçek olan
+kısmıdır:
+
+$$
+\begin{aligned}
+\rho &= \frac{\operatorname{Var}(\hat x) - \overline{\mathrm{SE}^2}}{\operatorname{Var}(\hat x)}, \\
+E\big[x_{\text{dışı}} \mid \hat x_{\text{içi}}\big] &\approx \mu + \rho\,\big(\hat x_{\text{içi}} - \mu\big).
+\end{aligned}
+$$
+
+İkinci ifade büzülmedir: örneklem içinde ortalamadan uzak görünen bir bileşimin gelecekteki beklentisi, aradaki farkın
+yalnız $\rho$ kadarını taşır. Örneklem dışında en az 20 işlemi olan
+84 bileşimde güvenilirlik örneklem içinde 0,44,
+örneklem dışında 0,04. Bütün bileşimler alınınca örneklem dışı tahmin eksiye
+düşüyor (−0,16); güvenilirlik eksi olamayacağı için bu sıfır okunur: o
+pencerede bileşimler arası brüt farkların tamamı örnekleme gürültüsünden ayırt edilemiyor.
+
+**Taşınma.** Örneklem içinin brüt sonucu örneklem dışınınkini ne kadar öngörüyor? Aynı bileşimlerde kesit eğimi
+0,10 (sağlam bir eğim tahmini olan Theil–Sen ile 0,27,
+aralığı −0,04 / 0,59; korelasyon
+0,09, p 0,42): örneklem içinde bir R'lik brüt
+fark örneklem dışında, iki tahmine göre onda bir ile dörtte bir R arasına iniyor ve Theil–Sen aralığı sıfırı
+kapsıyor.
+Bütün bileşimlerde eğim 0,43; farkı dışarıda kalan dört
+bileşim yaratıyor (örneklem dışında az işlem, büyük sonuç). Aynı ölçü maliyette
+1,06: maliyet örneklemden örnekleme neredeyse birebir taşınıyor.
+
+Sıralar aynı şeyi söylüyor. 22 kuralın örneklem içi ve dışı sırası (Spearman) netle
+0,77, maliyetle 0,95, brütle
+0,18 (p 0,43) korelasyonla
+taşınıyor. Bileşim düzeyinde (aynı 84 bileşim) netle
+0,69, maliyetle 0,91, brütle
+0,18 (p 0,10), isabetle
+0,86. Dışarıda kalan
+dört bileşim de katılınca brütle 0,22 (p
+0,042): bu küçük anlamlılığı, eğimde olduğu gibi, az işlemle büyük sonuç
+veren o dört bileşim yaratıyor. Yıldan yıla (8 ardışık yıl
+çiftinin medyanı) netle 0,37, maliyetle
+0,94, brütle 0,15. İsabetin
+sırası taşınıyor, çünkü isabeti büyük ölçüde maliyet ve kuralın iskeleti belirler (beklentinin aritmetiği). Kuralların
+net sırası da taşınıyor ama sebebi kenar değil: ucuz kural ucuz kalıyor. Net sonucun kurallar arası varyansında
+maliyetin payı %71, brütün payı %29
+(örneklem dışı; bütün dönemde %79 ve
+%21; iki payın ortak kısmı eşit bölündü).
+
+<GrafikEmbed src="/arastirma/fx-gunici/neden-kenar.html" baslik="Örneklemden örnekleme ne taşındı — maliyet evet, brüt hayır" no="04" kaynak="Dukascopy" />
+
+**Bütün dönemde görünen, örneklem dışında görünmeyen.** Önceden kayıtlı bootstrap aralığı brütte sıfırın üstünde kalan
+bileşim bütün dönemde 16; kenarsız bir dünyada beklenen
+2,2. Bunların 14 tanesinde
+net sonuç eksi, ve aynı ölçüyü örneklem dışında geçen bileşim 1.
+Bu iki sayı birlikte okunmalı: örneklem dışı pencere kısa. İşlem başına
++0,05 R'lik gerçek bir brüt kenar bile 2024 → penceresinde aralığı sıfırın
+üstüne ancak 0,18 olasılıkla taşır. Örneklem dışında tek bileşimin geçmesi
+kenarın yokluğunun kanıtı değildir; kalıcılığının gösterilemediğinin kanıtıdır.
+
+Yıllara bölünce de aynı tablo çıkıyor. Bileşim × yıl hücrelerinde (792 hücre,
+2018–2026) net sonucu artı olan hücrelerin payı
+%13,8; 36 bileşimin hiçbir yılı artı değil ve en
+iyi bileşim 9 yılın 5 tanesinde artı. Brütte
+hücrelerin %55,9 kadarı artı. 9 yılın en az
+7 tanesinde brütü artı olan bileşim 17; yıllar
+birbirinden bağımsız olsaydı, hücrelerin bu brüt artı payıyla beklenen 14,4.
+Brütü yıldan yıla taşıyan bir yapı görünmüyor.
+
+**Örneklem içinde anlamlı olanlar.** Örneklem içinde brüt t'si 1,96'yı aşan
+11 bileşimin brüt ortalaması örneklem içinde
++0,107, örneklem dışında +0,028 R: küçülme
+%74. 9 tanesi işaretini koruyor,
+hiçbiri örneklem dışında net artı değil. Güvenilirlikten kurulan büzülme bu küçülmeyi önceden söylüyordu: öngörü
++0,056 R, ölçülen +0,028 R, aradaki fark
+ölçünün standart hatasıyla (0,021) ayırt edilemiyor.
+Çok sayıda tahminin en büyükleri gerçek değerlerini büyük olasılıkla abartır (seçim yanlılığı ya da ortalamaya dönüş;
+Efron, 2011); seçilmiş bir sonucun gelecekte ortalamaya doğru dönmesi bir talihsizlik değil, seçimin aritmetiğidir.
+
+Sıralamanın başı da aynı dersi verir. Örneklem dışında işlem başına net sonucu en az eksi olan kural
+N4 başarısız: 43 işlemle −0,009 R
+(22 kural içinde 1. sırada).
+Bu sonucun büyük kısmı tek bir günden geliyor: 18 Eylül 2024 günü kuralın iki işlemi
+USD/JPY'de +6,79 R ve
+AUD/USD'de +4,63 R
+verdi. O gün çıkınca net sonuç −0,288 R ve kural
+20. sıraya iniyor. Küçük örneklemli bir kuralın sıralamadaki yeri çoğu zaman bir
+iki günün eseridir.
+
+**Alıştırma 3.** Örneklem içinde brüt t'si anlamlı bileşimlerin brüt ortalaması +0,107 R,
+bütün bileşimlerinki +0,017 R ve örneklem içi güvenilirlik
+0,44. Bu bileşimlerin örneklem dışı brüt beklentisi ne olmalıydı? Ölçülen
++0,028 R bu öngörüyle çelişiyor mu?
+
+<details>
+<summary>Çözüm</summary>
+
+Büzülmüş beklenti $\mu + \rho(\hat x - \mu)$: 0,017 +
+0,44 × (0,107 −
+0,017) = +0,056 R (yuvarlanmamış
+değerlerle). Ölçülen değerle farkı, ortalamanın standart hatası cinsinden −1,3: iki
+standart hatanın içinde, yani çelişmiyor. Örneklem içinde anlamlı görünen bir brüt kenarın örneklem dışında küçülmesi
+bir sürpriz değil, ölçmeden önce hesaplanabilecek bir beklentiydi.
+
+</details>
+
+## Şans, seçim ve süzgeç
+
+Bir sonucun şans olup olmadığını sormanın doğru yolu, kenarın hiç olmadığı bir dünyada aynı sonucun ne sıklıkla
+çıkacağını hesaplamaktır. Brüt kenar sıfırsa bir bileşimin örneklem dışı net ortalaması, ortalaması maliyetin eksisi
+($-c_i$) ve standart hatası $\mathrm{se}_i$ olan bir normal dağılıma uyar ve bileşimin net artı çıkma olasılığı
+$p_i = \Phi(-c_i / \mathrm{se}_i)$ olur. Net artı bileşimlerin sayısı, olasılıkları farklı bağımsız denemelerin
+toplamıdır (Poisson-binom dağılımı): beklentisi $\sum_i p_i$, varyansı $\sum_i p_i(1-p_i)$. Bileşimler aynı günleri
+paylaşır; beklenen sayı bağımlılıkla değişmez, yalnız dağılım genişler.
+
+Bu taban önceden kayıtlı varsayılanlarda 88 bileşim için
+4,5 net artı bileşim bekliyor (standart sapma
+1,9); gözlenen 6. Kenarsız bir dünyada
+en az bu kadar net artının çıkma olasılığı 0,28. Aralığının alt ucu sıfırın
+üstünde kalan bileşim için taban 0,06; hükmün "çalışıyor" sayısı
+0. Karşı olgu da hesaplanabilir: örneklem içinin brüt sonucu örneklem dışında aynen
+sürseydi beklenen net artı sayısı 8,5 olurdu. Gözlenen sayı iki tabanın
+arasında
+ve şansla açıklanabiliyor.
+
+Izgaradan örneklem içinde seçilen kombinasyonlar için aynı hesap: 86 bileşimde
+beklenen 10,9, gözlenen 11, en az bu
+kadarının şansla çıkma olasılığı 0,54; seçilenlerin örneklem içi brütü sürseydi
+beklenen 34,3. Seçilenlerin tabanı varsayılanlarınkinden yüksek, çünkü
+seçim daha ucuz kombinasyonları seçiyor (aşağıda); gözlenen sayı bu tabandan da ayırt edilemiyor.
+
+<GrafikEmbed src="/arastirma/fx-gunici/neden-sans.html" baslik="Şansın beklediği — kenarsız dünyada kaç bileşim artı çıkardı" no="05" kaynak="Dukascopy" />
+
+**Seçim örneklem dışına ne taşıdı?** Seçilen kombinasyonun varsayılandan ayrı olduğu
+83 bileşimde ortalama, seçilen eksi varsayılan: örneklem içinde net fark
++0,155 R; bunun +0,113 R'si brütten,
++0,041 R'si maliyet tasarrufundan. Örneklem dışında net fark
++0,038 R; brütün katkısı −0,007 R, maliyet
+tasarrufunun katkısı +0,046 R. Seçimin örneklem dışına taşıdığı şey bir brüt
+kenar değil, daha ucuz bir kombinasyondur: seçilenlerin varsayılandan ucuz olma payı
+%82 ve medyan risklerinin varsayılanınkine oranı
+1,52. Ölçek bölümündeki mekanizmanın ta kendisi: daha geniş stop, maliyetin R
+içindeki payını küçültür.
+
+Seçilen kombinasyon, ızgaranın örneklem dışı sıralamasında da iyi tarafta kalıyor: örneklem dışı Sharpe yüzdeliğinin
+medyanı 88, 86 seçimin
+72 tanesi üst yarıda; ızgaranın içinde örneklem içi ve dışı Sharpe
+sırasının korelasyonu (medyan) 0,67. Ama ızgaranın kendisi eksidir:
+seçilenlerin yıllık Sharpe'ının medyanı örneklem içinde −0,12, dışında
+−0,86. Seçilenlerden 11 tanesi
+örneklem dışında net artı; yürüyen pencerede (her yıl yalnız önceki yıllarla yeniden seçim) net artı kalan bileşim
+9. Seçim sayısına göre düzeltilmiş Sharpe olasılığı (deflated Sharpe) 0,95
+eşiğini 86 seçimin
+hiçbirinde geçmiyor (en yükseği
+0,28). 51 bileşimde
+ızgaranın örneklem içindeki en yüksek Sharpe'ı bile sıfır ya da eksi.
+
+Seçim ancak geriye bakarak kurtarılabilir. Izgaranın 6.129 satırının
+543 tanesi örneklem dışında net artı; her bileşimde ızgaranın örneklem dışı
+en iyi satırını seçen biri 88 bileşimin
+35 tanesinde artı bir sonuç gösterebilirdi. Bu bir sonuç değil, görülmüş bir
+pencerede yapılmış bir seçimdir ve tam olarak bu bölümün ölçtüğü yanılgıdır: bir geriye dönük sınamanın en iyi satırı,
+o satırın gelecekte ne vereceği hakkında hiçbir şey söylemez.
+
+Koşul süzgeçleri için aynı soru karşılaştırma dersinde soruldu: örneklem içinde seçilen kovalar
+1.118 sınamanın 115 tanesinde örneklem dışında tuttu, tam tersine seçilen kovalar
+1.120 sınamanın 123 tanesinde; fark şanstan ayırt edilemiyor (McNemar p
+0,74). Yerel tatil günlerini dışlamak da sık önerilen bir süzgeçtir: örneklem
+dışında kuralların işlemlerinden medyanda %4,7 payını atar, işlem başına net
+R'yi medyanda +0,002, en çok +0,018 R
+(Pivot dönüş) değiştirir (bütün dönemde medyanda
++0,004, en çok +0,013 R,
+Pivot dönüş) ve iki
+pencerede de hiçbir kuralı eksiden artıya çevirmez.
+
+**Aile hata oranı.** 88 bileşim, her biri %5 düzeyde sınanınca, hiçbir kenar yokken
+ortalama 4,4 yanlış alarm verir. Sınamaların bir aile olarak
+düşünülmesi gerekir, ve ailenin büyüklüğü sorulan soruya göre değişir:
+
+<div class="sayi-tablo">
+
+| Soru | Ailenin büyüklüğü | Gürültüde beklenen geçen |
+| :--- | ---: | ---: |
+| Hangi kural–parite bileşimi çalışıyor? | 88 | 4,4 |
+| Izgaranın hangi satırı iyi? | 6.129 | 306 |
+| Hangi koşul kovası tutuyor? | 1.118 | 123 |
+| Ay sonu hangi biçimde çalışıyor? | 28 | 1,4 |
+
+</div>
+
+_Tür: betimleme (hesap). Gürültüde beklenen geçen: gerçek etkisi sıfır olan sınamaların ölçütü geçme sayısı. Bileşim,
+ızgara ve ay sonu satırlarında ölçüt %5 düzeyli bir sınama sayıldı; ızgaranın satırları hüküm kuralıyla sınanmaz ve
+"net sonucu artı" bir %5 sınaması değildir, satır yalnız ailenin büyüklüğünü gösterir. Koşul satırının ölçütü ("tuttu")
+%5 düzeyli değildir: gürültüde geçme oranını ters seçim ölçer (1.120 sınamanın
+123 tanesi). Sınamalar bağımsız sayıldı; bağımlılık beklenen sayıyı değiştirmez, dağılımını
+genişletir._
+
+Üç düzeltme yaygındır. **Bonferroni** her sınamayı $\alpha / m$ düzeyinde yapar ve ailede en az bir yanlış alarm
+olasılığını $\alpha$'nın altında tutar. **Holm** aynı güvenceyi daha az kayıpla verir: p değerleri küçükten büyüğe
+dizilir, $k$. sıradaki değer $\alpha / (m - k + 1)$ ile kıyaslanır ve ilk geçemeyen değerde durulur (Holm, 1979).
+**Benjamini–Hochberg** başka bir soruyu denetler: reddedilenlerin içindeki yanlışların beklenen payını (yanlış keşif
+oranı); $k$. sıradaki değer $q \cdot k / m$ ile kıyaslanır ve geçen en büyük $k$'ya kadar hepsi reddedilir (Benjamini ve
+Hochberg, 1995). Teknik işlem kurallarında aynı sorun "veri madenciliği" adıyla incelendi: aynı veri çıkarım ya da
+model seçimi için birden çok kez kullanıldığında iyi bir sonuç yöntemin değerinden değil şanstan gelebilir, ve bir
+kural evreninin en iyisi evrenin büyüklüğü hesaba katılarak sınanmalıdır (White, 2000). Sullivan, Timmermann ve White
+(1999) Brock, Lakonishok ve LeBaron'un 26 kuralını genişletip Dow Jones'un 100 yıllık günlük verisinde bu yöntemle
+sınadı: 1897–1986'da bazı kurallar veri madenciliği düzeltmesinden sonra da kıyası yendi. Sonraki on yılda
+(1987–1996) evrenin o dönemdeki en iyi kuralı bile düzeltmeden sonra kıyası alışılmış anlamlılık düzeylerinde yenemedi:
+en iyi kuralın kıyası yenmemiş olma olasılığı (düzeltilmiş p değeri) 0,12'ye yakındı. Hisse getirilerinin
+kesitini açıklamak için yüzlerce faktörün denendiği literatürde yeni bir faktörün t istatistiğinin 3,0'ı aşması
+önerildi (Harvey, Liu ve Zhu, 2016); eşik o literatürün deneme sayısından türetildi, başka bir aile için ayrıca
+hesaplanır. Seçilmiş en iyi Sharpe'ı deneme sayısına ve getirilerin normal olmamasına göre düzelten ölçü deflated
+Sharpe'tır (Bailey ve López de Prado, 2014). Becerisi olmayan (gerçek Sharpe'ı sıfır) stratejiler arasında parlak
+görünen bir sonuca az sayıda denemeyle ulaşılır: beş yıllık veride kırk beş bağımsız ayar denendiğinde en iyisinin
+örneklem içi Sharpe'ının beklenen değeri 1, örneklem dışındaki 0'dır (Bailey, Borwein, López de Prado ve Zhu, 2014).
+Bu serinin hükme giren savunmaları üçtür: sonuç görülmeden yazılmış kurallar, örneklem dışı pencere ve rastgele yön
+tabanı. Deflated Sharpe raporlanır, hükme girmez; 88 bileşimlik aileye aile
+düzeltmesi uygulanmadı, şansın beklediği sayı bu yüzden yukarıda ayrıca verildi.
+
+**Alıştırma 4.** Kenarsız tabanda beklenen net artı sayısı 4,48, standart
+sapması 1,90; gözlenen 6. Normal
+yaklaşımla (süreklilik düzeltmesiyle) en az bu kadar artının şansla çıkma olasılığı nedir?
+
+<details>
+<summary>Çözüm</summary>
+
+Süreklilik düzeltmesi tam sayılı bir sayımı normal dağılıma yarım birimle bağlar: z = (gözlenen − 0,5 −
+beklenen) / standart sapma = (6 − 0,5 −
+4,48) / 1,90 =
+0,54. Standart normalin bu değerin üstünde kalma olasılığı
+0,30; kesin Poisson-binom dağılımıyla 0,28.
+Gözlenen sayı şansla açıklanabiliyor.
+
+</details>
+
+## Geriye bakan grafik neden iyi görünür
+
+Eksi beklentili bir kuralın geriye dönük grafiği yine de ikna edici görünebilir. Üç mekanizması var: kuyruk, tuzak
+payları ve seçilmiş örnek.
+
+**Kuyruk.** Gün içi kuralların sonucu, az sayıda büyük işlemden gelebilir. Örneklem dışında net sonucu artı kalan altı bileşimin üçünde en iyi bir ya da üç işlem çıkınca sonuç sıfıra ya da eksiye dönüyor; beş tanesi USD/JPY.
+
+<div class="sayi-tablo">
+
+| Kural | Parite | İşlem | Net R | En iyi işlem çıkınca | En iyi üç çıkınca | En iyi işlemin günü | O işlem (R) | Toplam R içindeki payı |
+| :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Londra ORB | USD/JPY | 711 | +0,183 | +0,111 | +0,046 | 01.05.2024 | +51,0 | %39 |
+| Asya aralığı | USD/JPY | 400 | +0,037 | +0,035 | +0,030 | 20.06.2024 | +1,0 | %7 |
+| Sıkışma | USD/JPY | 534 | +0,015 | +0,012 | +0,004 | 112 işlem eşit | +2,0 | — |
+| N2 fade | USD/JPY | 56 | +0,135 | +0,023 | −0,098 | 10.01.2025 | +6,3 | %83 |
+| N4 başarısız | USD/JPY | 12 | +0,354 | −0,231 | −0,389 | 18.09.2024 | +6,8 | %160 |
+| N4 başarısız | AUD/USD | 12 | +0,179 | −0,226 | −0,411 | 18.09.2024 | +4,6 | %216 |
+
+</div>
+
+_Tür: betimleme. 2024 →, önceden kayıtlı varsayılan, işlem başına net R. Toplam R içindeki pay: en iyi işlemin R'si / bileşimin bütün işlemlerinin R toplamı; %100'ün üstündeki pay, öbür işlemlerin toplamının eksi olduğunu söyler. En iyi değeri birden çok işlem paylaşıyorsa tek bir en iyi işlem yoktur._
+
+Bileşimlerin aynı paritede toplanması bir yapının izi de olabilir (o paritenin bu penceredeki oynaklığı), şansın da. Bu
+bir hipotezdir: net artı bileşimlerin sayısı zaten şansın beklediğinden ayırt edilemiyor (şans bölümü).
+
+**Tuzak payları.** Kaybeden işlemlerin bir kısmı önce lehe gider. Örneklem dışında kaybeden işlemlerin en az
+0,5 R lehine gitmiş olma payı kuralların medyanında
+%27; +1,0 R'ye ulaşan
+işlemlerin zararla kapanma payı %20 (Londra ORB'de sırasıyla
+%47 ve %45).
+İki payın paydası farklıdır: birincisi kaybeden işlemler, ikincisi +1,0 R'ye
+ulaşan bütün işlemler. Bu sayılar "çıkışı biraz farklı yapsaydım kazanırdım" hissini doğurur. Kenarsız bir piyasada
+aynı paylar şöyledir: sürüklenmesiz bir rastgele yürüyüşte, −1 R'de stop ve ufukta çıkışla, ufka kadarki oynaklık
+1 ile 4 R
+arasında değişirken kaybedenlerin lehine gitme payı %28 ile
+%56 arasında, +1,0 R'ye
+ulaşanların zararla kapanma payı %6 ile
+%59 arasında. Taban kuralların hedef yapısını taşımaz,
+yalnız büyüklüğün mertebesini verir: tuzak payları bir kenarın izi değil, kenarsız bir piyasada da bu büyüklükte
+beklenir. Çıkış kuralının beklentiyi değiştirmediğini söyleyen teorem (beklentinin
+aritmetiği) bu hissin cevabıdır.
+
+**Seçilmiş örnek.** Okura ulaşan geriye dönük sınamalar seçilmiştir: yayımlanan, paylaşılan, pazarlanan sınama iyi
+sonuç verendir. Yalnız ayakta kalanlar incelendiğinde başarının sürdüğü yanılsaması doğabilir (Brown, Goetzmann,
+Ibbotson ve Ross, 1992). Gün içi işlem yapan bireylerin taban oranları da aynı yöndedir. Tayvan'da 1992–2006 arasında,
+ortalama bir yılda gün içi işlem hacmi yılda 600 bin Tayvan dolarını aşan yaklaşık 277 bin kişinin beşte biri
+ücretlerden (komisyon ve işlem vergisi) sonra artı anormal getiri elde etti; ertesi yıl da işlem maliyetlerinden sonra
+güvenilir biçimde artı anormal getiri elde edenler yalnız önceki yılın en kârlı 4 bin gün içi işlemcisiydi, yani bütün
+gün içi işlemcilerin %1'inden azı (Barber, Lee, Liu ve Odean, 2014); Brezilya'nın hisse senedi vadeli piyasasında 2013–2015 arasında gün içi işleme başlayıp 300 günden uzun
+sürenlerin %97'si para kaybetti (Chague, De-Losso ve Giovannetti, 2019). Kaldıraçlı perakende ürünlerde de
+oran aynı yöndedir: Avrupa Menkul Kıymetler ve Piyasalar Otoritesi, ulusal otoritelerin analizlerine dayanarak
+perakende CFD hesaplarının tipik olarak %74–89'unun para kaybettiğini yazdı (ESMA, 2018); bu oran
+hesaplara aittir, gün içi işlemcilere değil. Bu kaynaklar dersin kurallarına dair bir şey söylemez; bir geriye dönük
+sınamanın arka planındaki taban oranını söyler.
+
+## Sık önerilen kurtarma yolları
+
+Kaybeden bir kural için en sık önerilen yollar şunlardır. Çoğunun bu seride ölçülmüş bir karşılığı var; Tür sütunu
+her satırın ne olduğunu söyler.
+
+<div class="sayi-tablo">
+
+| Öneri | Tür | Bu seride ölçülen | Bölüm |
+| :--- | :--- | :--- | :--- |
+| Parametreleri iyileştirmek | Ön kayıt ve betimleme | Seçim örneklem dışına +0,038 R taşıdı; brütün katkısı −0,007 R | Şans, seçim ve süzgeç |
+| Koşul ya da rejim süzgeci | Ön kayıt ve betimleme | 1.118 sınamada 115 tuttu; tam tersine seçilen kovalarla 1.120 sınamada 123 | Şans, seçim ve süzgeç |
+| Kuralı tersine çevirmek | Betimleme | Ayna 84 bileşimin 80 tanesinde eksi | Kaybın ayrışımı |
+| Stopu uzatmak, mumu büyütmek | Betimleme | Net R artıyor ama ızgara medyanı eksi kalıyor; işlem başına pip yazı tura | Ölçek |
+| Çıkışı değiştirmek | Betimleme | Grubun içinde isabet medyanda 12 puan, beklenti 0,05 R oynuyor | Ölçek |
+| Yerel tatilleri dışlamak | Betimleme | Hiçbir kural eksiden artıya dönmüyor | Şans, seçim ve süzgeç |
+| Kuralları tek kitapta birleştirmek | Betimleme | Hacim %13 azalır; başabaş için maliyetin %90 kadarı gitmeli | Yürütme şartı |
+| Pozisyon büyüklüğünü ayarlamak | Türetim | Eksi beklentide en iyi pay sıfırdır | Aşağıda |
+| En ucuz pariteyi seçmek | Betimleme | Yalnız makasla bakılınca maliyet seçimi; kayma eklenince sıralama makası izlemiyor | Aşağıda |
+| Limit emirle girmek | Ölçülmedi | Dolum fiyata bağlıdır ve ters seçime uğrar; net etkinin yönü bilinmiyor | Yürütme şartı |
+| Daha ucuz yürütme | Betimleme | 8 kuralda başabaş maliyeti sıfır ya da altında; aralıklar sıfırı kapsıyor | Yürütme şartı |
+| Haberle ilk saniyede girmek | Ölçülmedi | 1 dakikalık veride haber saniyesinin makası ve kayması yok; ölçülen, hareketin büyük kısmının ilk beş dakikada fiyata girdiği | Kenarın kaynakları |
+
+</div>
+
+_Tür: ön kayıt, ölçütü sonuç görülmeden yazılmış bir ölçünün sonucu (parametre seçiminin ve koşul doğrulamasının
+ölçütleri; brüt ile maliyet tasarrufu ayrımı ve ters seçim bu dersin ve karşılaştırma dersinin betimlemesidir);
+betimleme, iki pencere de görüldükten sonra kurulan ölçü; türetim, aritmetikten çıkan sonuç; ölçülmedi, bu seride
+ölçülmeyen. Hiçbir satır bir hüküm değildir ve hiçbiri bir kuralı kullanılabilir yapmaz. Bölüm sütunu ölçünün bu
+dersteki yerini gösterir._
+
+Tablonun ortak cevabı kısadır: maliyetten önceki kenar sıfıra yakınsa, kuralın görünüşünü değiştiren bir ayar sonucun
+işaretini değiştirmez ve brütü artırmaz. Önerilerin çoğu ya isabeti başabaş eğrisi boyunca kaydırır (çıkış, stop), ya
+maliyetin R içindeki payını küçültür (zaman dilimi, seçim), ya da görülmüş pencerede iyi görüneni seçer (süzgeç,
+parametre). Üçü de brütün kendisini artırmaz.
+
+**Pozisyon büyüklüğü.** İşlem başına getirisi $r$ olan bir kuralda sermayenin $f$ payıyla işlem yapılırsa, sermayenin
+logaritmik büyümesi küçük getiriler için
+
+$$
+\begin{aligned}
+g(f) &= E\big[\ln(1 + f\,r)\big] \\
+     &\approx f\,\mu - \tfrac{1}{2}\,f^{2}\,\sigma^{2}, \\
+f^{*} &= \frac{\mu}{\sigma^{2}}
+\end{aligned}
+$$
+
+olur. $\mu$ eksiyse en iyi pay eksidir; ters pozisyon da aynayı açmak demektir ve ayna da kaybeder (kaybın ayrışımı).
+Geriye kalan en iyi pay sıfırdır. Pozisyon büyüklüğü bir eksi beklentiyi artıya çeviremez, yalnız kaybın hızını ve
+dağılımını belirler.
+
+**Parite seçimi.** Yalnız makasla (kayma sıfır) ölçüldüğünde örneklem dışında net artı kalan
+25 bileşimin pariteleri: EUR/USD
+9, USD/JPY
+9, GBP/USD
+6, AUD/USD
+1. Verinin medyan makası aynı sırayla EUR/USD'de
+0,3, USD/JPY'de 0,4, GBP/USD'de
+0,9, AUD/USD'de 1,0 pip. Yalnız makasla
+bakılınca parite seçimi bir maliyet seçimidir: dar makaslı paritede aynı kural daha az
+kaybeder.
+Kayma da eklenince (temel senaryo) net artı kalan 6 bileşimin
+pariteleri EUR/USD 0, USD/JPY
+5, GBP/USD
+0, AUD/USD
+1: sıralama artık makası
+izlemiyor
+ve net artıların toplandığı parite kuyruk bölümündeki hipoteze döner. Maliyetin makas kısmı ölçülmüştür, kayma kısmı
+bu verinin ölçemediği bir varsayımdır.
+
+## Kenarın kaynakları
+
+Kurtarma yolları sonuç vermiyorsa soru tersinden sorulmalıdır: bir gün içi kuralın kenarı, olacaksa, nereden gelir?
+Bu ders dört kaynak ayırır. Her biri bir karşı tarafın neden para kaybetmeye razı olduğunu açıklar; kaynağı
+olmayan bir kural, kenarını şansa borçludur.
+
+<div class="sayi-tablo">
+
+| Kaynak | Karşı taraf neden öder | Bu serideki karşılığı | Değerlendirme |
+| :--- | :--- | :--- | :--- |
+| Yürütme | Likidite isteyen, aracının üstlendiği stok riskinin karşılığını öder | Bütün kurallar likidite alır, makası öder | Ölçülmedi: likidite sağlayan kural yok |
+| Akış | Fiyattan bağımsız sebeple işlem yapmak zorundadır | Fiksing, gün içi momentum, VWAP | Ölçüldü; çalışan kural yok, tek aday ay sonu |
+| Bilgi | Haberi geç ya da kötü işler | Beş haber kuralı | Ölçüldü; çalışan kural yok |
+| Risk primi | Taşımak istemediği riski devreder | Yok: pozisyonlar gece taşınmaz | Kapsam dışı |
+
+</div>
+
+_Tür: kaynak sütunu bu dersin kendi ayrımıdır, dayandığı literatür aşağıda kaynağıyla; değerlendirme sütunu betimlemedir
+ve bu serinin ölçtüğü kurallar içindir: bir kaynağın var olup olmadığı hakkında değil, bu kuralların ona ulaşıp
+ulaşmadığı hakkındadır._
+
+**Yürütme.** Piyasada bilgili işlemciler varsa makas, piyasa yapıcı risk nötr olsa ve beklenen kârı sıfır olsa bile
+artıdır: makas, bilgisiz tarafın bilgiliye kaybettiğinin karşılığıdır (Glosten ve Milgrom, 1985). Makasın bu kısmı
+likidite sağlayana kenar bırakmaz; aldığını bilgili tarafa geri verir. Likidite sağlamanın kenar olabilecek kısmı
+üstlenilen riskin karşılığıdır: fiksinglerdeki dolar yönlü fiyat örüntüsü, aracıların fiksinglerde koşulsuz dolar
+talebine aracılık ederken taşıdığı stok riskiyle tutarlıdır (Krohn, Mueller ve Whelan, 2024). Kâr al emirleri yuvarlak sayılarda, zarar durdur emirleri onların hemen ötesinde
+kümelenir; bu kümelenme fiyatın destek ve direnç seviyelerinde dönmesini ve seviye geçildikten sonra hızlanmasını
+açıklayabilir (Osler, 2003). Bu serinin bütün kuralları likidite ister: giriş ve piyasa çıkışları makası öder.
+Likidite sağlayan bir kural ölçülmedi.
+
+**Akış.** Bazı katılımcılar fiyattan bağımsız sebeplerle belirli bir anda işlem yapmak zorundadır: fiksing emirleri,
+endeks ve portföy yeniden dengelemesi, yabancı portföylerin kur koruması. Melvin ve Prins (2015) uluslararası hisse
+portföylerinin kur koruma işlemlerinin Londra fiksinginde yoğunlaştığını kurumsal bir öncül olarak alır, işlemlerin
+yönünü geçmiş hisse getirilerinden okur ve hisse piyasasının ay içindeki değer artışının ay sonu fiksinginden önceki kur
+değer kaybını öngördüğünü gösterir. 2004–2013 verisinde, fiksingin hesaplama penceresinin bir dakika olduğu dönemde,
+fiksingin hemen öncesindeki ve sonrasındaki kur değişimleri olağanüstü oynaktı ve güçlü bir eksi ardışık ilinti
+gösteriyordu, özellikle ayın son işlem gününde (Evans, 2018); dolar fiksinglere giderken değer kazanır, sonra kaybeder
+(Krohn, Mueller ve Whelan, 2024). Bu serinin akışa dayanan kuralları fiksingin iki kuralı (momentum ve dönüş), gün içi
+momentum ve VWAP geri çekilmesidir.
+
+**Bilgi.** Emir akışı kurun belirleyicisidir, çünkü bilgi taşır: emir akışına dayanan bir model Alman markı–dolar
+kurunun günlük değişimlerinde R²'yi %60'ın üstüne çıkarır (Evans ve Lyons, 2002). Bilgisel olarak tam etkin
+bir piyasa olanaksızdır (Grossman ve Stiglitz, 1980); bilgi kaynağı bu yüzden vardır: fiyat bilgiyi tam yansıtsaydı onu
+toplamanın bir getirisi kalmazdı. Haber kuralları bu kaynağa haberin kendisinden ulaşmaya çalışır. Ölçülen patika haberin fiyata ne hızla girdiğini gösteriyor:
+
+<div class="sayi-tablo">
+
+| Olay | Olay × parite | Parite | İlk 5 dk | 5 → 15 dk | 5 → 60 dk | 5 → 60 dk, paritelerin aralığı |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| ABD tarım dışı istihdam (NFP) | 415 | 4 | %30,0 | −%2,7 | −%5,3 | −%7,5 / −%3,7 |
+| ABD TÜFE (CPI) | 412 | 4 | %27,2 | −%0,1 | +%0,3 | −%0,3 / +%0,8 |
+| FOMC kararı | 284 | 4 | %25,7 | +%1,5 | +%2,5 | +%0,9 / +%3,8 |
+| FOMC basın toplantısı | 260 | 4 | %11,1 | −%9,3 | −%15,0 | −%18,3 / −%6,7 |
+| ECB kararı | 70 | 1 | %18,1 | −%1,5 | +%4,6 | — |
+| ECB basın toplantısı | 70 | 1 | %9,9 | +%1,8 | +%2,8 | — |
+| BoE kararı | 69 | 1 | %29,1 | −%0,1 | −%1,9 | — |
+
+</div>
+
+_Tür: betimleme. Olay anındaki orta fiyattan, önceki günlerin ATR'sinin yüzdesi; ilk beş dakikanın yönünde artı (yukarı ve aşağı kapanan olaylar simetrik birleştirildi: iki kolun farkının yarısı). İlk beş dakikanın hareketi tanımı gereği artıdır; devam ya da geri dönüş sonraki iki sütundadır. Paritelerin olay sayısıyla ağırlıklı._
+
+Veri anlarında fiyat ilk beş dakikada günlük ATR'nin dörtte birinden fazlasını yol alıyor (tarım dışı istihdamda
+%30, tüketici fiyatlarında %27).
+Sonraki 55 dakikada ortalama hareket ya sıfıra yakın (tüketici fiyatları +%0,3) ya da
+geri dönüş (tarım dışı istihdam −%5,3).
+FOMC basın toplantısında ilk beş dakikanın hareketi küçük ve sonraki bir saatte ondan fazlası geri veriliyor
+(−%15,0).
+Gün içi bir kuralın ölçebildiği ufukta haber fiyata büyük ölçüde ilk dakikalarda giriyor: bir kural ilk mum kapandıktan
+sonra girdiğinde bilginin çoğu fiyattadır ve kalan hareket, haber penceresinin geniş makasını ve ek kaymasını
+karşılamıyor. Haber dersinin kırılım ↔ fade devam tablosu aynı soruyu stop ve hedef olmadan sorar: hücrelerinin
+111 tanesinde kazanan yok, 36
+tanesinde örneklem yetersiz; kırılımın ya da fade'in kazandığı hücre yok.
+
+**Risk primi.** Yüksek faizli paralar ortak bir risk faktörüne düşük faizli paralardan daha çok yüklenir ve bu faktör
+iki grup arasındaki ortalama fazla getiri farkının çoğunu açıklar: düşük faizli parayla borçlanıp yüksek faizli paraya
+yatıran, küresel riski üstlenir (Lustig, Roussanov ve Verdelhan, 2011). Bu kaynak, riski taşımak için zaman ister: bu serinin bütün pozisyonları gün sonunda kapanır ve faiz
+farkı doğmaz.
+
+Bir kaynağa dayanmak gerekli ama yeterli değil. Serinin akış ve haber kuralları da bir kaynağın adını taşıyordu ve
+kaybetti. Kaynağın varlığı, kuralın o kaynağa maliyetinden ucuza ulaştığını göstermez; ulaşan çok kişiyse kenar
+paylaşılır ve küçülür. Döviz piyasasında genetik programla ve doğrusal bir tahmin modeliyle seçilen gün içi teknik
+kurallar için, gerçekçi işlem maliyeti ve işlem saatleri hesaba katıldığında, örneklem dışında fazla getiri
+sağladıklarına dair kanıt çıkmadı; kurallar verideki şaşırtıcı ölçüde istikrarlı bazı örüntüleri yine de buldu (Neely
+ve Weller, 2003). Örüntünün varlığı kenarın
+varlığı değildir. Döviz piyasasında daha önce yayımlanmış teknik kuralların 1970'ler ve 1980'lerdeki fazla getirisi
+gerçekti, ama filtre ve hareketli ortalama kurallarında 1990'ların başında kaybolmuştu (Neely, Weller ve Ulrich,
+2009). Algoritmik işlemin yayılması üçgen arbitraj fırsatlarının sıklığını ve yüksek frekanslı getirilerin
+özilintisini azalttı; daha yavaş işlemcilere daha yüksek ters seçim maliyeti yükleyebilir (Chaboud, Chiquoine,
+Hjalmarsson ve Vega, 2014). Hisse senetlerinde kesitsel getiriyi öngördüğü gösterilmiş 97 değişkenin portföy getirisi
+örneklem dışında %26, yayımdan sonra %58 daha düşüktü; yazarlar örneklem dışındaki düşüşü veri
+madenciliği etkisinin üst sınırı sayar, yayımdan sonraki ek 32 puanı yayımı okuyan işlemlere bağlar (McLean ve
+Pontiff, 2016). Birinci kısım, bu dersin "Kenar var mıydı" bölümünde ölçülen küçülmenin, yani seçimin aritmetiğinin, hisse
+senetlerindeki karşılığıdır.
+
+Bu seride sınanmamış akış anları da var. Tokyo fiksinginde bankalar kuru, bankalar arası piyasanın Tokyo 09:55'teki
+(TSİ 03:55) işlemlerine göre ilan eder; fiksingden önceki emir akışı dolar yönüne eğilimlidir ve bu
+öngörülebilir bir fiyat örüntüsü doğurur (Ito ve Yamada, 2017). New York'taki opsiyon vade kesimi
+(TSİ ABD yaz saatinde 17:00, kış saatinde 18:00) ve çeyrek sonları da zorunlu akışın birikebildiği anlardır. Bunlar bu seri için
+**hipotezdir**: aynı yöntemle, sonuç görülmeden yazılmış bir planla sınanmadıkça bu serinin kuralları hakkında hiçbir
+şey söylemezler.
+
+## Yürütme şartı: kural ne kadar maliyet kaldırır
+
+Kullanılabilirliğin birinci şartı aritmetiktir: kuralın kaldırabildiği maliyet, ödenecek maliyetin üstünde olmalıdır.
+İşlem başına sabit bir gidiş-dönüş maliyeti $c$ (pip) için işlemin net sonucu $r_{\text{brüt}} - c / R_{\text{pip}}$'dir
+ve beklenti
+
+$$
+\begin{aligned}
+E[r_{\text{net}}] &= E[r_{\text{brüt}}] - c\,E\big[1/R_{\text{pip}}\big], \\
+c^{*} &= \frac{E[r_{\text{brüt}}]}{E\big[1/R_{\text{pip}}\big]}
+\end{aligned}
+$$
+
+olur. $c^{*}$ **başabaş maliyetidir**: kural işlem başına bu kadar maliyetle sıfıra iner. Hesap ilk mertebedir:
+maliyet değişince işlemler aynı kalır sayılır (gerçekte daha ucuz bir yürütme bazı işlemleri de değiştirir). Aralık,
+brüt sonucun önceden kayıtlı bootstrap aralığının uçlarından gelir.
+
+<div class="sayi-tablo">
+
+| Kural | İşlem (2024 →) | c* (2024 →) | %95 aralığı | Ödenen | c* (bütün dönem) | %95 aralığı | Ödenen |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| N4 başarısız | 43 | 2,47 | −6,62 / 15,31 | 2,50 | 2,92 | −1,03 / 7,10 | 2,47 |
+| N2 fade | 266 | 1,70 | −0,98 / 4,70 | 2,23 | 0,67 | −0,80 / 2,11 | 2,27 |
+| Londra ORB | 2.875 | 1,05 | −0,19 / 2,36 | 1,73 | 0,82 | 0,17 / 1,51 | 1,76 |
+| NY IB 09:30 | 2.082 | 0,67 | −0,43 / 1,84 | 1,78 | −0,05 | −0,66 / 0,59 | 1,84 |
+| NY IB 08:00 | 2.628 | 0,56 | −0,65 / 1,95 | 1,77 | 0,44 | −0,19 / 1,10 | 1,82 |
+| Asya aralığı | 1.850 | 0,47 | −0,38 / 1,32 | 1,49 | 0,30 | −0,19 / 0,77 | 1,49 |
+| VWAP çekilme | 1.598 | 0,36 | 0,09 / 0,65 | 1,62 | 0,11 | −0,05 / 0,27 | 1,66 |
+| Sahte ORB | 1.682 | 0,31 | −0,06 / 0,68 | 1,41 | 0,25 | 0,03 / 0,47 | 1,45 |
+| Pivot kırılım | 1.731 | 0,16 | −0,42 / 0,76 | 1,57 | 0,23 | −0,09 / 0,58 | 1,59 |
+| Sahte Asya | 1.196 | 0,15 | −0,30 / 0,57 | 1,44 | 0,22 | −0,04 / 0,48 | 1,45 |
+| Sahte PDH/PDL | 934 | 0,15 | −0,38 / 0,66 | 1,48 | −0,08 | −0,39 / 0,24 | 1,48 |
+| Fiksing dönüşü | 2.886 | 0,12 | −0,34 / 0,56 | 1,58 | 0,44 | 0,22 / 0,66 | 1,60 |
+| VWAP dönüş | 6.931 | 0,12 | −0,08 / 0,34 | 1,54 | 0,10 | −0,02 / 0,21 | 1,56 |
+| Pivot dönüş | 1.394 | 0,07 | −0,37 / 0,54 | 1,61 | 0,14 | −0,12 / 0,40 | 1,62 |
+| Fiksing momentumu | 2.883 | 0,00 | −0,17 / 0,15 | 1,57 | 0,21 | 0,10 / 0,33 | 1,59 |
+| İç mum | 5.137 | −0,02 | −0,48 / 0,45 | 1,65 | 0,11 | −0,14 / 0,37 | 1,66 |
+| PDH/PDL | 1.708 | −0,03 | −0,57 / 0,51 | 1,55 | 0,10 | −0,22 / 0,40 | 1,58 |
+| Sıkışma | 2.265 | −0,18 | −1,22 / 0,89 | 1,74 | 0,03 | −0,56 / 0,63 | 1,72 |
+| N5 devam | 251 | −0,22 | −2,11 / 1,77 | 1,92 | 0,36 | −0,62 / 1,38 | 1,82 |
+| Gün içi momentum | 2.891 | −0,35 | −1,22 / 0,51 | 1,62 | −0,01 | −0,53 / 0,51 | 1,66 |
+| N3 straddle | 433 | −1,52 | −4,50 / 1,59 | 2,64 | −1,10 | −2,66 / 0,46 | 2,63 |
+| N1 kırılım | 429 | −2,12 | −4,49 / 0,27 | 2,78 | −0,94 | −2,08 / 0,21 | 2,82 |
+
+</div>
+
+_Tür: betimleme. Pip, gidiş-dönüş, işlem başına; önceden kayıtlı varsayılanlar, dört paritenin işlemleri birlikte. c* = ortalama brüt R / ortalama (1 / R'nin pip karşılığı): işlem başına sabit bir maliyet c* olsaydı net R sıfır olurdu (ilk mertebe: işlemler maliyetle değişmez sayılır). Aralık, brüt sonucun önceden kayıtlı bootstrap aralığının uçlarından. Ödenen: ölçülen makas ve varsayılan kaymanın toplamı. Türetilmiş varsayılan: NY IB 08:00 (ön kayıtlı varsayılandan tek boyutu değiştirilerek)._
+
+<GrafikEmbed src="/arastirma/fx-gunici/neden-maliyet-esigi.html" baslik="Bir kural ne kadar maliyet kaldırır — başabaş maliyeti ve ödenen" no="06" kaynak="Dukascopy" />
+
+Örneklem dışında 8 kuralda başabaş maliyetinin nokta tahmini sıfır ya
+da altında (İç mum, Sıkışma, PDH/PDL, N1 kırılım, N3 straddle, N5 devam, Fiksing momentumu ve Gün içi momentum) ve aralıklarının hepsi sıfırı
+kapsıyor: bu kurallarda
+maliyetsiz bir yürütmeyle de bir kenar gösterilemiyor (brütleri sıfırdan ayırt edilemiyor). Öbür
+kuralların hiçbirinde başabaş maliyeti ödenen maliyete ulaşmıyor; ödenen
+maliyet kurallar arasında 1,41 ile 2,78
+pip arasında. Aralığın alt ucu sıfırın üstünde kalan kural örneklem dışında 1
+(VWAP çekilme), bütün dönemde 4
+(Londra ORB, Sahte ORB, Fiksing dönüşü ve Fiksing momentumu). Bütün dönemde başabaş maliyeti ödenen maliyetin üstünde kalan tek
+kural N4 başarısız,
+ve o kuralın sonucu tek bir günün eseridir (kenar bölümü).
+
+Aynı soru bileşim düzeyinde de sorulabilir: maliyet bugünküne göre küçülseydi örneklem dışında kaç bileşim net artı
+kalırdı? Bugünkü maliyetle 6, maliyetin dörtte üçüyle
+12, yarısıyla 21, dörtte
+biriyle 29, onda biriyle 40,
+maliyetsiz 52 (brütü artı olanların hepsi). Brütü artı bileşimlerde
+brütün maliyete oranının medyanı 0,31: tipik bir brüt artı bileşim maliyetinin
+ancak üçte birini karşılıyor.
+
+Başabaş maliyeti, maliyet merdiveninden bulunan başabaş kaymasıyla da tutarlıdır (karşılaştırma dersi, "Maliyet"):
+Londra ORB EUR/USD'de örneklem dışı başabaş maliyeti 0,78 pip; makasın pip
+maliyeti (0,37) ile iki dolumun başabaş kaymasının
+(0,44) toplamı 0,81 pip. İki
+ayrı yoldan gelen iki sayının birbirine yakın olması, ilk mertebe yaklaşımının bu kuralda tuttuğunu gösterir.
+
+**Kuralları birleştirmek.** Bir masa bütün kuralları tek kitapta yürütseydi, aynı dakikada açılıp kapanan ters
+işlemler birbirini götürür ve makas yalnız net akışa ödenirdi. Ölçüldü: aynı paritenin bütün kurallarının emirleri
+aynı dakikada netleşseydi işlem hacmi örneklem dışında %13,4 (eşit
+nominal) ya da %14,1 (her işlem 1 R) azalırdı. Kitabın başabaşı için
+gereken azalma çok daha büyük: kitabın brüt toplamının maliyet toplamına oranı %9,6,
+yani maliyetin %90 kadarı ortadan kalkmalı.
+
+**Limit emir.** Limit emir makası ödemek yerine almayı dener. Ama limit emir fiyata bağlıdır: fiyat ona doğru
+geldiğinde dolar ve onu dolduran karşı taraf bilgili olabilir; dolmayan emir ise fiyatın lehte gittiği, kaçırılan bir
+işlem olabilir. Bireysel yatırımcıların işlemlerinden sonraki kötü getirilerin büyük kısmı limit emir kullanmalarıyla
+açıklanabilir, çünkü limit emir fiyata bağlıdır ve ters seçime uğrar (Linnainmaa, 2010). Limit emirle yürütülen bir
+kuralın sonucu orta fiyattan ölçülen brütten iyi de kötü de olabilir: dolan emir makasın bir kısmını alır, ters seçim
+ve kaçırılan işlemler onu geri verebilir. Bu seride limit emir benzetilmedi; net etkinin yönü ölçülmedi. Elektronik döviz piyasasında likidite
+sağlayıcı, işlem talebini kabul edip etmeyeceğine ve ederse hangi kurdan edeceğine talep ulaştıktan sonra karar
+verebilir ("son bakış"); talep iletilirken fiyat hareket etmiş olabilir (Oomen, 2017). Bu uygulama yürütme maliyetini
+verinin dışından etkiler.
+
+**Ulaşılabilir maliyet.** Döviz likiditesi kurdan kura belirgin biçimde farklıdır, likiditesizliğin maliyeti
+büyüktür ve likidite kurlar arasında, hisse ve tahvil piyasalarıyla birlikte hareket eder; 2007–2009'da likidite riski
+taşıma getirisini belirgin biçimde etkiledi (Mancini, Ranaldo ve Wrampelmeyer, 2013). Bir kuralın maliyet şartı bu yüzden ortalama bir makasla değil, kuralın işlem
+yaptığı dakikanın ölçülmüş makası ve kendi yürütmesinin ölçülmüş kaymasıyla sorulur. Bu serinin kayması bir
+varsayımdır (dolum başına 0,5 pip); kullanacak olanın kendi kaymasını ölçmesi gerekir.
+
+**Alıştırma 5.** Londra ORB'nin örneklem dışı başabaş maliyeti 1,05 pip,
+ödenen maliyeti 1,73 pip. Kuralın başabaşa gelmesi için maliyetin hangi
+katına (λ*) inmesi gerekir? Aralığın alt ucu (−0,19 pip) neyi söyler?
+
+<details>
+<summary>Çözüm</summary>
+
+λ* = başabaş maliyeti / ödenen maliyet = 1,05 /
+1,73 = 0,61.
+Aralığın alt ucu sıfırın altında: bu pencerede kuralın maliyetsiz
+yürütmeyle bile artı olduğu gösterilemiyor. Başabaş maliyetinin nokta tahmini artı olsa da şart, aralığın alt ucunun
+ödenen maliyetin üstünde olmasıdır; bu kural ondan çok uzakta.
+
+</details>
+
+## Akış şartı: ay sonu fiksingi
+
+Serinin tek adayı fiksing momentumunun ay sonu alt kümesidir. Kural Londra 16:00 fiksingine giden son beş dakikalık
+mumu taşır: Londra 15:50–15:55 mumunun (TSİ İngiltere yaz saatinde 17:50–17:55, kış saatinde 18:50–18:55) yönünde 15:55'te girer, 16:00'da çıkar
+(TSİ İngiltere yaz saatinde 17:55 → 18:00, kış saatinde 18:55 → 19:00); stop yoktur, R girişteki ATR(14)'tür. Fiksingin hesaplama penceresi
+16:00'ı ortalayan beş dakikadır (Londra 15:57:30–16:02:30; TSİ İngiltere yaz saatinde 17:57:30–18:02:30, kış saatinde 18:57:30–19:02:30): işlem pencerenin
+ilk yarısını da taşır ve çıkış pencerenin ortasındadır. Ay sonu ayın son Londra iş günüdür (ön kaydın tanımı). Ön kayıt
+bu alt kümeyi ayrıca raporlamayı yazdı, ona hüküm kuralı uygulamadı; aşağıdakilerin hepsi betimlemedir.
+
+<div class="sayi-tablo">
+
+| Parite | Pencere | Ay sonu | İsabet | Brüt | Maliyet | Net | %95 aralığı | Net, eski tanımla | %95 aralığı (eski) |
+| :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| EUR/USD | 2018–2023 | 72 | %58,3 | +0,303 | −0,181 | +0,122 | −0,231 / +0,454 | +0,141 | −0,220 / +0,476 |
+| EUR/USD | 2024 → | 32 | %43,8 | +0,196 | −0,205 | −0,009 | −0,285 / +0,286 | −0,087 | −0,394 / +0,222 |
+| GBP/USD | 2018–2023 | 72 | %52,8 | +0,475 | −0,172 | +0,303 | +0,003 / +0,610 | +0,380 | +0,055 / +0,706 |
+| GBP/USD | 2024 → | 33 | %66,7 | +0,586 | −0,210 | +0,376 | +0,036 / +0,737 | +0,198 | −0,193 / +0,598 |
+| USD/JPY | 2018–2023 | 72 | %63,9 | +0,406 | −0,215 | +0,191 | −0,153 / +0,514 | +0,314 | −0,073 / +0,708 |
+| USD/JPY | 2024 → | 33 | %72,7 | +0,474 | −0,164 | +0,310 | +0,011 / +0,653 | +0,211 | −0,127 / +0,585 |
+| AUD/USD | 2018–2023 | 72 | %45,8 | +0,050 | −0,368 | −0,318 | −0,622 / −0,003 | −0,322 | −0,637 / −0,001 |
+| AUD/USD | 2024 → | 33 | %33,3 | +0,070 | −0,425 | −0,355 | −0,635 / −0,066 | −0,398 | −0,687 / −0,108 |
+
+</div>
+
+_Tür: betimleme. Fiksing momentumu, önceden kayıtlı varsayılan; R / işlem, ayda bir işlem. Bugünkü tanım (ön kaydın tanımı): ayın son Londra iş günü; eski tanım: ayın son hafta içi günü. Aralık önceden kayıtlı bootstrap'tan. Ön kayıt alt kümeye hüküm vermez._
+
+<GrafikEmbed src="/arastirma/fx-gunici/neden-ay-sonu.html" baslik="Ay sonu fiksingi — tek aday, dört paritede" no="07" kaynak="Dukascopy" />
+
+Aralıkların bazı uçları sıfıra çok yakın. Böyle bir ucun işareti bootstrap tohumuna bağlıdır: önceden kayıtlı yordam
+200 farklı tohumla yeniden koşulunca bir
+tohumda artı, öbüründe eksi uç verir. Ders böyle bir ucu "sınırda" diye adlandırır; tohumların artı çıkma payını ve
+500.000 tekrarlı kestirimi de basar. Tabloda ve
+metinde yazan uç önceden kayıtlı yordamın sonucudur; sınır kaydı yalnız işaretinin ne kadar sağlam olduğunu söyler.
+
+GBP/USD iki ayrık pencerede de net artı ve önceden kayıtlı yordamla aralığının alt ucu iki pencerede de sıfırın
+üstünde. 2024 →'de +0,376 R
+(+0,036 / +0,737).
+2018–2023'te +0,303 R, alt uç
++0,003 ve sınırda: tohumların artı çıkma payı
+%78, büyük tekrarlı kestirim
++0,007.
+USD/JPY'de 2024 → aralığının alt ucu önceden kayıtlı yordamla sıfırın hemen üstünde
+(+0,011), ama sınırda: tohumların artı çıkma payı
+%18, büyük tekrarlı kestirim
+−0,011; 2018–2023 aralığı sıfırı
+kapsıyor.
+EUR/USD iki pencerede de sıfırı kapsıyor. AUD/USD iki pencerede de eksi: 2024 → aralığı sıfırın altında, 2018–2023'ün
+üst ucu (−0,003) sınırda (tohumların artı çıkma payı
+%10). Brüt sonucu ise iki pencerede de artı
+(+0,050 ve
++0,070 R): R'nin pip karşılığı küçük
+(5,3 pip) ve makas geniş, maliyet bütün dönemde
+0,386 R.
+
+Maliyetten önce tablo daha düzgün: dört parite ve iki pencere, 8 hücrenin
+hepsinde brüt sonuç artı; aynı kuralın öbür günlerinin brütü −0,043 ile
++0,103 R arasında. Dört paritenin brüt sonucu ay başına tek gözlemle (paritelerin
+ortalaması) havuzlanınca 2018–2023'te +0,308 R (t
+3,2, 72 ay), 2024 →'de
++0,333 R (t 3,1,
+33 ay). Bu ölçü ön kayıtta yoktu; bir keşiftir ve öyle okunmalıdır.
+
+Ay sonu ayrımı ailenin 28 biçiminde ölçüldü (kural, parite, zaman dilimi; varsayılan
+ve seçilen). Ay sonu ile öbür günlerin farkı %5 düzeyde örneklem içinde 6,
+örneklem dışında 6 biçimde anlamlı; şansın her pencerede beklediği
+1,4. Holm düzeltmesiyle iki pencerede 1
+ve 1, yanlış keşif oranı %10 olan
+Benjamini–Hochberg düzeltmesiyle 4 ve 3
+biçim kalıyor. Yanlış keşif oranı denetimi bağımsız sınamalar için kanıtlanmıştır (Benjamini ve Hochberg, 1995);
+ailenin biçimleri aynı günleri paylaştığı için buradaki düzeltme yaklaşıktır. İki pencerede birden %5 düzeyde anlamlı olan biçim 3 (bağımsız
+pencerelerde şansın beklediği 0,07); Bonferroni eşiğiyle iki pencerede birden
+1. Ailenin tutma ölçütünü (iki ayrık pencerede aralığın alt ucu sıfırın üstünde,
+ay sonu ile öbür günlerin farkı düzeltilmiş eşiğin altında) sağlayan tek biçim GBP/USD'nin önceden kayıtlı
+varsayılanıdır.
+
+Büyüklüğü küçüktür. GBP/USD'de bir ay sonu işlemi ortalama 4,4
+pip brüt kazanıyor, 1,7 pip maliyet ödüyor ve
+2,7 pip net bırakıyor. Yılda
+12 işlem, yılda 32 pip ve yıllık
+Sharpe 0,92. Sonuç yıllara yayılıyor ama her yıl artı değil: 2022 ve 2023
+eksi, öbür yedi yıl artı.
+En iyi üç işlem çıkınca işlem başına +0,229 R kalıyor; dört paritenin
+sonuçları birbirine doğru büzülünce (ampirik Bayes) GBP/USD'nin beklentisi +0,283 R
+(gözlenen +0,326).
+
+Bir gerilim de var. Ay sonu etkisi ortak bir dolar akımıysa paritelerin aynı ay sonundaki sonuçları birlikte
+hareket etmeli. Ay sonu net sonuçlarının korelasyonu GBP/USD ile USD/JPY arasında
+−0,01, öbür 5 çiftte
+0,13 ile 0,22
+arasında: sonucu en
+güçlü olan GBP/USD ile USD/JPY'nin ay sonu sonuçları arasında bir ilinti görünmüyor. Bu bir çürütme değildir (akım paritelere farklı oranlarda ve
+farklı aylarda dağılabilir), ama ortak bir akımın bu iki paritede aynı anda iz bıraktığı da bu ölçüyle desteklenmiyor.
+Ölçü yalnız ortak bir dolar akımını sınar, aracıların fiksinglerde karşıladığı koşulsuz dolar talebi gibi (Krohn,
+Mueller ve Whelan, 2024). Melvin ve Prins'in mekanizmasında akımın yönü her paritenin kendi hisse piyasasının ay içindeki
+getirisine bağlıdır; o mekanizmada paritelerin birlikte hareket etmesi gerekmez.
+
+Bu sonuç ay sonunun tanımına duyarlıdır: ay sonu ayın son hafta içi günü sayılsaydı fiksing momentumu (GBP/USD, önceden kayıtlı varsayılan) 2018–2023 penceresinde +0,380 R (aralık +0,055 / +0,706), 2024 → penceresinde +0,198 R (aralık −0,193 / +0,598) verirdi; ikinci pencerede aralık sıfırı kapsar. İki tanım yalnız son hafta içi gününün bir İngiltere tatiline düştüğü aylarda ayrışır ve o penceredeki fark iki aydan gelir: Mart 2024'te eski tanım 29.03.2024 günü −2,18 R, bugünkü tanım 28.03.2024 günü +0,40 R; Ağustos 2026'da eski tanım 31.08.2026 günü −1,64 R, bugünkü tanım 28.08.2026 günü +1,66 R. Derslerdeki ay sonu sayılarının hepsi ön kaydın tanımıyladır.
+
+Adayı tehdit eden şeyler adıyla:
+
+- **Alt küme seçimi.** Ay sonu ayrımı ön kayıttaydı, ama bu derste ona odaklanma kararı iki pencere de görüldükten sonra
+  verildi.
+- **Eksi yıllar.** GBP/USD'de iki yıl üst üste eksi; etkinin kalıcı olduğu varsayılamaz.
+- **Fiksing uygulaması.** Düzenleyiciler 2013'ten itibaren dünyanın en büyük bankalarından bazılarının döviz
+  fiksingleri çevresindeki işlemlerini soruşturdu (Evans, 2018); fiksing öncesi hareketin yapısı o dönemden sonra değişmiş olabilir (hipotez).
+- **Hesaplama penceresi.** Finansal İstikrar Kurulu, WM/R fiksinginin bir dakikalık hesaplama penceresinin
+  genişletilmesini önerdi; piyasa görüşlerinin medyanı ana paralar için beş dakikaydı (FSB, 2014). Pencere 15 Şubat
+  2015'te beş dakikaya çıktı (Krohn, Mueller ve Whelan, 2024); bu serinin örneklemi tamamen yeni pencerededir ve eski
+  pencereden bir şey öğrenmez. Kenarın kaynakları bölümünde anılan fiksing öncesi eksi ilinti bulgusu (Evans, 2018)
+  ise 2004–2013 verisinden, yani bir dakikalık pencerenin döneminden gelir.
+- **Sinyal.** Kaynağın ay sonu öngörücüsü ayın hisse getirisidir (Melvin ve Prins, 2015); bu kural fiksinge giden
+  mumun yönünü kullanır. Kaynağın sinyali bu seride sınanmadı; kuralın sonucu o mekanizmanın sınaması değildir.
+- **Kapasite.** Fiksing anındaki derinlik ve büyük bir emrin fiyatı itmesi ölçülmedi.
+- **Tek besleme.** Fiyatlar tek bir kaynağın kotasyonudur; fiksing dakikasında başka bir kaynağın makası farklı olabilir.
+- **Çeyrek sonu.** Çeyrek sonları ay sonlarının alt kümesidir (35 gözlem,
+  GBP/USD); ayrı sınanmadı.
+
+Bu alt küme bir kural değil, bir adaydır: ileriye dönük bir sınamanın konusu.
+
+## Sınama şartı: güç ve plan
+
+Bir aday ancak görülmemiş veride, sonuç görülmeden yazılmış ve gücü önceden hesaplanmış bir planla sınanınca kural
+olabilir. Gücün aritmetiği basittir. İşlem başına net etki $\mu$ ve standart sapma $\sigma$ olan bir kuralın ortalamasını
+tek yönlü $\alpha$ düzeyinde ve $1 - \beta$ güçle sıfırdan ayırmak için gereken işlem sayısı
+
+$$
+\begin{aligned}
+n &= \left(\frac{(z_{1-\alpha} + z_{1-\beta})\,\sigma}{\mu}\right)^{2}, \\
+\mu_{\min}(n) &= \frac{(z_{1-\alpha} + z_{1-\beta})\,\sigma}{\sqrt{n}}
+\end{aligned}
+$$
+
+olur; ikinci ifade $n$ işlemle görülebilecek **en küçük etkidir**. %5 düzey ve
+%80 güç için $z_{1-\alpha}$ = 1,645, $z_{1-\beta}$ =
+0,842. Bir etki bir anlamlılık eşiğinden geçtiği için ilan edildiyse ve onu bulan sınama
+düşük güçlüyse, ölçülen büyüklüğün gerçeğinden büyük olması beklenir (Ioannidis, 2008); bu etkiye kazananın laneti
+denir. Bu yüzden güç, gözlenen etkiyle birlikte büzülmüş ve daha küçük etkilerle de
+hesaplanır.
+
+GBP/USD ay sonu kuralında bütün dönemin ölçüsüyle $\sigma$ = 1,22 R ve ayda bir işlem:
+
+<div class="sayi-tablo">
+
+| Senaryo | Net etki (R) | Gereken işlem | Süre (yıl) | Aile düzeltmeli eşikle (yıl) |
+| :--- | ---: | ---: | ---: | ---: |
+| Gözlenen | +0,326 | 87 | 7,3 | 18,5 |
+| Büzülmüş | +0,283 | 116 | 9,6 | 24,5 |
+| Gözlenenin yarısı | +0,163 | 348 | 29,0 | 73,8 |
+
+</div>
+
+_Tür: betimleme (hesap). Tek yönlü %5 düzey, %80 güç; σ ve etki bütün dönemin ay sonu işlemlerinden. Aile düzeltmeli eşik: ailenin
+28 biçimi için Bonferroni, iki yönlü. Etkiler görülmüş veriden ölçüldü; güç bu yüzden
+iyimserdir._
+
+Tablonun en iyimser satırı bile yedi yıldan uzun bir sınama istiyor. GBP/USD
+ile USD/JPY birlikte sınansaydı (ayda iki işlem) gözlenen etkiyle 5,2 yıl gerekirdi; bu
+sayı daha da iyimserdir, çünkü bu iki parite görülmüş pencereden seçildi. Örneklem içinde anlamlı brüt kenarların örneklem
+dışında ölçülen küçülmesi (%74, kenar bölümü) ay sonu brütüne uygulanırsa net
+etki −0,052 R olur: o senaryoda hiçbir süre
+yetmez, çünkü kenar maliyetin altında kalır.
+
+Bir yıllık sonuç neredeyse hiçbir şey söylemez. İlk yılın 12 işlemiyle %95 aralığının
+yarı genişliği ±0,69 R. Gözlenen etki gerçek olsa bile bu aralığın
+alt ucunun sıfırın üstüne çıkma olasılığı 0,15, tek yönlü %5
+sınamanın etkiyi sıfırdan ayırma olasılığı 0,24. Ölü bir kenar (brüt sıfır, net
+−0,184 R) ilk yıl 0,30 olasılıkla artı
+görünür.
+
+Her yıl sonuca bakmak da bir sınamadır. Her bakışta "anlamlı mı" diye sorup sınırı düzeltmemek, yanlış alarm
+olasılığını düzeyin çok üstüne çıkarır (Armitage, McPherson ve Rowe, 1969). Çözüm, bakış sayısını önceden sabitleyip
+sınırı erken bakışlarda sıkı, sonda gevşek kurmaktır: böyle bir yordamda toplam yanlış alarm olasılığı ve güç, aynı
+gözlemle yapılan tek sınamanınkiyle neredeyse aynı kalır ve sınama erken bitebilir (O'Brien ve Fleming, 1979). Yılda bir bakan ve beş yılda biten bir planın z sınırları 3,90,
+2,76, 2,25, 1,95
+ve 1,74. Benzetimle: etki sıfırken planın yanlış alarm olasılığı
+0,050; gözlenen etkide gücü 0,65, büzülmüş etkide
+0,55 (beş yılın sonunda tek bakışla 0,66
+ve 0,56); ölü bir kenarda sınırı aşma olasılığı
+0,003. Ara bakışların bedeli küçüktür, ama beş yılda bile güç hedefin (%80) altında kalıyor.
+
+<GrafikEmbed src="/arastirma/fx-gunici/neden-guc.html" baslik="Bir etkiyi görmek ne kadar sürer — ayda bir işlemle" no="08" kaynak="Dukascopy" />
+
+İşlem sıklığı gücün asıl belirleyicisidir:
+
+<div class="sayi-tablo">
+
+| İşlem sıklığı | 1 yıl | 3 yıl | 5 yıl | 10 yıl |
+| :--- | ---: | ---: | ---: | ---: |
+| Ayda bir | 0,86 | 0,49 | 0,38 | 0,27 |
+| Haftada bir | 0,41 | 0,24 | 0,18 | 0,13 |
+| Her iş günü | 0,19 | 0,11 | 0,08 | 0,06 |
+
+</div>
+
+_Tür: betimleme (hesap). R / işlem. İşlem başına standart sapma 1,19 R (bütün bileşimlerin örneklem dışı standart sapmasının medyanı); tek yönlü %5 düzey, %80 güç. Bir yıl 250 iş günü, 52 hafta, 12 ay sayıldı._
+
+Ayda bir işlem yapan bir kuralda beş yılda görülebilecek en küçük etki 0,38 R; her
+iş günü işlem yapan bir kuralda 0,08 R. Ama sık işlem yapan kuralın maliyeti de
+sık ödenir ve kalın kuyruklu bir kuralda σ büyüktür: Londra ORB'nin örneklem dışı standart sapması
+2,32 R ve +0,10 R'lik bir etki için
+3.334 işlem gerekir.
+
+Görülmemiş veri de var: WM/R penceresinin beş dakikaya çıktığı Şubat 2015'ten (Krohn, Mueller ve Whelan, 2024) serinin
+başlangıcına kadar 35 ay sonu. Gözlenen etkiyle bu verinin gücü 0,47, yarı etkiyle
+0,20. Bu seride o sınama yapılmadı.
+
+Bir sınama planı, sonuç görülmeden şunları yazar ve tarihler:
+
+1. **Kuralın harfi.** Giriş, çıkış, R birimi ve alt kümenin tanımı (ayın hangi günü ay sonu sayılır).
+2. **Pariteler.** Birincil parite ve ikincil olanlar, adıyla; ikincil sonuçlar hüküm vermez.
+3. **Maliyet.** Ölçülmüş makas ve kayma modeli; kullanılacak yürütmenin kendisi.
+4. **Süre.** Güç hesabından çıkan asgari işlem sayısı ve takvim.
+5. **Bakışlar.** Bakış günleri ve her bakışın sınırı.
+6. **Durdurma.** Sınır aşılırsa, süre dolarsa ya da etki önceden yazılmış bir eşiğin altına inerse ne olacağı.
+7. **Aile.** Kaç biçimin sınandığı ve hangi düzeltmenin uygulanacağı.
+8. **Takvim.** Tatil ve iş günü takviminin kaynağı, sonuçtan önce doğrulanmış olarak.
+9. **Kayıt.** Planın kendisi ve sonuçların ayrı, değiştirilemez bir kaydı.
+
+Ön kayıt, öngörüyü (sınamayı) sonradan açıklamadan (keşiften) ayırır (Nosek, Ebersole, DeHaven ve Mellor, 2018); bu
+serinin bütün hükümleri o ayrımın üstüne kuruldu.
+
+**Alıştırma 6.** GBP/USD ay sonu kuralında σ = 1,22 R. Gerçek net etki
+0,10 R olsaydı, tek yönlü %5 düzey ve %80 güçle ayda bir işlemle kaç
+yıl gerekirdi?
+
+<details>
+<summary>Çözüm</summary>
+
+n = ((1,645 + 0,842) × 1,22 /
+0,10)² ≈ 927 işlem (yuvarlanmamış
+değerlerle); ayda bir işlemle
+77 yıl. Etki yarıya inince gereken işlem dört katına çıkar: güç hesabında etkinin
+karesi paydadadır.
+
+</details>
+
+## Kullanmadan önce: kontrol listesi
+
+Bir gün içi kuralı kullanmadan önce cevabı ölçülmüş olması gereken on altı soru. İlk beşi sonuç görülmeden, sonraki
+yedisi sonuç okunurken, son dördü kullanmadan önce sorulur.
+
+**Sonuç görülmeden**
+
+1. Kuralın harfi, parametreleri ve hüküm ölçütü tarihli olarak yazıldı mı?
+2. Maliyet modeli ölçülmüş makası, dolum başına kaymayı ve haber penceresinin ek maliyetini taşıyor mu?
+3. Kenarın kaynağı adıyla belli mi: yürütme, akış, bilgi ya da risk primi?
+4. Gereken işlem sayısı ve süre güç hesabıyla bulundu mu?
+5. Kaç kural, kaç parametre ve kaç alt kümenin deneneceği, yani ailenin büyüklüğü belli mi?
+
+**Sonuç okunurken**
+
+6. Net sonuç brütten ayrı okundu mu; isabet ile başabaş isabeti yan yana mı?
+7. Kayıp yön, zamanlama ve maliyet paylarına ayrıldı mı?
+8. Sonucun birimi pozisyon büyüklüğüyle uyumlu mu: sabit riskle (her işlem 1 R) işlem yapılacaksa R'deki iyileşme
+   paradır; sabit nominalle yapılacaksa sonuç pip olarak da okundu mu?
+9. En iyi bir ve en iyi üç işlem çıkınca sonuç ne oluyor?
+10. Rastgele yön tabanı ve şansın beklediği sayı biliniyor mu?
+11. Seçim örneklem dışına brüt mü taşıdı, maliyet tasarrufu mu?
+12. Kuralın başabaş maliyeti, aralığının alt ucuyla, ödenen maliyetin üstünde mi?
+
+**Kullanmadan önce**
+
+13. Görülmemiş veride, önceden yazılmış bir planla sınandı mı?
+14. Planın gücü, bakış takvimi ve durdurma kuralı yazılı mı?
+15. Kendi yürütmenizin makası ve kayması ölçüldü mü? Bu serinin medyan maliyeti
+    (1,6 pip) 10 pip'lik bir riskte işlem başına
+    0,16 R eder.
+16. Kapasite ve akışın yapısal değişimi (düzenleme, hesaplama penceresi, katılımcılar) ölçüldü mü?
+
+## Ölçülmeyenler
+
+Bu dersin sınırları, serinin metodoloji dersindeki listeye ek olarak:
+
+- **Görülmemiş veri.** 2015–2017 ay sonları ve serinin bitişinden sonraki aylar sınanmadı; güçleri yukarıda.
+- **Gerçek yürütme.** Limit emir, kısmi dolum, son bakış, gecikme ve kendi makas ve kaymanız benzetilmedi.
+- **Kapasite.** Hiçbir kuralda büyük bir emrin fiyatı itmesi ölçülmedi.
+- **Kuralların birleşimi.** Netleşmenin hacme etkisi ölçüldü; birleşik bir kitabın sonucu, riski ve korelasyonu ölçülmedi.
+- **Sınanmamış akışlar.** Tokyo fiksingi, opsiyon vade kesimi, çeyrek sonu ve endeks yeniden dengelemesi.
+- **Literatürün kendi sonuçları.** Anılan çalışmaların bulguları kendi örneklemlerine aittir; bu serinin verisiyle
+  yeniden üretilmedi.
+
+## Kaynaklar
+
+- Armitage, P., McPherson, C. K. ve Rowe, B. C. (1969). Repeated Significance Tests on Accumulating Data. _Journal of the Royal Statistical Society, Series A_, 132(2), 235–244.
+- Bailey, D. H., Borwein, J. M., López de Prado, M. ve Zhu, Q. J. (2014). Pseudo-Mathematics and Financial Charlatanism: The Effects of Backtest Overfitting on Out-of-Sample Performance. _Notices of the American Mathematical Society_, 61(5), 458–471.
+- Bailey, D. H. ve López de Prado, M. (2014). The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality. _Journal of Portfolio Management_, 40(5), 94–107. (alıntılar yazarlardan birinin sitesindeki yayım öncesi sürümden)
+- Barber, B. M., Lee, Y.-T., Liu, Y.-J. ve Odean, T. (2014). The Cross-Section of Speculator Skill: Evidence from Day Trading. _Journal of Financial Markets_, 18, 1–24.
+- Benjamini, Y. ve Hochberg, Y. (1995). Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing. _Journal of the Royal Statistical Society, Series B_, 57(1), 289–300.
+- Brown, S. J., Goetzmann, W., Ibbotson, R. G. ve Ross, S. A. (1992). Survivorship Bias in Performance Studies. _Review of Financial Studies_, 5(4), 553–580. (alıntı üçüncü taraf bir sitedeki metin sürümünden)
+- Chaboud, A. P., Chiquoine, B., Hjalmarsson, E. ve Vega, C. (2014). Rise of the Machines: Algorithmic Trading in the Foreign Exchange Market. _Journal of Finance_, 69(5), 2045–2084.
+- Chague, F., De-Losso, R. ve Giovannetti, B. (2019). Day Trading for a Living? Çalışma metni, SSRN 3423101.
+- Efron, B. (2011). Tweedie's Formula and Selection Bias. _Journal of the American Statistical Association_, 106(496), 1602–1614.
+- ESMA (2018). ESMA agrees to prohibit binary options and restrict CFDs to protect retail investors. Basın duyurusu, 27 Mart 2018.
+- Evans, M. D. D. (2018). Forex Trading and the WMR Fix. _Journal of Banking and Finance_, 87, 233–247. (alıntılar yazarın MPRA arşivindeki çalışma metninden)
+- Evans, M. D. D. ve Lyons, R. K. (2002). Order Flow and Exchange Rate Dynamics. _Journal of Political Economy_, 110(1), 170–180.
+- FSB (2014). Foreign Exchange Benchmarks: Final Report. Financial Stability Board, 30 Eylül 2014.
+- Glosten, L. R. ve Milgrom, P. R. (1985). Bid, Ask and Transaction Prices in a Specialist Market with Heterogeneously Informed Traders. _Journal of Financial Economics_, 14(1), 71–100.
+- Grossman, S. J. ve Stiglitz, J. E. (1980). On the Impossibility of Informationally Efficient Markets. _American Economic Review_, 70(3), 393–408.
+- Harvey, C. R., Liu, Y. ve Zhu, H. (2016). … and the Cross-Section of Expected Returns. _Review of Financial Studies_, 29(1), 5–68.
+- Holm, S. (1979). A Simple Sequentially Rejective Multiple Test Procedure. _Scandinavian Journal of Statistics_, 6(2), 65–70.
+- Ioannidis, J. P. A. (2008). Why Most Discovered True Associations Are Inflated. _Epidemiology_, 19(5), 640–648.
+- Ito, T. ve Yamada, M. (2017). Puzzles in the Tokyo Fixing in the Forex Market: Order Imbalances and Bank Pricing. _Journal of International Economics_, 109, 214–234.
+- Kaminski, K. M. ve Lo, A. W. (2014). When Do Stop-Loss Rules Stop Losses? _Journal of Financial Markets_, 18, 234–254. (alıntılar üçüncü taraf bir sitedeki metin sürümünden)
+- Krohn, I., Mueller, P. ve Whelan, P. (2024). Foreign Exchange Fixings and Returns Around the Clock. _Journal of Finance_, 79(1), 541–578. (pencere tanımı yazarların kabul edilmiş metninden)
+- Linnainmaa, J. T. (2010). Do Limit Orders Alter Inferences about Investor Performance and Behavior? _Journal of Finance_, 65(4), 1473–1506.
+- Lustig, H., Roussanov, N. ve Verdelhan, A. (2011). Common Risk Factors in Currency Markets. _Review of Financial Studies_, 24(11), 3731–3777.
+- Mancini, L., Ranaldo, A. ve Wrampelmeyer, J. (2013). Liquidity in the Foreign Exchange Market: Measurement, Commonality, and Risk Premiums. _Journal of Finance_, 68(5), 1805–1841.
+- McLean, R. D. ve Pontiff, J. (2016). Does Academic Research Destroy Stock Return Predictability? _Journal of Finance_, 71(1), 5–32.
+- Melvin, M. ve Prins, J. (2015). Equity Hedging and Exchange Rates at the London 4 p.m. Fix. _Journal of Financial Markets_, 22, 50–72.
+- Neely, C. J. ve Weller, P. A. (2003). Intraday Technical Trading in the Foreign Exchange Market. _Journal of International Money and Finance_, 22(2), 223–237. (özet çalışmanın başka bir sürümünden)
+- Neely, C. J., Weller, P. A. ve Ulrich, J. M. (2009). The Adaptive Markets Hypothesis: Evidence from the Foreign Exchange Market. _Journal of Financial and Quantitative Analysis_, 44(2), 467–488.
+- Nosek, B. A., Ebersole, C. R., DeHaven, A. C. ve Mellor, D. T. (2018). The Preregistration Revolution. _Proceedings of the National Academy of Sciences_, 115(11), 2600–2606.
+- O'Brien, P. C. ve Fleming, T. R. (1979). A Multiple Testing Procedure for Clinical Trials. _Biometrics_, 35(3), 549–556.
+- Oomen, R. (2017). Last Look. _Quantitative Finance_, 17(7), 1057–1070.
+- Osler, C. L. (2003). Currency Orders and Exchange Rate Dynamics: An Explanation for the Predictive Success of Technical Analysis. _Journal of Finance_, 58(5), 1791–1819.
+- Sullivan, R., Timmermann, A. ve White, H. (1999). Data-Snooping, Technical Trading Rule Performance, and the Bootstrap. _Journal of Finance_, 54(5), 1647–1691.
+- White, H. (2000). A Reality Check for Data Snooping. _Econometrica_, 68(5), 1097–1126.
+
+_Yatırım tavsiyesi değildir. Ölçülen her şey geçmişe aittir; geçmiş sonuçlar gelecekteki sonuçların göstergesi
+değildir._
