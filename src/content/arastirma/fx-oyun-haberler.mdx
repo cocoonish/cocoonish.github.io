@@ -11,11 +11,15 @@ onkosul: ['fx-oyun-okuma']
 ---
 
 import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Diyagram from '../../components/Diyagram.astro';
 
 Bir veri ya da karar açıklandığında fiyat birkaç dakika içinde yeni bilgiyi fiyatlamaya çalışır. İlk mum bu yüzden
-haber anlarında açılışlardan ve fiksinglerden çok daha büyüktür ve çok daha seyrek gelir: bir açılış her iş günü gelir,
-bir istihdam verisi ayda bir, bir merkez bankası kararı yılda sekiz kez. Bu ders iki aileyi ayrı okur: **ABD verileri**
-(tarım dışı istihdam ve tüketici fiyatları) ve **merkez bankası kararları** (Fed, ECB, BoE).
+haber anlarında genellikle daha büyüktür (2024 sonrasında sınanan tepkinin ortanca riski ABD verisinin normal
+mumunda 24 pip, açılışınkinde 5 pip) ve çok daha seyrek gelir: bir açılış her iş günü gelir, bir istihdam
+verisi ayda bir, bir merkez bankası kararı yılda sekiz kez. Bu ders iki aileyi ayrı okur: **ABD verileri** (tarım dışı
+istihdam ve tüketici fiyatları) ve **merkez bankası kararları** (Fed, ECB, BoE).
+
+<div class="sayi-tablo">
 
 | An | Yerel saat | TSİ | İlk mum | İzlenen süre |
 |---|---|---|---:|---:|
@@ -25,18 +29,99 @@ bir istihdam verisi ayda bir, bir merkez bankası kararı yılda sekiz kez. Bu d
 | ECB kararı | Frankfurt 14:15 | 15:15 (Avrupa kış saatinde 16:15) | 5 dk | 120 dk |
 | BoE kararı | Londra 12:00 | 14:00 (İngiltere kış saatinde 15:00) | 5 dk | 120 dk |
 
+</div>
+
 ECB kararı 09.06.2022 tarihine kadar Frankfurt 13:45'te açıklanıyordu (TSİ 14:45; Avrupa kış saatinde 15:45); ölçüm her olayı kendi gününün saatinden okur.
 
 Saatler resmî yayım takviminden alınır, tahmin edilmez. Burada **ilk mum** açıklamadan sonraki ilk 5
-dakikadır. Tipik boy o anın son 24 olayından ölçülür. Haber anında makas açılır ve emirler kayar;
-maliyet bu yüzden açıklamadan iki dakika önce ile on beş dakika sonrası arasında ek 1,0 pip
-kayma içerir.
+dakikadır. Tipik boy o anın son 24 olayından ölçülür. Sınamada açıklamadan iki dakika önce ile on
+beş dakika sonrası arasında piyasa, stop ve kırılım emirlerine ek 1,0 pip kayma varsayıldı; makas
+gerçek alış-satış fiyatlarından ödendi, haber anındaki büyüklüğü ayrıca ölçülmedi.
 
 ## Plan tek cümlede
 
-**Haber mumu tek başına bir yön sinyali değildir.** ABD verisinin ilk mumu şanstan seyrek sürüyor. Merkez bankası
-kararlarında güçlü ya da reddedilen ilk mumun yönünde kalmak 2024 sonrasında artıda kaldı, ama bu sonuç birkaç karar
-gününe dayanıyor; bir hüküm değil, izlenecek bir aday.
+**Haber mumu tek başına bir yön sinyali değildir.** ABD verisinin normal ve reddedilen ilk mumu şanstan seyrek
+sürüyor. Merkez bankası kararlarında güçlü ya da reddedilen ilk mumun yönünde kalmak 2024 sonrasında artıda kaldı, ama
+bu sonuç birkaç karar gününe dayanıyor; bir hüküm değil, izlenecek bir aday.
+
+## Bu dersi masada nasıl kullanırsın
+
+Bu ders haber anında bir yön vermez; masada üç şey söyler: açıklamadan önce defterde ne bırakılmaz, ilk beş dakikalık
+mum nasıl okunur, ne zaman beklenir ve ne zaman masadan kalkılır. Dersin bütün sayıları ilk mumla başlar ve iki saatlik
+izlemeyle biter. Aşağıdaki şema bu sırayı beş soruya çevirir: bir soru seni durdurursa sağdaki sonuç geçerlidir,
+durdurmazsa bir alttaki soruya inilir.
+
+<Diyagram no="M1" baslik="Haber anı: masada sırayla sorulan beş soru" kaynak="Karar şeması — dayanak: 1. ders, Emri nereye koyarsın; 1. ders, İlk mumun dört sınıfı; 1. ders, İncelenen on an; 4. ders, ABD verileri; 4. ders, Merkez bankası kararları" azami={480}>
+<svg viewBox="0 0 360 558" class="karar-sema" role="img" aria-label="Haber anı: masada sırayla sorulan beş soru">
+<defs><marker id="ko-haberakis" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ks-ok-ucu" /></marker></defs>
+<rect x="4" y="10" width="184" height="74" rx="3" class="ks-soru" />
+<text x="14" y="27" class="ks-yazi">Defterde süresine haber</text>
+<text x="14" y="42" class="ks-yazi">penceresi düşen bir emir</text>
+<text x="14" y="57" class="ks-yazi">var mı?</text>
+<line x1="188" x2="220" y1="47.0" y2="47.0" class="ks-ok" marker-end="url(#ko-haberakis)" />
+<text x="193" y="42.0" class="ks-dal">var</text>
+<rect x="222" y="10" width="134" height="74" rx="3" class="ks-sonuc ks-bekle" />
+<text x="230" y="26" class="ks-yazi-kucuk">Emri açıklamadan</text>
+<text x="230" y="40" class="ks-yazi-kucuk">önce çekersin</text>
+<text x="230" y="54" class="ks-yazi-kucuk">(disiplin kuralı;</text>
+<text x="230" y="68" class="ks-yazi-kucuk">ölçülmedi)</text>
+<line x1="40" x2="40" y1="84" y2="108" class="ks-ok" marker-end="url(#ko-haberakis)" />
+<text x="46" y="100" class="ks-dal">yok</text>
+<rect x="4" y="110" width="184" height="60" rx="3" class="ks-soru" />
+<text x="14" y="127" class="ks-yazi">İlk beş dakikalık mum</text>
+<text x="14" y="142" class="ks-yazi">kapandı mı?</text>
+<line x1="188" x2="220" y1="140.0" y2="140.0" class="ks-ok" marker-end="url(#ko-haberakis)" />
+<text x="193" y="135.0" class="ks-dal">hayır</text>
+<rect x="222" y="110" width="134" height="60" rx="3" class="ks-sonuc ks-bekle" />
+<text x="230" y="126" class="ks-yazi-kucuk">Beklersin: mum</text>
+<text x="230" y="140" class="ks-yazi-kucuk">kapanmadan sınıfı</text>
+<text x="230" y="154" class="ks-yazi-kucuk">belli değil</text>
+<line x1="40" x2="40" y1="170" y2="194" class="ks-ok" marker-end="url(#ko-haberakis)" />
+<text x="46" y="186" class="ks-dal">evet</text>
+<rect x="4" y="196" width="184" height="63" rx="3" class="ks-soru" />
+<text x="14" y="213" class="ks-yazi">ABD verisi mi ve ilk mum</text>
+<text x="14" y="228" class="ks-yazi">normal ya da reddedilen</text>
+<text x="14" y="243" class="ks-yazi">mi?</text>
+<line x1="188" x2="220" y1="227.5" y2="227.5" class="ks-ok" marker-end="url(#ko-haberakis)" />
+<text x="193" y="222.5" class="ks-dal">evet</text>
+<rect x="222" y="196" width="134" height="63" rx="3" class="ks-sonuc ks-yapma" />
+<text x="230" y="212" class="ks-yazi-kucuk">Mumun yönünde</text>
+<text x="230" y="226" class="ks-yazi-kucuk">kalmazsın: itiş</text>
+<text x="230" y="240" class="ks-yazi-kucuk">şanstan seyrek sürer</text>
+<line x1="40" x2="40" y1="259" y2="283" class="ks-ok" marker-end="url(#ko-haberakis)" />
+<text x="46" y="275" class="ks-dal">hayır</text>
+<rect x="4" y="285" width="184" height="74" rx="3" class="ks-soru" />
+<text x="14" y="302" class="ks-yazi">Merkez bankası kararı mı</text>
+<text x="14" y="317" class="ks-yazi">ve basın toplantısı henüz</text>
+<text x="14" y="332" class="ks-yazi">başlamadı mı?</text>
+<line x1="188" x2="220" y1="322.0" y2="322.0" class="ks-ok" marker-end="url(#ko-haberakis)" />
+<text x="193" y="317.0" class="ks-dal">evet</text>
+<rect x="222" y="285" width="134" height="74" rx="3" class="ks-sonuc ks-bekle" />
+<text x="230" y="301" class="ks-yazi-kucuk">İşlem açmazsın:</text>
+<text x="230" y="315" class="ks-yazi-kucuk">toplantıyı izler,</text>
+<text x="230" y="329" class="ks-yazi-kucuk">adayı deftere</text>
+<text x="230" y="343" class="ks-yazi-kucuk">yazarsın</text>
+<line x1="40" x2="40" y1="359" y2="383" class="ks-ok" marker-end="url(#ko-haberakis)" />
+<text x="46" y="375" class="ks-dal">hayır</text>
+<rect x="4" y="385" width="184" height="74" rx="3" class="ks-soru" />
+<text x="14" y="402" class="ks-yazi">İlk mumdan bu yana iki</text>
+<text x="14" y="417" class="ks-yazi">saat geçti mi?</text>
+<line x1="188" x2="220" y1="422.0" y2="422.0" class="ks-ok" marker-end="url(#ko-haberakis)" />
+<text x="193" y="417.0" class="ks-dal">evet</text>
+<rect x="222" y="385" width="134" height="74" rx="3" class="ks-sonuc ks-kalk" />
+<text x="230" y="401" class="ks-yazi-kucuk">Haber okuması biter;</text>
+<text x="230" y="415" class="ks-yazi-kucuk">masadan kalkarsın</text>
+<text x="230" y="429" class="ks-yazi-kucuk">(masa uygulaması;</text>
+<text x="230" y="443" class="ks-yazi-kucuk">ölçülmedi)</text>
+<line x1="40" x2="40" y1="459" y2="483" class="ks-ok" marker-end="url(#ko-haberakis)" />
+<text x="46" y="475" class="ks-dal">hayır</text>
+<rect x="4" y="485" width="352" height="63" rx="3" class="ks-son" />
+<text x="14" y="502" class="ks-yazi">Hiçbir soru seni durdurmadıysa kalan okuma:</text>
+<text x="14" y="517" class="ks-yazi">yarıya dönüş sıktır; karar mumunun yönü bir</text>
+<text x="14" y="532" class="ks-yazi">işlem değil, izlenecek bir adaydır.</text>
+</svg>
+</Diyagram>
+
 
 ## Haberden sonra fiyat nereye gidiyor
 
@@ -47,9 +132,83 @@ gününe dayanıyor; bir hüküm değil, izlenecek bir aday.
 Haber anlarında olay sayısı az olduğu için ortalama yol açılışlardaki kadar düzgün değildir; tek bir olay çizgiyi
 belirgin oynatabilir. Şekil bir yön söylemek için değil, iki dönemin birbirinden ne kadar ayrıştığını görmek için.
 
+### Masada: açıklamadan önceki dakikalar
+
+Açıklamadan önceki dakikalar ölçülmedi; buradaki kurallar sınamanın maliyet kurallarından ve ilk mumun tanımından
+gelir. Süresine haber penceresi düşen bekleyen bir emri açıklamadan önce çekersin. Bu bir disiplin kuralıdır, ölçüm
+sonucu değil: penceredeki ek kayma bir varsayımdı, haber anındaki makas ve gerçek kayma ölçülmedi, emri çekmenin
+sonuca etkisi de ölçülmedi. Mumun sınıfı kapanışta verilir: bir ucu süpürüp öbür yöne kapanan mum (reddedilen) ilk
+saniyelerde güçlü bir mum gibi görünebilir.
+
+<Diyagram no="M2" baslik="Açıklamadan önce: dar aralık ve defterde bekleyen emir" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 250" class="mum-sema" role="img" aria-label="Açıklamadan önce: dar aralık ve defterde bekleyen emir">
+<defs><marker id="ok-dararalik" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<rect x="133.3" y="25.5" width="82.2" height="191.1" class="ms-bolge ms-kalk" />
+<text x="244" y="125.0" class="ms-etiket ms-kalk-yazi">haber penceresi</text>
+<line x1="10.0" x2="153.8" y1="161.1" y2="161.1" class="ms-cizgi ms-uc" />
+<text x="244" y="165.1" class="ms-etiket ms-uc-yazi">dar aralık</text>
+<line x1="71.6" x2="194.9" y1="145.7" y2="145.7" class="ms-cizgi ms-stop" />
+<text x="244" y="149.7" class="ms-etiket ms-stop-yazi">bekleyen stop</text>
+<line x1="20.3" x2="20.3" y1="167.2" y2="188.8" class="ms-fitil ms-artis" />
+<rect x="13.9" y="173.4" width="12.7" height="6.2" class="ms-govde ms-artis" />
+<line x1="40.8" x2="40.8" y1="164.1" y2="182.6" class="ms-fitil ms-azalis" />
+<rect x="34.4" y="173.4" width="12.7" height="6.2" class="ms-govde ms-azalis" />
+<line x1="61.4" x2="61.4" y1="170.3" y2="188.8" class="ms-fitil ms-artis" />
+<rect x="55.0" y="176.5" width="12.7" height="3.1" class="ms-govde ms-artis" />
+<line x1="81.9" x2="81.9" y1="167.2" y2="185.7" class="ms-fitil ms-azalis" />
+<rect x="75.5" y="176.5" width="12.7" height="6.2" class="ms-govde ms-azalis" />
+<line x1="102.5" x2="102.5" y1="173.4" y2="188.8" class="ms-fitil ms-artis" />
+<rect x="96.1" y="176.5" width="12.7" height="6.2" class="ms-govde ms-artis" />
+<line x1="123.0" x2="123.0" y1="170.3" y2="182.6" class="ms-fitil ms-azalis" />
+<rect x="116.6" y="176.5" width="12.7" height="3.1" class="ms-govde ms-azalis" />
+<line x1="143.5" x2="143.5" y1="173.4" y2="185.7" class="ms-fitil ms-artis" />
+<rect x="137.2" y="176.5" width="12.7" height="3.1" class="ms-govde ms-artis" />
+<line x1="164.1" x2="164.1" y1="37.8" y2="210.4" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="157.7" y="56.3" width="12.7" height="120.2" class="ms-govde ms-artis ms-vurgu" />
+<line x1="184.6" x2="184.6" y1="44.0" y2="93.3" class="ms-fitil ms-azalis" />
+<rect x="178.3" y="56.3" width="12.7" height="27.7" class="ms-govde ms-azalis" />
+<line x1="205.2" x2="205.2" y1="68.6" y2="105.6" class="ms-fitil ms-azalis" />
+<rect x="198.8" y="84.0" width="12.7" height="6.2" class="ms-govde ms-azalis" />
+<line x1="225.7" x2="225.7" y1="74.8" y2="111.8" class="ms-fitil ms-azalis" />
+<rect x="219.4" y="90.2" width="12.7" height="9.2" class="ms-govde ms-azalis" />
+<circle cx="61.4" cy="204.2" r="8" class="ms-isaret" />
+<text x="61.4" y="207.8" class="ms-isaret-yazi">1</text>
+<circle cx="123.0" cy="130.2" r="8" class="ms-isaret" />
+<text x="123.0" y="133.8" class="ms-isaret-yazi">2</text>
+<circle cx="164.1" cy="16.2" r="8" class="ms-isaret" />
+<text x="164.1" y="19.8" class="ms-isaret-yazi">3</text>
+<text x="10" y="244" class="ms-eksen">zaman →  (5 dakikalık mumlar)</text>
+</svg>
+</Diyagram>
+
+- ① Açıklamadan önceki mumlar: bu dersin ölçtüğü her şey ilk mumla başlar; açıklamadan önceki dakikaların davranışı ölçülmedi.
+- ② Dar aralığın hemen dışında bekleyen stop emri: haber mumu onu tetikler ve dolum, emrin seviyesinin ötesinde olabilir; süresine pencere düşen emri açıklamadan önce çekersin.
+- ③ Haber mumu: önce bir ucu süpürüp öbür yöne kapanabilir; mum kapanmadan sınıfı belli değildir.
+
+
+<div class="senaryo" id="kart-haber-oncesi">
+<p class="senaryo-durum"><span class="etiket">Durum</span> Açıklamaya on dakika kala, ABD verisinden ya da bir merkez bankası kararından önce, açık bir emirle ya da pozisyonla masadasın</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Mumlar küçülmüş, aralık birkaç dakikadır dar; takvimde saati belli bir açıklama var ve fiyat onu bekliyor.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Süresine haber penceresi (açıklamadan iki dakika önce – on beş dakika sonra) düşen emri açıklamadan önce çekersin (disiplin kuralı, ölçüm sonucu değil); açık pozisyonun stopunun ilk mumun tipik boyu kadar bir hareketin içinde kalıp kalmadığına bakarsın; açıklamanın saatini TSİ olarak not edersin.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Açıklamadan saniyeler önce yön tahminiyle girmezsin; dar aralığın hemen dışına, haberi yakalamak için stop emri bırakmazsın.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Bıraktığın stop emri haber mumunda seviyesinin ötesinde dolabilir; ek kayma sınamada bir varsayımdı, haber anındaki makas ve gerçek kayma ölçülmedi. Yeni bir işlemin emrini ilk mum kapanmadan koymazsın.</dd>
+<dt>Dayanak</dt>
+<dd>1. ders, Emri nereye koyarsın; 1. ders, İlk mumun dört sınıfı</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: kartın tarif ettiği işlem bu seride ölçülmedi; kart, maliyet kurallarından ve tanımlardan türetilmiş bir masa uygulamasıdır, bir bulgu değil.</p>
+</div>
+
+
 ## ABD verileri
 
 Yarısına dönüş, devam ve dönüş payı; yanında yolun aynasında (yön rastgele olsaydı) aynı payın değeri:
+
+<div class="sayi-tablo">
 
 | İlk mum · dönem | n | yarısına döndü (gerçek · ayna) | devam etti (gerçek · ayna) | tersine döndü (gerçek · ayna) |
 |---|---:|---:|---:|---:|
@@ -60,6 +219,8 @@ Yarısına dönüş, devam ve dönüş payı; yanında yolun aynasında (yön ra
 | reddedilen · 2018–23 | 75 | %87 · %76 | %39 · %51 | %48 · %41 |
 | reddedilen · 2024 → | 23 | %83 · %78 | %4 · %17 | %35 · %22 |
 
+</div>
+
 Normal ve reddedilen veri mumunda sürme payı iki dönemde de aynanın altında. Normal mumda 2018–2023'te
 %38 (ayna %48), 2024 → döneminde %13
 (%34). Veri ilk beş dakikada fiyatı bir yöne itiyor, ve o itiş sonraki iki saatte şanstan
@@ -68,6 +229,8 @@ seyrek sürüyor. 2024 → döneminde fark büyüdü. Güçlü veri mumunda ise 
 
 Bu bir okuma. İlk mumun tersine giren bir tepki ABD verisi için önceden yazılmadığı için sınanmadı; sınanmadan bir
 kural sayılmaz. Her veri tek tek:
+
+<div class="sayi-tablo">
 
 | An · ilk mum | 2018–23 n | yarısına döndü | devam etti | tersine döndü | 2024 → n | yarısına döndü | devam etti | tersine döndü |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -78,11 +241,110 @@ kural sayılmaz. Her veri tek tek:
 | ABD TÜFE · normal | 97 | %81 | %41 | %38 | 68 | %79 | %13 | %35 |
 | ABD TÜFE · reddedilen | 24 | %79 | %50 | %38 | 10 | %60 | %10 | %10 |
 
+</div>
+
 2024 → döneminde güçlü veri mumu yalnız 43 olay. İki dönemin farkının sebebi bu derste ölçülmedi:
 bir piyasa değişimi de (veriden sonraki ilk dakikalarda fiyatlamanın daha hızlı bitmesi), küçük örneklemin dalgalanması
 da olabilir.
 
+### Masada: verinin ilk beş dakikası
+
+Tarım dışı istihdam ve TÜFE New York 08:30'da (TSİ 15:30, ABD kış saatinde 16:30) gelir; ilk mum New York 08:35'te
+(TSİ 15:35, ABD kış saatinde 16:35) kapanır. Masadaki okuma o kapanışla başlar ve üç adımdır.
+
+1. **Sınıfı koyarsın,** o anın son 24 olayının tipik boyuna göre (1. ders, İlk mumun dört sınıfı).
+2. **Üç seviye çizersin:** mumun iki ucu ve yarısı. Sonraki iki saatin okuması bu üç çizginin karşısında yapılır.
+3. **Neyi beklemeyeceğini söylersin.** Normal ve reddedilen veri mumunun yönünde sürmesini beklemezsin: iki dönemde de
+   şanstan seyrek sürdü. Güçlü veri mumunda devam payı aynayla aynı; mumun ucunda kapanması yön bilgisi değildir.
+
+İzleme New York 10:35'te (TSİ 17:35, ABD kış saatinde 18:35) biter; arada New York açılışı (New York 09:30, TSİ
+16:30, ABD kış saatinde 17:30) geçer ve bu ders ikisini ayırmadı.
+
+<Diyagram no="M3" baslik="ABD verisinin normal ilk mumu: kovalamazsın, yarıyı ve öbür ucu izlersin" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 250" class="mum-sema" role="img" aria-label="ABD verisinin normal ilk mumu: kovalamazsın, yarıyı ve öbür ucu izlersin">
+<defs><marker id="ok-verinormal" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<rect x="133.3" y="25.5" width="102.7" height="52.7" class="ms-bolge ms-yasak" />
+<text x="244" y="55.8" class="ms-etiket ms-yasak-yazi">kovalama bölgesi</text>
+<line x1="112.7" x2="236.0" y1="84.8" y2="84.8" class="ms-cizgi ms-uc" />
+<text x="244" y="88.8" class="ms-etiket ms-uc-yazi">mumun ucu</text>
+<line x1="112.7" x2="236.0" y1="150.6" y2="150.6" class="ms-cizgi ms-seviye" />
+<text x="244" y="154.6" class="ms-etiket ms-seviye-yazi">mumun yarısı</text>
+<line x1="112.7" x2="236.0" y1="216.5" y2="216.5" class="ms-cizgi ms-uc" />
+<text x="244" y="220.5" class="ms-etiket ms-uc-yazi">öbür uç</text>
+<line x1="20.3" x2="20.3" y1="190.2" y2="213.2" class="ms-fitil ms-artis" />
+<rect x="13.9" y="200.1" width="12.7" height="3.3" class="ms-govde ms-artis" />
+<line x1="40.8" x2="40.8" y1="186.9" y2="209.9" class="ms-fitil ms-artis" />
+<rect x="34.4" y="193.5" width="12.7" height="6.6" class="ms-govde ms-artis" />
+<line x1="61.4" x2="61.4" y1="183.6" y2="203.4" class="ms-fitil ms-azalis" />
+<rect x="55.0" y="193.5" width="12.7" height="6.6" class="ms-govde ms-azalis" />
+<line x1="81.9" x2="81.9" y1="190.2" y2="209.9" class="ms-fitil ms-azalis" />
+<rect x="75.5" y="200.1" width="12.7" height="3.3" class="ms-govde ms-azalis" />
+<line x1="102.5" x2="102.5" y1="193.5" y2="209.9" class="ms-fitil ms-artis" />
+<rect x="96.1" y="196.8" width="12.7" height="6.6" class="ms-govde ms-artis" />
+<line x1="123.0" x2="123.0" y1="84.8" y2="216.5" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="116.6" y="124.3" width="12.7" height="72.5" class="ms-govde ms-artis ms-vurgu" />
+<line x1="143.5" x2="143.5" y1="104.5" y2="140.8" class="ms-fitil ms-azalis" />
+<rect x="137.2" y="124.3" width="12.7" height="9.9" class="ms-govde ms-azalis" />
+<line x1="164.1" x2="164.1" y1="121.0" y2="157.2" class="ms-fitil ms-azalis" />
+<rect x="157.7" y="134.2" width="12.7" height="16.5" class="ms-govde ms-azalis" />
+<line x1="184.6" x2="184.6" y1="137.5" y2="173.7" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="178.3" y="150.6" width="12.7" height="13.2" class="ms-govde ms-azalis ms-soluk" />
+<line x1="205.2" x2="205.2" y1="150.6" y2="190.2" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="198.8" y="163.8" width="12.7" height="16.5" class="ms-govde ms-azalis ms-soluk" />
+<line x1="225.7" x2="225.7" y1="167.1" y2="196.8" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="219.4" y="180.3" width="12.7" height="6.6" class="ms-govde ms-azalis ms-soluk" />
+<circle cx="123.0" cy="65.0" r="8" class="ms-isaret" />
+<text x="123.0" y="68.6" class="ms-isaret-yazi">1</text>
+<circle cx="164.1" cy="177.0" r="8" class="ms-isaret" />
+<text x="164.1" y="180.6" class="ms-isaret-yazi">2</text>
+<circle cx="164.1" cy="51.8" r="8" class="ms-isaret" />
+<text x="164.1" y="55.4" class="ms-isaret-yazi">3</text>
+<circle cx="225.7" cy="229.7" r="8" class="ms-isaret" />
+<text x="225.7" y="233.3" class="ms-isaret-yazi">4</text>
+<text x="10" y="244" class="ms-eksen">zaman →  (5 dakikalık mumlar)</text>
+</svg>
+</Diyagram>
+
+- ① Verinin ilk beş dakikalık mumu, normal sınıf: boyu tipik boya yakın, kapanışı mumun ucunda değil.
+- ② Mumun yarısı: fiyat çoğu zaman buraya döner; yönü rastgele bir yolda da sık dönerdi.
+- ③ Kovalama bölgesi: mumun ucunun ötesinde mumun yönünde kalmak. Bu itiş iki dönemde de şanstan seyrek sürdü.
+- ④ Öbür uç: kırılırsa ilk mumun yönü geri alınmıştır; bu yönde bir tepki önceden yazılmadı ve sınanmadı.
+
+
+<div class="senaryo" id="kart-veri-normal">
+<p class="senaryo-durum"><span class="etiket">Durum</span> 5 dakikalık grafikte, tarım dışı istihdam ya da TÜFE açıklamasından sonra normal ya da reddedilen ilk mum</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Boyu tipik boya yakın bir mum; kapanışı ucunda değil, ortasına yakın. Reddedilen mumda bir yönde uzun bir fitil ve küçük bir gövde.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Mumun iki ucunu ve yarısını işaretlersin; sonraki iki saatte fiyatın yarıya ve öbür uca gidip gitmediğine bakarsın.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Mumun yönünde kalmazsın: bu itiş iki dönemde de şanstan seyrek sürdü. Mumun tersine de girmezsin: o tepki önceden yazılmadı ve sınanmadı.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Başka bir gerekçeyle mumun yönünde gireceksen limit mumun yarısına, stop öbür ucun mum boyunun onda biri ötesine. Limit yalnız fiyat yarıya geri geldiğinde dolar; dolum itişin yarısının geri alındığını söyler. Emir ilk mum kapandıktan bir saat sonra düşer (ön kayıttaki süre, ölçülerek seçilmedi).</dd>
+<dt>Dayanak</dt>
+<dd>4. ders, ABD verileri; 5. ders, Referans tepkiler; 8. ders, Limit neden ucuz görünür: ters seçim</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: ölçüm bu durumda maliyetten sonra artı bir işlem bulmadı. Kural, başka bir gerekçeyle masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+Aşağıdaki iki gün bir kuralla seçildi: EUR/USD'de tarım dışı istihdamın normal ilk mumuna uyan olaylardan, biri
+yarıya dönüp itişi sürdürmeyen, öbürü itişi sürdüren en son olay.
+
+<GrafikEmbed src="/arastirma/fx-oyun-haberler/m_nfp-normal.html" baslik="Tarım dışı istihdamın normal ilk mumu: iki gün, iki son" no="M4" kaynak="Dukascopy" />
+
+
+Üstteki gün 1 Eylül 2023: ① yukarı, normal sınıftan ve ucuna yakın kapanmış bir mumdur (TSİ 15:30–15:35). Fiyat
+yedi dakika sonra ② yarıya geri çekilir (③, TSİ 15:42), TSİ 16:30'da ucuna kadar çıkıp onu aşamaz, TSİ 17:00'de öbür
+ucu kırar ve ④'te (TSİ 17:35) mumun dibinin belirgin altındadır: yükseliş tamamen geri alınmıştır. Alttaki gün 3 Kasım
+2023: ① aynı sınıftan, aşağı yukarı aynı boyda ve aynı biçimde kapanmış bir mumdur; kapandığı anda üstteki günden ayırt
+edilemez. Fiyat yarıya hiç dönmez, ucu hemen aşar, TSİ 17:00'de ucun neredeyse bir mum boyu ötesine gider ve ④'te ucun
+biraz ötesinde biter. Tek bir gün kuralı ne doğrular ne yanlışlar; okuma bir sıklıktır.
+
 ## Merkez bankası kararları
+
+<div class="sayi-tablo">
 
 | İlk mum · dönem | n | yarısına döndü (gerçek · ayna) | devam etti (gerçek · ayna) | tersine döndü (gerçek · ayna) |
 |---|---:|---:|---:|---:|
@@ -93,12 +355,16 @@ da olabilir.
 | reddedilen · 2018–23 | 31 | %81 · %87 | %61 · %32 | %23 · %55 |
 | reddedilen · 2024 → | 7 | %86 · %100 | %71 · %14 | %29 · %71 |
 
+</div>
+
 Kararlarda reddedilen ilk mum iki dönemde de şanstan sık sürüyor: 2018–2023'te %61
 (ayna %32), 2024 → döneminde %71
 (%14). Ama olay sayısı küçük (31 ve
 7). Güçlü karar mumu 2018–2023'te aynayla aynıydı (%43 ve
 %46); 2024 → döneminde 11 olayda %73 sürdü ve
 tersine dönen olmadı. Her karar tek tek:
+
+<div class="sayi-tablo">
 
 | An · ilk mum | 2018–23 n | yarısına döndü | devam etti | tersine döndü | 2024 → n | yarısına döndü | devam etti | tersine döndü |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -112,15 +378,111 @@ tersine dönen olmadı. Her karar tek tek:
 | BoE kararı · normal | 14 | %93 | %21 | %36 | 10 | %80 | %30 | %40 |
 | BoE kararı · reddedilen | 6 | %50 | %33 | %17 | 0 | — | — | — |
 
-Kararın ilk beş dakikası karar metnidir; BoE'de toplantı tutanağı da aynı anda yayımlanır. Fed'de basın toplantısı
-karardan yarım saat sonra başlar (2019'dan beri her kararda; 2018'de yalnız çeyrek sonu toplantılarında), ECB'de
-bugün yarım saat sonra (2022 ortasına kadar üç çeyrek saat sonra), ve izlenen 120 dakika onu da
-içerir. Yani bir karar mumunun "devam etmesi", metnin ve basın toplantısının aynı yöne bakması anlamına gelebilir.
-Basın toplantısının ayrı etkisi bu derste ölçülmedi.
+</div>
+
+Kararın ilk beş dakikası karar metnidir (BoE'de toplantı tutanağı da aynı anda gelir). Fed'de basın toplantısı
+karardan yarım saat sonra başlar (2019'dan beri her kararda; 2018'de yalnız çeyrek sonu toplantılarında), ECB'de bugün
+yarım saat sonra (2022 ortasına kadar üç çeyrek saat sonra); izlenen 120 dakika onu da içerir. Bir
+karar mumunun "devam etmesi" bu yüzden metnin ve toplantının aynı yöne bakması olabilir; toplantının ayrı etkisi bu
+derste ölçülmedi.
+
+### Masada: karar metni ve basın toplantısı
+
+İlk 5 dakikalık mum karar metninin fiyatıdır; ikinci dalga basın toplantısıdır: Fed New York 14:30 (TSİ
+21:30, ABD kış saatinde 22:30), ECB Frankfurt 14:45 (TSİ 15:45, Avrupa kış saatinde 16:45); BoE'de tutanak kararla
+gelir. Ölçülen paylar Fed'de ve ECB'de iki dalganın toplamıdır. Normal karar mumunun yarıya dönüşü aynadakiyle aynıdır;
+reddedilen ve güçlü karar mumunun sürmesi az olaya dayanır. Masada işlem açmazsın: iki ucu ve toplantının saatini
+işaretler, toplantıyı izler, adayı deftere yazarsın. Öbür uç kırılırsa karar mumunun okuması biter.
+
+<Diyagram no="M5" baslik="Karar mumu ve basın toplantısı: iki ayrı dalga" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 250" class="mum-sema" role="img" aria-label="Karar mumu ve basın toplantısı: iki ayrı dalga">
+<defs><marker id="ok-ikidalga" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<rect x="79.5" y="34.4" width="86.9" height="66.7" class="ms-bolge ms-bekle" />
+<text x="244" y="65.7" class="ms-etiket ms-bekle-yazi">toplantıyı</text>
+<text x="244" y="78.7" class="ms-etiket ms-bekle-yazi">izlersin</text>
+<line x1="62.2" x2="236.0" y1="25.5" y2="25.5" class="ms-cizgi ms-uc" />
+<text x="244" y="29.5" class="ms-etiket ms-uc-yazi">karar mumu ucu</text>
+<line x1="62.2" x2="236.0" y1="89.9" y2="89.9" class="ms-cizgi ms-seviye" />
+<text x="244" y="93.9" class="ms-etiket ms-seviye-yazi">mumun yarısı</text>
+<line x1="62.2" x2="236.0" y1="154.3" y2="154.3" class="ms-cizgi ms-uc" />
+<text x="244" y="158.3" class="ms-etiket ms-uc-yazi">öbür uç</text>
+<line x1="18.7" x2="18.7" y1="127.7" y2="149.9" class="ms-fitil ms-artis" />
+<rect x="13.3" y="136.6" width="10.8" height="4.4" class="ms-govde ms-artis" />
+<line x1="36.1" x2="36.1" y1="123.2" y2="145.4" class="ms-fitil ms-azalis" />
+<rect x="30.7" y="136.6" width="10.8" height="4.4" class="ms-govde ms-azalis" />
+<line x1="53.5" x2="53.5" y1="132.1" y2="149.9" class="ms-fitil ms-artis" />
+<rect x="48.1" y="136.6" width="10.8" height="4.4" class="ms-govde ms-artis" />
+<line x1="70.8" x2="70.8" y1="25.5" y2="154.3" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="65.5" y="69.9" width="10.8" height="66.7" class="ms-govde ms-artis ms-vurgu" />
+<line x1="88.2" x2="88.2" y1="43.2" y2="87.7" class="ms-fitil ms-artis" />
+<rect x="82.8" y="56.6" width="10.8" height="13.3" class="ms-govde ms-artis" />
+<line x1="105.6" x2="105.6" y1="38.8" y2="78.8" class="ms-fitil ms-azalis" />
+<rect x="100.2" y="56.6" width="10.8" height="17.8" class="ms-govde ms-azalis" />
+<line x1="123.0" x2="123.0" y1="56.6" y2="92.1" class="ms-fitil ms-artis" />
+<rect x="117.6" y="65.5" width="10.8" height="8.9" class="ms-govde ms-artis" />
+<line x1="140.4" x2="140.4" y1="52.1" y2="87.7" class="ms-fitil ms-azalis" />
+<rect x="135.0" y="65.5" width="10.8" height="13.3" class="ms-govde ms-azalis" />
+<line x1="157.8" x2="157.8" y1="61.0" y2="96.6" class="ms-fitil ms-azalis" />
+<rect x="152.4" y="78.8" width="10.8" height="4.4" class="ms-govde ms-azalis" />
+<line x1="175.2" x2="175.2" y1="69.9" y2="203.2" class="ms-fitil ms-azalis ms-vurgu" />
+<rect x="169.8" y="83.2" width="10.8" height="102.2" class="ms-govde ms-azalis ms-vurgu" />
+<line x1="192.5" x2="192.5" y1="163.2" y2="216.5" class="ms-fitil ms-azalis" />
+<rect x="187.1" y="185.4" width="10.8" height="8.9" class="ms-govde ms-azalis" />
+<line x1="209.9" x2="209.9" y1="167.7" y2="212.1" class="ms-fitil ms-artis" />
+<rect x="204.5" y="176.5" width="10.8" height="17.8" class="ms-govde ms-artis" />
+<line x1="227.3" x2="227.3" y1="158.8" y2="198.8" class="ms-fitil ms-azalis" />
+<rect x="221.9" y="176.5" width="10.8" height="13.3" class="ms-govde ms-azalis" />
+<circle cx="70.8" cy="7.7" r="8" class="ms-isaret" />
+<text x="70.8" y="11.3" class="ms-isaret-yazi">1</text>
+<circle cx="175.2" cy="47.7" r="8" class="ms-isaret" />
+<text x="175.2" y="51.3" class="ms-isaret-yazi">2</text>
+<circle cx="192.5" cy="234.3" r="8" class="ms-isaret" />
+<text x="192.5" y="237.9" class="ms-isaret-yazi">3</text>
+<text x="10" y="244" class="ms-eksen">zaman →  (5 dakikalık mumlar)</text>
+</svg>
+</Diyagram>
+
+- ① Karar mumu: kararın ilk beş dakikası karar metninin fiyatıdır.
+- ② Basın toplantısının başladığı mum: Fed'de karardan yarım saat sonra, yani beş dakikalık grafikte altı mum sonra.
+- ③ Karar mumunun öbür ucu kırıldı: ikinci dalga ilk dalgayı geri aldı; karar mumunun okuması burada biter.
+
+
+<div class="senaryo" id="kart-karar-guclu">
+<p class="senaryo-durum"><span class="etiket">Durum</span> 5 dakikalık grafikte, Fed, ECB ya da BoE kararından sonra güçlü ya da reddedilen ilk mum</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Güçlüde tipik boyun belirgin üstünde, ucuna yakın kapanan bir mum; reddedilende bir yönde uzun fitil, küçük gövde. Basın toplantısı henüz başlamamış.</dd>
+<dt>Ne yaparsın</dt>
+<dd>İşlem açmadan mumun yönünü ve iki ucunu işaretlersin; basın toplantısını izler, fiyatın mumun öbür ucuna gidip gitmediğine bakar, adayı deftere yazarsın.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Birkaç karar gününden gelen artı sonucu bir kural saymazsın; basın toplantısının karar mumunun yönünde gideceğini varsaymazsın.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Başka bir gerekçeyle mumun yönünde gireceksen giriş hâlâ haber penceresindedir; stop mumun öbür ucunun ötesine gider ve pip cinsinden geniştir; hedef yakınsa başa baş için gereken kazanma oranı da yükselir. Basın toplantısı öbür ucu kırarsa okuma biter.</dd>
+<dt>Dayanak</dt>
+<dd>4. ders, Merkez bankası kararları; 5. ders, İşlem tepkileri; 1. ders, Kazanma oranı ile net sonuç</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: bu durumda 2024 sonrasında artı sonuç ölçüldü, ama az sayıda olaya dayanıyor ve hüküm &quot;çalışıyor&quot; değil. Kural, masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+Aşağıdaki iki gün de kuralla seçildi: EUR/USD'de Fed kararının normal ilk mumu; biri öbür ucu kırarak, öbürü mumun
+yönünde sürerek biten en son olay.
+
+<GrafikEmbed src="/arastirma/fx-oyun-haberler/m_fomc-normal.html" baslik="Fed kararının normal ilk mumu: basın toplantısında iki ayrı son" no="M6" kaynak="Dukascopy" />
+
+
+Üstteki gün 3 Mayıs 2023: ① yukarıdır (TSİ 21:00–21:05), uzun üst fitilli ve yarısının hemen üstünde kapanır; bu
+yüzden fiyat ② yarıya hemen sonraki mumda dokunur (③). Öbür uç basın toplantısının ilk mumunda (TSİ 21:30) kırılır ve
+④'te (TSİ 23:05) fiyat mumun alt yarısındadır: yükselişin çoğu geri alınmıştır. Alttaki gün 20 Mart 2019: ① yine
+normal sınıftadır ama biçimi farklıdır: ucunda kapanmış, gövdesi neredeyse mumun tamamı. Fiyat yarıya hiç dönmez, basın
+toplantısı başladıktan sonra (TSİ 21:30) ucun üç çeyrek mum boyu kadar ötesine gider ve ④'te ucun yaklaşık yarım mum
+boyu ötesindedir. Biçim farkı sınıfın içinde ölçülmedi; tek bir gün onu kural yapmaz.
 
 ## Küçük haber mumu
 
 Açıklama ilk beş dakikada fiyatı oynatmamışsa, sonra kırıldığı tarafa ne kadar gidiyor:
+
+<div class="sayi-tablo">
 
 | An | 2018–23 n | kırılan tarafta 1 mum boyu gitti | 2024 → n | kırılan tarafta 1 mum boyu gitti |
 |---|---:|---:|---:|---:|
@@ -130,10 +492,91 @@ Açıklama ilk beş dakikada fiyatı oynatmamışsa, sonra kırıldığı tarafa
 | ECB kararı | 7 | %43 | 11 | %82 |
 | BoE kararı | 7 | %14 | 10 | %30 |
 
+</div>
+
 Fed kararında küçük ilk mumdan sonra kırılan tarafta bir mum boyu ilerleme %65
 (2024 → %60): karar metni fiyatı oynatmamışsa, hareket çoğu zaman sonra geliyor; basın toplantısı
 izlenen sürenin içinde. ABD verisinde ise küçük ilk mum 2024 → döneminde daha da az ilerliyor (enflasyon verisinde
 %20). ECB ve BoE'nin olay sayıları küçük (11 ve 10).
+
+### Masada: fiyatı oynatmayan açıklama
+
+Küçük ilk mum fiyatın oynamadığını söyler, yön söylemez; okuma önce kırılan uçla başlar ve Fed'de toplantının
+başlangıcından (TSİ 21:30, ABD kış saatinde 22:30) önce bitmiş sayılmaz, çünkü kırılımın metinden mi toplantıdan mı
+geldiği ayrılmadı. Sınanan biçim iki uca birer kırılım emridir (biri dolunca öbürü iptal; stop öbür ucun mum boyunun
+onda biri ötesinde, hedef yarım R) ve "sıkışma patlar" diye bir kenar sayılmaz. ABD verisinde kırılım maliyetten önce
+küçük bir artı, maliyetle iki dönemde de eksiydi (2024 sonrasında maliyetsiz +0,09,
+net −0,03 R). Karar mumunda 2018–2023'te −0,12 R, 2024 sonrasında
++0,15 R (zayıf); maliyetin payı sırasıyla 0,25 ve
+0,10 R (5. ders, Maliyet nereye gidiyor). Bir R hedefli biçimler karar mumunda
+2018–2023'te denendi, hiçbiri maliyetten sonra artıda kalmadı (en iyisi −0,07 R).
+
+<Diyagram no="M7" baslik="Küçük karar mumu: önce hangi uç kırılıyor" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 250" class="mum-sema" role="img" aria-label="Küçük karar mumu: önce hangi uç kırılıyor">
+<defs><marker id="ok-kucukkarar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<rect x="112.7" y="136.1" width="41.1" height="60.3" class="ms-bolge ms-bekle" />
+<text x="244" y="164.3" class="ms-etiket ms-bekle-yazi">kırılımı</text>
+<text x="244" y="177.3" class="ms-etiket ms-bekle-yazi">beklersin</text>
+<line x1="153.8" x2="236.0" y1="102.9" y2="102.9" class="ms-cizgi ms-hedef" />
+<text x="244" y="106.9" class="ms-etiket ms-hedef-yazi">yarım R hedef</text>
+<line x1="92.2" x2="236.0" y1="136.1" y2="136.1" class="ms-cizgi ms-uc" />
+<text x="244" y="140.1" class="ms-etiket ms-uc-yazi">kırılan uç</text>
+<line x1="92.2" x2="236.0" y1="202.5" y2="202.5" class="ms-cizgi ms-stop" />
+<text x="244" y="206.5" class="ms-etiket ms-stop-yazi">stop: öbür ucun ötesi</text>
+<line x1="20.3" x2="20.3" y1="126.0" y2="206.5" class="ms-fitil ms-artis" />
+<rect x="13.9" y="146.1" width="12.7" height="30.2" class="ms-govde ms-artis" />
+<line x1="40.8" x2="40.8" y1="116.0" y2="186.4" class="ms-fitil ms-azalis" />
+<rect x="34.4" y="146.1" width="12.7" height="30.2" class="ms-govde ms-azalis" />
+<line x1="61.4" x2="61.4" y1="136.1" y2="216.5" class="ms-fitil ms-artis" />
+<rect x="55.0" y="156.2" width="12.7" height="20.1" class="ms-govde ms-artis" />
+<line x1="81.9" x2="81.9" y1="126.0" y2="186.4" class="ms-fitil ms-azalis" />
+<rect x="75.5" y="156.2" width="12.7" height="10.1" class="ms-govde ms-azalis" />
+<line x1="102.5" x2="102.5" y1="136.1" y2="196.4" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="96.1" y="156.2" width="12.7" height="10.1" class="ms-govde ms-artis ms-vurgu" />
+<line x1="123.0" x2="123.0" y1="136.1" y2="186.4" class="ms-fitil ms-azalis" />
+<rect x="116.6" y="156.2" width="12.7" height="10.1" class="ms-govde ms-azalis" />
+<line x1="143.5" x2="143.5" y1="146.1" y2="186.4" class="ms-fitil ms-artis" />
+<rect x="137.2" y="156.2" width="12.7" height="10.1" class="ms-govde ms-artis" />
+<line x1="164.1" x2="164.1" y1="85.8" y2="166.3" class="ms-fitil ms-artis" />
+<rect x="157.7" y="95.9" width="12.7" height="60.3" class="ms-govde ms-artis" />
+<line x1="184.6" x2="184.6" y1="45.6" y2="116.0" class="ms-fitil ms-artis" />
+<rect x="178.3" y="55.6" width="12.7" height="40.2" class="ms-govde ms-artis" />
+<line x1="205.2" x2="205.2" y1="25.5" y2="85.8" class="ms-fitil ms-azalis" />
+<rect x="198.8" y="55.6" width="12.7" height="10.1" class="ms-govde ms-azalis" />
+<line x1="225.7" x2="225.7" y1="35.5" y2="95.9" class="ms-fitil ms-artis" />
+<rect x="219.4" y="45.6" width="12.7" height="20.1" class="ms-govde ms-artis" />
+<circle cx="102.5" cy="100.9" r="8" class="ms-isaret" />
+<text x="102.5" y="104.5" class="ms-isaret-yazi">1</text>
+<circle cx="164.1" cy="15.4" r="8" class="ms-isaret" />
+<text x="164.1" y="19.0" class="ms-isaret-yazi">2</text>
+<circle cx="205.2" cy="256.8" r="8" class="ms-isaret" />
+<text x="205.2" y="260.4" class="ms-isaret-yazi">3</text>
+<text x="10" y="244" class="ms-eksen">zaman →  (5 dakikalık mumlar)</text>
+</svg>
+</Diyagram>
+
+- ① Küçük karar mumu: boyu tipik boyun çok altında; karar metni fiyatı oynatmadı.
+- ② Önce kırılan uç: okuma buradan başlar. Fed kararında kırılan taraf iki dönemde de çoğu zaman bir mum boyu yol aldı.
+- ③ Stop öbür ucun mum boyunun onda biri ötesinde, hedef riskin yarısı: sınanan biçim budur. Makas ve kayma bu riskin görünür bir parçasıdır.
+
+
+<div class="senaryo" id="kart-karar-kucuk">
+<p class="senaryo-durum"><span class="etiket">Durum</span> 5 dakikalık grafikte, Fed, ECB ya da BoE kararından sonra küçük ilk mum (karar metni fiyatı oynatmadı)</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Tipik boyun çok altında bir mum; fiyat birkaç mumdur karar mumunun aralığında dolaşıyor, basın toplantısı henüz başlamadı.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Mumun iki ucunu işaretlersin; basın toplantısının saatini not edersin (Fed TSİ 21:30, ABD kış saatinde 22:30; ECB TSİ 15:45, Avrupa kış saatinde 16:45); hangi ucun önce kırıldığına bakarsın.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Küçük mumu kararın etkisiz kaldığı diye okumazsın; ilk kırılımdan önce bir taraf seçmezsin; iki uca emir bırakmayı &quot;sıkışma patlar&quot; diye bir kenar saymazsın.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Sınanan biçim iki uca birer kırılım emridir, biri dolunca öbürü iptal; stop öbür ucun mum boyunun onda biri ötesinde, hedef riskin yarısı. Bir R hedefli biçimler 2018–2023&#x27;te artıda kalmadı, 2024 sonrasında sınanmadı. Emir ilk mum kapandıktan bir saat sonra düşer.</dd>
+<dt>Dayanak</dt>
+<dd>4. ders, Küçük haber mumu; 5. ders, Maliyet nereye gidiyor; 8. ders, Stop uzaklığı ve maliyet</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: bu durumda 2024 sonrasında artı sonuç ölçüldü, ama az sayıda olaya dayanıyor ve hüküm &quot;çalışıyor&quot; değil. Kural, masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
 
 ## Trend
 
@@ -144,6 +587,8 @@ kararlarda birkaç olay kalıyor. Plan haber anlarında trendi kullanmaz.
 
 Haber anlarında planın iki tür tepkisi var. **Referans tepkiler** açılış ve fiksinglerle aynı kuralla kuruldu: yarısına
 limit, yarım R hedef; küçük mumda kırılım. 2024 → dönemindeki sonuç:
+
+<div class="sayi-tablo">
 
 | Ailesi · ilk mum | 2024 → işlem | kazanma | başa baş için | net R | hüküm |
 |---|---:|---:|---:|---:|---|
@@ -156,9 +601,13 @@ limit, yarım R hedef; küçük mumda kırılım. 2024 → dönemindeki sonuç:
 | Merkez bankası kararları · reddedilen | 6 | %83 | %67 | +0,24 | ölçülemedi |
 | Merkez bankası kararları · küçük | 50 | %80 | %69 | +0,15 | zayıf |
 
+</div>
+
 **İşlem tepkileri** önceden yazılmış seçim kuralıyla seçildi: 2018–2023'te denenen adayların içinden maliyetten sonra
 artıda kalan en iyisi. Kural artıyı şart koştuğu için seçilen tepkilerin 2018–2023 sonucu kendiliğinden artıdır; kanıt
 yalnız 2024 → sonucudur.
+
+<div class="sayi-tablo">
 
 | An ailesi · ilk mum | Tepki | 2018–23 n | kazanma | net R | 2024 → n | kazanma | net R | %95 aralık | hüküm |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
@@ -167,6 +616,8 @@ yalnız 2024 → sonucudur.
 | Merkez bankası kararları · reddedilen | mum kapanınca mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 1,0 R | 31 | %68 | +0,33 | 7 | %71 | +0,25 | −0,43 … +0,84 | ölçülemedi |
 | ABD verileri · güçlü | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef mumun kendi ucu | 70 | %59 | +0,06 | 13 | %23 | −0,37 | −0,68 … −0,06 | ölçülemedi |
 | ABD verileri · küçük | küçük mumun kırılan ucundan · stop öbür ucun 0,5 mum boyu ötesinde · hedef 1,0 R | 70 | %50 | 0,00 | 56 | %43 | −0,06 | −0,23 … +0,12 | çalışmıyor |
+
+</div>
 
 <GrafikEmbed src="/arastirma/fx-oyun-haberler/02_bacaklar.html" baslik="Haber anlarında işlem tepkileri: 2024 sonrasında net sonuç ve güven aralığı" no="02" kaynak="Dukascopy" />
 
@@ -186,17 +637,177 @@ yalnız 2024 → sonucudur.
   sürenin sonunda kapandı: verinin ilk mumundan sonraki itişin sürmemesi burada da görünüyor.
 - **Küçük veri mumu, kırılımda, bir R hedef.** 2018–2023'te işlem başına +0,004 R ile
   seçildi; 2024 → döneminde 56 işlemde net −0,06 R, hüküm
-  "çalışmıyor". Maliyetsiz sonucu artı (+0,07 R); haber anının makası
-  ve kayması onu eksiye çeviriyor.
+  "çalışmıyor". Maliyetsiz sonucu artı (+0,07 R); makas ve
+  varsayılan ek kayma onu eksiye çeviriyor.
+
+## Emri nereye koyarsın
+
+Genel kurallar (giriş türleri, emrin ömrü, haber penceresinde bekleyen emir) 1. dersin "Emri nereye koyarsın"
+bölümündedir; haber anına özgü olanlar şunlar.
+
+- **Piyasa emri.** Güçlü ve reddedilen karar mumunun işlem tepkileri ilk mum kapanınca böyle kuruldu. Giriş hâlâ haber
+  penceresindedir; makası ve sınamada varsayılan 1,0 pip ek kaymayı öder. Stop geniştir: güçlü
+  karar mumunda ortanca risk 52 pip.
+- **Limit, mumun yarısına.** Yön sınıflarının referans tepkileri böyle kuruldu; dolum itişin yarısının geri alındığını
+  söyler. Büyük mumda bu olaylarda piyasa girişi çoğunlukla kaybetti (8. ders, Limit neden ucuz görünür: ters seçim);
+  haber mumunda ölçülmedi.
+- **İki uca kırılım emri.** Küçük mumun tepkileri böyle kuruldu; biri dolunca öbürü iptal.
+- **Stop ve hedef.** Stop referanslarda öbür ucun mum boyunun onda biri, iki işlem tepkisinde yarısı kadar ötesindedir;
+  hedef yarım R, bir R ya da mumun kendi ucudur. Onay mumundan sonra giriş haber anında ölçülmedi (büyük mumda onayın
+  bilgisi kaçırılan fiyatın bedelini ancak karşıladı: 8. ders, Onay mumu).
+- **Ömür.** Emir ilk mum kapandıktan bir saat sonra düşer (ön kayıttaki süre, ölçülerek seçilmedi); dolan pozisyon ne
+  hedefe ne stopa ulaşırsa iki saatin sonunda kapanır. Güçlü veri mumunun tepkisinde 2024 sonrasında işlemlerin
+  %62 kadarı böyle kapandı. Basın toplantısı karar mumunun öbür ucunu kırarsa
+  bekleyen emri çekersin (masa uygulaması; ölçülmedi).
+
+<Diyagram no="M8" baslik="Güçlü karar mumu: giriş, stop ve hedef nerede" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 250" class="mum-sema" role="img" aria-label="Güçlü karar mumu: giriş, stop ve hedef nerede">
+<defs><marker id="ok-emiryerleri" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<line x1="110.4" x2="236.0" y1="31.1" y2="31.1" class="ms-cizgi ms-hedef" />
+<text x="244" y="35.1" class="ms-etiket ms-hedef-yazi">yarım R hedef</text>
+<line x1="110.4" x2="236.0" y1="92.9" y2="92.9" class="ms-cizgi ms-seviye" />
+<text x="244" y="96.9" class="ms-etiket ms-seviye-yazi">giriş: kapanış</text>
+<line x1="110.4" x2="236.0" y1="216.5" y2="216.5" class="ms-cizgi ms-stop" />
+<text x="244" y="220.5" class="ms-etiket ms-stop-yazi">stop</text>
+<line x1="22.6" x2="22.6" y1="186.6" y2="205.3" class="ms-fitil ms-artis" />
+<rect x="14.8" y="194.1" width="15.6" height="3.7" class="ms-govde ms-artis" />
+<line x1="47.7" x2="47.7" y1="182.8" y2="201.5" class="ms-fitil ms-artis" />
+<rect x="39.9" y="190.3" width="15.6" height="3.7" class="ms-govde ms-artis" />
+<line x1="72.8" x2="72.8" y1="182.8" y2="201.5" class="ms-fitil ms-azalis" />
+<rect x="65.0" y="190.3" width="15.6" height="7.5" class="ms-govde ms-azalis" />
+<line x1="97.9" x2="97.9" y1="186.6" y2="205.3" class="ms-fitil ms-artis" />
+<rect x="90.1" y="197.8" width="15.6" height="1.2" class="ms-govde ms-artis" />
+<line x1="123.0" x2="123.0" y1="85.4" y2="205.3" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="115.2" y="92.9" width="15.6" height="104.9" class="ms-govde ms-artis ms-vurgu" />
+<line x1="148.1" x2="148.1" y1="62.9" y2="115.4" class="ms-fitil ms-artis" />
+<rect x="140.3" y="70.4" width="15.6" height="22.5" class="ms-govde ms-artis" />
+<line x1="173.2" x2="173.2" y1="25.5" y2="81.7" class="ms-fitil ms-artis" />
+<rect x="165.4" y="36.7" width="15.6" height="33.7" class="ms-govde ms-artis" />
+<line x1="198.3" x2="198.3" y1="29.2" y2="62.9" class="ms-fitil ms-azalis" />
+<rect x="190.5" y="36.7" width="15.6" height="18.7" class="ms-govde ms-azalis" />
+<line x1="223.4" x2="223.4" y1="44.2" y2="77.9" class="ms-fitil ms-azalis" />
+<rect x="215.7" y="55.4" width="15.6" height="11.2" class="ms-govde ms-azalis" />
+<circle cx="123.0" cy="239.0" r="8" class="ms-isaret" />
+<text x="123.0" y="242.6" class="ms-isaret-yazi">1</text>
+<circle cx="198.3" cy="235.3" r="8" class="ms-isaret" />
+<text x="198.3" y="238.9" class="ms-isaret-yazi">2</text>
+<circle cx="173.2" cy="6.7" r="8" class="ms-isaret" />
+<text x="173.2" y="10.3" class="ms-isaret-yazi">3</text>
+<text x="10" y="244" class="ms-eksen">zaman →  (5 dakikalık mumlar)</text>
+</svg>
+</Diyagram>
+
+- ① Güçlü karar mumu: tipik boyun belirgin üstünde, ucuna yakın kapanmış.
+- ② Stop mumun öbür ucunun hemen ötesinde: mum büyük olduğu için risk de büyüktür, yani pip cinsinden geniş bir stop.
+- ③ Yarım R hedef: kazanma oranı yüksek görünür; başa baş için gereken kazanma oranı da o kadar yüksektir.
+
+
+<div class="senaryo" id="kart-iki-saat">
+<p class="senaryo-durum"><span class="etiket">Durum</span> Açıklamadan iki saat sonra: ilk mumdan sonraki izleme penceresi doldu</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Fiyat ilk mumun aralığına dönmüş ya da ondan uzaklaşmış; ABD verisinde bu sürenin içinde New York açılışı da geçmiş.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Haber okumasını kapatırsın; bundan sonrasına günün öbür anlarının okumasıyla bakarsın.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>İki saat sonra hâlâ ilk mumun yönünü bir gerekçe saymazsın: bu dersin ölçüsü o pencerenin ötesine gitmez.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Haberle açılmış pozisyon hâlâ açıksa kapatırsın: sınanan tepkilerde ne hedefe ne stopa ulaşan pozisyon pencerenin sonunda kapandı. Bekleyen emir ilk mumdan bir saat sonra zaten düşmüştür.</dd>
+<dt>Dayanak</dt>
+<dd>1. ders, İncelenen on an; 4. ders, Bu okumaları işleme çevirmek</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: kartın tarif ettiği işlem bu seride ölçülmedi; kart, maliyet kurallarından ve tanımlardan türetilmiş bir masa uygulamasıdır, bir bulgu değil.</p>
+</div>
+
+
+## Sık yapılan hatalar
+
+- **"Sürmüyorsa döner" diye tersine girmek.** Ters yönde bir tepki önceden yazılmadı ve sınanmadı; sürmemek ile dönmek
+  ayrı ölçülerdir. Dayanak: 4. ders, "ABD verileri".
+- **Karar mumunu son söz saymak.** Basın toplantısı izlenen sürenin içindedir; ölçülen devam ve dönüş payları iki
+  dalganın toplamıdır. Dayanak: 4. ders, "Merkez bankası kararları"; 5. ders, "Günün haritası".
+- **Birkaç karar gününü kural saymak.** Güçlü karar mumunun artı sonucu 7 karar gününe
+  dayanıyor; 20 işlemin altında hüküm kurulmaz. Dayanak: 4. ders, "Bu okumaları işleme çevirmek".
+
+## Masa kontrol listesi
+
+1. Bugün takvimde hangi açıklama var ve saati TSİ kaçta (dersin başındaki tablo)?
+2. Defterde süresine haber penceresi düşen bir emir var mı? Varsa açıklamadan önce çekiyor muyum? Açık pozisyonun
+   stopu o anın ilk mumunun tipik boyu kadar bir hareketin içinde kalıyor mu?
+3. Açıklamadan iki dakika önce ile on beş dakika sonrası arasındaki her piyasa ve stop emrinin seviyesinden kötü
+   dolabileceğini hesaba kattım mı?
+4. İlk beş dakikalık mum kapandı mı?
+5. Mumun sınıfı ne: güçlü, normal, reddedilen, küçük? Sınıfı o anın tipik boyuna göre mi koydum?
+6. Mumun iki ucu ve yarısı çizili mi?
+7. ABD verisiyse: mumun yönünde sürmesini bir beklenti gibi taşıyor muyum?
+8. Kararsa: basın toplantısının saatini TSİ olarak işaretledim mi ("Masada: karar metni ve basın toplantısı")?
+9. Başka bir gerekçeyle giriyorsam: stop mumun öbür ucunun ötesinde mi, risk pip cinsinden ne kadar, makas bu riskin ne
+   kadarı?
+10. İlk mumdan bu yana iki saat geçti mi? Geçtiyse haber okuması bitmiştir.
+
+## Grafik okuma alıştırmaları
+
+**1.** Tarım dışı istihdam açıklandı. EUR/USD'de ilk beş dakikalık mum yukarı; boyu tipik boya yakın, kapanışı
+ortasına yakın. Sonraki iki mum ucun hemen altında, hafifçe yukarı. Ne yaparsın, ne yapmazsın?
+
+<details>
+<summary>Çözüm</summary>
+
+Mum normaldir (Şekil M3). İki ucu ve yarısını işaretlersin. Mumun yönünde kalmazsın:
+normal veri mumunun itişi iki dönemde de şanstan seyrek sürdü. Tersine de girmezsin: o tepki sınanmadı. Başka bir
+gerekçeyle mumun yönünde gireceksen limit yarıya, stop öbür ucun ötesine; limitin dolması itişin yarıya kadar geri
+alındığını söyler. Dayanak: 4. ders, "ABD verileri"; 5. ders, "Referans tepkiler".
+
+</details>
+
+**2.** ABD yaz saatinde Fed kararı TSİ 21:00'de açıklandı; ilk mum küçük. TSİ 21:20'de fiyat hâlâ mumun
+aralığında. Ne yaparsın, ne yapmazsın?
+
+<details>
+<summary>Çözüm</summary>
+
+Beklersin. Basın toplantısı TSİ 21:30'da başlar ve izlenen süre onu içerir; okuma hangi ucun önce kırıldığıyla
+başlar ve kırılımdan önce taraf seçmezsin. Sınanan biçim iki uca birer kırılım emridir; stop öbür ucun mum boyunun
+onda biri ötesinde, hedef yarım R, ve maliyet bu riskin görünür bir parçasıdır. Dayanak: 4. ders, "Küçük haber mumu";
+5. ders, "Maliyet nereye gidiyor".
+
+</details>
+
+**3.** ECB kararından sonra güçlü bir aşağı mum geldi; yarım saat sonra basın toplantısı başlıyor. Biri bunun,
+karar mumunun yönünde yarım R hedefli tepkinin tam örneği olduğunu söylüyor. Ne yaparsın, ne yapmazsın?
+
+<details>
+<summary>Çözüm</summary>
+
+Bunu bir kural saymazsın. Güçlü karar mumu 2018–2023'te aynayla aynıydı; 2024 sonrasındaki artı sonuç birkaç karar
+gününe dayanıyor ve "ölçülemedi" hükmü taşıyor; ECB'nin kendi güçlü mumları bir okuma kurmaya bile yetmiyor. İşlem
+açmadan toplantıyı izler, sonucu adayın satırı olarak deftere yazarsın. Başka bir gerekçeyle girersen stop öbür ucun
+ötesinde ve geniştir; toplantı öbür ucu kırarsa okuma biter. Dayanak: 4. ders, "Merkez bankası kararları"; 4. ders, "Bu
+okumaları işleme çevirmek".
+
+</details>
+
+**4.** ABD ve İngiltere yaz saatindeyken, tarım dışı istihdamdan iki buçuk saat sonra (TSİ 18:00) fiyat ilk
+mumun ucunun çok ötesinde. Bu, mumun yönünde girmek için bir gerekçe mi?
+
+<details>
+<summary>Çözüm</summary>
+
+Değil. Ölçü iki saatte biter ve bu dersin o saatten sonrası için söyleyecek bir şeyi yoktur. TSİ 18:00 üstelik
+Londra fiksingidir (Londra 16:00); okuma artık o anındır ve 3. dersin konusudur. Haberle açılmış pozisyon hâlâ açıksa
+kapatırsın; bekleyen emir bir saat önce zaten düşmüştür. Dayanak: 1. ders, "İncelenen on an"; 4. ders, "Bu okumaları
+işleme çevirmek".
+
+</details>
 
 ## Haber anları için masa kartı
 
 - **Haber mumu yeni bilginin ilk fiyatıdır, son fiyatı değil.** Yarısına dönüş haberde de sıktır.
-- **ABD verisinin ilk beş dakikasının yönü sonraki iki saatte şanstan seyrek sürer.** Veri mumunun yönüne dayanan bir
-  okuma iki dönemde de zayıf; 2024 sonrasında daha da zayıf.
+- **ABD verisinin normal ve reddedilen ilk mumu sonraki iki saatte şanstan seyrek sürer;** güçlü veri mumunun devamı
+  aynayla aynıdır.
 - **Karar metni fiyatı oynatmadıysa hareket sonra gelebilir.** Fed'de küçük ilk mumdan sonra kırılım iki dönemde de
   çoğu zaman yol aldı; üç bankanın küçük karar mumu kırılımı bir işleme çevrildiğinde ise iki dönem ayrı işaret verdi.
 - **Merkez bankası kararlarındaki üç işlem tepkisi 2024 sonrasında artıda kaldı.** Hiçbirinin karar günü sayısı bir
   hüküm kurmaya yetmiyor. Bir sonraki dönemde, bugünkü kuralla, değiştirilmeden sınanmadan bir kural sayılmaz.
-- **Haber anının maliyeti farklıdır.** Makas açılır, kayma artar; dar stoplu bir haber işlemi maliyete en çok
-  dayanan işlemdir.
+- **Haber anının maliyeti bir varsayımdır.** Pencerede ek kayma varsayıldı, makas ve gerçek kayma ölçülmedi;
+  süresine pencere düşen emri açıklamadan önce çekersin (disiplin kuralı, ölçüm sonucu değil).

@@ -1,0 +1,930 @@
+---
+title: 'FX Gün İçi Oyun Planı 8: Büyük Mum — Nasıl Girilir: Piyasa, Limit, Stop, Onay'
+description: "Büyük mumdan sonra kapanışta piyasadan mı girmeli, geri çekilmeye limit mi koymalı, ucun kırılmasını mı beklemeli, onay mumunu mu? Mumun yönünde ve tersine on bir giriş biçimi, iki stop ve iki hedefle: dolum oranı, kazanma oranı, maliyetten önce ve sonra işlem başına sonuç, limit emrin ters seçimi."
+pubDate: 2026-10-20
+tags: ['fx', 'gun-ici', 'oyun-plani', 'buyuk-mum', 'emir', 'limit', 'ders']
+durum: 'aktif'
+kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · önceden kayıt'
+ozet: "Giriş biçimi sonucu değiştirir ama kenar yaratmaz. Maliyetten önce bütün biçimler sıfır çevresinde; stop 2 ATR ve hedef 1 R ile maliyetten sonra hepsi eksi. Limit girişte makası ve kaymayı ödemediği için 5 ve 15 dakikada en az kaybeden biçim, ama maliyetten önce piyasa emrinden kötü: limit, fiyat aleyhine yürüdüğünde dolar ve kazanacak işlemi kaçırır. Stopu yaklaştırmak maliyeti R cinsinden büyütür."
+seviye: 'orta'
+onkosul: ['fx-buyuk-mum', 'fx-buyuk-suzgec']
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Diyagram from '../../components/Diyagram.astro';
+
+Önceki iki ders büyük mumdan sonra fiyatın ne yaptığını okudu. Bu ders o okumanın **işlem hâlini** ölçer: aynı büyük
+mumdan sonra, aynı stop ve hedefle, farklı biçimde giren on bir işlemci ne kazanır? Sorunun iki yarısı var. Biri yöndür
+(mumun yönünde mi, tersine mi); öbürü girişin kendisidir (hemen mi, geri çekilmede mi, kırılımda mı, onay gelince mi).
+
+Bütün işlemler gerçek alış ve satış fiyatlarından simüle edildi. Alış ask'tan, satış bid'den dolar. Piyasa ve stop
+emirleri 0,5 pip kötü dolar; takvimdeki büyük bir haberin iki dakika öncesinden on beş dakika sonrasına
+kadar buna 1,0 pip daha eklenir. Limit emir kendi fiyatına kaymasız dolar. Aynı dakikada hem stop
+hem hedef görülürse stop sayılır; dolum dakikasında hedef sayılmaz. Planlanan risk 3,0 pipin
+altındaysa işlem açılmaz. Tablolar 2018–2023'ün ve 2024 sonrasının sonucunu yan yana verir. Girişlerin 2024 sonrası
+sonucu planın seçiminde kullanılmadı (seçim 9. dersin konusu ve yalnız 2018–2023'ten yapıldı); burada betimleme olarak
+duruyor.
+
+İki ölçü bütün ders boyunca aynı anlamda kullanılır. **R**, planlanan risktir: girişten stopa olan mesafe; işlemin
+sonucu bu mesafenin katı olarak yazılır. **Maliyetsiz R** (maliyetten önce), aynı kuralın alış ile satışın ortasından,
+makassız ve kaymasız sonucudur; **net R** (maliyetten sonra) aynı işlemlerin gerçek alış-satış fiyatlarıyla sonucudur.
+Aradaki fark maliyettir. Aşağıdaki üç tablonun bütün satırları stop 2 ATR, hedef 1 R ile hesaplandı.
+
+## Kısaca
+
+- **Maliyetten önce kenar yok.** 5 dakikada mumun yönünde kapanışta piyasadan giren, stop 2 ATR ve hedef 1 R ile, işlem
+  başına −0,04 R; tersine giren +0,04 R aldı. 6. dersteki
+  hafif geri verme burada da görünüyor, büyüklüğü R'nin yüzde birkaçı.
+- **Maliyetten sonra her biçim eksi** (stop 2 ATR, hedef 1 R). Aynı iki giriş maliyetten sonra −0,29 ve
+  −0,22 R. Maliyet (makas ve kayma) işlem başına 0,26 R.
+- **Limit en az kaybeden, ama kenarı yok.** Limit girişte makası ve kaymayı ödemez, çıkışta öder. Mumun yarısına
+  limitle giren 5 dakikada maliyetten sonra −0,17 R aldı; maliyetten önce
+  −0,06 R, yani piyasa emrinden kötü.
+- **Limit, piyasa girişinin kaybettiği olaylarda dolar.** 5 dakikada mumun yarısına konan limitin dolduğu olaylarda
+  aynı anda piyasadan girilseydi işlemlerin %23 kadarı kazanırdı; dolmadığı
+  olaylarda %78. Bunun büyük kısmı geometridir: limit, fiyat piyasa
+  girişinin aleyhine yürüdüğünde dolar.
+- **Stop yakınsa maliyet büyür.** 5 dakikada stop 1 ATR'de maliyet işlem başına
+  0,35 R, 2 ATR'de 0,26 R, 1 saatte 2 ATR'de
+  0,06 R.
+
+## Bu dersi masada nasıl kullanırsın
+
+Bu ders bir giriş kuralı değil bir emir disiplini verir: başka bir gerekçeyle girersen emrin türü, yeri, süresi, stopu
+ve hedefi sonucu nasıl değiştirir. Sıra: takvim, gerekçe, stop ve dilim, en son emrin türü. Büyük mum serisinin emir
+kuralları bu dersin "Emri nereye koyarsın" bölümündedir; 6., 7. ve 9. dersler oraya dayanır.
+
+<Diyagram no="M1" baslik="Büyük mumdan sonra emir: masada beş soru" kaynak="Karar şeması — dayanak: 8. ders, 15 dakika ve 1 saat; 8. ders, 5 dakika; 8. ders, Emri nereye koyarsın; 8. ders, Limit neden ucuz görünür: ters seçim; 8. ders, Stop uzaklığı ve maliyet" azami={480}>
+<svg viewBox="0 0 360 548" class="karar-sema" role="img" aria-label="Büyük mumdan sonra emir: masada beş soru">
+<defs><marker id="ko-emirakis" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ks-ok-ucu" /></marker></defs>
+<rect x="4" y="10" width="184" height="78" rx="3" class="ks-soru" />
+<text x="14" y="27" class="ks-yazi">Emrin bekleme süresine</text>
+<text x="14" y="42" class="ks-yazi">takvimdeki büyük bir</text>
+<text x="14" y="57" class="ks-yazi">haberin penceresi düşüyor</text>
+<text x="14" y="72" class="ks-yazi">mu?</text>
+<line x1="188" x2="220" y1="49.0" y2="49.0" class="ks-ok" marker-end="url(#ko-emirakis)" />
+<text x="193" y="44.0" class="ks-dal">evet</text>
+<rect x="222" y="10" width="134" height="78" rx="3" class="ks-sonuc ks-kalk" />
+<text x="230" y="26" class="ks-yazi-kucuk">Emri açıklamadan</text>
+<text x="230" y="40" class="ks-yazi-kucuk">önce çekersin</text>
+<text x="230" y="54" class="ks-yazi-kucuk">(disiplin kuralı;</text>
+<text x="230" y="68" class="ks-yazi-kucuk">ölçülmedi)</text>
+<line x1="40" x2="40" y1="88" y2="112" class="ks-ok" marker-end="url(#ko-emirakis)" />
+<text x="46" y="104" class="ks-dal">hayır</text>
+<rect x="4" y="114" width="184" height="60" rx="3" class="ks-soru" />
+<text x="14" y="131" class="ks-yazi">Girişin tek gerekçesi</text>
+<text x="14" y="146" class="ks-yazi">büyük mumun kendisi mi?</text>
+<line x1="188" x2="220" y1="144.0" y2="144.0" class="ks-ok" marker-end="url(#ko-emirakis)" />
+<text x="193" y="139.0" class="ks-dal">evet</text>
+<rect x="222" y="114" width="134" height="60" rx="3" class="ks-sonuc ks-kalk" />
+<text x="230" y="130" class="ks-yazi-kucuk">Emir vermezsin:</text>
+<text x="230" y="144" class="ks-yazi-kucuk">giriş biçimi kenar</text>
+<text x="230" y="158" class="ks-yazi-kucuk">yaratmaz</text>
+<line x1="40" x2="40" y1="174" y2="198" class="ks-ok" marker-end="url(#ko-emirakis)" />
+<text x="46" y="190" class="ks-dal">hayır</text>
+<rect x="4" y="200" width="184" height="60" rx="3" class="ks-soru" />
+<text x="14" y="217" class="ks-yazi">Dilim 5 dakika ve stop</text>
+<text x="14" y="232" class="ks-yazi">girişten 1 ATR mi?</text>
+<line x1="188" x2="220" y1="230.0" y2="230.0" class="ks-ok" marker-end="url(#ko-emirakis)" />
+<text x="193" y="225.0" class="ks-dal">evet</text>
+<rect x="222" y="200" width="134" height="60" rx="3" class="ks-sonuc ks-bekle" />
+<text x="230" y="216" class="ks-yazi-kucuk">Stopu 2 ATR&#x27;ye</text>
+<text x="230" y="230" class="ks-yazi-kucuk">koyarsın ya da bir</text>
+<text x="230" y="244" class="ks-yazi-kucuk">üst dilimde kurarsın</text>
+<line x1="40" x2="40" y1="260" y2="284" class="ks-ok" marker-end="url(#ko-emirakis)" />
+<text x="46" y="276" class="ks-dal">hayır</text>
+<rect x="4" y="286" width="184" height="74" rx="3" class="ks-soru" />
+<text x="14" y="303" class="ks-yazi">Mumun yönünde, kapanışta</text>
+<text x="14" y="318" class="ks-yazi">piyasa emri mi</text>
+<text x="14" y="333" class="ks-yazi">düşünüyorsun?</text>
+<line x1="188" x2="220" y1="323.0" y2="323.0" class="ks-ok" marker-end="url(#ko-emirakis)" />
+<text x="193" y="318.0" class="ks-dal">evet</text>
+<rect x="222" y="286" width="134" height="74" rx="3" class="ks-sonuc ks-bekle" />
+<text x="230" y="302" class="ks-yazi-kucuk">Kovalamazsın: limit</text>
+<text x="230" y="316" class="ks-yazi-kucuk">çeyrek ya da yarı</text>
+<text x="230" y="330" class="ks-yazi-kucuk">geri çekilmeye,</text>
+<text x="230" y="344" class="ks-yazi-kucuk">dolum bir uyarı</text>
+<line x1="40" x2="40" y1="360" y2="384" class="ks-ok" marker-end="url(#ko-emirakis)" />
+<text x="46" y="376" class="ks-dal">hayır</text>
+<rect x="4" y="386" width="184" height="48" rx="3" class="ks-soru" />
+<text x="14" y="403" class="ks-yazi">Dilim 1 saat ve mumun</text>
+<text x="14" y="418" class="ks-yazi">tersine mi gireceksin?</text>
+<line x1="188" x2="220" y1="410.0" y2="410.0" class="ks-ok" marker-end="url(#ko-emirakis)" />
+<text x="193" y="405.0" class="ks-dal">evet</text>
+<rect x="222" y="386" width="134" height="48" rx="3" class="ks-sonuc ks-yapma" />
+<text x="230" y="402" class="ks-yazi-kucuk">Tersine girmezsin</text>
+<line x1="40" x2="40" y1="434" y2="458" class="ks-ok" marker-end="url(#ko-emirakis)" />
+<text x="46" y="450" class="ks-dal">hayır</text>
+<rect x="4" y="460" width="352" height="78" rx="3" class="ks-son" />
+<text x="14" y="477" class="ks-yazi">Kalan durumda emir bir maliyet seçimidir:</text>
+<text x="14" y="492" class="ks-yazi">stop girişten 2 ATR; limit girişte makas</text>
+<text x="14" y="507" class="ks-yazi">ödemez, ama yalnız fiyat aleyhine</text>
+<text x="14" y="522" class="ks-yazi">yürüdüğünde dolar.</text>
+</svg>
+</Diyagram>
+
+
+## On bir giriş biçimi
+
+Mumun **yönünde**:
+
+- **Kapanışta piyasa.** Mum kapanınca, sonraki dakikanın açılışında piyasa emri.
+- **Geri çekilmeye limit.** Mumun ucundan mumun boyunun %25, %50 ya da %62 kadarı geri çekilen
+  seviyeye limit. Mum zaten o kadar geri çekilmişse (kapanış o seviyenin gerisindeyse) emir konmaz.
+- **Ucun kırılmasına stop.** Mumun ucunun bir fiyat adımı (pipin onda biri) ötesine stop emri: fiyat yeni bir uç yaparsa girilir.
+- **Onay mumundan sonra piyasa.** Sonraki mum, kapanışı büyük mumun kapanışının ötesinde kapanırsa onun kapanışında
+  piyasa emri. Onay gelmezse işlem yok.
+
+Mumun **tersine**:
+
+- **Kapanışta piyasa.** Mum kapanınca, mumun tersine piyasa emri.
+- **Mumun ucuna limit.** Fiyat mumun ucuna geri gelirse oradan tersine (yukarı mumda satış, aşağı mumda alış).
+- **Ucun yarım ATR ötesine limit.** Uzamaya karşı girilir: fiyat mumun ucunu yarım ATR aşarsa oradan tersine.
+- **Mumun yarısının kırılmasına stop.** Fiyat mumun yarısını kırarsa tersine stop emri (geri çekilme başladı onayı).
+  Kapanış zaten yarının gerisindeyse emir yok.
+- **Onay mumundan sonra piyasa.** Sonraki mum büyük mumun kapanışının gerisinde kapanırsa, onun kapanışında tersine.
+
+Limit ve stop emirleri büyük mum kapandıktan sonra 6 mum boyunca bekler, dolmazsa iptal edilir. Her biçim
+iki stop (girişten 1 ya da 2 ATR) ve iki hedefle (riskin 1 ya da 2 katı) koşturuldu; ne stop ne hedef görülürse pozisyon
+24 mumun sonunda kapanır.
+
+### Masada: emirler grafikte nerede durur
+
+Büyük mum kapandığı anda masadaki ilk iş mumun iki ucunu ve yarısını işaretlemektir: limitler, stop emirleri ve
+koruyucu stoplar bu üç seviyeden ve ATR'den ölçülür. Şemalarda büyük mum yukarı yönlü ve üç ATR kadardır (aşağı mumda
+her şey aynalanır); soluk mumlar emirlerin hangi sırayla dolabileceğini gösteren olası bir yoldur, numaralar şemanın
+altındaki maddelere bağlıdır.
+
+<Diyagram no="M2" baslik="Mumun yönünde beş emir: grafikte nerede dururlar" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 320" class="mum-sema" role="img" aria-label="Mumun yönünde beş emir: grafikte nerede dururlar">
+<defs><marker id="ok-yonundeemirler" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<line x1="104.2" x2="236.0" y1="55.6" y2="55.6" class="ms-cizgi ms-seviye" />
+<text x="244" y="59.6" class="ms-etiket ms-seviye-yazi">kapanış: piyasa</text>
+<line x1="104.2" x2="236.0" y1="39.1" y2="39.1" class="ms-cizgi ms-uc" />
+<text x="244" y="43.1" class="ms-etiket ms-uc-yazi">uca stop emri</text>
+<line x1="104.2" x2="236.0" y1="98.4" y2="98.4" class="ms-cizgi ms-limit" />
+<text x="244" y="102.4" class="ms-etiket ms-limit-yazi">çeyrek limit</text>
+<line x1="104.2" x2="236.0" y1="147.8" y2="147.8" class="ms-cizgi ms-limit" />
+<text x="244" y="151.8" class="ms-etiket ms-limit-yazi">yarı limit</text>
+<line x1="104.2" x2="236.0" y1="171.5" y2="171.5" class="ms-cizgi ms-limit" />
+<text x="244" y="175.5" class="ms-etiket ms-limit-yazi">derin limit</text>
+<line x1="19.4" x2="19.4" y1="213.6" y2="272.9" class="ms-fitil ms-artis" />
+<rect x="13.6" y="226.8" width="11.7" height="16.5" class="ms-govde ms-artis" />
+<line x1="38.2" x2="38.2" y1="203.8" y2="263.0" class="ms-fitil ms-azalis" />
+<rect x="32.4" y="226.8" width="11.7" height="26.3" class="ms-govde ms-azalis" />
+<line x1="57.1" x2="57.1" y1="220.2" y2="282.8" class="ms-fitil ms-artis" />
+<rect x="51.2" y="230.1" width="11.7" height="23.1" class="ms-govde ms-artis" />
+<line x1="75.9" x2="75.9" y1="200.5" y2="259.7" class="ms-fitil ms-artis" />
+<rect x="70.1" y="210.3" width="11.7" height="19.8" class="ms-govde ms-artis" />
+<line x1="94.8" x2="94.8" y1="203.8" y2="266.3" class="ms-fitil ms-azalis" />
+<rect x="88.9" y="210.3" width="11.7" height="29.6" class="ms-govde ms-azalis" />
+<line x1="113.6" x2="113.6" y1="49.0" y2="246.6" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="107.7" y="55.6" width="11.7" height="184.4" class="ms-govde ms-artis ms-vurgu" />
+<line x1="132.4" x2="132.4" y1="50.6" y2="105.0" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="126.6" y="55.6" width="11.7" height="42.8" class="ms-govde ms-azalis ms-soluk" />
+<line x1="151.2" x2="151.2" y1="91.8" y2="134.6" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="145.4" y="98.4" width="11.7" height="29.6" class="ms-govde ms-azalis ms-soluk" />
+<line x1="170.1" x2="170.1" y1="121.4" y2="157.6" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="164.2" y="128.0" width="11.7" height="21.4" class="ms-govde ms-azalis ms-soluk" />
+<line x1="188.9" x2="188.9" y1="108.2" y2="154.4" class="ms-fitil ms-artis ms-soluk" />
+<rect x="183.1" y="114.8" width="11.7" height="34.6" class="ms-govde ms-artis ms-soluk" />
+<line x1="207.8" x2="207.8" y1="68.7" y2="119.8" class="ms-fitil ms-artis ms-soluk" />
+<rect x="201.9" y="75.3" width="11.7" height="39.5" class="ms-govde ms-artis ms-soluk" />
+<line x1="226.6" x2="226.6" y1="29.2" y2="80.3" class="ms-fitil ms-artis ms-soluk" />
+<rect x="220.7" y="34.2" width="11.7" height="41.2" class="ms-govde ms-artis ms-soluk" />
+<circle cx="113.6" cy="266.3" r="8" class="ms-isaret" />
+<text x="113.6" y="269.9" class="ms-isaret-yazi">1</text>
+<circle cx="132.4" cy="98.4" r="8" class="ms-isaret" />
+<text x="132.4" y="102.0" class="ms-isaret-yazi">2</text>
+<circle cx="170.1" cy="147.8" r="8" class="ms-isaret" />
+<text x="170.1" y="151.4" class="ms-isaret-yazi">3</text>
+<circle cx="207.8" cy="171.5" r="8" class="ms-isaret" />
+<text x="207.8" y="175.1" class="ms-isaret-yazi">4</text>
+<circle cx="226.6" cy="39.1" r="8" class="ms-isaret" />
+<text x="226.6" y="42.7" class="ms-isaret-yazi">5</text>
+<text x="10" y="314" class="ms-eksen">zaman → · soluk mumlar: olası bir yol</text>
+</svg>
+</Diyagram>
+
+- ① Büyük mum kapanır. Kapanışta piyasa emri sonraki dakikanın açılışında, kapanışa yakın bir fiyattan dolar; girişte makası ve kaymayı öder.
+- ② Çeyrek limit: ucundan mumun boyunun dörtte biri geri. En kolay dolan limittir; fiyatın biraz geri geldiği olayların neredeyse hepsinde dolar.
+- ③ Yarı limit: mumun yarısı. Dolduğunda fiyat mumun hareketinin yarısını geri almıştır.
+- ④ Derin limit: yarının biraz gerisi, mumun boyunun beşte üçünden biraz fazlası. En seyrek dolan limittir; bu yolda dolmadı.
+- ⑤ Uca stop emri: ucun bir fiyat adımı ötesi. Fiyat yeni bir uç yaparsa dolar; kaymayı öder ve fiyatın zaten yürüdüğü yerden alır.
+
+
+Emrin yeri hangi olayların işlem olacağını seçer (8. ders, Limit neden ucuz görünür: ters seçim). Tersine kurulan
+emirler aynı mantığı ters yönden taşır:
+
+<Diyagram no="M3" baslik="Mumun tersine üç emir: uç, uzama, yarının kırılması" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 300" class="mum-sema" role="img" aria-label="Mumun tersine üç emir: uç, uzama, yarının kırılması">
+<defs><marker id="ok-tersineemirler" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<line x1="104.2" x2="236.0" y1="33.8" y2="33.8" class="ms-cizgi ms-limit" />
+<text x="244" y="37.8" class="ms-etiket ms-limit-yazi">uzama limiti</text>
+<line x1="104.2" x2="236.0" y1="62.2" y2="62.2" class="ms-cizgi ms-limit" />
+<text x="244" y="66.2" class="ms-etiket ms-limit-yazi">uca limit</text>
+<line x1="104.2" x2="236.0" y1="147.4" y2="147.4" class="ms-cizgi ms-uc" />
+<text x="244" y="151.4" class="ms-etiket ms-uc-yazi">yarıya stop emri</text>
+<line x1="19.4" x2="19.4" y1="204.2" y2="255.3" class="ms-fitil ms-artis" />
+<rect x="13.6" y="215.6" width="11.7" height="14.2" class="ms-govde ms-artis" />
+<line x1="38.2" x2="38.2" y1="195.7" y2="246.8" class="ms-fitil ms-azalis" />
+<rect x="32.4" y="215.6" width="11.7" height="22.7" class="ms-govde ms-azalis" />
+<line x1="57.1" x2="57.1" y1="209.9" y2="263.9" class="ms-fitil ms-artis" />
+<rect x="51.2" y="218.4" width="11.7" height="19.9" class="ms-govde ms-artis" />
+<line x1="75.9" x2="75.9" y1="192.9" y2="244.0" class="ms-fitil ms-artis" />
+<rect x="70.1" y="201.4" width="11.7" height="17.0" class="ms-govde ms-artis" />
+<line x1="94.8" x2="94.8" y1="195.7" y2="249.7" class="ms-fitil ms-azalis" />
+<rect x="88.9" y="201.4" width="11.7" height="25.6" class="ms-govde ms-azalis" />
+<line x1="113.6" x2="113.6" y1="62.2" y2="232.6" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="107.7" y="67.9" width="11.7" height="159.0" class="ms-govde ms-artis ms-vurgu" />
+<line x1="132.4" x2="132.4" y1="50.9" y2="73.6" class="ms-fitil ms-artis ms-soluk" />
+<rect x="126.6" y="55.1" width="11.7" height="12.8" class="ms-govde ms-artis ms-soluk" />
+<line x1="151.2" x2="151.2" y1="28.1" y2="59.4" class="ms-fitil ms-artis ms-soluk" />
+<rect x="145.4" y="39.5" width="11.7" height="15.6" class="ms-govde ms-artis ms-soluk" />
+<line x1="170.1" x2="170.1" y1="35.2" y2="87.8" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="164.2" y="39.5" width="11.7" height="44.0" class="ms-govde ms-azalis ms-soluk" />
+<line x1="188.9" x2="188.9" y1="77.8" y2="124.7" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="183.1" y="83.5" width="11.7" height="36.9" class="ms-govde ms-azalis ms-soluk" />
+<line x1="207.8" x2="207.8" y1="116.2" y2="154.5" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="201.9" y="120.4" width="11.7" height="29.8" class="ms-govde ms-azalis ms-soluk" />
+<line x1="226.6" x2="226.6" y1="140.3" y2="167.3" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="220.7" y="150.3" width="11.7" height="11.4" class="ms-govde ms-azalis ms-soluk" />
+<circle cx="113.6" cy="249.7" r="8" class="ms-isaret" />
+<text x="113.6" y="253.3" class="ms-isaret-yazi">1</text>
+<circle cx="132.4" cy="62.2" r="8" class="ms-isaret" />
+<text x="132.4" y="65.8" class="ms-isaret-yazi">2</text>
+<circle cx="151.2" cy="33.8" r="8" class="ms-isaret" />
+<text x="151.2" y="37.4" class="ms-isaret-yazi">3</text>
+<circle cx="207.8" cy="147.4" r="8" class="ms-isaret" />
+<text x="207.8" y="151.0" class="ms-isaret-yazi">4</text>
+<text x="10" y="294" class="ms-eksen">zaman → · soluk mumlar: olası bir yol</text>
+</svg>
+</Diyagram>
+
+- ① Büyük mum kapanır. Kapanışta tersine piyasa emri, mumun kapanışından mumun tersine girer.
+- ② Uca limit: fiyat mumun ucuna geri gelirse oradan tersine. Fiyatın ucuna geri döndüğü olaylar, geri çekilmenin sürmediği olaylardır.
+- ③ Uzama limiti: ucun yarım ATR ötesi. Uzamaya karşı girilir; emir ancak fiyat mumun ucunu aşarsa dolar.
+- ④ Yarıya stop emri: fiyat mumun yarısını kırarsa tersine. Geri çekilme başlamıştır, ama giriş hareketin yarısı geri alındıktan sonra yapılır.
+
+
+Bu şemalarda iki şeyi yapmazsın: kapanışın zaten gerisinde kalan bir limiti koymazsın (bu derste o emir hiç konmadı),
+mumun yönünde ve tersine iki emri aynı anda bırakmazsın (ikisi de dolarsa iki zarar taşırsın; bu bileşim ölçülmedi).
+
+## 5 dakika
+
+<div class="sayi-tablo">
+
+| Yön · emir | 2018–23 işlem | dolum | kazanma | maliyetsiz R | net R | 2024 → işlem | dolum | kazanma | maliyetsiz R | net R |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| mumun yönünde · %25 geri çekilmeye limit | 30.276 | %83 | %43 | −0,07 | −0,19 | 12.390 | %81 | %41 | −0,09 | −0,22 |
+| mumun yönünde · %50 geri çekilmeye limit | 31.324 | %66 | %43 | −0,06 | −0,17 | 12.749 | %65 | %42 | −0,07 | −0,20 |
+| mumun yönünde · %62 geri çekilmeye limit | 28.040 | %57 | %43 | −0,06 | −0,18 | 11.546 | %56 | %42 | −0,07 | −0,20 |
+| mumun yönünde · onay mumundan sonra piyasa | 22.751 | %100 | %42 | −0,03 | −0,27 | 9.865 | %100 | %41 | −0,04 | −0,29 |
+| mumun yönünde · kapanışta piyasa | 50.638 | %100 | %41 | −0,04 | −0,29 | 21.054 | %100 | %41 | −0,03 | −0,30 |
+| mumun yönünde · ucun kırılmasına stop | 41.540 | %82 | %43 | +0,01 | −0,26 | 17.575 | %83 | %43 | 0,00 | −0,28 |
+| mumun tersine · ucun yarım ATR ötesine limit | 29.111 | %57 | %44 | −0,06 | −0,17 | 12.360 | %59 | %44 | −0,05 | −0,17 |
+| mumun tersine · mumun ucuna limit | 35.271 | %73 | %44 | −0,05 | −0,16 | 15.001 | %75 | %44 | −0,04 | −0,16 |
+| mumun tersine · onay mumundan sonra piyasa | 27.477 | %100 | %43 | 0,00 | −0,26 | 11.016 | %100 | %44 | +0,03 | −0,24 |
+| mumun tersine · kapanışta piyasa | 50.638 | %100 | %45 | +0,04 | −0,22 | 21.054 | %100 | %44 | +0,03 | −0,23 |
+| mumun tersine · mumun yarısının kırılmasına stop | 34.786 | %73 | %44 | +0,02 | −0,23 | 14.279 | %72 | %45 | +0,04 | −0,23 |
+
+</div>
+
+Tablonun okunuşu: önce **maliyetsiz R** sütunu, yani aynı kuralın alış-satış ortasından, makassız ve kaymasız sonucu.
+Bütün biçimler sıfırın birkaç yüzde R yakınında. Tersine piyasa girişinin artı olması 6. dersin geri verme okumasıyla
+tutarlı. Sonra **net R**: aynı işlemler gerçek fiyatlarla. Fark maliyettir: piyasa ve stop emirlerinde maliyetsiz
+sonucun kat kat üstünde, limitlerde iki katı civarında. 5 dakikada mumun %25 geri çekilmesine limitin maliyeti
+işlem başına 0,12 R, kapanışta piyasa girişininki
+0,26 R.
+
+<GrafikEmbed src="/arastirma/fx-buyuk-giris/01_izgara.html" baslik="On bir giriş biçimi, maliyetten önce ve sonra" no="01" kaynak="Dukascopy" />
+
+### Masada: 5 dakikada emir bir maliyet seçimidir
+
+5 dakikalık grafikte büyük mum kaçan bir hareket izlenimi verir. Tablonun maliyetsiz sütunu bu izlenimin karşılığını
+verir (sıfırın çevresi), net sütunu emrin türünün neyi değiştirdiğini: kaç kez makas ve kayma ödendiğini. Bu dilimde
+emrin türü bir maliyet kararıdır.
+
+<div class="senaryo" id="kart-bes-dk-kapanis">
+<p class="senaryo-durum"><span class="etiket">Durum</span> 5 dakikalık grafikte, takvimde haber olmayan bir saatte, ucunda kapanan büyük mumdan hemen sonra mumun yönünde girmeyi düşünüyorsun.</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Mum kapandı, fiyat hâlâ ucun yakınında ve sonraki mumun açılışı kapanışa yapışık: kaçmakta olan bir hareket.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Mumun iki ucunu ve yarısını işaretlersin; kapanışta piyasa emrinin ödeyeceği makası ve kaymayı stopun pip uzaklığının yanına yazarsın.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Kapanışta piyasa emriyle ya da uca stop emriyle kovalamazsın: 5 dakikada ikisi de maliyeti girişte ve çıkışta öder, maliyetten önce de sıfır çevresindedir. Tersine kapanışta piyasa girişinin maliyetten önceki küçük artısını da kenar saymazsın; maliyetten sonra o da eksidir.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Başka bir gerekçen varsa emir limittir: mumun çeyrek ya da yarı geri çekilmesine; stop limitin fiyatından 2 ATR, hedef 1 R. Emir altı mum bekler, dolmazsa iptal edilir; fiyat yeni bir uç yaparsa limiti peşinden taşımazsın. Süresine haber penceresi düşüyorsa emri açıklamadan önce çekersin.</dd>
+<dt>Dayanak</dt>
+<dd>8. ders, 5 dakika; 8. ders, Limit neden ucuz görünür: ters seçim; 8. ders, Emri nereye koyarsın</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: ölçüm bu durumda maliyetten sonra artı bir işlem bulmadı. Kural, başka bir gerekçeyle masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+## 15 dakika ve 1 saat
+
+**15 dakika**
+
+<div class="sayi-tablo">
+
+| Yön · emir | 2018–23 işlem | dolum | kazanma | maliyetsiz R | net R | 2024 → işlem | dolum | kazanma | maliyetsiz R | net R |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| mumun yönünde · %25 geri çekilmeye limit | 11.709 | %85 | %47 | −0,02 | −0,08 | 5.044 | %85 | %45 | −0,05 | −0,12 |
+| mumun yönünde · %50 geri çekilmeye limit | 12.630 | %68 | %47 | −0,02 | −0,08 | 5.428 | %68 | %46 | −0,03 | −0,11 |
+| mumun yönünde · %62 geri çekilmeye limit | 11.496 | %59 | %47 | −0,03 | −0,09 | 4.961 | %60 | %46 | −0,04 | −0,11 |
+| mumun yönünde · onay mumundan sonra piyasa | 9.274 | %100 | %46 | 0,00 | −0,13 | 3.988 | %100 | %46 | 0,00 | −0,14 |
+| mumun yönünde · kapanışta piyasa | 19.778 | %100 | %46 | 0,00 | −0,13 | 8.485 | %100 | %45 | −0,02 | −0,16 |
+| mumun yönünde · ucun kırılmasına stop | 16.067 | %81 | %47 | +0,02 | −0,11 | 6.984 | %82 | %45 | −0,02 | −0,17 |
+| mumun tersine · ucun yarım ATR ötesine limit | 12.277 | %62 | %48 | −0,01 | −0,07 | 5.246 | %62 | %47 | −0,01 | −0,08 |
+| mumun tersine · mumun ucuna limit | 14.978 | %77 | %46 | −0,04 | −0,10 | 6.489 | %78 | %48 | 0,00 | −0,07 |
+| mumun tersine · onay mumundan sonra piyasa | 10.430 | %100 | %46 | 0,00 | −0,13 | 4.459 | %100 | %47 | +0,01 | −0,13 |
+| mumun tersine · kapanışta piyasa | 19.778 | %100 | %47 | 0,00 | −0,13 | 8.485 | %100 | %47 | +0,02 | −0,12 |
+| mumun tersine · mumun yarısının kırılmasına stop | 13.309 | %72 | %46 | +0,01 | −0,13 | 5.747 | %72 | %47 | +0,01 | −0,13 |
+
+</div>
+
+**1 saat**
+
+<div class="sayi-tablo">
+
+| Yön · emir | 2018–23 işlem | dolum | kazanma | maliyetsiz R | net R | 2024 → işlem | dolum | kazanma | maliyetsiz R | net R |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| mumun yönünde · %25 geri çekilmeye limit | 3.002 | %85 | %50 | +0,02 | −0,01 | 1.239 | %84 | %49 | 0,00 | −0,04 |
+| mumun yönünde · %50 geri çekilmeye limit | 3.112 | %65 | %49 | 0,00 | −0,03 | 1.295 | %64 | %50 | +0,01 | −0,02 |
+| mumun yönünde · %62 geri çekilmeye limit | 2.761 | %55 | %49 | −0,01 | −0,04 | 1.147 | %54 | %48 | −0,01 | −0,05 |
+| mumun yönünde · onay mumundan sonra piyasa | 2.442 | %100 | %51 | +0,05 | 0,00 | 1.075 | %100 | %48 | 0,00 | −0,07 |
+| mumun yönünde · kapanışta piyasa | 5.070 | %100 | %50 | +0,02 | −0,03 | 2.168 | %100 | %49 | +0,01 | −0,06 |
+| mumun yönünde · ucun kırılmasına stop | 4.024 | %79 | %51 | +0,05 | −0,02 | 1.737 | %80 | %48 | +0,01 | −0,05 |
+| mumun tersine · ucun yarım ATR ötesine limit | 3.095 | %61 | %47 | −0,05 | −0,08 | 1.290 | %60 | %47 | −0,04 | −0,07 |
+| mumun tersine · mumun ucuna limit | 3.897 | %77 | %46 | −0,06 | −0,08 | 1.689 | %78 | %48 | −0,02 | −0,05 |
+| mumun tersine · onay mumundan sonra piyasa | 2.624 | %100 | %47 | −0,02 | −0,09 | 1.090 | %100 | %49 | +0,01 | −0,04 |
+| mumun tersine · kapanışta piyasa | 5.070 | %100 | %47 | −0,02 | −0,08 | 2.168 | %100 | %48 | −0,01 | −0,07 |
+| mumun tersine · mumun yarısının kırılmasına stop | 3.191 | %66 | %48 | −0,01 | −0,07 | 1.349 | %67 | %47 | −0,02 | −0,10 |
+
+</div>
+
+Dilim büyüdükçe iki şey değişiyor. Maliyet R cinsinden küçülüyor, çünkü ATR büyüyor ve aynı makas daha büyük bir
+mesafenin parçası oluyor. Ve yön değişiyor: 2018–2023'te 1 saatte mumun yönündeki girişlerin çoğu maliyetten önce artı
+(+0,02 R, onay mumuyla +0,05 R), tersine girişlerin
+hepsi eksi; 2024 sonrasında tersine girişler maliyetten önce sıfırın çevresinde kaldı. Maliyetten sonra 1 saatte de bu
+satırda hiçbir biçim artıda değil. 2018–2023'te sıfıra en yakın iki biçim onay mumu
+(0,00 R) ve mumun %25 geri çekilmesine limitti
+(−0,01 R). 2024 sonrasında sıra değişti: onay mumu mumun yönündeki biçimlerin en çok
+kaybedeni oldu (−0,07 R), en az kaybeden yarıya limitti
+(−0,02 R).
+
+Izgaranın öbür hücrelerinde (iki stop, iki hedef) sıfıra en yakın yer 1 saatte, hedefi 2 R olan geri çekilme
+limitleri: mumun %25 geri çekilmesine limit 2018–2023'te 0,00 R, 2024
+sonrasında +0,02 R; yarısına limit −0,02 ve
++0,03 R. Izgarada maliyetten sonra sıfırın üstüne çıkan hücreler yalnız bu ikisidir:
+2018–2023'te sıfırda ya da altında, 2024 sonrasında az farkla artı; büyüklükleri sıfırdan ayırt edilemeyecek kadar
+küçük. Aynı emir biçiminin stopu 1 ATR'lik, koşu süzgeçli bir hâli 9. dersin planına seçildi ve 2024 sonrasında
+tutmadı (9. ders, Seçilen girişler).
+
+### Masada: dilim büyüyünce
+
+1 saatte aynı makas riskin daha küçük bir parçasıdır ve 6. dersin ölçtüğü hafif devam mumun yönündeki girişlerin
+maliyetsiz sonucunda görünür (6. ders, Dilim dilim okuma); ikisi de kenar değildir.
+
+<div class="senaryo" id="kart-saat-tersine">
+<p class="senaryo-durum"><span class="etiket">Durum</span> 1 saatlik grafikte büyük bir mum kapandı ve hareket sana aşırı uzamış görünüyor.</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Mum önceki mumların birkaç katı, kapanış uca yakın; günlük grafikte de göze batıyor ve dönmesi gerekiyormuş gibi duruyor.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Mumun uçlarını ve yarısını işaretler, bir günlük izleme penceresi boyunca fiyatın mumun yönünde kalıp kalmadığına bakarsın.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Mumun tersine girmezsin: stop 2 ATR ve hedef 1 R ile 1 saatte tersine girişlerin hepsi 2018–2023&#x27;te maliyetten önce de eksiydi, uca ya da ucun yarım ATR ötesine konan tersine limit dahil; 2024 sonrasında maliyetten önce sıfırın çevresinde kaldılar, maliyetten sonra hepsi eksi.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Mumun yönünde başka bir gerekçen varsa limit çeyrek ya da yarı geri çekilmeye; stop limitin fiyatından 2 ATR. Onay mumu 2018–2023&#x27;te en az kaybeden biçimdi, 2024 sonrasında mumun yönündeki biçimlerin en çok kaybedeni oldu; onu güvenli seçenek saymazsın. Hedefi 2 R&#x27;ye taşımanın sonucu sıfırdan ayırt edilemiyor; bunu bir kenar saymazsın.</dd>
+<dt>Dayanak</dt>
+<dd>8. ders, 15 dakika ve 1 saat; 6. ders, Dilim dilim okuma</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: ölçüm bu durumda maliyetten sonra artı bir işlem bulmadı. Kural, başka bir gerekçeyle masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+## Limit neden ucuz görünür: ters seçim
+
+Limit emir üç şeyi birden yapar: girişte makas ödemez (fiyat sana gelir), girişte kayma ödemez ve **yalnız fiyat
+aleyhine yürüdüğünde dolar.** Çıkışta makas ve kayma yine ödenir. Üçüncüsü ilk ikisini dengeler: yukarı bir büyük
+mumdan sonra yarıya konan alış limiti tam da hareketin geri alındığı olaylarda dolar; fiyat geri gelmeden yükselirse
+limit dolmaz ve en iyi işlem kaçar.
+
+Bunu ölçmek için her olayda iki soru birlikte soruldu: limit doldu mu, ve aynı anda piyasadan girilseydi (aynı stop ve
+hedefle) işlem kazanır mıydı?
+
+<div class="sayi-tablo">
+
+| Dilim · emir | 2018–23 limit doldu | doldu · piyasa girişi kazandı | dolmadı · piyasa girişi kazandı | 2024 → limit doldu | doldu · piyasa girişi kazandı | dolmadı · piyasa girişi kazandı |
+|---|---:|---:|---:|---:|---:|---:|
+| 5 dakika · mumun yönünde · %25 geri çekilmeye limit | %83 | %32 | %87 | %81 | %31 | %86 |
+| 15 dakika · mumun yönünde · %25 geri çekilmeye limit | %85 | %39 | %91 | %85 | %36 | %92 |
+| 1 saat · mumun yönünde · %25 geri çekilmeye limit | %85 | %42 | %93 | %84 | %41 | %91 |
+| 5 dakika · mumun yönünde · %50 geri çekilmeye limit | %66 | %23 | %78 | %65 | %22 | %77 |
+| 15 dakika · mumun yönünde · %50 geri çekilmeye limit | %68 | %29 | %83 | %68 | %28 | %83 |
+| 1 saat · mumun yönünde · %50 geri çekilmeye limit | %65 | %33 | %82 | %64 | %30 | %82 |
+| 5 dakika · mumun yönünde · %62 geri çekilmeye limit | %57 | %18 | %72 | %56 | %18 | %72 |
+| 15 dakika · mumun yönünde · %62 geri çekilmeye limit | %59 | %24 | %79 | %60 | %23 | %78 |
+| 1 saat · mumun yönünde · %62 geri çekilmeye limit | %55 | %27 | %78 | %54 | %24 | %78 |
+| 5 dakika · mumun tersine · mumun ucuna limit | %73 | %32 | %80 | %75 | %33 | %78 |
+| 15 dakika · mumun tersine · mumun ucuna limit | %77 | %36 | %85 | %78 | %37 | %85 |
+| 1 saat · mumun tersine · mumun ucuna limit | %77 | %37 | %83 | %78 | %38 | %83 |
+| 5 dakika · mumun tersine · ucun yarım ATR ötesine limit | %57 | %22 | %76 | %59 | %23 | %76 |
+| 15 dakika · mumun tersine · ucun yarım ATR ötesine limit | %62 | %26 | %81 | %62 | %26 | %82 |
+| 1 saat · mumun tersine · ucun yarım ATR ötesine limit | %61 | %27 | %78 | %60 | %26 | %79 |
+
+</div>
+
+Limitin dolduğu olaylarda piyasa girişi çoğunlukla kaybediyor; dolmadığı olaylarda çoğunlukla kazanıyor. Fark büyük ve
+iki dönemde aynı. Farkın büyük kısmı geometridir: limit, fiyat piyasa girişinin aleyhine mumun yarısı kadar yürüdüğünde
+dolar, ve yön bilgisi taşımayan bir yolda da piyasa girişi o olaylarda çoğunlukla kaybederdi. Tablo limitin iyi ya da
+kötü bir süzgeç olduğunu söylemez; limitin dolmasının hangi olaylarla birlikte geldiğini gösterir. Limitin net sonucu
+5 dakikada piyasa emrinden iyi çıkıyor, çünkü daha iyi bir fiyattan giriyor ve girişte makas ödemiyor. Ama maliyetten
+önce piyasa emrinden kötü: 5 dakikada mumun yönünde, yarıya limit −0,06 R, piyasa
+−0,04 R. Mumun tersine aynı durum daha da belirgin: kapanışta piyasa maliyetten önce
++0,04 R, mumun ucuna limit −0,05 R. Limit, 5 dakikadaki
+küçük geri verme kenarını yok ediyor, çünkü fiyatın ucuna geri döndüğü olaylar tam da geri çekilmenin sürmediği
+olaylardır.
+
+<GrafikEmbed src="/arastirma/fx-buyuk-giris/02_ters_secim.html" baslik="Limit doldu mu, dolmadı mı" no="02" kaynak="Dukascopy" />
+
+Pratik ders: "geri çekilmeyi bekle, limitle gir" tavsiyesi maliyeti düşürür, kenar yaratmaz. Limitin dolum oranı
+yüksekse (5 dakikada %25 geri çekilmeye limit %83 doluyor) bu iyi haber
+değildir: emir, fiyatın kolayca geri geldiği olayların neredeyse tamamında doluyor demektir.
+
+### Masada: limitin dolması ne anlatır
+
+Masadaki karşılığı tek bir alışkanlıktır: limitin dolmasını onay değil uyarı okumak. Dolum fiyatın aleyhine mumun
+yarısı kadar yürüdüğünü, dolmayan limit fiyatın geri gelmeden yürüdüğünü söyler. Şema aynı limitin iki gününü yan yana
+koyar.
+
+<Diyagram no="M4" baslik="Yarıya alış limiti: dolduğu gün ve kaçtığı gün" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 320" class="mum-sema" role="img" aria-label="Yarıya alış limiti: dolduğu gün ve kaçtığı gün">
+<defs><marker id="ok-terssecim" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<line x1="141.8" x2="236.0" y1="58.9" y2="58.9" class="ms-cizgi ms-hedef" />
+<text x="244" y="62.9" class="ms-etiket ms-hedef-yazi">hedef 1R</text>
+<line x1="85.3" x2="236.0" y1="166.8" y2="166.8" class="ms-cizgi ms-limit" />
+<text x="244" y="170.8" class="ms-etiket ms-limit-yazi">yarı limit</text>
+<line x1="141.8" x2="236.0" y1="274.7" y2="274.7" class="ms-cizgi ms-stop" />
+<text x="244" y="278.7" class="ms-etiket ms-stop-yazi">stop 2 ATR</text>
+<line x1="19.4" x2="19.4" y1="220.7" y2="269.3" class="ms-fitil ms-artis" />
+<rect x="13.6" y="231.5" width="11.7" height="13.5" class="ms-govde ms-artis" />
+<line x1="38.2" x2="38.2" y1="212.6" y2="261.2" class="ms-fitil ms-azalis" />
+<rect x="32.4" y="231.5" width="11.7" height="21.6" class="ms-govde ms-azalis" />
+<line x1="57.1" x2="57.1" y1="226.1" y2="277.4" class="ms-fitil ms-artis" />
+<rect x="51.2" y="234.2" width="11.7" height="18.9" class="ms-govde ms-artis" />
+<line x1="75.9" x2="75.9" y1="210.0" y2="258.5" class="ms-fitil ms-azalis" />
+<rect x="70.1" y="234.2" width="11.7" height="8.1" class="ms-govde ms-azalis" />
+<line x1="94.8" x2="94.8" y1="85.9" y2="247.7" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="88.9" y="91.3" width="11.7" height="151.1" class="ms-govde ms-artis ms-vurgu" />
+<line x1="113.6" x2="113.6" y1="85.9" y2="120.9" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="107.7" y="91.3" width="11.7" height="24.3" class="ms-govde ms-azalis ms-soluk" />
+<line x1="132.4" x2="132.4" y1="110.1" y2="150.6" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="126.6" y="115.5" width="11.7" height="29.7" class="ms-govde ms-azalis ms-soluk" />
+<line x1="151.2" x2="151.2" y1="141.2" y2="174.9" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="145.4" y="145.2" width="11.7" height="24.3" class="ms-govde ms-azalis ms-soluk" />
+<line x1="170.1" x2="170.1" y1="161.4" y2="207.3" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="164.2" y="169.5" width="11.7" height="32.4" class="ms-govde ms-azalis ms-soluk" />
+<line x1="188.9" x2="188.9" y1="193.8" y2="234.2" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="183.1" y="201.9" width="11.7" height="27.0" class="ms-govde ms-azalis ms-soluk" />
+<line x1="207.8" x2="207.8" y1="220.7" y2="261.2" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="201.9" y="228.8" width="11.7" height="27.0" class="ms-govde ms-azalis ms-soluk" />
+<line x1="226.6" x2="226.6" y1="250.4" y2="282.8" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="220.7" y="255.8" width="11.7" height="21.6" class="ms-govde ms-azalis ms-soluk" />
+<polyline points="94.8,91.3 132.4,69.7 170.1,50.8 207.8,29.2" class="ms-yol ms-yol-olasi" marker-end="url(#ok-terssecim)" />
+<text x="213.8" y="33.2" class="ms-etiket ms-yol-yazi">B</text>
+<circle cx="94.8" cy="266.6" r="8" class="ms-isaret" />
+<text x="94.8" y="270.2" class="ms-isaret-yazi">1</text>
+<circle cx="151.2" cy="166.8" r="8" class="ms-isaret" />
+<text x="151.2" y="170.4" class="ms-isaret-yazi">2</text>
+<circle cx="226.6" cy="274.7" r="8" class="ms-isaret" />
+<text x="226.6" y="278.3" class="ms-isaret-yazi">3</text>
+<circle cx="170.1" cy="31.9" r="8" class="ms-isaret" />
+<text x="170.1" y="35.5" class="ms-isaret-yazi">4</text>
+<text x="10" y="314" class="ms-eksen">zaman → · soluk mumlar: A günü · kesikli ok: B günü</text>
+</svg>
+</Diyagram>
+
+- ① Büyük mum kapanır. Mumun yarısına alış limiti konur; stop limitin 2 ATR altında, hedef 1 R üstünde.
+- ② A günü: fiyat geri çekilir ve limit yarıda dolar. Dolum, mumun hareketinin yarısının geri alındığı andır.
+- ③ A günü sürer: fiyat mumun dibini de geçer ve stop görülür. Limitin dolduğu olaylarda aynı anda piyasadan girilen işlem de çoğunlukla kaybederdi.
+- ④ B günü: fiyat geri gelmeden yürür, limit hiç dolmaz. Hedefe giden hareket emirsiz geçer; limitin dolmadığı olaylarda piyasa girişi çoğunlukla kazanırdı.
+
+
+İki gün kapanışta aynıdır; ayrışma limitin kaderiyle gelir ve geometridir. Yarısına dönen büyük mumların yarısında
+dönüş ilk bir iki mumdadır (6. ders, Yarısına dönen fiyat ne kadar sürede dönüyor); limiti bekleme süresinin ötesine
+uzatmak bu derste ölçülmemiş bir emirdir.
+
+<div class="senaryo" id="kart-yariya-limit">
+<p class="senaryo-durum"><span class="etiket">Durum</span> Büyük mumdan sonra mumun yönünde, mumun yarısına bir limit koydun ve emir doldu.</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Fiyat hareketin yarısını geri aldı; dolum ekranda ucuz bir fiyat gibi görünür.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Dolumu bir uyarı sayarsın: limit, aynı anda piyasadan girilen işlemin çoğunlukla kaybettiği olaylarda dolar. Stopu ve hedefi baştan yazdığın yerde bırakırsın.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Dolumu iyi haber saymazsın, yüksek dolum oranını limitin seçici olduğuna yormazsın, ucuz göründü diye stopu uzaklaştırmazsın.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Limit mumun yarısında; stop limitin fiyatından 2 ATR, hedef 1 R. Emir altı mum bekler, dolmazsa iptal edilir ve kovalanmaz. Süresine takvimdeki büyük bir haberin penceresi düşüyorsa emri açıklamadan önce çekersin.</dd>
+<dt>Dayanak</dt>
+<dd>8. ders, Limit neden ucuz görünür: ters seçim; 8. ders, Emri nereye koyarsın</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: ölçüm bu durumda maliyetten sonra artı bir işlem bulmadı. Kural, başka bir gerekçeyle masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+Aşağıdaki iki gün aynı kuralla seçildi: 5 dakikalık EUR/USD'de, Londra seansında, takvimde büyük haber olmayan bir
+saatte, ucunda kapanan, boyu iki ile üç ATR arasında bir büyük mum. Gerçek grafiklerde ① olay mumu, ② mumun yarısı, ③
+yarıya ilk dokunuş, ④ izleme penceresinin sonudur.
+
+<GrafikEmbed src="/arastirma/fx-buyuk-giris/m_yariya-limit.html" baslik="Yarıya konan limit: dolup stop olduğu gün, dolmayıp kaçtığı gün" no="M5" kaynak="Dukascopy" />
+
+
+Üstteki günde ① TSİ 11:10'da kapanır; fiyat sonraki ilk dakikada ② yarıya iner ve limit ③'te, kapanıştan sonraki ilk
+mumda dolar. Aynı mumun içinde fiyat büyük mumun dibini de kırar ve limitin 2 ATR altındaki stopu görür; kapanışta
+piyasadan giren de aynı mumda stopa giderdi. ④'te fiyat mumun dibinin belirgin altındadır. Alttaki günde ① TSİ 11:00'da
+kapanır ve ③ yoktur: ilk mumda fiyat yarıya bir fiyat adımından az kala döner ve ucu aşar. Yarıdaki limit dolmaz,
+çeyrek geri çekilmeye konmuş bir limit ilk dakikada dolardı; kapanışta piyasadan giren 1 R hedefini ikinci mumda görürdü
+ve ④'te fiyat kapanışın belirgin ötesindedir. Biri dolan limitin kötü gittiği, öbürü dolmayan limitin kaçırdığı
+olaydır; tek gün kuralı ne doğrular ne yanlışlar.
+
+## Stop uzaklığı ve maliyet
+
+Makas ve kayma pip cinsinden sabittir; R cinsinden, stopun uzaklığına bölünür. Stop yaklaştıkça aynı maliyet daha büyük
+bir R olur.
+
+<GrafikEmbed src="/arastirma/fx-buyuk-giris/03_maliyet.html" baslik="Stop yakınsa maliyet büyür" no="03" kaynak="Dukascopy" />
+
+5 dakikalık bir ATR'nin medyanı 3,1 pip. Stop 1 ATR'deyse planlanan risk birkaç pip ve tek bir makas
+bunun önemli bir parçası: 5 dakikada kapanışta piyasa girişinin maliyeti işlem başına 0,35
+R. Üstelik 1 ATR'de 5 dakikalık olayların %43 kadarında risk 3,0 pipin altında
+kaldı ve işlem hiç açılmadı (kalanların medyan riski 4,5 pip); yani 1 ATR'lik
+maliyet yalnız ATR'si büyük olan olayların maliyeti, gerçek fark daha da büyük. Stopu 2 ATR'ye taşımak maliyeti 0,26 R'ye, 1 saatlik grafiğe geçmek
+0,06 R'ye indiriyor. Ama hiçbiri kenar yaratmıyor; yalnız kaybı küçültüyor.
+
+### Masada: stop nereye
+
+Grafikte en "mantıklı" görünen stop mumun öbür ucunun ötesidir; bu seride o yer ölçülmedi. Ölçülen stop girişten 1 ya
+da 2 ATR uzaktır ve sonucu belirleyen yerin anlamı değil pip uzaklığıdır (8. ders, Emri nereye koyarsın). Şema aynı
+girişe konmuş iki stopu ve 1 R hedeflerini gösterir.
+
+<Diyagram no="M6" baslik="Aynı makas, iki stop: yakın stop maliyeti büyütür" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 300" class="mum-sema" role="img" aria-label="Aynı makas, iki stop: yakın stop maliyeti büyütür">
+<defs><marker id="ok-stopuzaklik" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<rect x="160.7" y="138.7" width="75.3" height="11.6" class="ms-bolge ms-kalk" />
+<text x="244" y="148.5" class="ms-etiket ms-kalk-yazi">giriş ve makas</text>
+<line x1="160.7" x2="236.0" y1="28.1" y2="28.1" class="ms-cizgi ms-hedef" />
+<text x="244" y="32.1" class="ms-etiket ms-hedef-yazi">1R, uzak stop</text>
+<line x1="160.7" x2="236.0" y1="86.3" y2="86.3" class="ms-cizgi ms-hedef" />
+<text x="244" y="90.3" class="ms-etiket ms-hedef-yazi">1R, yakın stop</text>
+<line x1="160.7" x2="236.0" y1="202.7" y2="202.7" class="ms-cizgi ms-stop" />
+<text x="244" y="206.7" class="ms-etiket ms-stop-yazi">stop 1 ATR</text>
+<line x1="160.7" x2="236.0" y1="260.9" y2="260.9" class="ms-cizgi ms-stop" />
+<text x="244" y="264.9" class="ms-etiket ms-stop-yazi">stop 2 ATR</text>
+<line x1="22.6" x2="22.6" y1="202.7" y2="255.1" class="ms-fitil ms-artis" />
+<rect x="14.8" y="214.4" width="15.6" height="14.6" class="ms-govde ms-artis" />
+<line x1="47.7" x2="47.7" y1="194.0" y2="246.4" class="ms-fitil ms-azalis" />
+<rect x="39.9" y="214.4" width="15.6" height="23.3" class="ms-govde ms-azalis" />
+<line x1="72.8" x2="72.8" y1="208.6" y2="263.9" class="ms-fitil ms-artis" />
+<rect x="65.0" y="217.3" width="15.6" height="20.4" class="ms-govde ms-artis" />
+<line x1="97.9" x2="97.9" y1="191.1" y2="243.5" class="ms-fitil ms-azalis" />
+<rect x="90.1" y="217.3" width="15.6" height="8.7" class="ms-govde ms-azalis" />
+<line x1="123.0" x2="123.0" y1="57.2" y2="231.8" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="115.2" y="63.1" width="15.6" height="163.0" class="ms-govde ms-artis ms-vurgu" />
+<line x1="148.1" x2="148.1" y1="57.2" y2="115.4" class="ms-fitil ms-azalis" />
+<rect x="140.3" y="63.1" width="15.6" height="46.6" class="ms-govde ms-azalis" />
+<line x1="173.2" x2="173.2" y1="103.8" y2="150.4" class="ms-fitil ms-azalis" />
+<rect x="165.4" y="109.6" width="15.6" height="32.0" class="ms-govde ms-azalis" />
+<line x1="198.3" x2="198.3" y1="124.2" y2="162.0" class="ms-fitil ms-artis" />
+<rect x="190.5" y="130.0" width="15.6" height="11.6" class="ms-govde ms-artis" />
+<line x1="223.4" x2="223.4" y1="112.5" y2="137.3" class="ms-fitil ms-artis" />
+<rect x="215.7" y="118.4" width="15.6" height="11.6" class="ms-govde ms-artis" />
+<circle cx="173.2" cy="164.9" r="8" class="ms-isaret" />
+<text x="173.2" y="168.5" class="ms-isaret-yazi">1</text>
+<circle cx="223.4" cy="202.7" r="8" class="ms-isaret" />
+<text x="223.4" y="206.3" class="ms-isaret-yazi">2</text>
+<circle cx="223.4" cy="260.9" r="8" class="ms-isaret" />
+<text x="223.4" y="264.5" class="ms-isaret-yazi">3</text>
+<text x="10" y="294" class="ms-eksen">zaman →</text>
+</svg>
+</Diyagram>
+
+- ① Giriş: yarıya konan limit dolar. Çıkışta ödenecek makas ve kayma pip cinsinden sabittir; bant onun payını gösterir ve iki stopta da aynı genişliktedir.
+- ② Yakın stop (1 ATR): risk küçük, aynı makas riskin daha büyük bir parçası. 5 dakikada ATR birkaç pip olduğu için olayların önemli bir kısmında risk işlem açılamayacak kadar küçük kalır.
+- ③ Uzak stop (2 ATR): pip cinsinden aynı maliyet iki kat büyük bir riske bölünür. Kenar değişmez; yalnız maliyetin R içindeki payı küçülür.
+
+
+<div class="senaryo" id="kart-stop-1atr">
+<p class="senaryo-durum"><span class="etiket">Durum</span> 5 dakikalık grafikte büyük mumdan sonra stopu girişten bir ATR&#x27;ye koymayı düşünüyorsun.</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Yarıdan giriyorsan bu stop mumun öbür ucuna yakın düşer ve grafikte makul görünür; pip olarak ise birkaç piptir ve tek bir makas onun görünür bir parçasıdır.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Riski pip olarak yazar, makasla ve kaymayla yan yana koyarsın. Bu derste risk belirli bir pip sınırının altındaysa işlem hiç açılmadı; masada da aynı sınırı sorarsın.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Stopu yaklaştırarak kaybı küçülttüğünü düşünmezsin: pip olarak küçülen kayıp, R cinsinden büyüyen maliyetle gelir ve kenar değişmez. Stopu mumun öbür ucunun ötesine koymayı da bir çözüm saymazsın; o yer bu seride ölçülmedi ve büyük mumların çoğunda yarıdan bir ile bir buçuk ATR uzaktadır.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Başka bir gerekçeyle gireceksen stopu girişten 2 ATR&#x27;ye koyarsın ya da fikri bir üst dilimde kurarsın. Aynı pip kaybını korumak için pozisyonu küçültmek bu derste ölçülmedi.</dd>
+<dt>Dayanak</dt>
+<dd>8. ders, Stop uzaklığı ve maliyet; 8. ders, Emri nereye koyarsın</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: ölçüm bu durumda maliyetten sonra artı bir işlem bulmadı. Kural, başka bir gerekçeyle masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+## Onay mumu
+
+"Onayı bekle" en sık verilen tavsiyelerden biridir. Ölçüm şunu söylüyor: onay mumu beklemek, olayların bir kısmında hiç
+işlem açmamak demek (5 dakikada mumun yönündeki onay 22.751 olayda geldi; büyük mum
+54.501 olaydı ve kapanışta piyasa girişi 50.638 işlem açtı) ve gelen onaydan sonraki girişin maliyetten önceki sonucu kapanışta piyasa
+girişinden belirgin farklı değil (−0,03 ve −0,04 R).
+Onay bir mumu bekler, ama fiyat o mumda zaten yürümüş olur: giriş daha kötü bir fiyattan yapılır, ve onayın taşıdığı
+bilgi kaçırılan fiyatın bedelini ancak karşılıyor. 1 saatte, stop 2 ATR ve hedef 1 R satırında, 2018–2023'te en az
+kaybeden biçim onay mumu oldu; 2024 sonrasında mumun yönündeki biçimlerin en çok kaybedeniydi.
+
+### Masada: onayı beklerken
+
+Onay mumu güven verir; şema bedelini gösterir: giriş onay mumunun kapanışından, yani daha ileriden yapılır ve stop da
+aynı mesafe kadar taşınır.
+
+<Diyagram no="M7" baslik="Onay mumu: bilgi gelir, fiyat da gider" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 300" class="mum-sema" role="img" aria-label="Onay mumu: bilgi gelir, fiyat da gider">
+<defs><marker id="ok-onay" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<line x1="145.6" x2="236.0" y1="34.0" y2="34.0" class="ms-cizgi ms-seviye" />
+<text x="244" y="38.0" class="ms-etiket ms-seviye-yazi">onay girişi</text>
+<line x1="123.0" x2="236.0" y1="60.6" y2="60.6" class="ms-cizgi ms-seviye" />
+<text x="244" y="64.6" class="ms-etiket ms-seviye-yazi">kapanış girişi</text>
+<line x1="145.6" x2="236.0" y1="151.9" y2="151.9" class="ms-cizgi ms-stop" />
+<text x="244" y="155.9" class="ms-etiket ms-stop-yazi">onay stopu</text>
+<line x1="123.0" x2="236.0" y1="178.4" y2="178.4" class="ms-cizgi ms-stop" />
+<text x="244" y="182.4" class="ms-etiket ms-stop-yazi">kapanış stopu</text>
+<line x1="21.3" x2="21.3" y1="202.0" y2="255.0" class="ms-fitil ms-artis" />
+<rect x="14.3" y="213.8" width="14.0" height="14.7" class="ms-govde ms-artis" />
+<line x1="43.9" x2="43.9" y1="193.1" y2="246.2" class="ms-fitil ms-azalis" />
+<rect x="36.9" y="213.8" width="14.0" height="23.6" class="ms-govde ms-azalis" />
+<line x1="66.5" x2="66.5" y1="207.9" y2="263.9" class="ms-fitil ms-artis" />
+<rect x="59.5" y="216.7" width="14.0" height="20.6" class="ms-govde ms-artis" />
+<line x1="89.1" x2="89.1" y1="190.2" y2="243.2" class="ms-fitil ms-artis" />
+<rect x="82.1" y="199.0" width="14.0" height="17.7" class="ms-govde ms-artis" />
+<line x1="111.7" x2="111.7" y1="193.1" y2="249.1" class="ms-fitil ms-azalis" />
+<rect x="104.7" y="199.0" width="14.0" height="26.5" class="ms-govde ms-azalis" />
+<line x1="134.3" x2="134.3" y1="54.7" y2="231.4" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="127.3" y="60.6" width="14.0" height="165.0" class="ms-govde ms-artis ms-vurgu" />
+<line x1="156.9" x2="156.9" y1="28.1" y2="66.4" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="149.9" y="34.0" width="14.0" height="26.5" class="ms-govde ms-artis ms-vurgu" />
+<line x1="179.5" x2="179.5" y1="28.1" y2="57.6" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="172.5" y="34.0" width="14.0" height="17.7" class="ms-govde ms-azalis ms-soluk" />
+<line x1="202.1" x2="202.1" y1="45.8" y2="72.3" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="195.1" y="51.7" width="14.0" height="14.7" class="ms-govde ms-azalis ms-soluk" />
+<line x1="224.7" x2="224.7" y1="48.8" y2="70.9" class="ms-fitil ms-artis ms-soluk" />
+<rect x="217.7" y="54.7" width="14.0" height="11.8" class="ms-govde ms-artis ms-soluk" />
+<circle cx="134.3" cy="249.1" r="8" class="ms-isaret" />
+<text x="134.3" y="252.7" class="ms-isaret-yazi">1</text>
+<circle cx="156.9" cy="13.4" r="8" class="ms-isaret" />
+<text x="156.9" y="17.0" class="ms-isaret-yazi">2</text>
+<circle cx="202.1" cy="87.1" r="8" class="ms-isaret" />
+<text x="202.1" y="90.7" class="ms-isaret-yazi">3</text>
+<text x="10" y="294" class="ms-eksen">zaman → · soluk mumlar: olası bir yol</text>
+</svg>
+</Diyagram>
+
+- ① Büyük mum kapanır. Kapanışta giren, mumun kapanışından girer; stopu 2 ATR aşağıdadır.
+- ② Onay mumu, büyük mumun kapanışının ötesinde kapanır. Onaylı giriş onun kapanışından, yani daha yukarıdan yapılır; aynı uzaklıktaki stop da o kadar yukarı taşınır.
+- ③ Sonraki mumlar onay mumunun kazandırdığını geri alabilir. Onayın taşıdığı bilgi, kaçırılan fiyatın bedelini ancak karşılar.
+
+
+<div class="senaryo" id="kart-onay">
+<p class="senaryo-durum"><span class="etiket">Durum</span> Büyük mumdan sonra bir mum daha görmek için onay bekliyorsun.</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Sonraki mum büyük mumun kapanışının ötesinde kapanır ya da kapanmaz; kapanırsa fiyat bir mum daha yürümüştür.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Onay gelirse girişin daha ileriden olacağını ve stopun da o kadar taşınacağını hesaba katarsın; gelmezse işlem yoktur ve bunu kayıp saymazsın.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Onay mumunu bir kenar saymazsın: 5 dakikada onaylı girişin maliyetten önceki sonucu kapanıştaki piyasa girişinden belirgin farklı değil, 1 saatte 2018–2023&#x27;teki en az kaybeden sırası 2024 sonrasında korunmadı. Onay gelmedi diye mumun tersine de girmezsin; tersine onaylı giriş de maliyetten sonra eksi.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Onaylı giriş onay mumunun kapanışında piyasa emridir; stop girişten 2 ATR, hedef 1 R. Onay gelmediği olayda emir yoktur, bekleyen bir emir de bırakılmaz.</dd>
+<dt>Dayanak</dt>
+<dd>8. ders, Onay mumu; 8. ders, 15 dakika ve 1 saat</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: ölçüm bu durumda maliyetten sonra artı bir işlem bulmadı. Kural, başka bir gerekçeyle masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+Onayı beklerken aynı anda kapanışta bir piyasa emri de vermezsin; iki giriş aynı görüşün iki kopyasıdır ve bu bileşim
+bu derste ölçülmedi.
+
+## Ucun kırılması
+
+Mumun ucunun kırılmasına konan stop emri, mumun yönündeki "momentum" girişidir. 5 dakikada emirlerin
+%82 kadarı doldu, maliyetten önce +0,01 R, maliyetten
+sonra −0,26 R. Stop emri kaymayı öder ve fiyatın zaten yürüdüğü yerden alır. 1 saatte
+maliyetten önce +0,05 R; 2024 sonrasında +0,01 R.
+
+### Masada: uca stop emri
+
+Uca stop emri ekranda en "canlı" giriştir: fiyat ucu geçtiği anda hareket hızlanıyormuş gibi görünür ve emir tam o
+anda, fiyatın zaten yürüdüğü yerde, kaymayı ödeyerek dolar; Şekil M2'deki ⑤ bu emirdir.
+
+<div class="senaryo" id="kart-uc-stop">
+<p class="senaryo-durum"><span class="etiket">Durum</span> Büyük mumun ucunun ötesine, fiyat yeni bir uç yaparsa girmek için stop emri koymayı düşünüyorsun.</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Fiyat ucun yanında dolaşıyor; uç kırıldığı an hareket hızlanıyormuş gibi görünür.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Emrin dolacağı yerin kayma ödeyeceği yer olduğunu bilir, giriş fiyatını kapanışla değil ucun ötesiyle yazarsın.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Ucun kırılmasını momentumun kanıtı saymazsın: 5 dakikada uca stop emri maliyetten önce sıfır çevresinde, maliyetten sonra eksi. Bekleme süresinde dolmayan emrin ardından fiyatı kovalamazsın.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Emir ucun bir fiyat adımı ötesinde; stop girişten 2 ATR, hedef 1 R; altı mum bekler, dolmazsa iptal edilir. Süresine takvimdeki büyük bir haberin penceresi düşüyorsa emri açıklamadan önce çekersin.</dd>
+<dt>Dayanak</dt>
+<dd>8. ders, Ucun kırılması; 8. ders, Emri nereye koyarsın</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: ölçüm bu durumda maliyetten sonra artı bir işlem bulmadı. Kural, başka bir gerekçeyle masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+Aşağıdaki iki gün yine aynı kuralla seçildi: 15 dakikalık GBP/USD'de, takvimde büyük haber olmayan bir saatte, ucunda
+kapanan, boyu iki ile üç ATR arasında bir büyük mum; iki günde de uç bekleme süresinin içinde kırıldı.
+
+<GrafikEmbed src="/arastirma/fx-buyuk-giris/m_uc-stop.html" baslik="Ucun kırılması: kırılıp geri döndüğü gün, kırılıp sürdüğü gün" no="M8" kaynak="Dukascopy" />
+
+
+Üstteki gün aşağı yönlü bir mumdur (TSİ 16:30, Londra–New York örtüşmesi). Fiyat kapanıştan birkaç dakika sonra önce
+② yarıya döner (③), sonra yeniden iner ve dördüncü mumda dibi kırar: satış stop emri orada dolar. Fiyat bir mum daha
+ilerler, TSİ 18:00 mumunda döner, girişin 2 ATR üstündeki stopu görür ve aynı mumda büyük mumun tepesini aşar; ④'te
+tepenin belirgin üstündedir. Alttaki gün yukarı yönlü, tepesinde kapanmış bir mumdur (TSİ 12:30, Londra seansı): uç ilk
+mumda kırılır, fiyat mumun dörtte biri kadar bile geri gelmez ve uçtan giren işlem 1 R hedefini ikinci mumda görür.
+Asıl yürüyüş sonra, ABD istihdam raporuyla (New York 08:30, TSİ ABD yaz saatinde 15:30) gelir: bekleme süresinin
+dışında, izleme penceresinin içinde; ④'te fiyat kapanışın çok ötesindedir. Emrin dolup dolmadığını ① ile kırılma
+arasındaki mumları sayarak okursun: emir 6 mum açıktır, sonraki bir kırılma bu dersin emri için işlem
+değildir.
+
+## Emri nereye koyarsın
+
+Bu bölüm, büyük mumdan bağımsız bir gerekçeyle (bir seviye, bir haber okuması, başka bir dilimdeki bir yapı) işleme
+girecek olan içindir: büyük mum o kararı vermez, yalnız emrin nasıl yazılacağını değiştirir. Büyük mum serisinin (6–9.
+dersler) emir kuralları burada durur; hiçbiri bir kenar vaadi değildir.
+
+### Giriş emri
+
+- **Piyasa emri** her olayda girer, makası ve kaymayı girişte de çıkışta da öder; maliyetsiz sonucu büyük mumun kendi
+  okumasını taşır (8. ders, Kısaca). 5 dakikada bu emri, maliyetin stopa oranını yazmadan vermezsin.
+- **Limit emir** girişte makas ve kayma ödemez, çıkışta öder; yeri hangi olayları seçtiğini belirler, bedeli kazanacak
+  olayları kaçırmasıdır (8. ders, Limit neden ucuz görünür: ters seçim). Kapanışın zaten gerisindeki seviyeye konmaz.
+  5 dakikada mumun yönünde gireceksen limit çeyrek ya da yarı geri çekilmeye konur; "yarıyı bekle" tek başına kural
+  değildir: ikisi de ölçüldü, çeyrek daha sık dolar ve ikisi de maliyetten sonra eksidir (8. ders, 5 dakika). Dolum bir
+  uyarıdır.
+- **Stop emriyle giriş** yalnız fiyat seviyeyi geçtiğinde dolar ve kaymayı orada öder; maliyetten önce sıfır
+  çevresinde (8. ders, Ucun kırılması).
+- **Onay mumundan sonra piyasa** olayların bir kısmında işlem açmaz, açtığında daha ileriden açar (8. ders, Onay mumu).
+
+### Stop
+
+Stop girişten 2 ATR uzaktadır; limitle giriyorsan limitin fiyatından. Ölçülen stoplar 1 ve 2 ATR'dir ve 1 ATR'de
+maliyetin payı büyür (8. ders, Stop uzaklığı ve maliyet). Mumun öbür ucunun ötesine konan stop bu seride ölçülmedi:
+2–3 ATR'lik bir mumda o yer yarıdaki limite bir ile bir buçuk ATR uzaklıktadır ve yakın stopun maliyetini taşır; mumun
+tersine kapanışta girerken mumun ucu girişin hemen yanındadır. 2 ATR'lik stop büyük bir mumda mumun içinde de
+kalabilir. Risk 3,0 pipin altındaysa işlem açılmadı; masada da aynı sınırı sorarsın. Fikri 2 ATR'lik
+stopla taşıyamıyorsan bir üst dilimde kurmak maliyetin payını küçültür, fikrin kendisini değiştirmez.
+
+### Hedef
+
+Hedef planlanan riskin katıdır: 1 R ya da 2 R. Uzak hedefe daha az işlem ulaşır, ulaşan daha çok kazanır; 5 ve 15
+dakikada bu denge hiçbir biçimi maliyetten sonra artıya çevirmedi (8. ders, 15 dakika ve 1 saat). Ne stop ne hedef
+görülürse pozisyon 24 mumun sonunda kapanır; emri yazarken o saati de yazarsın. 1 saatte bu pencere bir gündür;
+perşembe akşamından sonra açılan 1 saatlik mumların penceresi hafta sonuna taştığı için bu mumlar ölçüye girmedi
+(6. ders, Büyük mum nasıl tanımlandı).
+
+### Bekleme süresi ve iptal
+
+Limit ve stop emri büyük mum kapandıktan sonra 6 mum bekler, dolmazsa iptal edilir; ölçülen emir budur,
+süre mumla sayıldığı için dilimle uzar. Süreye seans geçişi (Londra açılışı Londra 07:00; TSİ İngiltere yaz saatinde
+09:00, kış saatinde 10:00) ya da haber penceresi düşüyorsa emri önceden çekmek ölçülmemiş bir ek kuraldır; haber için
+aşağıdaki disiplin geçerlidir. Masada emri iki durumda daha çekersin (masa uygulaması; ölçülmedi): limiti yeni ucun
+peşinden taşımak istersen (taşınan limit başka bir emirdir) ve emrin gerekçesi o sürede geçersiz olursa. Farklı bekleme
+süreleri ölçülmedi.
+
+### Haber penceresinde
+
+Bekleyen bir emrin süresine takvimdeki büyük bir haberin penceresi (açıklamadan iki dakika önce – on beş dakika sonra)
+düşüyorsa emri açıklamadan önce çekersin. Bu bir disiplin kuralıdır, ölçüm sonucu değil: o pencerede piyasa ve stop
+emirlerine 1,0 pip ek kayma varsayıldı, limit kaymasız sayıldı; haber anındaki makas, gerçek kayma
+ve emri çekmenin sonuca etkisi ölçülmedi. Saatler: ABD istihdam ve enflasyon verisi New York 08:30 (TSİ ABD yaz saatinde
+15:30, kış saatinde 16:30), FOMC kararı New York 14:00 (TSİ ABD yaz saatinde 21:00, kış saatinde 22:00), ECB kararı
+Frankfurt 14:15 (TSİ Avrupa yaz saatinde 15:15, kış saatinde 16:15), BoE kararı Londra 12:00 (TSİ İngiltere yaz
+saatinde 14:00, kış saatinde 15:00). Haberin kendi mumu ayrıca okundu ve okuma çıkarmadı: az sayıdadır ve sonraki yolu
+bir yön söyleyemeyecek kadar dağınıktır (7. ders, Haber mumu); bu, bekleyen bir emre sonradan düşen haberin ölçüsü
+değildir.
+
+## Sık yapılan hatalar
+
+1. **"Limitin dolum oranı yüksek, limit iyi çalışıyor."** Çeyrek limit fiyatın kolayca geri geldiği olayların neredeyse
+   hepsinde dolar; seçici değildir (8. ders, Limit neden ucuz görünür: ters seçim).
+2. **"Limit dolmadı, fiyat kaçıyor, piyasadan girerim."** Kaçırılan kazanç kapanıştaki piyasa girişinindir ve o fiyat
+   geride kalmıştır. Geç piyasa girişi bu derste ölçülmedi; kapanıştaki giriş de maliyetten sonra eksidir (8. ders,
+   5 dakika).
+3. **"Hedefi 2 R yaparsam oran düzelir."** 5 ve 15 dakikada hiçbir biçimi maliyetten sonra artıya çevirmedi (8. ders,
+   15 dakika ve 1 saat).
+
+## Masa kontrol listesi
+
+Büyük mum kapandıktan sonra, emir vermeden önce sırayla:
+
+1. Hangi seanstayım? Asya New York 17:00 – Londra 07:00, Londra seansı Londra 07:00 – New York 08:00, örtüşme New York
+   08:00 – Londra 16:30; TSİ ikisi yaz saatindeyken 00:00–09:00, 09:00–15:00 ve 15:00–18:30, ikisi kış saatindeyken
+   birer saat sonra.
+2. Emrin bekleme süresine (6 mum) ABD verisinin, FOMC'nin, ECB'nin ya da BoE'nin penceresi düşüyor mu
+   (saatler TSİ karşılıklarıyla: Emri nereye koyarsın, Haber penceresinde)? Düşüyorsa emri açıklamadan önce çekersin
+   (disiplin kuralı; ölçülmedi).
+3. FX gününün devrine yakın mıyım? New York 16:50–17:10 (TSİ ABD yaz saatinde 23:50–00:10, kış saatinde 00:50–01:10)
+   makas sıçrar; o mumlar bu serinin ölçülerine girmedi.
+4. Büyük mumun dışında bir gerekçem var mı? Yoksa emir yok.
+5. Mumun iki ucunu ve yarısını işaretledim mi; kapanış hangi seviyenin gerisinde?
+6. Dilim kaç, ATR kaç pip; stop girişten 2 ATR mi ve risk makasın kaç katı?
+7. Emrin türü hangi olay kümesini seçiyor, hangi maliyeti ödüyor?
+8. Limit dolarsa ne düşüneceğimi, dolmazsa kovalamayacağımı yazdım mı?
+9. Hedef 1 R mi 2 R mi; ne stop ne hedef görülürse pozisyon hangi saatte kapanır?
+
+## Grafik okuma alıştırmaları
+
+**Alıştırma 1.** 5 dakikalık EUR/USD'de Londra 08:40'ta (TSİ İngiltere yaz saatinde 10:40, kış saatinde 11:40) yukarı
+yönlü, boyu üç ATR kadar bir mum ucunda kapanıyor; takvimde haber yok. Masadaki biri "kaçıyor" deyip kapanışta
+piyasadan alıyor. Senin başka bir gerekçen yok. Ne yaparsın, ne yapmazsın?
+
+<details>
+<summary>Çözüm</summary>
+
+Emir vermezsin: tek gerekçe büyük mumun kendisi ve hiçbir giriş biçimi bunu maliyetten sonra artıya çevirmedi (8. ders,
+5 dakika). Mumun uçlarını ve yarısını işaretleyip izlersin. Gerekçen olsaydı bile kapanışta piyasa emri vermezdin; 5
+dakikada piyasa ve stop emirleri maliyeti en çok ödeyen satırlardır.
+
+</details>
+
+**Alıştırma 2.** Başka bir gerekçeyle 5 dakikalık yukarı bir büyük mumdan sonra yarıya alış limiti koydun. Üçüncü mumda
+limit doldu; dolum mumu uzun ve kırmızı. Ucuzdan almış gibisin ve ikinci bir limitle ortalamayı düşürmek aklından
+geçiyor. Ne yaparsın, ne yapmazsın? (Şekil M4, A günü.)
+
+<details>
+<summary>Çözüm</summary>
+
+Stopu ve hedefi baştan yazdığın yerde bırakırsın ve dolumu bir uyarı olarak okursun: limitin dolduğu olaylarda aynı
+anda piyasadan giren işlem çoğunlukla kaybederdi (8. ders, Limit neden ucuz görünür: ters seçim). İkinci limitle
+pozisyonu büyütmezsin; bu bileşim bu derste ölçülmedi. Stopu da "fiyat ucuzladı" diye uzaklaştırmazsın.
+
+</details>
+
+**Alıştırma 3.** 1 saatlik GBP/USD'de New York 10:00'da (TSİ ABD yaz saatinde 17:00, kış saatinde 18:00) başlayan aşağı
+yönlü büyük bir mum önceki mumların birkaç katı boyunda kapanıyor. "Fazla gitti, ucuna limit koyup alırım" diye
+düşünüyorsun. Ne yaparsın, ne yapmazsın?
+
+<details>
+<summary>Çözüm</summary>
+
+Mumun tersine girmezsin: 1 saatte tersine girişler 2018–2023'te maliyetten önce de eksiydi, uca konan limit dahil;
+2024 sonrasında maliyetten önce sıfırın çevresinde, maliyetten sonra eksi (8. ders, 15 dakika ve 1 saat). Mumun yönünde
+başka bir gerekçen varsa çeyrek ya da yarı geri çekilmeye limit koyarsın, stop limitin fiyatından 2 ATR; onay mumu
+2024 sonrasında mumun yönündeki biçimlerin en çok kaybedeniydi. Hiçbiri stop 2 ATR, hedef 1 R satırında maliyetten
+sonra artıda değil.
+
+</details>
+
+**Alıştırma 4.** 5 dakikalık USD/JPY'de New York 08:20'de (TSİ ABD yaz saatinde 15:20, kış saatinde 16:20) yukarı bir
+büyük mum kapanıyor; New York 08:30'da (TSİ ABD yaz saatinde 15:30, kış saatinde 16:30) ABD istihdam raporu var. Başka
+bir gerekçeyle ucun kırılmasına stop emri koymayı düşünüyorsun. Ne yaparsın, ne yapmazsın?
+
+<details>
+<summary>Çözüm</summary>
+
+Emri koymazsın, koyduysan açıklamadan önce çekersin: 6 mumluk bekleme süresine haber penceresi düşüyor.
+Bu bir disiplin kuralıdır: o pencerede stop emrine 1,0 pip ek kayma varsayıldı, haber anındaki
+makas ve emri çekmenin etkisi ölçülmedi (8. ders, Emri nereye koyarsın). Uca stop emri haber dışında da maliyetten önce
+sıfır çevresindeydi (8. ders, Ucun kırılması).
+
+</details>
+
+## Bu sonuç nasıl okunmalı
+
+Giriş biçimi üç şeyi değiştirir: kaç işlem açıldığını, işlemin hangi fiyattan açıldığını ve ne kadar maliyet ödendiğini.
+Yön bilgisini değiştirmez; o, mumun kendisinden gelir ve 6. ders onun küçük olduğunu gösterdi. 5 ve 15 dakikada en az
+kaybeden biçim (limit) maliyeti en az ödeyen biçimdir, en çok bilgiyi kullanan biçim değil. "Hangi emirle girmeliyim"
+sorusunun dürüst cevabı: kenar yoksa en ucuz emir bile kaybettirir; hiç girmemek ondan da ucuzdur.
+
+## Ölçülmeyenler
+
+- **Kısmi dolum ve kuyruk sırası.** Limit emir, fiyatı ona dokunduğu dakikada tam doldu sayıldı; gerçek bir defterde
+  sırada beklemek ve kısmen dolmak vardır, bu da limitin sonucunu tablodakinden kötü yapar.
+- **Komisyon.** Yalnız makas ve kayma; komisyon eklenmedi.
+- **Değişken kayma ve haber anındaki makas.** Kayma sabit bir varsayımdır (haber penceresinde artan); gerçek kayma ve
+  haber anındaki makas ölçülmedi.
+- **Mumun ucuna göre stop** ve **emri haberden ya da seans geçişinden önce çekmek.** Stop girişten 1 ya da 2 ATR uzakta
+  ölçüldü; ölçülen emir 6 mumun sonuna kadar bekledi.
+- **Dinamik çıkış.** Stop ve hedef sabit; iz süren stop, kısmi kâr alma ölçülmedi.
+- **Stop emriyle girişin dolum dakikası.** Dakika verisinde stop emrinin dolduğu dakikanın içindeki sıra görünmez: fiyat
+  önce koruyucu stopa uğrayıp sonra girişi tetiklemiş olabilir. Bu derste o dakikada koruyucu stop yalnız dakika stopun
+  ötesinde kapandıysa sayıldı ve çıkış stop seviyesinden yazıldı; dakikanın içindeki gerçek sıra ölçülmedi. Bu kural
+  2024 sınamasından sonra konuldu; değiştirdiği yalnız stop emirli hücrelerin sonucudur, seçilen ve sınanan girişlerin
+  hiçbiri stop emirli değil.

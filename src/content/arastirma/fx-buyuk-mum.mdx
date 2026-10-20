@@ -1,0 +1,885 @@
+---
+title: 'FX Gün İçi Oyun Planı 6: Büyük Mum — 2, 3, 4, 5 ATR''den Sonra Ne Oluyor'
+description: "Aralığı önceki ATR'nin en az iki katı olan bir 5 dakikalık, 15 dakikalık ya da 1 saatlik mumdan sonra fiyat genelde ne yapıyor: devam mı, geri çekilme mi, tam dönüş mü? 2018–2023'ün 54.501 + 19.784 + 5.070 büyük mumu, şansın vereceği payla kıyaslı ve 2024 sonrasında yeniden ölçülmüş."
+pubDate: 2026-10-20
+tags: ['fx', 'gun-ici', 'oyun-plani', 'buyuk-mum', 'atr', 'ders']
+durum: 'aktif'
+kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · önceden kayıt'
+ozet: "Büyük bir mumdan sonra fiyatın çoğu zaman mumun yarısına döndüğü doğru, ama bunun büyük kısmı mumun kendi şeklinden gelir. Şansın payı düşülünce kalan şu: 5 dakikada hafif bir geri verme (iki dönemde de), 15 dakikada daha zayıf bir geri verme, 1 saatte hafif bir devam (2024 sonrasında yalnız nokta tahmini olarak). 5 dakikadaki makastan küçük; 1 saatteki makastan büyük ama stoplu ve hedefli bir işlemde maliyeti karşılamıyor."
+seviye: 'orta'
+onkosul: ['fx-oyun-okuma']
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+import Diyagram from '../../components/Diyagram.astro';
+
+Grafikte bir mum öbürlerinden belirgin uzun çıktığında iki refleks yarışır. Biri "momentum geldi, mumun yönüne bin"
+der; öbürü "fazla gitti, geri gelecek, tersine gir" der. Bu ders ve sonraki üçü o iki refleksi ölçer. Önce büyük mumdan
+sonra fiyatın ne yaptığını (bu ders), sonra hangi koşulda hangi refleksin daha haklı çıktığını (7. ders), sonra girişin
+nasıl yapılacağını (8. ders) ve en sonda 2018–2023 verisinden yazılıp 2024 sonrasında sınanan bir oyun planını
+(9. ders).
+
+Seri önceki derslerdeki gibi iki dönemli çalışır. Bütün okumalar 2018–2023 verisinden yapıldı; giriş planı o dönemden
+yazılıp 2024 ve sonrasının fiyatları hiçbir hesaba girmeden kaydedildi. 2024 → döneminin sayıları (15.10.2026 tarihine
+kadar) aynı kurallarla sonradan ölçüldü ve her tabloda yan yana durur.
+
+## Kısaca
+
+- **Büyük mum sık.** Aralığı önceki ATR'nin en az iki katı olan mum 5 dakikalık grafikte bir parite için günde ortalama
+  8,7 kez görüldü (kümenin devamı, kararsız mumlar ve öbür dışarıda bırakılanlar sayılmadan). Yani "büyük mum" nadir bir olay
+  değil, günün sıradan bir parçası.
+- **Mumun yarısına dönüş çok sık, ama çoğu şekilden.** 5 dakikalık büyük mumların %85 kadarında fiyat
+  sonraki 24 mum içinde mumun yarısına geri geldi. Fiyatın yönü rastgele olsaydı da %82
+  gelecekti: büyük mum çoğu zaman ucuna yakın kapanır ve yarısı kapanıştan kısa bir mesafededir. Farkın kendisi
+  (+3 puan) küçük ama iki dönemde de aynı yönde.
+- **Hangi yöne önce 1 ATR?** Kapanışın 1 ATR yukarısı ile 1 ATR aşağısı arasında önce mumun yönündeki seviyenin
+  görülme payı: 5 dakikada %46,9, 15 dakikada %49,5, 1 saatte %51,4. Yazı
+  turada bu pay %50 olurdu. 5 dakikada hafif bir dönüş eğilimi var; 1 saatlik pay yazı turadan ayırt edilemiyor.
+- **Ortalama yol küçük.** 24 mum sonra fiyat mumun yönünde ortalama 5 dakikada −0,08 ATR, 1 saatte
+  +0,15 ATR yol aldı. 5 dakikada bu −0,21 pip ediyor ve tipik makas tek başına bundan
+  büyük. 1 saatte +1,75 pip ve makastan büyük, ama stoplu ve hedefli bir işlemde maliyetten önce
+  işlem başına +0,02 R'ye iniyor (8. ders).
+- **Makas büyük mumun kapanışında açılmıyor.** Büyük mumun kapanış dakikasında makas, mumdan önceki bir saatin
+  1,03 katıydı; iki katını aştığı mum %2. Mumun içinde açılan makas da
+  sonucu taşımıyor: aşağıda.
+
+## Bu dersi masada nasıl kullanırsın
+
+Bu ders bir giriş kuralı vermez; büyük mum kapandığında soruların sırasını verir. İlk sorular mumun bu dersin olayı
+olup olmadığını sorar: FX gününün devri, haftanın açılışı ve kümenin ikinci mumu ölçüye girmedi. Takvimdeki büyük
+haberin mumu sayıların içinde ama küçük bir parçası (aşağıda); 7. ders onu ayrı ölçtü ve okuma çıkarmadı. Sonra dilim
+sorulur ve cevabı bir "yapma" listesidir; şemanın hiçbir dalı "gir" demez.
+
+<Diyagram no="M1" baslik="Büyük mum kapandı: masada sırayla beş soru" kaynak="Karar şeması — dayanak: 6. ders, Büyük mum nasıl tanımlandı; 6. ders, Dilim dilim okuma; 7. ders, Fade mi, devam mı: okuma tablosu" azami={480}>
+<svg viewBox="0 0 360 519" class="karar-sema" role="img" aria-label="Büyük mum kapandı: masada sırayla beş soru">
+<defs><marker id="ko-akis" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ks-ok-ucu" /></marker></defs>
+<rect x="4" y="10" width="184" height="60" rx="3" class="ks-soru" />
+<text x="14" y="27" class="ks-yazi">Mum takvimdeki büyük bir</text>
+<text x="14" y="42" class="ks-yazi">haberin mumu mu?</text>
+<line x1="188" x2="220" y1="40.0" y2="40.0" class="ks-ok" marker-end="url(#ko-akis)" />
+<text x="193" y="35.0" class="ks-dal">evet</text>
+<rect x="222" y="10" width="134" height="60" rx="3" class="ks-sonuc ks-kalk" />
+<text x="230" y="26" class="ks-yazi-kucuk">Okuma yok (7. ders</text>
+<text x="230" y="40" class="ks-yazi-kucuk">ayrı ölçtü): masadan</text>
+<text x="230" y="54" class="ks-yazi-kucuk">kalkarsın</text>
+<line x1="40" x2="40" y1="70" y2="94" class="ks-ok" marker-end="url(#ko-akis)" />
+<text x="46" y="86" class="ks-dal">hayır</text>
+<rect x="4" y="96" width="184" height="63" rx="3" class="ks-soru" />
+<text x="14" y="113" class="ks-yazi">Mum devirde, hafta</text>
+<text x="14" y="128" class="ks-yazi">açılışında ya da bir</text>
+<text x="14" y="143" class="ks-yazi">kümenin devamı mı?</text>
+<line x1="188" x2="220" y1="127.5" y2="127.5" class="ks-ok" marker-end="url(#ko-akis)" />
+<text x="193" y="122.5" class="ks-dal">evet</text>
+<rect x="222" y="96" width="134" height="63" rx="3" class="ks-sonuc ks-kalk" />
+<text x="230" y="112" class="ks-yazi-kucuk">Ölçüye girmedi: bu</text>
+<text x="230" y="126" class="ks-yazi-kucuk">dersin okuması</text>
+<text x="230" y="140" class="ks-yazi-kucuk">uygulanmaz</text>
+<line x1="40" x2="40" y1="159" y2="183" class="ks-ok" marker-end="url(#ko-akis)" />
+<text x="46" y="175" class="ks-dal">hayır</text>
+<rect x="4" y="185" width="184" height="63" rx="3" class="ks-soru" />
+<text x="14" y="202" class="ks-yazi">Gövde aralığın beşte</text>
+<text x="14" y="217" class="ks-yazi">birinden küçük mü</text>
+<text x="14" y="232" class="ks-yazi">(kararsız mum)?</text>
+<line x1="188" x2="220" y1="216.5" y2="216.5" class="ks-ok" marker-end="url(#ko-akis)" />
+<text x="193" y="211.5" class="ks-dal">evet</text>
+<rect x="222" y="185" width="134" height="63" rx="3" class="ks-sonuc ks-kalk" />
+<text x="230" y="201" class="ks-yazi-kucuk">Yön yok: yön okuması</text>
+<text x="230" y="215" class="ks-yazi-kucuk">yapılmaz</text>
+<line x1="40" x2="40" y1="248" y2="272" class="ks-ok" marker-end="url(#ko-akis)" />
+<text x="46" y="264" class="ks-dal">hayır</text>
+<rect x="4" y="274" width="184" height="74" rx="3" class="ks-soru" />
+<text x="14" y="291" class="ks-yazi">Dilim 5 dakika mı?</text>
+<line x1="188" x2="220" y1="311.0" y2="311.0" class="ks-ok" marker-end="url(#ko-akis)" />
+<text x="193" y="306.0" class="ks-dal">evet</text>
+<rect x="222" y="274" width="134" height="74" rx="3" class="ks-sonuc ks-bekle" />
+<text x="230" y="290" class="ks-yazi-kucuk">Kovalamazsın; mumun</text>
+<text x="230" y="304" class="ks-yazi-kucuk">yönünde gireceksen</text>
+<text x="230" y="318" class="ks-yazi-kucuk">limit çeyrek ya da</text>
+<text x="230" y="332" class="ks-yazi-kucuk">yarı geri çekilmeye</text>
+<line x1="40" x2="40" y1="348" y2="372" class="ks-ok" marker-end="url(#ko-akis)" />
+<text x="46" y="364" class="ks-dal">hayır</text>
+<rect x="4" y="374" width="184" height="46" rx="3" class="ks-soru" />
+<text x="14" y="391" class="ks-yazi">Dilim 1 saat mi?</text>
+<line x1="188" x2="220" y1="397.0" y2="397.0" class="ks-ok" marker-end="url(#ko-akis)" />
+<text x="193" y="392.0" class="ks-dal">evet</text>
+<rect x="222" y="374" width="134" height="46" rx="3" class="ks-sonuc ks-yapma" />
+<text x="230" y="390" class="ks-yazi-kucuk">Mumun tersine</text>
+<text x="230" y="404" class="ks-yazi-kucuk">girmezsin</text>
+<line x1="40" x2="40" y1="420" y2="444" class="ks-ok" marker-end="url(#ko-akis)" />
+<text x="46" y="436" class="ks-dal">hayır</text>
+<rect x="4" y="446" width="352" height="63" rx="3" class="ks-son" />
+<text x="14" y="463" class="ks-yazi">15 dakika kalır: zayıf bir geri verme, 24</text>
+<text x="14" y="478" class="ks-yazi">mumda yön yok. Hiçbir dilimde okuma</text>
+<text x="14" y="493" class="ks-yazi">maliyetten sonra bir işlem değil.</text>
+</svg>
+</Diyagram>
+
+
+## Büyük mum nasıl tanımlandı
+
+**ATR** (ortalama gerçek aralık) bir mumun "olağan" boyunun ölçüsüdür. Her mumun **gerçek aralığı** yüksek ile düşüğün
+farkıdır; mum bir önceki kapanıştan boşlukla açıldıysa o boşluk da aralığa eklenir. ATR(14) bu gerçek
+aralıkların son 14 mum üzerinden yumuşatılmış ortalamasıdır (Wilder ortalaması; TradingView'deki ATR
+göstergesiyle aynı yumuşatma). Tek fark: önceki mum bitişik değilse (hafta sonu, tatil ya da eksik mum) boşluk sayılmaz.
+
+Bir mum, aralığı (yüksek − düşük) **kendisinden önceki** mumun ATR'sinin en az 2 katıysa büyük sayıldı. Ölçü
+yalnız geçmişten kurulur: mum kapandığı anda büyük olup olmadığı bilinir, sonrasına bakılmaz. Her dilim kendi ATR'siyle
+ölçüldü; 5 dakikalık mum 5 dakikalık ATR ile, 1 saatlik mum 1 saatlik ATR ile. Büyüklük dört kovaya ayrıldı: 2–3,
+3–4, 4–5 ve 5 ATR ve üstü.
+
+**Yön** mumun kapanış eksi açılışıdır. Gövdesi aralığının beşte birinden küçük mum (uzun fitilli, kararsız mum) yön
+ölçülerine girmedi; 5 dakikada 3.511 böyle mum vardı.
+
+Dört tür mum dışarıda bırakıldı ve sayıldı:
+
+- **Kümenin devamı.** Önceki 3 mumdan biri de büyükse mum sayılmadı; yalnız kümenin **ilk** büyük mumu
+  olaydır. Arka arkaya gelen üç büyük mum aynı haberin üç parçasıdır ve ayrı ayrı sayılırsa aynı olay üç kez
+  ölçülürdü. 5 dakikalık grafikte 88.251 büyük mumdan 26.520 tanesi böyle çıktı.
+- **Yeniden açılış.** Altı saatten uzun bir boşluktan (hafta sonu, tatil) sonraki ilk 60 dakika. O dakikalarda kotasyon
+  seyrek ve geniştir; aralık fiyatın değil kotasyonun hareketidir (810 mum).
+- **Devir.** New York saatiyle 16:50–17:10 aralığına değen mum (TSİ, ABD yaz saatinde 23:50–00:10, kış saatinde
+  00:50–01:10; 1 saatlik grafikte New York 16:00 ve 17:00 mumları). FX gününün devrinde makas sıçrar ve alış-satış
+  ortasından ölçülen aralığı şişirir (2.348 mum).
+- **Eksik veri.** Mumun ya da sonraki 24 mumun dakikalarının beşte birinden fazlası kotasyonsuz (561 mum).
+  İzleme penceresi saatle ölçüldüğü için cuma günü piyasa kapanışına yakın mumların penceresi hafta sonuna taşar ve bu
+  kurala takılır. 1 saatlik grafikte etki büyük: pencere bir gün sürdüğü için perşembe akşamından sonra açılan 1 saatlik
+  mumlar ölçüye girmedi. Bütün dönemde (2018 → 15.10.2026) bu kurala takılan 1 saatlik 1.824 mumun
+  1.683 tanesi cuma mumuydu; ABD istihdam raporunun (cuma) 1 saatlik mumu hiçbir 1 saatlik ölçüde
+  yok. 15 dakikada bu sayılar 258 ve 202.
+
+Takvimdeki büyük haberin mumu dışarıda bırakılmadı: 2018–2023'ün 54.501 5 dakikalık olayından
+501 tanesi haber mumudur. 7. ders onu ayrı ölçer.
+
+Her şey EUR/USD, GBP/USD, USD/JPY ve AUD/USD paritelerinde ve alış ile satışın ortasından (orta fiyat) ölçüldü. 2018–2023'te yön ölçülerine
+giren olay sayısı 5 dakikada 54.501, 15 dakikada 19.784, 1 saatte 5.070.
+
+<GrafikEmbed src="/arastirma/fx-buyuk-mum/01_ornek.html" baslik="Üç dilimde birer büyük mum" no="01" kaynak="Dukascopy" />
+
+Şekildeki üç mumu sayıyla okumak tanımı somutlaştırır. 5 dakikalık mum (28.11.2023, başlangıcı
+TSİ 18:35) yukarı yönlüydü: aralığı 22,7 pip, kendisinden önceki 5 dakikalık ATR 6,5 pip,
+oran 3,5. Sonraki 24 mumda fiyat mumun yarısına döndü, mumun ucunu aştı ve 24 mumun
+sonunda mumun yönünde +1,52 ATR'deydi. 15 dakikalık mum (29.11.2023, başlangıcı TSİ 16:30, aşağı)
+23,2 pip, ATR 6,6 pip; sonrasında yarısına döndü, ucunu aştı, 24 mum sonra
+−0,27 ATR. 1 saatlik mum (28.11.2023, başlangıcı TSİ 16:00, yukarı) 28,5 pip, ATR
+9,4 pip; sonrasında yarısına dönmedi, ucunu aştı, bir gün sonra +0,03 ATR.
+
+Üç örnek üç farklı hikâye anlatır ve bu dersin konusu tam olarak budur: tek bir büyük mumun ardından ne olacağı
+grafikte hep "belliydi" gibi görünür. Ölçülmesi gereken, binlerce büyük mumun ortalamasıdır.
+
+### Masada: büyük mumu ekranda tanımak
+
+Gözün kıyas noktası ekrandaki öbür mumlardır, bu dersinki bir önceki mumun ATR'sidir. Tanıma üç adımdır: aynı dilimde
+ATR'yi (14 mum, Wilder yumuşatması) büyük mumun **bir önceki** mumunda okursun, çünkü büyük mumun kendi ATR'si
+onu da içerir ve eşiği yükseltir; mumun aralığının o değerin en az iki katı olup olmadığına bakarsın; gövde aralığın
+beşte birinden kısaysa yön okuması yapmazsın.
+
+<Diyagram no="M2" baslik="Ekranda büyük mum: hangisi olay, hangisi değil" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 250" class="mum-sema" role="img" aria-label="Ekranda büyük mum: hangisi olay, hangisi değil">
+<defs><marker id="ok-tanima" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<line x1="19.4" x2="19.4" y1="162.6" y2="192.0" class="ms-fitil ms-artis" />
+<rect x="13.6" y="172.4" width="11.7" height="9.8" class="ms-govde ms-artis" />
+<line x1="38.2" x2="38.2" y1="157.7" y2="182.2" class="ms-fitil ms-artis" />
+<rect x="32.4" y="165.1" width="11.7" height="7.3" class="ms-govde ms-artis" />
+<line x1="57.1" x2="57.1" y1="152.8" y2="177.3" class="ms-fitil ms-azalis" />
+<rect x="51.2" y="165.1" width="11.7" height="7.3" class="ms-govde ms-azalis" />
+<line x1="75.9" x2="75.9" y1="160.2" y2="184.7" class="ms-fitil ms-artis" />
+<rect x="70.1" y="167.5" width="11.7" height="4.9" class="ms-govde ms-artis" />
+<line x1="94.8" x2="94.8" y1="155.3" y2="174.9" class="ms-fitil ms-artis" />
+<rect x="88.9" y="160.2" width="11.7" height="7.3" class="ms-govde ms-artis" />
+<line x1="113.6" x2="113.6" y1="99.0" y2="216.5" class="ms-fitil ms-artis ms-soluk" />
+<rect x="107.7" y="155.3" width="11.7" height="4.9" class="ms-govde ms-artis ms-soluk" />
+<line x1="132.4" x2="132.4" y1="143.0" y2="167.5" class="ms-fitil ms-artis" />
+<rect x="126.6" y="150.4" width="11.7" height="4.9" class="ms-govde ms-artis" />
+<line x1="151.2" x2="151.2" y1="138.1" y2="160.2" class="ms-fitil ms-azalis" />
+<rect x="145.4" y="150.4" width="11.7" height="2.4" class="ms-govde ms-azalis" />
+<line x1="170.1" x2="170.1" y1="140.6" y2="162.6" class="ms-fitil ms-artis" />
+<rect x="164.2" y="145.5" width="11.7" height="7.3" class="ms-govde ms-artis" />
+<line x1="188.9" x2="188.9" y1="30.4" y2="150.4" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="183.1" y="37.7" width="11.7" height="107.8" class="ms-govde ms-artis ms-vurgu" />
+<line x1="207.8" x2="207.8" y1="25.5" y2="59.8" class="ms-fitil ms-azalis" />
+<rect x="201.9" y="37.7" width="11.7" height="12.2" class="ms-govde ms-azalis" />
+<line x1="226.6" x2="226.6" y1="45.1" y2="143.0" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="220.7" y="50.0" width="11.7" height="83.3" class="ms-govde ms-azalis ms-soluk" />
+<circle cx="188.9" cy="10.8" r="8" class="ms-isaret" />
+<text x="188.9" y="14.4" class="ms-isaret-yazi">1</text>
+<circle cx="113.6" cy="79.4" r="8" class="ms-isaret" />
+<text x="113.6" y="83.0" class="ms-isaret-yazi">2</text>
+<circle cx="226.6" cy="162.6" r="8" class="ms-isaret" />
+<text x="226.6" y="166.2" class="ms-isaret-yazi">3</text>
+<text x="10" y="244" class="ms-eksen">zaman →</text>
+</svg>
+</Diyagram>
+
+- ① Olay: aralığı kendisinden önceki mumun ATR'sinin en az iki katı, gövdesi belirgin. Mum kapandığı anda büyük olduğu bilinir; sonrasına bakılmaz.
+- ② Aralığı büyük ama gövdesi aralığının beşte birinden küçük: kararsız mum. Yönü yok, yön okumasına girmez.
+- ③ Olaydan sonraki üç mum içinde gelen ikinci büyük mum yeni bir olay değil, kümenin devamı: aynı hareketin bir parçası.
+
+
+Devir penceresine ve hafta açılışının ilk saatine değen mum da dersin dışındadır.
+
+## Ne ölçüldü
+
+Büyük mum kapandıktan sonra fiyat 24 mum boyunca izlendi: 5 dakikalık grafikte iki saat, 15 dakikalıkta altı saat,
+1 saatlikte bir gün. Birim, olayın ATR'sidir. Ölçüler:
+
+- **±1 ATR'den hangisi önce.** Kapanışın bir ATR mumun yönünde ve bir ATR tersindeki iki seviye. Hangisi önce görüldü?
+  Bu ölçü simetriktir: yön bilgisi olmayan bir fiyatta iki seviye eşit olasıdır ve beklenen pay %50. Aynı dakikada
+  ikisi birden görülen ya da hiçbiri görülmeyen olay bu ölçüye girmedi.
+- **Geri çekilme.** Fiyat mumun ucundan mumun boyunun %25, %50 ve %62 kadarı geri geldi mi; mumun öbür ucuna
+  kadar döndü mü.
+- **Mumun ucunu aştı mı.** Fiyat 24 mum içinde mumun kendi ucunun ötesine geçti mi.
+- **Net hareket.** 6 ve 24 mum sonra fiyat, kapanıştan mumun yönünde kaç ATR yol aldı.
+
+## Ayna: şansın vereceği pay
+
+Bu dersin ana fikri şudur: büyük bir mumdan sonra "fiyat genelde yarısına döner" cümlesi doğrudur ve neredeyse hiçbir
+şey söylemez. Sebep mumun şekli. Büyük mum çoğu zaman ucuna yakın kapanır; mumun yarısı kapanıştan, mumun boyunun
+yarısından biraz az bir mesafededir ve fiyat her yöne biraz dalgalandığı için o mesafeyi yön bilgisi olmadan da sık
+geçer.
+
+Şansın payını ölçmek için önceki derslerdeki **ayna** kullanıldı. Her olayda mumdan sonraki gerçek yol, mumun kapanışına
+göre ters çevrildi: kapanıştan on pip yukarı giden bir dakika, aynada on pip aşağı gider. Aynı ölçüler aynalanmış yolda
+yeniden hesaplandı. Aynanın oynaklığı ve mum geometrisi gerçek yolla birebir aynıdır, yalnız yön tersine dönmüştür.
+Yani **gerçek pay eksi ayna payı mumun yön bilgisidir**; ayna payının kendisi geometrinin kendiliğinden ürettiği
+orandır.
+
+<div class="sayi-tablo">
+
+| Dilim · dönem | olay | +1 ATR önce mumun yönünde | yarısına döndü (gerçek · ayna) | öbür ucuna döndü (gerçek · ayna) | 6 mum sonra, ATR | 24 mum sonra, ATR (%95 aralık) |
+|---|---:|---:|---:|---:|---:|---:|
+| 5 dakika · 2018–23 | 54.501 | %46,9 | %85 · %82 | %62 · %59 | −0,10 | −0,08 (−0,13 … −0,03) |
+| 5 dakika · 2024 → | 22.828 | %48,3 | %85 · %82 | %62 · %59 | −0,03 | −0,07 (−0,17 … +0,02) |
+| 15 dakika · 2018–23 | 19.784 | %49,5 | %84 · %83 | %60 · %59 | −0,03 | −0,06 (−0,13 … +0,02) |
+| 15 dakika · 2024 → | 8.488 | %48,7 | %84 · %81 | %59 · %57 | +0,01 | −0,02 (−0,16 … +0,12) |
+| 1 saat · 2018–23 | 5.070 | %51,4 | %81 · %83 | %55 · %58 | +0,05 | +0,15 (+0,03 … +0,28) |
+| 1 saat · 2024 → | 2.168 | %50,6 | %81 · %82 | %54 · %57 | +0,14 | +0,18 (−0,07 … +0,43) |
+
+</div>
+
+«+1 ATR önce» sütununda ayna yoktur, çünkü o ölçü simetriktir: aynası tam tersidir ve beklenen pay %50. Öbür
+iki geri çekilme sütununda iki sayı yan yanadır: önce gerçek, sonra ayna. Son sütun 24 mum sonraki ortalama hareket ve
+hafta düzeyinde yeniden örneklenmiş %95 aralığıdır: aynı gün dört paritede büyük mum çıkabilir ve 1 saatlik
+yol ertesi güne taşar; bunlar birbirinden bağımsız sayılmaz.
+
+<GrafikEmbed src="/arastirma/fx-buyuk-mum/02_yol.html" baslik="Büyük mumdan sonra ortalama yol" no="02" kaynak="Dukascopy" />
+
+### Masada: yarıya dönüş bir işaret değil
+
+Ayna bölümünün masadaki karşılığı tek cümledir: fiyatın büyük mumun yarısına dönmesi, mumun "döndüğünü" söylemez.
+Yarı kapanışa yakındır; fiyatın oraya uğraması için bir yön gerekmez, sıradan dalgalanma yeter.
+
+<Diyagram no="M3" baslik="Yarıya dönüş: kısa bir mesafe, yönsüz bir yol da geçer" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 250" class="mum-sema" role="img" aria-label="Yarıya dönüş: kısa bir mesafe, yönsüz bir yol da geçer">
+<defs><marker id="ok-yarigeometri" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<line x1="100.4" x2="236.0" y1="121.0" y2="121.0" class="ms-cizgi ms-seviye" />
+<text x="244" y="125.0" class="ms-etiket ms-seviye-yazi">mumun yarısı</text>
+<line x1="100.4" x2="236.0" y1="48.1" y2="48.1" class="ms-cizgi ms-uc" />
+<text x="244" y="52.1" class="ms-etiket ms-uc-yazi">kapanış</text>
+<line x1="21.3" x2="21.3" y1="197.1" y2="216.5" class="ms-fitil ms-artis" />
+<rect x="14.3" y="205.2" width="14.0" height="4.9" class="ms-govde ms-artis" />
+<line x1="43.9" x2="43.9" y1="193.9" y2="210.1" class="ms-fitil ms-artis" />
+<rect x="36.9" y="197.1" width="14.0" height="8.1" class="ms-govde ms-artis" />
+<line x1="66.5" x2="66.5" y1="190.6" y2="205.2" class="ms-fitil ms-azalis" />
+<rect x="59.5" y="197.1" width="14.0" height="4.9" class="ms-govde ms-azalis" />
+<line x1="89.1" x2="89.1" y1="193.9" y2="208.4" class="ms-fitil ms-artis" />
+<rect x="82.1" y="195.5" width="14.0" height="6.5" class="ms-govde ms-artis" />
+<line x1="111.7" x2="111.7" y1="41.7" y2="200.3" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="104.7" y="48.1" width="14.0" height="147.4" class="ms-govde ms-artis ms-vurgu" />
+<line x1="134.3" x2="134.3" y1="40.0" y2="70.8" class="ms-fitil ms-azalis" />
+<rect x="127.3" y="48.1" width="14.0" height="16.2" class="ms-govde ms-azalis" />
+<line x1="156.9" x2="156.9" y1="57.8" y2="90.2" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="149.9" y="64.3" width="14.0" height="19.4" class="ms-govde ms-azalis ms-soluk" />
+<line x1="179.5" x2="179.5" y1="77.3" y2="125.9" class="ms-fitil ms-azalis ms-soluk" />
+<rect x="172.5" y="83.8" width="14.0" height="32.4" class="ms-govde ms-azalis ms-soluk" />
+<line x1="202.1" x2="202.1" y1="96.7" y2="122.6" class="ms-fitil ms-artis ms-soluk" />
+<rect x="195.1" y="103.2" width="14.0" height="13.0" class="ms-govde ms-artis ms-soluk" />
+<line x1="224.7" x2="224.7" y1="91.9" y2="112.9" class="ms-fitil ms-artis ms-soluk" />
+<rect x="217.7" y="98.3" width="14.0" height="4.9" class="ms-govde ms-artis ms-soluk" />
+<polyline points="134.3,64.3 156.9,25.5 179.5,44.9 202.1,93.5 224.7,132.3" class="ms-yol ms-yol-ters" marker-end="url(#ok-yarigeometri)" />
+<circle cx="111.7" cy="27.1" r="8" class="ms-isaret" />
+<text x="111.7" y="30.7" class="ms-isaret-yazi">1</text>
+<circle cx="66.5" cy="121.0" r="8" class="ms-isaret" />
+<text x="66.5" y="124.6" class="ms-isaret-yazi">2</text>
+<circle cx="156.9" cy="9.3" r="8" class="ms-isaret" />
+<text x="156.9" y="12.9" class="ms-isaret-yazi">3</text>
+<text x="10" y="244" class="ms-eksen">zaman →</text>
+</svg>
+</Diyagram>
+
+- ① Ucuna yakın kapanan büyük mum: kapanış aralığın en üst çeyreğinde.
+- ② Mumun yarısı: kapanıştan, mumun boyunun yarısından biraz az uzakta. Soluk mumlar doğrudan inen bir yolu gösterir; fiyat oraya birkaç mumda varır.
+- ③ Kesikli yol önce mumun yönünde bir parça daha gider, sonra o da yarıya uğrar. Yönü olmayan bir yol da yarıyı sık geçer; bu yüzden yarıya dönüşün sıklığı tek başına bir şey söylemez, gerçek yol ile aynası arasındaki fark yalnız birkaç puan.
+
+
+Yarıya dönüş 5 dakikada %85, yönsüz bir yolda %82: gördüğün dönüşlerin
+neredeyse hepsi, bir yön bilgisi olmasa da göreceğin dönüşlerdir.
+
+<div class="senaryo" id="kart-yari-dokunus">
+<p class="senaryo-durum"><span class="etiket">Durum</span> Herhangi bir dilimde, büyük mumdan sonra fiyat mumun yarısına geri geldi</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Büyük mumdan sonraki bir iki mumda fiyat mumun ortasına iniyor (aşağı mumda çıkıyor). Grafik &#x27;dönüş başladı&#x27; der.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Dokunuşu bir olgu olarak not edersin, bir işaret olarak değil: yönü olmayan bir yol da yarıya neredeyse aynı sıklıkta uğrardı; gerçek ile ayna arasındaki fark birkaç puan.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Yarıya dokunuşu tersine bir işlemin onayı saymazsın; &#x27;okuma tuttu&#x27; diye kaydetmezsin. Fiyatın yarıdan yeniden uca gitmesini de devamın onayı saymazsın: o da şansla beklenen kadar sık.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Başka bir gerekçeyle mumun tersine gireceksen girişi yarıya göre değil kendi gerekçenin seviyesine göre kurarsın; stop girişten 2 ATR uzakta. Stopu büyük mumun ucuna koymak bu seride ölçülmedi; kapanış uca yakın olduğu için o yer girişe çok yakındır. Yarının kırılmasına stop emriyle tersine girmek maliyetten önce küçük bir artı, maliyetten sonra eksi: kırılma kendi başına bir gerekçe değil.</dd>
+<dt>Dayanak</dt>
+<dd>6. ders, Ayna: şansın vereceği pay; 6. ders, Yarısına dönen fiyat ne kadar sürede dönüyor; 8. ders, 5 dakika; 8. ders, Stop uzaklığı ve maliyet</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: ölçüm bu durumda maliyetten sonra artı bir işlem bulmadı. Kural, başka bir gerekçeyle masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+Yarıya dönen olayları sayıp tutulan bir defterin şansla tutturacağı oran zaten aynanın payıdır.
+
+## Dilim dilim okuma
+
+**5 dakika: hafif geri verme.** Fiyat ±1 ATR'den önce mumun tersindekini daha sık gördü (%53,1;
+2024 → %51,7). Mumun yarısına dönüş aynadan +3 puan sık
+(2024 → +3 puan). 24 mum sonra ortalama −0,08 ATR (2024 → −0,07).
+Üç ölçü de aynı yöne bakıyor. ±1 ATR payı ve yarısına dönüş iki dönemde de aralığıyla tutuyor; 24 mum sonraki yolun
+aralığı 2018–2023'te sıfırın altında (−0,13 … −0,03), 2024 sonrasında sıfırı
+kapsıyor (−0,17 … +0,02). Ama büyüklüğe dikkat: 5 dakikalık bir ATR'nin medyanı
+3,1 pip; 24 mumluk ortalama hareket −0,21 pip. Aynı paritelerde makasın medyanı
+0,8 pip.
+
+**15 dakika: zayıf bir geri verme.** Yarısına dönüş aynadan +1,1 puan sık (aralık
++0,2 … +1,9); 2024 → +2,9 puan (aralık
++1,5 … +4,5). ±1 ATR payı %49,5 (2024 →
+%48,7), 24 mum sonra −0,06 ATR (2024 → −0,02). 24 mum sonraki yol iki
+dönemde de sıfırdan ayırt edilemiyor; ±1 ATR payı 2018–2023'te yazı turadan ayırt edilemiyor, 2024 sonrasında
+aralığın üst ucu %50 sınırında (%47,4 … %50,0). 15 dakikalık büyük mum, 5 dakikalığın geri verme eğilimi ile 1 saatliğin devam eğilimi
+arasında, geri verme tarafına yakın duruyor.
+
+**1 saat: hafif devam.** ±1 ATR'den önce mumun yönündeki %51,4 (2024 → %50,6). Yarısına
+dönüş aynadan seyrek değil, sık da değil (−2 puan). 24 mum (bir gün) sonra fiyat mumun yönünde
+ortalama +0,15 ATR (%95 aralık +0,03 … +0,28) ve 2024 → döneminde
++0,18 ATR yol aldı (aralık −0,07 … +0,43). 2018–2023'te aralık
+sıfırın üstünde, 2024 sonrasında nokta tahmini aynı yönde ama aralık sıfırı kapsıyor; yön payı da iki dönemde yazı
+turadan ayırt edilemiyor. İki dönemde de aralığıyla tutan ölçüler 5 dakikadaki geri verme ve 15 dakikadaki küçük
+yarıya dönüş farkıdır.
+
+<GrafikEmbed src="/arastirma/fx-buyuk-mum/03_geri.html" baslik="Geri çekilme şanstan sık mı" no="03" kaynak="Dukascopy" />
+
+### Masada: 5 dakikada kovalamazsın
+
+5 dakikalık büyük mumdan sonraki tek ölçülmüş eğilim, makastan küçük bir geri vermedir. Kapanışta mumun yönünde
+piyasa emriyle giren ortalama olarak bu geri vermenin içine girer ve üstüne makası öder; tersine giren onu maliyetten
+önce yakalar, maliyetten sonra eksidedir (8. ders, 5 dakika). Geri verme bir işlem değil, bir uyarıdır: mumun yönünde
+gireceksen kapanıştan girmezsin.
+
+Hangi 5 dakikalık mumda bu uyarı daha güçlü? 7. ders iki yer buldu ve ikisi de iki dönemde aynı yöne bakıyor:
+kapanışı ucuna yakın mum ve Asya seansındaki mum (Asya: New York 17:00 ile Londra 07:00 arası; TSİ iki ülke de yaz
+saatindeyken 00:00–09:00, ikisi de kış saatindeyken 01:00–10:00). Londra seansında (Londra 07:00 ile New York 08:00 arası; TSİ iki ülke de yaz saatindeyken
+09:00–15:00, ikisi de kış saatindeyken 10:00–16:00) aynı eğilim yarı yarıya küçük (7. ders, 5 dakika).
+
+<Diyagram no="M4" baslik="Ucunda kapanan 5 dakikalık büyük mum: kovalamazsın, geri çekilmeyi beklersin" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 250" class="mum-sema" role="img" aria-label="Ucunda kapanan 5 dakikalık büyük mum: kovalamazsın, geri çekilmeyi beklersin">
+<defs><marker id="ok-kovalama" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<rect x="160.7" y="25.5" width="75.3" height="30.8" class="ms-bolge ms-yasak" />
+<text x="244" y="44.9" class="ms-etiket ms-yasak-yazi">kovalama bölgesi</text>
+<line x1="135.6" x2="236.0" y1="110.5" y2="110.5" class="ms-cizgi ms-seviye" />
+<text x="244" y="114.5" class="ms-etiket ms-seviye-yazi">mumun yarısı</text>
+<line x1="135.6" x2="236.0" y1="196.8" y2="196.8" class="ms-cizgi ms-seviye" />
+<text x="244" y="200.8" class="ms-etiket ms-seviye-yazi">öbür uç</text>
+<line x1="22.6" x2="22.6" y1="191.9" y2="216.5" class="ms-fitil ms-artis" />
+<rect x="14.8" y="198.0" width="15.6" height="6.2" class="ms-govde ms-artis" />
+<line x1="47.7" x2="47.7" y1="185.7" y2="206.7" class="ms-fitil ms-artis" />
+<rect x="39.9" y="191.9" width="15.6" height="6.2" class="ms-govde ms-artis" />
+<line x1="72.8" x2="72.8" y1="184.5" y2="201.7" class="ms-fitil ms-azalis" />
+<rect x="65.0" y="191.9" width="15.6" height="4.9" class="ms-govde ms-azalis" />
+<line x1="97.9" x2="97.9" y1="189.4" y2="205.4" class="ms-fitil ms-artis" />
+<rect x="90.1" y="191.9" width="15.6" height="4.9" class="ms-govde ms-artis" />
+<line x1="123.0" x2="123.0" y1="179.6" y2="196.8" class="ms-fitil ms-artis" />
+<rect x="115.2" y="184.5" width="15.6" height="7.4" class="ms-govde ms-artis" />
+<line x1="148.1" x2="148.1" y1="31.6" y2="189.4" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="140.3" y="39.0" width="15.6" height="145.5" class="ms-govde ms-artis ms-vurgu" />
+<line x1="173.2" x2="173.2" y1="29.2" y2="74.8" class="ms-fitil ms-azalis" />
+<rect x="165.4" y="39.0" width="15.6" height="29.6" class="ms-govde ms-azalis" />
+<line x1="198.3" x2="198.3" y1="58.7" y2="115.5" class="ms-fitil ms-azalis" />
+<rect x="190.5" y="68.6" width="15.6" height="37.0" class="ms-govde ms-azalis" />
+<line x1="223.4" x2="223.4" y1="76.0" y2="110.5" class="ms-fitil ms-artis" />
+<rect x="215.7" y="80.9" width="15.6" height="24.7" class="ms-govde ms-artis" />
+<circle cx="148.1" cy="11.9" r="8" class="ms-isaret" />
+<text x="148.1" y="15.5" class="ms-isaret-yazi">1</text>
+<circle cx="198.3" cy="132.7" r="8" class="ms-isaret" />
+<text x="198.3" y="136.3" class="ms-isaret-yazi">2</text>
+<circle cx="223.4" cy="41.5" r="8" class="ms-isaret" />
+<text x="223.4" y="45.1" class="ms-isaret-yazi">3</text>
+<text x="10" y="244" class="ms-eksen">zaman →</text>
+</svg>
+</Diyagram>
+
+- ① Ucunda kapanan büyük mum: aralığı önceki ortalama aralığın en az iki katı, kapanış en uca yakın çeyrekte.
+- ② Mumun yarısı: fiyat buraya çoğu zaman döner, ama yön bilgisi olmayan bir yolda da neredeyse aynı sıklıkta dönerdi.
+- ③ Kovalama bölgesi: kapanışın hemen ötesi. Mumun yönünde piyasa emri tam burada, maliyetin en büyük olduğu yerde girer.
+
+
+<div class="senaryo" id="kart-bes-dk-uc">
+<p class="senaryo-durum"><span class="etiket">Durum</span> 5 dakikalık grafikte, Londra ya da Asya seansında, ucunda kapanan bir büyük mum</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Gövdesi uzun, kapanışı mumun en uç çeyreğinde bir mum; önceki on mumun hiçbiri onun yarısı kadar değil.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Mumun iki ucunu ve yarısını işaretlersin; sonraki bir iki mumda fiyatın yarıya dönüp dönmediğine bakarsın. Mum Asya seansındaysa bu dilimdeki geri vermenin en belirgin olduğu yerde olduğunu bilirsin; Londra&#x27;da aynı eğilim yarı yarıya küçük.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Kapanışta mumun yönünde piyasa emriyle kovalamazsın; mumun tersine de yalnız uzadı diye girmezsin: geri vermenin büyüklüğü makastan küçük.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Başka bir gerekçeyle mumun yönünde gireceksen limiti çeyrek ya da yarı geri çekilmeye koyarsın; stop limitin fiyatından 2 ATR uzakta, emir altı mum bekler ve dolmazsa çekilir. Stopu mumun öbür ucuna koymak bu seride ölçülmedi. Limit dolduysa mumun yönündeki okumanın zayıfladığını bilirsin.</dd>
+<dt>Dayanak</dt>
+<dd>6. ders, Dilim dilim okuma; 7. ders, 5 dakika; 8. ders, Limit neden ucuz görünür: ters seçim; 8. ders, Emri nereye koyarsın</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: ölçüm bu durumda maliyetten sonra artı bir işlem bulmadı. Kural, başka bir gerekçeyle masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+Gerçek grafiklerde numaralar sabittir: ① olay mumu, ② mumun yarısı, ③ fiyatın yarıya ilk dokunduğu an, ④ izleme
+penceresinin sonu. Şemalarda ise numaralar şemanın altındaki maddelere bağlıdır.
+
+<GrafikEmbed src="/arastirma/fx-buyuk-mum/m_uc-kapanis.html" baslik="Ucunda kapanan 5 dakikalık büyük mum: iki gün, iki son" no="M5" kaynak="Dukascopy" />
+
+
+İki gün de EUR/USD'de, Londra seansında, takvimde haber yokken gelen aşağı yönlü 5 dakikalık büyük mumdur; ikisi de
+uzun gövdeli ve dibine yakın kapanır. Üstteki günde (24 Kasım 2023, mum TSİ 15:40'ta başlar) fiyat önce mumun yönünde
+bir buçuk mum boyundan fazla daha iner (TSİ 16:30), sonra döner: yarıya ancak kapanıştan bir saat sonra, TSİ 16:47'de
+dokunur (③), TSİ 17:15'te mumun tepesini kırar ve ④'te (TSİ 17:45) tepenin de üstündedir. Alttaki günde (13 Kasım
+2023, mum TSİ 15:00'te başlar) fiyat yarıya hiç dönmez, ③ yoktur; kapanıştan sonraki ikinci mumda mumun dibini kırar ve
+④'te (TSİ 17:05) dibin belirgin altındadır. Tek bir çift gün kuralı ne doğrular ne yanlışlar. İki günde de kapanışta
+mumun yönünde giren işlem (stop 2 ATR, hedef 1 R) hedefini ilk saat içinde görürdü; üstteki günde yarıya konan limit
+altı mumluk bekleme süresinde dolmazdı. Kovalamama kuralının dayanağı bu iki günün sonucu değil, binlerce olayın
+ortalaması ve kapanışta ödenen makastır; ortalamanın içinde kovalayanın kazandığı günler de vardır.
+
+### Masada: 15 dakikada okuma zayıf
+
+15 dakikalık büyük mumda iki dönemde tutan tek şey yarıya dönüşün aynadan biraz sık olmasıdır; ne kovalama ne tersine
+giriş gerekçesi taşır. Mumu bağlam olarak not edersin (7. ders, 15 dakika).
+
+### Masada: 1 saatte tersine girmezsin
+
+1 saatlik büyük mumda ortalama yol bir gün boyunca mumun yönündedir (2018–2023'te aralığıyla, 2024 sonrasında yalnız
+nokta tahmini olarak) ve bunun masadaki sonucu bir yasaktır: tersine giren bu yolun karşısında durur. 8. ders bunu
+ölçtü: stop 2 ATR, hedef 1 R satırında 1 saatte tersine giriş biçimleri 2018–2023'te maliyetten önce de eksiydi, 2024
+sonrasında maliyetten önce sıfırın çevresinde kaldı, maliyetten sonra iki dönemde de eksi (8. ders, 15 dakika ve 1 saat).
+
+Mumun yönündeki devam da işlem çıkarmıyor: maliyetten önce işlem başına +0,02 R.
+Kapanışı yarısının gerisinde kalan fitilli 1 saatlik mumda ve günlük trend yatayken mumun yönü korunmuyor (7. ders, 1
+saat); bu, tersine girmenin gerekçesi değildir.
+
+<Diyagram no="M6" baslik="1 saatlik büyük mum: tersine girilmeyen bölge" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 250" class="mum-sema" role="img" aria-label="1 saatlik büyük mum: tersine girilmeyen bölge">
+<defs><marker id="ok-birsaat" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<rect x="145.6" y="25.5" width="90.4" height="41.6" class="ms-bolge ms-yasak" />
+<text x="244" y="44.3" class="ms-etiket ms-yasak-yazi">tersine giriş</text>
+<text x="244" y="57.3" class="ms-etiket ms-yasak-yazi">yok</text>
+<line x1="123.0" x2="236.0" y1="121.0" y2="121.0" class="ms-cizgi ms-seviye" />
+<text x="244" y="125.0" class="ms-etiket ms-seviye-yazi">mumun yarısı</text>
+<line x1="21.3" x2="21.3" y1="190.1" y2="216.5" class="ms-fitil ms-artis" />
+<rect x="14.3" y="195.7" width="14.0" height="11.4" class="ms-govde ms-artis" />
+<line x1="43.9" x2="43.9" y1="182.5" y2="203.3" class="ms-fitil ms-artis" />
+<rect x="36.9" y="188.2" width="14.0" height="7.6" class="ms-govde ms-artis" />
+<line x1="66.5" x2="66.5" y1="180.6" y2="199.5" class="ms-fitil ms-azalis" />
+<rect x="59.5" y="188.2" width="14.0" height="5.7" class="ms-govde ms-azalis" />
+<line x1="89.1" x2="89.1" y1="178.7" y2="197.6" class="ms-fitil ms-artis" />
+<rect x="82.1" y="184.4" width="14.0" height="9.5" class="ms-govde ms-artis" />
+<line x1="111.7" x2="111.7" y1="173.0" y2="190.1" class="ms-fitil ms-artis" />
+<rect x="104.7" y="178.7" width="14.0" height="5.7" class="ms-govde ms-artis" />
+<line x1="134.3" x2="134.3" y1="59.5" y2="182.5" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="127.3" y="67.1" width="14.0" height="111.6" class="ms-govde ms-artis ms-vurgu" />
+<line x1="156.9" x2="156.9" y1="50.1" y2="89.8" class="ms-fitil ms-azalis" />
+<rect x="149.9" y="67.1" width="14.0" height="15.1" class="ms-govde ms-azalis" />
+<line x1="179.5" x2="179.5" y1="70.9" y2="101.1" class="ms-fitil ms-artis" />
+<rect x="172.5" y="76.5" width="14.0" height="5.7" class="ms-govde ms-artis" />
+<line x1="202.1" x2="202.1" y1="48.2" y2="84.1" class="ms-fitil ms-artis" />
+<rect x="195.1" y="53.8" width="14.0" height="22.7" class="ms-govde ms-artis" />
+<line x1="224.7" x2="224.7" y1="34.9" y2="63.3" class="ms-fitil ms-artis" />
+<rect x="217.7" y="40.6" width="14.0" height="13.2" class="ms-govde ms-artis" />
+<circle cx="134.3" cy="42.5" r="8" class="ms-isaret" />
+<text x="134.3" y="46.1" class="ms-isaret-yazi">1</text>
+<circle cx="179.5" cy="135.2" r="8" class="ms-isaret" />
+<text x="179.5" y="138.8" class="ms-isaret-yazi">2</text>
+<circle cx="224.7" cy="10.3" r="8" class="ms-isaret" />
+<text x="224.7" y="13.9" class="ms-isaret-yazi">3</text>
+<text x="10" y="244" class="ms-eksen">zaman → (bir mum, bir saat)</text>
+</svg>
+</Diyagram>
+
+- ① Ucuna yakın kapanan 1 saatlik büyük mum, takvimde haber yok.
+- ② Mumun yarısı: 1 saatte fiyat buraya aynadan ne daha sık ne daha seyrek döner. Bekleme noktası değil, yalnız bir işaret.
+- ③ Sonraki saatler: ortalama yol mumun yönünde küçük bir parça daha gider. Mumun ucundaki tersine giriş bu yolun karşısında durur.
+
+
+<div class="senaryo" id="kart-bir-saat-uc">
+<p class="senaryo-durum"><span class="etiket">Durum</span> 1 saatlik grafikte, takvimde haber yokken ucuna yakın kapanan bir büyük mum</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Bir saatlik mum önceki saatlerin birkaç katı, kapanış mumun en uç çeyreğinde. Grafik &#x27;fazla gitti, geri gelir&#x27; der.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Mumun yönünü günün bağlamı olarak not edersin: ortalama yol bir gün boyunca mumun yönünde küçük bir parça daha. Mumun yarısını işaretlersin ama ona dönüşü beklemezsin: 1 saatte yarıya dönüş aynadan sık değil.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Mumun tersine girmezsin: 1 saatte tersine giriş biçimleri 2018–2023&#x27;te maliyetten önce de eksiydi, 2024 sonrasında maliyetten önce sıfırın çevresinde kaldı, maliyetten sonra iki dönemde de eksi. Mumun yönünde de &#x27;devam ediyor&#x27; diye işlemi büyütmezsin: devamın büyüklüğü stoplu ve hedefli bir işlemde maliyeti karşılamıyor.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Başka bir gerekçeyle mumun yönünde gireceksen: 2018–2023&#x27;te en az kaybeden iki biçim onay mumundan sonra piyasa ve mumun çeyrek geri çekilmesine limitti; 2024 sonrasında sıra değişti ve onay mumu en çok kaybeden biçim oldu. Stop girişten 2 ATR uzakta, hedef riskin bir katı. Kapanışı yarısının gerisinde kalan fitilli mumda mumun yönü korunmuyor; olay az ve aralık geniş, bu bir uyarıdır.</dd>
+<dt>Dayanak</dt>
+<dd>6. ders, Dilim dilim okuma; 7. ders, 1 saat; 8. ders, 15 dakika ve 1 saat</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: ölçüm bu durumda maliyetten sonra artı bir işlem bulmadı. Kural, başka bir gerekçeyle masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+<GrafikEmbed src="/arastirma/fx-buyuk-mum/m_saat-uc.html" baslik="Ucunda kapanan 1 saatlik büyük mum: iki gün, iki son" no="M7" kaynak="Dukascopy" />
+
+
+İki gün de GBP/USD'de, takvimde haber yokken dibine yakın kapanan aşağı yönlü 1 saatlik büyük mumdur. Üstteki günde
+(24 Ekim 2023, mum TSİ 10:00–11:00, Londra seansı) fiyat ilk saatte mumun dibini kırar, yarıya hiç dönmez (③ yok) ve
+ertesi güne kadar inmeye devam eder; ④'te (25 Ekim, TSİ 11:00) kapanışın yaklaşık dört mum boyu altındadır. Alttaki
+günde (22 Kasım 2023, mum TSİ 16:00–17:00, Londra–New York örtüşmesi) fiyat da önce mumun yönünde gider ve sonraki iki
+saatte dibin bir buçuk mum boyundan fazla altına iner; sonra gece boyunca toparlanır, yarıya ancak ertesi gün TSİ
+11:30'da döner (③), hemen ardından mumun tepesini de kırar ve ④'te (23 Kasım, TSİ 17:00) mumun içinde, yarının
+üstündedir. Alttaki gün geriye bakınca "tersine girmeliydim" dedirtir; oysa kapanışta tersine giren, 1 ATR'lik de
+2 ATR'lik de stopunu ilk saatte görürdü. Tersine girmeme kuralı tam dönüşün olmayacağını söylemez; ortalama yolun
+tersine girişin aleyhine olduğunu söyler.
+
+## Yarısına dönen fiyat ne kadar sürede dönüyor
+
+Yarısına dönüşün medyan süresi: 5 dakikalık grafikte 6 dakika, 15 dakikalıkta
+15 dakika, 1 saatlikte 54 dakika. Yani yarısına dönenlerin yarısında dönüş ilk
+bir iki mum içinde gelir; 8. dersteki limit emirlerin çoğu zaman dolması buradandır.
+
+Büyük mumların 5 dakikada %40 kadarında (ayna %38) fiyat önce yarısına
+dönüp sonra yeniden mumun ucuna gitti; yarısına dönenler içinde bu pay %47 (ayna
+%47). 1 saatte %39 (ayna %39), yarısına
+dönenler içinde %49 (ayna %47). Geri çekilip yeniden uca gitmek
+("geri çekilmede katıl" okuması) şansla beklenen kadar sık.
+
+### Masada: geri çekilmeyi ne kadar beklersin
+
+Ölçülen limit ve stop emirleri büyük mum kapandıktan sonra 6 mum bekledi, dolmazsa çekildi (8. ders, On
+bir giriş biçimi). Süre bitince emri çekersin; dolmayan limiti fiyatın peşinden kaydırmak kovalamanın yavaş hâlidir.
+Dolum iyi haber değildir: limitin dolduğu olaylarda aynı anda piyasadan girilen işlem çoğunlukla kaybederdi ve bunun
+büyük kısmı geometridir, çünkü limit fiyat mumun hareketini geri aldığında dolar (8. ders, Limit neden ucuz görünür:
+ters seçim).
+
+<Diyagram no="M8" baslik="Geri çekilmeyi beklemek: limit, altı mumluk bekleme, iptal" kaynak="Şema — gerçek veri değil" azami={480}>
+<svg viewBox="0 0 360 250" class="mum-sema" role="img" aria-label="Geri çekilmeyi beklemek: limit, altı mumluk bekleme, iptal">
+<defs><marker id="ok-bekleme" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="ms-ok-ucu" /></marker></defs>
+<rect x="104.2" y="25.5" width="113.0" height="78.1" class="ms-bolge ms-bekle" />
+<text x="244" y="62.5" class="ms-etiket ms-bekle-yazi">altı mumluk</text>
+<text x="244" y="75.5" class="ms-etiket ms-bekle-yazi">bekleme</text>
+<line x1="85.3" x2="236.0" y1="111.8" y2="111.8" class="ms-cizgi ms-limit" />
+<text x="244" y="115.8" class="ms-etiket ms-limit-yazi">limit: yarı</text>
+<line x1="85.3" x2="236.0" y1="148.7" y2="148.7" class="ms-cizgi ms-stop" />
+<text x="244" y="152.7" class="ms-etiket ms-stop-yazi">stop: limitten 2 ATR</text>
+<line x1="19.4" x2="19.4" y1="196.0" y2="216.5" class="ms-fitil ms-artis" />
+<rect x="13.6" y="202.2" width="11.7" height="8.2" class="ms-govde ms-artis" />
+<line x1="38.2" x2="38.2" y1="189.8" y2="208.3" class="ms-fitil ms-artis" />
+<rect x="32.4" y="193.9" width="11.7" height="8.2" class="ms-govde ms-artis" />
+<line x1="57.1" x2="57.1" y1="185.7" y2="202.2" class="ms-fitil ms-azalis" />
+<rect x="51.2" y="193.9" width="11.7" height="4.1" class="ms-govde ms-azalis" />
+<line x1="75.9" x2="75.9" y1="183.7" y2="202.2" class="ms-fitil ms-artis" />
+<rect x="70.1" y="189.8" width="11.7" height="8.2" class="ms-govde ms-artis" />
+<line x1="94.8" x2="94.8" y1="29.6" y2="193.9" class="ms-fitil ms-artis ms-vurgu" />
+<rect x="88.9" y="37.8" width="11.7" height="152.0" class="ms-govde ms-artis ms-vurgu" />
+<line x1="113.6" x2="113.6" y1="27.5" y2="74.8" class="ms-fitil ms-azalis" />
+<rect x="107.7" y="37.8" width="11.7" height="28.8" class="ms-govde ms-azalis" />
+<line x1="132.4" x2="132.4" y1="56.3" y2="99.4" class="ms-fitil ms-azalis" />
+<rect x="126.6" y="66.6" width="11.7" height="22.6" class="ms-govde ms-azalis" />
+<line x1="151.2" x2="151.2" y1="74.8" y2="115.9" class="ms-fitil ms-artis" />
+<rect x="145.4" y="83.0" width="11.7" height="6.2" class="ms-govde ms-artis" />
+<line x1="170.1" x2="170.1" y1="64.5" y2="91.2" class="ms-fitil ms-artis" />
+<rect x="164.2" y="70.7" width="11.7" height="12.3" class="ms-govde ms-artis" />
+<line x1="188.9" x2="188.9" y1="58.3" y2="85.0" class="ms-fitil ms-artis" />
+<rect x="183.1" y="64.5" width="11.7" height="6.2" class="ms-govde ms-artis" />
+<line x1="207.8" x2="207.8" y1="48.1" y2="72.7" class="ms-fitil ms-artis" />
+<rect x="201.9" y="54.2" width="11.7" height="10.3" class="ms-govde ms-artis" />
+<line x1="226.6" x2="226.6" y1="39.8" y2="62.4" class="ms-fitil ms-artis" />
+<rect x="220.7" y="46.0" width="11.7" height="8.2" class="ms-govde ms-artis" />
+<circle cx="94.8" cy="9.0" r="8" class="ms-isaret" />
+<text x="94.8" y="12.6" class="ms-isaret-yazi">1</text>
+<circle cx="151.2" cy="132.3" r="8" class="ms-isaret" />
+<text x="151.2" y="135.9" class="ms-isaret-yazi">2</text>
+<circle cx="226.6" cy="21.4" r="8" class="ms-isaret" />
+<text x="226.6" y="25.0" class="ms-isaret-yazi">3</text>
+<text x="10" y="244" class="ms-eksen">zaman →</text>
+</svg>
+</Diyagram>
+
+- ① Büyük mum kapandı: limit geri çekilmede (burada mumun yarısında), stop limitin fiyatından 2 ATR uzakta.
+- ② Fiyat yarıya dokundu, limit doldu. Dolum, fiyatın mumun hareketini geri aldığı anda olur; bu bir iyi haber değil.
+- ③ Altı mumluk bekleme süresi bitti: dolmamış bir limit burada çekilir.
+
+
+<div class="senaryo" id="kart-yari-bekleme">
+<p class="senaryo-durum"><span class="etiket">Durum</span> 5 ya da 15 dakikalık grafikte, büyük mumun geri çekilmesinde (çeyreğinde ya da yarısında) bekleyen bir limit emri</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Limit mumun içinde. Fiyat ya bir iki mum içinde gelir ya da gelmeden uzaklaşır.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Emri altı mumluk bekleme süresiyle sınırlarsın: yarıya dönenlerin yarısı ilk bir iki mum içinde döner. Süreye takvimdeki büyük bir haberin penceresi düşüyorsa emri açıklamadan önce çekersin (disiplin kuralı; etkisi ölçülmedi); seans geçişinde önce çekmek de ölçülmemiş bir ek kuraldır. Limitin dolduğu anı, fiyatın mumun hareketini geri aldığı an olarak okursun.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Dolmayan limiti fiyatın peşinden kaydırmazsın: o, kovalamanın yavaş hâlidir. Dolan limiti &#x27;iyi fiyat aldım, okuma doğru&#x27; diye büyütmezsin: limitin dolduğu olaylarda aynı anda piyasadan girilen işlem çoğunlukla kaybederdi.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Limit geri çekilmede, stop limitin fiyatından 2 ATR uzakta, hedef riskin bir katı; altı mum içinde dolmayan emir iptal. Stopu 1 ATR&#x27;ye yaklaştırmak aynı makası daha büyük bir R yapar; stopu mumun öbür ucuna koymak bu seride ölçülmedi.</dd>
+<dt>Dayanak</dt>
+<dd>6. ders, Yarısına dönen fiyat ne kadar sürede dönüyor; 8. ders, Limit neden ucuz görünür: ters seçim; 8. ders, Stop uzaklığı ve maliyet</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: ölçüm bu durumda maliyetten sonra artı bir işlem bulmadı. Kural, başka bir gerekçeyle masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+## Büyüklük değişince
+
+Mum büyüdükçe davranışın değiştiği sık söylenir: "5 ATR'lik mum artık aşırıdır, döner". Kovalar:
+
+<div class="sayi-tablo">
+
+| Dilim · büyüklük | 2018–23 olay | +1 ATR önce mumun yönünde | 24 mum sonra, ATR | 2024 → olay | +1 ATR önce mumun yönünde | 24 mum sonra, ATR |
+|---|---:|---:|---:|---:|---:|---:|
+| 5 dakika · 2–3 ATR | 43.213 | %47,1 | −0,06 | 18.111 | %48,3 | −0,10 |
+| 5 dakika · 3–4 ATR | 7.091 | %46,5 | −0,07 | 2.787 | %47,6 | −0,04 |
+| 5 dakika · 4–5 ATR | 2.072 | %43,6 | −0,31 | 851 | %47,4 | +0,26 |
+| 5 dakika · 5 ATR ve üstü | 2.125 | %48,6 | −0,18 | 1.079 | %50,5 | −0,06 |
+| 15 dakika · 2–3 ATR | 15.391 | %49,3 | 0,00 | 6.451 | %49,2 | +0,03 |
+| 15 dakika · 3–4 ATR | 2.660 | %49,1 | −0,38 | 1.144 | %45,6 | −0,11 |
+| 15 dakika · 4–5 ATR | 818 | %51,5 | −0,05 | 344 | %48,5 | −0,01 |
+| 15 dakika · 5 ATR ve üstü | 915 | %52,7 | −0,02 | 549 | %49,2 | −0,37 |
+| 1 saat · 2–3 ATR | 3.881 | %51,9 | +0,14 | 1.574 | %52,4 | +0,27 |
+| 1 saat · 3–4 ATR | 702 | %51,1 | +0,11 | 328 | %43,3 | −0,18 |
+| 1 saat · 4–5 ATR | 259 | %46,3 | +0,19 | 117 | %43,6 | +0,37 |
+| 1 saat · 5 ATR ve üstü | 228 | %50,0 | +0,49 | 149 | %52,3 | −0,02 |
+
+</div>
+
+Kovalar büyüdükçe olay sayısı hızla düşer: 5 dakikada 2–3 ATR'lik mumlar olayların %79 kadarı, 5
+ATR ve üstü %4. Küçük kovalarda tek tek sayılar oynak; iki dönemde aynı yöne bakan bir büyüklük
+etkisi yok. 5 ATR'lik bir mumun 2 ATR'lik bir mumdan daha güvenilir bir dönüş işareti olduğunu bu veri göstermiyor.
+
+### Masada: büyüklük okumayı değiştirmez
+
+Kovalar iki dönemde aynı yöne bakmıyor (5 dakikalık 4–5 ATR'lik mum 2018–2023'te belirgin geri verdi, 2024 sonrasında
+vermedi; 7. ders, 5 dakika); 5 ATR'lik mumu 2 ATR'likten farklı okumazsın. Stop girişten 2 ATR uzakta kaldığı için
+mumun boyu stopu da değiştirmez; stopu mumun öbür ucuna koymak ve pozisyon büyüklüğü bu seride ölçülmedi.
+
+<div class="senaryo" id="kart-cok-buyuk">
+<p class="senaryo-durum"><span class="etiket">Durum</span> Herhangi bir dilimde, aralığı önceki ATR&#x27;nin beş katını aşan bir mum</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>Ekranın büyük kısmını kaplayan tek bir mum. Grafik &#x27;aşırı, döner&#x27; ya da &#x27;çok güçlü, sürer&#x27; der.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Önce takvime bakarsın: mum büyük bir haberin mumuysa okuma yok. Değilse mumu iki ATR&#x27;lik bir büyük mumla aynı okursun: kovalar büyüdükçe iki dönemde aynı yöne bakan bir büyüklük etkisi yok.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>&#x27;Aşırı&#x27; diye tersine girmezsin; &#x27;çok güçlü&#x27; diye kovalamazsın. Beş ATR&#x27;lik mum ne daha güvenilir bir dönüş ne daha güvenilir bir devam işareti; o kovada olay az ve sayılar oynak.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Başka bir gerekçeyle gireceksen stop girişten 2 ATR uzaktadır; mumun boyu stopu değiştirmez. Stopu mumun öbür ucuna koymak (beş ATR&#x27;lik mumda riski birkaç ATR yapar) ve pozisyon büyüklüğü bu seride ölçülmedi; stopu 1 ATR&#x27;ye yaklaştırmak aynı makası daha büyük bir R yapar.</dd>
+<dt>Dayanak</dt>
+<dd>6. ders, Büyüklük değişince; 7. ders, Fade mi, devam mı: okuma tablosu; 8. ders, Stop uzaklığı ve maliyet</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: ölçüm bu durumda maliyetten sonra artı bir işlem bulmadı. Kural, başka bir gerekçeyle masadaysan neyi yapmayacağını ve emri nereye koyacağını söyler.</p>
+</div>
+
+
+## Makas büyük mumda açılıyor mu
+
+Büyük mum anında işlem yapmanın makas yüzünden pahalı olduğu sık söylenir. Ölçüldü: mumun kapanış
+dakikasındaki makas mumdan önceki 60 dakikanın medyan makasıyla, sonraki dakikaların açılışındaki makas da aynı tabanla
+kıyaslandı.
+
+<div class="sayi-tablo">
+
+| Dilim · dönem | önceki 60 dk makas, medyan pip | mum kapanışında, kat | iki katını aştı | 1 dk sonra, kat | 5 dk sonra, kat | 5 dk sonra iki katını aştı |
+|---|---:|---:|---:|---:|---:|---:|
+| 5 dakika · 2018–23 | 0,8 | 1,03 | %2 | 1,00 | 0,98 | %2 |
+| 5 dakika · 2024 → | 0,7 | 1,09 | %4 | 1,04 | 1,00 | %3 |
+| 15 dakika · 2018–23 | 0,7 | 1,05 | %2 | 1,00 | 0,96 | %1 |
+| 15 dakika · 2024 → | 0,7 | 1,12 | %5 | 1,07 | 1,00 | %3 |
+| 1 saat · 2018–23 | 0,7 | 1,03 | %2 | 0,97 | 0,96 | %1 |
+| 1 saat · 2024 → | 0,6 | 1,11 | %5 | 1,04 | 1,00 | %3 |
+
+</div>
+
+Büyük mumların çoğunda kapanış dakikasında makas açılmıyor; iki katını aşan mumlar azınlıkta.
+
+Makasın mumun **içinde** açılması ayrı bir sorudur. Orta fiyatın yükseği, alış ve satış yükseklerinin ortalamasıdır;
+mum içinde makas bir an açılırsa orta fiyatın aralığı şişer ve mum, fiyat o kadar gitmediği hâlde "büyük" görünür.
+5 dakikalık büyük mumların içinde makasın en geniş anı, mumdan önceki saatin medyan makasının medyanda
+1,2 katıydı. Sınamak için yalnız alış ve yalnız satış fiyatıyla ölçülen iki aralığın küçüğü de
+2 ATR'yi geçen mumlar ayrıca ölçüldü; 5 dakikada olayların %95 kadarı (2024 → %94). O
+mumlarda yarısına dönüş aynadan +3,5 puan sık (aralık +2,9 …
++4,0; 2024 → +3,0 puan) ve 24 mum sonra ortalama
+−0,08 ATR (2024 → −0,08): geri verme makasın yarattığı bir görüntü değil.
+
+Yani büyük mumdan sonra girişin pahalı olmasının sebebi makasın açılması değil, hareketin kendisinin küçük olması:
+5 dakikada ortalama geri verme makastan küçük, 1 saatte ortalama devam makastan büyük ama stop ve hedefle kurulan bir
+işlemde makas ve kaymayı karşılamıyor.
+
+### Masada: makas penceresi
+
+Sıradan büyük mumun kapanışında makas açılmıyor; "makas kapansın diye beklerim" bir gerekçe değildir, girişi pahalı
+yapan hareketin küçüklüğüdür. FX gününün devri ve hafta açılışı bu dersin dışındadır. Takvimdeki büyük haberin
+penceresinde piyasa ve stop emirlerine ek kayma varsayıldı; haberdeki makas bu seride ölçülmedi (8. ders, Ölçülmeyenler).
+
+<div class="senaryo" id="kart-makas-devir">
+<p class="senaryo-durum"><span class="etiket">Durum</span> Büyük mum FX gününün devrinde ya da haftanın açılışında</p>
+<dl>
+<dt>Ne görürsün</dt>
+<dd>New York 17:00 civarında (TSİ ABD yaz saatinde 00:00, kış saatinde 01:00) fitili uzun, gövdesi küçük bir mum; ya da hafta açılışından sonraki seyrek kotasyonlu bir sıçrama.</dd>
+<dt>Ne yaparsın</dt>
+<dd>Saatine bakarsın. Devir penceresinde (New York 16:50–17:10; TSİ ABD yaz saatinde 23:50–00:10, kış saatinde 00:50–01:10) ve hafta açılışından sonraki ilk saatte aralık kotasyonun hareketidir; ikisi de bu dersin ölçüsüne girmedi.</dd>
+<dt>Ne yapmazsın</dt>
+<dd>Bu mumları bu dersin okumasıyla okumazsın; devir mumunun ucuna ya da yarısına emir koymazsın.</dd>
+<dt>Emir, stop, hedef</dt>
+<dd>Başka bir gerekçeyle bu pencerelerde emir vereceksen devirde makasın sıçradığını hesaba katarsın. Bekleyen emrin süresine takvimdeki büyük bir haberin penceresi (açıklamadan iki dakika önce – on beş dakika sonra) düşüyorsa emri açıklamadan önce çekersin; bu bir disiplin kuralıdır: o pencerede ek kayma varsayıldı, haberdeki makas ölçülmedi. Sıradan büyük mumun kapanışında makas açılmıyor.</dd>
+<dt>Dayanak</dt>
+<dd>6. ders, Büyük mum nasıl tanımlandı; 6. ders, Makas büyük mumda açılıyor mu; 8. ders, Emri nereye koyarsın; 8. ders, Ölçülmeyenler</dd>
+</dl>
+<p class="senaryo-not">Bu bir okuma kuralıdır, kenar değil: kartın tarif ettiği işlem bu seride ölçülmedi; kart, maliyet kurallarından ve tanımlardan türetilmiş bir masa uygulamasıdır, bir bulgu değil.</p>
+</div>
+
+
+## Emri nereye koyarsın
+
+Bu bölüm büyük mumdan bağımsız bir gerekçeyle girecek olan içindir. Emir biçimlerinin, stopun, hedefin, bekleme
+süresinin ve haber penceresinin genel kuralları 8. dersin aynı adlı bölümündedir (8. ders, Emri nereye koyarsın); bu
+dersin okumasından eklenecekler:
+
+- **5 dakikada kapanışta mumun yönünde piyasa emri** geri vermenin içine girer ve makası öder. Mumun yönünde gireceksen
+  limiti çeyrek ya da yarı geri çekilmeye koyarsın; limit dolarsa, o olaylarda piyasa girişinin çoğunlukla kaybettiğini
+  bilirsin (8. ders, Limit neden ucuz görünür: ters seçim).
+- **1 saatte** tersine girmezsin (yukarıda). Mumun yönünde 2018–2023'te en az kaybeden iki biçim onay mumu ve çeyrek
+  geri çekilmeye limitti; 2024 sonrasında sıra değişti ve onay mumu en çok kaybeden biçim oldu (8. ders, 15 dakika ve
+  1 saat).
+- **Stop** girişten (limitle giriyorsan limitin fiyatından) 2 ATR uzaktadır; bu serinin ölçtüğü stoplar 1 ve 2 ATR.
+  Mumun öbür ucunun ötesine konan stop bu seride ölçülmedi: 2–3 ATR'lik mumda o yer girişe 1 ATR kadar yakındır ve
+  yakın stopun maliyetini taşır (8. ders, Stop uzaklığı ve maliyet).
+- **Hedef** riskin bir ya da iki katıdır. 1 saatte hedefi 2 R olan geri çekilme limitleri ızgaranın sıfıra en yakın
+  hücreleridir (2018–2023'te 0,00 ve −0,02 R, 2024
+  sonrasında +0,02 ve +0,03 R); büyüklükleri sıfırdan
+  ayırt edilemez. 9. dersin planına bu biçimin stop 1 ATR'lik, koşu süzgeçli bir hâli seçildi ve 2024 sonrasında tutmadı
+  (9. ders, Seçilen girişler).
+- **Bekleme süresi** 6 mumdur; dolmayan emir çekilir. Süreye seans geçişi düşüyorsa önce çekmek ölçülmemiş
+  bir ek kuraldır. Süreye takvimdeki büyük bir haberin penceresi (açıklamadan iki dakika önce – on beş dakika sonra)
+  düşüyorsa emri açıklamadan önce çekersin. Bu bir disiplin kuralıdır, ölçüm sonucu değil: o pencerede piyasa ve stop
+  emirlerine 1,0 pip ek kayma varsayıldı, haber anındaki makas ölçülmedi ve emri çekmenin etkisi de
+  ölçülmedi.
+
+## Sık yapılan hatalar
+
+1. **"Yarısına döndü, demek ki tersine haklıydım."** Yarıya dönüşün çoğu mumun şeklinden gelir; yönü olmayan bir yol
+   da yarıya neredeyse aynı sıklıkta uğrardı. Dayanak: 6. ders, Ayna: şansın vereceği pay.
+2. **Devir mumunu ve hafta açılışını sıradan bir büyük mum gibi okumak; haber mumuna bu dersin okumasını uygulamak.**
+   Devirde ve açılışta aralık kotasyonun hareketidir ve ikisi ölçüye girmedi; haber mumu sayıların küçük bir parçasıdır
+   ve ayrı ölçüldüğünde okuma çıkmadı. Dayanak: 6. ders, Büyük mum nasıl tanımlandı; 7. ders, Fade mi, devam mı: okuma
+   tablosu.
+3. **"Onayı bekledim, artık güvenli."** Onay beklemek olayların bir kısmında hiç işlem açmamak, gelen onayda da daha
+   kötü bir fiyattan girmek demektir; maliyetten önceki sonuç kapanışta girişten belirgin farklı değil. Dayanak: 8.
+   ders, Onay mumu.
+
+## Masa kontrol listesi
+
+Büyük bir mum kapandığında sırayla:
+
+1. **Saat kaç?** Mum FX gününün devrine (New York 16:50–17:10; TSİ ABD yaz saatinde 23:50–00:10, kış saatinde
+   00:50–01:10) ya da haftanın açılışından sonraki ilk saate (pazar akşamı New York 17:00 civarı; TSİ ABD yaz saatinde
+   pazartesi 00:00, kış saatinde 01:00) değiyorsa bu dersin olayı değil.
+2. **Takvimde büyük haber var mı?** ABD istihdam ve enflasyon verisi New York 08:30 (TSİ ABD yaz saatinde 15:30, kış
+   saatinde 16:30), Fed kararı New York 14:00 (TSİ ABD yaz saatinde 21:00, kış saatinde 22:00), ECB kararı Frankfurt
+   14:15 (TSİ Avrupa yaz saatinde 15:15, kış saatinde 16:15), BoE kararı Londra 12:00 (TSİ İngiltere yaz saatinde
+   14:00, kış saatinde 15:00). Mum o haberin mumuysa okuma yok (7. ders, Haber mumu).
+3. **Mum gerçekten büyük mü?** Aralığı, bir önceki mumun ATR değerinin en az iki katı mı?
+4. **Önceki üç mumda başka büyük mum var mı?** Varsa kümenin devamıdır, yeni bir olay değil.
+5. **Gövde aralığın beşte birinden büyük mü?** Değilse mumun yönü yok.
+6. **Dilim, kapanışın yeri ve seans hangisi?** 5 dakikada kovalamazsın, 1 saatte tersine girmezsin, 15 dakikada ikisi
+   de belirgin değil. Ucunda kapanan 5 dakikalık mumda ve Asya seansında (New York 17:00 ile Londra 07:00 arası; TSİ iki
+   ülke de yaz saatindeyken 00:00–09:00, ikisi de kış saatindeyken 01:00–10:00) geri verme en belirgin; 1 saatlik
+   fitilli mumda mumun yönü korunmuyor.
+7. **Başka bir gerekçen var mı?** Yoksa masadan kalkarsın; büyük mum tek başına bir giriş değil.
+8. **Varsa emir yazılı mı?** Emir biçimi, stop (girişten, limitle giriyorsan limitin fiyatından 2 ATR), hedef (riskin
+   katı olarak) ve 6 mumluk bekleme süresi.
+9. **Emri ne zaman çekersin?** Bekleme süresi dolduğunda; süreye takvimdeki büyük bir haberin penceresi düşüyorsa
+   açıklamadan önce (disiplin kuralı; etkisi ölçülmedi).
+
+## Grafik okuma alıştırmaları
+
+**1.** 5 dakikalık EUR/USD grafiği, saat Londra 03:40 (TSİ İngiltere yaz saatinde 05:40, kış saatinde 06:40), takvimde
+haber yok. Şekil M4'teki gibi, ucunda kapanan yukarı yönlü bir büyük mum; aralığı önceki mumun ATR'sinin üç katı. Kısa
+vadeli bir alış gerekçen zaten var. Ne yaparsın, ne yapmazsın?
+
+<details>
+<summary>Çözüm</summary>
+
+Mum Asya seansında ve ucunda kapandı: 5 dakikadaki geri vermenin en belirgin olduğu iki koşul bir arada (7. ders, 5
+dakika). Kapanışta piyasa emriyle kovalamazsın. Alış gerekçen büyük mumdan bağımsızsa limiti mumun çeyrek ya da yarı
+geri çekilmesine koyarsın; stop limitin fiyatından 2 ATR uzakta, emir 6 mum bekler. Stopu mumun alt ucunun
+ötesine koymak bu seride ölçülmedi; üç ATR'lik bir mumda yarıdaki limitten o uç bir buçuk ATR kadar uzaktadır. Limit
+dolarsa mumun yönündeki okumanın zayıfladığını bilirsin (8. ders, Limit neden ucuz görünür: ters seçim). Mumun tersine
+de "Asya'da geri verir" diye girmezsin: geri vermenin büyüklüğü makastan küçük (6. ders, Dilim dilim okuma).
+
+</details>
+
+**2.** 1 saatlik GBP/USD grafiği, Londra 09:00'da başlayan bir mum (TSİ İngiltere yaz saatinde 11:00, kış saatinde
+12:00), takvimde haber yok, ucunda kapandı, aralığı ATR'nin dört katı. Şekil M6'daki gibi grafik "uzamış" görünüyor ve
+tersine bir işlem düşünüyorsun. Ne yaparsın, ne yapmazsın?
+
+<details>
+<summary>Çözüm</summary>
+
+Tersine girmezsin: 1 saatte ortalama yol mumun yönündedir; tersine giriş biçimleri (stop 2 ATR, hedef 1 R) 2018–2023'te
+maliyetten önce de eksiydi, 2024 sonrasında maliyetten önce sıfırın çevresinde kaldı, maliyetten sonra iki dönemde de
+eksi (6. ders, Dilim dilim okuma; 8. ders, 15 dakika ve 1 saat). Mumun dört ATR olması bunu değiştirmez (6. ders,
+Büyüklük değişince). Mumun yönünde de büyük mum tek başına bir işlem değildir. 7. ders Londra seansında başlayan 1
+saatlik büyük mumun iki dönemde de mumun yönünde gittiğini buldu, ama aralık yalnız bir dönemde sıfırın üstünde (7.
+ders, 1 saat); bu bir bağlamdır, giriş değil.
+
+</details>
+
+**3.** 15 dakikalık EUR/USD grafiğinde ABD enflasyon verisinin mumu (New York 08:30; TSİ ABD yaz saatinde 15:30, kış
+saatinde 16:30) aşağı yönlü ve ucunda kapandı; aralığı ATR'nin altı katı. Masadaki biri "bu kadar büyük haber mumu
+döner" diyor. Ne yaparsın, ne yapmazsın?
+
+<details>
+<summary>Çözüm</summary>
+
+Haber mumunda okuma yok: olay az ve 24 mum sonraki yolun aralığı sıfırın iki yanına geniş açılıyor (7. ders, Fade mi,
+devam mı: okuma tablosu). 9. dersin seçim kuralının üç girişinden ikisi 5 dakikada ve 1 saatte tam da haber mumunu
+ucundan tersine işleyen adaylardı ve ikisi de 2024 sonrasında tutmadı (9. ders, Seçilen girişler). Tersine girmezsin;
+mumun altı ATR olması bunu değiştirmez.
+
+</details>
+
+**4.** 5 dakikalık grafikte yarıya koyduğun limit üçüncü mumda doldu (Şekil M8'deki ② gibi); fiyat sonra yarıdan dönüp
+mumun ucuna doğru gidiyor ve pozisyonu büyütmeyi düşünüyorsun. Ne yaparsın, ne yapmazsın?
+
+<details>
+<summary>Çözüm</summary>
+
+Yarıya dönüp yeniden uca gitmek şansla beklenen kadar sık; bir "geri çekilmede katıl" onayı değil (6. ders, Yarısına
+dönen fiyat ne kadar sürede dönüyor). Limitin dolması da iyi haber değildi (8. ders, Limit neden ucuz görünür: ters
+seçim). Pozisyonu büyütmezsin; baştaki stop ve hedef geçerli kalır. Bu serinin ölçtüğü girişlerde ekleme yoktu;
+eklemenin sonucu bu derste ölçülmedi.
+
+</details>
+
+## Bu sonuç nasıl okunmalı
+
+Büyük mum bir **bilgi** taşıyor, ama çok az. 5 dakikada bir parça geri verme, 1 saatte bir parça devam. 5 dakikadaki
+iki dönemde de aralığıyla tutuyor; 1 saatteki 2018–2023'te aralığıyla, 2024 sonrasında yalnız nokta tahminiyle aynı
+yönde. İkisi de bir işlemin maliyetini karşılamadığı için tek başına işlem değil (8. ders). Büyük
+mumdan sonra yarısına dönüşü bekleyen bir işlemci haklı çıkar, ama aynı haklılık yönü bilmeyen birine de düşerdi.
+Ayna bunu ölçer.
+
+Sonraki ders bu küçük bilginin nerede yoğunlaştığına bakar: hangi seansta, hangi kapanışta, hangi trendde mumun
+tersine girmek (fade) daha haklı, hangisinde mumun yönü.
+
+Seride üç sözcük tek anlamda kullanılır. **Geri çekilme**, fiyatın mumun ucundan mumun boyunun belli bir oranı kadar
+geri gelmesidir; tek olayda görülür. **Geri verme**, geri çekilmenin şansın vereceğinden sık olması ya da ortalama yolun
+mumun tersine olmasıdır; binlerce olayda ölçülür. **Fade**, mumun tersine işleme girmektir (bir karar).
+
+## Ölçülmeyenler
+
+- **Gerçek işlem hacmi.** Dukascopy hacmi bir likidite vekilidir, piyasanın tamamının hacmi değil.
+- **Dört majör dışı pariteler, hisse, emtia.** Ölçüm yalnız EUR/USD, GBP/USD, USD/JPY ve AUD/USD için.
+- **Mumun içi.** Büyük mumun dakikalarının sırası (önce yükselip mi düştü) ölçüye girmedi; yalnız açılış, kapanış ve uçlar.
+- **Haberin içeriği.** Takvimdeki büyük haberler (ABD istihdam ve enflasyon verisi, Fed, ECB ve BoE kararları) yalnız
+  "var/yok" olarak işaretlendi; beklentiye göre sürpriz ölçülmedi.
+- **Mumun ucuna göre stop.** Ölçülen stoplar girişten 1 ve 2 ATR; mumun öbür ucunun ötesine konan stop ölçülmedi.

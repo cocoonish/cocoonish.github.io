@@ -105,10 +105,12 @@ export const GRUPLAR: DersGrubu[] = [
       'Günün belirli anlarında (Tokyo, Londra ve New York açılışları, Tokyo ve Londra fiksingleri, ABD ' +
       'istihdam ve enflasyon verisi, Fed, ECB ve BoE kararları) ilk mumdan sonra fiyat genelde ne yapıyor? ' +
       'İlk mum dört sınıfa ayrılır, her sınıfın davranışı okunur ve bir oyun planı yazılır; plan 2018–2023 ' +
-      'verisinden yazıldı, 2024 sonrasında gerçek alış-satış fiyatları ve maliyetle sınandı. Beş ders. ' +
+      'verisinden yazıldı, 2024 sonrasında gerçek alış-satış fiyatları ve maliyetle sınandı. Son dört ders ' +
+      'büyük mumu (önceki ATR\'nin en az iki katı) ölçer: sonrasında ne olduğunu, süzgeçleri, giriş biçimlerini ' +
+      've aynı yöntemle sınanan bir planı. Dokuz ders. ' +
       'Önceki kural sınamaları arşivde.',
     hat: true,
-    // Sıra tek tanımdan: Aktarılacak Projeler/FxOyun/ders_yaz.py (SIRA); FxOyun/dogrula.py ikisini karşılaştırır.
+    // Sıra tek tanımdan: Aktarılacak Projeler/FxOyun/ders_yaz.py (SERI); FxOyun/dogrula.py ikisini karşılaştırır.
     // Önceki seri (Aktarılacak Projeler/FxGunici, on yedi ders) arşivde: listelerde görünmez, adresleri açık.
     slugSirasi: [
       'fx-oyun-okuma',
@@ -116,6 +118,10 @@ export const GRUPLAR: DersGrubu[] = [
       'fx-oyun-fiksingler',
       'fx-oyun-haberler',
       'fx-oyun-backtest',
+      'fx-buyuk-mum',
+      'fx-buyuk-suzgec',
+      'fx-buyuk-giris',
+      'fx-buyuk-plan',
     ],
     etiketler: ['gun-ici'],
   },
