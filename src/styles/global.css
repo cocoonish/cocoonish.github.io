@@ -495,9 +495,15 @@ main:focus {
 .prose .sayi-tablo table {
   margin: 0;
 }
-.prose .sayi-tablo td:not(:first-child),
-.prose .sayi-tablo th:not(:first-child) {
+.prose .sayi-tablo td:not(:first-child) {
   white-space: nowrap;
+}
+/* Başlık kırılır, değer kırılmaz. Başlık da kırılmadığında sekiz sütunlu bir tablonun başlık satırı tek başına
+   sütundan genişti; tablo sağdan kesiliyor, satır adı sütunu en uzun sözcüğe sıkışıp sözcük sözcük alt alta
+   diziliyordu ("5 / dakika / · / 2018– / 23"). */
+.prose .sayi-tablo th {
+  white-space: normal;
+  vertical-align: bottom;
 }
 /* Satır adı her genişlikte yapışıktır: kayan tabloda okur hangi satırı okuduğunu kaybetmez. Zemin
    kâğıdın dokusuyla birlikte boyanır; düz renk, kaymayan tabloda da açık bir şerit gibi görünürdü. */
@@ -514,6 +520,67 @@ main:focus {
 .prose .sayi-tablo.sarilir td:not(:first-child),
 .prose .sayi-tablo.sarilir th:not(:first-child) {
   white-space: normal;
+}
+/* Üretilen sayı tablosu (ham HTML; FX gün içi dersleri): yaprak başlık ve hücre sınıfla hizalanır, satır adı
+   sütunu en dar hâlinde de bir sözcük grubunu taşır. */
+.prose .sayi-tablo .sag {
+  text-align: right;
+}
+/* td.metin, değer hücresinin kırılmama kuralından (td:not(:first-child)) güçlü olmalı: sınıf seçicisi tek başına
+   ondan zayıf kalıyor ve uzun "Giriş" metni yan sütunun sayısının üstüne taşıyordu. */
+.prose .sayi-tablo td.metin,
+.prose .sayi-tablo th.metin {
+  text-align: left;
+  white-space: normal;
+}
+.prose .sayi-tablo td.metin:not(.ad) {
+  min-width: 12rem;
+}
+.prose .sayi-tablo td.ad {
+  min-width: 8rem;
+}
+/* İki katlı başlık: üst satır dönemi ("2018–23" · "2024 →") ya da ölçünün adını taşır, altındaki sütunlara ince
+   bir çizgiyle bağlanır. Alt satırın ilk hücresi bir veri sütunudur, yapışık satır adı değil. */
+.prose .sayi-tablo thead tr + tr th {
+  border-top: 0;
+}
+.prose .sayi-tablo thead tr + tr th:first-child {
+  position: static;
+  background: none;
+}
+.prose .sayi-tablo table.kat thead tr:first-child th {
+  border-bottom: 0;
+}
+.prose .sayi-tablo table.kat thead tr:first-child th[rowspan] {
+  border-bottom: 1px solid var(--ink);
+}
+.prose .sayi-tablo thead th.ust {
+  text-align: center;
+  padding-bottom: 0.2rem;
+}
+.prose .sayi-tablo thead th.ust > span {
+  display: block;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--ink-30);
+}
+/* Grup satırı: tablo genişliğinde bir ara başlık ("5 dakika", "Tokyo açılışı"); altındaki satırların adı yalnız
+   grubun içindeki farkı söyler. Hücre tablo genişliğindedir, adı kayan tabloda solda kalsın diye yapışık. */
+.prose .sayi-tablo tr.grup th {
+  position: static;
+  background: none;
+  text-align: left;
+  font-family: var(--font-body, inherit);
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 0.9rem 0 0.35rem;
+  border-bottom: 1px solid var(--ink-30);
+}
+.prose .sayi-tablo tr.grup th > span {
+  position: sticky;
+  left: 0;
+}
+.prose .sayi-tablo tbody tr.grup + tr td {
+  border-top: 0;
 }
 /* Takvim tablosu (`<div class="takvim-tablo">`): tarih hücresi kırılmaz — göz tarihle ilerler. */
 .prose .takvim-tablo td:first-child {
