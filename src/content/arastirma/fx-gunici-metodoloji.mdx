@@ -11,7 +11,7 @@ onkosul:
   - fx-gunici-giris
 ---
 
-<div class="not gezinme"><span class="etiket">Arşiv</span> Bu ders serinin ayrıntılı yöntem notlarındandır ve arşivdedir. Serinin sade hâli üç kısa derste: [1 · Hangisi işe yarıyor?](/arastirma/fx-gunici-sonuc/) · [2 · Stop ve hedef](/arastirma/fx-gunici-stop-hedef/) · [3 · Kontrol listesi](/arastirma/fx-gunici-kontrol/).</div>
+<div class="not gezinme"><span class="etiket">Arşiv</span> Bu ders gün içi FX kurallarının ayrıntılı sınamasındandır ve arşivdedir. Gün içi seri şimdi açılış, fiksing ve haber anlarının oyun planı olarak beş derste: [1 · İlk mumu okumak](/arastirma/fx-oyun-okuma/) · [2 · Açılışlar](/arastirma/fx-oyun-acilislar/) · [3 · Fiksingler](/arastirma/fx-oyun-fiksingler/) · [4 · Haber mumları](/arastirma/fx-oyun-haberler/) · [5 · Backtest](/arastirma/fx-oyun-backtest/).</div>
 
 Önceki yedi ders sonuçları anlattı. Bu ders sonuçların nasıl üretildiğini anlatır ve iki amaca hizmet eder. Birincisi
 denetlenebilirlik: bir okurun bir sayıya itiraz edebilmesi için o sayının hangi fiyattan, hangi saatte ve hangi

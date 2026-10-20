@@ -1,0 +1,202 @@
+---
+title: 'FX Gün İçi Oyun Planı 4: Haber Mumları'
+description: "ABD istihdam ve enflasyon verisi, Fed, ECB ve BoE kararları: açıklamadan sonraki ilk 5 dakikanın mumu ne söylüyor? Güçlü, normal, reddedilen ve küçük haber mumundan sonra fiyatın davranışı, şansın vereceği payla kıyas, iki dönemde nasıl değiştiği, ve planın 2024 sonrasında artıda kalan tepkileri."
+pubDate: 2026-10-19
+tags: ['fx', 'gun-ici', 'oyun-plani', 'haber', 'backtest', 'ders']
+durum: 'aktif'
+kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · resmî yayım takvimleri · önceden kayıt'
+ozet: "Haber mumu serinin en oynak anıdır ve en az olayı olanıdır. ABD verisinden sonra ilk mumun sürme payı iki dönemde de şansın altında. Merkez bankası kararlarında planın üç tepkisi 2024 sonrasında artıda kaldı, ama işlem sayıları bir hüküm kurmaya yetmiyor. Ders haber anlarının oyun planını ve sınırlarını verir."
+seviye: 'orta'
+onkosul: ['fx-oyun-okuma']
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+
+Bir veri ya da karar açıklandığında fiyat birkaç dakika içinde yeni bilgiyi fiyatlamaya çalışır. İlk mum bu yüzden
+haber anlarında açılışlardan ve fiksinglerden çok daha büyüktür ve çok daha seyrek gelir: bir açılış her iş günü gelir,
+bir istihdam verisi ayda bir, bir merkez bankası kararı yılda sekiz kez. Bu ders iki aileyi ayrı okur: **ABD verileri**
+(tarım dışı istihdam ve tüketici fiyatları) ve **merkez bankası kararları** (Fed, ECB, BoE).
+
+| An | Yerel saat | TSİ | İlk mum | İzlenen süre |
+|---|---|---|---:|---:|
+| Tarım dışı istihdam | New York 08:30 | 15:30 (ABD kış saatinde 16:30) | 5 dk | 120 dk |
+| ABD TÜFE | New York 08:30 | 15:30 (ABD kış saatinde 16:30) | 5 dk | 120 dk |
+| FOMC kararı | New York 14:00 | 21:00 (ABD kış saatinde 22:00) | 5 dk | 120 dk |
+| ECB kararı | Frankfurt 14:15 | 15:15 (Avrupa kış saatinde 16:15) | 5 dk | 120 dk |
+| BoE kararı | Londra 12:00 | 14:00 (İngiltere kış saatinde 15:00) | 5 dk | 120 dk |
+
+ECB kararı 09.06.2022 tarihine kadar Frankfurt 13:45'te açıklanıyordu (TSİ 14:45; Avrupa kış saatinde 15:45); ölçüm her olayı kendi gününün saatinden okur.
+
+Saatler resmî yayım takviminden alınır, tahmin edilmez. Burada **ilk mum** açıklamadan sonraki ilk 5
+dakikadır. Tipik boy o anın son 24 olayından ölçülür. Haber anında makas açılır ve emirler kayar;
+maliyet bu yüzden açıklamadan iki dakika önce ile on beş dakika sonrası arasında ek 1,0 pip
+kayma içerir.
+
+## Plan tek cümlede
+
+**Haber mumu tek başına bir yön sinyali değildir.** ABD verisinin ilk mumu şanstan seyrek sürüyor. Merkez bankası
+kararlarında güçlü ya da reddedilen ilk mumun yönünde kalmak 2024 sonrasında artıda kaldı, ama bu sonuç birkaç karar
+gününe dayanıyor; bir hüküm değil, izlenecek bir aday.
+
+## Haberden sonra fiyat nereye gidiyor
+
+İlk mum kapandıktan sonra ortalama fiyat, mumun yönünde ve mumun boyu cinsinden; iki aile, iki dönem.
+
+<GrafikEmbed src="/arastirma/fx-oyun-haberler/01_patika.html" baslik="Haber mumundan sonra ortalama fiyat yolu, ilk mumun yönünde" no="01" kaynak="Dukascopy" />
+
+Haber anlarında olay sayısı az olduğu için ortalama yol açılışlardaki kadar düzgün değildir; tek bir olay çizgiyi
+belirgin oynatabilir. Şekil bir yön söylemek için değil, iki dönemin birbirinden ne kadar ayrıştığını görmek için.
+
+## ABD verileri
+
+Yarısına dönüş, devam ve dönüş payı; yanında yolun aynasında (yön rastgele olsaydı) aynı payın değeri:
+
+| İlk mum · dönem | n | yarısına döndü (gerçek · ayna) | devam etti (gerçek · ayna) | tersine döndü (gerçek · ayna) |
+|---|---:|---:|---:|---:|
+| güçlü · 2018–23 | 140 | %63 · %64 | %36 · %37 | %21 · %20 |
+| güçlü · 2024 → | 43 | %40 · %33 | %19 · %19 | %12 · %2 |
+| normal · 2018–23 | 222 | %84 · %80 | %38 · %48 | %43 · %40 |
+| normal · 2024 → | 132 | %80 · %64 | %13 · %34 | %38 · %23 |
+| reddedilen · 2018–23 | 75 | %87 · %76 | %39 · %51 | %48 · %41 |
+| reddedilen · 2024 → | 23 | %83 · %78 | %4 · %17 | %35 · %22 |
+
+Normal ve reddedilen veri mumunda sürme payı iki dönemde de aynanın altında. Normal mumda 2018–2023'te
+%38 (ayna %48), 2024 → döneminde %13
+(%34). Veri ilk beş dakikada fiyatı bir yöne itiyor, ve o itiş sonraki iki saatte şanstan
+seyrek sürüyor. 2024 → döneminde fark büyüdü. Güçlü veri mumunda ise devam payı aynayla aynı
+(%36 ve %37).
+
+Bu bir okuma. İlk mumun tersine giren bir tepki ABD verisi için önceden yazılmadığı için sınanmadı; sınanmadan bir
+kural sayılmaz. Her veri tek tek:
+
+| An · ilk mum | 2018–23 n | yarısına döndü | devam etti | tersine döndü | 2024 → n | yarısına döndü | devam etti | tersine döndü |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Tarım dışı istihdam · güçlü | 54 | %57 | %31 | %19 | 33 | %45 | %18 | %15 |
+| Tarım dışı istihdam · normal | 125 | %86 | %36 | %46 | 64 | %81 | %12 | %41 |
+| Tarım dışı istihdam · reddedilen | 51 | %90 | %33 | %53 | 13 | %100 | %0 | %54 |
+| ABD TÜFE · güçlü | 86 | %66 | %40 | %22 | 10 | %20 | %20 | %0 |
+| ABD TÜFE · normal | 97 | %81 | %41 | %38 | 68 | %79 | %13 | %35 |
+| ABD TÜFE · reddedilen | 24 | %79 | %50 | %38 | 10 | %60 | %10 | %10 |
+
+2024 → döneminde güçlü veri mumu yalnız 43 olay. İki dönemin farkının sebebi bu derste ölçülmedi:
+bir piyasa değişimi de (veriden sonraki ilk dakikalarda fiyatlamanın daha hızlı bitmesi), küçük örneklemin dalgalanması
+da olabilir.
+
+## Merkez bankası kararları
+
+| İlk mum · dönem | n | yarısına döndü (gerçek · ayna) | devam etti (gerçek · ayna) | tersine döndü (gerçek · ayna) |
+|---|---:|---:|---:|---:|
+| güçlü · 2018–23 | 65 | %62 · %75 | %43 · %46 | %35 · %17 |
+| güçlü · 2024 → | 11 | %36 · %82 | %73 · %18 | %0 · %45 |
+| normal · 2018–23 | 100 | %90 · %87 | %37 · %40 | %45 · %41 |
+| normal · 2024 → | 63 | %84 · %89 | %44 · %51 | %49 · %38 |
+| reddedilen · 2018–23 | 31 | %81 · %87 | %61 · %32 | %23 · %55 |
+| reddedilen · 2024 → | 7 | %86 · %100 | %71 · %14 | %29 · %71 |
+
+Kararlarda reddedilen ilk mum iki dönemde de şanstan sık sürüyor: 2018–2023'te %61
+(ayna %32), 2024 → döneminde %71
+(%14). Ama olay sayısı küçük (31 ve
+7). Güçlü karar mumu 2018–2023'te aynayla aynıydı (%43 ve
+%46); 2024 → döneminde 11 olayda %73 sürdü ve
+tersine dönen olmadı. Her karar tek tek:
+
+| An · ilk mum | 2018–23 n | yarısına döndü | devam etti | tersine döndü | 2024 → n | yarısına döndü | devam etti | tersine döndü |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| FOMC kararı · güçlü | 44 | %66 | %39 | %36 | 8 | %25 | %100 | %0 |
+| FOMC kararı · normal | 67 | %93 | %28 | %54 | 45 | %82 | %44 | %53 |
+| FOMC kararı · reddedilen | 20 | %85 | %70 | %20 | 5 | %80 | %80 | %20 |
+| ECB kararı · güçlü | 9 | %89 | %44 | %44 | 1 | %100 | %0 | %0 |
+| ECB kararı · normal | 19 | %79 | %79 | %21 | 8 | %100 | %62 | %38 |
+| ECB kararı · reddedilen | 5 | %100 | %60 | %40 | 2 | %100 | %50 | %50 |
+| BoE kararı · güçlü | 12 | %25 | %58 | %25 | 2 | %50 | %0 | %0 |
+| BoE kararı · normal | 14 | %93 | %21 | %36 | 10 | %80 | %30 | %40 |
+| BoE kararı · reddedilen | 6 | %50 | %33 | %17 | 0 | — | — | — |
+
+Kararın ilk beş dakikası karar metnidir; BoE'de toplantı tutanağı da aynı anda yayımlanır. Fed'de basın toplantısı
+karardan yarım saat sonra başlar (2019'dan beri her kararda; 2018'de yalnız çeyrek sonu toplantılarında), ECB'de
+bugün yarım saat sonra (2022 ortasına kadar üç çeyrek saat sonra), ve izlenen 120 dakika onu da
+içerir. Yani bir karar mumunun "devam etmesi", metnin ve basın toplantısının aynı yöne bakması anlamına gelebilir.
+Basın toplantısının ayrı etkisi bu derste ölçülmedi.
+
+## Küçük haber mumu
+
+Açıklama ilk beş dakikada fiyatı oynatmamışsa, sonra kırıldığı tarafa ne kadar gidiyor:
+
+| An | 2018–23 n | kırılan tarafta 1 mum boyu gitti | 2024 → n | kırılan tarafta 1 mum boyu gitti |
+|---|---:|---:|---:|---:|
+| Tarım dışı istihdam | 25 | %44 | 22 | %36 |
+| ABD TÜFE | 49 | %53 | 40 | %20 |
+| FOMC kararı | 34 | %65 | 30 | %60 |
+| ECB kararı | 7 | %43 | 11 | %82 |
+| BoE kararı | 7 | %14 | 10 | %30 |
+
+Fed kararında küçük ilk mumdan sonra kırılan tarafta bir mum boyu ilerleme %65
+(2024 → %60): karar metni fiyatı oynatmamışsa, hareket çoğu zaman sonra geliyor; basın toplantısı
+izlenen sürenin içinde. ABD verisinde ise küçük ilk mum 2024 → döneminde daha da az ilerliyor (enflasyon verisinde
+%20). ECB ve BoE'nin olay sayıları küçük (11 ve 10).
+
+## Trend
+
+Haber anlarında olay sayısı trend ayrımı için yetmiyor: bir sınıfı üçe bölünce hücrelerin çoğunda birkaç düzine,
+kararlarda birkaç olay kalıyor. Plan haber anlarında trendi kullanmaz.
+
+## Bu okumaları işleme çevirmek
+
+Haber anlarında planın iki tür tepkisi var. **Referans tepkiler** açılış ve fiksinglerle aynı kuralla kuruldu: yarısına
+limit, yarım R hedef; küçük mumda kırılım. 2024 → dönemindeki sonuç:
+
+| Ailesi · ilk mum | 2024 → işlem | kazanma | başa baş için | net R | hüküm |
+|---|---:|---:|---:|---:|---|
+| ABD verileri · güçlü | 13 | %23 | %68 | −0,39 | ölçülemedi |
+| ABD verileri · normal | 91 | %51 | %64 | −0,19 | çalışmıyor |
+| ABD verileri · reddedilen | 18 | %50 | %66 | −0,20 | ölçülemedi |
+| ABD verileri · küçük | 56 | %62 | %65 | −0,03 | çalışmıyor |
+| Merkez bankası kararları · güçlü | 3 | %67 | %67 | −0,01 | ölçülemedi |
+| Merkez bankası kararları · normal | 51 | %71 | %68 | +0,04 | zayıf |
+| Merkez bankası kararları · reddedilen | 6 | %83 | %67 | +0,24 | ölçülemedi |
+| Merkez bankası kararları · küçük | 50 | %80 | %69 | +0,15 | zayıf |
+
+**İşlem tepkileri** önceden yazılmış seçim kuralıyla seçildi: 2018–2023'te denenen adayların içinden maliyetten sonra
+artıda kalan en iyisi. Kural artıyı şart koştuğu için seçilen tepkilerin 2018–2023 sonucu kendiliğinden artıdır; kanıt
+yalnız 2024 → sonucudur.
+
+| An ailesi · ilk mum | Tepki | 2018–23 n | kazanma | net R | 2024 → n | kazanma | net R | %95 aralık | hüküm |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| Merkez bankası kararları · güçlü | mum kapanınca mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 65 | %69 | +0,02 | 11 | %91 | +0,38 | +0,25 … +0,46 | ölçülemedi |
+| Merkez bankası kararları · normal | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,5 mum boyu ötesinde · hedef 1,0 R | 84 | %50 | +0,01 | 51 | %55 | +0,05 | −0,19 … +0,29 | zayıf |
+| Merkez bankası kararları · reddedilen | mum kapanınca mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 1,0 R | 31 | %68 | +0,33 | 7 | %71 | +0,25 | −0,43 … +0,84 | ölçülemedi |
+| ABD verileri · güçlü | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef mumun kendi ucu | 70 | %59 | +0,06 | 13 | %23 | −0,37 | −0,68 … −0,06 | ölçülemedi |
+| ABD verileri · küçük | küçük mumun kırılan ucundan · stop öbür ucun 0,5 mum boyu ötesinde · hedef 1,0 R | 70 | %50 | 0,00 | 56 | %43 | −0,06 | −0,23 … +0,12 | çalışmıyor |
+
+<GrafikEmbed src="/arastirma/fx-oyun-haberler/02_bacaklar.html" baslik="Haber anlarında işlem tepkileri: 2024 sonrasında net sonuç ve güven aralığı" no="02" kaynak="Dukascopy" />
+
+- **Güçlü karar mumu, kapanışta mumun yönünde, yarım R hedef.** 2024 → döneminde 11
+  işlemin %91 kadarı kazandı, net +0,38 R; hiçbiri stopta
+  bitmedi. Ama bu 11 işlem yalnız 7 karar gününe düşüyor; aynı
+  kararda paritelerin işlemleri birlikte hareket eder. Karar günlerinden yeniden örneklenen aralık
+  +0,22 … +0,46 R. 20 işlemin altında hüküm
+  kurulmaz ("ölçülemedi"). Stop geniş: ortanca risk 52 pip.
+- **Reddedilen karar mumu, kapanışta reddin yönünde, bir R hedef.** 7 işlem
+  (4 karar günü), net +0,25 R; ölçülemedi.
+- **Normal karar mumu, yarısına limit, bir R hedef.** 51 işlemde
+  (27 karar günü) net +0,05 R; aralık
+  −0,19 … +0,29, hüküm "zayıf".
+- **Güçlü veri mumu, yarısına limit, hedef mumun ucu.** 2024 → döneminde 13 işlemde
+  −0,37 R. İşlemlerin %62 kadarı ne hedefe ne stopa ulaşıp
+  sürenin sonunda kapandı: verinin ilk mumundan sonraki itişin sürmemesi burada da görünüyor.
+- **Küçük veri mumu, kırılımda, bir R hedef.** 2018–2023'te işlem başına +0,004 R ile
+  seçildi; 2024 → döneminde 56 işlemde net −0,06 R, hüküm
+  "çalışmıyor". Maliyetsiz sonucu artı (+0,07 R); haber anının makası
+  ve kayması onu eksiye çeviriyor.
+
+## Haber anları için masa kartı
+
+- **Haber mumu yeni bilginin ilk fiyatıdır, son fiyatı değil.** Yarısına dönüş haberde de sıktır.
+- **ABD verisinin ilk beş dakikasının yönü sonraki iki saatte şanstan seyrek sürer.** Veri mumunun yönüne dayanan bir
+  okuma iki dönemde de zayıf; 2024 sonrasında daha da zayıf.
+- **Karar metni fiyatı oynatmadıysa hareket sonra gelebilir.** Fed'de küçük ilk mumdan sonra kırılım iki dönemde de
+  çoğu zaman yol aldı; üç bankanın küçük karar mumu kırılımı bir işleme çevrildiğinde ise iki dönem ayrı işaret verdi.
+- **Merkez bankası kararlarındaki üç işlem tepkisi 2024 sonrasında artıda kaldı.** Hiçbirinin karar günü sayısı bir
+  hüküm kurmaya yetmiyor. Bir sonraki dönemde, bugünkü kuralla, değiştirilmeden sınanmadan bir kural sayılmaz.
+- **Haber anının maliyeti farklıdır.** Makas açılır, kayma artar; dar stoplu bir haber işlemi maliyete en çok
+  dayanan işlemdir.

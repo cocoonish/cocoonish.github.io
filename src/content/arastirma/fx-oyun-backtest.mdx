@@ -1,0 +1,197 @@
+---
+title: 'FX Gün İçi Oyun Planı 5: Backtest — Plan 2024 Sonrasında Ne Verdi'
+description: "Oyun planının bütün tepkileri, 2018–2023 (planın yazıldığı dönem) ve 2024 → (planın hiç sınanmadığı dönem) arasında, gerçek alış-satış fiyatları ve maliyetle: kazanma oranı, işlem başına net sonuç, maliyetin payı, güven aralığı ve hüküm; sonunda günün haritası."
+pubDate: 2026-10-19
+tags: ['fx', 'gun-ici', 'oyun-plani', 'backtest', 'ders']
+durum: 'aktif'
+kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · önceden kayıt'
+ozet: "Planın tepkilerinin hiçbiri 2024 sonrasında 'çalışıyor' hükmü almadı. Sık gelen anlarda yüksek kazanma oranlı tepkiler maliyetten sonra kaybettirdi; açılışta kenar maliyetten önce de yok, fiksingte küçük bir kenar var ve maliyet onu yiyor. Tek artı adaylar merkez bankası kararlarında, birkaç karar gününe dayanıyor."
+seviye: 'orta'
+onkosul: ['fx-oyun-okuma', 'fx-oyun-acilislar', 'fx-oyun-fiksingler', 'fx-oyun-haberler']
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+
+Önceki dört ders bir oyun planı yazdı: hangi anda, hangi ilk mumdan sonra fiyatın genelde ne yaptığı ve bunun ne
+kadarının şansın ötesinde olduğu. Bu ders o planın **işleme çevrilmiş** hâlinin sonucunu verir. Planın tepkileri
+2018–2023 verisinden yazıldı ve 2024 sonrası veride hiç koşturulmadan kaydedildi; burada iki dönemin sonucu yan yana
+durur. Hüküm yalnız 2024 → döneminden verilir (15.10.2026 tarihine kadar).
+
+## Kısaca
+
+- **Davranış iki dönemde aynı kaldı.** Açılışta ilk mumun yön bilgisi taşımaması, fiksingte koşunun şanstan sık geri
+  verilmesi iki dönemde de görüldü.
+- **Davranıştan para çıkmadı.** 16 referans tepkinin ve 5 işlem tepkisinin hiçbiri
+  "çalışıyor" hükmü almadı. İşlem tepkilerinde 1 zayıf, 1 çalışmıyor,
+  3 ölçülemedi.
+- **Kazanma oranı yüksek kurulabildi.** Açılışta yarım R hedefli tepkiler işlemlerin
+  %55–%61 kadarını kazandı; başa baş için
+  %68 gerekiyordu.
+- **Tek artı adaylar merkez bankası kararlarında.** Güçlü karar mumunun yönünde kalmak 2024 → döneminde
+  11 işlemde (7 karar günü) +0,38 R verdi.
+  20 işlemin altında hüküm kurulmaz.
+
+## Tepki nedir, nasıl seçildi
+
+Plan her an ailesinde (açılış, fiksing, ABD verisi, merkez bankası) ve her ilk mum sınıfında bir **tepki** yazar. İki
+tür vardır.
+
+- **Referans tepki** planın kendi okumasının en düz işlem hâlidir. Yön sınıflarında ilk mumun yarısına limitle mumun
+  yönünde girmek ve yarım R hedeflemek; küçük mumda kırılan uçtan girmek; fiksingde koşunun tersine girip koşunun
+  yarısını hedeflemek. 2024 sonrası sonucuna bakılmadan yazıldı; 2018–2023 sonucu yazılırken biliniyordu. Amacı
+  "okuma doğruysa kazanma oranı yüksek olur" sözünü sınamaktır.
+- **İşlem tepkisi**, her hücrede 2018–2023'te denenen altı ila yedi adayın içinden, önceden yazılmış
+  kuralla seçildi: en az 30 işlemi olan ve maliyetten sonra artıda kalanların en iyisi. Bu kural
+  gereği seçilen her tepkinin 2018–2023 sonucu artıdır; kanıt 2024 → sonucudur. Böyle bir aday çıkmayan hücrede plan
+  "izle, işlem açma" der. 11 hücre bu durumdaydı; 5 hücrede işlem tepkisi seçildi.
+
+Trend seçime girmedi: gözlemde trend ilk mumdan sonraki davranışı belirgin değiştirmiyordu.
+
+## Kazanma oranı ve net sonuç
+
+Her tepkinin 2024 → dönemindeki kazanma oranı ve işlem başına net sonucu (dairenin büyüklüğü işlem sayısı):
+
+<GrafikEmbed src="/arastirma/fx-oyun-backtest/01_kazanma_net.html" baslik="Açılış ve fiksing tepkileri: kazanma oranı yüksek ya da düşük, hepsi eksi" no="01" kaynak="Dukascopy" />
+
+Şekilde iki küme var. Büyük daireler açılış ve fiksing tepkileri: yüzlerce, kimi binlerce işlem, ve hepsi sıfırın
+altında. Açılışta kazanma oranları yarının üstünde ama yarım R'lik kazanç kaybı karşılamıyor. Fiksingde güçlü koşunun
+tersine giren tepki işlemlerin yalnız %37 kadarını kazandı; kazananı ortalama
++1,19 R getirdi, başa baş için %49 yetiyordu,
+o oran da tutmadı. Sağ üstteki küçük noktalar merkez bankası kararları: hem kazanma oranı hem net sonuç yüksek, ama her
+biri en çok 51 işlem. O kümede iki ölçünün birlikte yükselmesi birkaç iyi kararın ikisini birden yukarı
+itmesi olabilir; ayrılmadı.
+
+Aritmetik açılışta en açık hâlindedir. Güçlü ilk mumun yarısına limitle girip yarım R hedefleyen tepkide kazanan işlem
+ortalama +0,50 R kazandı, kaybeden ortalama −1,05 R
+kaybetti. Bu ikisiyle başa baş için işlemlerin %68 kadarını kazanmak gerekir; tepki
+%61 kazandı. Kazanma oranı istenen yere çekilebilir (hedef yaklaştıkça yükselir),
+ama başa baş oranı da onunla birlikte yükselir.
+
+## Referans tepkiler
+
+| An ailesi · ilk mum | Tepki | 2018–23 n | kazanma | net R | 2024 → n | kazanma | net R | %95 aralık | hüküm |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| Seans açılışları · güçlü | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 1.703 | %61 | −0,10 | 845 | %61 | −0,10 | −0,15 … −0,05 | çalışmıyor |
+| Seans açılışları · normal | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 7.239 | %55 | −0,20 | 3.238 | %55 | −0,19 | −0,22 … −0,17 | çalışmıyor |
+| Seans açılışları · reddedilen | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 2.411 | %57 | −0,18 | 1.041 | %56 | −0,19 | −0,24 … −0,15 | çalışmıyor |
+| Seans açılışları · küçük | küçük mumun kırılan ucundan · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 1.614 | %60 | −0,23 | 804 | %61 | −0,20 | −0,26 … −0,15 | çalışmıyor |
+| Fiksingler · güçlü | fiksingde koşunun tersine · stop koşunun ucunun 0,1 koşu boyu ötesinde · hedef koşunun yarısı | 1.331 | %42 | −0,18 | 558 | %37 | −0,28 | −0,38 … −0,17 | çalışmıyor |
+| Fiksingler · normal | fiksingde koşunun tersine · stop koşunun ucunun 0,1 koşu boyu ötesinde · hedef koşunun yarısı | 3.400 | %56 | −0,16 | 1.415 | %54 | −0,20 | −0,25 … −0,15 | çalışmıyor |
+| Fiksingler · reddedilen | fiksingde koşunun tersine · stop koşunun ucunun 0,1 koşu boyu ötesinde · hedef koşunun yarısı | 1.345 | %58 | −0,14 | 631 | %56 | −0,18 | −0,25 … −0,12 | çalışmıyor |
+| Fiksingler · küçük | küçük mumun kırılan ucundan · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 1.197 | %53 | −0,21 | 606 | %51 | −0,24 | −0,30 … −0,19 | çalışmıyor |
+| ABD verileri · güçlü | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 70 | %69 | +0,03 | 13 | %23 | −0,39 | −0,66 … −0,10 | ölçülemedi |
+| ABD verileri · normal | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 174 | %61 | −0,11 | 91 | %51 | −0,19 | −0,33 … −0,04 | çalışmıyor |
+| ABD verileri · reddedilen | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 62 | %55 | −0,19 | 18 | %50 | −0,20 | −0,51 … +0,11 | ölçülemedi |
+| ABD verileri · küçük | küçük mumun kırılan ucundan · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 70 | %71 | −0,08 | 56 | %62 | −0,03 | −0,19 … +0,12 | çalışmıyor |
+| Merkez bankası kararları · güçlü | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 37 | %65 | −0,05 | 3 | %67 | −0,01 | −1,02 … +0,50 | ölçülemedi |
+| Merkez bankası kararları · normal | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 84 | %65 | −0,01 | 51 | %71 | +0,04 | −0,15 … +0,23 | zayıf |
+| Merkez bankası kararları · reddedilen | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 24 | %79 | +0,17 | 6 | %83 | +0,24 | −0,27 … +0,50 | ölçülemedi |
+| Merkez bankası kararları · küçük | küçük mumun kırılan ucundan · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 47 | %68 | −0,12 | 50 | %80 | +0,15 | −0,01 … +0,31 | zayıf |
+
+Açılış ve fiksingin 8 referans tepkisinin hepsi "çalışmıyor" ve hepsinin güven aralığı sıfırın altında.
+Haber anlarında işlem sayıları küçük; merkez bankası kararlarında normal ve küçük mumun referans tepkisi 2024 →
+döneminde artıda, ikisinin de aralığı sıfırı kapsıyor ("zayıf").
+
+## Maliyet nereye gidiyor
+
+Her tepkinin maliyetsiz (aynı kurallar orta fiyatla, makas ve kayma olmadan) ve maliyetli sonucu:
+
+<GrafikEmbed src="/arastirma/fx-oyun-backtest/02_maliyet.html" baslik="Maliyetten önce ve sonra: açılışta kenar yok, fiksingte küçük kenar maliyete gidiyor" no="02" kaynak="Dukascopy" />
+
+Üç ayrı hikâye var.
+
+- **Açılışta kenar maliyetten önce de yok.** Yarısına limitle girilen tepkilerin maliyetsiz sonucu sıfıra yakın ya da
+  eksi (güçlü mumda −0,02 R, normal mumda −0,05 R);
+  küçük mumun kırılımı da öyle (+0,02 R). Maliyet, sıfırı belirgin bir eksiye
+  çeviriyor: küçük mum küçük stop demektir ve makas o stopun görünür bir parçasıdır.
+- **Fiksingde küçük bir kenar var, maliyet onu yiyor.** Koşunun tersine girmenin maliyetsiz sonucu 2018–2023'te normal
+  koşuda +0,08 R, 2024 → döneminde +0,03 R. Bu,
+  fiksing dersinde şansla kıyaslanan geri vermenin işlem hâlidir. Maliyet
+  (0,23 R) ondan büyük.
+- **Merkez bankasında maliyetsiz sonuç artı.** Küçük karar mumunun kırılımında maliyetsiz
+  +0,26 R, maliyetli +0,15 R; az işlemle.
+
+## İşlem tepkileri
+
+| An ailesi · ilk mum | Tepki | 2018–23 n | kazanma | net R | 2024 → n | kazanma | net R | %95 aralık | hüküm |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| Merkez bankası kararları · güçlü | mum kapanınca mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 0,5 R | 65 | %69 | +0,02 | 11 | %91 | +0,38 | +0,25 … +0,46 | ölçülemedi |
+| Merkez bankası kararları · normal | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,5 mum boyu ötesinde · hedef 1,0 R | 84 | %50 | +0,01 | 51 | %55 | +0,05 | −0,19 … +0,29 | zayıf |
+| Merkez bankası kararları · reddedilen | mum kapanınca mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef 1,0 R | 31 | %68 | +0,33 | 7 | %71 | +0,25 | −0,43 … +0,84 | ölçülemedi |
+| ABD verileri · güçlü | mumun yarısına limitle mumun yönünde · stop öbür ucun 0,1 mum boyu ötesinde · hedef mumun kendi ucu | 70 | %59 | +0,06 | 13 | %23 | −0,37 | −0,68 … −0,06 | ölçülemedi |
+| ABD verileri · küçük | küçük mumun kırılan ucundan · stop öbür ucun 0,5 mum boyu ötesinde · hedef 1,0 R | 70 | %50 | 0,00 | 56 | %43 | −0,06 | −0,23 … +0,12 | çalışmıyor |
+
+İşlem tepkilerinin 2024 → dönemindeki birikimli sonucu, işlem işlem:
+
+<GrafikEmbed src="/arastirma/fx-oyun-backtest/03_egri.html" baslik="İşlem tepkilerinin 2024 sonrasında birikimli sonucu" no="03" kaynak="Dukascopy" />
+
+- Merkez bankasında **güçlü karar mumunun yönünde** kalmak 11 işlemin
+  %91 kadarını kazandı (net +0,38 R). İşlemler yalnız
+  7 karar gününe düşüyor; aynı kararda dört paritenin işlemi birlikte hareket eder. İşlem
+  düzeyindeki aralık (+0,25 … +0,46) bu yüzden olduğundan dardır;
+  karar günlerinden yeniden örneklenen aralık +0,22 … +0,46.
+  Yılda birkaç olay gelen bir kural için bu bir başlangıçtır, sonuç değil.
+- Merkez bankasında **reddedilen karar mumu** 7 işlemde
+  (4 karar günü) +0,25 R, **normal karar mumu**
+  51 işlemde +0,05 R ("zayıf").
+- ABD verisinde **güçlü veri mumu** 2024 → döneminde −0,37 R, **küçük veri mumu**
+  −0,06 R ("çalışmıyor").
+
+## İzle, işlem açma
+
+Bu hücrelerde 2018–2023'te denenen hiçbir aday maliyetten sonra artıda kalmadı. Tabloda denenen aday sayısı ve en
+iyisinin sonucu:
+
+| An ailesi · ilk mum | denenen tepki | en iyisinin 2018–23 net R'si |
+|---|---:|---:|
+| Seans açılışları · güçlü | 7 | −0,08 |
+| Seans açılışları · küçük | 6 | −0,14 |
+| Seans açılışları · normal | 7 | −0,15 |
+| Seans açılışları · reddedilen | 7 | −0,12 |
+| Fiksingler · güçlü | 6 | −0,06 |
+| Fiksingler · küçük | 6 | −0,11 |
+| Fiksingler · normal | 6 | −0,10 |
+| Fiksingler · reddedilen | 6 | −0,09 |
+| Merkez bankası kararları · küçük | 6 | −0,07 |
+| ABD verileri · normal | 7 | −0,05 |
+| ABD verileri · reddedilen | 7 | −0,12 |
+
+Açılış ve fiksinglerin bütün hücreleri burada. Plan bu anlarda okumayı sürdürür ama işlem önermez.
+
+## Günün haritası
+
+Planın bütün okumaları tek tabloda, günün sırasıyla. Saatler TSİ; parantez içi İngiltere, Avrupa ya da ABD kış
+saatinde.
+
+| TSİ | An | Ne beklenir | Ne yapılmaz |
+|---|---|---|---|
+| 03:00 | Tokyo açılışı | İlk 15 dakika bir aralık çizer; yön bilgisi yok | Güçlü mumu kovalamak, yarısında katılmak |
+| 03:55 | Tokyo fiksingi | Fiksinge koşu varsa bir geri çekilme | Fiksingden sonra koşunun yönünde girmek |
+| 10:00 (11:00) | Londra açılışı | Normal mumda birkaç dakika içinde yarısına dönüş | Yarıya dönüşü bir giriş sinyali saymak |
+| 14:00 (15:00) | BoE kararı | Tutanak kararla birlikte gelir; olay az | İlk mumdan hüküm kurmak |
+| 15:15 (16:15) | ECB kararı | Basın toplantısı yarım saat sonra | İlk mumu son söz saymak |
+| 15:30 (16:30) | ABD verisi | İlk mumun itişi şanstan seyrek sürer | Veri mumunun yönünde kalmak |
+| 16:30 (17:30) | New York açılışı | Açılışlardaki gibi: aralık, yön değil | Sessiz açılışın kırılımına girmek |
+| 18:00 (19:00) | Londra fiksingi | Koşunun bir kısmı geri verilir; ay sonunda koşu daha da az sürer | Fiksingden sonra koşuyu kovalamak; geri vermeyi maliyetle işlemek |
+| 21:00 (22:00) | FOMC kararı | Güçlü ya da reddedilen mumun yönü 2024 sonrasında sürdü; birkaç karar günü | Sınanmamış bir adayı kural saymak |
+
+## Bu sonuç nasıl okunmalı
+
+- **Okumalar iki dönemde aynı kaldı.** Açılışta ve fiksingte fiyatın davranışı iki dönemde de aynı. Bu okumaların
+  başka bir kurulumu iyileştirip iyileştirmediği bu seride ölçülmedi.
+- **Plan bir işlem sistemi olarak kazandırmıyor.** Açılışta okumanın kenarı maliyetten önce de yok; fiksingde var ama
+  maliyeti karşılayacak kadar büyük değil.
+- **Kazanma oranı kurulabilir, kâr kurulamadı.** Yakın hedefle işlemlerin çoğunu kazanmak mümkün; ama açılış ve
+  fiksinglerde 2018–2023'te denenen stop ve hedef bileşimlerinin hiçbiri bu maliyetle net sonucu artıya çevirmedi.
+- **Merkez bankası kararları izlenecek tek yer.** Artı sonuç 2024 → döneminde orada; ama birkaç karar gününe dayanıyor.
+  Bir kural olması için bundan sonraki kararlarda, bugünkü hâliyle değiştirilmeden sınanması gerekir.
+
+## Ölçülmeyenler
+
+- Gerçek sürpriz: veri ve kararlarda beklentiye göre sapma ölçülmedi; ilk mum sapmanın vekilidir.
+- Basın toplantısının karar metninden ayrı etkisi.
+- Gün içi dokunuşların sırası dakikadan kısa sürelerde (aynı dakikada stop ve hedef görülürse stop sayıldı).
+- Piyasa derinliği, kısmi dolum, komisyon ve emir gecikmesi.
+- EUR/USD, GBP/USD, USD/JPY ve AUD/USD dışındaki pariteler ve beş dakikadan kısa ilk mumlar.
+
+Veri Dukascopy'nin bir dakikalık alış ve satış fiyatlarıdır (2018 başından 15.10.2026 tarihine kadar).

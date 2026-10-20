@@ -100,26 +100,22 @@ export const GRUPLAR: DersGrubu[] = [
   {
     id: 'fx-gunici',
     no: '07',
-    baslik: 'FX gün içi stratejiler — backtest serisi',
+    baslik: 'FX gün içi — açılış, fiksing ve haber anlarının oyun planı',
     aciklama:
-      'Gün içi FX işlem kitaplarının en çok anılan kuralları dört majör paritede, gerçek alış-satış ' +
-      'fiyatıyla ve maliyet düşülerek sınandı. Sekiz kısa ders: hangi kural işe yarıyor, her kural adım ' +
-      'adım grafik üstünde (hangi saatte ne olursa ne yapılır), kurallar tek tek ' +
-      '(ne yapar, ne verdi, stop ve hedef nerede olsaydı ne değişirdi), stop ve hedefin aritmetiği, ' +
-      'süzgeçler (EMA20 yönü, oynaklık şartı), bir kuralı denemeden önce neye bakılmalı. ' +
-      'Ayrıntılı yöntem notları arşivde.',
+      'Günün belirli anlarında (Tokyo, Londra ve New York açılışları, Tokyo ve Londra fiksingleri, ABD ' +
+      'istihdam ve enflasyon verisi, Fed, ECB ve BoE kararları) ilk mumdan sonra fiyat genelde ne yapıyor? ' +
+      'İlk mum dört sınıfa ayrılır, her sınıfın davranışı okunur ve bir oyun planı yazılır; plan 2018–2023 ' +
+      'verisinden yazıldı, 2024 sonrasında gerçek alış-satış fiyatları ve maliyetle sınandı. Beş ders. ' +
+      'Önceki kural sınamaları arşivde.',
     hat: true,
-    // Sıra tek tanımdan: Aktarılacak Projeler/FxGunici/adlar.py (DERS_SIRA); dogrula.py ikisini karşılaştırır.
-    // Arşivdeki dokuz uzun ders (adlar.ARSIV_SIRA) listede görünmez.
+    // Sıra tek tanımdan: Aktarılacak Projeler/FxOyun/ders_yaz.py (SIRA); FxOyun/dogrula.py ikisini karşılaştırır.
+    // Önceki seri (Aktarılacak Projeler/FxGunici, on yedi ders) arşivde: listelerde görünmez, adresleri açık.
     slugSirasi: [
-      'fx-gunici-sonuc',
-      'fx-gunici-nasil',
-      'fx-gunici-kirilim',
-      'fx-gunici-donus',
-      'fx-gunici-akis-haber',
-      'fx-gunici-stop-hedef',
-      'fx-gunici-suzgec',
-      'fx-gunici-kontrol',
+      'fx-oyun-okuma',
+      'fx-oyun-acilislar',
+      'fx-oyun-fiksingler',
+      'fx-oyun-haberler',
+      'fx-oyun-backtest',
     ],
     etiketler: ['gun-ici'],
   },

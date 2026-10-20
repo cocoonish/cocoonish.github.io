@@ -3,7 +3,7 @@ title: 'FX Gün İçi Stratejiler 8: Bir Kuralı Denemeden Önce — Kontrol Lis
 description: "Bir gün içi FX kuralını kendiniz sınamak ya da uygulamak istiyorsanız önce bakılacak altı şey: maliyetinizin pip karşılığı, stopun maliyete oranı, kazanma oranı yerine işlem başına net sonuç, kaç işlemin yeteceği, ayarların önceden yazılması ve ileriye dönük izleme."
 pubDate: 2026-10-19
 tags: ['fx', 'gun-ici', 'backtest', 'strateji', 'ders', 'risk']
-durum: 'aktif'
+durum: 'arsiv'
 kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · önceden kayıt'
 ozet: "Kuralların sonucunu önceki dersler anlattı; bu ders, bir kuralı kendiniz denemek isterseniz neye bakmanız gerektiğini sayılarla veriyor: maliyetin pip karşılığı, stopun maliyete oranı, net sonuç, gereken işlem sayısı, önceden yazılmış ayarlar ve adayların ileriye dönük izlenmesi."
 seviye: 'giris'
@@ -11,6 +11,8 @@ onkosul:
   - fx-gunici-sonuc
   - fx-gunici-stop-hedef
 ---
+
+<div class="not gezinme"><span class="etiket">Arşiv</span> Bu ders gün içi FX kurallarının ayrıntılı sınamasındandır ve arşivdedir. Gün içi seri şimdi açılış, fiksing ve haber anlarının oyun planı olarak beş derste: [1 · İlk mumu okumak](/arastirma/fx-oyun-okuma/) · [2 · Açılışlar](/arastirma/fx-oyun-acilislar/) · [3 · Fiksingler](/arastirma/fx-oyun-fiksingler/) · [4 · Haber mumları](/arastirma/fx-oyun-haberler/) · [5 · Backtest](/arastirma/fx-oyun-backtest/).</div>
 
 Önceki dersler iki şey gösterdi: sınanan kuralların hiçbiri maliyetten sonra güvenilir biçimde kazandırmıyor, ve stop ile
 hedefi değiştirmek bunu değiştirmiyor. Bu ders bir adım geri çekilip pratik bir soru soruyor: bir kuralı kendiniz denemek

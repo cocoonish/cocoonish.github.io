@@ -1,0 +1,187 @@
+---
+title: 'FX Gün İçi Oyun Planı 1: İlk Mumu Okumak'
+description: "Açılışlar, fiksingler, ABD verileri ve merkez bankası kararları: fiyat bu anlarda ilk mumdan sonra genelde ne yapıyor, ve bunun ne kadarı gerçekten bir şey söylüyor? İlk mumu dört sınıfa ayırıp 2018–2023'teki 31.516 olayda okuyan, şansın vereceği payla kıyaslayan ve 2024 sonrasında sınanan bir oyun planı."
+pubDate: 2026-10-19
+tags: ['fx', 'gun-ici', 'oyun-plani', 'backtest', 'ders']
+durum: 'aktif'
+kaynak: 'Dukascopy 1 dakikalık bid/ask (2018–2026) · önceden kayıt'
+ozet: "Bir gün içi işlemci için günün belirli anları vardır: açılış, fiksing, veri, karar. Bu ders o anların ilk mumunu dört sınıfa ayırır, fiyatın her sınıftan sonra ne yaptığını gösterir ve bunun ne kadarının şansın, yani mumun kendi şeklinin vereceği pay olduğunu ayırır. Serinin oyun planı bu ayrımın üstüne kurulur."
+seviye: 'giris'
+---
+
+import GrafikEmbed from '../../components/GrafikEmbed.astro';
+
+Bir gün içi işlemcinin günü saatlere değil anlara bölünür. Tokyo açılır, Londra açılır, New York açılır; Tokyo ve
+Londra'da kur fiksingleri yapılır; ayın belirli günlerinde ABD istihdam ve enflasyon verisi gelir; altı haftada bir
+merkez bankaları karar açıklar. Bu anların her birinde fiyat kısa bir süre içinde bir şey söyler. O ilk söz, yani **ilk
+mum**, çoğu işlemcinin günün geri kalanını okuduğu yerdir.
+
+Bu seri o anları anlatır. Bir kural listesi değildir: "fiyat şu seviyeyi kırarsa al" demez. Her anın ilk mumunu bir
+sınıfa koyar, o sınıftan sonra fiyatın genelde ne yaptığını gösterir ve bunun üstüne bir **oyun planı** yazar: bu
+anda ne beklenir, ne beklenmez, nerede sabırlı olunur, nerede masadan kalkılır. Plan 2018–2023 verisinden yazıldı;
+planın tepkileri 2024 sonrası veride hiç koşturulmadan kaydedildi ve sonra 2024 → döneminde, gerçek alış-satış
+fiyatları ve maliyetle sınandı.
+
+## Kısaca
+
+- **Açılışta ilk mum yön söylemiyor.** Güçlü bir açılış mumu çoğu zaman devam ediyor gibi görünür
+  (%54 devam, %36 dönüş), ama fiyatın yönü rastgele olsaydı da
+  aynı pay çıkardı (%53 ve %37): güçlü mum ucunda
+  kapandığı için "devam" eşiği zaten yakındadır. Açılış mumunun yarısına dönmesi de
+  (%88) şansın verdiği payla aynı (%88).
+- **Fiksingde gerçek bir davranış var.** Fiksinge güçlü koşan fiyat koşunun yarısını %53
+  geri verdi; şansla beklenen %45. Koşunun sürme payı ise şansın altında
+  (%24 ve %29). İki fark 2024 → döneminde de aynı yönde.
+- **ABD verisinden sonra ilk mum şanstan az sürüyor.** Normal bir veri mumunun devam payı 2018–2023'te
+  %38 (şansla %48), 2024 → döneminde
+  %13 (%34). Bu bir okuma; bu yönde bir tepki önceden
+  yazılmadığı için sınanmadı.
+- **Merkez bankası kararlarında olay az.** Planın artı sonuç veren tek tepkileri burada, ama işlem sayıları bir hüküm
+  kurmaya yetmiyor.
+- **Yüksek kazanma oranı kurmak kolay, kâr etmek değil.** Açılışta ilk mumun yarısına limitle girip yarım R hedefleyen
+  tepkiler 2024 → döneminde işlemlerin %55–%61
+  kadarını kazandı; başa baş için %68 gerekiyordu.
+
+Bu sonuç ilk bakışta kafa karıştırır: işlemlerin çoğu kazanıyorsa nasıl kaybedilir? Cevap aşağıda, "Kazanma oranı
+ile net sonuç" başlığında.
+
+## İncelenen on an
+
+Seri on anı inceler; hepsi EUR/USD, GBP/USD, USD/JPY ve AUD/USD paritelerinde. Saatler yerel saat ve Türkiye saati (TSİ) olarak
+verilir. İngiltere, Avrupa ve ABD yaz saatine geçtiğinde TSİ karşılığı bir saat erkene kayar; Tokyo yaz saati
+uygulamaz.
+
+| An | Yerel saat | TSİ | İlk mum | İzlenen süre |
+|---|---|---|---:|---:|
+| Tokyo açılışı | Tokyo 09:00 | 03:00 | 15 dk | 180 dk |
+| Londra açılışı | Londra 08:00 | 10:00 (İngiltere kış saatinde 11:00) | 15 dk | 180 dk |
+| New York açılışı | New York 09:30 | 16:30 (ABD kış saatinde 17:30) | 15 dk | 120 dk |
+| Tokyo fiksingi | Tokyo 09:55 | 03:55 | 30 dk (fiksinge kadar) | 60 dk |
+| Londra fiksingi (WM/R) | Londra 16:00 | 18:00 (İngiltere kış saatinde 19:00) | 30 dk (fiksinge kadar) | 60 dk |
+| Tarım dışı istihdam | New York 08:30 | 15:30 (ABD kış saatinde 16:30) | 5 dk | 120 dk |
+| ABD TÜFE | New York 08:30 | 15:30 (ABD kış saatinde 16:30) | 5 dk | 120 dk |
+| FOMC kararı | New York 14:00 | 21:00 (ABD kış saatinde 22:00) | 5 dk | 120 dk |
+| ECB kararı | Frankfurt 14:15 | 15:15 (Avrupa kış saatinde 16:15) | 5 dk | 120 dk |
+| BoE kararı | Londra 12:00 | 14:00 (İngiltere kış saatinde 15:00) | 5 dk | 120 dk |
+
+ECB kararı 09.06.2022 tarihine kadar Frankfurt 13:45'te açıklanıyordu (TSİ 14:45; Avrupa kış saatinde 15:45); ölçüm her olayı kendi gününün saatinden okur.
+
+**İlk mum** açılışlarda açılıştan sonraki ilk 15 dakikadır. Fiksinglerde ilk mum fiksinge
+giden 30 dakikadır, yani fiyatın fiksinge kadar yaptığı koşu; plan fiksingden sonrasını okur. Veri ve
+kararlarda ilk mum açıklamadan sonraki ilk 5 dakikadır. **İzlenen süre**, ilk mumdan sonra fiyatın
+ne yaptığına bakılan penceredir.
+
+## İlk mumun dört sınıfı
+
+Bir mumun büyük mü küçük mü olduğu, o anın kendi geçmişine göre söylenir: Londra açılışının sıradan mumu Tokyo
+açılışının sıradan mumundan büyüktür. Her anın **tipik boyu**, o anın son 60 olayındaki ilk
+mum boylarının ortancasıdır (en az 20 olay); veri ve kararlarda son 24 olay
+(en az 8). Hesap yalnız geçmiş olaylardan yapılır, o günün mumu kendi ölçüsüne girmez.
+
+- **Güçlü.** Boyu tipik boyun en az 1,25 katı ve gövdesi boyunun en az %60
+  kadarı. Fiyat bir yöne gitmiş ve o yönde kapanmış. Yönü mumun yönüdür.
+- **Reddedilen.** Gövdesi boyunun en çok %35 kadarı, fitillerinden biri boyunun en az
+  %50 kadarı ve boyu tipik boyun en az 0,75 katı. Fiyat bir yöne gitmiş, orada
+  satıcı ya da alıcı bulmuş ve geri itilmiş. Yönü reddin yönüdür: üstte uzun fitil aşağı, altta uzun fitil yukarı.
+- **Küçük.** Boyu tipik boyun 0,60 katından küçük. Piyasa o anda bir şey söylememiş. Yönü yoktur;
+  plan hangi tarafın önce kırıldığına bakar.
+- **Normal.** Kalan her mum. Yönü gövdesinin yönüdür.
+
+Aynı açılışın dört sınıftan dört örneği (EUR/USD, Londra açılışı; her şeklin altında günü ve TSİ saati):
+
+<GrafikEmbed src="/arastirma/fx-oyun-okuma/01_siniflar.html" baslik="İlk mumun dört sınıfı: aynı açılış, dört gün" no="01" kaynak="Dukascopy" />
+
+Şekildeki kesikli çizgi ilk mumun **yarısıdır** (orta noktası). Bu seride en çok bakılan seviye odur.
+
+## Trend
+
+Her ilk mum bir de günlük trendle karşılaştırılır. Trend, bir önceki günün kapanışının 20 günlük üssel
+ortalamaya göre yeridir: kapanış ortalamanın üstünde ve ortalama son 5 günde yükselmişse trend yukarı,
+ikisi de tersi ise aşağı, başka her durumda yatay. İlk mumun yönü trendle aynıysa mum **trend yönünde**, tersse
+**trende karşı** sayılır.
+
+Açılış ve fiksing derslerinde trend ayrımı bir tabloyla verilir ve sayıları değiştirmiyor. Haber anlarında olay sayısı
+böyle bir ayrım için yetmiyor. Plan trendi bir okuma bilgisi olarak taşır, karar ölçütü yapmaz.
+
+## İlk mumdan sonra ne olabilir
+
+İlk mum kapandıktan sonra izlenen süre içinde dört şeye bakılır. Hepsi ilk mumun **boyu** cinsinden ölçülür:
+
+- **Yarısına döndü.** Fiyat mumun orta noktasına geri geldi. (Fiksingde: koşunun yarısını geri verdi.)
+- **Devam etti.** Fiyat, mumun öbür ucunu görmeden, kendi ucunu yarım mum boyu aştı.
+- **Tersine döndü.** Fiyat, kendi ucunu yarım mum boyu aşmadan, mumun öbür ucunu kırdı.
+- **Geri çekilip devam etti.** Fiyat önce yarısına döndü, sonra öbür uca gitmeden kendi ucuna ulaştı.
+
+Aynı dakikada iki seviye birden görülürse hangisinin önce geldiği bilinemez; o olay iki sonuçta da "olmadı" sayılır.
+
+## Şans ne verirdi: yolun aynası
+
+Bir payın bir şey söyleyip söylemediği, şansın aynı ölçüde ne vereceği bilinmeden kurulamaz. Burada şansın payı
+mumun **şeklinden** gelir. Güçlü bir mum ucuna yakın kapanır. Kapanıştan "devam" eşiği (kendi ucunun yarım mum boyu
+ötesi) yakın, "dönüş" eşiği (öbür uç) uzaktır. Fiyat yazı tura atsa bile devam dönüşten sık görünür. Normal bir mum
+ise ortasına yakın kapanır, yani "yarısına dönüş" zaten bir adım ötededir.
+
+Bu payı ayırmak için her olayda ilk mumdan sonraki fiyat yolu, ilk mumun kapanışına göre **aynalanır**: yukarı giden
+her hareket aşağı, aşağı giden her hareket yukarı yazılır, ve aynı dört ölçü aynalanmış yolda yeniden hesaplanır. Yol
+ile aynası, yönü olmayan bir fiyatta eşit olasıdır. Gerçek pay ile aynanın payı aynıysa ilk mum yön bilgisi
+taşımıyordur. Fark varsa, fark ilk mumun söylediği şeydir.
+
+Açılış, fiksing ve ABD verisinde, üç yönlü sınıfta, iki dönemde bu farkın kendisi (gerçek pay eksi aynadaki pay,
+puan). Merkez bankası kararlarında olay az olduğu için fark birkaç olayla onlarca puan oynar; o aile haber dersinde
+kendi tablosuyla verilir.
+
+<GrafikEmbed src="/arastirma/fx-oyun-okuma/02_yarisi.html" baslik="Gerçek pay eksi şansın payı: açılışta sıfır, fiksingde geri verme" no="02" kaynak="Dukascopy" />
+
+Şekil serinin özetidir. Açılışlarda üç ölçünün farkı da sıfır çevresinde: açılış mumunun söylediği her şey kendi
+şeklinin sonucudur. Fiksinglerde koşunun yarısını geri verme payı iki dönemde de şansın üstünde, sürme payı altında.
+ABD verisinin normal ve reddedilen mumunda devam payı iki dönemde de şansın altında.
+
+## Kazanma oranı ile net sonuç
+
+Planın her okuması bir **tepkiye** çevrilip sınandı: ilk mumun yarısına limitle mumun yönünde girmek, küçük mumun
+kırılan ucundan girmek, fiksingde koşunun tersine girmek gibi. Her tepkinin bir stopu ve bir hedefi var.
+
+Sonuç **R** cinsinden yazılır. R, riske edilen mesafedir: giriş ile stop arası. Hedef girişten riskin yarısı kadar
+uzaktaysa ("hedef yarım R") kazanan işlem yarım R kazanır, stopa gelen işlem bir R kaybeder. Böyle bir tepkinin başa
+baş kalması için işlemlerin üçte ikisini kazanması gerekir: üç işlemin ikisi kazanıp biri kaybederse toplam sıfırdır.
+
+Kazanma oranı tek başına hiçbir şey söylemez. Hedef yaklaştıkça kazanma oranı yükselir, ama kazanan işlemin getirdiği
+de küçülür. Açılışlarda güçlü ilk mumun yarısına limitle girip yarım R hedefleyen tepki 2024 → döneminde işlemlerin
+%61 kadarını kazandı. Ortalama kazanç +0,50 R,
+ortalama kayıp −1,05 R, başa baş için gereken kazanma oranı
+%68. İşlemlerin %38 kadarı tam bir R'lik
+stopla kapandı ve yarım R'lik kazançlar bunu karşılamadı. Sonuç işlem başına −0,10 R.
+
+Net sonuç maliyetten sonradır. Her işlem gerçek alış-satış farkını (makas) öder: alış emri satış fiyatından, satış
+emri alış fiyatından dolar, stop ve hedef de çıkış tarafının fiyatından sorulur. Piyasa, stop ve kırılım emirleri
+ayrıca 0,5 pip kayma öder; veri ve karar anında (açıklamadan iki dakika önce ile on beş dakika sonrası
+arası) ek 1,0 pip. Limit emir kendi fiyatından dolar, kayma ödemez. Riski 3,0
+pipten küçük işlem açılmaz. Her tepkinin bir de **maliyetsiz** sonucu var: aynı kurallar orta fiyatla, makas ve kayma
+olmadan. İkisinin farkı maliyetin payıdır.
+
+## Bu planın dürüstlük kuralları
+
+- **Plan 2018–2023'ten yazıldı.** Gözlem (31.516 olay) ve tepkilerin seçimi yalnız o dönemin verisiyle
+  yapıldı; gözlem sırasında 2024 sonrasının verisine bakılmadı.
+- **Seçim kuralı önceden yazıldı.** Bir an ailesi ve ilk mum sınıfı için "işlem" tepkisi, 2018–2023'te en az
+  30 işlemi olan ve maliyetten sonra artıda kalan adaylardan en iyisidir. Hiçbir aday artıda
+  değilse o hücrede plan "izle, işlem açma" der. Bu kural gereği seçilen her tepkinin 2018–2023 sonucu artıdır; o
+  sonuç kanıt değildir, kanıt 2024 → sonucudur.
+- **Hüküm 2024 → döneminden verilir.** İşlem başına net sonucun güven aralığı (işlemlerden yeniden örnekleme,
+  2.000 tekrar) tamamen sıfırın üstündeyse **çalışıyor**, ortalama artı ama aralık sıfırı kapsıyorsa
+  **zayıf**, ortalama eksiyse **çalışmıyor**. 20 işlemin altında hüküm **ölçülemedi**dir; sonuç
+  yine yazılır.
+- **Bilinen sınırlar.** Referans tepkilerin 2018–2023 sonucu plan yazılırken biliniyordu. Bu verinin 2024 sonrası
+  dönemiyle daha önce yirmi iki gün içi kural sınanmış ve yayımlanmıştı; o kuralların çoğunun maliyetten sonra eksi
+  kaldığı biliniyordu. Bu planın kendi tepkilerinin 2024 sonrası sonucu ise hiç ölçülmemişti. Yolun aynası ölçüsü
+  iki dönem de görüldükten sonra eklendi; bir betimlemedir, hüküm değildir.
+
+Veri: Dukascopy bir dakikalık alış ve satış fiyatları, 2018 başından 15.10.2026 tarihine kadar.
+
+## Serinin dersleri
+
+1. **İlk mumu okumak** (bu ders): anlar, sınıflar, ölçüler.
+2. [**Açılışlar**](/arastirma/fx-oyun-acilislar/): Tokyo, Londra ve New York açılışlarının oyun planı.
+3. [**Fiksingler**](/arastirma/fx-oyun-fiksingler/): Tokyo fiksingi ve Londra'nın WM/R fiksingi; ay sonu.
+4. [**Haber mumları**](/arastirma/fx-oyun-haberler/): ABD istihdam ve enflasyon verisi, Fed, ECB ve BoE kararları.
+5. [**Backtest**](/arastirma/fx-oyun-backtest/): planın bütün tepkileri iki dönemde, maliyetle; günün haritası.
