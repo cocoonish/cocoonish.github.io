@@ -102,6 +102,21 @@ const analiz = defineCollection({
     veriTarihi: z.coerce.date().optional(),
     /** Yayımlanmış bir sayının düzeltme kaydı — bültenle aynı sözleşme; /duzeltmeler/ toplar. */
     duzeltmeler: duzeltmeSema,
+    /** ANALİZ HAFIZASI: İzleme listesinin makinece okunur ikizi. Sayfa BASMAZ;
+     *  bülten yazarının ilk ekranı (bulten/zincir.py) ve denetimi okur
+     *  (ortak/analiz_hafiza.py). `tarih` → olay günü; yalnız `bitis` → o güne kadar
+     *  izlenen açık risk (`anahtar` haber başlıklarında aranır). `ifade` yazının
+     *  kendi metninden bir parçadır; analiz sınavı onu gövdede arar. */
+    izleme: z
+      .array(z.object({
+        tarih: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        bitis: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        olay: z.string().min(1),
+        soru: z.string().min(1),
+        ifade: z.string().min(1),
+        anahtar: z.array(z.string()).default([]),
+      }).refine((k) => k.tarih || k.bitis, { message: 'izleme kalemi tarih ya da bitis taşımalı' }))
+      .default([]),
   }),
 });
 
