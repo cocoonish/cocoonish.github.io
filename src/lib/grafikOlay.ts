@@ -17,7 +17,8 @@
    düşüşünü piyasaya yorardı.
 
    İşaret, kararın kendisiyle aynı düzlemdeki serilere konur: para politikası
-   ve fonlama, piyasa (DİBS eğrisi, borsa), kredi ve mevduat faizleri, kur.
+   ve fonlama, piyasa (DİBS eğrisi, borsa), kredi ve mevduat faizleri, kur, TCMB
+   rezervleri ve dolarizasyon.
    Enflasyon, dış denge, kamu maliyesi ve büyüme serileri aylık ve çeyreklik
    yayımlanır; her gözlemi zaten bir yayımdır ve karar çizgisi orada bir
    nedensellik çağrışımı yapardı. Dünya ve küresel piyasa serilerinde TCMB
@@ -35,7 +36,7 @@ export interface Olay {
   yon: number;
 }
 
-export const OLAY_BASLIKLARI = ['para', 'piyasa', 'kredi', 'kur'];
+export const OLAY_BASLIKLARI = ['para', 'piyasa', 'kredi', 'kur', 'rezerv', 'dolar'];
 
 interface PpkKaydi { t: string; onceki: number; yeni: number; no: string | null }
 

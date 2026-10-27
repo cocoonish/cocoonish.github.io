@@ -44,7 +44,11 @@ export interface FigurKaynak {
 export interface DisKaynak { tur: 'evds' | 'yahoo'; kod: string; ad?: string }
 /** Hattın depodaki veri dosyasındaki bir sütun: panonun figürü serinin yalnız son yıllarını
  *  çiziyorsa uzun tarihçe buradan gelir (cek.py taşır; derleme o dosyayı göremez). */
-export interface HatKaynak { tur: 'hat'; proje: string; dosya: string; sutun: string; carpan?: number }
+export interface HatKaynak {
+  tur: 'hat'; proje: string; dosya: string; sutun: string; carpan?: number;
+  /** Pay: sütun / payda × çarpan (ör. altının brüt rezervdeki payı); iki sütun hattın aynı satırından. */
+  payda?: string;
+}
 /** Katalogdaki BAŞKA bir seriden türetilen seri (ör. USD/TRY'nin gerçekleşen oynaklığı):
  *  taban serinin dosyası okunur, ikinci bir çekim yapılmaz. Taban kendisi türetilmiş olamaz. */
 export interface SeriKaynak { tur: 'seri'; seri: string }
@@ -59,10 +63,18 @@ export interface SeriTanim {
   ondalik: number;
   kurum: string;
   kaynak: FigurKaynak | DisKaynak | HatKaynak | SeriKaynak;
-  /** Ham seriden türetme: endeksin yıllık ya da aylık % değişimi; ya da günlük kapanıştan
-   *  `pencere` iş günlük yıllıklandırılmış gerçekleşen oynaklık. */
-  turet?: 'yillik_yuzde' | 'aylik_yuzde' | 'oynaklik';
+  /** Ham seriden türetme: endeksin yıllık ya da aylık % değişimi; günlük kapanıştan
+   *  `pencere` iş günlük yıllıklandırılmış gerçekleşen oynaklık; ya da `pencere` iş günlük
+   *  ACT/365 yıllıklandırılmış devalüasyon hızı (USD/TRY panosunun tanımı). */
+  turet?: 'yillik_yuzde' | 'aylik_yuzde' | 'oynaklik' | 'deval';
   pencere?: number;
+  /** Yalnız `deval`: son `ortalama` iş gününde biten pencerelerin ortalaması (panonun
+   *  "son hafta ortalaması" — tek günlük kotasyon sıçramasını söndürür). */
+  ortalama?: number;
+  /** Türetmeden ÖNCE: art arda `toplam` gözlemin toplamı (ör. haftalık harcamanın dört
+   *  haftalık, aylık gelirin on iki aylık toplamı). Aradaki boşluk frekansın payını aşarsa
+   *  o toplam kurulmaz — eksik bir hafta toplamı küçültüp sahte bir düşüş çizerdi. */
+  toplam?: number;
   aciklama: string;
 }
 
@@ -268,6 +280,69 @@ function oynaklik(s: Seri, n: number): Seri {
   return { t, v };
 }
 
+const GUN_MS = 864e5;
+const gunMs = (t: string) => Date.UTC(+t.slice(0, 4), +t.slice(5, 7) - 1, +t.slice(8, 10));
+const msGun = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+/** DEVALÜASYON HIZI — USD/TRY panosunun tanımı (Aktarılacak Projeler/USDTRYDeval,
+ *  `deval_act365` ve `ozet_uret.deval`): kapanışlar takvim gününe zaman ağırlıklı
+ *  doğrusal ara değerle yayılır, yalnız hafta içi günler kalır (tatil bir ara değer
+ *  taşır — ham gözlem üzerinden n adım gitmek resmî tatilde pencereyi kaydırırdı), ve
+ *      hız(t) = (P_t / P_{t−n})^(365 / Δd) − 1      (Δd: iki günün takvim farkı)
+ *  `ortalama` verilirse son `ortalama` hafta içi günde biten pencerelerin ortalaması.
+ *  Sonuç yalnız GERÇEK gözlem günlerinde yazılır: ara değerli tatil günü bir gözlem değildir. */
+function deval(s: Seri, n: number, ort = 1): Seri {
+  if (s.t.length < 2) return { t: [], v: [] };
+  const ms = s.t.map(gunMs);
+  const gt: number[] = [];
+  const gv: number[] = [];
+  let j = 0;
+  for (let d = ms[0]; d <= ms[ms.length - 1]; d += GUN_MS) {
+    while (j < ms.length - 1 && ms[j + 1] < d) j++;
+    const hg = new Date(d).getUTCDay();
+    if (hg === 0 || hg === 6) continue;
+    let v: number;
+    if (d === ms[j]) v = s.v[j];
+    else if (j < ms.length - 1 && d === ms[j + 1]) v = s.v[j + 1];
+    else v = s.v[j] + (s.v[j + 1] - s.v[j]) * ((d - ms[j]) / (ms[j + 1] - ms[j]));
+    gt.push(d);
+    gv.push(v);
+  }
+  const hiz: (number | null)[] = gv.map((p1, i) => {
+    if (i < n || !(gv[i - n] > 0) || !(p1 > 0)) return null;
+    const gun = (gt[i] - gt[i - n]) / GUN_MS;
+    return ((p1 / gv[i - n]) ** (365 / gun) - 1) * 100;
+  });
+  const gercek = new Set(ms);
+  const t: string[] = [];
+  const v: number[] = [];
+  for (let i = 0; i < gt.length; i++) {
+    if (!gercek.has(gt[i])) continue;
+    const p = hiz.slice(Math.max(0, i - ort + 1), i + 1);
+    if (p.length < ort || p.some((x) => x === null)) continue;
+    t.push(msGun(gt[i]));
+    v.push((p as number[]).reduce((a, b) => a + b, 0) / ort);
+  }
+  return { t, v };
+}
+
+/** Art arda `n` gözlemin toplamı; ardışık iki gözlem arasındaki boşluk frekansın
+ *  payını aşan pencere kurulmaz. */
+const TOPLAM_BOSLUK_GUN: Record<Frekans, number> = { gunluk: 10, haftalik: 10, aylik: 35, ceyreklik: 100 };
+function toplamSerisi(s: Seri, n: number, frekans: Frekans): Seri {
+  const ms = s.t.map(gunMs);
+  const t: string[] = [];
+  const v: number[] = [];
+  for (let i = n - 1; i < s.t.length; i++) {
+    let tamam = true;
+    for (let k = i - n + 2; k <= i; k++) if (ms[k] - ms[k - 1] > TOPLAM_BOSLUK_GUN[frekans] * GUN_MS) tamam = false;
+    if (!tamam) continue;
+    t.push(s.t[i]);
+    v.push(s.v.slice(i - n + 1, i + 1).reduce((a, b) => a + b, 0));
+  }
+  return { t, v };
+}
+
 // ── Katalog ───────────────────────────────────────────────────
 
 let kurulmus: KurulmusSeri[] | null = null;
@@ -296,9 +371,12 @@ export function seriler(): KurulmusSeri[] {
   kurulmus = TANIMLAR.map((d) => {
     const r = ham(d);
     let seri = r.seri ?? { t: [], v: [] };
-    if (r.seri && d.turet === 'yillik_yuzde') seri = yillikYuzde(r.seri, d.frekans);
-    if (r.seri && d.turet === 'aylik_yuzde') seri = aylikYuzde(r.seri);
-    if (r.seri && d.turet === 'oynaklik') seri = oynaklik(r.seri, d.pencere ?? 20);
+    const taban = r.seri && d.toplam ? toplamSerisi(r.seri, d.toplam, d.frekans) : r.seri;
+    if (taban) seri = taban;
+    if (taban && d.turet === 'yillik_yuzde') seri = yillikYuzde(taban, d.frekans);
+    if (taban && d.turet === 'aylik_yuzde') seri = aylikYuzde(taban);
+    if (taban && d.turet === 'oynaklik') seri = oynaklik(taban, d.pencere ?? 20);
+    if (taban && d.turet === 'deval') seri = deval(taban, d.pencere ?? 21, d.ortalama ?? 1);
     const n = seri.t.length;
     return {
       ...d,
