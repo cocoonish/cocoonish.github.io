@@ -1,0 +1,177 @@
+---
+/* Grafikler bölümünün büyük grafiği: dönem · gösterim · (kıyas) · tablo · CSV.
+   Tek seri sayfası ve hazır grafik sayfası aynı paneli kullanır; davranış
+   lib/grafikSayfa'da, veri sayfanın `seri-veri` bloğunda. Betik kapalıyken
+   son gözlemler aşağıdaki tabloda okunur. */
+import { olcuYaz } from '../lib/bicim';
+import { donusumler, tarihEtiketi, type Frekans, type Tur } from '../lib/grafikDonusum';
+import type { SayfaVeri } from '../lib/grafikSayfa';
+
+interface Props {
+  veri: SayfaVeri;
+  /** Ekran okuyucu için grafiğin adı. */
+  ad: string;
+  frekans: Frekans;
+}
+const { veri, ad, frekans } = Astro.props;
+const tur: Tur = veri.tur;
+const kiyaslar = veri.kiyaslar ?? [];
+const donusum = donusumler(tur, frekans);
+
+const ilk = veri.seriler.reduce((m, s) => (s.t[0] < m ? s.t[0] : m), veri.seriler[0].t[0]);
+const son = veri.seriler.reduce((m, s) => (s.t[s.t.length - 1] > m ? s.t[s.t.length - 1] : m), '');
+const ilkYil = +ilk.slice(0, 4);
+const sonYil = +son.slice(0, 4);
+const donemler = [
+  { kod: '6', ad: '6A' }, { kod: '12', ad: '1Y' }, { kod: '36', ad: '3Y' }, { kod: '60', ad: '5Y' }, { kod: '', ad: 'Tümü' },
+].filter((d) => !d.kod || sonYil - ilkYil >= +d.kod / 12 - 0.5);
+// Öntanımlı dönem: gün ve hafta serisinde beş yıl, ay ve çeyrek serisinde on yıldan uzunsa
+// beş yıl; tarihçenin tamamı bir düğmeyle açılır.
+const gunlukMu = frekans === 'gunluk' || frekans === 'haftalik';
+const ontanimli = sonYil - ilkYil > (gunlukMu ? 5 : 10) ? '60' : '';
+
+// Betiksiz okur için son on iki gözlem günü (serilerin birleşimi).
+const haritalar = veri.seriler.map((s) => new Map(s.t.map((t, i) => [t, s.v[i]])));
+const gunler = [...new Set(veri.seriler.flatMap((s) => s.t))].sort().reverse().slice(0, 12);
+---
+
+<section class="grafik-blok yuksel" style="--d: 100ms" aria-label="Grafik">
+  <div class="denetim" data-grafik-denetim>
+    <div class="grup-dugme" role="group" aria-label="Dönem">
+      <span class="etiket">Dönem</span>
+      {donemler.map((d) => (
+        <button type="button" data-donem={d.kod} aria-pressed={String(d.kod === ontanimli)}>{d.ad}</button>
+      ))}
+    </div>
+    <div class="grup-dugme" role="group" aria-label="Gösterim">
+      <span class="etiket">Gösterim</span>
+      {donusum.map((d, i) => (
+        <button type="button" data-donusum={d.kod} aria-pressed={String(i === 0)}>{d.ad}</button>
+      ))}
+    </div>
+    {kiyaslar.length > 0 && (
+      <label class="kiyas">
+        <span class="etiket">Kıyasla</span>
+        <select data-kiyas>
+          <option value="">Kıyas yok</option>
+          {kiyaslar.map((k) => <option value={k.id}>{k.ad}</option>)}
+        </select>
+      </label>
+    )}
+    <div class="eylemler">
+      <button type="button" class="ikincil" data-tablo aria-expanded="false">Tablo</button>
+      <button type="button" class="ikincil" data-csv>CSV indir</button>
+    </div>
+  </div>
+
+  <div class="cizim-ust">
+    <span class="birim" data-birim>{veri.birim === '%' ? 'yüzde' : veri.birim}</span>
+    <ul class="lejant" data-lejant hidden></ul>
+  </div>
+  <div class="cizim-kap">
+    <div class="cizim" data-cizim tabindex="0" role="img" aria-label={`${ad} grafiği; ok tuşlarıyla gözlemler arasında gezilir`}>
+      <noscript><p class="grafik-bos">Grafik için tarayıcıda betik açık olmalı; son gözlemler aşağıdaki tabloda.</p></noscript>
+    </div>
+    <div class="ipucu" data-ipucu hidden></div>
+  </div>
+  <p class="durum" data-durum aria-live="polite"></p>
+
+  <div class="tablo-kap" data-tablo-kap>
+    <table class="sayi-tablosu">
+      <caption>Son gözlemler</caption>
+      <thead><tr><th scope="col">Tarih</th>{veri.seriler.map((s) => <th scope="col">{s.ad}</th>)}</tr></thead>
+      <tbody data-tablo-govde>
+        {gunler.map((t) => (
+          <tr>
+            <td>{tarihEtiketi(t, frekans)}</td>
+            {haritalar.map((h) => {
+              const v = h.get(t);
+              return <td>{v === undefined ? '—' : olcuYaz(v, veri.birim, veri.ondalik)}</td>;
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script type="application/json" id="seri-veri" set:html={JSON.stringify(veri)} />
+
+<script>
+  import { grafikSayfasiKur } from '../lib/grafikSayfa';
+  grafikSayfasiKur();
+</script>
+
+<style>
+  .denetim {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.7rem 1.4rem;
+    margin-bottom: 0.9rem;
+  }
+  .grup-dugme { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
+  .grup-dugme .etiket, .kiyas .etiket { color: var(--ink-60); margin-right: 0.3rem; }
+  .denetim button, .kiyas select {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--ink-30);
+    background: transparent;
+    color: var(--ink-70);
+    border-radius: 2px;
+    cursor: pointer;
+    min-height: 2rem;
+  }
+  .denetim button[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .denetim button:focus-visible, .kiyas select:focus-visible, .cizim:focus-visible { outline: 2px solid var(--claret); outline-offset: 2px; }
+  .kiyas { display: flex; align-items: center; gap: 0.3rem; }
+  .kiyas select { background: var(--paper); max-width: 17rem; }
+  .eylemler { display: flex; gap: 0.4rem; margin-left: auto; }
+
+  .cizim-ust { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem 1rem; margin-bottom: 0.2rem; }
+  .birim { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-60); }
+  .lejant { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.2rem 1rem; font-size: 0.9rem; }
+  .lejant[hidden] { display: none; }
+  /* Lejant öğelerini betik kurar: kapsamlı stil onlara ulaşmaz. */
+  .lejant :global(li) { display: flex; align-items: center; gap: 0.4rem; }
+  :global(.lejant-im), :global(.ipucu-im) { display: inline-block; width: 18px; height: 3px; border-radius: 2px; flex: none; }
+  .cizim-kap { position: relative; }
+  .cizim { width: 100%; min-height: 280px; }
+  .cizim :global(svg) { display: block; width: 100%; height: auto; touch-action: pan-y; }
+  .cizim :global(.izgara line) { stroke: var(--ink-15); stroke-width: 1; }
+  .cizim :global(.izgara line.sifir), .cizim :global(.izgara line.taban) { stroke: var(--ink-30); }
+  .cizim :global(.izgara line.isaret) { stroke: var(--ink-30); }
+  .cizim :global(.eksen-yazi) { font-family: var(--font-mono); font-size: 11px; fill: var(--ink-60); }
+  .cizim :global(.arti) { stroke: var(--ink-50); stroke-width: 1; stroke-dasharray: 3 3; }
+  :global(.grafik-bos) { color: var(--ink-70); font-style: italic; padding: 2rem 0; }
+  .ipucu {
+    position: absolute;
+    pointer-events: none;
+    background: var(--paper);
+    border: 1px solid var(--ink-30);
+    box-shadow: 0 2px 8px rgba(33, 27, 18, 0.12);
+    padding: 0.4rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    max-width: 24rem;
+    white-space: nowrap;
+    z-index: 2;
+  }
+  .ipucu :global(.ipucu-satir) { display: flex; align-items: center; gap: 0.4rem; }
+  .ipucu :global(.ipucu-ad) { color: var(--ink-70); font-size: 0.74rem; }
+  .ipucu :global(.ipucu-tarih) { color: var(--ink-60); font-size: 0.74rem; margin-top: 0.15rem; }
+  .durum { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-60); margin: 0.4rem 0 0; min-height: 1.2em; }
+
+  .tablo-kap { max-height: 26rem; overflow: auto; margin-top: 1rem; border-top: 1px solid var(--ink-15); }
+  .tablo-kap table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.82rem; }
+  .tablo-kap caption { text-align: left; font-size: 0.75rem; color: var(--ink-60); padding: 0.4rem 0; }
+  .tablo-kap th, .tablo-kap td { padding: 0.25rem 0.6rem 0.25rem 0; text-align: right; border-bottom: 1px solid var(--ink-15); }
+  .tablo-kap th:first-child, .tablo-kap td:first-child { text-align: left; }
+  .tablo-kap thead th { position: sticky; top: 0; background: var(--paper); color: var(--ink-60); font-weight: 500; }
+
+  @media (max-width: 640px) {
+    .eylemler { margin-left: 0; }
+    .birim, .durum { font-size: 0.75rem; }
+  }
+</style>

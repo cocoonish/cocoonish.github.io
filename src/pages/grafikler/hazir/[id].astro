@@ -1,0 +1,122 @@
+---
+import Base from '../../../layouts/Base.astro';
+import GrafikPanel from '../../../components/GrafikPanel.astro';
+import { olcuYaz } from '../../../lib/bicim';
+import { BASLIKLAR, kisaAdlar, setler, type KurulmusSet } from '../../../lib/grafikVeri';
+import { tarihEtiketi } from '../../../lib/grafikDonusum';
+import type { SayfaVeri } from '../../../lib/grafikSayfa';
+import { RENK, kesikMi } from '../../../lib/grafikSayfa';
+import { bolumBul } from '../../../lib/bolumler';
+
+export function getStaticPaths() {
+  // Gösterilemeyen hazır grafik için sayfa ÜRETİLMEZ (sayfa sınavı 30 adıyla listeler).
+  return setler()
+    .filter((h) => !h.sorun)
+    .map((h) => ({ params: { id: h.id }, props: { h } }));
+}
+
+const { h } = Astro.props as { h: KurulmusSet };
+const baslik = BASLIKLAR.find((b) => b.kod === h.baslik)!;
+const kisa = kisaAdlar(h.uyeler.map((u) => u.ad));
+const veri: SayfaVeri = {
+  id: h.id, birim: h.birim, tur: h.tur, ondalik: h.ondalik,
+  seriler: h.uyeler.map((u, i) => ({ id: u.id, ad: kisa[i], frekans: u.frekans, t: u.seri.t, v: u.seri.v })),
+};
+---
+
+<Base title={`${h.ad} — Hazır grafik`} description={`${h.ad}: ${h.aciklama}`}>
+  <header class="seri-baslik yuksel">
+    <p class="etiket kicker">
+      <a href="/grafikler/">{bolumBul('/grafikler/')?.no} — Grafikler</a>
+      <span aria-hidden="true"> · </span>
+      <a href={`/grafikler/#${baslik.kod}`}>{baslik.ad}</a>
+      <span aria-hidden="true"> · </span>
+      Hazır grafik
+    </p>
+    <h1>{h.ad}</h1>
+    <p class="alt">{h.aciklama}</p>
+  </header>
+
+  <ul class="uyeler yuksel" style="--d: 60ms">
+    {h.uyeler.map((u, i) => (
+      <li>
+        <span class:list={['im', { kesik: kesikMi(i) }]} style={`--renk: ${RENK[i]}`} aria-hidden="true"></span>
+        <a href={`/grafikler/${u.id}/`} class="uye-ad">{kisa[i]}</a>
+        <span class="uye-deger">{olcuYaz(u.sonDeger!, u.birim, u.ondalik)}</span>
+        <time datetime={u.sonTarih!}>{tarihEtiketi(u.sonTarih!, u.frekans)}</time>
+      </li>
+    ))}
+  </ul>
+
+  <GrafikPanel veri={veri} ad={h.ad} frekans={h.frekans} />
+
+  <section class="hesap-blok yuksel" style="--d: 140ms">
+    <div class="bolum-baslik"><h2>Bu grafikteki seriler nasıl hesaplanıyor</h2></div>
+    <p>
+      Grafikteki her seri bu bölümün tek seri sayfasındaki serinin kendisidir; hesabı, kaynağı ve
+      varsayımları o sayfada yazar. Seriler aynı birimde olduğu için tek eksende çizilir; "yıllık" ve
+      "aylık" gösterimde her seri kendi bir yıl ya da bir ay önceki gözlemiyle kıyaslanır.
+    </p>
+    <dl class="uye-hesap">
+      {h.uyeler.map((u) => (
+        <div>
+          <dt><a href={`/grafikler/${u.id}/`}>{u.ad}</a> · {u.kurum}</dt>
+          <dd>{u.aciklama}</dd>
+        </div>
+      ))}
+    </dl>
+    {h.eksik.length > 0 && (
+      <p class="kunye">Bu grafiğin {h.eksik.length} serisi şu an gösterilemiyor; gösterilebilenler çizildi.</p>
+    )}
+  </section>
+</Base>
+
+<style>
+  .seri-baslik { padding: 2.6rem 0 1.2rem; max-width: 62ch; }
+  .kicker { margin: 0 0 0.8rem; color: var(--claret); }
+  .kicker a { text-decoration: none; color: inherit; }
+  .kicker a:hover { text-decoration: underline; }
+  h1 {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 60;
+    font-size: clamp(1.8rem, 4.4vw, 2.6rem);
+    font-weight: 540;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    margin: 0 0 0.8rem;
+  }
+  .alt { color: var(--ink-70); margin: 0; font-size: 1.02rem; }
+
+  .uyeler {
+    list-style: none;
+    margin: 0 0 1.4rem;
+    padding: 0.5rem 0 0;
+    border-top: 1px solid var(--ink);
+    display: grid;
+    gap: 0.35rem;
+  }
+  .uyeler li {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto auto;
+    align-items: baseline;
+    gap: 0 0.8rem;
+  }
+  .im { width: 18px; height: 3px; border-radius: 2px; background: var(--renk); align-self: center; }
+  .im.kesik { background: repeating-linear-gradient(90deg, var(--renk) 0 6px, transparent 6px 9px); }
+  .uye-ad { color: inherit; }
+  .uye-deger { font-family: var(--font-mono); font-size: 1rem; }
+  .uyeler time { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-60); }
+
+  .hesap-blok { max-width: var(--olcu-metin); }
+  .hesap-blok .bolum-baslik { margin-top: 2.6rem; }
+  .hesap-blok p { line-height: 1.65; }
+  .uye-hesap { margin: 1rem 0 0; display: grid; gap: 0.9rem; }
+  .uye-hesap dt { font-weight: 560; }
+  .uye-hesap dd { margin: 0.2rem 0 0; line-height: 1.6; color: var(--ink-70); }
+  .kunye { font-size: 0.92rem; color: var(--ink-70); }
+
+  @media (max-width: 560px) {
+    .uyeler li { grid-template-columns: 22px minmax(0, 1fr) auto; }
+    .uyeler time { grid-column: 2 / -1; }
+  }
+</style>

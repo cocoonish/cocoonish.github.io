@@ -18,6 +18,9 @@ export interface CizimSerisi {
   ad: string;
   seri: Seri;
   renk: string;
+  /** İkinci kodlama: beş serilik hazır grafikte üçüncü ve sonraki renkler renk
+   *  körlüğünde sınırda ayrışıyor (ΔE 7,6), çizgi kesikli de çizilir. */
+  kesik?: boolean;
 }
 
 export interface CizimAyar {
@@ -93,6 +96,11 @@ function zamanIsaretleri(t0: number, t1: number, genislik: number): { x: number;
   return out;
 }
 
+/** Lejant ve ipucu imi: kesik çizgili seri imde de kesik görünür. */
+export function imRengi(renk: string, kesik?: boolean): string {
+  return kesik ? `repeating-linear-gradient(90deg, ${renk} 0 6px, transparent 6px 9px)` : renk;
+}
+
 /** Sıralı dizide x'e en yakın gözlemin sırası. */
 function enYakin(xs: number[], x: number): number {
   let lo = 0;
@@ -110,6 +118,9 @@ export class ZamanGrafigi {
   private seriler: CizimSerisi[] = [];
   private ayar: CizimAyar = { birim: '', ondalik: 1, isaretli: false, frekans: 'gunluk' };
   private secili = -1;
+  /** İpucunun ve klavyenin yürüdüğü seri: görünen gözlemi en çok olan (çok serili
+   *  grafikte ilk seri kısa olabilir; imleç onun dışında kalan dönemi göremezdi). */
+  private ref = 0;
   private gozlem: ResizeObserver;
 
   constructor(kap: HTMLElement, ipucu: HTMLElement) {
@@ -123,6 +134,7 @@ export class ZamanGrafigi {
 
   goster(seriler: CizimSerisi[], ayar: CizimAyar): void {
     this.seriler = seriler.filter((s) => s.seri.t.length > 0);
+    this.ref = this.seriler.reduce((en, s, k, a) => (s.seri.t.length > a[en].seri.t.length ? k : en), 0);
     this.ayar = ayar;
     this.secili = -1;
     this.ciz();
@@ -193,7 +205,9 @@ export class ZamanGrafigi {
       s.seri.t.forEach((_, i) => {
         d += `${i ? 'L' : 'M'}${x(xs[k][i]).toFixed(1)},${y(s.seri.v[i]).toFixed(1)}`;
       });
-      svg.append(el('path', { d, fill: 'none', stroke: s.renk, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+      const nit: Record<string, string | number> = { d, fill: 'none', stroke: s.renk, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' };
+      if (s.kesik) nit['stroke-dasharray'] = '6 4';
+      svg.append(el('path', nit));
     });
 
     const cizgi = el('line', { y1: ust, y2: h - alt, class: 'arti', visibility: 'hidden' });
@@ -209,7 +223,7 @@ export class ZamanGrafigi {
       const r = svg.getBoundingClientRect();
       const px = ((e.clientX - r.left) / r.width) * g;
       const t = t0 + ((px - sol) / (g - sol - sag)) * (t1 - t0);
-      this.isaretle(enYakin(xs[0], t));
+      this.isaretle(enYakin(xs[this.ref], t));
     });
     alan.addEventListener('pointerleave', () => this.gizle());
     svg.append(alan);
@@ -220,17 +234,17 @@ export class ZamanGrafigi {
   private isaretle(i: number): void {
     const o = this.olcu;
     if (!o) return;
-    const ana = this.seriler[0];
+    const ana = this.seriler[this.ref];
     i = Math.max(0, Math.min(ana.seri.t.length - 1, i));
     this.secili = i;
-    const t = o.xs[0][i];
+    const t = o.xs[this.ref][i];
     const px = o.x(t);
     o.cizgi.setAttribute('x1', String(px));
     o.cizgi.setAttribute('x2', String(px));
     o.cizgi.setAttribute('visibility', 'visible');
     this.ipucu.replaceChildren();
     this.seriler.forEach((s, k) => {
-      const j = k === 0 ? i : enYakin(o.xs[k], t);
+      const j = k === this.ref ? i : enYakin(o.xs[k], t);
       // Kıyas serisinin en yakın gözlemi başka bir günse (frekans farkı) o günü ayrıca yaz.
       const ayniGun = Math.abs(o.xs[k][j] - t) < 864e5 * 2;
       const nokta = o.noktalar[k];
@@ -241,7 +255,7 @@ export class ZamanGrafigi {
       satir.className = 'ipucu-satir';
       const im = document.createElement('span');
       im.className = 'ipucu-im';
-      im.style.background = s.renk;
+      im.style.background = imRengi(s.renk, s.kesik);
       const deger = document.createElement('strong');
       deger.textContent = this.yaz(s.seri.v[j]);
       satir.append(im, deger);
@@ -277,7 +291,7 @@ export class ZamanGrafigi {
 
   private tus(e: KeyboardEvent): void {
     if (!this.seriler.length) return;
-    const n = this.seriler[0].seri.t.length;
+    const n = this.seriler[this.ref].seri.t.length;
     const adim = e.shiftKey ? 10 : 1;
     let i = this.secili < 0 ? n - 1 : this.secili;
     if (e.key === 'ArrowLeft') i -= adim;

@@ -2,8 +2,10 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import { olcuYaz } from '../../lib/bicim';
-import { BASLIKLAR, seriler, type KurulmusSeri } from '../../lib/grafikVeri';
-import { degisimOndalik, donusumler, tarihEtiketi } from '../../lib/grafikDonusum';
+import GrafikPanel from '../../components/GrafikPanel.astro';
+import { BASLIKLAR, seriler, setler, type KurulmusSeri } from '../../lib/grafikVeri';
+import { degisimOndalik, tarihEtiketi } from '../../lib/grafikDonusum';
+import type { SayfaVeri } from '../../lib/grafikSayfa';
 import { bolumBul } from '../../lib/bolumler';
 
 export function getStaticPaths() {
@@ -17,7 +19,7 @@ export function getStaticPaths() {
 const { s } = Astro.props as { s: KurulmusSeri };
 const baslik = BASLIKLAR.find((b) => b.kod === s.baslik)!;
 const panolar = new Map((await getCollection('projeler')).map((p) => [p.id, p.data.title]));
-const panoAdi = s.kaynak.tur === 'figur' ? panolar.get(s.kaynak.proje) ?? null : null;
+const panoAdi = s.kaynak.tur === 'figur' || s.kaynak.tur === 'hat' ? panolar.get(s.kaynak.proje) ?? null : null;
 const kaynakYazi =
   s.kaynak.tur === 'evds' ? `TCMB EVDS, seri ${s.kaynak.kod}`
   : s.kaynak.tur === 'yahoo' ? `Yahoo Finance, ${s.kaynak.kod}`
@@ -27,21 +29,13 @@ const kaynakYazi =
 const kiyaslar = seriler()
   .filter((x) => !x.sorun && x.id !== s.id && x.birim === s.birim && x.tur === s.tur)
   .map((x) => ({ id: x.id, ad: x.ad, frekans: x.frekans }));
-const donusum = donusumler(s.tur, s.frekans);
-const ilkYil = +s.seri.t[0].slice(0, 4);
-const sonYil = +s.sonTarih!.slice(0, 4);
-const donemler = [
-  { kod: '6', ad: '6A' }, { kod: '12', ad: '1Y' }, { kod: '36', ad: '3Y' }, { kod: '60', ad: '5Y' }, { kod: '', ad: 'Tümü' },
-].filter((d) => !d.kod || sonYil - ilkYil >= +d.kod / 12 - 0.5);
-// Öntanımlı dönem: gün ve hafta serisinde beş yıl, ay ve çeyrek serisinde on yıldan uzunsa
-// beş yıl; tarihçenin tamamı bir düğmeyle açılır.
-const gunlukMu = s.frekans === 'gunluk' || s.frekans === 'haftalik';
-const ontanimli = sonYil - ilkYil > (gunlukMu ? 5 : 10) ? '60' : '';
-const sonGozlemler = s.seri.t.map((t, i) => ({ t, v: s.seri.v[i] })).slice(-12).reverse();
-const veri = JSON.stringify({
-  id: s.id, ad: s.ad, birim: s.birim, tur: s.tur, frekans: s.frekans, ondalik: s.ondalik,
-  t: s.seri.t, v: s.seri.v, kiyaslar,
-});
+const veri: SayfaVeri = {
+  id: s.id, birim: s.birim, tur: s.tur, ondalik: s.ondalik,
+  seriler: [{ id: s.id, ad: s.ad, frekans: s.frekans, t: s.seri.t, v: s.seri.v }],
+  kiyaslar,
+};
+// Bu seriyi içeren hazır grafikler: aynı seriyi komşularıyla birlikte görmek için.
+const iceren = setler().filter((h) => !h.sorun && h.uyeler.some((u) => u.id === s.id));
 const aciklama = `${s.ad}: ${s.aciklama}`;
 ---
 
@@ -66,59 +60,7 @@ const aciklama = `${s.ad}: ${s.aciklama}`;
     <div><dt>Kaynak</dt><dd>{s.kurum}</dd></div>
   </dl>
 
-  <section class="grafik-blok yuksel" style="--d: 100ms" aria-label="Grafik">
-    <div class="denetim" data-grafik-denetim>
-      <div class="grup-dugme" role="group" aria-label="Dönem">
-        <span class="etiket">Dönem</span>
-        {donemler.map((d) => (
-          <button type="button" data-donem={d.kod} aria-pressed={String(d.kod === ontanimli)}>{d.ad}</button>
-        ))}
-      </div>
-      <div class="grup-dugme" role="group" aria-label="Gösterim">
-        <span class="etiket">Gösterim</span>
-        {donusum.map((d, i) => (
-          <button type="button" data-donusum={d.kod} aria-pressed={String(i === 0)}>{d.ad}</button>
-        ))}
-      </div>
-      {kiyaslar.length > 0 && (
-        <label class="kiyas">
-          <span class="etiket">Kıyasla</span>
-          <select data-kiyas>
-            <option value="">Kıyas yok</option>
-            {kiyaslar.map((k) => <option value={k.id}>{k.ad}</option>)}
-          </select>
-        </label>
-      )}
-      <div class="eylemler">
-        <button type="button" class="ikincil" data-tablo aria-expanded="false">Tablo</button>
-        <button type="button" class="ikincil" data-csv>CSV indir</button>
-      </div>
-    </div>
-
-    <div class="cizim-ust">
-      <span class="birim" data-birim>{s.birim === '%' ? 'yüzde' : s.birim}</span>
-      <ul class="lejant" data-lejant hidden></ul>
-    </div>
-    <div class="cizim-kap">
-      <div class="cizim" data-cizim tabindex="0" role="img" aria-label={`${s.ad} grafiği; ok tuşlarıyla gözlemler arasında gezilir`}>
-        <noscript><p class="grafik-bos">Grafik için tarayıcıda betik açık olmalı; son gözlemler aşağıdaki tabloda.</p></noscript>
-      </div>
-      <div class="ipucu" data-ipucu hidden></div>
-    </div>
-    <p class="durum" data-durum aria-live="polite"></p>
-
-    <div class="tablo-kap" data-tablo-kap>
-      <table class="sayi-tablosu">
-        <caption>Son gözlemler</caption>
-        <thead><tr><th scope="col">Tarih</th><th scope="col">{s.ad}</th></tr></thead>
-        <tbody data-tablo-govde>
-          {sonGozlemler.map((g) => (
-            <tr><td>{tarihEtiketi(g.t, s.frekans)}</td><td>{olcuYaz(g.v, s.birim, s.ondalik)}</td></tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </section>
+  <GrafikPanel veri={veri} ad={s.ad} frekans={s.frekans} />
 
   <section class="hesap-blok yuksel" style="--d: 140ms">
     <div class="bolum-baslik"><h2>Bu seri nasıl hesaplanıyor</h2></div>
@@ -128,6 +70,14 @@ const aciklama = `${s.ad}: ${s.aciklama}`;
         Seri <a href={`/projeler/${s.kaynak.proje}/`}>{panoAdi}</a> panosunun yayımlanmış grafiğinden okunur ve
         panodaki sayının kendisidir; verinin kaynağı, formülü ve varsayımları panonun ilgili şeklinin altında
         anlatılır. Pano tazelendiğinde bu grafik de tazelenir.
+      </p>
+    )}
+    {panoAdi && s.kaynak.tur === 'hat' && (
+      <p>
+        Seri <a href={`/projeler/${s.kaynak.proje}/`}>{panoAdi}</a> panosunu besleyen ölçümün kendisidir; panonun
+        grafiği son yılları çizdiği için tam tarihçe burada gösterilir. Verinin kaynağı, formülü ve varsayımları
+        panoda anlatılır; pano tazelendiğinde bu grafik de tazelenir.
+        {s.turet === 'yillik_yuzde' && ' Grafikteki değer, endeksin bir yıl önceki aynı döneme göre yüzde değişimidir; bu sayfada hesaplanır.'}
       </p>
     )}
     {kaynakYazi && (
@@ -144,191 +94,16 @@ const aciklama = `${s.ad}: ${s.aciklama}`;
     </p>
   </section>
 
-  <script type="application/json" id="seri-veri" set:html={veri} />
+  {iceren.length > 0 && (
+    <section class="hesap-blok">
+      <div class="bolum-baslik"><h2>Bu seriyi içeren hazır grafikler</h2></div>
+      <ul class="iceren">
+        {iceren.map((h) => <li><a href={`/grafikler/hazir/${h.id}/`}>{h.ad}</a></li>)}
+      </ul>
+    </section>
+  )}
 </Base>
 
-<script>
-  import { olcuYaz } from '../../lib/bicim';
-  import {
-    degisimOndalik, donemBasi, donustur, donusumBirimi, kes, tarihEtiketi, type Donusum, type Seri,
-  } from '../../lib/grafikDonusum';
-  import { ZamanGrafigi } from '../../lib/grafikCizim';
-
-  type Veri = Seri & {
-    id: string; ad: string; birim: string; tur: 'oran' | 'seviye' | 'fark';
-    frekans: 'gunluk' | 'haftalik' | 'aylik' | 'ceyreklik'; ondalik: number;
-    kiyaslar: { id: string; ad: string; frekans: Veri['frekans'] }[];
-  };
-  // Seri renkleri SIRAYLA atanır (ana seri, kıyas). Kâğıt zeminde (#f5f0e6) doğrulandı:
-  // açıklık bandı, doygunluk tabanı, renk körlüğünde ayrım ΔE 18,7, kontrast ≥ 3:1.
-  // Sitenin --claret/--teal çifti renk körlüğünde 7,9'da kalıyordu ve petrol gri okunuyordu.
-  const RENK = ['#9e2a3a', '#2b6cb0'];
-
-  const veri = JSON.parse(document.getElementById('seri-veri')!.textContent!) as Veri;
-  const kap = document.querySelector<HTMLElement>('[data-cizim]')!;
-  const ipucu = document.querySelector<HTMLElement>('[data-ipucu]')!;
-  const grafik = new ZamanGrafigi(kap, ipucu);
-  const durum = document.querySelector<HTMLElement>('[data-durum]')!;
-  const lejant = document.querySelector<HTMLElement>('[data-lejant]')!;
-  const birimYazi = document.querySelector<HTMLElement>('[data-birim]')!;
-  const tabloKap = document.querySelector<HTMLElement>('[data-tablo-kap]')!;
-  const tabloGovde = document.querySelector<HTMLElement>('[data-tablo-govde]')!;
-  const tabloDugme = document.querySelector<HTMLButtonElement>('[data-tablo]')!;
-  const kiyasSec = document.querySelector<HTMLSelectElement>('[data-kiyas]');
-
-  let donem: number | null = (() => {
-    const b = document.querySelector<HTMLButtonElement>('[data-donem][aria-pressed="true"]');
-    return b && b.dataset.donem ? +b.dataset.donem : null;
-  })();
-  let donusum: Donusum = 'duzey';
-  let kiyas: { id: string; ad: string; frekans: Veri['frekans']; seri: Seri } | null = null;
-  const onbellek = new Map<string, Seri>();
-  tabloKap.hidden = true;
-
-  function gorunen(): { ad: string; seri: Seri; frekans: Veri['frekans'] }[] {
-    const ana = donustur(veri, veri.tur, veri.frekans, donusum);
-    const bas = donemBasi(veri, donem);
-    const out = [{ ad: veri.ad, seri: kes(ana, bas), frekans: veri.frekans }];
-    if (kiyas) {
-      out.push({ ad: kiyas.ad, seri: kes(donustur(kiyas.seri, veri.tur, kiyas.frekans, donusum), bas), frekans: kiyas.frekans });
-    }
-    return out;
-  }
-
-  function ondalik(): number {
-    return donusum === 'duzey' ? veri.ondalik : degisimOndalik(veri.tur, veri.ondalik);
-  }
-
-  function birim(): string {
-    return donusumBirimi(veri.tur, veri.birim, donusum);
-  }
-
-  function yenile() {
-    const g = gorunen();
-    const b = birim();
-    birimYazi.textContent = b === '%' ? 'yüzde' : b;
-    grafik.goster(
-      g.map((x, i) => ({ ad: x.ad, seri: x.seri, renk: RENK[i] })),
-      { birim: b, ondalik: ondalik(), isaretli: donusum !== 'duzey', frekans: veri.frekans },
-    );
-    lejant.replaceChildren();
-    lejant.hidden = g.length < 2;
-    g.forEach((x, i) => {
-      const li = document.createElement('li');
-      const im = document.createElement('span');
-      im.className = 'lejant-im';
-      im.style.background = RENK[i];
-      const ad = document.createElement('span');
-      ad.textContent = x.ad;
-      li.append(im, ad);
-      lejant.append(li);
-    });
-    const ana = g[0].seri;
-    durum.textContent = ana.t.length
-      ? `${tarihEtiketi(ana.t[0], veri.frekans)} – ${tarihEtiketi(ana.t[ana.t.length - 1], veri.frekans)} · ${ana.t.length} gözlem`
-      : '';
-    if (!tabloKap.hidden) tabloyuKur();
-  }
-
-  function tabloyuKur() {
-    const g = gorunen();
-    const b = birim();
-    const thead = tabloKap.querySelector('thead tr')!;
-    thead.replaceChildren();
-    for (const ad of ['Tarih', ...g.map((x) => x.ad)]) {
-      const th = document.createElement('th');
-      th.scope = 'col';
-      th.textContent = ad;
-      thead.append(th);
-    }
-    const kiyasHarita = g[1] ? new Map(g[1].seri.t.map((t, i) => [t, g[1].seri.v[i]])) : null;
-    tabloGovde.replaceChildren();
-    const ana = g[0].seri;
-    for (let i = ana.t.length - 1; i >= 0; i--) {
-      const tr = document.createElement('tr');
-      const hucreler = [tarihEtiketi(ana.t[i], veri.frekans), olcuYaz(ana.v[i], b, ondalik(), donusum !== 'duzey')];
-      if (kiyasHarita) {
-        const v = kiyasHarita.get(ana.t[i]);
-        hucreler.push(v === undefined ? '—' : olcuYaz(v, b, ondalik(), donusum !== 'duzey'));
-      }
-      for (const h of hucreler) {
-        const td = document.createElement('td');
-        td.textContent = h;
-        tr.append(td);
-      }
-      tabloGovde.append(tr);
-    }
-    tabloKap.querySelector('caption')!.textContent = `${ana.t.length} gözlem, yeniden eskiye`;
-  }
-
-  function sec(secici: string, b: HTMLButtonElement) {
-    for (const x of document.querySelectorAll<HTMLButtonElement>(secici)) x.setAttribute('aria-pressed', String(x === b));
-  }
-
-  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-donem]')) {
-    b.addEventListener('click', () => {
-      donem = b.dataset.donem ? +b.dataset.donem : null;
-      sec('[data-donem]', b);
-      yenile();
-    });
-  }
-  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-donusum]')) {
-    b.addEventListener('click', () => {
-      donusum = b.dataset.donusum as Donusum;
-      sec('[data-donusum]', b);
-      yenile();
-    });
-  }
-  kiyasSec?.addEventListener('change', async () => {
-    const id = kiyasSec.value;
-    if (!id) { kiyas = null; yenile(); return; }
-    const k = veri.kiyaslar.find((x) => x.id === id)!;
-    try {
-      let s = onbellek.get(id);
-      if (!s) {
-        const r = await fetch(`/grafikler/veri/${id}.json`);
-        if (!r.ok) throw new Error(String(r.status));
-        s = (await r.json()) as Seri;
-        onbellek.set(id, s);
-      }
-      kiyas = { ...k, seri: s };
-    } catch {
-      kiyas = null;
-      kiyasSec.value = '';
-      durum.textContent = 'Kıyas serisi yüklenemedi.';
-      return;
-    }
-    yenile();
-  });
-  tabloDugme.addEventListener('click', () => {
-    tabloKap.hidden = !tabloKap.hidden;
-    tabloDugme.setAttribute('aria-expanded', String(!tabloKap.hidden));
-    if (!tabloKap.hidden) tabloyuKur();
-  });
-  document.querySelector<HTMLButtonElement>('[data-csv]')!.addEventListener('click', () => {
-    // Elektronik tablo dostu: noktalı virgül ayraç, ondalık virgül, ISO tarih.
-    const g = gorunen();
-    const kiyasHarita = g[1] ? new Map(g[1].seri.t.map((t, i) => [t, g[1].seri.v[i]])) : null;
-    const sayi = (v: number | undefined) => (v === undefined ? '' : String(v).replace('.', ','));
-    const satirlar = [['Tarih', ...g.map((x) => `${x.ad} (${birim() || 'düzey'})`)].join(';')];
-    const ana = g[0].seri;
-    ana.t.forEach((t, i) => {
-      const r = [t, sayi(ana.v[i])];
-      if (kiyasHarita) r.push(sayi(kiyasHarita.get(t)));
-      satirlar.push(r.join(';'));
-    });
-    const blob = new Blob(['﻿' + satirlar.join('\r\n')], { type: 'text/csv;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${veri.id}${donusum === 'duzey' ? '' : `-${donusum}`}.csv`;
-    document.body.append(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(a.href);
-  });
-
-  yenile();
-</script>
 
 <style>
   .seri-baslik { padding: 2.6rem 0 1.2rem; max-width: 62ch; }
@@ -364,79 +139,13 @@ const aciklama = `${s.ad}: ${s.aciklama}`;
   .ozet dd { margin: 0.15rem 0 0; font-size: 1.05rem; }
   .ozet .sayi { font-family: var(--font-mono); font-size: 1.3rem; }
 
-  .denetim {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 0.7rem 1.4rem;
-    margin-bottom: 0.9rem;
-  }
-  .grup-dugme { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
-  .grup-dugme .etiket, .kiyas .etiket { color: var(--ink-60); margin-right: 0.3rem; }
-  .denetim button, .kiyas select {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    padding: 0.35rem 0.55rem;
-    border: 1px solid var(--ink-30);
-    background: transparent;
-    color: var(--ink-70);
-    border-radius: 2px;
-    cursor: pointer;
-    min-height: 2rem;
-  }
-  .denetim button[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-  .denetim button:focus-visible, .kiyas select:focus-visible, .cizim:focus-visible { outline: 2px solid var(--claret); outline-offset: 2px; }
-  .kiyas { display: flex; align-items: center; gap: 0.3rem; }
-  .kiyas select { background: var(--paper); max-width: 17rem; }
-  .eylemler { display: flex; gap: 0.4rem; margin-left: auto; }
-
-  .cizim-ust { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem 1rem; margin-bottom: 0.2rem; }
-  .birim { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-60); }
-  .lejant { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.2rem 1rem; font-size: 0.9rem; }
-  .lejant[hidden] { display: none; }
-  .lejant li { display: flex; align-items: center; gap: 0.4rem; }
-  :global(.lejant-im), :global(.ipucu-im) { display: inline-block; width: 14px; height: 3px; border-radius: 2px; }
-  .cizim-kap { position: relative; }
-  .cizim { width: 100%; min-height: 280px; }
-  .cizim :global(svg) { display: block; width: 100%; height: auto; touch-action: pan-y; }
-  .cizim :global(.izgara line) { stroke: var(--ink-15); stroke-width: 1; }
-  .cizim :global(.izgara line.sifir), .cizim :global(.izgara line.taban) { stroke: var(--ink-30); }
-  .cizim :global(.izgara line.isaret) { stroke: var(--ink-30); }
-  .cizim :global(.eksen-yazi) { font-family: var(--font-mono); font-size: 11px; fill: var(--ink-60); }
-  .cizim :global(.arti) { stroke: var(--ink-50); stroke-width: 1; stroke-dasharray: 3 3; }
-  :global(.grafik-bos) { color: var(--ink-70); font-style: italic; padding: 2rem 0; }
-  .ipucu {
-    position: absolute;
-    pointer-events: none;
-    background: var(--paper);
-    border: 1px solid var(--ink-30);
-    box-shadow: 0 2px 8px rgba(33, 27, 18, 0.12);
-    padding: 0.4rem 0.6rem;
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    max-width: 24rem;
-    white-space: nowrap;
-    z-index: 2;
-  }
-  .ipucu :global(.ipucu-satir) { display: flex; align-items: center; gap: 0.4rem; }
-  .ipucu :global(.ipucu-ad) { color: var(--ink-70); font-size: 0.74rem; }
-  .ipucu :global(.ipucu-tarih) { color: var(--ink-60); font-size: 0.74rem; margin-top: 0.15rem; }
-  .durum { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-60); margin: 0.4rem 0 0; min-height: 1.2em; }
-
-  .tablo-kap { max-height: 26rem; overflow: auto; margin-top: 1rem; border-top: 1px solid var(--ink-15); }
-  .tablo-kap table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.82rem; }
-  .tablo-kap caption { text-align: left; font-size: 0.75rem; color: var(--ink-60); padding: 0.4rem 0; }
-  .tablo-kap th, .tablo-kap td { padding: 0.25rem 0.6rem 0.25rem 0; text-align: right; border-bottom: 1px solid var(--ink-15); }
-  .tablo-kap th:first-child, .tablo-kap td:first-child { text-align: left; }
-  .tablo-kap thead th { position: sticky; top: 0; background: var(--paper); color: var(--ink-60); font-weight: 500; }
-
   .hesap-blok { max-width: var(--olcu-metin); }
   .hesap-blok .bolum-baslik { margin-top: 2.6rem; }
   .hesap-blok p { line-height: 1.65; }
   .kunye { font-size: 0.92rem; color: var(--ink-70); }
 
+  .iceren { padding-left: 1.1rem; line-height: 1.7; }
   @media (max-width: 640px) {
-    .eylemler { margin-left: 0; }
-    .ozet dt, .birim, .durum { font-size: 0.75rem; }
+    .ozet dt { font-size: 0.75rem; }
   }
 </style>

@@ -1,202 +1,4098 @@
 {
-  "_not": "Grafikler bölümünün TEK kataloğu. Seri eklemek tek kayıttır: figür kaynağı bir panonun yayımlanmış Plotly dosyasındaki izin ADI (aynı ad birden çok panelde varsa 'eksen'), dış kaynak EVDS seri kodu ya da Yahoo sembolü. tur: oran → fark puan; seviye → yüzde değişim; fark → serinin biriminde fark. Okuyucular: site/src/lib/grafikVeri.ts (derleme), Aktarılacak Projeler/Grafikler/cek.py (dış kaynakları çeker).",
-  "basliklar": [
-    { "kod": "para", "ad": "Para politikası ve fonlama", "aciklama": "TCMB'nin ilan ettiği ve fiilen uyguladığı faiz, gecelik piyasa faizi, açık piyasa ve swap yoluyla verilen likidite." },
-    { "kod": "kur", "ad": "Kur ve rezerv", "aciklama": "Piyasa kuru, TCMB rezervleri, altın ve yurt dışı yerleşiklerin menkul kıymet akımları." },
-    { "kod": "enflasyon", "ad": "Enflasyon", "aciklama": "Tüketici ve üretici fiyatları, enflasyonun ana eğilimi, beklentiler ve piyasanın fiyatladığı enflasyon." },
-    { "kod": "kredi", "ad": "Kredi ve mevduat", "aciklama": "Kredi büyümesi, yeni kullandırım faizleri, mevduatın para cinsi ve kredilerin kalitesi." },
-    { "kod": "dis", "ad": "Dış denge", "aciklama": "Cari denge, altın ve enerji ayrıştırması, dış ticaret ve cari dengenin GSYH'ye oranı." },
-    { "kod": "kamu", "ad": "Kamu maliyesi", "aciklama": "Merkezi yönetim bütçe dengesi, faiz yükü, borç stoku ve iç borcun sahipliği." },
-    { "kod": "buyume", "ad": "Büyüme ve reel sektör", "aciklama": "GSYH, sanayi üretimi, kapasite kullanımı, güven endeksleri, işsizlik ve konut fiyatları." },
-    { "kod": "piyasa", "ad": "Piyasa", "aciklama": "Devlet iç borçlanma senetlerinin getiri eğrisi, BIST 100 ve dolar bazında TL taşıma getirisi." }
-  ],
-  "seriler": [
-    { "id": "politika-faizi", "ad": "Politika faizi", "baslik": "para", "birim": "%", "tur": "oran", "frekans": "gunluk", "ondalik": 2, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "fonlama-likidite", "dosya": "01_koridor_faizler.html", "iz": "Politika faizi (1 hafta repo kotasyonu)" },
-      "aciklama": "TCMB'nin bir hafta vadeli repo ihalelerinde ilan ettiği faiz. Yıllık, basit faiz olarak yayımlanır." },
-    { "id": "aofm", "ad": "TCMB ağırlıklı ortalama fonlama maliyeti", "baslik": "para", "birim": "%", "tur": "oran", "frekans": "gunluk", "ondalik": 2, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "fonlama-likidite", "dosya": "01_koridor_faizler.html", "iz": "AOFM — ağırlıklı ort. fonlama maliyeti" },
-      "aciklama": "TCMB'nin o gün bütün kanallardan (repo ihalesi, gecelik, geç likidite) verdiği fonlamanın tutar ağırlıklı faizi. Fonlamanın politika faizinden farklı kanallardan verildiği dönemlerde ilan edilen faizden ayrışır; fonlama tutarı çok küçük olduğu günler panoda ayrıca işaretlidir." },
-    { "id": "tlref", "ad": "TLREF (gecelik piyasa faizi)", "baslik": "para", "birim": "%", "tur": "oran", "frekans": "gunluk", "ondalik": 2, "kurum": "Borsa İstanbul",
-      "kaynak": { "tur": "figur", "proje": "dibs-verim-egrisi", "dosya": "04_carry.html", "iz": "TLREF — ham (BASİT, yayımlandığı hâliyle)" },
-      "aciklama": "Borsa İstanbul'da gerçekleşen gecelik repo işlemlerinden hesaplanan Türk lirası gecelik referans faizi; yayımlandığı hâliyle, yıllık basit faiz. Getiri eğrisinin günleriyle hizalı seridir." },
-    { "id": "koridor-alt", "ad": "Faiz koridoru alt bandı (gecelik borç alma)", "baslik": "para", "birim": "%", "tur": "oran", "frekans": "gunluk", "ondalik": 2, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "fonlama-likidite", "dosya": "01_koridor_faizler.html", "iz": "Koridor alt bandı (O/N borç alma)" },
-      "aciklama": "TCMB'nin bankalardan gecelik vadede borç aldığı faiz: piyasa faizinin taban sınırı." },
-    { "id": "net-fonlama", "ad": "TCMB net açık piyasa fonlaması", "baslik": "para", "birim": "milyar TL", "tur": "fark", "frekans": "gunluk", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "fonlama-likidite", "dosya": "03_net_api_kompozisyon.html", "iz": "Net fonlama (A − B)" },
-      "aciklama": "TCMB'nin açık piyasa işlemleriyle verdiği fonlama eksi çektiği likidite (sterilizasyon). Artı değer bankacılık sisteminin TCMB'ye net borçlu olduğunu, eksi değer sistemde fazla Türk lirası bulunduğunu gösterir. 2024'ten bu yana." },
-    { "id": "swap-alim", "ad": "TCMB swap stoku — alım yönlü", "baslik": "para", "birim": "milyar USD", "tur": "seviye", "frekans": "gunluk", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "fonlama-likidite", "dosya": "04_swap_fonlama.html", "iz": "Toplam stok — alım yönlü" },
-      "aciklama": "TCMB'nin döviz alıp Türk lirası verdiği swapların bütün kanallardaki toplam stoku. Bilanço dışı bir fonlama kanalıdır." },
-    { "id": "swap-satim", "ad": "TCMB swap stoku — satım yönlü", "baslik": "para", "birim": "milyar USD", "tur": "seviye", "frekans": "gunluk", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "fonlama-likidite", "dosya": "04_swap_fonlama.html", "iz": "Toplam stok — satım yönlü" },
-      "aciklama": "TCMB'nin döviz verip Türk lirası çektiği swapların toplam stoku." },
-
-    { "id": "usdtry", "ad": "USD/TRY", "baslik": "kur", "birim": "TL", "tur": "seviye", "frekans": "gunluk", "ondalik": 4, "kurum": "Yahoo Finance",
-      "kaynak": { "tur": "yahoo", "kod": "USDTRY=X" },
-      "aciklama": "Dolar/Türk lirası piyasa kuru, İstanbul 18:00 kapanışı. Son iki yıl saatlik barlardan kurulur; daha eskisi günlük bardandır." },
-    { "id": "net-rezerv-swap-haric", "ad": "Swap hariç net rezerv", "baslik": "kur", "birim": "milyar USD", "tur": "fark", "frekans": "gunluk", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "tcmb-net-rezerv", "dosya": "grafik.html", "iz": "Swap hariç net rezerv" },
-      "aciklama": "TCMB'nin dış varlıkları eksi dış yükümlülükleri eksi bankaların TCMB'deki döviz mevduatı, eksi toplam swap stoku. Piyasanın kullandığı tanımdır; TCMB'nin resmî net rezerv tanımından farklıdır." },
-    { "id": "brut-rezerv", "ad": "Brüt rezerv", "baslik": "kur", "birim": "milyar USD", "tur": "seviye", "frekans": "gunluk", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "tcmb-net-rezerv", "dosya": "brut_kirilim.html", "iz": "Brüt rezerv (toplam)" },
-      "aciklama": "TCMB'nin altın ve döviz rezervlerinin (IMF rezerv pozisyonu ve SDR dahil) dolar karşılığı." },
-    { "id": "altin-ons", "ad": "Altın fiyatı", "baslik": "kur", "birim": "USD/ons", "tur": "seviye", "frekans": "gunluk", "ondalik": 0, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "tcmb-net-rezerv", "dosya": "brut_kirilim.html", "iz": "Altın fiyatı (USD/ons)" },
-      "aciklama": "Rezervdeki altının değerlemesinde kullanılan ons fiyatı (dolar)." },
-    { "id": "yabanci-kumulatif", "ad": "Yurt dışı yerleşiklerin DİBS ve hisse alımı (birikimli)", "baslik": "kur", "birim": "milyon USD", "tur": "fark", "frekans": "haftalik", "ondalik": 0, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "yabanci-pozisyon", "dosya": "kumulatif.html", "iz": "Toplam" },
-      "aciklama": "Yurt dışı yerleşiklerin devlet iç borçlanma senetleri ve hisse senedi kesin alım-satımlarının Eylül 2020'den bu yana birikimli toplamı. Fiyat değişimi değil, işlem akımıdır." },
-    { "id": "yp-mevduat", "ad": "Yurt içi yerleşiklerin döviz mevduatı", "baslik": "kur", "birim": "milyar USD", "tur": "seviye", "frekans": "haftalik", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "yp-mevduat", "dosya": "01_stok_kirilim.html", "iz": "Yurt içi yerleşikler, toplam" },
-      "aciklama": "Gerçek ve tüzel kişilerin döviz ve kıymetli maden hesaplarının dolar karşılığı. Euro ve altın fiyatı değiştiğinde stok, para yatırılmadan da değişir; o ayrıştırma panodadır." },
-
-    { "id": "tufe-yillik", "ad": "TÜFE yıllık enflasyon", "baslik": "enflasyon", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 2, "kurum": "TÜİK",
-      "kaynak": { "tur": "figur", "proje": "enflasyon", "dosya": "01_manset_momentum.html", "iz": "12 aylık (manşet)" },
-      "aciklama": "Tüketici fiyat endeksinin bir yıl önceki aynı aya göre değişimi." },
-    { "id": "tufe-saar", "ad": "TÜFE 3 aylık yıllıklandırılmış (mevsimsellikten arındırılmış)", "baslik": "enflasyon", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 2, "kurum": "TÜİK, hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "enflasyon", "dosya": "01_manset_momentum.html", "iz": "3 aylık SAAR (mevsimsellikten arındırılmış)" },
-      "aciklama": "Mevsimsellikten arındırılmış endeksin son üç aylık değişiminin yıla çevrilmesi: (E_t / E_t−3)^4 − 1. Bugünkü fiyatlama temposu bir yıl sürerse yıllık enflasyonun ne olacağını söyler; yıllık orandan önce döner ama daha oynaktır." },
-    { "id": "cekirdek-c", "ad": "Çekirdek C yıllık enflasyon", "baslik": "enflasyon", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 2, "kurum": "TÜİK",
-      "kaynak": { "tur": "figur", "proje": "enflasyon", "dosya": "02_cekirdek_momentum.html", "iz": "12 aylık", "eksen": "x2" },
-      "aciklama": "Enerji, gıda, alkollü içecekler, tütün ve altın hariç tüketici fiyatlarının yıllık değişimi. 2024'ten bu yana." },
-    { "id": "pka-12ay", "ad": "Piyasa katılımcılarının 12 ay sonrası enflasyon beklentisi", "baslik": "enflasyon", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 2, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "enflasyon", "dosya": "07_beklenti.html", "iz": "PKA · 12 ay sonrası" },
-      "aciklama": "TCMB Piyasa Katılımcıları Anketi'nde katılımcıların 12 ay sonrası için yıllık TÜFE beklentisi." },
-    { "id": "hanehalki-beklenti", "ad": "Hanehalkının 12 aylık enflasyon beklentisi", "baslik": "enflasyon", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 2, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "enflasyon", "dosya": "07_beklenti.html", "iz": "Hanehalkı" },
-      "aciklama": "TCMB Sektörel Enflasyon Beklentileri anketinde hanehalkının önümüzdeki 12 ay için yıllık enflasyon beklentisi." },
-    { "id": "reel-sektor-beklenti", "ad": "Reel sektörün 12 aylık enflasyon beklentisi", "baslik": "enflasyon", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 2, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "enflasyon", "dosya": "07_beklenti.html", "iz": "Reel sektör (İYA)" },
-      "aciklama": "İktisadi Yönelim Anketi'nde reel sektör temsilcilerinin önümüzdeki 12 ay için yıllık enflasyon beklentisi." },
-    { "id": "reel-faiz-exante", "ad": "Ex-ante reel politika faizi", "baslik": "enflasyon", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 2, "kurum": "TCMB, hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "enflasyon", "dosya": "08_reel_faiz.html", "iz": "ex-ante (PKA 12 ay beklentisiyle)" },
-      "aciklama": "TCMB'nin ağırlıklı ortalama fonlama maliyetinin piyasa katılımcılarının 12 ay sonrası enflasyon beklentisiyle tam Fisher formülüyle reele çevrilmesi: (1 + i) / (1 + π_e) − 1." },
-    { "id": "basabas-2y", "ad": "2 yıllık başabaş enflasyon", "baslik": "enflasyon", "birim": "%", "tur": "oran", "frekans": "gunluk", "ondalik": 2, "kurum": "TCMB, BİST; hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "tufex-basabas", "dosya": "basabas_anket.html", "iz": "2y başabaş (piyasa)" },
-      "aciklama": "2 yıllık nominal DİBS getirisinin aynı vadeli TÜFE'ye endeksli tahvil (TÜFEX) reel getirisiyle tam Fisher ilişkisinden çıkan enflasyon: (1 + nominal) / (1 + reel) − 1. Piyasanın fiyatladığı enflasyondur ve bir risk primi içerir." },
-    { "id": "yi-ufe", "ad": "Yurt içi üretici fiyatları (Yİ-ÜFE) yıllık değişim", "baslik": "enflasyon", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 2, "kurum": "TÜİK",
-      "kaynak": { "tur": "evds", "kod": "TP.TUFE1YI.T1" }, "turet": "yillik_yuzde",
-      "aciklama": "Yurt içi üretici fiyat endeksinin bir yıl önceki aynı aya göre değişimi; endeks EVDS'ten, değişim bu sayfada hesaplanır." },
-
-    { "id": "kredi-buyume", "ad": "Toplam kredi büyümesi (kur etkisinden arındırılmış)", "baslik": "kredi", "birim": "%", "tur": "oran", "frekans": "haftalik", "ondalik": 1, "kurum": "TCMB, hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "kredi-parasal", "dosya": "01_kredi_buyume.html", "iz": "Toplam kredi (birleştirilmiş)" },
-      "aciklama": "Yurt içi yerleşiklere kullandırılan toplam kredinin 13 haftalık bileşik büyümesinin yıla çevrilmesi. Döviz kredileri önce sabit kurla yeniden değerlenir, yani kurun yükselmesi büyüme diye okunmaz. Arşiv ve yeni tablolar büyüme oranı düzeyinde birleştirilmiştir." },
-    { "id": "ticari-faiz", "ad": "Ticari kredi faizi (TL)", "baslik": "kredi", "birim": "%", "tur": "oran", "frekans": "haftalik", "ondalik": 2, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "kredi-parasal", "dosya": "04_faiz_spread.html", "iz": "Ticari TL kredi" },
-      "aciklama": "Yeni kullandırılan Türk lirası ticari kredilerin haftalık ağırlıklı ortalama faizi (akım, stok değil)." },
-    { "id": "ihtiyac-faiz", "ad": "İhtiyaç kredisi faizi", "baslik": "kredi", "birim": "%", "tur": "oran", "frekans": "haftalik", "ondalik": 2, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "kredi-parasal", "dosya": "04_faiz_spread.html", "iz": "İhtiyaç kredisi" },
-      "aciklama": "Yeni kullandırılan ihtiyaç kredilerinin haftalık ağırlıklı ortalama faizi." },
-    { "id": "konut-faiz", "ad": "Konut kredisi faizi", "baslik": "kredi", "birim": "%", "tur": "oran", "frekans": "haftalik", "ondalik": 2, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "kredi-parasal", "dosya": "04_faiz_spread.html", "iz": "Konut kredisi" },
-      "aciklama": "Yeni kullandırılan konut kredilerinin haftalık ağırlıklı ortalama faizi." },
-    { "id": "mevduat-faiz", "ad": "TL mevduat faizi", "baslik": "kredi", "birim": "%", "tur": "oran", "frekans": "haftalik", "ondalik": 2, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "kredi-parasal", "dosya": "04_faiz_spread.html", "iz": "TL mevduat" },
-      "aciklama": "Yeni açılan Türk lirası mevduatın haftalık ağırlıklı ortalama faizi." },
-    { "id": "dth-payi", "ad": "Döviz mevduatının toplam mevduattaki payı", "baslik": "kredi", "birim": "%", "tur": "oran", "frekans": "haftalik", "ondalik": 1, "kurum": "TCMB, hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "kredi-parasal", "dosya": "06_dolarizasyon.html", "iz": "DTH payı — ham" },
-      "aciklama": "Döviz tevdiat hesaplarının Türk lirası karşılığının, TL mevduat ile döviz mevduatının toplamına oranı. Kur yükseldiğinde pay, hiç para hareketi olmadan da yükselir; kur etkisinden arındırılmış pay panodadır." },
-    { "id": "m2-buyume", "ad": "M2 para arzı büyümesi (kur etkisinden arındırılmış)", "baslik": "kredi", "birim": "%", "tur": "oran", "frekans": "haftalik", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "kredi-parasal", "dosya": "05_para_arzi.html", "iz": "M2 (ARIM2)" },
-      "aciklama": "TCMB'nin kur etkisinden arındırdığı M2 endeksinin 13 haftalık değişiminin yıla çevrilmesi. 2022'den bu yana." },
-    { "id": "takip-orani", "ad": "Takipteki alacak oranı", "baslik": "kredi", "birim": "%", "tur": "oran", "frekans": "haftalik", "ondalik": 2, "kurum": "TCMB, hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "kredi-parasal", "dosya": "08_takip.html", "iz": "Toplam" },
-      "aciklama": "Takipteki alacakların, krediler ile takipteki alacakların toplamına oranı. 2024'ten bu yana." },
-
-    { "id": "cari-12ay", "ad": "Cari denge (12 aylık)", "baslik": "dis", "birim": "milyar USD", "tur": "fark", "frekans": "aylik", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "odemeler-dengesi", "dosya": "01_cari_manset_cekirdek.html", "iz": "Manşet cari denge (12 aylık)" },
-      "aciklama": "Ödemeler dengesi cari işlemler hesabının son 12 ayın toplamı. Eksi değer cari açıktır." },
-    { "id": "cekirdek-cari-12ay", "ad": "Çekirdek cari denge — altın ve enerji hariç (12 aylık)", "baslik": "dis", "birim": "milyar USD", "tur": "fark", "frekans": "aylik", "ondalik": 1, "kurum": "TCMB, hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "odemeler-dengesi", "dosya": "01_cari_manset_cekirdek.html", "iz": "Çekirdek cari denge — altın ve enerji hariç (12 aylık)" },
-      "aciklama": "Cari dengeden parasal olmayan altın ve enerji dış ticaret dengesinin çıkarılmasıyla kalan denge, son 12 ayın toplamı." },
-    { "id": "cari-aylik", "ad": "Aylık cari denge", "baslik": "dis", "birim": "milyar USD", "tur": "fark", "frekans": "aylik", "ondalik": 2, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "odemeler-dengesi", "dosya": "01_cari_manset_cekirdek.html", "iz": "Aylık cari denge" },
-      "aciklama": "Cari işlemler hesabının ay içindeki dengesi. Güçlü bir mevsimsellik taşır; aylar arası kıyas yerine bir yıl önceki aynı ayla kıyaslanır." },
-    { "id": "altin-net-12ay", "ad": "Altın dış ticaret dengesi (12 aylık)", "baslik": "dis", "birim": "milyar USD", "tur": "fark", "frekans": "aylik", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "odemeler-dengesi", "dosya": "01_cari_manset_cekirdek.html", "iz": "Altın net (12 aylık)" },
-      "aciklama": "Parasal olmayan altın ihracatı eksi ithalatı, son 12 ayın toplamı." },
-    { "id": "enerji-net-12ay", "ad": "Enerji dış ticaret dengesi (12 aylık)", "baslik": "dis", "birim": "milyar USD", "tur": "fark", "frekans": "aylik", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "odemeler-dengesi", "dosya": "01_cari_manset_cekirdek.html", "iz": "Enerji net (12 aylık)" },
-      "aciklama": "Enerji ihracatı eksi ithalatı (gümrük tarifesinin 27. faslı), son 12 ayın toplamı." },
-    { "id": "ihracat-12ay", "ad": "İhracat (12 aylık)", "baslik": "dis", "birim": "milyar USD", "tur": "seviye", "frekans": "aylik", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "odemeler-dengesi", "dosya": "03_cari_alt_kalemler.html", "iz": "İhracat" },
-      "aciklama": "Ödemeler dengesi tanımıyla mal ihracatı, son 12 ayın toplamı." },
-    { "id": "ithalat-12ay", "ad": "İthalat (12 aylık)", "baslik": "dis", "birim": "milyar USD", "tur": "seviye", "frekans": "aylik", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "odemeler-dengesi", "dosya": "03_cari_alt_kalemler.html", "iz": "İthalat" },
-      "aciklama": "Ödemeler dengesi tanımıyla mal ithalatı, son 12 ayın toplamı." },
-    { "id": "cari-gsyh", "ad": "Cari denge / GSYH", "baslik": "dis", "birim": "%", "tur": "oran", "frekans": "ceyreklik", "ondalik": 1, "kurum": "TCMB, TÜİK; hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "odemeler-dengesi", "dosya": "04_cari_gsyh.html", "iz": "Manşet cari denge / GSYH" },
-      "aciklama": "Son 12 ayın cari dengesinin son dört çeyreğin GSYH'sine oranı; GSYH dolara çeyrek ortalaması kurla çevrilir." },
-
-    { "id": "butce-12ay", "ad": "Merkezi yönetim bütçe dengesi (12 aylık)", "baslik": "kamu", "birim": "trilyon TL", "tur": "fark", "frekans": "aylik", "ondalik": 2, "kurum": "Hazine ve Maliye Bakanlığı",
-      "kaynak": { "tur": "figur", "proje": "butce-borc", "dosya": "01_denge_aylik.html", "iz": "Bütçe dengesi (12 aylık)" },
-      "aciklama": "Merkezi yönetim bütçe gelirleri eksi giderleri, son 12 ayın toplamı. Eksi değer açıktır." },
-    { "id": "faiz-disi-12ay", "ad": "Faiz dışı denge (12 aylık)", "baslik": "kamu", "birim": "trilyon TL", "tur": "fark", "frekans": "aylik", "ondalik": 2, "kurum": "Hazine ve Maliye Bakanlığı",
-      "kaynak": { "tur": "figur", "proje": "butce-borc", "dosya": "01_denge_aylik.html", "iz": "Faiz dışı denge (12 aylık)" },
-      "aciklama": "Bütçe gelirleri eksi faiz dışı giderler, son 12 ayın toplamı." },
-    { "id": "butce-gsyh", "ad": "Bütçe dengesi / GSYH", "baslik": "kamu", "birim": "%", "tur": "oran", "frekans": "ceyreklik", "ondalik": 1, "kurum": "HMB, TÜİK; hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "butce-borc", "dosya": "02_denge_gsyh.html", "iz": "Bütçe dengesi / GSYH" },
-      "aciklama": "Son 12 ayın bütçe dengesinin son dört çeyreğin cari fiyatlı GSYH'sine oranı." },
-    { "id": "faiz-gideri-gsyh", "ad": "Faiz gideri / GSYH", "baslik": "kamu", "birim": "%", "tur": "oran", "frekans": "ceyreklik", "ondalik": 1, "kurum": "HMB, TÜİK; hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "butce-borc", "dosya": "02_denge_gsyh.html", "iz": "Faiz gideri / GSYH" },
-      "aciklama": "Son 12 ayın faiz giderinin son dört çeyreğin GSYH'sine oranı." },
-    { "id": "faiz-vergi", "ad": "Faiz gideri / vergi geliri", "baslik": "kamu", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 1, "kurum": "HMB; hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "butce-borc", "dosya": "06_faiz_yuku.html", "iz": "Faiz gideri / vergi geliri" },
-      "aciklama": "Borç servisinin vergi tabanını ne kadar kullandığı: son 12 ayın faiz giderinin son 12 ayın vergi gelirine oranı." },
-    { "id": "borc-gsyh", "ad": "Merkezi yönetim brüt borç stoku / GSYH", "baslik": "kamu", "birim": "%", "tur": "oran", "frekans": "ceyreklik", "ondalik": 1, "kurum": "HMB, TCMB, TÜİK; hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "butce-borc", "dosya": "07_borc_stoku.html", "iz": "Brüt stok / GSYH" },
-      "aciklama": "İç borç, yurt dışında ihraç edilen senetler ve dış kredilerin toplamının son dört çeyreğin GSYH'sine oranı. 2020'den bu yana." },
-    { "id": "yabanci-dibs-payi", "ad": "DİBS stokunda yurt dışı yerleşik payı", "baslik": "kamu", "birim": "%", "tur": "oran", "frekans": "haftalik", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "figur", "proje": "butce-borc", "dosya": "11_dibs_sahiplik.html", "iz": "Yurt dışı yerleşik payı" },
-      "aciklama": "Devlet iç borçlanma senetleri stokunun yurt dışı yerleşiklerin elindeki payı." },
-
-    { "id": "gsyh-yillik", "ad": "GSYH yıllık büyüme", "baslik": "buyume", "birim": "%", "tur": "oran", "frekans": "ceyreklik", "ondalik": 1, "kurum": "TÜİK",
-      "kaynak": { "tur": "evds", "kod": "TP.GSYIH20.CY.B1GQ" }, "turet": "yillik_yuzde",
-      "aciklama": "Harcama yöntemiyle gayrisafi yurt içi hasılanın zincirlenmiş hacim endeksinin bir yıl önceki aynı çeyreğe göre değişimi." },
-    { "id": "sanayi-uretim", "ad": "Sanayi üretimi yıllık değişim (takvim etkisinden arındırılmış)", "baslik": "buyume", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 1, "kurum": "TÜİK",
-      "kaynak": { "tur": "evds", "kod": "TP.TSANAYTKVM2021.BCD" }, "turet": "yillik_yuzde",
-      "aciklama": "Takvim etkisinden arındırılmış sanayi üretim endeksinin bir yıl önceki aynı aya göre değişimi." },
-    { "id": "kko", "ad": "İmalat sanayi kapasite kullanım oranı (mevsimsellikten arındırılmış)", "baslik": "buyume", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "evds", "kod": "TP.KKO.MA" },
-      "aciklama": "İktisadi Yönelim Anketi'nden derlenen imalat sanayi kapasite kullanım oranı." },
-    { "id": "reel-kesim-guven", "ad": "Reel kesim güven endeksi (mevsimsellikten arındırılmış)", "baslik": "buyume", "birim": "endeks", "tur": "fark", "frekans": "aylik", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "evds", "kod": "TP.GY1.N2.MA" },
-      "aciklama": "İktisadi Yönelim Anketi'nden derlenen reel kesim güven endeksi. 100'ün üstü iyimserliği, altı kötümserliği gösterir." },
-    { "id": "tuketici-guven", "ad": "Tüketici güven endeksi", "baslik": "buyume", "birim": "endeks", "tur": "fark", "frekans": "aylik", "ondalik": 1, "kurum": "TÜİK",
-      "kaynak": { "tur": "evds", "kod": "TP.TG2.Y01" },
-      "aciklama": "TÜİK Tüketici Eğilim Anketi'nden derlenen güven endeksi. 0–200 arasında değer alır; 100'ün altı kötümserliktir." },
-    { "id": "issizlik", "ad": "İşsizlik oranı (mevsimsellikten arındırılmış)", "baslik": "buyume", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 1, "kurum": "TÜİK",
-      "kaynak": { "tur": "evds", "kod": "TP.TIG08" },
-      "aciklama": "TÜİK Hanehalkı İşgücü Araştırması'ndan işsizlerin işgücüne oranı." },
-    { "id": "konut-fiyat", "ad": "Konut fiyat endeksi yıllık değişim", "baslik": "buyume", "birim": "%", "tur": "oran", "frekans": "aylik", "ondalik": 1, "kurum": "TCMB",
-      "kaynak": { "tur": "evds", "kod": "TP.KFE.TR" }, "turet": "yillik_yuzde",
-      "aciklama": "TCMB konut fiyat endeksinin (Türkiye) bir yıl önceki aynı aya göre nominal değişimi." },
-
-    { "id": "dibs-3a", "ad": "DİBS 3 ay getirisi", "baslik": "piyasa", "birim": "%", "tur": "oran", "frekans": "gunluk", "ondalik": 2, "kurum": "BİST, hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "dibs-verim-egrisi", "dosya": "02_egri_hareketi.html", "iz": "3 ay" },
-      "aciklama": "İşlem gören devlet iç borçlanma senetlerinden her gün yeniden kurulan getiri eğrisinin 3 aylık sıfır kuponlu (spot) noktası, yıllık bileşik." },
-    { "id": "dibs-2y", "ad": "DİBS 2 yıl getirisi", "baslik": "piyasa", "birim": "%", "tur": "oran", "frekans": "gunluk", "ondalik": 2, "kurum": "BİST, hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "dibs-verim-egrisi", "dosya": "02_egri_hareketi.html", "iz": "2 yıl" },
-      "aciklama": "Getiri eğrisinin 2 yıllık spot noktası, yıllık bileşik." },
-    { "id": "dibs-5y", "ad": "DİBS 5 yıl getirisi", "baslik": "piyasa", "birim": "%", "tur": "oran", "frekans": "gunluk", "ondalik": 2, "kurum": "BİST, hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "dibs-verim-egrisi", "dosya": "02_egri_hareketi.html", "iz": "5 yıl" },
-      "aciklama": "Getiri eğrisinin 5 yıllık spot noktası, yıllık bileşik." },
-    { "id": "dibs-9y", "ad": "DİBS 9 yıl getirisi", "baslik": "piyasa", "birim": "%", "tur": "oran", "frekans": "gunluk", "ondalik": 2, "kurum": "BİST, hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "dibs-verim-egrisi", "dosya": "02_egri_hareketi.html", "iz": "9 yıl" },
-      "aciklama": "Getiri eğrisinin 9 yıllık spot noktası, yıllık bileşik. İşlem gören en uzun vadeli kâğıtlar 10 yıla ulaşmadığı için eğrinin uzun ucu 9 yıldır." },
-    { "id": "egim-2y9y", "ad": "Getiri eğrisinin eğimi (2 yıl − 9 yıl)", "baslik": "piyasa", "birim": "puan", "tur": "oran", "frekans": "gunluk", "ondalik": 2, "kurum": "BİST, hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "dibs-verim-egrisi", "dosya": "03_egim_bukulme.html", "iz": "2 yıl − 9 yıl (10 yıl ucu YOK, vekil)" },
-      "aciklama": "2 yıllık spot getiri eksi 9 yıllık spot getiri. Artı değer kısa ucun uzun uçtan yüksek, yani eğrinin ters olduğunu gösterir." },
-    { "id": "forward-1y1y", "ad": "1y1y ileri faiz", "baslik": "piyasa", "birim": "%", "tur": "oran", "frekans": "gunluk", "ondalik": 2, "kurum": "BİST, hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "dibs-verim-egrisi", "dosya": "07_forward.html", "iz": "1y1y — bir yıl sonrasının 1 yıllık faizi" },
-      "aciklama": "Bugünkü eğriden çıkan, bir yıl sonra başlayıp bir yıl süren faiz: (1 + s₂)² / (1 + s₁) − 1. Bir beklenti değil, beklenti ile vade priminin toplamıdır." },
-    { "id": "bist100", "ad": "BIST 100", "baslik": "piyasa", "birim": "puan", "tur": "seviye", "frekans": "gunluk", "ondalik": 0, "kurum": "Yahoo Finance",
-      "kaynak": { "tur": "yahoo", "kod": "XU100.IS" },
-      "aciklama": "Borsa İstanbul'un 100 hisselik ana endeksi, günlük kapanış (Türk lirası)." },
-    { "id": "tl-tasima", "ad": "Hedge'siz TL taşıma endeksi (dolar bazında)", "baslik": "piyasa", "birim": "endeks", "tur": "seviye", "frekans": "gunluk", "ondalik": 1, "kurum": "BİST, Yahoo; hesap TTO",
-      "kaynak": { "tur": "figur", "proje": "tl-tasima", "dosya": "endeks.html", "iz": "Carry endeksi (USD bazlı)" },
-      "aciklama": "28.12.2018'de 100 dolar Türk lirasına çevrilip TLREF'te gecelik döndürülse ve bugün dolara geri çevrilse ulaşılacak değer (100 = 28.12.2018). Faiz getirisi ile kurun değer kaybının birlikte sonucudur." }
-  ]
+ "_not": "Grafikler bölümünün TEK kataloğu. Seri eklemek tek kayıttır: figür kaynağı bir panonun yayımlanmış Plotly dosyasındaki izin ADI (aynı ad birden çok panelde varsa 'eksen'), dış kaynak EVDS seri kodu ya da Yahoo sembolü, hat kaynağı bir hattın depodaki veri dosyası ve sütunu (panonun figürü serinin yalnız son yıllarını çiziyorsa). tur: oran → fark puan; seviye → yüzde değişim; fark → serinin biriminde fark. Okuyucular: site/src/lib/grafikVeri.ts (derleme), Aktarılacak Projeler/Grafikler/cek.py (dış ve hat kaynaklarını site/src/data/grafikler/dis/ altına yazar).",
+ "basliklar": [
+  {
+   "kod": "para",
+   "ad": "Para politikası ve fonlama",
+   "aciklama": "TCMB'nin ilan ettiği ve fiilen uyguladığı faiz, gecelik piyasa faizi, açık piyasa ve swap yoluyla verilen likidite."
+  },
+  {
+   "kod": "kur",
+   "ad": "Kur ve rezerv",
+   "aciklama": "Piyasa kuru, TCMB rezervleri, altın ve yurt dışı yerleşiklerin menkul kıymet akımları."
+  },
+  {
+   "kod": "enflasyon",
+   "ad": "Enflasyon",
+   "aciklama": "Tüketici ve üretici fiyatları, enflasyonun ana eğilimi, beklentiler ve piyasanın fiyatladığı enflasyon."
+  },
+  {
+   "kod": "kredi",
+   "ad": "Kredi ve mevduat",
+   "aciklama": "Kredi büyümesi, yeni kullandırım faizleri, mevduatın para cinsi ve kredilerin kalitesi."
+  },
+  {
+   "kod": "dis",
+   "ad": "Dış denge",
+   "aciklama": "Cari denge, altın ve enerji ayrıştırması, dış ticaret ve cari dengenin GSYH'ye oranı."
+  },
+  {
+   "kod": "kamu",
+   "ad": "Kamu maliyesi",
+   "aciklama": "Merkezi yönetim bütçe dengesi, faiz yükü, borç stoku ve iç borcun sahipliği."
+  },
+  {
+   "kod": "buyume",
+   "ad": "Büyüme ve reel sektör",
+   "aciklama": "GSYH, sanayi üretimi, kapasite kullanımı, güven endeksleri, işsizlik ve konut fiyatları."
+  },
+  {
+   "kod": "piyasa",
+   "ad": "Piyasa",
+   "aciklama": "Devlet iç borçlanma senetlerinin getiri eğrisi, BIST 100 ve dolar bazında TL taşıma getirisi."
+  },
+  {
+   "kod": "dunya",
+   "ad": "Dünya",
+   "aciklama": "Gelişmiş ve gelişmekte olan ülke merkez bankalarının politika faizleri; Türkiye'nin faiz konumunu kıyaslamak için."
+  }
+ ],
+ "seriler": [
+  {
+   "id": "politika-faizi",
+   "ad": "Politika faizi",
+   "baslik": "para",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "fonlama-likidite",
+    "dosya": "01_koridor_faizler.html",
+    "iz": "Politika faizi (1 hafta repo kotasyonu)"
+   },
+   "aciklama": "TCMB'nin bir hafta vadeli repo ihalelerinde ilan ettiği faiz. Yıllık, basit faiz olarak yayımlanır."
+  },
+  {
+   "id": "politika-faizi-aylik",
+   "ad": "Politika faizi (aylık, 2011'den)",
+   "baslik": "para",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB, BIS derlemesi",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "fonlama-likidite",
+    "dosya": "Fonlama/data/aylik.csv",
+    "sutun": "bis_politika"
+   },
+   "aciklama": "TCMB politika faizinin aylık serisi (EVDS'te BIS derlemesi, TP.BISPOLFAIZ.TUR). Günlük kotasyon serisi 2018'de başladığı için daha eski dönem bu seriden okunur; panoda iki seri ay sonlarında birbirine karşı sınanır."
+  },
+  {
+   "id": "aofm",
+   "ad": "TCMB ağırlıklı ortalama fonlama maliyeti",
+   "baslik": "para",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "fonlama-likidite",
+    "dosya": "01_koridor_faizler.html",
+    "iz": "AOFM — ağırlıklı ort. fonlama maliyeti"
+   },
+   "aciklama": "TCMB'nin o gün bütün kanallardan (repo ihalesi, gecelik, geç likidite) verdiği fonlamanın tutar ağırlıklı faizi. Fonlamanın politika faizinden farklı kanallardan verildiği dönemlerde ilan edilen faizden ayrışır; fonlama tutarı çok küçük olduğu günler panoda ayrıca işaretlidir."
+  },
+  {
+   "id": "tlref",
+   "ad": "TLREF (gecelik piyasa faizi)",
+   "baslik": "para",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "Borsa İstanbul",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "04_carry.html",
+    "iz": "TLREF — ham (BASİT, yayımlandığı hâliyle)"
+   },
+   "aciklama": "Borsa İstanbul'da gerçekleşen gecelik repo işlemlerinden hesaplanan Türk lirası gecelik referans faizi; yayımlandığı hâliyle, yıllık basit faiz. Getiri eğrisinin günleriyle hizalı seridir."
+  },
+  {
+   "id": "koridor-alt",
+   "ad": "Faiz koridoru alt bandı (gecelik borç alma)",
+   "baslik": "para",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "fonlama-likidite",
+    "dosya": "01_koridor_faizler.html",
+    "iz": "Koridor alt bandı (O/N borç alma)"
+   },
+   "aciklama": "TCMB'nin bankalardan gecelik vadede borç aldığı faiz: piyasa faizinin taban sınırı."
+  },
+  {
+   "id": "net-fonlama",
+   "ad": "TCMB net açık piyasa fonlaması",
+   "baslik": "para",
+   "birim": "milyar TL",
+   "tur": "fark",
+   "frekans": "gunluk",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "fonlama-likidite",
+    "dosya": "Fonlama/data/gunluk.csv",
+    "sutun": "net_fonlama",
+    "carpan": 0.001
+   },
+   "aciklama": "TCMB'nin açık piyasa işlemleriyle verdiği fonlama eksi çektiği likidite (sterilizasyon). Artı değer bankacılık sisteminin TCMB'ye net borçlu olduğunu, eksi değer sistemde fazla Türk lirası bulunduğunu gösterir."
+  },
+  {
+   "id": "swap-alim",
+   "ad": "TCMB swap stoku — alım yönlü",
+   "baslik": "para",
+   "birim": "milyar USD",
+   "tur": "seviye",
+   "frekans": "gunluk",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "fonlama-likidite",
+    "dosya": "04_swap_fonlama.html",
+    "iz": "Toplam stok — alım yönlü"
+   },
+   "aciklama": "TCMB'nin döviz alıp Türk lirası verdiği swapların bütün kanallardaki toplam stoku. Bilanço dışı bir fonlama kanalıdır."
+  },
+  {
+   "id": "swap-satim",
+   "ad": "TCMB swap stoku — satım yönlü",
+   "baslik": "para",
+   "birim": "milyar USD",
+   "tur": "seviye",
+   "frekans": "gunluk",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "fonlama-likidite",
+    "dosya": "04_swap_fonlama.html",
+    "iz": "Toplam stok — satım yönlü"
+   },
+   "aciklama": "TCMB'nin döviz verip Türk lirası çektiği swapların toplam stoku."
+  },
+  {
+   "id": "usdtry",
+   "ad": "USD/TRY",
+   "baslik": "kur",
+   "birim": "TL",
+   "tur": "seviye",
+   "frekans": "gunluk",
+   "ondalik": 4,
+   "kurum": "Yahoo Finance",
+   "kaynak": {
+    "tur": "yahoo",
+    "kod": "USDTRY=X"
+   },
+   "aciklama": "Dolar/Türk lirası piyasa kuru, İstanbul 18:00 kapanışı. Son iki yıl saatlik barlardan kurulur; daha eskisi günlük bardandır."
+  },
+  {
+   "id": "redk-kompozit",
+   "ad": "Reel efektif kur (kompozit)",
+   "baslik": "kur",
+   "birim": "endeks",
+   "tur": "seviye",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "try-reer",
+    "dosya": "TRYREER/reer_analysis_data.csv",
+    "sutun": "Composite_REER"
+   },
+   "aciklama": "TCMB'nin TÜFE bazlı (%70) ve Yİ-ÜFE bazlı (%30) reel efektif kur endekslerinin ağırlıklı ortalaması. Yükseliş Türk lirasının reel değerlendiğini, düşüş reel değer kaybını gösterir."
+  },
+  {
+   "id": "redk-tufe",
+   "ad": "Reel efektif kur (TÜFE bazlı)",
+   "baslik": "kur",
+   "birim": "endeks",
+   "tur": "seviye",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "try-reer",
+    "dosya": "TRYREER/reer_analysis_data.csv",
+    "sutun": "CPI_REER"
+   },
+   "aciklama": "TCMB'nin TÜFE bazlı reel efektif kur endeksi (TP.RK.T1.Y)."
+  },
+  {
+   "id": "redk-sapma-10y",
+   "ad": "Reel efektif kurun 10 yıllık ortalamadan sapması",
+   "baslik": "kur",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "try-reer",
+    "dosya": "TRYREER/reer_analysis_data.csv",
+    "sutun": "Deviation_10Y_Pct"
+   },
+   "aciklama": "Kompozit reel efektif kurun son 120 ayın ortalamasından yüzde sapması. Sıfırın üstü Türk lirasının kendi geçmişine göre pahalı, altı ucuz olduğunu gösterir; ortalama ilk 10 yıl kurulamadığı için seri ondan sonra başlar."
+  },
+  {
+   "id": "net-rezerv-swap-haric",
+   "ad": "Swap hariç net rezerv",
+   "baslik": "kur",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "gunluk",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "tcmb-net-rezerv",
+    "dosya": "grafik.html",
+    "iz": "Swap hariç net rezerv"
+   },
+   "aciklama": "TCMB'nin dış varlıkları eksi dış yükümlülükleri eksi bankaların TCMB'deki döviz mevduatı, eksi toplam swap stoku. Piyasanın kullandığı tanımdır; TCMB'nin resmî net rezerv tanımından farklıdır."
+  },
+  {
+   "id": "net-rezerv-resmi",
+   "ad": "Net uluslararası rezerv — TCMB tanımı (haftalık)",
+   "baslik": "kur",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "tcmb-net-rezerv",
+    "dosya": "TCMBNetRezerv/haftalik_rezerv.csv",
+    "sutun": "net_rezerv_usd"
+   },
+   "aciklama": "TCMB'nin haftalık yayımladığı net uluslararası rezerv serisinin, haftanın kuruyla dolar karşılığı. 2002'den bu yana; günlük seriyle aynı büyüklüğü TCMB'nin kendi tanımıyla ölçer ve iki tanımın farkı panoda ayrıca çizilir."
+  },
+  {
+   "id": "net-rezerv-swap-haric-haftalik",
+   "ad": "Swap hariç net rezerv — TCMB tanımı (haftalık)",
+   "baslik": "kur",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "tcmb-net-rezerv",
+    "dosya": "TCMBNetRezerv/haftalik_rezerv.csv",
+    "sutun": "swap_haric_net_rezerv_usd"
+   },
+   "aciklama": "Haftalık net uluslararası rezervden TCMB'nin yerleşiklerle ve yurt dışıyla yaptığı swapların düşülmesi; swap gözlemleri TCMB'nin uluslararası rezerv ve döviz likiditesi tablosundan. Günlük seri piyasa tanımını, bu seri TCMB'nin resmî tanımını taban alır."
+  },
+  {
+   "id": "brut-rezerv",
+   "ad": "Brüt rezerv",
+   "baslik": "kur",
+   "birim": "milyar USD",
+   "tur": "seviye",
+   "frekans": "gunluk",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "tcmb-net-rezerv",
+    "dosya": "brut_kirilim.html",
+    "iz": "Brüt rezerv (toplam)"
+   },
+   "aciklama": "TCMB'nin altın ve döviz rezervlerinin (IMF rezerv pozisyonu ve SDR dahil) dolar karşılığı."
+  },
+  {
+   "id": "altin-ons",
+   "ad": "Altın fiyatı",
+   "baslik": "kur",
+   "birim": "USD/ons",
+   "tur": "seviye",
+   "frekans": "gunluk",
+   "ondalik": 0,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "tcmb-net-rezerv",
+    "dosya": "brut_kirilim.html",
+    "iz": "Altın fiyatı (USD/ons)"
+   },
+   "aciklama": "Rezervdeki altının değerlemesinde kullanılan ons fiyatı (dolar)."
+  },
+  {
+   "id": "yabanci-kumulatif",
+   "ad": "Yurt dışı yerleşiklerin DİBS ve hisse alımı (birikimli)",
+   "baslik": "kur",
+   "birim": "milyon USD",
+   "tur": "fark",
+   "frekans": "haftalik",
+   "ondalik": 0,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "yabanci-pozisyon",
+    "dosya": "kumulatif.html",
+    "iz": "Toplam"
+   },
+   "aciklama": "Yurt dışı yerleşiklerin devlet iç borçlanma senetleri ve hisse senedi kesin alım-satımlarının Eylül 2020'den bu yana birikimli toplamı. Fiyat değişimi değil, işlem akımıdır."
+  },
+  {
+   "id": "yp-mevduat",
+   "ad": "Yurt içi yerleşiklerin döviz mevduatı",
+   "baslik": "kur",
+   "birim": "milyar USD",
+   "tur": "seviye",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "yp-mevduat",
+    "dosya": "01_stok_kirilim.html",
+    "iz": "Yurt içi yerleşikler, toplam"
+   },
+   "aciklama": "Gerçek ve tüzel kişilerin döviz ve kıymetli maden hesaplarının dolar karşılığı. Euro ve altın fiyatı değiştiğinde stok, para yatırılmadan da değişir; o ayrıştırma panodadır."
+  },
+  {
+   "id": "zk-dth",
+   "ad": "Zorunlu karşılığa tabi döviz mevduatı (dolar)",
+   "baslik": "kur",
+   "birim": "milyar USD",
+   "tur": "seviye",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/haftalik.csv",
+    "sutun": "dth_usd",
+    "carpan": 0.001
+   },
+   "aciklama": "Bankacılık sektöründe zorunlu karşılığa tabi döviz tevdiat hesaplarının dolar karşılığı (TP.ZORUNDTH.KB7). 2005'ten bu yana; yurt içi yerleşiklerin döviz mevduatından kapsamı biraz farklıdır."
+  },
+  {
+   "id": "tufe-yillik",
+   "ad": "TÜFE yıllık enflasyon",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "enflasyon",
+    "dosya": "01_manset_momentum.html",
+    "iz": "12 aylık (manşet)"
+   },
+   "aciklama": "Tüketici fiyat endeksinin bir yıl önceki aynı aya göre değişimi."
+  },
+  {
+   "id": "tufe-saar",
+   "ad": "TÜFE 3 aylık yıllıklandırılmış (mevsimsellikten arındırılmış)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK, hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "enflasyon",
+    "dosya": "01_manset_momentum.html",
+    "iz": "3 aylık SAAR (mevsimsellikten arındırılmış)"
+   },
+   "aciklama": "Mevsimsellikten arındırılmış endeksin son üç aylık değişiminin yıla çevrilmesi: (E_t / E_t−3)^4 − 1. Bugünkü fiyatlama temposu bir yıl sürerse yıllık enflasyonun ne olacağını söyler; yıllık orandan önce döner ama daha oynaktır."
+  },
+  {
+   "id": "cekirdek-c",
+   "ad": "Çekirdek C yıllık enflasyon",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "cekirdek_c"
+   },
+   "aciklama": "Enerji, gıda, alkollü içecekler, tütün ve altın hariç tüketici fiyat endeksinin (özel kapsamlı TÜFE göstergesi C) bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "cekirdek-b",
+   "ad": "Çekirdek B yıllık enflasyon",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "cekirdek_b"
+   },
+   "turet": "yillik_yuzde",
+   "aciklama": "İşlenmemiş gıda, enerji, alkollü içecekler, tütün ve altın hariç tüketici fiyat endeksinin (özel kapsamlı TÜFE göstergesi B) bir yıl önceki aynı aya göre değişimi. C'den tek farkı işlenmiş gıdayı içermesidir."
+  },
+  {
+   "id": "hizmet-yillik",
+   "ad": "Hizmet enflasyonu (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "hizmet"
+   },
+   "turet": "yillik_yuzde",
+   "aciklama": "TÜFE hizmet grubunun (kira, lokanta, ulaştırma ve diğer hizmetler) bir yıl önceki aynı aya göre değişimi. Fiyatlama ataletinin en yüksek olduğu kalemdir."
+  },
+  {
+   "id": "pka-12ay",
+   "ad": "Piyasa katılımcılarının 12 ay sonrası enflasyon beklentisi",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "enflasyon",
+    "dosya": "07_beklenti.html",
+    "iz": "PKA · 12 ay sonrası"
+   },
+   "aciklama": "TCMB Piyasa Katılımcıları Anketi'nde katılımcıların 12 ay sonrası için yıllık TÜFE beklentisi."
+  },
+  {
+   "id": "hanehalki-beklenti",
+   "ad": "Hanehalkının 12 aylık enflasyon beklentisi",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "enflasyon",
+    "dosya": "07_beklenti.html",
+    "iz": "Hanehalkı"
+   },
+   "aciklama": "TCMB Sektörel Enflasyon Beklentileri anketinde hanehalkının önümüzdeki 12 ay için yıllık enflasyon beklentisi."
+  },
+  {
+   "id": "reel-sektor-beklenti",
+   "ad": "Reel sektörün 12 aylık enflasyon beklentisi",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "enflasyon",
+    "dosya": "07_beklenti.html",
+    "iz": "Reel sektör (İYA)"
+   },
+   "aciklama": "İktisadi Yönelim Anketi'nde reel sektör temsilcilerinin önümüzdeki 12 ay için yıllık enflasyon beklentisi."
+  },
+  {
+   "id": "reel-faiz-exante",
+   "ad": "Ex-ante reel politika faizi",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB, hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "enflasyon",
+    "dosya": "08_reel_faiz.html",
+    "iz": "ex-ante (PKA 12 ay beklentisiyle)"
+   },
+   "aciklama": "TCMB'nin ağırlıklı ortalama fonlama maliyetinin piyasa katılımcılarının 12 ay sonrası enflasyon beklentisiyle tam Fisher formülüyle reele çevrilmesi: (1 + i) / (1 + π_e) − 1."
+  },
+  {
+   "id": "basabas-2y",
+   "ad": "2 yıllık başabaş enflasyon",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "TCMB, BİST; hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "tufex-basabas",
+    "dosya": "basabas_anket.html",
+    "iz": "2y başabaş (piyasa)"
+   },
+   "aciklama": "2 yıllık nominal DİBS getirisinin aynı vadeli TÜFE'ye endeksli tahvil (TÜFEX) reel getirisiyle tam Fisher ilişkisinden çıkan enflasyon: (1 + nominal) / (1 + reel) − 1. Piyasanın fiyatladığı enflasyondur ve bir risk primi içerir."
+  },
+  {
+   "id": "yi-ufe",
+   "ad": "Yurt içi üretici fiyatları (Yİ-ÜFE) yıllık değişim",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TUFE1YI.T1"
+   },
+   "turet": "yillik_yuzde",
+   "aciklama": "Yurt içi üretici fiyat endeksinin bir yıl önceki aynı aya göre değişimi; endeks EVDS'ten, değişim bu sayfada hesaplanır."
+  },
+  {
+   "id": "kredi-buyume",
+   "ad": "Toplam kredi büyümesi (kur etkisinden arındırılmış)",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB, hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "kredi-parasal",
+    "dosya": "01_kredi_buyume.html",
+    "iz": "Toplam kredi (birleştirilmiş)"
+   },
+   "aciklama": "Yurt içi yerleşiklere kullandırılan toplam kredinin 13 haftalık bileşik büyümesinin yıla çevrilmesi. Döviz kredileri önce sabit kurla yeniden değerlenir, yani kurun yükselmesi büyüme diye okunmaz. Arşiv ve yeni tablolar büyüme oranı düzeyinde birleştirilmiştir."
+  },
+  {
+   "id": "ticari-faiz",
+   "ad": "Ticari kredi faizi (TL)",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/faiz.csv",
+    "sutun": "f_ticari_tl"
+   },
+   "aciklama": "Yeni kullandırılan Türk lirası ticari kredilerin haftalık ağırlıklı ortalama faizi (akım, stok değil)."
+  },
+  {
+   "id": "ihtiyac-faiz",
+   "ad": "İhtiyaç kredisi faizi",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/faiz.csv",
+    "sutun": "f_ihtiyac"
+   },
+   "aciklama": "Yeni kullandırılan ihtiyaç kredilerinin haftalık ağırlıklı ortalama faizi."
+  },
+  {
+   "id": "konut-faiz",
+   "ad": "Konut kredisi faizi",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/faiz.csv",
+    "sutun": "f_konut"
+   },
+   "aciklama": "Yeni kullandırılan konut kredilerinin haftalık ağırlıklı ortalama faizi."
+  },
+  {
+   "id": "mevduat-faiz",
+   "ad": "TL mevduat faizi",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/faiz.csv",
+    "sutun": "mev_tl"
+   },
+   "aciklama": "Yeni açılan Türk lirası mevduatın haftalık ağırlıklı ortalama faizi."
+  },
+  {
+   "id": "dth-payi",
+   "ad": "Döviz mevduatının toplam mevduattaki payı",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB, hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "kredi-parasal",
+    "dosya": "06_dolarizasyon.html",
+    "iz": "DTH payı — ham"
+   },
+   "aciklama": "Döviz tevdiat hesaplarının Türk lirası karşılığının, TL mevduat ile döviz mevduatının toplamına oranı. Kur yükseldiğinde pay, hiç para hareketi olmadan da yükselir; kur etkisinden arındırılmış pay panodadır."
+  },
+  {
+   "id": "m2-buyume",
+   "ad": "M2 para arzı büyümesi (kur etkisinden arındırılmış)",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "kredi-parasal",
+    "dosya": "05_para_arzi.html",
+    "iz": "M2 (ARIM2)"
+   },
+   "aciklama": "TCMB'nin kur etkisinden arındırdığı M2 endeksinin 13 haftalık değişiminin yıla çevrilmesi. 2022'den bu yana."
+  },
+  {
+   "id": "m2-yillik",
+   "ad": "M2 para arzı yıllık büyüme",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/haftalik.csv",
+    "sutun": "ham_m2"
+   },
+   "turet": "yillik_yuzde",
+   "aciklama": "M2 para arzı stokunun bir yıl önceki aynı haftaya göre değişimi. Döviz mevduatını Türk lirası karşılığıyla içerdiği için kur yükselişi büyümeyi şişirir; kur etkisinden arındırılmış 13 haftalık hız ayrı seridir."
+  },
+  {
+   "id": "takip-orani",
+   "ad": "Takipteki alacak oranı",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB, hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "kredi-parasal",
+    "dosya": "08_takip.html",
+    "iz": "Toplam"
+   },
+   "aciklama": "Takipteki alacakların, krediler ile takipteki alacakların toplamına oranı. 2024'ten bu yana."
+  },
+  {
+   "id": "cari-12ay",
+   "ad": "Cari denge (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "odemeler-dengesi",
+    "dosya": "01_cari_manset_cekirdek.html",
+    "iz": "Manşet cari denge (12 aylık)"
+   },
+   "aciklama": "Ödemeler dengesi cari işlemler hesabının son 12 ayın toplamı. Eksi değer cari açıktır."
+  },
+  {
+   "id": "cekirdek-cari-12ay",
+   "ad": "Çekirdek cari denge — altın ve enerji hariç (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB, hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "odemeler-dengesi",
+    "dosya": "01_cari_manset_cekirdek.html",
+    "iz": "Çekirdek cari denge — altın ve enerji hariç (12 aylık)"
+   },
+   "aciklama": "Cari dengeden parasal olmayan altın ve enerji dış ticaret dengesinin çıkarılmasıyla kalan denge, son 12 ayın toplamı."
+  },
+  {
+   "id": "cari-aylik",
+   "ad": "Aylık cari denge",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "odemeler-dengesi",
+    "dosya": "01_cari_manset_cekirdek.html",
+    "iz": "Aylık cari denge"
+   },
+   "aciklama": "Cari işlemler hesabının ay içindeki dengesi. Güçlü bir mevsimsellik taşır; aylar arası kıyas yerine bir yıl önceki aynı ayla kıyaslanır."
+  },
+  {
+   "id": "altin-net-12ay",
+   "ad": "Altın dış ticaret dengesi (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "odemeler-dengesi",
+    "dosya": "01_cari_manset_cekirdek.html",
+    "iz": "Altın net (12 aylık)"
+   },
+   "aciklama": "Parasal olmayan altın ihracatı eksi ithalatı, son 12 ayın toplamı."
+  },
+  {
+   "id": "enerji-net-12ay",
+   "ad": "Enerji dış ticaret dengesi (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "odemeler-dengesi",
+    "dosya": "01_cari_manset_cekirdek.html",
+    "iz": "Enerji net (12 aylık)"
+   },
+   "aciklama": "Enerji ihracatı eksi ithalatı (gümrük tarifesinin 27. faslı), son 12 ayın toplamı."
+  },
+  {
+   "id": "ihracat-12ay",
+   "ad": "İhracat (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "seviye",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "odemeler-dengesi",
+    "dosya": "03_cari_alt_kalemler.html",
+    "iz": "İhracat"
+   },
+   "aciklama": "Ödemeler dengesi tanımıyla mal ihracatı, son 12 ayın toplamı."
+  },
+  {
+   "id": "ithalat-12ay",
+   "ad": "İthalat (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "seviye",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "odemeler-dengesi",
+    "dosya": "03_cari_alt_kalemler.html",
+    "iz": "İthalat"
+   },
+   "aciklama": "Ödemeler dengesi tanımıyla mal ithalatı, son 12 ayın toplamı."
+  },
+  {
+   "id": "cari-gsyh",
+   "ad": "Cari denge / GSYH",
+   "baslik": "dis",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TCMB, TÜİK; hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "odemeler-dengesi",
+    "dosya": "04_cari_gsyh.html",
+    "iz": "Manşet cari denge / GSYH"
+   },
+   "aciklama": "Son 12 ayın cari dengesinin son dört çeyreğin GSYH'sine oranı; GSYH dolara çeyrek ortalaması kurla çevrilir."
+  },
+  {
+   "id": "butce-12ay",
+   "ad": "Merkezi yönetim bütçe dengesi (12 aylık)",
+   "baslik": "kamu",
+   "birim": "trilyon TL",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "Hazine ve Maliye Bakanlığı",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "butce-borc",
+    "dosya": "01_denge_aylik.html",
+    "iz": "Bütçe dengesi (12 aylık)"
+   },
+   "aciklama": "Merkezi yönetim bütçe gelirleri eksi giderleri, son 12 ayın toplamı. Eksi değer açıktır."
+  },
+  {
+   "id": "faiz-disi-12ay",
+   "ad": "Faiz dışı denge (12 aylık)",
+   "baslik": "kamu",
+   "birim": "trilyon TL",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "Hazine ve Maliye Bakanlığı",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "butce-borc",
+    "dosya": "01_denge_aylik.html",
+    "iz": "Faiz dışı denge (12 aylık)"
+   },
+   "aciklama": "Bütçe gelirleri eksi faiz dışı giderler, son 12 ayın toplamı."
+  },
+  {
+   "id": "butce-gsyh",
+   "ad": "Bütçe dengesi / GSYH",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "HMB, TÜİK; hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "butce-borc",
+    "dosya": "02_denge_gsyh.html",
+    "iz": "Bütçe dengesi / GSYH"
+   },
+   "aciklama": "Son 12 ayın bütçe dengesinin son dört çeyreğin cari fiyatlı GSYH'sine oranı."
+  },
+  {
+   "id": "faiz-gideri-gsyh",
+   "ad": "Faiz gideri / GSYH",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "HMB, TÜİK; hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "butce-borc",
+    "dosya": "02_denge_gsyh.html",
+    "iz": "Faiz gideri / GSYH"
+   },
+   "aciklama": "Son 12 ayın faiz giderinin son dört çeyreğin GSYH'sine oranı."
+  },
+  {
+   "id": "faiz-vergi",
+   "ad": "Faiz gideri / vergi geliri",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "HMB; hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "butce-borc",
+    "dosya": "06_faiz_yuku.html",
+    "iz": "Faiz gideri / vergi geliri"
+   },
+   "aciklama": "Borç servisinin vergi tabanını ne kadar kullandığı: son 12 ayın faiz giderinin son 12 ayın vergi gelirine oranı."
+  },
+  {
+   "id": "borc-gsyh",
+   "ad": "Merkezi yönetim brüt borç stoku / GSYH",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "HMB, TCMB, TÜİK; hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "butce-borc",
+    "dosya": "07_borc_stoku.html",
+    "iz": "Brüt stok / GSYH"
+   },
+   "aciklama": "İç borç, yurt dışında ihraç edilen senetler ve dış kredilerin toplamının son dört çeyreğin GSYH'sine oranı. 2020'den bu yana."
+  },
+  {
+   "id": "yabanci-dibs-payi",
+   "ad": "DİBS stokunda yurt dışı yerleşik payı",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "butce-borc",
+    "dosya": "11_dibs_sahiplik.html",
+    "iz": "Yurt dışı yerleşik payı"
+   },
+   "aciklama": "Devlet iç borçlanma senetleri stokunun yurt dışı yerleşiklerin elindeki payı."
+  },
+  {
+   "id": "gsyh-yillik",
+   "ad": "GSYH yıllık büyüme",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GSYIH20.CY.B1GQ"
+   },
+   "turet": "yillik_yuzde",
+   "aciklama": "Harcama yöntemiyle gayrisafi yurt içi hasılanın zincirlenmiş hacim endeksinin bir yıl önceki aynı çeyreğe göre değişimi."
+  },
+  {
+   "id": "sanayi-uretim",
+   "ad": "Sanayi üretimi yıllık değişim (takvim etkisinden arındırılmış)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TSANAYTKVM2021.BCD"
+   },
+   "turet": "yillik_yuzde",
+   "aciklama": "Takvim etkisinden arındırılmış sanayi üretim endeksinin bir yıl önceki aynı aya göre değişimi."
+  },
+  {
+   "id": "kko",
+   "ad": "İmalat sanayi kapasite kullanım oranı (mevsimsellikten arındırılmış)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.KKO.MA"
+   },
+   "aciklama": "İktisadi Yönelim Anketi'nden derlenen imalat sanayi kapasite kullanım oranı."
+  },
+  {
+   "id": "reel-kesim-guven",
+   "ad": "Reel kesim güven endeksi (mevsimsellikten arındırılmış)",
+   "baslik": "buyume",
+   "birim": "endeks",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GY1.N2.MA"
+   },
+   "aciklama": "İktisadi Yönelim Anketi'nden derlenen reel kesim güven endeksi. 100'ün üstü iyimserliği, altı kötümserliği gösterir."
+  },
+  {
+   "id": "tuketici-guven",
+   "ad": "Tüketici güven endeksi",
+   "baslik": "buyume",
+   "birim": "endeks",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TG2.Y01"
+   },
+   "aciklama": "TÜİK Tüketici Eğilim Anketi'nden derlenen güven endeksi. 0–200 arasında değer alır; 100'ün altı kötümserliktir."
+  },
+  {
+   "id": "issizlik",
+   "ad": "İşsizlik oranı (mevsimsellikten arındırılmış)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TIG08"
+   },
+   "aciklama": "TÜİK Hanehalkı İşgücü Araştırması'ndan işsizlerin işgücüne oranı."
+  },
+  {
+   "id": "konut-fiyat",
+   "ad": "Konut fiyat endeksi yıllık değişim",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.KFE.TR"
+   },
+   "turet": "yillik_yuzde",
+   "aciklama": "TCMB konut fiyat endeksinin (Türkiye) bir yıl önceki aynı aya göre nominal değişimi."
+  },
+  {
+   "id": "dibs-3a",
+   "ad": "DİBS 3 ay getirisi",
+   "baslik": "piyasa",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "02_egri_hareketi.html",
+    "iz": "3 ay"
+   },
+   "aciklama": "İşlem gören devlet iç borçlanma senetlerinden her gün yeniden kurulan getiri eğrisinin 3 aylık sıfır kuponlu (spot) noktası, yıllık bileşik."
+  },
+  {
+   "id": "dibs-2y",
+   "ad": "DİBS 2 yıl getirisi",
+   "baslik": "piyasa",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "02_egri_hareketi.html",
+    "iz": "2 yıl"
+   },
+   "aciklama": "Getiri eğrisinin 2 yıllık spot noktası, yıllık bileşik."
+  },
+  {
+   "id": "dibs-5y",
+   "ad": "DİBS 5 yıl getirisi",
+   "baslik": "piyasa",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "02_egri_hareketi.html",
+    "iz": "5 yıl"
+   },
+   "aciklama": "Getiri eğrisinin 5 yıllık spot noktası, yıllık bileşik."
+  },
+  {
+   "id": "dibs-9y",
+   "ad": "DİBS 9 yıl getirisi",
+   "baslik": "piyasa",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "02_egri_hareketi.html",
+    "iz": "9 yıl"
+   },
+   "aciklama": "Getiri eğrisinin 9 yıllık spot noktası, yıllık bileşik. İşlem gören en uzun vadeli kâğıtlar 10 yıla ulaşmadığı için eğrinin uzun ucu 9 yıldır."
+  },
+  {
+   "id": "egim-2y9y",
+   "ad": "Getiri eğrisinin eğimi (2 yıl − 9 yıl)",
+   "baslik": "piyasa",
+   "birim": "puan",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "03_egim_bukulme.html",
+    "iz": "2 yıl − 9 yıl (10 yıl ucu YOK, vekil)"
+   },
+   "aciklama": "2 yıllık spot getiri eksi 9 yıllık spot getiri. Artı değer kısa ucun uzun uçtan yüksek, yani eğrinin ters olduğunu gösterir."
+  },
+  {
+   "id": "forward-1y1y",
+   "ad": "1y1y ileri faiz",
+   "baslik": "piyasa",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "07_forward.html",
+    "iz": "1y1y — bir yıl sonrasının 1 yıllık faizi"
+   },
+   "aciklama": "Bugünkü eğriden çıkan, bir yıl sonra başlayıp bir yıl süren faiz: (1 + s₂)² / (1 + s₁) − 1. Bir beklenti değil, beklenti ile vade priminin toplamıdır."
+  },
+  {
+   "id": "bist100",
+   "ad": "BIST 100",
+   "baslik": "piyasa",
+   "birim": "puan",
+   "tur": "seviye",
+   "frekans": "gunluk",
+   "ondalik": 0,
+   "kurum": "Yahoo Finance",
+   "kaynak": {
+    "tur": "yahoo",
+    "kod": "XU100.IS"
+   },
+   "aciklama": "Borsa İstanbul'un 100 hisselik ana endeksi, günlük kapanış (Türk lirası)."
+  },
+  {
+   "id": "tl-tasima",
+   "ad": "Hedge'siz TL taşıma endeksi (dolar bazında)",
+   "baslik": "piyasa",
+   "birim": "endeks",
+   "tur": "seviye",
+   "frekans": "gunluk",
+   "ondalik": 1,
+   "kurum": "BİST, Yahoo; hesap TTO",
+   "kaynak": {
+    "tur": "figur",
+    "proje": "tl-tasima",
+    "dosya": "endeks.html",
+    "iz": "Carry endeksi (USD bazlı)"
+   },
+   "aciklama": "28.12.2018'de 100 dolar Türk lirasına çevrilip TLREF'te gecelik döndürülse ve bugün dolara geri çevrilse ulaşılacak değer (100 = 28.12.2018). Faiz getirisi ile kurun değer kaybının birlikte sonucudur."
+  },
+  {
+   "id": "tufe-gida",
+   "ad": "TÜFE · Gıda ve alkolsüz içecekler (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_01"
+   },
+   "aciklama": "Tüketici fiyat endeksinin gıda ve alkolsüz içecekler ana harcama grubu (COICOP 01); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-alkol-tutun",
+   "ad": "TÜFE · Alkollü içecekler ve tütün (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_02"
+   },
+   "aciklama": "Tüketici fiyat endeksinin alkollü içecekler ve tütün ana harcama grubu (COICOP 02); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-giyim",
+   "ad": "TÜFE · Giyim ve ayakkabı (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_03"
+   },
+   "aciklama": "Tüketici fiyat endeksinin giyim ve ayakkabı ana harcama grubu (COICOP 03); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-konut",
+   "ad": "TÜFE · Konut, su, elektrik, gaz ve diğer yakıtlar (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_04"
+   },
+   "aciklama": "Tüketici fiyat endeksinin konut, su, elektrik, gaz ve diğer yakıtlar ana harcama grubu (COICOP 04); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-mobilya",
+   "ad": "TÜFE · Mobilya, ev eşyası ve ev bakımı (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_05"
+   },
+   "aciklama": "Tüketici fiyat endeksinin mobilya, ev eşyası ve ev bakımı ana harcama grubu (COICOP 05); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-saglik",
+   "ad": "TÜFE · Sağlık (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_06"
+   },
+   "aciklama": "Tüketici fiyat endeksinin sağlık ana harcama grubu (COICOP 06); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-ulastirma",
+   "ad": "TÜFE · Ulaştırma (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_07"
+   },
+   "aciklama": "Tüketici fiyat endeksinin ulaştırma ana harcama grubu (COICOP 07); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-iletisim",
+   "ad": "TÜFE · Bilgi ve iletişim (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_08"
+   },
+   "aciklama": "Tüketici fiyat endeksinin bilgi ve iletişim ana harcama grubu (COICOP 08); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-eglence",
+   "ad": "TÜFE · Eğlence, spor ve kültür (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_09"
+   },
+   "aciklama": "Tüketici fiyat endeksinin eğlence, spor ve kültür ana harcama grubu (COICOP 09); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-egitim",
+   "ad": "TÜFE · Eğitim hizmetleri (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_10"
+   },
+   "aciklama": "Tüketici fiyat endeksinin eğitim hizmetleri ana harcama grubu (COICOP 10); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-lokanta",
+   "ad": "TÜFE · Lokanta ve konaklama hizmetleri (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_11"
+   },
+   "aciklama": "Tüketici fiyat endeksinin lokanta ve konaklama hizmetleri ana harcama grubu (COICOP 11); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-sigorta",
+   "ad": "TÜFE · Sigorta ve finansal hizmetler (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_12"
+   },
+   "aciklama": "Tüketici fiyat endeksinin sigorta ve finansal hizmetler ana harcama grubu (COICOP 12); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-kisisel",
+   "ad": "TÜFE · Kişisel bakım, sosyal koruma ve çeşitli (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ana_13"
+   },
+   "aciklama": "Tüketici fiyat endeksinin kişisel bakım, sosyal koruma ve çeşitli ana harcama grubu (COICOP 13); endeksin bir yıl önceki aynı aya göre değişimi. Endeks 2025 baz değişiminde zincirlenmiştir.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-enerji",
+   "ad": "TÜFE · Enerji (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg09"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden enerji endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-islenmemis-gida",
+   "ad": "TÜFE · İşlenmemiş gıda (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg11"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden i̇şlenmemiş gıda endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-taze-meyve-sebze",
+   "ad": "TÜFE · Taze meyve ve sebze (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg12"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden taze meyve ve sebze endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-islenmis-gida",
+   "ad": "TÜFE · İşlenmiş gıda (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg14"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden i̇şlenmiş gıda endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-ekmek-tahil",
+   "ad": "TÜFE · Ekmek ve tahıllar (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg15"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden ekmek ve tahıllar endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-enerji-gida-disi-mal",
+   "ad": "TÜFE · Enerji ve gıda dışı mallar (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg17"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden enerji ve gıda dışı mallar endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-temel-mal",
+   "ad": "TÜFE · Temel mallar (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg18"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden temel mallar endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-dayanikli",
+   "ad": "TÜFE · Dayanıklı mallar (altın hariç) (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg20"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden dayanıklı mallar (altın hariç) endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-mallar",
+   "ad": "TÜFE · Mallar (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg08"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden mallar endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-kira",
+   "ad": "TÜFE · Kira (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg24"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden kira endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-ulastirma-hizmet",
+   "ad": "TÜFE · Ulaştırma hizmetleri (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg26"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden ulaştırma hizmetleri endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-haberlesme",
+   "ad": "TÜFE · Haberleşme hizmetleri (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg27"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden haberleşme hizmetleri endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-diger-hizmet",
+   "ad": "TÜFE · Diğer hizmetler (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg28"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden diğer hizmetler endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-ozel-a",
+   "ad": "TÜFE · Özel kapsamlı A (mevsimlik ürünler hariç) (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg02"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden özel kapsamlı a (mevsimlik ürünler hariç) endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-ozel-d",
+   "ad": "TÜFE · Özel kapsamlı D (işlenmemiş gıda, alkol ve tütün hariç) (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg05"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden özel kapsamlı d (işlenmemiş gıda, alkol ve tütün hariç) endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-ozel-e",
+   "ad": "TÜFE · Özel kapsamlı E (alkol ve tütün hariç) (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg06"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden özel kapsamlı e (alkol ve tütün hariç) endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-yonetilen-haric",
+   "ad": "TÜFE · Yönetilen ve yönlendirilen fiyatlar hariç (F) (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "oktg07"
+   },
+   "aciklama": "TÜİK'in özel kapsamlı TÜFE göstergelerinden yönetilen ve yönlendirilen fiyatlar hariç (f) endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tufe-aylik",
+   "ad": "TÜFE aylık değişim",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "tufe"
+   },
+   "aciklama": "Tüketici fiyat endeksinin bir önceki aya göre değişimi; mevsimsellikten arındırılmamış, TÜİK'in açıkladığı aylık enflasyon.",
+   "turet": "aylik_yuzde"
+  },
+  {
+   "id": "tufe-aylik-ma",
+   "ad": "TÜFE aylık değişim (mevsimsellikten arındırılmış)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB EVDS",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TUKFIYARND.OKTG01"
+   },
+   "aciklama": "TÜFE endeksinin EVDS'te yayımlanan mevsimsellikten arındırılmış hâlinin bir önceki aya göre değişimi; enflasyonun ana eğilimini ay ay izlemek için. Değişim bu sayfada hesaplanır. Enflasyon panosu arındırmayı kendi yöntemiyle de yapar; iki ölçü yöntem farkı kadar, çoğu ay birkaç onda bir puan, ayrışabilir.",
+   "turet": "aylik_yuzde"
+  },
+  {
+   "id": "b-aylik-ma",
+   "ad": "Çekirdek B aylık değişim (mevsimsellikten arındırılmış)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB EVDS",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TUKFIYARND.OKTG03"
+   },
+   "aciklama": "Çekirdek B endeksinin EVDS'te yayımlanan mevsimsellikten arındırılmış hâlinin bir önceki aya göre değişimi; enflasyonun ana eğilimini ay ay izlemek için. Değişim bu sayfada hesaplanır. Enflasyon panosu arındırmayı kendi yöntemiyle de yapar; iki ölçü yöntem farkı kadar, çoğu ay birkaç onda bir puan, ayrışabilir.",
+   "turet": "aylik_yuzde"
+  },
+  {
+   "id": "c-aylik-ma",
+   "ad": "Çekirdek C aylık değişim (mevsimsellikten arındırılmış)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB EVDS",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TUKFIYARND.OKTG04"
+   },
+   "aciklama": "Çekirdek C endeksinin EVDS'te yayımlanan mevsimsellikten arındırılmış hâlinin bir önceki aya göre değişimi; enflasyonun ana eğilimini ay ay izlemek için. Değişim bu sayfada hesaplanır. Enflasyon panosu arındırmayı kendi yöntemiyle de yapar; iki ölçü yöntem farkı kadar, çoğu ay birkaç onda bir puan, ayrışabilir.",
+   "turet": "aylik_yuzde"
+  },
+  {
+   "id": "hizmet-aylik-ma",
+   "ad": "Hizmet aylık değişim (mevsimsellikten arındırılmış)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB EVDS",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TUKFIYARND.OKTG23"
+   },
+   "aciklama": "Hizmet endeksinin EVDS'te yayımlanan mevsimsellikten arındırılmış hâlinin bir önceki aya göre değişimi; enflasyonun ana eğilimini ay ay izlemek için. Değişim bu sayfada hesaplanır. Enflasyon panosu arındırmayı kendi yöntemiyle de yapar; iki ölçü yöntem farkı kadar, çoğu ay birkaç onda bir puan, ayrışabilir.",
+   "turet": "aylik_yuzde"
+  },
+  {
+   "id": "temel-mal-aylik-ma",
+   "ad": "Temel mallar aylık değişim (mevsimsellikten arındırılmış)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB EVDS",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TUKFIYARND.OKTG18"
+   },
+   "aciklama": "Temel mallar endeksinin EVDS'te yayımlanan mevsimsellikten arındırılmış hâlinin bir önceki aya göre değişimi; enflasyonun ana eğilimini ay ay izlemek için. Değişim bu sayfada hesaplanır. Enflasyon panosu arındırmayı kendi yöntemiyle de yapar; iki ölçü yöntem farkı kadar, çoğu ay birkaç onda bir puan, ayrışabilir.",
+   "turet": "aylik_yuzde"
+  },
+  {
+   "id": "enerji-aylik-ma",
+   "ad": "Enerji aylık değişim (mevsimsellikten arındırılmış)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB EVDS",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TUKFIYARND.OKTG09"
+   },
+   "aciklama": "Enerji endeksinin EVDS'te yayımlanan mevsimsellikten arındırılmış hâlinin bir önceki aya göre değişimi; enflasyonun ana eğilimini ay ay izlemek için. Değişim bu sayfada hesaplanır. Enflasyon panosu arındırmayı kendi yöntemiyle de yapar; iki ölçü yöntem farkı kadar, çoğu ay birkaç onda bir puan, ayrışabilir.",
+   "turet": "aylik_yuzde"
+  },
+  {
+   "id": "gida-aylik-ma",
+   "ad": "Gıda ve alkolsüz içecekler aylık değişim (mevsimsellikten arındırılmış)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB EVDS",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TUKFIYARND.OKTG10"
+   },
+   "aciklama": "Gıda ve alkolsüz içecekler endeksinin EVDS'te yayımlanan mevsimsellikten arındırılmış hâlinin bir önceki aya göre değişimi; enflasyonun ana eğilimini ay ay izlemek için. Değişim bu sayfada hesaplanır. Enflasyon panosu arındırmayı kendi yöntemiyle de yapar; iki ölçü yöntem farkı kadar, çoğu ay birkaç onda bir puan, ayrışabilir.",
+   "turet": "aylik_yuzde"
+  },
+  {
+   "id": "kira-aylik-ma",
+   "ad": "Kira aylık değişim (mevsimsellikten arındırılmış)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB EVDS",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TUKFIYARND.OKTG24"
+   },
+   "aciklama": "Kira endeksinin EVDS'te yayımlanan mevsimsellikten arındırılmış hâlinin bir önceki aya göre değişimi; enflasyonun ana eğilimini ay ay izlemek için. Değişim bu sayfada hesaplanır. Enflasyon panosu arındırmayı kendi yöntemiyle de yapar; iki ölçü yöntem farkı kadar, çoğu ay birkaç onda bir puan, ayrışabilir.",
+   "turet": "aylik_yuzde"
+  },
+  {
+   "id": "ito-uge",
+   "ad": "İTO ücretliler geçinme endeksi (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "İstanbul Ticaret Odası",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "enflasyon",
+    "dosya": "Enflasyon/data/aylik.csv",
+    "sutun": "ito_uge"
+   },
+   "aciklama": "İstanbul Ticaret Odası'nın ücretliler geçinme endeksinin (1995=100) bir yıl önceki aynı aya göre değişimi. Sepet, İstanbul'daki ücretli hanelerin harcama yapısına göre ağırlıklandırılmıştır; TÜFE değil, geçim maliyetinin ölçüsüdür.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "ufe-yurtdisi",
+   "ad": "Yurt dışı üretici fiyatları (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.UFEYD01"
+   },
+   "aciklama": "Yurt dışı üretici fiyat endeksinin (ihracata giden ürünlerin üretici fiyatları) bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "ufe-tarim",
+   "ad": "Tarım ürünleri üretici fiyatları (yıllık)",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TARIMUFE01"
+   },
+   "aciklama": "Tarım, ormancılık ve balıkçılık ürünleri üretici fiyat endeksinin bir yıl önceki aynı aya göre değişimi; gıda fiyatlarının öncü göstergelerinden biri.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "pka-24ay",
+   "ad": "Piyasa katılımcılarının 24 ay sonrası enflasyon beklentisi",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/aylik.csv",
+    "sutun": "pka_24a"
+   },
+   "aciklama": "TCMB Piyasa Katılımcıları Anketi'nde 24 ay sonrası yıllık TÜFE beklentisinin ortalaması."
+  },
+  {
+   "id": "pka-5y",
+   "ad": "Piyasa katılımcılarının 5 yıl sonrası enflasyon beklentisi",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/aylik.csv",
+    "sutun": "pka_5y"
+   },
+   "aciklama": "TCMB Piyasa Katılımcıları Anketi'nde 5 yıl sonrası yıllık TÜFE beklentisi; uzun vadeli beklentinin çıpasıdır."
+  },
+  {
+   "id": "pka-yilsonu",
+   "ad": "Piyasa katılımcılarının yıl sonu enflasyon beklentisi",
+   "baslik": "enflasyon",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/aylik.csv",
+    "sutun": "pka_yilsonu"
+   },
+   "aciklama": "TCMB Piyasa Katılımcıları Anketi'nde içinde bulunulan yılın sonu için yıllık TÜFE beklentisi. Ocak anketinde hedef yıl değişir, seri o ay sıçrayabilir."
+  },
+  {
+   "id": "pka-faiz-12ay",
+   "ad": "Piyasa katılımcılarının 12 ay sonrası politika faizi beklentisi",
+   "baslik": "para",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/aylik.csv",
+    "sutun": "pka_faiz_12a"
+   },
+   "aciklama": "TCMB Piyasa Katılımcıları Anketi'nde 12 ay sonrası politika faizi beklentisi. Basit faizdir; politika faiziyle aynı dilde okunur."
+  },
+  {
+   "id": "pka-12ay-dagilim",
+   "ad": "Enflasyon beklentilerinin dağılımı (12 ay, standart sapma)",
+   "baslik": "enflasyon",
+   "birim": "puan",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/aylik.csv",
+    "sutun": "pka_12a_std"
+   },
+   "aciklama": "Piyasa Katılımcıları Anketi'nde 12 ay sonrası enflasyon beklentilerinin katılımcılar arası standart sapması. Yükselmesi beklentilerin dağıldığını, çıpanın zayıfladığını gösterir."
+  },
+  {
+   "id": "koridor-ust",
+   "ad": "Faiz koridoru üst bandı (gecelik borç verme)",
+   "baslik": "para",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "fonlama-likidite",
+    "dosya": "Fonlama/data/metrik.csv",
+    "sutun": "koridor_ust"
+   },
+   "aciklama": "TCMB'nin gecelik borç verme faizi: bankaların TCMB'den gecelik borçlanabildiği en yüksek oran. Basit faizdir."
+  },
+  {
+   "id": "bist-repo",
+   "ad": "BİST gecelik repo faizi",
+   "baslik": "para",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "Borsa İstanbul",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "fonlama-likidite",
+    "dosya": "Fonlama/data/metrik.csv",
+    "sutun": "bist_on"
+   },
+   "aciklama": "Borsa İstanbul Repo-Ters Repo Pazarı'nda gecelik işlemlerin ağırlıklı ortalama faizi."
+  },
+  {
+   "id": "tlref-politika-makas",
+   "ad": "TLREF − politika faizi",
+   "baslik": "para",
+   "birim": "puan",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST ve TCMB, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "fonlama-likidite",
+    "dosya": "Fonlama/data/metrik.csv",
+    "sutun": "spread_tlref_politika"
+   },
+   "aciklama": "Gecelik piyasa faizi (TLREF) eksi politika faizi. Artı değer piyasanın politika faizinin üstünde fonlandığını, yani TCMB'nin fonlamayı sıkılaştırdığını gösterir. İkisi de basit faizdir."
+  },
+  {
+   "id": "rezerv-para-yillik",
+   "ad": "Rezerv para yıllık büyüme",
+   "baslik": "para",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "fonlama-likidite",
+    "dosya": "Fonlama/data/metrik.csv",
+    "sutun": "rezerv_para"
+   },
+   "aciklama": "TCMB analitik bilançosunda rezerv paranın (dolaşımdaki para ve bankaların TCMB'deki mevduatı) takvimde bir yıl önceki son gözleme göre yüzde değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "emisyon-yillik",
+   "ad": "Dolaşımdaki para (emisyon) yıllık büyüme",
+   "baslik": "para",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "fonlama-likidite",
+    "dosya": "Fonlama/data/metrik.csv",
+    "sutun": "emisyon"
+   },
+   "aciklama": "TCMB'nin dolaşıma çıkardığı banknotların takvimde bir yıl önceki son gözleme göre yüzde değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "reeskont",
+   "ad": "Reeskont faizi",
+   "baslik": "para",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.REESAVANS.RIO",
+    "ilk_yil": 1990
+   },
+   "aciklama": "TCMB'nin reeskont işlemlerinde (ihracatçıya döviz kazandırıcı faaliyetler için verilen kredi) uyguladığı iskonto oranı."
+  },
+  {
+   "id": "dibs-6a",
+   "ad": "DİBS 6 ay getirisi",
+   "baslik": "piyasa",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/metrik.csv",
+    "sutun": "n6a"
+   },
+   "aciklama": "Devlet iç borçlanma senetlerinin gösterge fiyatlarından kurulan sıfır kuponlu eğrinin 6 ay düğümü. Yıllık bileşik getiridir; basit faiz olan politika faiziyle aynı dilde değildir."
+  },
+  {
+   "id": "dibs-1y",
+   "ad": "DİBS 1 yıl getirisi",
+   "baslik": "piyasa",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/metrik.csv",
+    "sutun": "n1y"
+   },
+   "aciklama": "Devlet iç borçlanma senetlerinin gösterge fiyatlarından kurulan sıfır kuponlu eğrinin 1 yıl düğümü. Yıllık bileşik getiridir; basit faiz olan politika faiziyle aynı dilde değildir."
+  },
+  {
+   "id": "dibs-3y",
+   "ad": "DİBS 3 yıl getirisi",
+   "baslik": "piyasa",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/metrik.csv",
+    "sutun": "n3y"
+   },
+   "aciklama": "Devlet iç borçlanma senetlerinin gösterge fiyatlarından kurulan sıfır kuponlu eğrinin 3 yıl düğümü. Yıllık bileşik getiridir; basit faiz olan politika faiziyle aynı dilde değildir."
+  },
+  {
+   "id": "dibs-7y",
+   "ad": "DİBS 7 yıl getirisi",
+   "baslik": "piyasa",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/metrik.csv",
+    "sutun": "n7y"
+   },
+   "aciklama": "Devlet iç borçlanma senetlerinin gösterge fiyatlarından kurulan sıfır kuponlu eğrinin 7 yıl düğümü. Yıllık bileşik getiridir; basit faiz olan politika faiziyle aynı dilde değildir."
+  },
+  {
+   "id": "dibs-reel-2y",
+   "ad": "2 yıllık reel getiri (TÜFE'ye endeksli DİBS)",
+   "baslik": "piyasa",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/metrik.csv",
+    "sutun": "r2y"
+   },
+   "aciklama": "TÜFE'ye endeksli devlet tahvillerinden kurulan reel eğrinin 2 yıllık düğümü; yıllık bileşik reel getiri."
+  },
+  {
+   "id": "forward-2y1y",
+   "ad": "2y1y ileri faiz",
+   "baslik": "piyasa",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/metrik.csv",
+    "sutun": "f_2y1y"
+   },
+   "aciklama": "Spot eğriden türetilen, iki yıl sonra başlayan bir yıllık faiz. Yıllık bileşik."
+  },
+  {
+   "id": "forward-5y4y",
+   "ad": "5y4y ileri faiz",
+   "baslik": "piyasa",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/metrik.csv",
+    "sutun": "f_5y4y"
+   },
+   "aciklama": "Spot eğriden türetilen, beş yıl sonra başlayan dört yıllık faiz; eğrinin uzun ucunun 'kalıcı' faiz okuması. Yıllık bileşik."
+  },
+  {
+   "id": "egim-2y5y",
+   "ad": "Getiri eğrisinin eğimi (2 yıl − 5 yıl)",
+   "baslik": "piyasa",
+   "birim": "puan",
+   "tur": "oran",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "BİST, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "dibs-verim-egrisi",
+    "dosya": "DIBS/data/metrik.csv",
+    "sutun": "egim_2y5y"
+   },
+   "aciklama": "2 yıllık spot getiri eksi 5 yıllık spot getiri. Artı değer kısa ucun uzun uçtan yüksek, yani eğrinin ters olduğunu gösterir."
+  },
+  {
+   "id": "gram-altin",
+   "ad": "Gram altın (BİST)",
+   "baslik": "piyasa",
+   "birim": "TL/gr",
+   "tur": "seviye",
+   "frekans": "gunluk",
+   "ondalik": 2,
+   "kurum": "Borsa İstanbul",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.ALTINPIYASA.KAP02",
+    "carpan": 0.001,
+    "ilk_yil": 2018
+   },
+   "aciklama": "Borsa İstanbul Kıymetli Madenler Piyasası'nda altının kilogram başına Türk lirası kapanış fiyatının gram karşılığı. Gram başına kote edilen sözleşme seyrek işlem gördüğü için kilogram fiyatı kullanılır."
+  },
+  {
+   "id": "xu030",
+   "ad": "BIST 30",
+   "baslik": "piyasa",
+   "birim": "puan",
+   "tur": "seviye",
+   "frekans": "gunluk",
+   "ondalik": 0,
+   "kurum": "Borsa İstanbul",
+   "kaynak": {
+    "tur": "yahoo",
+    "kod": "XU030.IS"
+   },
+   "aciklama": "BIST 30 endeksinin günlük kapanışı; gün içi kapanmamış seans seriye alınmaz."
+  },
+  {
+   "id": "xbank",
+   "ad": "BIST Bankacılık",
+   "baslik": "piyasa",
+   "birim": "puan",
+   "tur": "seviye",
+   "frekans": "gunluk",
+   "ondalik": 0,
+   "kurum": "Borsa İstanbul",
+   "kaynak": {
+    "tur": "yahoo",
+    "kod": "XBANK.IS"
+   },
+   "aciklama": "BIST Bankacılık endeksinin günlük kapanışı; gün içi kapanmamış seans seriye alınmaz."
+  },
+  {
+   "id": "xusin",
+   "ad": "BIST Sınai",
+   "baslik": "piyasa",
+   "birim": "puan",
+   "tur": "seviye",
+   "frekans": "gunluk",
+   "ondalik": 0,
+   "kurum": "Borsa İstanbul",
+   "kaynak": {
+    "tur": "yahoo",
+    "kod": "XUSIN.IS"
+   },
+   "aciklama": "BIST Sınai endeksinin günlük kapanışı; gün içi kapanmamış seans seriye alınmaz."
+  },
+  {
+   "id": "redk-yiufe-tcmb",
+   "ad": "Reel efektif kur (Yİ-ÜFE bazlı, TCMB)",
+   "baslik": "kur",
+   "birim": "endeks",
+   "tur": "seviye",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.RK.U01.Y"
+   },
+   "aciklama": "TCMB'nin yurt içi üretici fiyatlarıyla hesapladığı reel efektif döviz kuru endeksi (2025=100). Artış liranın reel değer kazandığını gösterir."
+  },
+  {
+   "id": "tasit-faiz",
+   "ad": "Taşıt kredisi faizi",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/faiz.csv",
+    "sutun": "f_tasit"
+   },
+   "aciklama": "Bankaların yeni kullandırdığı TL taşıt kredilerinin ağırlıklı ortalama faizi (akım, yıllık)."
+  },
+  {
+   "id": "tuketici-faiz",
+   "ad": "Tüketici kredisi faizi",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/faiz.csv",
+    "sutun": "f_tuketici"
+   },
+   "aciklama": "İhtiyaç, taşıt ve konut kredilerini birlikte kapsayan yeni kullandırım faizi (akım, yıllık)."
+  },
+  {
+   "id": "ticari-usd-faiz",
+   "ad": "Ticari kredi faizi (dolar)",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.KTF17.USD"
+   },
+   "aciklama": "Bankaların yeni kullandırdığı ABD doları cinsi ticari kredilerin ağırlıklı ortalama faizi (akım, yıllık)."
+  },
+  {
+   "id": "ticari-eur-faiz",
+   "ad": "Ticari kredi faizi (euro)",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.KTF17.EUR"
+   },
+   "aciklama": "Bankaların yeni kullandırdığı euro cinsi ticari kredilerin ağırlıklı ortalama faizi (akım, yıllık)."
+  },
+  {
+   "id": "ihtiyac-kmh-faiz",
+   "ad": "İhtiyaç kredisi faizi (kredili mevduat dahil)",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.KTF101"
+   },
+   "aciklama": "Kredili mevduat hesabını da kapsayan TL ihtiyaç kredisi yeni kullandırım faizi (akım, yıllık)."
+  },
+  {
+   "id": "mevduat-1ay-faiz",
+   "ad": "TL mevduat faizi (1 aya kadar)",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TRY.MT01"
+   },
+   "aciklama": "Bankaların yeni açtığı 1 aya kadar vadeli TL mevduatın ağırlıklı ortalama faizi (akım, yıllık)."
+  },
+  {
+   "id": "mevduat-3ay-faiz",
+   "ad": "TL mevduat faizi (3 aya kadar)",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TRY.MT02"
+   },
+   "aciklama": "Bankaların yeni açtığı 1–3 ay vadeli TL mevduatın ağırlıklı ortalama faizi (akım, yıllık)."
+  },
+  {
+   "id": "mevduat-1yil-faiz",
+   "ad": "TL mevduat faizi (1 yıl ve üstü)",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TRY.MT05"
+   },
+   "aciklama": "Bankaların yeni açtığı 1 yıl ve daha uzun vadeli TL mevduatın ağırlıklı ortalama faizi (akım, yıllık)."
+  },
+  {
+   "id": "mevduat-usd-faiz",
+   "ad": "Dolar mevduat faizi",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.USD.MT06"
+   },
+   "aciklama": "Bankaların yeni açtığı ABD doları mevduatın ağırlıklı ortalama faizi (akım, yıllık, bütün vadeler)."
+  },
+  {
+   "id": "mevduat-eur-faiz",
+   "ad": "Euro mevduat faizi",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.EUR.MT06"
+   },
+   "aciklama": "Bankaların yeni açtığı euro mevduatın ağırlıklı ortalama faizi (akım, yıllık, bütün vadeler)."
+  },
+  {
+   "id": "kredi-hacmi-yillik",
+   "ad": "Toplam kredi hacmi yıllık büyüme (aylık, 2008'den)",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/metrik_aylik.csv",
+    "sutun": "g_kh_toplam_yil"
+   },
+   "aciklama": "Bankacılık sektörü toplam kredi hacminin bir yıl önceki aynı aya göre nominal büyümesi; kur etkisinden arındırılmamıştır."
+  },
+  {
+   "id": "katilim-payi",
+   "ad": "Katılım bankalarının kredi payı",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/metrik_aylik.csv",
+    "sutun": "katilim_pay"
+   },
+   "aciklama": "Katılım bankalarının toplam kredi hacmi içindeki payı."
+  },
+  {
+   "id": "takip-tuketici",
+   "ad": "Takipteki alacak oranı (tüketici)",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/metrik_haftalik.csv",
+    "sutun": "npl_tuketici"
+   },
+   "aciklama": "Tüketici kredilerinde takipteki alacakların toplam tüketici kredisine oranı."
+  },
+  {
+   "id": "takip-ticari",
+   "ad": "Takipteki alacak oranı (ticari)",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 2,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/metrik_haftalik.csv",
+    "sutun": "npl_ticari"
+   },
+   "aciklama": "Ticari kredilerde takipteki alacakların toplam ticari krediye oranı."
+  },
+  {
+   "id": "kredi-mevduat",
+   "ad": "Kredi / mevduat oranı",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "kredi-parasal",
+    "dosya": "Kredi/data/metrik_haftalik.csv",
+    "sutun": "kredi_mevduat"
+   },
+   "aciklama": "Bankacılık sektörünün toplam kredisinin toplam mevduatına oranı."
+  },
+  {
+   "id": "m1-yillik",
+   "ad": "M1 para arzı yıllık büyüme",
+   "baslik": "kredi",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.HPBITABLO1.2"
+   },
+   "aciklama": "Dolaşımdaki para ile vadesiz TL ve döviz mevduatından oluşan M1'in takvimde bir yıl önceki son gözleme göre yüzde değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "dis-ticaret-denge-12ay",
+   "ad": "Dış ticaret (mal) dengesi (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "odemeler-dengesi",
+    "dosya": "OdemelerDengesi/data/metrik.csv",
+    "sutun": "mal_denge12",
+    "carpan": 0.001
+   },
+   "aciklama": "Ödemeler dengesi tanımıyla mal ihracatı eksi ithalatı, son 12 ayın toplamı. Eksi değer dış ticaret açığıdır."
+  },
+  {
+   "id": "hizmet-denge-12ay",
+   "ad": "Hizmet dengesi (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "odemeler-dengesi",
+    "dosya": "OdemelerDengesi/data/metrik.csv",
+    "sutun": "hizmet_denge12",
+    "carpan": 0.001
+   },
+   "aciklama": "Turizm, taşımacılık ve diğer hizmet gelirleri eksi giderleri, son 12 ayın toplamı."
+  },
+  {
+   "id": "birincil-gelir-12ay",
+   "ad": "Birincil gelir dengesi (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "odemeler-dengesi",
+    "dosya": "OdemelerDengesi/data/metrik.csv",
+    "sutun": "birincil_denge12",
+    "carpan": 0.001
+   },
+   "aciklama": "Yatırım geliri (faiz, kâr payı) ve ücret ödemelerinin net tutarı, son 12 ayın toplamı. Eksi değer dışarıya net ödemedir."
+  },
+  {
+   "id": "dyy-giris-12ay",
+   "ad": "Doğrudan yatırım girişi (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "odemeler-dengesi",
+    "dosya": "OdemelerDengesi/data/metrik.csv",
+    "sutun": "dyy_giris12",
+    "carpan": 0.001
+   },
+   "aciklama": "Yurt dışı yerleşiklerin Türkiye'deki doğrudan yatırımlarındaki net artış (yükümlülük bacağı), son 12 ayın toplamı."
+  },
+  {
+   "id": "portfoy-giris-12ay",
+   "ad": "Portföy girişi (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "odemeler-dengesi",
+    "dosya": "OdemelerDengesi/data/metrik.csv",
+    "sutun": "portfoy_giris12",
+    "carpan": 0.001
+   },
+   "aciklama": "Yurt dışı yerleşiklerin hisse senedi ve borç senedi alımlarının net tutarı (yükümlülük bacağı), son 12 ayın toplamı."
+  },
+  {
+   "id": "kaliteli-finansman-12ay",
+   "ad": "Kaliteli finansman (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "odemeler-dengesi",
+    "dosya": "OdemelerDengesi/data/metrik.csv",
+    "sutun": "kaliteli12",
+    "carpan": 0.001
+   },
+   "aciklama": "Doğrudan yatırım girişi ile özel sektörün uzun vadeli net kredi kullanımının toplamı, son 12 ay. Cari açığın görece kalıcı kaynaklarla finanse edilen kısmıdır."
+  },
+  {
+   "id": "sicak-para-12ay",
+   "ad": "Sıcak para (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "odemeler-dengesi",
+    "dosya": "OdemelerDengesi/data/metrik.csv",
+    "sutun": "sicak_para12",
+    "carpan": 0.001
+   },
+   "aciklama": "Portföy girişi, kısa vadeli kredi yükümlülüğü ve yurt dışı yerleşiklerin mevduatının toplamı, son 12 ay. Hızla geri çıkabilecek finansmandır."
+  },
+  {
+   "id": "net-hata-noksan-12ay",
+   "ad": "Net hata ve noksan (12 aylık)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "odemeler-dengesi",
+    "dosya": "OdemelerDengesi/data/metrik.csv",
+    "sutun": "nhn12",
+    "carpan": 0.001
+   },
+   "aciklama": "Ödemeler dengesinde kaydı bulunamayan akımların net tutarı, son 12 ayın toplamı. Artı değer kaynağı belirsiz girişlerdir."
+  },
+  {
+   "id": "rollover-banka",
+   "ad": "Dış borç çevirme oranı — bankalar",
+   "baslik": "dis",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.ODEROLL.K1"
+   },
+   "aciklama": "Kısa ve uzun vadeli dış kredi kullanımlarının aynı dönemdeki geri ödemelere oranı. Yüzün üstü sektörün ödediğinden fazla yeni borç bulabildiğini gösterir."
+  },
+  {
+   "id": "rollover-diger",
+   "ad": "Dış borç çevirme oranı — diğer sektörler",
+   "baslik": "dis",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.ODEROLL.K2"
+   },
+   "aciklama": "Kısa ve uzun vadeli dış kredi kullanımlarının aynı dönemdeki geri ödemelere oranı. Yüzün üstü sektörün ödediğinden fazla yeni borç bulabildiğini gösterir."
+  },
+  {
+   "id": "uyp-net",
+   "ad": "Uluslararası yatırım pozisyonu (net)",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.UYPUCAY.K1",
+    "carpan": 0.001
+   },
+   "aciklama": "Türkiye'de yerleşiklerin yurt dışındaki finansal varlıkları eksi yurt dışına olan yükümlülükleri, çeyrek sonu stok. Eksi değer net yükümlülüktür."
+  },
+  {
+   "id": "net-dis-borc",
+   "ad": "Net dış borç stoku",
+   "baslik": "dis",
+   "birim": "milyar USD",
+   "tur": "fark",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.NETDISBORC.G1",
+    "carpan": 0.001
+   },
+   "aciklama": "Brüt dış borç stoku eksi yurt dışındaki borç niteliğindeki varlıklar, çeyrek sonu."
+  },
+  {
+   "id": "ara-mali-ithalat-yillik",
+   "ad": "Ara malı ithalatı yıllık değişim",
+   "baslik": "dis",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.ITHALATBEC.2"
+   },
+   "aciklama": "Ara malı ithalatı (dolar, geniş ekonomik gruplar sınıflaması) tutarının bir yıl önceki aynı aya göre yüzde değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "yatirim-mali-ithalat-yillik",
+   "ad": "Yatırım malı ithalatı yıllık değişim",
+   "baslik": "dis",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.ITHALATBEC.1"
+   },
+   "aciklama": "Yatırım malı ithalatı (dolar, geniş ekonomik gruplar sınıflaması) tutarının bir yıl önceki aynı aya göre yüzde değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "ihracat-aylik-yillik",
+   "ad": "İhracat (genel ticaret sistemi) yıllık değişim",
+   "baslik": "dis",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.IHRACATBEC.9999"
+   },
+   "aciklama": "İhracat (genel ticaret sistemi) (dolar, geniş ekonomik gruplar sınıflaması) tutarının bir yıl önceki aynı aya göre yüzde değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "ithalat-aylik-yillik",
+   "ad": "İthalat (genel ticaret sistemi) yıllık değişim",
+   "baslik": "dis",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.ITHALATBEC.9999"
+   },
+   "aciklama": "İthalat (genel ticaret sistemi) (dolar, geniş ekonomik gruplar sınıflaması) tutarının bir yıl önceki aynı aya göre yüzde değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "ihracat-birim-deger",
+   "ad": "İhracat birim değer endeksi (yıllık)",
+   "baslik": "dis",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.DT.IH.FIY.D01.2010"
+   },
+   "aciklama": "Dolar cinsinden i̇hracat birim değer endeksiinin bir yıl önceki aynı aya göre değişimi; dış ticarette fiyat etkisini miktar etkisinden ayırır.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "ithalat-birim-deger",
+   "ad": "İthalat birim değer endeksi (yıllık)",
+   "baslik": "dis",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.DT.IT.FIY.D01.2010"
+   },
+   "aciklama": "Dolar cinsinden i̇thalat birim değer endeksiinin bir yıl önceki aynı aya göre değişimi; dış ticarette fiyat etkisini miktar etkisinden ayırır.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "gelir-reel",
+   "ad": "Bütçe gelirleri reel yıllık artış (12 aylık)",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "Hazine ve Maliye Bakanlığı, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "butce-borc",
+    "dosya": "Butce/data/aylik_metrik.csv",
+    "sutun": "gelir_reel_yy"
+   },
+   "aciklama": "Son 12 ayın merkezi yönetim bütçe gelirlerinin TÜFE ile reelleştirilmiş toplamının bir yıl önceye göre değişimi."
+  },
+  {
+   "id": "vergi-reel",
+   "ad": "Vergi gelirleri reel yıllık artış (12 aylık)",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "Hazine ve Maliye Bakanlığı, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "butce-borc",
+    "dosya": "Butce/data/aylik_metrik.csv",
+    "sutun": "vergi_reel_yy"
+   },
+   "aciklama": "Son 12 ayın vergi gelirlerinin TÜFE ile reelleştirilmiş toplamının bir yıl önceye göre değişimi."
+  },
+  {
+   "id": "faiz-disi-gider-reel",
+   "ad": "Faiz dışı giderler reel yıllık artış (12 aylık)",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "Hazine ve Maliye Bakanlığı, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "butce-borc",
+    "dosya": "Butce/data/aylik_metrik.csv",
+    "sutun": "fdg_reel_yy"
+   },
+   "aciklama": "Son 12 ayın faiz dışı bütçe giderlerinin TÜFE ile reelleştirilmiş toplamının bir yıl önceye göre değişimi."
+  },
+  {
+   "id": "faiz-gideri-reel",
+   "ad": "Faiz giderleri reel yıllık artış (12 aylık)",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "Hazine ve Maliye Bakanlığı, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "butce-borc",
+    "dosya": "Butce/data/aylik_metrik.csv",
+    "sutun": "faiz_reel_yy"
+   },
+   "aciklama": "Son 12 ayın faiz giderlerinin TÜFE ile reelleştirilmiş toplamının bir yıl önceye göre değişimi."
+  },
+  {
+   "id": "ic-borc-cevirme",
+   "ad": "İç borç çevirme oranı (12 aylık)",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "Hazine ve Maliye Bakanlığı, hesap TTO",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "butce-borc",
+    "dosya": "Butce/data/aylik_metrik.csv",
+    "sutun": "cevirme"
+   },
+   "aciklama": "Son 12 ayda yapılan iç borçlanma satışlarının aynı dönemdeki iç borç ödemelerine oranı. Yüzün üstü Hazine'nin ödediğinden fazla iç borç aldığını gösterir."
+  },
+  {
+   "id": "ic-borc-stok",
+   "ad": "Merkezi yönetim iç borç stoku",
+   "baslik": "kamu",
+   "birim": "trilyon TL",
+   "tur": "seviye",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "Hazine ve Maliye Bakanlığı",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "butce-borc",
+    "dosya": "Butce/data/aylik_metrik.csv",
+    "sutun": "ic_borc_trl"
+   },
+   "aciklama": "Merkezi yönetimin Türk lirası ve döviz cinsi iç borç stoku, ay sonu."
+  },
+  {
+   "id": "dibs-pay-bankalar",
+   "ad": "DİBS stokunda bankaların payı",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "butce-borc",
+    "dosya": "Butce/data/haftalik_metrik.csv",
+    "sutun": "pay_dibs_bankalar"
+   },
+   "aciklama": "Devlet iç borçlanma senetleri stokunun (piyasa değeri) sahiplerine göre dağılımında bu kesimin payı, haftalık."
+  },
+  {
+   "id": "dibs-pay-tcmb",
+   "ad": "DİBS stokunda TCMB'nin payı",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "butce-borc",
+    "dosya": "Butce/data/haftalik_metrik.csv",
+    "sutun": "pay_dibs_tcmb"
+   },
+   "aciklama": "Devlet iç borçlanma senetleri stokunun (piyasa değeri) sahiplerine göre dağılımında bu kesimin payı, haftalık."
+  },
+  {
+   "id": "dibs-pay-fonlar",
+   "ad": "DİBS stokunda yatırım fonlarının payı",
+   "baslik": "kamu",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "hat",
+    "proje": "butce-borc",
+    "dosya": "Butce/data/haftalik_metrik.csv",
+    "sutun": "pay_dibs_fonlar"
+   },
+   "aciklama": "Devlet iç borçlanma senetleri stokunun (piyasa değeri) sahiplerine göre dağılımında bu kesimin payı, haftalık."
+  },
+  {
+   "id": "gsyh-takvim-yillik",
+   "ad": "GSYH yıllık büyüme (takvim etkisinden arındırılmış)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GSYIH40.HY.B1GQ"
+   },
+   "aciklama": "Harcama yöntemiyle GSYH'nin gsyh kaleminin takvim etkisinden arındırılmış zincirlenmiş hacminin bir yıl önceki aynı çeyreğe göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "hanehalki-tuketim-yillik",
+   "ad": "Hanehalkı tüketimi yıllık büyüme (takvim etkisinden arındırılmış)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GSYIH40.HY.P311"
+   },
+   "aciklama": "Harcama yöntemiyle GSYH'nin hanehalkı tüketimi kaleminin takvim etkisinden arındırılmış zincirlenmiş hacminin bir yıl önceki aynı çeyreğe göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "devlet-tuketim-yillik",
+   "ad": "Devlet tüketimi yıllık büyüme (takvim etkisinden arındırılmış)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GSYIH40.HY.P32"
+   },
+   "aciklama": "Harcama yöntemiyle GSYH'nin devlet tüketimi kaleminin takvim etkisinden arındırılmış zincirlenmiş hacminin bir yıl önceki aynı çeyreğe göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "yatirim-yillik",
+   "ad": "Sabit sermaye yatırımı yıllık büyüme (takvim etkisinden arındırılmış)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GSYIH40.HY.P51G"
+   },
+   "aciklama": "Harcama yöntemiyle GSYH'nin sabit sermaye yatırımı kaleminin takvim etkisinden arındırılmış zincirlenmiş hacminin bir yıl önceki aynı çeyreğe göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "ihracat-gsyh-yillik",
+   "ad": "Mal ve hizmet ihracatı yıllık büyüme (takvim etkisinden arındırılmış)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GSYIH40.HY.P6"
+   },
+   "aciklama": "Harcama yöntemiyle GSYH'nin mal ve hizmet ihracatı kaleminin takvim etkisinden arındırılmış zincirlenmiş hacminin bir yıl önceki aynı çeyreğe göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "ithalat-gsyh-yillik",
+   "ad": "Mal ve hizmet ithalatı yıllık büyüme (takvim etkisinden arındırılmış)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GSYIH40.HY.P7"
+   },
+   "aciklama": "Harcama yöntemiyle GSYH'nin mal ve hizmet ithalatı kaleminin takvim etkisinden arındırılmış zincirlenmiş hacminin bir yıl önceki aynı çeyreğe göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "sanayi-katma-yillik",
+   "ad": "Sanayi katma değeri yıllık büyüme",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GSYIH40.IFC.BTE"
+   },
+   "aciklama": "Üretim yöntemiyle GSYH'de sanayi sektörünün zincirlenmiş hacim katma değerinin bir yıl önceki aynı çeyreğe göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "insaat-katma-yillik",
+   "ad": "İnşaat katma değeri yıllık büyüme",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GSYIH40.IFC.F"
+   },
+   "aciklama": "Üretim yöntemiyle GSYH'de i̇nşaat sektörünün zincirlenmiş hacim katma değerinin bir yıl önceki aynı çeyreğe göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "ticaret-katma-yillik",
+   "ad": "Ticaret, ulaştırma, konaklama katma değeri yıllık büyüme",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GSYIH40.IFC.GTI"
+   },
+   "aciklama": "Üretim yöntemiyle GSYH'de ticaret, ulaştırma, konaklama sektörünün zincirlenmiş hacim katma değerinin bir yıl önceki aynı çeyreğe göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "finans-katma-yillik",
+   "ad": "Finans ve sigorta katma değeri yıllık büyüme",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GSYIH40.IFC.K"
+   },
+   "aciklama": "Üretim yöntemiyle GSYH'de finans ve sigorta sektörünün zincirlenmiş hacim katma değerinin bir yıl önceki aynı çeyreğe göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "tarim-katma-yillik",
+   "ad": "Tarım katma değeri yıllık büyüme",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.GSYIH40.IFC.A"
+   },
+   "aciklama": "Üretim yöntemiyle GSYH'de tarım sektörünün zincirlenmiş hacim katma değerinin bir yıl önceki aynı çeyreğe göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "kart-harcama-yillik",
+   "ad": "Kartlı harcamalar yıllık değişim (haftalık)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "haftalik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.KKHARTUT.KT1"
+   },
+   "aciklama": "Banka kartı ve kredi kartıyla yapılan harcamaların haftalık tutarının takvimde bir yıl önceki son haftaya göre nominal yüzde değişimi; tüketimin en hızlı izlenebilen göstergesi. Enflasyondan arındırılmamıştır.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "kartli-odeme-reel",
+   "ad": "Kartlı ödeme endeksi, reel (yıllık)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "BKM (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.KARTMETRE.D2"
+   },
+   "aciklama": "Bankalararası Kart Merkezi'nin enflasyondan arındırılmış genel kartlı ödeme endeksinin bir yıl önceki aynı aya göre değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "konut-satis",
+   "ad": "Konut satışları",
+   "baslik": "buyume",
+   "birim": "adet",
+   "tur": "seviye",
+   "frekans": "aylik",
+   "ondalik": 0,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.AKONUTSAT1.KTRTOPLAM"
+   },
+   "aciklama": "Türkiye'de bir ayda satılan konut sayısı (ilk el ve ikinci el, ipotekli ve diğer)."
+  },
+  {
+   "id": "konut-satis-ipotekli",
+   "ad": "İpotekli konut satışları",
+   "baslik": "buyume",
+   "birim": "adet",
+   "tur": "seviye",
+   "frekans": "aylik",
+   "ondalik": 0,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.AKONUTSAT2.KTRTOPLAM"
+   },
+   "aciklama": "Türkiye'de bir ayda ipotekli (krediyle) satılan konut sayısı; konut kredisi faizine en duyarlı satış kalemi."
+  },
+  {
+   "id": "konut-fiyat-istanbul",
+   "ad": "İstanbul konut fiyat endeksi yıllık değişim",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.KFE.TR10"
+   },
+   "aciklama": "TCMB konut fiyat endeksinin İstanbul (TR10) bölgesi için bir yıl önceki aynı aya göre nominal değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "yeni-konut-fiyat",
+   "ad": "Yeni konut fiyat endeksi yıllık değişim",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.YKFE.TR"
+   },
+   "aciklama": "Yeni konutlar fiyat endeksinin bir yıl önceki aynı aya göre nominal değişimi.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "konut-kira",
+   "ad": "Değerlemesi yapılan konutların birim kirası (yıllık)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "ceyreklik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BK.TR"
+   },
+   "aciklama": "Değerleme raporlarından derlenen Türkiye geneli konut birim kirasının bir yıl önceki aynı çeyreğe göre değişimi; TÜFE kira kalemine öncü bir okuma.",
+   "turet": "yillik_yuzde"
+  },
+  {
+   "id": "isgucune-katilim",
+   "ad": "İşgücüne katılma oranı (mevsimsellikten arındırılmış)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TIG06"
+   },
+   "aciklama": "15 ve daha yukarı yaştaki nüfus içinde işgücünün (çalışan ya da iş arayan) payı."
+  },
+  {
+   "id": "istihdam-orani",
+   "ad": "İstihdam oranı (mevsimsellikten arındırılmış)",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TÜİK",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.TIG07"
+   },
+   "aciklama": "15 ve daha yukarı yaştaki nüfus içinde çalışanların payı."
+  },
+  {
+   "id": "finansal-guven",
+   "ad": "Finansal hizmetler güven endeksi",
+   "baslik": "buyume",
+   "birim": "endeks",
+   "tur": "fark",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.FHGE.S01"
+   },
+   "aciklama": "Finansal kuruluşların iş durumu ve talep değerlendirmelerinden derlenen güven endeksi."
+  },
+  {
+   "id": "kko-dayanikli",
+   "ad": "Kapasite kullanım oranı — dayanıklı tüketim malları",
+   "baslik": "buyume",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 1,
+   "kurum": "TCMB",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.KKO2.IS.CDUR"
+   },
+   "aciklama": "İktisadi Yönelim Anketi'nden dayanıklı tüketim malı üreten imalat firmalarının kapasite kullanım oranı (mevsimsellikten arındırılmamış)."
+  },
+  {
+   "id": "politika-usa",
+   "ad": "Politika faizi — ABD (Fed)",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.USA"
+   },
+   "aciklama": "ABD (Fed) merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-xm",
+   "ad": "Politika faizi — Euro Bölgesi (ECB)",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.XM"
+   },
+   "aciklama": "Euro Bölgesi (ECB) merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-gbr",
+   "ad": "Politika faizi — Birleşik Krallık (BoE)",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.GBR"
+   },
+   "aciklama": "Birleşik Krallık (BoE) merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-jpn",
+   "ad": "Politika faizi — Japonya (BoJ)",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.JPN"
+   },
+   "aciklama": "Japonya (BoJ) merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-che",
+   "ad": "Politika faizi — İsviçre (SNB)",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.CHE"
+   },
+   "aciklama": "İsviçre (SNB) merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-can",
+   "ad": "Politika faizi — Kanada",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.CAN"
+   },
+   "aciklama": "Kanada merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-aus",
+   "ad": "Politika faizi — Avustralya",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.AUS"
+   },
+   "aciklama": "Avustralya merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-bra",
+   "ad": "Politika faizi — Brezilya",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.BRA"
+   },
+   "aciklama": "Brezilya merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-mex",
+   "ad": "Politika faizi — Meksika",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.MEX"
+   },
+   "aciklama": "Meksika merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-zaf",
+   "ad": "Politika faizi — Güney Afrika",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.ZAF"
+   },
+   "aciklama": "Güney Afrika merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-pol",
+   "ad": "Politika faizi — Polonya",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.POL"
+   },
+   "aciklama": "Polonya merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-hun",
+   "ad": "Politika faizi — Macaristan",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.HUN"
+   },
+   "aciklama": "Macaristan merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-cze",
+   "ad": "Politika faizi — Çekya",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.CZE"
+   },
+   "aciklama": "Çekya merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-ind",
+   "ad": "Politika faizi — Hindistan",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.IND"
+   },
+   "aciklama": "Hindistan merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-idn",
+   "ad": "Politika faizi — Endonezya",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.IDN"
+   },
+   "aciklama": "Endonezya merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-chn",
+   "ad": "Politika faizi — Çin",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.CHN"
+   },
+   "aciklama": "Çin merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-kor",
+   "ad": "Politika faizi — Güney Kore",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.KOR"
+   },
+   "aciklama": "Güney Kore merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  },
+  {
+   "id": "politika-rus",
+   "ad": "Politika faizi — Rusya",
+   "baslik": "dunya",
+   "birim": "%",
+   "tur": "oran",
+   "frekans": "aylik",
+   "ondalik": 2,
+   "kurum": "BIS (TCMB EVDS)",
+   "kaynak": {
+    "tur": "evds",
+    "kod": "TP.BISPOLFAIZ.RUS"
+   },
+   "aciklama": "Rusya merkez bankasının politika faizi, ay sonu. BIS'in derlediği merkez bankası politika faizleri setinden TCMB EVDS aracılığıyla."
+  }
+ ],
+ "setler": [
+  {
+   "id": "faiz-koridoru",
+   "ad": "Faiz koridoru ve gecelik faiz",
+   "baslik": "para",
+   "seriler": [
+    "koridor-alt",
+    "politika-faizi",
+    "tlref",
+    "aofm",
+    "koridor-ust"
+   ],
+   "aciklama": "TCMB'nin ilan ettiği koridor ve politika faizi ile piyasanın fiilen fonlandığı gecelik faiz ve TCMB fonlamasının ortalama maliyeti. Hepsi basit faizdir."
+  },
+  {
+   "id": "politika-beklenti",
+   "ad": "Politika faizi ve beklentisi",
+   "baslik": "para",
+   "seriler": [
+    "politika-faizi-aylik",
+    "pka-faiz-12ay"
+   ],
+   "aciklama": "Politika faizi ile piyasa katılımcılarının 12 ay sonrası için beklediği politika faizi; aradaki fark beklenen indirimin büyüklüğüdür."
+  },
+  {
+   "id": "dibs-egrisi",
+   "ad": "DİBS getiri eğrisi",
+   "baslik": "piyasa",
+   "seriler": [
+    "dibs-3a",
+    "dibs-1y",
+    "dibs-2y",
+    "dibs-5y",
+    "dibs-9y"
+   ],
+   "aciklama": "Sıfır kuponlu DİBS eğrisinin beş düğümü. Yıllık bileşik getiridir; politika faiziyle aynı grafikte kıyaslanmaz."
+  },
+  {
+   "id": "ileri-faizler",
+   "ad": "İleri faizler",
+   "baslik": "piyasa",
+   "seriler": [
+    "forward-1y1y",
+    "forward-2y1y",
+    "forward-5y4y"
+   ],
+   "aciklama": "Spot eğriden türetilen ileri faizler: piyasanın bir, iki ve beş yıl sonrası için fiyatladığı faiz (vade primi dahil)."
+  },
+  {
+   "id": "borsa-endeksleri",
+   "ad": "BIST endeksleri",
+   "baslik": "piyasa",
+   "seriler": [
+    "bist100",
+    "xu030",
+    "xbank",
+    "xusin"
+   ],
+   "aciklama": "Borsa İstanbul'un geniş, büyük şirket, bankacılık ve sanayi endeksleri. Düzeyleri farklı olduğu için yıllık değişim gösterimiyle kıyaslanır."
+  },
+  {
+   "id": "enflasyon-olculeri",
+   "ad": "Enflasyonun ana göstergeleri",
+   "baslik": "enflasyon",
+   "seriler": [
+    "tufe-yillik",
+    "cekirdek-b",
+    "cekirdek-c",
+    "hizmet-yillik",
+    "tufe-temel-mal"
+   ],
+   "aciklama": "Manşet TÜFE, iki çekirdek gösterge, hizmet ve temel mal enflasyonu: fiyat artışının ne kadarının geniş tabanlı olduğunu gösterir."
+  },
+  {
+   "id": "enflasyon-aylik-ma",
+   "ad": "Aylık enflasyon eğilimi (mevsimsellikten arındırılmış)",
+   "baslik": "enflasyon",
+   "seriler": [
+    "tufe-aylik-ma",
+    "b-aylik-ma",
+    "c-aylik-ma",
+    "hizmet-aylik-ma",
+    "temel-mal-aylik-ma"
+   ],
+   "aciklama": "Mevsimsellikten arındırılmış endekslerin aylık değişimi: yıllık enflasyonun geçmiş baz etkisinden bağımsız, ay ay nereye gittiği."
+  },
+  {
+   "id": "enflasyon-beklentileri",
+   "ad": "Enflasyon ve beklentiler",
+   "baslik": "enflasyon",
+   "seriler": [
+    "tufe-yillik",
+    "pka-12ay",
+    "hanehalki-beklenti",
+    "reel-sektor-beklenti"
+   ],
+   "aciklama": "Gerçekleşen yıllık enflasyon ile piyasa katılımcılarının, hanehalkının ve reel sektörün 12 ay sonrası için beklediği enflasyon."
+  },
+  {
+   "id": "beklenti-vadeleri",
+   "ad": "Beklentilerin vade yapısı",
+   "baslik": "enflasyon",
+   "seriler": [
+    "pka-yilsonu",
+    "pka-12ay",
+    "pka-24ay",
+    "pka-5y"
+   ],
+   "aciklama": "Piyasa katılımcılarının yıl sonu, 12 ay, 24 ay ve 5 yıl sonrası enflasyon beklentileri: dezenflasyonun ne kadar hızlı beklendiğini gösterir."
+  },
+  {
+   "id": "tufe-gida-enerji",
+   "ad": "Gıda, enerji ve kira",
+   "baslik": "enflasyon",
+   "seriler": [
+    "tufe-gida",
+    "tufe-islenmemis-gida",
+    "tufe-enerji",
+    "tufe-kira",
+    "tufe-yillik"
+   ],
+   "aciklama": "Enflasyonun oynak ve yapışkan kalemleri manşetle yan yana."
+  },
+  {
+   "id": "tufe-ana-gruplar",
+   "ad": "TÜFE ana harcama grupları",
+   "baslik": "enflasyon",
+   "seriler": [
+    "tufe-konut",
+    "tufe-ulastirma",
+    "tufe-lokanta",
+    "tufe-egitim",
+    "tufe-giyim"
+   ],
+   "aciklama": "Ana harcama gruplarından beşinin yıllık enflasyonu."
+  },
+  {
+   "id": "uretici-fiyatlari",
+   "ad": "Üretici fiyatları",
+   "baslik": "enflasyon",
+   "seriler": [
+    "yi-ufe",
+    "ufe-yurtdisi",
+    "ufe-tarim",
+    "tufe-yillik"
+   ],
+   "aciklama": "Yurt içi, yurt dışı ve tarım üretici fiyatları; tüketici fiyatlarına maliyet yoluyla geçişin öncü göstergeleri."
+  },
+  {
+   "id": "kredi-faizleri",
+   "ad": "Kredi ve mevduat faizleri",
+   "baslik": "kredi",
+   "seriler": [
+    "ticari-faiz",
+    "ihtiyac-faiz",
+    "konut-faiz",
+    "tasit-faiz",
+    "mevduat-faiz"
+   ],
+   "aciklama": "Bankaların yeni kullandırdığı TL kredilerin ve yeni açtığı TL mevduatın faizleri (akım, yıllık)."
+  },
+  {
+   "id": "mevduat-vadeleri",
+   "ad": "Mevduat faizinin vade yapısı",
+   "baslik": "kredi",
+   "seriler": [
+    "mevduat-1ay-faiz",
+    "mevduat-3ay-faiz",
+    "mevduat-1yil-faiz",
+    "mevduat-faiz"
+   ],
+   "aciklama": "Yeni açılan TL mevduatın vadeye göre faizi."
+  },
+  {
+   "id": "doviz-faizleri",
+   "ad": "Döviz kredi ve mevduat faizleri",
+   "baslik": "kredi",
+   "seriler": [
+    "ticari-usd-faiz",
+    "ticari-eur-faiz",
+    "mevduat-usd-faiz",
+    "mevduat-eur-faiz"
+   ],
+   "aciklama": "Dolar ve euro cinsi ticari kredi ile döviz mevduatının yeni işlem faizleri."
+  },
+  {
+   "id": "para-buyumesi",
+   "ad": "Para arzı büyümesi",
+   "baslik": "kredi",
+   "seriler": [
+    "m1-yillik",
+    "m2-yillik",
+    "rezerv-para-yillik",
+    "emisyon-yillik"
+   ],
+   "aciklama": "Dar ve geniş para arzı ile TCMB'nin rezerv parası ve emisyonunun yıllık büyümesi."
+  },
+  {
+   "id": "takip-oranlari",
+   "ad": "Takipteki alacak oranları",
+   "baslik": "kredi",
+   "seriler": [
+    "takip-orani",
+    "takip-tuketici",
+    "takip-ticari"
+   ],
+   "aciklama": "Toplam, tüketici ve ticari kredilerde takipteki alacak oranı."
+  },
+  {
+   "id": "cari-ayristirma",
+   "ad": "Cari denge ayrıştırması",
+   "baslik": "dis",
+   "seriler": [
+    "cari-12ay",
+    "cekirdek-cari-12ay",
+    "altin-net-12ay",
+    "enerji-net-12ay"
+   ],
+   "aciklama": "Cari dengenin altın ve enerji dış ticaretinden ayrıştırılması, son 12 ayın toplamı."
+  },
+  {
+   "id": "cari-kalemleri",
+   "ad": "Cari dengenin kalemleri",
+   "baslik": "dis",
+   "seriler": [
+    "dis-ticaret-denge-12ay",
+    "hizmet-denge-12ay",
+    "birincil-gelir-12ay",
+    "cari-12ay"
+   ],
+   "aciklama": "Mal dengesi, hizmet dengesi ve birincil gelir dengesi cari dengeyle birlikte, son 12 ayın toplamı."
+  },
+  {
+   "id": "dis-finansman",
+   "ad": "Dış finansmanın niteliği",
+   "baslik": "dis",
+   "seriler": [
+    "kaliteli-finansman-12ay",
+    "sicak-para-12ay",
+    "dyy-giris-12ay",
+    "portfoy-giris-12ay",
+    "net-hata-noksan-12ay"
+   ],
+   "aciklama": "Cari açığı finanse eden girişlerin kalıcı ve hızla geri dönebilen kısımları, son 12 ayın toplamı."
+  },
+  {
+   "id": "dis-ticaret-fiyat",
+   "ad": "Dış ticaret fiyatları",
+   "baslik": "dis",
+   "seriler": [
+    "ihracat-birim-deger",
+    "ithalat-birim-deger"
+   ],
+   "aciklama": "İhracat ve ithalat birim değer endekslerinin yıllık değişimi: dış ticaret hadlerinin yönü."
+  },
+  {
+   "id": "ithalat-turu",
+   "ad": "İthalatın kompozisyonu",
+   "baslik": "dis",
+   "seriler": [
+    "ara-mali-ithalat-yillik",
+    "yatirim-mali-ithalat-yillik",
+    "ithalat-aylik-yillik",
+    "ihracat-aylik-yillik"
+   ],
+   "aciklama": "Ara malı ve yatırım malı ithalatı ile toplam ihracat ve ithalatın yıllık değişimi."
+  },
+  {
+   "id": "net-rezerv",
+   "ad": "Net rezerv tanımları",
+   "baslik": "kur",
+   "seriler": [
+    "net-rezerv-resmi",
+    "net-rezerv-swap-haric-haftalik",
+    "net-rezerv-swap-haric"
+   ],
+   "aciklama": "TCMB'nin resmî tanımıyla net rezerv, swap hariç net rezerv (haftalık) ve piyasa tanımıyla günlük swap hariç net rezerv."
+  },
+  {
+   "id": "butce-reel",
+   "ad": "Bütçenin reel seyri",
+   "baslik": "kamu",
+   "seriler": [
+    "gelir-reel",
+    "vergi-reel",
+    "faiz-disi-gider-reel",
+    "faiz-gideri-reel"
+   ],
+   "aciklama": "Son 12 ayın bütçe gelir ve gider kalemlerinin enflasyondan arındırılmış yıllık artışı."
+  },
+  {
+   "id": "dibs-sahiplik",
+   "ad": "DİBS stokunun sahipleri",
+   "baslik": "kamu",
+   "seriler": [
+    "dibs-pay-bankalar",
+    "yabanci-dibs-payi",
+    "dibs-pay-tcmb",
+    "dibs-pay-fonlar"
+   ],
+   "aciklama": "Devlet iç borçlanma senetleri stokunun bankalar, yurt dışı yerleşikler, TCMB ve yatırım fonları arasındaki dağılımı."
+  },
+  {
+   "id": "gsyh-harcama",
+   "ad": "GSYH harcama bileşenleri",
+   "baslik": "buyume",
+   "seriler": [
+    "gsyh-takvim-yillik",
+    "hanehalki-tuketim-yillik",
+    "devlet-tuketim-yillik",
+    "yatirim-yillik",
+    "ihracat-gsyh-yillik"
+   ],
+   "aciklama": "Takvim etkisinden arındırılmış GSYH ve harcama kalemlerinin yıllık büyümesi."
+  },
+  {
+   "id": "gsyh-sektor",
+   "ad": "Sektörlerin büyümesi",
+   "baslik": "buyume",
+   "seriler": [
+    "sanayi-katma-yillik",
+    "insaat-katma-yillik",
+    "ticaret-katma-yillik",
+    "finans-katma-yillik",
+    "tarim-katma-yillik"
+   ],
+   "aciklama": "Üretim yöntemiyle sektör katma değerlerinin yıllık büyümesi."
+  },
+  {
+   "id": "isgucu",
+   "ad": "İşgücü piyasası",
+   "baslik": "buyume",
+   "seriler": [
+    "issizlik",
+    "isgucune-katilim",
+    "istihdam-orani"
+   ],
+   "aciklama": "Mevsimsellikten arındırılmış işsizlik, işgücüne katılma ve istihdam oranları."
+  },
+  {
+   "id": "guven-endeksleri",
+   "ad": "Güven endeksleri",
+   "baslik": "buyume",
+   "seriler": [
+    "reel-kesim-guven",
+    "tuketici-guven",
+    "finansal-guven"
+   ],
+   "aciklama": "Reel kesim, tüketici ve finansal hizmetler güven endeksleri."
+  },
+  {
+   "id": "konut-piyasasi",
+   "ad": "Konut fiyatları ve kira",
+   "baslik": "buyume",
+   "seriler": [
+    "konut-fiyat",
+    "konut-fiyat-istanbul",
+    "yeni-konut-fiyat",
+    "konut-kira",
+    "tufe-kira"
+   ],
+   "aciklama": "Konut fiyat endekslerinin, değerleme kiralarının ve TÜFE kira kaleminin yıllık değişimi."
+  },
+  {
+   "id": "gelismis-faizler",
+   "ad": "Gelişmiş ülke politika faizleri",
+   "baslik": "dunya",
+   "seriler": [
+    "politika-usa",
+    "politika-xm",
+    "politika-gbr",
+    "politika-jpn",
+    "politika-che"
+   ],
+   "aciklama": "Fed, ECB, BoE, BoJ ve SNB politika faizleri, ay sonu."
+  },
+  {
+   "id": "gelismekte-faizler",
+   "ad": "Gelişmekte olan ülke politika faizleri",
+   "baslik": "dunya",
+   "seriler": [
+    "politika-faizi-aylik",
+    "politika-bra",
+    "politika-mex",
+    "politika-zaf",
+    "politika-hun"
+   ],
+   "aciklama": "Türkiye'nin politika faizi dört gelişmekte olan ülkeyle, ay sonu."
+  },
+  {
+   "id": "dogu-avrupa-asya-faizler",
+   "ad": "Doğu Avrupa ve Asya politika faizleri",
+   "baslik": "dunya",
+   "seriler": [
+    "politika-pol",
+    "politika-cze",
+    "politika-ind",
+    "politika-idn",
+    "politika-chn"
+   ],
+   "aciklama": "Polonya, Çekya, Hindistan, Endonezya ve Çin politika faizleri, ay sonu."
+  }
+ ]
 }

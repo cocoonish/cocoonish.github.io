@@ -11,9 +11,10 @@
      Aynı adlı birden çok iz varsa (aynı figürde kısa ve uzun pencere) EN UZUN
      olanı alınır.
 
-   · DIŞ. Hiçbir panonun çekmediği EVDS serileri ile piyasa serileri
-     (USD/TRY, BIST 100) `Aktarılacak Projeler/Grafikler/cek.py` ile çekilir ve
-     `src/data/grafikler/dis/<id>.json` olarak commit edilir.
+   · DIŞ ve HAT. Hiçbir panonun çekmediği EVDS serileri, piyasa serileri
+     (USD/TRY, BIST 100) ve panonun figürü yalnız son yıllarını çizen serilerin
+     hattın veri dosyasındaki uzun tarihçesi `Aktarılacak Projeler/Grafikler/cek.py`
+     ile `src/data/grafikler/dis/<id>.json` olarak commit edilir.
 
    ÇÖZÜLEMEYEN SERİ DERLEMEYİ DÜŞÜRMEZ. İz adı değişirse ya da dosya yoksa
    seri `sorun` taşır: kart "şu an gösterilemiyor" der, seri sayfası
@@ -25,7 +26,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { degerSonu } from './grafikOlcu';
 import {
-  donusumBirimi, sonDegisim, type Frekans, type Seri, type Tur,
+  degisimSerisi, donusumBirimi, sonDegisim, type Frekans, type Seri, type Tur,
 } from './grafikDonusum';
 import katalog from '../data/grafikler/katalog.json';
 
@@ -41,6 +42,9 @@ export interface FigurKaynak {
   eksen?: string;
 }
 export interface DisKaynak { tur: 'evds' | 'yahoo'; kod: string; ad?: string }
+/** Hattın depodaki veri dosyasındaki bir sütun: panonun figürü serinin yalnız son yıllarını
+ *  çiziyorsa uzun tarihçe buradan gelir (cek.py taşır; derleme o dosyayı göremez). */
+export interface HatKaynak { tur: 'hat'; proje: string; dosya: string; sutun: string; carpan?: number }
 
 export interface SeriTanim {
   id: string;
@@ -51,9 +55,9 @@ export interface SeriTanim {
   frekans: Frekans;
   ondalik: number;
   kurum: string;
-  kaynak: FigurKaynak | DisKaynak;
-  /** Ham seriden türetme: endeksin yıllık % değişimi gibi. */
-  turet?: 'yillik_yuzde';
+  kaynak: FigurKaynak | DisKaynak | HatKaynak;
+  /** Ham seriden türetme: endeksin yıllık ya da aylık % değişimi. */
+  turet?: 'yillik_yuzde' | 'aylik_yuzde';
   aciklama: string;
 }
 
@@ -68,8 +72,24 @@ export interface KurulmusSeri extends SeriTanim {
   yillikBirim: string;
 }
 
+/** Hazır grafik: aynı birim ve türde birkaç seri tek grafikte (en çok beş — paletin boyu). */
+export interface SetTanim { id: string; ad: string; baslik: string; seriler: string[]; aciklama: string }
+export interface KurulmusSet extends SetTanim {
+  /** Çözülen üyeler, katalogdaki sırasıyla (renk sıradan gelir, sıralamadan değil). */
+  uyeler: KurulmusSeri[];
+  /** Çözülemeyen üyeler adıyla; iki üye kalmazsa set gösterilmez. */
+  eksik: string[];
+  sorun: string | null;
+  birim: string;
+  tur: Tur;
+  frekans: Frekans;
+  ondalik: number;
+}
+
 export const BASLIKLAR = katalog.basliklar as Baslik[];
 export const TANIMLAR = katalog.seriler as SeriTanim[];
+export const SET_TANIMLAR = ((katalog as { setler?: SetTanim[] }).setler ?? []) as SetTanim[];
+export const SET_AZAMI = 5;
 
 // ── Plotly figürünün VERİ argümanı ────────────────────────────
 
@@ -175,8 +195,10 @@ function disSerisi(id: string): { seri: Seri | null; sorun: string | null } {
   }
 }
 
-/** Endeksin (aylık · çeyreklik) yıllık yüzde değişimi — bir yıl önceki AYNI dönemle. */
+/** Endeksin yıllık yüzde değişimi: ay ve çeyrekte bir yıl önceki AYNI dönemle, gün ve
+ *  haftada takvimde bir yıl önceki son gözlemle (grafikDonusum'un kuralı). */
 function yillikYuzde(s: Seri, frekans: Frekans): Seri {
+  if (frekans === 'gunluk' || frekans === 'haftalik') return degisimSerisi(s, 'seviye', frekans, 12);
   const m = new Map(s.t.map((t, i) => [t.slice(0, 7), s.v[i]]));
   const t: string[] = [];
   const v: number[] = [];
@@ -187,7 +209,23 @@ function yillikYuzde(s: Seri, frekans: Frekans): Seri {
       v.push((s.v[i] / once - 1) * 100);
     }
   });
-  void frekans;
+  return { t, v };
+}
+
+/** Endeksin aylık yüzde değişimi: bir önceki AY (gözlem değil; ay boşsa ölçülmez). */
+function aylikYuzde(s: Seri): Seri {
+  const m = new Map(s.t.map((t, i) => [t.slice(0, 7), s.v[i]]));
+  const t: string[] = [];
+  const v: number[] = [];
+  s.t.forEach((g, i) => {
+    const y = +g.slice(0, 4);
+    const a = +g.slice(5, 7);
+    const once = m.get(a === 1 ? `${y - 1}-12` : `${y}-${String(a - 1).padStart(2, '0')}`);
+    if (once && once > 0) {
+      t.push(g);
+      v.push((s.v[i] / once - 1) * 100);
+    }
+  });
   return { t, v };
 }
 
@@ -201,12 +239,13 @@ export function seriler(): KurulmusSeri[] {
     const r = d.kaynak.tur === 'figur' ? figurSerisi(d.kaynak) : disSerisi(d.id);
     let seri = r.seri ?? { t: [], v: [] };
     if (r.seri && d.turet === 'yillik_yuzde') seri = yillikYuzde(r.seri, d.frekans);
+    if (r.seri && d.turet === 'aylik_yuzde') seri = aylikYuzde(r.seri);
     const n = seri.t.length;
     return {
       ...d,
       seri,
       sorun: r.sorun ?? (n < 2 ? `türetilen seri boş: ${d.id}` : null),
-      pano: d.kaynak.tur === 'figur' ? `/projeler/${d.kaynak.proje}/` : null,
+      pano: d.kaynak.tur === 'figur' || d.kaynak.tur === 'hat' ? `/projeler/${d.kaynak.proje}/` : null,
       sonDeger: n ? seri.v[n - 1] : null,
       sonTarih: n ? seri.t[n - 1] : null,
       yillikDegisim: n ? sonDegisim(seri, d.tur, d.frekans, 12) : null,
@@ -218,4 +257,46 @@ export function seriler(): KurulmusSeri[] {
 
 export function seriBul(id: string): KurulmusSeri | undefined {
   return seriler().find((s) => s.id === id);
+}
+
+let kurulmusSet: KurulmusSet[] | null = null;
+
+/** Hazır grafikler. Üyeler aynı birim ve türde olmalı (tek eksen); katalogdaki bir
+ *  uyumsuzluk sayfa sınavında ENGEL'dir, burada yalnız seti gösterilemez kılar. */
+export function setler(): KurulmusSet[] {
+  if (kurulmusSet) return kurulmusSet;
+  const harita = new Map(seriler().map((s) => [s.id, s]));
+  kurulmusSet = SET_TANIMLAR.map((h) => {
+    const tanimli = h.seriler.map((id) => harita.get(id)).filter((x): x is KurulmusSeri => !!x);
+    const uyeler = tanimli.filter((x) => !x.sorun);
+    const eksik = h.seriler.filter((id) => !uyeler.some((u) => u.id === id));
+    const ilk = tanimli[0];
+    let sorun: string | null = null;
+    if (!ilk) sorun = `${h.id}: üye yok`;
+    else if (tanimli.some((x) => x.birim !== ilk.birim || x.tur !== ilk.tur)) sorun = `${h.id}: üyelerin birimi ya da türü farklı`;
+    else if (h.seriler.length > SET_AZAMI) sorun = `${h.id}: ${SET_AZAMI} seriden fazla`;
+    else if (uyeler.length < 2) sorun = `${h.id}: gösterilebilen üye ikiden az`;
+    return {
+      ...h, uyeler, eksik, sorun,
+      // Karma frekansta tarih etiketi ve dönüşüm listesi EN SIK üyeden: günlük bir üyenin
+      // tarihi ay etiketiyle yazılmasın.
+      birim: ilk?.birim ?? '', tur: ilk?.tur ?? 'oran',
+      frekans: (['gunluk', 'haftalik', 'aylik', 'ceyreklik'] as Frekans[]).find((f) => tanimli.some((x) => x.frekans === f)) ?? 'aylik',
+      ondalik: Math.max(...tanimli.map((x) => x.ondalik), 0),
+    };
+  });
+  return kurulmusSet;
+}
+
+/** Hazır grafikte üye adlarının ORTAK öneki ("Politika faizi — ") ve ortak parantez soneki
+ *  ("(mevsimsellikten arındırılmış)") başlığın zaten söylediği şeydir; kartta ve lejantta
+ *  yalnız ayırt eden kısım yazılır. Kırpma bir adı boşaltacaksa yapılmaz. */
+export function kisaAdlar(adlar: string[]): string[] {
+  if (adlar.length < 2) return adlar;
+  let out = adlar;
+  const onek = /^(.+? (?:—|·) )/.exec(out[0])?.[1];
+  if (onek && out.every((a) => a.startsWith(onek) && a.length > onek.length)) out = out.map((a) => a.slice(onek.length));
+  const sonek = / \([^()]+\)$/.exec(out[0])?.[0];
+  if (sonek && out.every((a) => a.endsWith(sonek) && a.length > sonek.length)) out = out.map((a) => a.slice(0, -sonek.length));
+  return out.map((a) => a.charAt(0).toLocaleUpperCase('tr-TR') + a.slice(1));
 }
