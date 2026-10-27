@@ -19,11 +19,19 @@
    payından eskiyse (seri orada boşsa) değişim ölçülemez ve boş kalır.
    Gözlem sayısıyla geri gitmek (günlük seride 252) tatil ve kesinti
    günlerinde başka bir güne düşerdi.
+
+   100'E ENDEKSLEME YALNIZ SEVİYEDE ve dönemin kendisine bağlıdır: taban,
+   görünen dönemde BÜTÜN serilerin ölçüldüğü ilk gündür ve her seri o gün
+   (ya da ondan sonraki ilk gözlemi) 100 olacak biçimde ölçeklenir. Farklı
+   birimdeki seviyeler (BIST puan, Brent dolar/varil) ancak böyle tek eksende
+   kıyaslanır — iki eksen kullanılmaz. Oranın ve işaret değiştiren büyüklüğün
+   endeksi anlamsızdır (%2'den %4'e çıkan faiz "200" olmaz); düğme yalnız
+   seviyede çıkar.
    ───────────────────────────────────────────────────────────── */
 
 export type Tur = 'oran' | 'seviye' | 'fark';
 export type Frekans = 'gunluk' | 'haftalik' | 'aylik' | 'ceyreklik';
-export type Donusum = 'duzey' | 'yillik' | 'aylik';
+export type Donusum = 'duzey' | 'yillik' | 'aylik' | 'endeks';
 
 export interface Seri {
   /** ISO gün ("2026-10-26"); aylık seri ayın ilk günü, çeyreklik çeyreğin son günü. */
@@ -58,6 +66,7 @@ export function donusumler(tur: Tur, frekans: Frekans): { kod: Donusum; ad: stri
   if (frekans !== 'ceyreklik') {
     liste.push({ kod: 'aylik', ad: tur === 'seviye' ? 'Aylık % değişim' : 'Aylık fark' });
   }
+  if (tur === 'seviye') liste.push({ kod: 'endeks', ad: "100'e endeksli" });
   return liste;
 }
 
@@ -65,6 +74,7 @@ export function donusumler(tur: Tur, frekans: Frekans): { kod: Donusum; ad: stri
  *  birimi (endeksin farkı puandır). */
 export function donusumBirimi(tur: Tur, birim: string, d: Donusum): string {
   if (d === 'duzey') return birim;
+  if (d === 'endeks') return '';
   if (tur === 'seviye') return '%';
   if (tur === 'oran' || birim === 'endeks') return 'puan';
   return birim;
@@ -103,7 +113,8 @@ export function degisimSerisi(s: Seri, tur: Tur, frekans: Frekans, ay: number): 
 }
 
 export function donustur(s: Seri, tur: Tur, frekans: Frekans, d: Donusum): Seri {
-  if (d === 'duzey') return s;
+  // Endeks dönemin tabanına bağlıdır; seriler kesildikten SONRA `endeksle` ile kurulur.
+  if (d === 'duzey' || d === 'endeks') return s;
   return degisimSerisi(s, tur, frekans, d === 'yillik' ? 12 : 1);
 }
 
@@ -149,4 +160,23 @@ export function seyrelt(s: Seri, n: number): Seri {
     v.push(s.v[i]);
   }
   return { t, v };
+}
+
+/** Serileri ortak bir tabanda 100'e endeksler: taban, bütün dolu serilerin ölçüldüğü
+ *  ilk gündür (ilk gözlemlerin en geç olanı). Taban günü ya da sonrasında pozitif bir
+ *  gözlemi olmayan seri boş döner — sıfır ya da eksi tabana endeks kurulmaz. */
+export function endeksle(seriler: Seri[]): { seriler: Seri[]; taban: string | null } {
+  const dolu = seriler.filter((s) => s.t.length);
+  if (!dolu.length) return { seriler: seriler.map(() => ({ t: [], v: [] })), taban: null };
+  const taban = dolu.reduce((m, s) => (s.t[0] > m ? s.t[0] : m), dolu[0].t[0]);
+  return {
+    taban,
+    seriler: seriler.map((s) => {
+      let i = 0;
+      while (i < s.t.length && s.t[i] < taban) i++;
+      const b = s.v[i];
+      if (!(b > 0)) return { t: [], v: [] };
+      return { t: s.t.slice(i), v: s.v.slice(i).map((x) => (x / b) * 100) };
+    }),
+  };
 }

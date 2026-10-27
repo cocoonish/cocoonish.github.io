@@ -7,6 +7,7 @@ import { tarihEtiketi } from '../../../lib/grafikDonusum';
 import type { SayfaVeri } from '../../../lib/grafikSayfa';
 import { RENK, kesikMi } from '../../../lib/grafikSayfa';
 import { bolumBul } from '../../../lib/bolumler';
+import { kesimAdi, sayfaOlaylari } from '../../../lib/grafikOlay';
 
 export function getStaticPaths() {
   // Gösterilemeyen hazır grafik için sayfa ÜRETİLMEZ (sayfa sınavı 30 adıyla listeler).
@@ -18,9 +19,15 @@ export function getStaticPaths() {
 const { h } = Astro.props as { h: KurulmusSet };
 const baslik = BASLIKLAR.find((b) => b.kod === h.baslik)!;
 const kisa = kisaAdlar(h.uyeler.map((u) => u.ad));
+// Kapanış geçişi yalnız üyelerin HEPSİ aynı günü taşıyorsa çizilir (aynı tabanın türevleri);
+// farklı günler tek çizgiyle anlatılamaz.
+const gecisler = [...new Set(h.uyeler.map((u) => u.gecis))];
+const ortakGecis = gecisler.length === 1 ? gecisler[0] : null;
+const olay = sayfaOlaylari(h.baslik, ortakGecis, kesimAdi(h.uyeler[0].piyasaKodu ?? undefined));
 const veri: SayfaVeri = {
   id: h.id, birim: h.birim, tur: h.tur, ondalik: h.ondalik,
   seriler: h.uyeler.map((u, i) => ({ id: u.id, ad: kisa[i], frekans: u.frekans, t: u.seri.t, v: u.seri.v })),
+  ...(olay ? { olaylar: olay.olaylar, olayAdi: olay.ad } : {}),
 };
 ---
 
@@ -56,7 +63,16 @@ const veri: SayfaVeri = {
       Grafikteki her seri bu bölümün tek seri sayfasındaki serinin kendisidir; hesabı, kaynağı ve
       varsayımları o sayfada yazar. Seriler aynı birimde olduğu için tek eksende çizilir; "yıllık" ve
       "aylık" gösterimde her seri kendi bir yıl ya da bir ay önceki gözlemiyle kıyaslanır.
+      {h.tur === 'seviye' && ` "100'e endeksli" gösterimde taban, görünen dönemde serilerin hepsinin ölçüldüğü ilk gündür; her seri o gün 100 olur ve düzeyleri çok farklı seriler aynı başlangıçtan izlenir.`}
     </p>
+    {veri.olaylar && veri.olaylar.some((o) => o.yon !== 0) && (
+      <p>
+        Grafikteki dikey kesikli çizgiler TCMB'nin politika faizini değiştirdiği Para Politikası Kurulu
+        kararlarıdır (▲ artırım, ▼ indirim); sabit bırakılan kararlar işaretlenmez. İşaretler Haziran 2018'de
+        başlar: o güne kadar fonlama koridor ve geç likidite penceresiyle yönlendiriliyordu ve tek bir politika
+        faizi değişikliği yazılamaz. Kararın tarihi, eski ve yeni oran imleç o güne geldiğinde yazılır.
+      </p>
+    )}
     <dl class="uye-hesap">
       {h.uyeler.map((u) => (
         <div>

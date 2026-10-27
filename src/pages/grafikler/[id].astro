@@ -7,6 +7,7 @@ import { BASLIKLAR, seriler, setler, type KurulmusSeri } from '../../lib/grafikV
 import { degisimOndalik, tarihEtiketi } from '../../lib/grafikDonusum';
 import type { SayfaVeri } from '../../lib/grafikSayfa';
 import { bolumBul } from '../../lib/bolumler';
+import { kesimAdi, sayfaOlaylari } from '../../lib/grafikOlay';
 
 export function getStaticPaths() {
   // Çözülemeyen seri için sayfa ÜRETİLMEZ: boş bir grafik sayfası, kartın
@@ -25,18 +26,35 @@ const kaynakYazi =
   : s.kaynak.tur === 'yahoo' ? `Yahoo Finance, ${s.kaynak.kod}`
   : null;
 
-// Kıyas yalnız AYNI birim ve AYNI türdeki serilerle: tek eksen, tek dönüşüm birimi.
+// Kıyas AYNI türdeki serilerle: tek eksen, tek dönüşüm birimi. Oranda ve farkta
+// birim de aynı olmalı; seviyede başka birimdeki seri de seçilebilir, ama yalnız
+// birimsiz gösterimde (yüzde değişim · 100'e endeks) çizilir.
 const kiyaslar = seriler()
-  .filter((x) => !x.sorun && x.id !== s.id && x.birim === s.birim && x.tur === s.tur)
-  .map((x) => ({ id: x.id, ad: x.ad, frekans: x.frekans }));
+  .filter((x) => !x.sorun && x.id !== s.id && x.tur === s.tur && (s.tur === 'seviye' || x.birim === s.birim))
+  .sort((a, b) => Number(b.birim === s.birim) - Number(a.birim === s.birim))
+  .map((x) => ({ id: x.id, ad: x.ad, frekans: x.frekans, birim: x.birim }));
+const kod = s.piyasaKodu ?? undefined;
+const olay = sayfaOlaylari(s.baslik, s.gecis, kesimAdi(kod));
+const tabanSeri = s.kaynak.tur === 'seri' ? seriler().find((x) => x.id === (s.kaynak as { seri: string }).seri) ?? null : null;
 const veri: SayfaVeri = {
   id: s.id, birim: s.birim, tur: s.tur, ondalik: s.ondalik,
   seriler: [{ id: s.id, ad: s.ad, frekans: s.frekans, t: s.seri.t, v: s.seri.v }],
   kiyaslar,
+  ...(olay ? { olaylar: olay.olaylar, olayAdi: olay.ad } : {}),
 };
 // Bu seriyi içeren hazır grafikler: aynı seriyi komşularıyla birlikte görmek için.
 const iceren = setler().filter((h) => !h.sorun && h.uyeler.some((u) => u.id === s.id));
 const aciklama = `${s.ad}: ${s.aciklama}`;
+// Aynı hattın ölçümünü kullanan analizler: yazı hattın figürünü gömüyor ya da sayısını
+// çağırıyorsa (`/projeler/<hat>/` · `proje="<hat>"`). Eşleşme HAT düzeyindedir, seri
+// düzeyinde değil — başlık bunu söyler. En yeni dört yazı.
+const hat = s.kaynak.tur === 'figur' || s.kaynak.tur === 'hat' ? s.kaynak.proje : null;
+const yazilar = hat
+  ? (await getCollection('analiz'))
+      .filter((a) => (a.body ?? '').match(new RegExp(`/projeler/${hat}/|proje="${hat}"`)))
+      .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+      .slice(0, 4)
+  : [];
 ---
 
 <Base title={`${s.ad} — Grafik`} description={aciklama}>
@@ -87,12 +105,43 @@ const aciklama = `${s.ad}: ${s.aciklama}`;
           : 'Değer kaynağın yayımladığı hâliyle gösterilir.'}
       </p>
     )}
+    {tabanSeri && (
+      <p>
+        Seri bu bölümdeki <a href={`/grafikler/${tabanSeri.id}/`}>{tabanSeri.ad}</a> serisinden, aynı kapanışlarla
+        bu sayfada hesaplanır; ikinci bir veri çekimi yoktur.
+      </p>
+    )}
+    {s.gecis && (
+      <p>
+        Döviz kapanışı {tarihEtiketi(s.gecis, 'gunluk')} tarihinden itibaren saatlik bardan ({kesimAdi(kod)}),
+        öncesi Yahoo'nun günlük barından düzeltilerek (Londra gece yarısı) kurulur; grafikte ◆ ile işaretlidir.
+        {s.turet === 'oynaklik' && ' İki kapanışın gerçekleşen oynaklığı aynı değildir: gece yarısı kapanışına akşam ve gece saatlerinin sığ kotasyonları da girer ve ertesi gün geri dönen bu gürültü ölçülen oynaklığı yükseltir. Geçiş gününden önceki ve sonraki düzeyler bu yüzden doğrudan kıyaslanmaz.'}
+      </p>
+    )}
+    {veri.olaylar && veri.olaylar.some((o) => o.yon !== 0) && (
+      <p>
+        Grafikteki dikey kesikli çizgiler TCMB'nin politika faizini değiştirdiği Para Politikası Kurulu
+        kararlarıdır (▲ artırım, ▼ indirim); sabit bırakılan kararlar işaretlenmez. İşaretler Haziran 2018'de
+        başlar: o güne kadar fonlama koridor ve geç likidite penceresiyle yönlendiriliyordu ve tek bir politika
+        faizi değişikliği yazılamaz. Kararın tarihi, eski ve yeni oran imleç o güne geldiğinde yazılır.
+      </p>
+    )}
     <p class="kunye">
       Gözlem: {s.seri.t.length} · ilk {tarihEtiketi(s.seri.t[0], s.frekans)} · son {tarihEtiketi(s.sonTarih!, s.frekans)}.
       "Yıllık" ve "aylık" gösterimde her gözlem, takvimde bir yıl ya da bir ay önceki son gözlemle kıyaslanır;
       oranlarda fark puan, seviyelerde değişim yüzde olarak yazılır.
+      {s.tur === 'seviye' && ` "100'e endeksli" gösterimde taban, görünen dönemde kıyaslanan serilerin hepsinin ölçüldüğü ilk gündür ve her seri o gün 100 olur; birimi farklı iki seviye ancak böyle tek eksende kıyaslanır.`}
     </p>
   </section>
+
+  {yazilar.length > 0 && panoAdi && (
+    <section class="hesap-blok">
+      <div class="bolum-baslik"><h2>{panoAdi} ölçümünü kullanan analizler</h2></div>
+      <ul class="iceren">
+        {yazilar.map((a) => <li><a href={`/analiz/${a.id}/`}>{a.data.title}</a></li>)}
+      </ul>
+    </section>
+  )}
 
   {iceren.length > 0 && (
     <section class="hesap-blok">

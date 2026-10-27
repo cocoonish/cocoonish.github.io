@@ -45,6 +45,9 @@ export interface DisKaynak { tur: 'evds' | 'yahoo'; kod: string; ad?: string }
 /** Hattın depodaki veri dosyasındaki bir sütun: panonun figürü serinin yalnız son yıllarını
  *  çiziyorsa uzun tarihçe buradan gelir (cek.py taşır; derleme o dosyayı göremez). */
 export interface HatKaynak { tur: 'hat'; proje: string; dosya: string; sutun: string; carpan?: number }
+/** Katalogdaki BAŞKA bir seriden türetilen seri (ör. USD/TRY'nin gerçekleşen oynaklığı):
+ *  taban serinin dosyası okunur, ikinci bir çekim yapılmaz. Taban kendisi türetilmiş olamaz. */
+export interface SeriKaynak { tur: 'seri'; seri: string }
 
 export interface SeriTanim {
   id: string;
@@ -55,14 +58,22 @@ export interface SeriTanim {
   frekans: Frekans;
   ondalik: number;
   kurum: string;
-  kaynak: FigurKaynak | DisKaynak | HatKaynak;
-  /** Ham seriden türetme: endeksin yıllık ya da aylık % değişimi. */
-  turet?: 'yillik_yuzde' | 'aylik_yuzde';
+  kaynak: FigurKaynak | DisKaynak | HatKaynak | SeriKaynak;
+  /** Ham seriden türetme: endeksin yıllık ya da aylık % değişimi; ya da günlük kapanıştan
+   *  `pencere` iş günlük yıllıklandırılmış gerçekleşen oynaklık. */
+  turet?: 'yillik_yuzde' | 'aylik_yuzde' | 'oynaklik';
+  pencere?: number;
   aciklama: string;
 }
 
 export interface KurulmusSeri extends SeriTanim {
   seri: Seri;
+  /** Döviz kapanışının saatlik bardan kurulmaya başladığı gün (öncesi düzeltilmiş günlük
+   *  bar, Londra gece yarısı); bilinmiyorsa ya da döviz değilse null. */
+  gecis: string | null;
+  /** Piyasa kodu (Yahoo); türetilmiş seride tabanınki. Kapanış anını (lira kuru
+   *  İstanbul, öbürleri New York) ve bülten bağını bu belirler. */
+  piyasaKodu: string | null;
   sorun: string | null;
   /** Panosu varsa adresi (figür kaynağı) — "hesabı orada" bağı. */
   pano: string | null;
@@ -183,13 +194,13 @@ function sirala(s: Seri): Seri {
   return { t, v: t.map((g) => m.get(g)!) };
 }
 
-function disSerisi(id: string): { seri: Seri | null; sorun: string | null } {
+function disSerisi(id: string): { seri: Seri | null; sorun: string | null; gecis?: string | null } {
   try {
-    const d = JSON.parse(fs.readFileSync(path.join(DIS, `${id}.json`), 'utf-8')) as Seri;
+    const d = JSON.parse(fs.readFileSync(path.join(DIS, `${id}.json`), 'utf-8')) as Seri & { gecis?: string };
     if (!Array.isArray(d.t) || !Array.isArray(d.v) || d.t.length < 2) {
       return { seri: null, sorun: `dış seri boş: ${id}` };
     }
-    return { seri: sirala({ t: d.t, v: d.v }), sorun: null };
+    return { seri: sirala({ t: d.t, v: d.v }), sorun: null, gecis: typeof d.gecis === 'string' ? d.gecis : null };
   } catch {
     return { seri: null, sorun: `dış seri henüz çekilmedi: ${id}` };
   }
@@ -229,21 +240,71 @@ function aylikYuzde(s: Seri): Seri {
   return { t, v };
 }
 
+/** GERÇEKLEŞEN OYNAKLIK: son `n` gözlemin günlük log getirilerinin örneklem standart
+ *  sapması × √252, yüzde. Getiri ardışık İKİ GÖZLEM arasındadır (tatil ve hafta sonu
+ *  tek getiri sayılır — kapanıştan kapanışa fiyatta hafta sonu seansı yoktur, CLAUDE.md
+ *  "üç takvim günü" ölçümü). İki gözlem arasında 10 takvim gününden uzun boşluk varsa
+ *  o getiri ölçülemez ve onu içeren pencere boş kalır: veri kesintisi oynaklık sayılmaz. */
+function oynaklik(s: Seri, n: number): Seri {
+  const GUN = 864e5;
+  const ms = (t: string) => Date.UTC(+t.slice(0, 4), +t.slice(5, 7) - 1, +t.slice(8, 10));
+  const r: (number | null)[] = s.v.map((x, i) => {
+    if (i === 0) return null;
+    const a = s.v[i - 1];
+    if (!(a > 0) || !(x > 0) || ms(s.t[i]) - ms(s.t[i - 1]) > 10 * GUN) return null;
+    return Math.log(x / a);
+  });
+  const t: string[] = [];
+  const v: number[] = [];
+  for (let i = n; i < s.v.length; i++) {
+    const p = r.slice(i - n + 1, i + 1);
+    if (p.some((x) => x === null)) continue;
+    const q = p as number[];
+    const ort = q.reduce((a, b) => a + b, 0) / n;
+    const var_ = q.reduce((a, b) => a + (b - ort) ** 2, 0) / (n - 1);
+    t.push(s.t[i]);
+    v.push(Math.sqrt(var_ * 252) * 100);
+  }
+  return { t, v };
+}
+
 // ── Katalog ───────────────────────────────────────────────────
 
 let kurulmus: KurulmusSeri[] | null = null;
 
 export function seriler(): KurulmusSeri[] {
   if (kurulmus) return kurulmus;
+  const ham = (d: SeriTanim): { seri: Seri | null; sorun: string | null; gecis?: string | null } => {
+    if (d.kaynak.tur === 'figur') return figurSerisi(d.kaynak);
+    if (d.kaynak.tur === 'seri') {
+      const tabanId = d.kaynak.seri;
+      const taban = TANIMLAR.find((x) => x.id === tabanId);
+      if (!taban || taban.kaynak.tur === 'seri') return { seri: null, sorun: `taban seri tanımsız: ${tabanId}` };
+      return ham(taban);
+    }
+    return disSerisi(d.id);
+  };
+  const piyasaKodu = (d: SeriTanim): string | null => {
+    if (d.kaynak.tur === 'yahoo') return d.kaynak.kod;
+    if (d.kaynak.tur === 'seri') {
+      const tabanId = d.kaynak.seri;
+      const t = TANIMLAR.find((x) => x.id === tabanId);
+      return t && t.kaynak.tur === 'yahoo' ? t.kaynak.kod : null;
+    }
+    return null;
+  };
   kurulmus = TANIMLAR.map((d) => {
-    const r = d.kaynak.tur === 'figur' ? figurSerisi(d.kaynak) : disSerisi(d.id);
+    const r = ham(d);
     let seri = r.seri ?? { t: [], v: [] };
     if (r.seri && d.turet === 'yillik_yuzde') seri = yillikYuzde(r.seri, d.frekans);
     if (r.seri && d.turet === 'aylik_yuzde') seri = aylikYuzde(r.seri);
+    if (r.seri && d.turet === 'oynaklik') seri = oynaklik(r.seri, d.pencere ?? 20);
     const n = seri.t.length;
     return {
       ...d,
       seri,
+      gecis: r.gecis ?? null,
+      piyasaKodu: piyasaKodu(d),
       sorun: r.sorun ?? (n < 2 ? `türetilen seri boş: ${d.id}` : null),
       pano: d.kaynak.tur === 'figur' || d.kaynak.tur === 'hat' ? `/projeler/${d.kaynak.proje}/` : null,
       sonDeger: n ? seri.v[n - 1] : null,
@@ -257,6 +318,20 @@ export function seriler(): KurulmusSeri[] {
 
 export function seriBul(id: string): KurulmusSeri | undefined {
   return seriler().find((s) => s.id === id);
+}
+
+/** Piyasa sembolünün (Yahoo kodu, bültenin enstrüman tablosundaki `kod`) Grafikler
+ *  sayfası; seri katalogda yoksa ya da şu an gösterilemiyorsa null — bağ kurulmaz. */
+let kodHaritasi: Map<string, string> | null = null;
+export function koddanGrafik(kod: string | null | undefined): string | null {
+  if (!kod) return null;
+  if (!kodHaritasi) {
+    kodHaritasi = new Map();
+    for (const x of seriler()) {
+      if (!x.sorun && x.kaynak.tur === 'yahoo' && !kodHaritasi.has(x.kaynak.kod)) kodHaritasi.set(x.kaynak.kod, `/grafikler/${x.id}/`);
+    }
+  }
+  return kodHaritasi.get(kod) ?? null;
 }
 
 let kurulmusSet: KurulmusSet[] | null = null;

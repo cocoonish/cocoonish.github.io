@@ -33,6 +33,7 @@ import {
 } from '../lib/fikir';
 import { FERAGAT } from '../consts';
 import type { HatSayfa } from '../lib/hatSayfa';
+import { koddanGrafik } from '../lib/grafikVeri';
 
 interface Props {
   b: any;
@@ -1717,7 +1718,7 @@ const bolumler = [
                 {g.satirlar.map((r: any) => (
                   <tr>
                     <td class="p-ad">
-                      {r.ad}{r.not && <sup class="p-isaret" title="Satır notu tablonun altında"><span aria-hidden="true">†</span><span class="gorunmez">satır notu var</span></sup>}
+                      {koddanGrafik(r.kod) ? <a class="p-grafik" href={koddanGrafik(r.kod)!} title="Uzun tarihçe: Grafikler">{r.ad}</a> : r.ad}{r.not && <sup class="p-isaret" title="Satır notu tablonun altında"><span aria-hidden="true">†</span><span class="gorunmez">satır notu var</span></sup>}
                       {notUyari(r) && <span class="p-not p-not-uyari">{notUyari(r)}</span>}
                       {(r.tarih !== anaSeans || r.onarim || r.eksik_seans?.length > 0 || ayrikTanim(r, g)) && (
                         <span class="p-tarih-ic">
@@ -2681,6 +2682,9 @@ const bolumler = [
     vertical-align: top; white-space: nowrap;
   }
   .p-ad { white-space: normal; min-width: 12rem; }
+  /* Enstrüman adı Grafikler'deki uzun tarihçeye bağlı: tabloyu bağ rengine boyamadan. */
+  .p-grafik { color: inherit; text-decoration: underline; text-decoration-color: var(--ink-30); text-underline-offset: 0.18em; }
+  .p-grafik:hover { text-decoration-color: var(--claret); }
   .p-not { display: block; font-size: 0.7rem; color: var(--ink-70); font-style: italic; white-space: normal; }
   .p-not-uyari { color: var(--uyari); font-style: normal; }
   .p-tarih-ic, .p-tarih { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-60); }

@@ -9,13 +9,19 @@
    Sayfa verisi `<script type="application/json" id="seri-veri">` içinde
    gelir; bütün seriler AYNI birim ve AYNI türdedir (tek eksen, tek dönüşüm
    birimi — kataloğun ve sayfa sınavı 30'un sözleşmesi).
+
+   TEK İSTİSNA kıyastır ve kuralı bozmaz: seviye bir seri BAŞKA birimdeki bir
+   seviyeyle kıyaslanabilir, ama yalnız birimsiz bir gösterimde (yüzde değişim
+   ya da 100'e endeks). Böyle bir kıyas seçildiğinde "Düzey" düğmesi kapanır;
+   iki birim hiçbir anda aynı eksende düzey olarak çizilmez.
    ───────────────────────────────────────────────────────────── */
 import { olcuYaz } from './bicim';
 import {
-  degisimOndalik, donustur, donusumBirimi, kes, tarihEtiketi,
+  degisimOndalik, donustur, donusumBirimi, endeksle, kes, tarihEtiketi,
   type Donusum, type Frekans, type Seri, type Tur,
 } from './grafikDonusum';
 import { imRengi, ZamanGrafigi } from './grafikCizim';
+import type { Olay } from './grafikOlay';
 
 /* Seri renkleri SIRAYLA atanır ve serinin kendisine bağlıdır (sırasına değil).
    Kâğıt zeminde (#f5f0e6) bütün çiftlerle doğrulandı (dataviz denetleyicisi,
@@ -34,7 +40,11 @@ export interface SayfaVeri {
   tur: Tur;
   ondalik: number;
   seriler: SayfaSerisi[];
-  kiyaslar?: { id: string; ad: string; frekans: Frekans }[];
+  kiyaslar?: { id: string; ad: string; frekans: Frekans; birim: string }[];
+  /** PPK faiz değişiklikleri (lib/grafikOlay); yalnız kararla aynı düzlemdeki serilerde. */
+  olaylar?: Olay[];
+  /** Olay denetiminin etiketi ("PPK faiz kararları" · "Kapanış tanımı geçişi"). */
+  olayAdi?: string;
 }
 
 export function grafikSayfasiKur(): void {
@@ -56,7 +66,12 @@ export function grafikSayfasiKur(): void {
     return b && b.dataset.donem ? +b.dataset.donem : null;
   })();
   let donusum: Donusum = 'duzey';
-  let kiyas: SayfaSerisi | null = null;
+  let kiyas: (SayfaSerisi & { birim: string }) | null = null;
+  let taban: string | null = null;
+  const duzeyDugme = document.querySelector<HTMLButtonElement>('[data-donusum="duzey"]');
+  const endeksDugme = document.querySelector<HTMLButtonElement>('[data-donusum="endeks"]');
+  const birimFarkli = () => !!kiyas && kiyas.birim !== veri.birim;
+  const olaySec = document.querySelector<HTMLInputElement>('[data-olay]');
   const onbellek = new Map<string, Seri>();
   tabloKap.hidden = true;
 
@@ -75,21 +90,38 @@ export function grafikSayfasiKur(): void {
   function gorunen(): { ad: string; seri: Seri; frekans: Frekans }[] {
     const liste = kiyas ? [...veri.seriler, kiyas] : veri.seriler;
     const bas = basGun(liste);
-    return liste.map((s) => ({ ad: s.ad, frekans: s.frekans, seri: kes(donustur(s, veri.tur, s.frekans, donusum), bas) }));
+    const g = liste.map((s) => ({ ad: s.ad, frekans: s.frekans, seri: kes(donustur(s, veri.tur, s.frekans, donusum), bas) }));
+    taban = null;
+    if (donusum !== 'endeks') return g;
+    const e = endeksle(g.map((x) => x.seri));
+    taban = e.taban;
+    return g.map((x, i) => ({ ...x, seri: e.seriler[i] }));
   }
 
-  const ondalik = () => (donusum === 'duzey' ? veri.ondalik : degisimOndalik(veri.tur, veri.ondalik));
+  const ondalik = () => (donusum === 'duzey' ? veri.ondalik : donusum === 'endeks' ? 1 : degisimOndalik(veri.tur, veri.ondalik));
   const birim = () => donusumBirimi(veri.tur, veri.birim, donusum);
-  const yaz = (v: number) => olcuYaz(v, birim(), ondalik(), donusum !== 'duzey');
+  const isaretli = () => donusum === 'yillik' || donusum === 'aylik';
+  const yaz = (v: number) => olcuYaz(v, birim(), ondalik(), isaretli());
+  const birimEtiketi = () => {
+    if (donusum === 'endeks') return taban ? `100 = ${tarihEtiketi(taban, anaFrekans)}` : '100\'e endeksli';
+    const b = birim();
+    return b === '%' ? 'yüzde' : b;
+  };
 
   function yenile() {
     const g = gorunen();
     const b = birim();
-    birimYazi.textContent = b === '%' ? 'yüzde' : b;
+    birimYazi.textContent = birimEtiketi();
     grafik.goster(
       g.map((x, i) => ({ ad: x.ad, seri: x.seri, renk: RENK[i], kesik: kesikMi(i) })),
-      { birim: b, ondalik: ondalik(), isaretli: donusum !== 'duzey', frekans: anaFrekans },
+      { birim: b, ondalik: ondalik(), isaretli: isaretli(), frekans: anaFrekans,
+        referans: donusum === 'endeks' ? 100 : undefined,
+        olaylar: olaySec?.checked ? veri.olaylar : undefined },
     );
+    if (duzeyDugme) {
+      duzeyDugme.disabled = birimFarkli();
+      duzeyDugme.title = birimFarkli() ? 'Farklı birimdeki iki seri düzey olarak aynı eksende çizilmez' : '';
+    }
     lejant.replaceChildren();
     lejant.hidden = g.length < 2;
     g.forEach((x, i) => {
@@ -177,6 +209,11 @@ export function grafikSayfasiKur(): void {
         onbellek.set(id, s);
       }
       kiyas = { ...k, t: s.t, v: s.v };
+      // Başka birimdeki seviye düzey olarak aynı eksene konmaz: gösterim 100'e endekse geçer.
+      if (birimFarkli() && donusum === 'duzey' && endeksDugme) {
+        donusum = 'endeks';
+        sec('[data-donusum]', endeksDugme);
+      }
     } catch {
       kiyas = null;
       kiyasSec.value = '';
@@ -185,6 +222,7 @@ export function grafikSayfasiKur(): void {
     }
     yenile();
   });
+  olaySec?.addEventListener('change', () => yenile());
   tabloDugme.addEventListener('click', () => {
     tabloKap.hidden = !tabloKap.hidden;
     tabloDugme.setAttribute('aria-expanded', String(!tabloKap.hidden));
@@ -194,7 +232,8 @@ export function grafikSayfasiKur(): void {
     // Elektronik tablo dostu: noktalı virgül ayraç, ondalık virgül, ISO tarih, eskiden yeniye.
     const g = gorunen();
     const sayi = (v: number | undefined) => (v === undefined ? '' : String(v).replace('.', ','));
-    const out = [['Tarih', ...g.map((x) => `${x.ad} (${birim() || 'düzey'})`)].join(';')];
+    const etiket = donusum === 'endeks' ? birimEtiketi() : birim() || 'düzey';
+    const out = [['Tarih', ...g.map((x) => `${x.ad} (${etiket})`)].join(';')];
     for (const r of satirlar().reverse()) out.push([r.t, ...r.v.map(sayi)].join(';'));
     const blob = new Blob(['﻿' + out.join('\r\n')], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');

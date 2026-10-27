@@ -1,10 +1,11 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { kicker, bolumBul } from '../../lib/bolumler';
-import { olcuYaz } from '../../lib/bicim';
+import { istanbulIsoGun, olcuYaz } from '../../lib/bicim';
 import { BASLIKLAR, kisaAdlar, seriler, setler } from '../../lib/grafikVeri';
 import { RENK, kesikMi } from '../../lib/grafikSayfa';
 import { degisimOndalik, donemBasi, kes, seyrelt, tarihEtiketi } from '../../lib/grafikDonusum';
+import defter from '../../data/grafikler/guncelleme.json';
 
 // Başlık başlık kart ızgarası. Kartın kıvılcım çizgisi son beş yılın (seri daha
 // kısaysa tamamının) seyreltilmiş hâlidir ve derleme anında çizilir; sekmeler ve
@@ -18,6 +19,28 @@ const gruplar = BASLIKLAR.map((b) => ({
   hazir: hazirlar.filter((h) => h.baslik === b.kod),
 })).filter((g) => g.kartlar.length > 0 || g.hazir.length > 0);
 const no = (i: number) => String(i + 1).padStart(2, '0');
+
+// SON YEDİ GÜNDE GELEN VERİ: güncelleme defterinde (Aktarılacak Projeler/Grafikler/
+// guncelleme.py) son gözlemi bu bölümde son yedi günde ilk kez görülen seriler.
+// Günlük seriler girmez — her iş günü yenilenirler ve şeridi doldururlar; şerit
+// takvimli yayımları (haftalık, aylık, çeyreklik) gösterir. Görülme anı ölçülmemiş
+// (defterde null) seri girmez: "yeni" etiketi uydurulmaz. Pencere derleme anına
+// göredir; site her veri tazelemesinden sonra yeniden derlenir.
+const YENI_GUN = 7;
+const kayitlar = defter as Record<string, { son: string; gorulme: string | null }>;
+const esik = Date.now() - YENI_GUN * 864e5;
+const yeniler = hepsi
+  .filter((s) => !s.sorun && s.frekans !== 'gunluk')
+  .map((s) => ({ s, k: kayitlar[s.id] }))
+  .filter(({ s, k }) => k && k.gorulme && k.son === s.sonTarih && Date.parse(k.gorulme) >= esik)
+  .sort((a, b) => (a.k!.gorulme! < b.k!.gorulme! ? 1 : a.k!.gorulme! > b.k!.gorulme! ? -1 : a.s.ad.localeCompare(b.s.ad, 'tr')));
+// Geliş gününe göre (İstanbul günü) gruplar, en yeni gün başta; ilk YENI_ACIK satırdan
+// sonrası katlanır — şerit dizinin üstünde duruyor, sayfayı itmemeli.
+const YENI_ACIK = 10;
+const yeniGunler = [...new Set(yeniler.map(({ k }) => istanbulIsoGun(k!.gorulme!)))].map((g) => ({
+  gun: g,
+  satirlar: yeniler.filter(({ k }) => istanbulIsoGun(k!.gorulme!) === g),
+}));
 
 const G = 220;
 const H = 48;
@@ -57,8 +80,8 @@ function cokluKivilcim(uyeler: { seri: { t: string[]; v: number[] } }[]): string
       Panoların ölçtüğü, TCMB EVDS'ten ve piyasadan çekilen {hepsi.length} seri ve bunları yan yana koyan
       {hazirlar.filter((h) => !h.sorun).length} hazır grafik, tek yerde. Her kart serinin son değerini, tarihini ve
       bir yıl önceye göre değişimini taşır; karta tıklayınca dönem seçilebilen, yıllık ve aylık değişime
-      çevrilebilen, aynı birimdeki bir seriyle kıyaslanabilen ve indirilebilen büyük grafik açılır. Oranların
-      değişimi puan, seviyelerinki yüzde olarak yazılır.
+      çevrilebilen, 100'e endekslenebilen, başka bir seriyle kıyaslanabilen ve indirilebilen büyük grafik açılır.
+      Oranların değişimi puan, seviyelerinki yüzde olarak yazılır.
     </p>
   </header>
 
@@ -76,6 +99,34 @@ function cokluKivilcim(uyeler: { seri: { t: string[]; v: number[] } }[]): string
       ))}
     </div>
   </div>
+  {yeniler.length > 0 && (
+    <section class="yeniler yuksel" style="--d: 90ms" aria-labelledby="yeniler-baslik" data-grafik-yeniler>
+      <h2 id="yeniler-baslik">Son {YENI_GUN} günde gelen veriler <span>{yeniler.length} seri</span></h2>
+      {(() => {
+        let sira = 0;
+        const satir = ({ s }: (typeof yeniler)[number]) => (
+          <li data-grafik-yeni={s.id}>
+            <a href={`/grafikler/${s.id}/`}>{s.ad}</a>
+            <span class="yeni-donem" title="Son gözlemin dönemi">{tarihEtiketi(s.sonTarih!, s.frekans)}</span>
+            <b>{olcuYaz(s.sonDeger!, s.birim, s.ondalik)}</b>
+          </li>
+        );
+        const acik: any[] = [];
+        const kapali: any[] = [];
+        for (const g of yeniGunler) {
+          const a = g.satirlar.filter(() => sira++ < YENI_ACIK);
+          const k = g.satirlar.slice(a.length);
+          const baslik = (n: number) => <h3><time datetime={g.gun}>{tarihEtiketi(g.gun, 'gunluk')}</time> geldi <span>{n} seri</span></h3>;
+          if (a.length) acik.push(<div class="yeni-gun">{baslik(g.satirlar.length)}<ul>{a.map(satir)}</ul></div>);
+          if (k.length) kapali.push(<div class="yeni-gun">{!a.length && baslik(g.satirlar.length)}<ul>{k.map(satir)}</ul></div>);
+        }
+        return <>{acik}{kapali.length > 0 && (
+          <details class="yeni-devam"><summary>Diğer {yeniler.length - YENI_ACIK} seri</summary>{kapali}</details>
+        )}</>;
+      })()}
+      <p class="yeni-not">Haftalık, aylık ve çeyreklik seriler; her satırda son gözlemin dönemi ve değeri. Gün, yeni gözlemin bu bölüme geldiği gündür. Günlük seriler her iş günü yenilendiği için listede yer almaz.</p>
+    </section>
+  )}
   <p class="sonucsuz" id="sonucsuz" hidden>Aramaya uyan seri yok.</p>
 
   {gruplar.map((g, gi) => (
@@ -245,6 +296,39 @@ function cokluKivilcim(uyeler: { seri: { t: string[]; v: number[] } }[]): string
   .sekmeler button:focus-visible { outline: 2px solid var(--claret); outline-offset: 1px; }
   .sonucsuz { margin: 2rem 0; color: var(--ink-70); }
 
+  .yeniler { margin: 1.6rem 0 0.4rem; border: 1px solid var(--ink-15); padding: 0.8rem 1rem 0.6rem; }
+  .yeniler h2 {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--claret);
+    margin: 0 0 0.5rem;
+  }
+  .yeniler h2 span { color: var(--ink-60); margin-left: 0.4rem; }
+  .yeni-gun h3 { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500; color: var(--ink-70); margin: 0.6rem 0 0.2rem; }
+  .yeni-gun h3 span { color: var(--ink-60); margin-left: 0.3rem; }
+  .yeni-devam summary { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-70); cursor: pointer; margin-top: 0.5rem; }
+  .yeniler ul { list-style: none; margin: 0; padding: 0; columns: 2 22rem; column-gap: 2rem; }
+  .yeniler li {
+    break-inside: avoid;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 0 0.7rem;
+    align-items: baseline;
+    padding: 0.22rem 0;
+    border-bottom: 1px solid var(--ink-15);
+    font-size: 0.92rem;
+  }
+  .yeniler li a { color: inherit; }
+  .yeniler .yeni-donem { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-60); }
+  .yeniler b { font-family: var(--font-mono); font-weight: 500; font-size: 0.85rem; }
+  .yeni-not { font-size: 0.8rem; color: var(--ink-60); margin: 0.5rem 0 0; }
+  @media (max-width: 560px) {
+    .yeniler li { grid-template-columns: minmax(0, 1fr) auto; }
+    .yeniler .yeni-donem { grid-column: 1; }
+  }
   .grup { scroll-margin-top: 2rem; }
   .grup .bolum-baslik { flex-wrap: wrap; row-gap: 0.2rem; margin: 2.6rem 0 0.6rem; }
   .grup-olcu {

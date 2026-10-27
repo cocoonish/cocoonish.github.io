@@ -28,6 +28,11 @@ export interface CizimAyar {
   ondalik: number;
   isaretli: boolean;          // dönüşüm (fark/değişim) — artıya "+" konur
   frekans: Frekans;
+  /** Görünür tutulan referans çizgisi: fark ve değişimde 0, 100'e endekste 100.
+   *  Verilmezse işaretli gösterimde 0, öbüründe yok. */
+  referans?: number;
+  /** Dikey olay çizgileri (PPK faiz değişiklikleri); ipucunda o aralığa düşen olay yazılır. */
+  olaylar?: { t: string; etiket: string; yon: number }[];
 }
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -169,8 +174,9 @@ export class ZamanGrafigi {
     const t1 = Math.max(...xs.map((a) => a[a.length - 1]));
     let vmin = Math.min(...tum);
     let vmax = Math.max(...tum);
-    // Değişim ve fark serilerinde sıfır çizgisi görünür olmalı.
-    if (this.ayar.isaretli) { vmin = Math.min(vmin, 0); vmax = Math.max(vmax, 0); }
+    // Değişim ve fark serilerinde sıfır, endekste 100 çizgisi görünür olmalı.
+    const ref = this.ayar.referans ?? (this.ayar.isaretli ? 0 : null);
+    if (ref !== null) { vmin = Math.min(vmin, ref); vmax = Math.max(vmax, ref); }
     const adimlar = guzelAdimlar(vmin, vmax, h < 300 ? 4 : 6);
     const ymin = adimlar[0];
     const ymax = adimlar[adimlar.length - 1];
@@ -186,7 +192,7 @@ export class ZamanGrafigi {
     const svg = el('svg', { viewBox: `0 0 ${g} ${h}`, width: g, height: h, 'aria-hidden': 'true' });
     const izgara = el('g', { class: 'izgara' });
     adimlar.forEach((v, i) => {
-      izgara.append(el('line', { x1: sol, x2: g - sag, y1: y(v), y2: y(v), class: v === 0 ? 'sifir' : '' }));
+      izgara.append(el('line', { x1: sol, x2: g - sag, y1: y(v), y2: y(v), class: v === ref ? 'sifir' : '' }));
       const yz = el('text', { x: sol - 8, y: y(v) + 4, 'text-anchor': 'end', class: 'eksen-yazi' });
       yz.textContent = etiketler[i];
       izgara.append(yz);
@@ -197,8 +203,26 @@ export class ZamanGrafigi {
       xz.textContent = is.etiket;
       izgara.append(xz);
     }
+    if (ref !== null && !adimlar.includes(ref)) {
+      izgara.append(el('line', { x1: sol, x2: g - sag, y1: y(ref), y2: y(ref), class: 'sifir' }));
+    }
     izgara.append(el('line', { x1: sol, x2: g - sag, y1: h - alt, y2: h - alt, class: 'taban' }));
     svg.append(izgara);
+
+    // Olay çizgileri serilerin ALTINDA: veri çizgisini örtmesin. Yön rengiyle değil
+    // biçimle kodlanır (▲ artırım · ▼ indirim) — renk serilere ayrılmış.
+    const olaylar = (this.ayar.olaylar ?? []).filter((o) => ms(o.t) >= t0 && ms(o.t) <= t1);
+    if (olaylar.length) {
+      const og = el('g', { class: 'olaylar' });
+      for (const o of olaylar) {
+        const px = x(ms(o.t));
+        og.append(el('line', { x1: px, x2: px, y1: ust + 9, y2: h - alt, class: 'olay' }));
+        const im = el('text', { x: px, y: ust + 7, 'text-anchor': 'middle', class: 'olay-im' });
+        im.textContent = o.yon > 0 ? '▲' : o.yon < 0 ? '▼' : '◆';
+        og.append(im);
+      }
+      svg.append(og);
+    }
 
     this.seriler.forEach((s, k) => {
       let d = '';
@@ -271,6 +295,16 @@ export class ZamanGrafigi {
     tarih.className = 'ipucu-tarih';
     tarih.textContent = tarihEtiketi(ana.seri.t[i], this.ayar.frekans);
     this.ipucu.append(tarih);
+    // Önceki gözlemden bu gözleme kadar (dahil) düşen olaylar: aylık seride o ayın kararı.
+    const onceki = i > 0 ? ana.seri.t[i - 1] : '';
+    for (const ol of this.ayar.olaylar ?? []) {
+      if (ol.t > onceki && ol.t <= ana.seri.t[i]) {
+        const d = document.createElement('div');
+        d.className = 'ipucu-olay';
+        d.textContent = `${tarihEtiketi(ol.t, 'gunluk')} · ${ol.etiket}`;
+        this.ipucu.append(d);
+      }
+    }
     this.ipucu.hidden = false;
     // Konum: çizginin sağında, sığmazsa solunda.
     const oran = this.kap.clientWidth / o.g;
