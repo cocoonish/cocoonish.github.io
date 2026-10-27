@@ -36,8 +36,9 @@ const EN_COK = 2600;
 
 const onbellek = new Map<string, number | null>();
 
-/** t[k]'dan (boşluk atlanarak) başlayan JSON değerinin bittiği konum; -1 bozuk. */
-function degerSonu(t: string, k: number): number {
+/** t[k]'dan (boşluk atlanarak) başlayan JSON değerinin bittiği konum; -1 bozuk.
+ *  lib/grafikVeri.ts aynı ayrıştırıcıyla figürün VERİ argümanını okur. */
+export function degerSonu(t: string, k: number): number {
   const n = t.length;
   while (k < n && ' \t\r\n'.includes(t[k])) k++;
   if (k >= n) return -1;

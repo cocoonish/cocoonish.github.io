@@ -1,0 +1,242 @@
+---
+import Base from '../../layouts/Base.astro';
+import { kicker, bolumBul } from '../../lib/bolumler';
+import { olcuYaz } from '../../lib/bicim';
+import { BASLIKLAR, seriler } from '../../lib/grafikVeri';
+import { degisimOndalik, donemBasi, kes, seyrelt, tarihEtiketi } from '../../lib/grafikDonusum';
+
+// Başlık başlık kart ızgarası. Kartın kıvılcım çizgisi son beş yılın (seri daha
+// kısaysa tamamının) seyreltilmiş hâlidir ve derleme anında çizilir; sekmeler ve
+// arama tarayıcıda yalnız GÖRÜNÜRLÜĞÜ değiştirir — betik kapalıyken bütün
+// başlıklar alt alta okunur.
+const hepsi = seriler();
+const gruplar = BASLIKLAR.map((b) => ({ ...b, kartlar: hepsi.filter((s) => s.baslik === b.kod) }))
+  .filter((g) => g.kartlar.length > 0);
+const no = (i: number) => String(i + 1).padStart(2, '0');
+
+const G = 220;
+const H = 48;
+function kivilcim(t: string[], v: number[]): string {
+  const s = seyrelt(kes({ t, v }, donemBasi({ t, v }, 60)), 120);
+  if (s.v.length < 2) return '';
+  const lo = Math.min(...s.v);
+  const hi = Math.max(...s.v);
+  const y = (x: number) => (H - 3 - ((x - lo) / (hi - lo || 1)) * (H - 6)).toFixed(1);
+  return s.v.map((x, i) => `${i ? 'L' : 'M'}${((i / (s.v.length - 1)) * (G - 4) + 2).toFixed(1)},${y(x)}`).join('');
+}
+---
+
+<Base title="Grafikler" description={bolumBul('/grafikler/')?.aciklama ?? ''}>
+  <header class="liste-baslik yuksel">
+    <p class="etiket kicker">{kicker('/grafikler/')}</p>
+    <h1>Grafikler</h1>
+    <p class="alt">
+      Panoların ölçtüğü ve TCMB EVDS'ten çekilen {hepsi.length} seri, tek yerde. Her kart serinin son
+      değerini, tarihini ve bir yıl önceye göre değişimini taşır; karta tıklayınca dönem seçilebilen,
+      yıllık ve aylık değişime çevrilebilen, aynı birimdeki bir seriyle kıyaslanabilen ve indirilebilen
+      büyük grafik açılır. Oranların değişimi puan, seviyelerinki yüzde olarak yazılır.
+    </p>
+  </header>
+
+  <div class="denetim yuksel" style="--d: 60ms">
+    <label class="ara">
+      <span class="etiket">Seri ara</span>
+      <input type="search" id="seri-ara" placeholder="ör. enflasyon, rezerv, kredi faizi" autocomplete="off" />
+    </label>
+    <div class="sekmeler" role="tablist" aria-label="Başlıklar">
+      <button type="button" role="tab" aria-selected="true" data-sekme="">Tümü <span>{hepsi.length}</span></button>
+      {gruplar.map((g) => (
+        <button type="button" role="tab" aria-selected="false" data-sekme={g.kod}>
+          {g.ad} <span>{g.kartlar.length}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+  <p class="sonucsuz" id="sonucsuz" hidden>Aramaya uyan seri yok.</p>
+
+  {gruplar.map((g, gi) => (
+    <section class="grup" id={g.kod} data-baslik={g.kod}>
+      <div class="bolum-baslik">
+        <span class="no">{no(gi)}</span>
+        <h2>{g.ad}</h2>
+        <span class="grup-olcu">{g.kartlar.length} seri</span>
+      </div>
+      <p class="grup-aciklama">{g.aciklama}</p>
+      <ul class="kartlar">
+        {g.kartlar.map((s) => {
+          const ara = `${s.ad} ${s.kurum} ${g.ad}`.toLocaleLowerCase('tr-TR');
+          if (s.sorun) {
+            return (
+              <li class="kart kart--yok" data-ara={ara} data-grafik-sorun={s.id}>
+                <span class="kart-ad">{s.ad}</span>
+                <span class="kart-not">Bu seri şu an gösterilemiyor.</span>
+              </li>
+            );
+          }
+          const d = kivilcim(s.seri.t, s.seri.v);
+          return (
+            <li class="kart" data-ara={ara} data-grafik-seri={s.id}>
+              <a href={`/grafikler/${s.id}/`}>
+                <span class="kart-ad">{s.ad}</span>
+                <span class="kart-deger">{olcuYaz(s.sonDeger!, s.birim, s.ondalik)}</span>
+                <span class="kart-alt">
+                  <time datetime={s.sonTarih!}>{tarihEtiketi(s.sonTarih!, s.frekans)}</time>
+                  {s.yillikDegisim !== null && (
+                    <span class="kart-degisim">1 yılda {olcuYaz(s.yillikDegisim, s.yillikBirim, degisimOndalik(s.tur, s.ondalik), true)}</span>
+                  )}
+                </span>
+                <svg class="kivilcim" viewBox={`0 0 ${G} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+                  <path d={d} />
+                </svg>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  ))}
+</Base>
+
+<script>
+  const ara = document.getElementById('seri-ara') as HTMLInputElement | null;
+  const sekmeler = [...document.querySelectorAll<HTMLButtonElement>('[data-sekme]')];
+  const gruplar = [...document.querySelectorAll<HTMLElement>('[data-baslik]')];
+  const sonucsuz = document.getElementById('sonucsuz');
+  let secili = '';
+
+  function uygula() {
+    const q = (ara?.value ?? '').trim().toLocaleLowerCase('tr-TR');
+    let gorunen = 0;
+    for (const g of gruplar) {
+      const sekmede = !secili || g.dataset.baslik === secili;
+      let n = 0;
+      for (const k of g.querySelectorAll<HTMLElement>('[data-ara]')) {
+        const uyar = sekmede && (!q || (k.dataset.ara ?? '').includes(q));
+        k.hidden = !uyar;
+        if (uyar) n++;
+      }
+      g.hidden = n === 0;
+      gorunen += n;
+    }
+    if (sonucsuz) sonucsuz.hidden = gorunen > 0;
+  }
+
+  for (const b of sekmeler) {
+    b.addEventListener('click', () => {
+      secili = b.dataset.sekme ?? '';
+      for (const x of sekmeler) x.setAttribute('aria-selected', String(x === b));
+      uygula();
+    });
+  }
+  ara?.addEventListener('input', uygula);
+</script>
+
+<style>
+  .liste-baslik { padding: 3rem 0 1.4rem; max-width: 60ch; }
+  .kicker { color: var(--claret); margin: 0 0 0.8rem; }
+  h1 {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 72;
+    font-size: clamp(2.2rem, 5vw, 3rem);
+    font-weight: 540;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin: 0 0 0.9rem;
+  }
+  .alt { font-size: 1.05rem; color: var(--ink-70); margin: 0; }
+
+  /* Denetimler grafiklerin üstünde tek blok: önce arama, sonra başlıklar. */
+  .denetim {
+    border-top: 1px solid var(--ink);
+    padding-top: 0.8rem;
+    display: grid;
+    gap: 0.8rem;
+  }
+  .ara { display: grid; gap: 0.3rem; max-width: 26rem; }
+  .ara .etiket { color: var(--claret); }
+  .ara input {
+    font: inherit;
+    font-size: 1rem;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--ink-30);
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 2px;
+  }
+  .ara input:focus { outline: 2px solid var(--claret); outline-offset: 1px; }
+  .sekmeler { display: flex; flex-wrap: wrap; gap: 0.35rem 0.4rem; }
+  .sekmeler button {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--ink-30);
+    background: transparent;
+    color: var(--ink-70);
+    border-radius: 2px;
+    cursor: pointer;
+    min-height: 2rem;
+  }
+  .sekmeler button span { color: var(--ink-60); margin-left: 0.2rem; }
+  .sekmeler button[aria-selected='true'] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .sekmeler button[aria-selected='true'] span { color: var(--paper); }
+  .sekmeler button:focus-visible { outline: 2px solid var(--claret); outline-offset: 1px; }
+  .sonucsuz { margin: 2rem 0; color: var(--ink-70); }
+
+  .grup { scroll-margin-top: 2rem; }
+  .grup .bolum-baslik { flex-wrap: wrap; row-gap: 0.2rem; margin: 2.6rem 0 0.6rem; }
+  .grup-olcu {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    margin-left: auto;
+  }
+  .grup-aciklama { max-width: 68ch; margin: 0 0 1rem; color: var(--ink-70); line-height: 1.6; }
+
+  .kartlar {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.9rem 1.4rem;
+  }
+  .kart { border-top: 1px solid var(--ink-15); }
+  .kart a, .kart--yok {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.7rem 0 0.4rem;
+    text-decoration: none;
+    color: inherit;
+  }
+  .kart a:hover .kart-ad, .kart a:focus-visible .kart-ad { color: var(--claret); }
+  .kart a:focus-visible { outline: 2px solid var(--claret); outline-offset: 2px; }
+  .kart-ad {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 24;
+    font-size: 1rem;
+    font-weight: 560;
+    line-height: 1.25;
+    transition: color 0.15s ease;
+  }
+  .kart-deger {
+    font-family: var(--font-mono);
+    font-size: 1.35rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin-top: 0.15rem;
+  }
+  .kart-alt {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-60);
+  }
+  .kivilcim { width: 100%; height: 48px; margin-top: 0.35rem; overflow: visible; }
+  .kivilcim path { fill: none; stroke: var(--claret); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+  .kart-not { font-size: 0.9rem; color: var(--ink-70); font-style: italic; }
+</style>

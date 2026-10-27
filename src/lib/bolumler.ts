@@ -44,27 +44,33 @@ export const BOLUMLER: Bolum[] = [
     no: '04', ad: 'Projeler', href: '/projeler/', gezinme: true,
     aciklama: 'Kendi kaynağından beslenen, kendi ritminde tazelenen veri panoları; her sayı kendi tarihini taşır.',
   },
+  // Panoların ve EVDS'in serilerini tek yerde izlemek için (27.10.2026):
+  // Projeler'in hemen ardında, çünkü serilerinin çoğu panoların kendi figürleridir.
   {
-    no: '05', ad: 'Dersler', href: '/arastirma/', gezinme: true,
+    no: '05', ad: 'Grafikler', href: '/grafikler/', gezinme: true,
+    aciklama: "Panoların ölçtüğü ve EVDS'ten çekilen serilerin tek yerde izlendiği grafikler: dönem seçimi, yıllık ve aylık değişim, kıyas ve veri indirme.",
+  },
+  {
+    no: '06', ad: 'Dersler', href: '/arastirma/', gezinme: true,
     aciklama: 'Faiz, kur, opsiyon ve teknik analiz üzerine ders formatında uzun notlar.',
   },
   {
-    no: '06', ad: 'İndikatörler', href: '/indikatorler/', gezinme: true,
+    no: '07', ad: 'İndikatörler', href: '/indikatorler/', gezinme: true,
     aciklama: 'Derslerde öğretilen yöntemlerin TradingView karşılığı: kaynağı açık, eşiği dersten gelen Pine Script indikatörleri.',
   },
   {
-    no: '07', ad: 'Hakkında', href: '/hakkinda/', gezinme: true,
+    no: '08', ad: 'Hakkında', href: '/hakkinda/', gezinme: true,
     aciklama: 'Sitenin amacı, yayın ilkeleri, yayın takvimi ve düzeltme politikası.',
   },
   {
-    no: '08', ad: 'Arama', href: '/arama/', gezinme: true,
+    no: '09', ad: 'Arama', href: '/arama/', gezinme: true,
     aciklama: 'Başlık, etiket ve metinlerde tam metin arama.',
   },
   // Haftalık teknik analiz 27.09.2026 sayısıyla sona erdi (01.10.2026, kullanıcı
   // kararı). Beş sayı kendi adreslerinde arşivde duruyor; bölüm gezinmeden ve
   // besleme listesinden çıktı, numarası sona alındı ki gezinmede boşluk kalmasın.
   {
-    no: '09', ad: 'Teknik arşivi', href: '/teknik/', gezinme: false, rss: '/teknik/rss.xml', arsiv: true,
+    no: '10', ad: 'Teknik arşivi', href: '/teknik/', gezinme: false, rss: '/teknik/rss.xml', arsiv: true,
     aciklama: 'Haftalık teknik analizin 30 Ağustos–27 Eylül 2026 arasında yayımlanan beş sayısı; yayın 27 Eylül 2026 sayısıyla sona erdi.',
   },
 ];
