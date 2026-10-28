@@ -154,6 +154,17 @@ const sozKimlik = (konu: unknown): string =>
     .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 const sozGorunen = new Set(sozKayitlari.map((k: any) => String(k?.konu ?? '')));
 const tz = (t: unknown) => (typeof t === 'string' ? tarihYaz(t) : '');
+// TEMA ŞERİDİ (karar 28.10.2026, bkz. bulten/tema.py): okumanın hemen altında
+// her temanın durumu, son değerlendirmesi, ölçülen bacakların tezle uyumu ve
+// derin okuma bağları tek satırda. Tam tema bölümü sayfanın altında kalır.
+// Yalnız yeni şemayı (uyum sayısı) taşıyan sayılarda basılır — arşiv sayıları
+// yazıldıkları günün düzeniyle kalır.
+const TEMA_DEG: Record<string, string> = { guclendi: 'güçlendi', zayifladi: 'zayıfladı', degismedi: 'değişmedi' };
+const TEMA_SONUC: Record<string, string> = { dogrulandi: 'doğrulandı', curutuldu: 'çürütüldü', kismen: 'kısmen doğrulandı' };
+const TEMA_DURUM: Record<string, string> = { aktif: 'aktif', izlemede: 'izlemede', kapandi: 'kapandı' };
+const temaSerit: any[] = ((b.temalar?.temalar ?? []) as any[]).filter((t) => t && t.uyum);
+const uyumYaz = (u: any) => (u && u.n ? `${u.yonunde}/${u.n}` : '');
+const temaCapa = (t: any) => (t.kimlik ? `tema-${t.kimlik}` : undefined);
 // HABER KAYNAĞI OKURA YAYINCIYLA YAZILIR. Haber taramasının arama akışından
 // gelen maddelerde kaynak alanı iç sorgunun adını taşıyor ("Arama — Fed ve
 // ECB") ve yayıncı başlığın sonuna ekleniyordu ("… - Reuters"); okur hem veri
@@ -783,6 +794,7 @@ const bolumler = [
   pazarDuzeni && { id: 'hafta-hareket', ad: haftaBaslik },
   onumuzdekiHafta.length > 0 && { id: 'onumuzdeki-hafta', ad: onumuzdekiAd },
   b.yorum && { id: 'yorum', ad: b.haftalik ? 'Haftanın okuması' : 'Günün okuması' },
+  temaSerit.length > 0 && { id: 'tema-ozet', ad: 'Temalar', kisa: 'Temalar' },
   // Yazı bölümleri ve işlem fikirleri basımla AYNI diziden (yaziAkisi).
   ...yaziAkisi.map((x: any) => (x.fikir ? FIKIR_BOLUM : { id: `y-${x.id}`, ad: x.baslik })),
   b.rejim?.length > 0 && { id: 'rejim', ad: 'Rejim panosu' },
@@ -1235,6 +1247,48 @@ const bolumler = [
           bölümü "Ne oldu" görünüyordu, açılış yazısının başlığı yoktu. */}
       <h2 class="etiket yorum-baslik">{b.haftalik ? 'Haftanın okuması' : 'Günün okuması'}</h2>
       <div set:html={sayiBag(String(b.yorum))} />
+    </section>
+  )}
+
+  {temaSerit.length > 0 && (
+    <section class="blok tema-ozet" id="tema-ozet">
+      <h2>Temalar</h2>
+      <p class="alt-not">Haftalarca süren anlatılar, son değerlendirmeleri ve izledikleri
+        bacakların tezle uyumu. Uyum, bacağın 1 haftalık ve 1 aylık değişiminin işaretinin tezin
+        beklediği yönle aynı olup olmadığıdır; eşik yoktur, büyüklük tema tablosunda.</p>
+      <ul class="tema-ozet-liste">
+        {temaSerit.map((t: any) => {
+          const guncel = !!t.son_guncelleme && String(t.son_guncelleme) >= String(b.tarih);
+          const kap = t.durum === 'kapandi' ? t.kapanis : null;
+          return (
+            <li class:list={['to-satir', t.durum]}>
+              <a class="to-ad" href={`#${temaCapa(t) ?? 'temalar'}`}>{t.ad}</a>
+              <span class="tema-durum">{TEMA_DURUM[t.durum] ?? t.durum}</span>
+              {kap ? (
+                <span class="to-deg">{TEMA_SONUC[kap.sonuc] ?? kap.sonuc} · {tz(kap.tarih)}</span>
+              ) : (
+                <span class="to-deg">
+                  {t.degerlendirme ? (guncel ? `bugün ${TEMA_DEG[t.degerlendirme]}` : `${TEMA_DEG[t.degerlendirme]} · ${tz(t.son_guncelleme)}`)
+                    : `son güncelleme ${tz(t.son_guncelleme)}`}
+                </span>
+              )}
+              {!kap && (uyumYaz(t.uyum?.hafta) || uyumYaz(t.uyum?.ay)) && (
+                <span class="to-uyum">
+                  {uyumYaz(t.uyum?.hafta) && <>1 hafta <strong>{uyumYaz(t.uyum.hafta)}</strong></>}
+                  {uyumYaz(t.uyum?.hafta) && uyumYaz(t.uyum?.ay) && ' · '}
+                  {uyumYaz(t.uyum?.ay) && <>1 ay <strong>{uyumYaz(t.uyum.ay)}</strong></>}
+                  {' '}bacak tezin yönünde
+                </span>
+              )}
+              {t.analiz_baglari?.length > 0 && (
+                <span class="to-analiz">Derin okuma: {t.analiz_baglari.map((a: any, i: number) => (
+                  <>{i > 0 && ' · '}<a href={a.adres}>{a.ad}</a></>
+                ))}</span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </section>
   )}
 
@@ -2009,16 +2063,22 @@ const bolumler = [
             {t.olculer && t.olculer.length > 0 && (
               <div class="p-kaydir" tabindex="0" role="region" aria-label="Kaydırılabilir tablo" data-kaydir>
                 <table class="p-tablo p-tema">
-                  <caption class="gorunmez">{t.baslik ?? 'Tema'} ölçüleri: son değer, 1 hafta ve yılbaşından değişim</caption>
+                  <caption class="gorunmez">{t.ad ?? 'Tema'} ölçüleri: {t.uyum ? 'tezin beklediği yön ve bacağın 1 haftada o yönde olup olmadığı, ' : ''}son değer, 1 hafta{t.uyum ? ', 1 ay' : ''} ve yılbaşından değişim</caption>
                   <thead>
-                    <tr><th scope="col">Ölçü</th><th class="sag" scope="col">Son</th><th class="sag" scope="col">1 hafta</th><th class="sag" scope="col">Yılbaşından</th></tr>
+                    <tr><th scope="col">Ölçü</th>{t.uyum && <th scope="col">Tez</th>}<th class="sag" scope="col">Son</th><th class="sag" scope="col">1 hafta</th>{t.uyum && <th class="sag" scope="col">1 ay</th>}<th class="sag" scope="col">Yılbaşından</th></tr>
                   </thead>
                   <tbody>
                     {t.olculer.map((r: any) => (
                       <tr>
                         <td class="p-ad">{r.ad}</td>
+                        {t.uyum && (
+                          <td class="p-tez">
+                            {r.yon ? (r.yon === 'yukari' ? '↑' : '↓') : '—'}
+                            {r.uyum_h1 && <span class:list={['p-uyum', r.uyum_h1]}>{r.uyum_h1 === 'yonunde' ? 'yönünde' : r.uyum_h1 === 'ters' ? 'tersinde' : 'yatay'}</span>}
+                          </td>
+                        )}
                         <td class="sag p-son">{sonYaz(r).govde}{sonYaz(r).birim && <span class="p-birim">{sonYaz(r).birim}</span>}</td>
-                        {['h1', 'ybb'].map((alan) => (
+                        {(t.uyum ? ['h1', 'a1', 'ybb'] : ['h1', 'ybb']).map((alan) => (
                           <td class:list={['sag', 'p-degisim', { arti: (r[alan] ?? 0) > 0, eksi: (r[alan] ?? 0) < 0 }]}>
                             {r[alan] === null || r[alan] === undefined
                               ? '—'
@@ -2048,11 +2108,38 @@ const bolumler = [
             {t.izlenecek_gosterge && (
               <p class="tema-gosterge">İzlenecek tek gösterge: <strong>{t.izlenecek_gosterge}</strong></p>
             )}
+            {t.analiz_baglari?.length > 0 && (
+              <div class="tema-analiz">
+                <span class="isaret-baslik">Derin okuma</span>
+                <ul>{t.analiz_baglari.map((a: any) => <li><a href={a.adres}>{a.baslik}</a> <span class="adet">{tz(a.tarih)}</span></li>)}</ul>
+                {t.analiz_takvimi?.length > 0 && (
+                  <>
+                    <span class="isaret-baslik">Bu analizlerin takvimi</span>
+                    <ul>{t.analiz_takvimi.slice(0, 5).map((o: any) => <li>{o.gun} — {o.olay} <a href={o.adres}>({o.analiz})</a></li>)}</ul>
+                  </>
+                )}
+              </div>
+            )}
   
           </>
         );
+        const kap = t.durum === 'kapandi' ? t.kapanis : null;
+        if (kap) return (
+        <div class:list={['tema', 'kapandi']} id={temaCapa(t)}>
+          <h3>
+            {t.ad}
+            <span class="tema-durum">kapandı · {TEMA_SONUC[kap.sonuc] ?? kap.sonuc}</span>
+            <span class="adet">{tz(kap.tarih)}</span>
+          </h3>
+          <p class="tema-kapanis">{kap.not}</p>
+          <details class="tema-kat">
+            <summary>Tez, ölçüler ve işaretler</summary>
+            {icerik}
+          </details>
+        </div>
+        );
         return kompakt ? (
-        <div class:list={['tema', 'tema-kompakt', t.durum]}>
+        <div class:list={['tema', 'tema-kompakt', t.durum]} id={temaCapa(t)}>
           <h3>
             {t.ad}
             <span class="tema-durum">{t.durum}</span>
@@ -2064,10 +2151,11 @@ const bolumler = [
           </details>
         </div>
         ) : (
-        <div class:list={['tema', t.durum]}>
+        <div class:list={['tema', t.durum]} id={temaCapa(t)}>
           <h3>
             {t.ad}
             <span class="tema-durum">{t.durum}</span>
+            {guncel && t.degerlendirme && <span class="adet">bugün {TEMA_DEG[t.degerlendirme]}</span>}
           </h3>
           {icerik}
         </div>
@@ -2726,6 +2814,24 @@ const bolumler = [
   .tema-isaret ul { margin: 0.2rem 0 0; padding-left: 1.1rem; }
   .tema-isaret li { font-size: 0.82rem; line-height: 1.4; color: var(--ink-70); }
   .tema-gosterge { font-size: 0.85rem; margin: 0.5rem 0 0; }
+  .tema.kapandi { border-left-color: var(--ink-60); }
+  .tema-kapanis { margin: 0 0 0.6rem; line-height: 1.55; font-size: 0.92rem; }
+  .tema-analiz { margin: 0.7rem 0 0; }
+  .tema-analiz ul { margin: 0.2rem 0 0.5rem; padding-left: 1.1rem; }
+  .tema-analiz li { font-size: 0.85rem; line-height: 1.45; }
+  td.p-tez { white-space: nowrap; font-family: var(--font-mono); font-size: 0.85rem; }
+  .p-uyum { font-family: var(--font-body); font-size: 0.74rem; margin-left: 0.3rem; color: var(--ink-70); }
+  .p-uyum.ters { color: var(--claret); }
+  .tema-ozet .alt-not { font-size: 0.8rem; color: var(--ink-70); margin: -0.3rem 0 0.8rem; max-width: var(--olcu-metin); }
+  .tema-ozet-liste { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink-30); }
+  .to-satir {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.75rem;
+    padding: 0.55rem 0; border-bottom: 1px solid var(--ink-30); font-size: 0.88rem;
+  }
+  .to-ad { font-weight: 560; color: inherit; }
+  .to-deg, .to-uyum { color: var(--ink-70); }
+  .to-uyum strong { font-family: var(--font-mono); font-weight: 500; color: var(--ink); }
+  .to-analiz { flex-basis: 100%; font-size: 0.82rem; color: var(--ink-70); }
 
   .kunye { border-top: 1px solid var(--ink-30); padding-top: 0.9rem; margin-top: 2.6rem; }
   .kunye p { font-size: 0.76rem; color: var(--ink-70); margin: 0 0 0.35rem; }
