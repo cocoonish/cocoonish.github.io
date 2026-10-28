@@ -33,14 +33,14 @@ import type { Olay } from './grafikOlay';
 export const RENK = ['#9e2a3a', '#2a78d6', '#a86f00', '#16875f', '#d1608f'];
 export const kesikMi = (i: number) => i >= 2;
 
-export interface SayfaSerisi { id: string; ad: string; frekans: Frekans; t: string[]; v: number[] }
+export interface SayfaSerisi { id: string; ad: string; frekans: Frekans; t: string[]; v: number[]; hedefYil?: boolean }
 export interface SayfaVeri {
   id: string;
   birim: string;
   tur: Tur;
   ondalik: number;
   seriler: SayfaSerisi[];
-  kiyaslar?: { id: string; ad: string; frekans: Frekans; birim: string }[];
+  kiyaslar?: { id: string; ad: string; frekans: Frekans; birim: string; hedefYil?: boolean }[];
   /** PPK faiz değişiklikleri (lib/grafikOlay); yalnız kararla aynı düzlemdeki serilerde. */
   olaylar?: Olay[];
   /** Olay denetiminin etiketi ("PPK faiz kararları" · "Kapanış tanımı geçişi"). */
@@ -87,10 +87,10 @@ export function grafikSayfasiKur(): void {
     return new Date(Date.UTC(y, ay, gun)).toISOString().slice(0, 10);
   }
 
-  function gorunen(): { ad: string; seri: Seri; frekans: Frekans }[] {
+  function gorunen(): { ad: string; seri: Seri; frekans: Frekans; hedefYil: boolean }[] {
     const liste = kiyas ? [...veri.seriler, kiyas] : veri.seriler;
     const bas = basGun(liste);
-    const g = liste.map((s) => ({ ad: s.ad, frekans: s.frekans, seri: kes(donustur(s, veri.tur, s.frekans, donusum), bas) }));
+    const g = liste.map((s) => ({ ad: s.ad, frekans: s.frekans, seri: kes(donustur(s, veri.tur, s.frekans, donusum, !!s.hedefYil), bas), hedefYil: !!s.hedefYil }));
     taban = null;
     if (donusum !== 'endeks') return g;
     const e = endeksle(g.map((x) => x.seri));
@@ -113,7 +113,7 @@ export function grafikSayfasiKur(): void {
     const b = birim();
     birimYazi.textContent = birimEtiketi();
     grafik.goster(
-      g.map((x, i) => ({ ad: x.ad, seri: x.seri, renk: RENK[i], kesik: kesikMi(i) })),
+      g.map((x, i) => ({ ad: x.ad, seri: x.seri, renk: RENK[i], kesik: kesikMi(i), yilKopuk: x.hedefYil })),
       { birim: b, ondalik: ondalik(), isaretli: isaretli(), frekans: anaFrekans,
         referans: donusum === 'endeks' ? 100 : undefined,
         olaylar: olaySec?.checked ? veri.olaylar : undefined },

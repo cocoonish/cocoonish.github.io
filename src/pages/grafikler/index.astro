@@ -44,18 +44,20 @@ const yeniGunler = [...new Set(yeniler.map(({ k }) => istanbulIsoGun(k!.gorulme!
 
 const G = 220;
 const H = 48;
-function kivilcim(t: string[], v: number[]): string {
+// Hedef yılı Ocakta değişen anket serisinde çizgi yıl başında kesilir (lib/grafikDonusum).
+const kopuk = (t: string[], i: number, yil: boolean) => !i || (yil && t[i].slice(0, 4) !== t[i - 1].slice(0, 4));
+function kivilcim(t: string[], v: number[], yil = false): string {
   const s = seyrelt(kes({ t, v }, donemBasi({ t, v }, 60)), 120);
   if (s.v.length < 2) return '';
   const lo = Math.min(...s.v);
   const hi = Math.max(...s.v);
   const y = (x: number) => (H - 3 - ((x - lo) / (hi - lo || 1)) * (H - 6)).toFixed(1);
-  return s.v.map((x, i) => `${i ? 'L' : 'M'}${((i / (s.v.length - 1)) * (G - 4) + 2).toFixed(1)},${y(x)}`).join('');
+  return s.v.map((x, i) => `${kopuk(s.t, i, yil) ? 'M' : 'L'}${((i / (s.v.length - 1)) * (G - 4) + 2).toFixed(1)},${y(x)}`).join('');
 }
 
 // Hazır grafiğin kıvılcımı: üyeler ORTAK eksende (aynı birim), son beş yıl, zaman ekseni ortak.
 const GH = 64;
-function cokluKivilcim(uyeler: { seri: { t: string[]; v: number[] } }[]): string[] {
+function cokluKivilcim(uyeler: { seri: { t: string[]; v: number[] }; hedef_yil?: boolean }[]): string[] {
   const son = uyeler.reduce((m, u) => (u.seri.t[u.seri.t.length - 1] > m ? u.seri.t[u.seri.t.length - 1] : m), '');
   const bas = donemBasi({ t: [son], v: [0] }, 60);
   const ss = uyeler.map((u) => seyrelt(kes(u.seri, bas), 120));
@@ -68,7 +70,7 @@ function cokluKivilcim(uyeler: { seri: { t: string[]; v: number[] } }[]): string
   const t1 = ms(son);
   const x = (t: string) => (((ms(t) - t0) / Math.max(1, t1 - t0)) * (G - 4) + 2).toFixed(1);
   const y = (v: number) => (GH - 3 - ((v - lo) / (hi - lo || 1)) * (GH - 6)).toFixed(1);
-  return ss.map((s) => s.v.map((v, i) => `${i ? 'L' : 'M'}${x(s.t[i])},${y(v)}`).join(''));
+  return ss.map((s, k) => s.v.map((v, i) => `${kopuk(s.t, i, !!uyeler[k].hedef_yil) ? 'M' : 'L'}${x(s.t[i])},${y(v)}`).join(''));
 }
 ---
 
@@ -186,7 +188,7 @@ function cokluKivilcim(uyeler: { seri: { t: string[]; v: number[] } }[]): string
               </li>
             );
           }
-          const d = kivilcim(s.seri.t, s.seri.v);
+          const d = kivilcim(s.seri.t, s.seri.v, !!s.hedef_yil);
           return (
             <li class="kart" data-ara={ara} data-grafik-seri={s.id}>
               <a href={`/grafikler/${s.id}/`}>

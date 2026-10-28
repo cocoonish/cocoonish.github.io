@@ -26,7 +26,7 @@ const ortakGecis = gecisler.length === 1 ? gecisler[0] : null;
 const olay = sayfaOlaylari(h.baslik, ortakGecis, kesimAdi(h.uyeler[0].piyasaKodu ?? undefined));
 const veri: SayfaVeri = {
   id: h.id, birim: h.birim, tur: h.tur, ondalik: h.ondalik,
-  seriler: h.uyeler.map((u, i) => ({ id: u.id, ad: kisa[i], frekans: u.frekans, t: u.seri.t, v: u.seri.v })),
+  seriler: h.uyeler.map((u, i) => ({ id: u.id, ad: kisa[i], frekans: u.frekans, t: u.seri.t, v: u.seri.v, hedefYil: !!u.hedef_yil })),
   ...(olay ? { olaylar: olay.olaylar, olayAdi: olay.ad } : {}),
 };
 ---
@@ -65,6 +65,13 @@ const veri: SayfaVeri = {
       "aylık" gösterimde her seri kendi bir yıl ya da bir ay önceki gözlemiyle kıyaslanır.
       {h.tur === 'seviye' && ` "100'e endeksli" gösterimde taban, görünen dönemde serilerin hepsinin ölçüldüğü ilk gündür; her seri o gün 100 olur ve düzeyleri çok farklı seriler aynı başlangıçtan izlenir.`}
     </p>
+    {h.uyeler.some((u) => u.hedef_yil) && (
+      <p>
+        {h.uyeler.filter((u) => u.hedef_yil).length === h.uyeler.length ? 'Serilerin' : `${kisa.filter((_, i) => h.uyeler[i].hedef_yil).join(' ve ')} ${h.uyeler.filter((u) => u.hedef_yil).length > 1 ? 'serilerinin' : 'serisinin'}`}{' '}
+        hedef yılı her Ocak değişir: Aralık gözlemi o yılın, Ocak gözlemi yeni yılın beklentisidir. Çizgi yıl
+        başında kesilir; bu yüzden grafikte yıllık kıyas yoktur, aylık fark yalnız aynı yıl içinde kurulur.
+      </p>
+    )}
     {veri.olaylar && veri.olaylar.some((o) => o.yon !== 0) && (
       <p>
         Grafikteki dikey kesikli çizgiler TCMB'nin politika faizini değiştirdiği Para Politikası Kurulu

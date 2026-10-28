@@ -32,7 +32,7 @@ const kaynakYazi =
 const kiyaslar = seriler()
   .filter((x) => !x.sorun && x.id !== s.id && x.tur === s.tur && (s.tur === 'seviye' || x.birim === s.birim))
   .sort((a, b) => Number(b.birim === s.birim) - Number(a.birim === s.birim))
-  .map((x) => ({ id: x.id, ad: x.ad, frekans: x.frekans, birim: x.birim }));
+  .map((x) => ({ id: x.id, ad: x.ad, frekans: x.frekans, birim: x.birim, hedefYil: !!x.hedef_yil }));
 // Bu sayfada yapılan dönüşüm okura söylenir: toplam ve yıllık değişim kaynağın değil bu bölümün hesabıdır.
 const toplamAd = s.toplam ? `art arda ${s.toplam} ${{ gunluk: 'günün', haftalik: 'haftanın', aylik: 'ayın', ceyreklik: 'çeyreğin' }[s.frekans]} toplamı` : null;
 const turetYazi =
@@ -41,12 +41,16 @@ const turetYazi =
     : s.turet === 'aylik_yuzde'
       ? 'Grafikteki değer, kaynağın yayımladığı endeksin bir önceki aya göre yüzde değişimidir; bu sayfada hesaplanır.'
       : toplamAd ? `Grafikteki değer, kaynağın yayımladığı serinin ${toplamAd}dır; bu sayfada hesaplanır.` : '';
+// Hedef yılı Ocakta değişen anket serisi: kıyas kuralı okura söylenir (lib/grafikDonusum).
+const hedefYazi = s.hedef_yil
+  ? 'Anketin hedef yılı her Ocak değişir: Aralık gözlemi o yılın, Ocak gözlemi yeni yılın beklentisidir. Çizgi yıl başında kesilir; yıllık fark hesaplanmaz, aylık fark yalnız aynı yıl içinde kurulur.'
+  : '';
 const kod = s.piyasaKodu ?? undefined;
 const olay = sayfaOlaylari(s.baslik, s.gecis, kesimAdi(kod));
 const tabanSeri = s.kaynak.tur === 'seri' ? seriler().find((x) => x.id === (s.kaynak as { seri: string }).seri) ?? null : null;
 const veri: SayfaVeri = {
   id: s.id, birim: s.birim, tur: s.tur, ondalik: s.ondalik,
-  seriler: [{ id: s.id, ad: s.ad, frekans: s.frekans, t: s.seri.t, v: s.seri.v }],
+  seriler: [{ id: s.id, ad: s.ad, frekans: s.frekans, t: s.seri.t, v: s.seri.v, hedefYil: !!s.hedef_yil }],
   kiyaslar,
   ...(olay ? { olaylar: olay.olaylar, olayAdi: olay.ad } : {}),
 };
@@ -91,6 +95,7 @@ const yazilar = hat
   <section class="hesap-blok yuksel" style="--d: 140ms">
     <div class="bolum-baslik"><h2>Bu seri nasıl hesaplanıyor</h2></div>
     <p>{s.aciklama}</p>
+    {hedefYazi && <p>{hedefYazi}</p>}
     {panoAdi && s.kaynak.tur === 'figur' && (
       <p>
         Seri <a href={`/projeler/${s.kaynak.proje}/`}>{panoAdi}</a> panosunun yayımlanmış grafiğinden okunur ve

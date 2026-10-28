@@ -20,7 +20,9 @@ const kiyaslar = veri.kiyaslar ?? [];
 // değişim ve 100'e endeks gösteriminde (lib/grafikSayfa).
 const ayniBirim = kiyaslar.filter((k) => k.birim === veri.birim);
 const baskaBirim = kiyaslar.filter((k) => k.birim !== veri.birim);
-const donusum = donusumler(tur, frekans);
+// Hazır grafikte bir üyenin hedef yılı Ocakta değişiyorsa yıllık kıyas o üye için hiç
+// kurulamaz; düğme çıkmaz (boş çizgili bir lejant yerine).
+const donusum = donusumler(tur, frekans, veri.seriler.some((s) => s.hedefYil));
 
 const ilk = veri.seriler.reduce((m, s) => (s.t[0] < m ? s.t[0] : m), veri.seriler[0].t[0]);
 const son = veri.seriler.reduce((m, s) => (s.t[s.t.length - 1] > m ? s.t[s.t.length - 1] : m), '');

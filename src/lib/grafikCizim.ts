@@ -21,6 +21,9 @@ export interface CizimSerisi {
   /** İkinci kodlama: beş serilik hazır grafikte üçüncü ve sonraki renkler renk
    *  körlüğünde sınırda ayrışıyor (ΔE 7,6), çizgi kesikli de çizilir. */
   kesik?: boolean;
+  /** Hedef yılı Ocakta değişen anket serisi: çizgi her yıl başında kesilir — Aralık
+   *  ile Ocak iki ayrı yılın beklentisidir, aralarına çizgi çekilmez. */
+  yilKopuk?: boolean;
 }
 
 export interface CizimAyar {
@@ -226,8 +229,9 @@ export class ZamanGrafigi {
 
     this.seriler.forEach((s, k) => {
       let d = '';
-      s.seri.t.forEach((_, i) => {
-        d += `${i ? 'L' : 'M'}${x(xs[k][i]).toFixed(1)},${y(s.seri.v[i]).toFixed(1)}`;
+      s.seri.t.forEach((t, i) => {
+        const yeni = !i || (s.yilKopuk && t.slice(0, 4) !== s.seri.t[i - 1].slice(0, 4));
+        d += `${yeni ? 'M' : 'L'}${x(xs[k][i]).toFixed(1)},${y(s.seri.v[i]).toFixed(1)}`;
       });
       const nit: Record<string, string | number> = { d, fill: 'none', stroke: s.renk, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' };
       if (s.kesik) nit['stroke-dasharray'] = '6 4';

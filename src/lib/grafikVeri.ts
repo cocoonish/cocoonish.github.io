@@ -75,6 +75,10 @@ export interface SeriTanim {
    *  haftalık, aylık gelirin on iki aylık toplamı). Aradaki boşluk frekansın payını aşarsa
    *  o toplam kurulmaz — eksik bir hafta toplamı küçültüp sahte bir düşüş çizerdi. */
   toplam?: number;
+  /** Anketin "cari yıl sonu" / "gelecek yıl sonu" sorusu: hedef yıl her Ocak değişir;
+   *  değişim yalnız aynı takvim yılı içinde kurulur, çizgi yıl başında kesilir
+   *  (lib/grafikDonusum). */
+  hedef_yil?: boolean;
   aciklama: string;
 }
 
@@ -387,7 +391,7 @@ export function seriler(): KurulmusSeri[] {
       pano: d.kaynak.tur === 'figur' || d.kaynak.tur === 'hat' ? `/projeler/${d.kaynak.proje}/` : null,
       sonDeger: n ? seri.v[n - 1] : null,
       sonTarih: n ? seri.t[n - 1] : null,
-      yillikDegisim: n ? sonDegisim(seri, d.tur, d.frekans, 12) : null,
+      yillikDegisim: n ? sonDegisim(seri, d.tur, d.frekans, 12, !!d.hedef_yil) : null,
       yillikBirim: donusumBirimi(d.tur, d.birim, 'yillik'),
     };
   });

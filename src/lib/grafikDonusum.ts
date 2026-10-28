@@ -27,6 +27,14 @@
    kıyaslanır — iki eksen kullanılmaz. Oranın ve işaret değiştiren büyüklüğün
    endeksi anlamsızdır (%2'den %4'e çıkan faiz "200" olmaz); düğme yalnız
    seviyede çıkar.
+
+   HEDEF YILI OCAKTA DEĞİŞEN SERİ (`hedef_yil`: anketin "cari yıl sonu" ya da
+   "gelecek yıl sonu" sorusu) iki ayrı yılın beklentisini art arda dizer: Aralık
+   2025'te %38,21 olan "yıl sonu politika faizi" 2025 sonunun, Ocak 2026'daki %28,02
+   2026 sonunun beklentisidir. Aradaki 10 puan bir beklenti değişimi değildir.
+   Böyle seride değişim yalnız AYNI takvim yılının iki gözlemi arasında kurulur
+   (yıllık fark hiç kurulamaz, düğmesi çıkmaz; Ocak'ın aylık farkı ölçülmez) ve
+   çizgi her yıl başında kesilir (lib/grafikCizim).
    ───────────────────────────────────────────────────────────── */
 
 export type Tur = 'oran' | 'seviye' | 'fark';
@@ -58,9 +66,11 @@ function ayGeri(t: string, ay: number): number {
 }
 
 /** Hangi dönüşümler bu türde anlamlı, okura nasıl adlandırılır. */
-export function donusumler(tur: Tur, frekans: Frekans): { kod: Donusum; ad: string }[] {
+export function donusumler(tur: Tur, frekans: Frekans, hedefYil = false): { kod: Donusum; ad: string }[] {
   const liste: { kod: Donusum; ad: string }[] = [{ kod: 'duzey', ad: 'Düzey' }];
-  if (tur === 'seviye') liste.push({ kod: 'yillik', ad: 'Yıllık % değişim' });
+  if (hedefYil) {
+    // Bir yıl önceki gözlem başka bir yılın beklentisidir: yıllık kıyas yok.
+  } else if (tur === 'seviye') liste.push({ kod: 'yillik', ad: 'Yıllık % değişim' });
   else liste.push({ kod: 'yillik', ad: 'Yıllık fark' });
   // Çeyreklik seride "aylık" bir kıyas noktası yoktur.
   if (frekans !== 'ceyreklik') {
@@ -87,7 +97,7 @@ export function degisimOndalik(tur: Tur, ondalik: number): number {
 }
 
 /** Her gözlem için `ay` ay önceki kıyas noktasına göre değişim; ölçülemeyen gözlem düşer. */
-export function degisimSerisi(s: Seri, tur: Tur, frekans: Frekans, ay: number): Seri {
+export function degisimSerisi(s: Seri, tur: Tur, frekans: Frekans, ay: number, hedefYil = false): Seri {
   const ms = s.t.map(gun);
   const pay = PAY_GUN[frekans] * GUN;
   const t: string[] = [];
@@ -97,6 +107,7 @@ export function degisimSerisi(s: Seri, tur: Tur, frekans: Frekans, ay: number): 
     const hedef = ayGeri(s.t[i], ay);
     while (j + 1 < i && ms[j + 1] <= hedef) j++;
     if (ms[j] > hedef || hedef - ms[j] > pay) continue;
+    if (hedefYil && s.t[j].slice(0, 4) !== s.t[i].slice(0, 4)) continue;
     const once = s.v[j];
     const simdi = s.v[i];
     let d: number;
@@ -112,16 +123,16 @@ export function degisimSerisi(s: Seri, tur: Tur, frekans: Frekans, ay: number): 
   return { t, v };
 }
 
-export function donustur(s: Seri, tur: Tur, frekans: Frekans, d: Donusum): Seri {
+export function donustur(s: Seri, tur: Tur, frekans: Frekans, d: Donusum, hedefYil = false): Seri {
   // Endeks dönemin tabanına bağlıdır; seriler kesildikten SONRA `endeksle` ile kurulur.
   if (d === 'duzey' || d === 'endeks') return s;
-  return degisimSerisi(s, tur, frekans, d === 'yillik' ? 12 : 1);
+  return degisimSerisi(s, tur, frekans, d === 'yillik' ? 12 : 1, hedefYil);
 }
 
 /** Son gözlemin `ay` ay önceye göre değişimi; ölçülemiyorsa null. */
-export function sonDegisim(s: Seri, tur: Tur, frekans: Frekans, ay = 12): number | null {
+export function sonDegisim(s: Seri, tur: Tur, frekans: Frekans, ay = 12, hedefYil = false): number | null {
   if (!s.t.length) return null;
-  const r = degisimSerisi(s, tur, frekans, ay);
+  const r = degisimSerisi(s, tur, frekans, ay, hedefYil);
   return r.t.length && r.t[r.t.length - 1] === s.t[s.t.length - 1] ? r.v[r.v.length - 1] : null;
 }
 
