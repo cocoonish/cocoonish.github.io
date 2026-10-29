@@ -1,0 +1,31 @@
+---
+import Base from '../../layouts/Base.astro';
+// Sebep kodları eposta/abone_sunucu.py SEBEPLER ile aynı (e-posta duman sınaması sorar).
+const MESAJ: Record<string, string> = {
+  adres: 'E-posta adresi geçerli görünmüyor.',
+  liste: 'En az bir bülten seç.',
+  onay: 'Aydınlatma metnini okuduğunu ve yurt dışına aktarımı onayladığını işaretle.',
+  hizli: 'Form çok hızlı gönderildi; sayfayı yenileyip tekrar dene.',
+  sinir: 'Çok fazla deneme oldu; bir saat sonra tekrar dene.',
+  servis: 'Abonelik şu anda alınamıyor; biraz sonra tekrar dene.',
+};
+---
+<Base title="Abonelik alınamadı" description="Bülten aboneliği: form gönderilemedi." dizinleme={false}>
+  <article>
+    <header class="makale-baslik yuksel">
+      <p class="kicker etiket">Abonelik</p>
+      <h1>Abonelik alınamadı</h1>
+      <p class="ozet" id="abone-hata">Form gönderilemedi.</p>
+    </header>
+    <div class="prose yuksel" style="--d: 120ms">
+      <p><a href="/abone/">Forma dön</a></p>
+    </div>
+  </article>
+  <script is:inline define:vars={{ MESAJ }}>
+    (function () {
+      var n = new URLSearchParams(location.search).get('n');
+      var el = document.getElementById('abone-hata');
+      if (el && n && MESAJ[n]) el.textContent = MESAJ[n];
+    })();
+  </script>
+</Base>
