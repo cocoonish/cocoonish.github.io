@@ -783,7 +783,6 @@ const bolumler = [
     (bicim3
       ? { id: 'ozet', ad: b.haftalik ? 'Haftanın özeti' : 'Bu sabah' }
       : { id: 'ozet', ad: b.haftalik ? 'Geçen hafta / önümüzdeki hafta' : 'Ne oldu / ne bekleniyor', kisa: 'Özet' }),
-  bicim3 && b.duzeltmeler?.length > 0 && { id: 'duzeltmeler', ad: 'Düzeltmeler' },
   b.gostergeler?.length > 0 && { id: 'gostergeler', ad: 'Gösterge şeridi' },
   !bicim3 && b.one_cikanlar?.length > 0 && { id: 'one-cikanlar', ad: 'Öne çıkanlar' },
   (bicim3 || gruplarKalan.length > 0) && (bicim3
@@ -807,7 +806,11 @@ const bolumler = [
   b.temalar?.temalar?.length > 0 && { id: 'temalar', ad: 'İzlenen temalar' },
   b.haberler?.bolumler?.length > 0 && { id: 'gundem', ad: bicim3 ? 'Haber akışı' : 'Gündem' },
   b.veri_gunlugu?.length > 0 && { id: 'veri-gunlugu', ad: 'Veri günlüğü' },
+  bicim3 && b.duzeltmeler?.length > 0 && { id: 'duzeltmeler', ad: 'Düzeltmeler' },
 ].filter(Boolean) as { id: string; ad: string; kisa?: string }[];
+// Veri ekinin içindeki bölümler (özet satırı ve sayfa betiği bu kümeden okur).
+const EK_BOLUMLERI = new Set(['rejim', 'olagandisi', 'piyasa', 'soz-defteri', 'takvim', 'temalar', 'gundem', 'veri-gunlugu']);
+const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kisa ?? x.ad);
 // `kisa`: dar ekranın bölüm ŞERİDİNDE basılan ad. 320 pikselde uzun başlık
 // (328 px) şeride (284 px) sığmıyor, etkin bölüm hiçbir kaydırma konumunda
 // tam görünmüyordu. Tam ad yan sütunda ve bölümün kendi başlığında durur.
@@ -899,31 +902,10 @@ const bolumler = [
       <div class="ozet-metin" set:html={yaziMetni(b.ozet.ne_oldu)} />
     </section>
   )}
-  {/* Biçim 3: düzeltme "Bu sabah"ın altında — ilk ekran manşet ve
-      maddelerindir; künyedeki "Düzeltme" hücresi buraya bağlanır. */}
+  {/* Biçim 3: düzeltme SONDA (karar 28.10.2026) — ilk ekran manşet ve maddelerindir;
+      burada yalnız tek satırlık işaret durur, künyedeki "Düzeltme" hücresi de sona bağlanır. */}
   {bicim3 && b.duzeltmeler?.length > 0 && (
-    <section class="blok duzeltmeler" id="duzeltmeler">
-      <h2>Düzeltmeler</h2>
-      <p class="alt-not">
-        Daha önce yayımlanan bir sayı yanlış çıktıysa sessizce değiştirilmez: neyin,
-        neden ve neye düzeltildiği burada tarihiyle yazar. Bütün yayınların düzeltmeleri
-        <a href="/duzeltmeler/">tek listede</a> toplanır.
-      </p>
-      <ul class="duzeltme-liste">
-        {b.duzeltmeler.map((d: any) => (
-          <li>
-            <span class="d-tarih">{tarihUzun(d.tarih)}</span>
-            <span class="d-govde">
-              <strong>{d.alan}</strong>
-              <span class="d-degerler">
-                yayımlanan <s>{d.eski}</s> yerine <b>{d.yeni}</b>
-              </span>
-              {d.sebep && <span class="d-sebep">{d.sebep}</span>}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <p class="duzeltme-isaret"><a href="#duzeltmeler">Bu sayıda {b.duzeltmeler.length} düzeltme var ↓</a></p>
   )}
 
   {!bicim3 && b.ozet && (b.ozet.ne_oldu || b.ozet.ne_bekleniyor) && (
@@ -1580,6 +1562,11 @@ const bolumler = [
     </section>
   ))}
 
+  {/* VERİ EKİ (karar 28.10.2026): sabah notunun gövdesi önde, ölçülen tabloların
+      tamamı katlanır ekte. Metin DOM'da kalır (sayfa sınavı onu orada arar); biçim
+      2 arşivi açık durur ve ek başlığı görünmez — arşiv kendi düzeniyle basılır. */}
+  <details class:list={['veri-eki', { 'veri-eki-acik': !bicim3 }]} id="veri-eki" open={!bicim3}>
+    <summary><span class="ek-ad">Veri eki</span> <span class="ek-icerik">{ekAdlari.join(' · ')}</span></summary>
   {b.rejim?.length > 0 && (
     <section class="blok rejim" id="rejim">
       <h2>Rejim panosu</h2>
@@ -2263,6 +2250,33 @@ const bolumler = [
     </section>
   )}
 
+  </details>
+
+  {bicim3 && b.duzeltmeler?.length > 0 && (
+    <section class="blok duzeltmeler" id="duzeltmeler">
+      <h2>Düzeltmeler</h2>
+      <p class="alt-not">
+        Daha önce yayımlanan bir sayı yanlış çıktıysa sessizce değiştirilmez: neyin,
+        neden ve neye düzeltildiği burada tarihiyle yazar. Bütün yayınların düzeltmeleri
+        <a href="/duzeltmeler/">tek listede</a> toplanır.
+      </p>
+      <ul class="duzeltme-liste">
+        {b.duzeltmeler.map((d: any) => (
+          <li>
+            <span class="d-tarih">{tarihUzun(d.tarih)}</span>
+            <span class="d-govde">
+              <strong>{d.alan}</strong>
+              <span class="d-degerler">
+                yayımlanan <s>{d.eski}</s> yerine <b>{d.yeni}</b>
+              </span>
+              {d.sebep && <span class="d-sebep">{d.sebep}</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
   {/* KAPSAM NOTU sayfanın sonunda tek satır: ne ölçülmediği adıyla, neden
       önemli olduğu katta. Okura yalnız ad ve neden gider; kaydın "aday
       kaynak" ve "engel" alanları veri hattının yapılacaklar listesiydi
@@ -2314,6 +2328,20 @@ const bolumler = [
 </article>
 
 <style>
+  .duzeltme-isaret { margin: 0.4rem 0 0; font-size: 0.92rem; }
+  .duzeltme-isaret a { color: var(--claret); }
+  .veri-eki { margin-top: 2.5rem; border-top: 1px solid var(--ink-30); }
+  .veri-eki > summary {
+    cursor: pointer; list-style: none; padding: 0.9rem 0; display: flex; gap: 0.75rem;
+    align-items: baseline; flex-wrap: wrap;
+  }
+  .veri-eki > summary::-webkit-details-marker { display: none; }
+  .veri-eki > summary::before { content: '▸'; color: var(--claret); }
+  .veri-eki[open] > summary::before { content: '▾'; }
+  .veri-eki .ek-ad { font-weight: 600; font-size: 1.05rem; }
+  .veri-eki .ek-icerik { color: var(--ink-60); font-size: 0.9rem; }
+  .veri-eki-acik { border-top: 0; margin-top: 0; }
+  .veri-eki-acik > summary { display: none; }
   .bulten { max-width: 46rem; }
   .ust { padding: 2.4rem 0 1.4rem; }
   .kicker { color: var(--claret); margin: 0 0 0.6rem; }
@@ -2939,7 +2967,10 @@ const bolumler = [
     bekliyor = false;
     const sinir = window.innerHeight * 0.25;
     let etkin: HTMLAnchorElement | null = null;
-    for (const { a, el } of hedefler) if (el.getBoundingClientRect().top <= sinir) etkin = a;
+    for (const { a, el } of hedefler) {
+      if (el.getClientRects().length === 0) continue;      // kapalı veri ekinde
+      if (el.getBoundingClientRect().top <= sinir) etkin = a;
+    }
     for (const { a } of hedefler) {
       if (a === etkin) a.setAttribute('aria-current', 'true');
       else a.removeAttribute('aria-current');
@@ -2953,6 +2984,23 @@ const bolumler = [
       }
     }
   };
+  // Veri eki kapalıyken içindeki bir bölüme giden bağ ya da adres eki ekini açar.
+  const ek = document.getElementById('veri-eki') as HTMLDetailsElement | null;
+  const ekiAc = (id: string) => {
+    const hedef = id ? document.getElementById(id) : null;
+    if (ek && hedef && ek.contains(hedef) && !ek.open) {
+      ek.open = true;
+      hedef.scrollIntoView();
+    }
+  };
+  if (ek) {
+    document.addEventListener('click', (e) => {
+      const a = (e.target as HTMLElement | null)?.closest?.('a[href^="#"]') as HTMLAnchorElement | null;
+      if (a) ekiAc(a.hash.slice(1));
+    });
+    window.addEventListener('hashchange', () => ekiAc(location.hash.slice(1)));
+    if (location.hash) ekiAc(location.hash.slice(1));
+  }
   if (hedefler.length) {
     window.addEventListener('scroll', () => {
       if (!bekliyor) { bekliyor = true; requestAnimationFrame(isaretle); }
