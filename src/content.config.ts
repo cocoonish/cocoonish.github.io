@@ -117,6 +117,10 @@ const analiz = defineCollection({
         anahtar: z.array(z.string()).default([]),
       }).refine((k) => k.tarih || k.bitis, { message: 'izleme kalemi tarih ya da bitis taşımalı' }))
       .default([]),
+    /** X GÖNDERİSİ (29.10.2026): yazarın kendi metni, paragraf başına bir öğe. Sayfa
+     *  BASMAZ; tweet/analiz.py gönderiyi bundan kurar (imza ve sorumluluk notunu araç
+     *  ekler). Yoksa gönderi yönetici özetinden mekanik kurulur. */
+    tweet: z.array(z.object({ metin: z.string().min(1) })).default([]),
   }),
 });
 
