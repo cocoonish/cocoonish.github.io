@@ -783,6 +783,9 @@ const haftaAsan = haftaHareket.filter((x: any) => Math.abs(x.h1_sigma) >= OLAGAN
 const gorselListe = (Array.isArray(b.gorseller) ? b.gorseller : [])
   .filter((g: any) => g && g.baslik && (g.tur === 'egri' ? b.grafikler?.egri : g.seriler?.length))
   .slice(0, 3);
+// GRAFİKLERDE OLAĞANDIŞI DEĞİŞİM (29.10.2026, bulten/grafik_degisim.py): ölçülen katman.
+const grafikDegisim = ((b.grafik_degisim?.kalemler ?? []) as any[])
+  .filter((k) => k && k.id && k.ad && typeof k.metin === 'string' && k.metin.startsWith(k.ad));
 const bolumler = [
   !bicim3 && b.duzeltmeler?.length > 0 && { id: 'duzeltmeler', ad: 'Düzeltmeler' },
   b.ozet && (b.ozet.ne_oldu || b.ozet.ne_bekleniyor) &&
@@ -1062,6 +1065,17 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
             </div>
           ))}
         </details>
+      )}
+      {bicim3 && grafikDegisim.length > 0 && (
+        <div class="grafik-degisim">
+          <h3>Grafiklerde olağandışı değişim</h3>
+          <p class="alt-not">Grafikler bölümünün serilerinde son nottan bu yana gelen ve kendi geçmişine göre olağandışı olan gözlemler.</p>
+          <ul>
+            {grafikDegisim.map((k: any) => (
+              <li data-grafik-degisim={k.id}><a href={k.adres}>{k.ad}</a>{String(k.metin).slice(String(k.ad).length)}</li>
+            ))}
+          </ul>
+        </div>
       )}
     </section>
   )}
@@ -2410,6 +2424,10 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
   }
   .ozet-parca :global(p) { margin: 0 0 0.7rem; line-height: 1.62; max-width: var(--olcu-metin); }
   .ozet-parca :global(p:last-child) { margin-bottom: 0; }
+  .grafik-degisim { margin-top: 1.4rem; }
+  .grafik-degisim h3 { font-size: 1rem; margin: 0 0 0.3rem; }
+  .grafik-degisim ul { margin: 0.4rem 0 0; padding-left: 1.1rem; max-width: var(--olcu-metin, 32rem); }
+  .grafik-degisim li { margin-bottom: 0.45rem; line-height: 1.5; }
   /* BİÇİM 3 — "Bu sabah": günün rakamlarının tek evi (madde aralığı bulten/ayar.YAZI_ARALIK_3). */
   .ozet.ozet-maddeler { display: block; margin: 0 0 2rem; }
   .ozet-maddeler h2 { font-family: var(--font-display); font-size: 1.12rem; margin: 0 0 0.5rem; }
