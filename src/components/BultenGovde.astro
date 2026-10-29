@@ -949,7 +949,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
   <section class="gosterge-serit" id="gostergeler" aria-label="Gösterge şeridi">
     {b.gostergeler.map((g: any) => (
       <div class:list={['gosterge', { durgun: gostergeDurgun(g) }]}>
-        <span class="g-ad">{g.ad}</span>
+        <span class="g-isim">{g.ad}</span>
         <span class="g-deger">
           {String(g.birim ?? '').trim() === '%'
             ? yuzdeMetin(g.metin)
@@ -1186,7 +1186,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
           <tbody>
             {haftaHareket.map((r: any) => (
               <tr>
-                <td class="p-ad">
+                <td class="p-isim">
                   {r.ad}
                   <span class="p-not">{r.grupBaslik}{r.tarih !== anaSeans && r.tarih ? ` · ${tz(r.tarih)}` : ''}</span>
                 </td>
@@ -1389,7 +1389,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
                   const bag = fikirAcildigi.get(String(k.kimlik));
                   return (
                     <tr>
-                      <td class="p-ad">
+                      <td class="p-isim">
                         {bag ? <a href={bag}>{k.baslik}</a> : <span>{k.baslik}</span>}
                         <span class="p-tarih-ic">açılış {gunAy(k.acilis)}{k.yapi_metni && !olculemez ? ` · ${k.yapi_metni}` : ''}</span>
                         {k.degerlenmedi && <span class="p-not p-not-uyari">Bu ölçümde değerlenmedi: {noktali(k.degerlenmedi)}</span>}
@@ -1461,7 +1461,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
                   const bag = fikirAcildigi.get(String(k.kimlik));
                   return (
                     <tr>
-                      <td class="p-ad">
+                      <td class="p-isim">
                         {bag ? <a href={bag}>{k.baslik}</a> : <span>{k.baslik}</span>}
                         <span class="p-tarih-ic">açılış {gunAy(k.acilis)}{k.yapi_metni && k.tur !== 'olculemez' ? ` · ${k.yapi_metni}` : ''}</span>
                         {Array.isArray(k.devir) && k.devir.length > 0 && (
@@ -1657,7 +1657,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
               <tbody>
                 {sigmaSatirlar.map((x: any) => (
                   <tr>
-                    <td class="p-ad">{x.ad}</td>
+                    <td class="p-isim">{x.ad}</td>
                     <td class:list={['sag', 'p-degisim', { arti: x.deger > 0, eksi: x.deger < 0 }]}>
                       {degisimli(x.deger, x.birim)}
                     </td>
@@ -1743,7 +1743,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
             <tbody>
               {b.piyasa.tr_faizleri.map((t: any) => (
                 <tr class:list={[{ gecersiz: t.gecerli === false }]}>
-                  <td class="p-ad">
+                  <td class="p-isim">
                     {t.ad}
                     {t.aciklama && <sup class="p-isaret" title="Satır notu tablonun altında"><span aria-hidden="true">†</span><span class="gorunmez">satır notu var</span></sup>}
                     {t.gecerli === false && <span class="p-bayrak">güncel değil</span>}
@@ -1772,7 +1772,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
             <table class="p-tablo p-piyasa">
               <caption class="gorunmez">{g.baslik}: son değer ve dönemsel değişimler</caption>
               <colgroup>
-                <col class="c-ad" /><col class="c-son" />
+                <col class="c-isim" /><col class="c-son" />
                 <col class="c-deg" /><col class="c-deg" /><col class="c-deg" /><col class="c-deg" />
                 <col class="c-konum" /><col class="c-sigma" />
               </colgroup>
@@ -1786,7 +1786,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
               <tbody>
                 {g.satirlar.map((r: any) => (
                   <tr>
-                    <td class="p-ad">
+                    <td class="p-isim">
                       {koddanGrafik(r.kod) ? <a class="p-grafik" href={koddanGrafik(r.kod)!} title="Uzun tarihçe: Grafikler">{r.ad}</a> : r.ad}{r.not && <sup class="p-isaret" title="Satır notu tablonun altında"><span aria-hidden="true">†</span><span class="gorunmez">satır notu var</span></sup>}
                       {notUyari(r) && <span class="p-not p-not-uyari">{notUyari(r)}</span>}
                       {(r.tarih !== anaSeans || r.onarim || r.eksik_seans?.length > 0 || ayrikTanim(r, g)) && (
@@ -1845,7 +1845,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
             <tbody>
               {b.piyasa.turetilmis.map((t: any) => (
                 <tr>
-                  <td class="p-ad">{t.ad}{t.aciklama && <sup class="p-isaret" title="Satır notu tablonun altında"><span aria-hidden="true">†</span><span class="gorunmez">satır notu var</span></sup>}</td>
+                  <td class="p-isim">{t.ad}{t.aciklama && <sup class="p-isaret" title="Satır notu tablonun altında"><span aria-hidden="true">†</span><span class="gorunmez">satır notu var</span></sup>}</td>
                   <td class="sag p-son">{tr(t.deger, typeof t.ondalik === 'number' ? t.ondalik : undefined)}<span class="p-birim">{t.birim}</span></td>
                   <td class:list={['sag', 'p-degisim', { arti: (t.d1 ?? 0) > 0, eksi: (t.d1 ?? 0) < 0 }]}>
                     {t.d1 === null || t.d1 === undefined ? '—' : t.degisim_birim ? degisimli(t.d1, t.degisim_birim, 1) : isaretli(t.d1)}
@@ -2085,7 +2085,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
                   <tbody>
                     {t.olculer.map((r: any) => (
                       <tr>
-                        <td class="p-ad">{r.ad}</td>
+                        <td class="p-isim">{r.ad}</td>
                         {t.uyum && (
                           <td class="p-tez">
                             {r.yon ? (r.yon === 'yukari' ? '↑' : '↓') : '—'}
@@ -2497,7 +2497,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
     .gosterge { padding: 0.55rem 0.6rem; }
     .g-deger { font-size: 1.05rem; }
   }
-  .g-ad { font-size: 0.72rem; color: var(--ink-70); line-height: 1.25; }
+  .g-isim { font-size: 0.72rem; color: var(--ink-70); line-height: 1.25; }
   .g-deger { font-family: var(--font-mono); font-size: 1.22rem; font-weight: 500; }
   .g-birim { font-size: 0.6em; color: var(--ink-70); margin-left: 0.35em; }
   .g-fark { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-70); }
@@ -2516,7 +2516,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
   .satir-not dd { margin: 0; color: var(--ink-70); }
   @media (max-width: 640px) { .satir-not dl { grid-template-columns: 1fr; } .satir-not dd { margin-bottom: 0.3rem; } }
   .olay-neden { color: var(--ink-60); }
-  .gosterge.durgun .g-deger, .gosterge.durgun .g-ad { color: var(--ink-60); }
+  .gosterge.durgun .g-deger, .gosterge.durgun .g-isim { color: var(--ink-60); }
   .gosterge.durgun .g-deger { font-weight: 400; }
   .serit-not { margin-top: 0.45rem; }
   .g-tarih { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-60); }
@@ -2724,10 +2724,10 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
   .fk-alt { display: block; font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-60); margin-top: 0.1rem; }
   .fk-metin { margin: 0 0 0.35rem; font-size: 0.95rem; line-height: 1.55; color: var(--ink-70); max-width: var(--olcu-metin); }
   .fk-metin .fk-et { color: var(--ink); }
-  /* `table.p-tablo td { white-space: nowrap }` özgüllükle `.p-ad`ı eziyor
+  /* `table.p-tablo td { white-space: nowrap }` özgüllükle `.p-isim`ı eziyor
      (piyasa tablosunda aynı kusur bir kez ölçüldü): ad ve yapı satırı sarar. */
-  table.fk-karne td.p-ad { min-width: 11rem; white-space: normal; }
-  table.fk-karne td.p-ad a { color: var(--ink); }
+  table.fk-karne td.p-isim { min-width: 11rem; white-space: normal; }
+  table.fk-karne td.p-isim a { color: var(--ink); }
   table.fk-karne td.fk-sar { white-space: normal; }
   table.fk-karne th.sag, table.fk-karne td.sag { padding-left: 0.9rem; }
   .fk-not-hucre { color: var(--ink-60); font-style: italic; }
@@ -2789,27 +2789,27 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
      aynı x'e koyar; dar ekranda tablo en az 44rem kalır ve yatay kayar, ad
      sütunu yapışık durur. */
   table.p-piyasa { table-layout: fixed; min-width: 44rem; }
-  table.p-piyasa col.c-ad { width: 30%; }
+  table.p-piyasa col.c-isim { width: 30%; }
   table.p-piyasa col.c-son { width: 13%; }
   table.p-piyasa col.c-deg { width: 10.5%; }
   table.p-piyasa col.c-konum { width: 7.5%; }
   table.p-piyasa col.c-sigma { width: 7.5%; }
   /* Ad hücresi SARAR: `table.p-tablo td { white-space: nowrap }` özgüllükle
-     `.p-ad { white-space: normal }`ı eziyordu; sabit düzende uzun ad ve
+     `.p-isim { white-space: normal }`ı eziyordu; sabit düzende uzun ad ve
      "… kaynakta boş" notu komşu sütunun altına akıyordu. Birim değerin
      ALTINDA: "7.670,84 puan" ve "2,9933 USD/galon" %13'lük sütuna sığmıyor,
      değer sütunun sağ kenarını 15 piksele kadar aşıp "1 gün" hücresine
      biniyordu (34 sayıda 645 hücre). */
-  table.p-piyasa td.p-ad { min-width: 0; overflow-wrap: break-word; white-space: normal; }
+  table.p-piyasa td.p-isim { min-width: 0; overflow-wrap: break-word; white-space: normal; }
   table.p-piyasa .p-son .p-birim { display: block; margin-left: 0; line-height: 1.2; }
   /* Tema tabloları dört sütun: telefonda da sığmalı. Piyasa tablolarının
      12rem'lik ad sütunu burada 'yılbaşından' sütununu yarısından kesiyordu. */
-  table.p-tema td.p-ad { min-width: 0; white-space: normal; }
+  table.p-tema td.p-isim { min-width: 0; white-space: normal; }
   @media (max-width: 640px) {
     table.p-tema th, table.p-tema td { padding-right: 0.35rem; }
   }
   @media (max-width: 760px) {
-    table.p-piyasa th:first-child, table.p-piyasa td.p-ad {
+    table.p-piyasa th:first-child, table.p-piyasa td.p-isim {
       position: sticky; left: 0; z-index: 1; background: var(--paper);
       box-shadow: 1px 0 0 var(--ink-15);
     }
@@ -2829,7 +2829,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
     padding: 0.34rem 0.5rem 0.34rem 0; border-bottom: 1px solid var(--ink-30);
     vertical-align: top; white-space: nowrap;
   }
-  .p-ad { white-space: normal; min-width: 12rem; }
+  .p-isim { white-space: normal; min-width: 12rem; }
   /* Enstrüman adı Grafikler'deki uzun tarihçeye bağlı: tabloyu bağ rengine boyamadan. */
   .p-grafik { color: inherit; text-decoration: underline; text-decoration-color: var(--ink-30); text-underline-offset: 0.18em; }
   .p-grafik:hover { text-decoration-color: var(--claret); }
@@ -2901,7 +2901,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
      Ölçüldü (390 px): 12 pikselin altındaki karakter payı bültende %9,0 — en yoğun
      katmanlar not, tarih ve konum satırlarıydı; sayı hücreleri zaten 13,4 px. */
   @media (max-width: 640px) {
-    .p-not, .p-tarih-ic, .p-tarih, .kaynak-not, .k-zaman, .g-ad, .g-tarih { font-size: 0.75rem; }
+    .p-not, .p-tarih-ic, .p-tarih, .kaynak-not, .k-zaman, .g-isim, .g-tarih { font-size: 0.75rem; }
     .p-aralik, .g-fark { font-size: 0.8125rem; }
     .p-birim { font-size: 0.72rem; }
   }
