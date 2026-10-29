@@ -1,0 +1,73 @@
+---
+/**
+ * Bülten abonelik formu — /abone/ sayfası ve ana sayfa aynı formu basar.
+ * Arka ucu ttotrading.com/api/abone (eposta/abone_sunucu.py); adres TAM yazılır,
+ * sayfa github.io'dan da sunuluyor ve orada /api/ yok. Alan adları servisin
+ * sözleşmesidir (e-posta duman sınaması sorar).
+ */
+interface Props {
+  /** Ana sayfa: tek satırda adres + düğme, liste seçimi ve onay altında. */
+  kompakt?: boolean;
+}
+const { kompakt = false } = Astro.props;
+const EYLEM = 'https://ttotrading.com/api/abone';
+---
+<form class:list={['abone-form', { kompakt }]} method="post" action={EYLEM}>
+  <label class="alan">
+    <span class:list={{ gorunmez: kompakt }}>E-posta adresin</span>
+    <span class="satir">
+      <input type="email" name="eposta" required autocomplete="email" maxlength="254" inputmode="email"
+             placeholder={kompakt ? 'e-posta adresin' : undefined} />
+      {kompakt && <button type="submit">Abone ol</button>}
+    </span>
+  </label>
+  <fieldset>
+    <legend class:list={{ gorunmez: kompakt }}>Hangi bültenler?</legend>
+    <label class="secim"><input type="checkbox" name="gunluk" checked /> Sabah notu{!kompakt && ' (hafta içi her sabah)'}</label>
+    <label class="secim"><input type="checkbox" name="haftalik" checked /> Haftaya bakış{!kompakt && ' (pazar akşamı)'}</label>
+  </fieldset>
+  <label class="secim onay">
+    <input type="checkbox" name="onay" required />
+    <span>{kompakt
+      ? <><a href="/abone/#aydinlatma">Aydınlatma metnini</a> okudum; adresimin bülten gönderimi için Brevo'ya (AB) aktarılmasına açık rıza veriyorum.</>
+      : <>Aşağıdaki <a href="#aydinlatma">aydınlatma metnini</a> okudum; e-posta adresimin bülten gönderimi için e-posta hizmet sağlayıcısı Brevo'ya (Avrupa Birliği) aktarılmasına açık rıza veriyorum.</>}</span>
+  </label>
+  <div class="bal" aria-hidden="true">
+    <label>Web sitesi <input type="text" name="web_sitesi" tabindex="-1" autocomplete="off" /></label>
+  </div>
+  <input type="hidden" name="t" value="" />
+  {!kompakt && <button type="submit">Abone ol</button>}
+  <p class="alt-not">Adresine bir onay e-postası gelir; aboneliğin, oradaki bağa tıkladığında başlar.</p>
+</form>
+<script is:inline>
+  (function () {
+    document.querySelectorAll('.abone-form input[name="t"]').forEach(function (t) { t.value = String(Date.now()); });
+  })();
+</script>
+
+<style>
+  .abone-form { display: grid; gap: 1rem; max-width: 30rem; margin: 0.5rem 0 2.4rem; }
+  .abone-form .alan { display: grid; gap: 0.35rem; }
+  .abone-form .satir { display: flex; gap: 0.5rem; }
+  .abone-form input[type='email'] {
+    flex: 1; min-width: 0; font: inherit; padding: 0.55rem 0.7rem; border: 1px solid var(--ink-60);
+    background: var(--paper); color: var(--ink);
+  }
+  .abone-form fieldset { border: 1px solid var(--ink-15); padding: 0.7rem 0.9rem; margin: 0; }
+  .abone-form legend { padding: 0 0.3rem; }
+  .abone-form .secim { display: flex; gap: 0.55rem; align-items: flex-start; line-height: 1.45; margin: 0.25rem 0; }
+  .abone-form .secim input { margin-top: 0.3rem; }
+  .abone-form .onay { font-size: 0.95rem; }
+  .abone-form button {
+    justify-self: start; font: inherit; padding: 0.55rem 1.1rem; border: 0; background: var(--claret);
+    color: var(--paper); cursor: pointer; white-space: nowrap;
+  }
+  .abone-form button:hover { opacity: 0.9; }
+  .abone-form .bal { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  /* Kompakt (ana sayfa): adres ve düğme tek satır, seçim ve onay küçük. */
+  .abone-form.kompakt { gap: 0.55rem; margin: 0; max-width: none; }
+  .abone-form.kompakt fieldset { border: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 1.1rem; }
+  .abone-form.kompakt .secim { font-size: 0.86rem; margin: 0; }
+  .abone-form.kompakt .onay { font-size: 0.78rem; color: var(--ink-70); line-height: 1.45; }
+  .abone-form.kompakt .alt-not { font-size: 0.76rem; margin: 0; }
+</style>

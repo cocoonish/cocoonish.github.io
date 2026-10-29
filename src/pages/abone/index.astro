@@ -1,9 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import abone from '../../data/abone.json';
-// Form arka ucu: ttotrading.com/api/abone (eposta/abone_sunucu.py). Adres TAM
-// yazılır: sayfa github.io'dan da sunuluyor ve orada /api/ yok.
-const EYLEM = 'https://ttotrading.com/api/abone';
+import AboneFormu from '../../components/AboneFormu.astro';
 ---
 
 <Base title="Bülten aboneliği" description="TTO Trading sabah notunu ve haftaya bakışı e-postayla al: listeni seç, adresini onayla." dizinleme={abone.acik}>
@@ -14,27 +12,7 @@ const EYLEM = 'https://ttotrading.com/api/abone';
       <p class="ozet">Hafta içi her sabah sabah notunun tamamı, pazar akşamı haftaya bakış. Adresini onaylayana kadar hiçbir listeye eklenmezsin.</p>
     </header>
     <div class="prose yuksel" style="--d: 120ms">
-      <form class="abone-form" method="post" action={EYLEM}>
-        <label class="alan">
-          <span>E-posta adresin</span>
-          <input type="email" name="eposta" required autocomplete="email" maxlength="254" inputmode="email" />
-        </label>
-        <fieldset>
-          <legend>Hangi bültenler?</legend>
-          <label class="secim"><input type="checkbox" name="gunluk" checked /> Sabah notu (hafta içi her sabah)</label>
-          <label class="secim"><input type="checkbox" name="haftalik" checked /> Haftaya bakış (pazar akşamı)</label>
-        </fieldset>
-        <label class="secim onay">
-          <input type="checkbox" name="onay" required />
-          <span>Aşağıdaki <a href="#aydinlatma">aydınlatma metnini</a> okudum; e-posta adresimin bülten gönderimi için e-posta hizmet sağlayıcısı Brevo'ya (Avrupa Birliği) aktarılmasına açık rıza veriyorum.</span>
-        </label>
-        <div class="bal" aria-hidden="true">
-          <label>Web sitesi <input type="text" name="web_sitesi" tabindex="-1" autocomplete="off" /></label>
-        </div>
-        <input type="hidden" name="t" value="" />
-        <button type="submit">Abone ol</button>
-        <p class="alt-not">Gönderdikten sonra adresine bir onay e-postası gelir; aboneliğin, oradaki bağa tıkladığında başlar.</p>
-      </form>
+      <AboneFormu />
 
       <h2 id="aydinlatma">Kişisel verilerin korunması — aydınlatma metni</h2>
       <p>Bu metin 6698 sayılı Kişisel Verilerin Korunması Kanunu'nun 10. maddesi uyarınca, bülten aboneliği için işlenen kişisel veriler hakkında bilgi verir.</p>
@@ -50,28 +28,4 @@ const EYLEM = 'https://ttotrading.com/api/abone';
       <p>Bültenler araştırma ve bilgilendirme amaçlıdır; yatırım tavsiyesi değildir.</p>
     </div>
   </article>
-  <script is:inline>
-    (function () {
-      var t = document.querySelector('.abone-form input[name="t"]');
-      if (t) t.value = String(Date.now());
-    })();
-  </script>
 </Base>
-
-<style>
-  .abone-form { display: grid; gap: 1rem; max-width: 30rem; margin: 0.5rem 0 2.4rem; }
-  .abone-form .alan { display: grid; gap: 0.35rem; }
-  .abone-form input[type='email'] {
-    font: inherit; padding: 0.55rem 0.7rem; border: 1px solid var(--ink-60); background: var(--paper); color: var(--ink);
-  }
-  .abone-form fieldset { border: 1px solid var(--ink-15); padding: 0.7rem 0.9rem; margin: 0; }
-  .abone-form legend { padding: 0 0.3rem; }
-  .abone-form .secim { display: flex; gap: 0.55rem; align-items: flex-start; line-height: 1.45; margin: 0.25rem 0; }
-  .abone-form .secim input { margin-top: 0.3rem; }
-  .abone-form .onay { font-size: 0.95rem; }
-  .abone-form button {
-    justify-self: start; font: inherit; padding: 0.55rem 1.1rem; border: 0; background: var(--claret);
-    color: var(--paper); cursor: pointer;
-  }
-  .abone-form .bal { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-</style>

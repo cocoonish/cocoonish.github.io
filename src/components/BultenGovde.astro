@@ -35,6 +35,8 @@ import {
 import { FERAGAT } from '../consts';
 import type { HatSayfa } from '../lib/hatSayfa';
 import { koddanGrafik } from '../lib/grafikVeri';
+import { eksiDuzelt, gostergeDurgun, gostergeFark, yuzdeMetin } from '../lib/gosterge';
+import GostergeSerit from './GostergeSerit.astro';
 
 interface Props {
   b: any;
@@ -360,35 +362,7 @@ const sigmaYaz = (v: number | null | undefined): string =>
 /** Birimli değişim: "%" ise yuzde önde, değilse "sayı birim". */
 const degisimli = (v: number | null | undefined, birim: string | null | undefined, ondalik?: number): string =>
   v === null || v === undefined || typeof v !== 'number' ? '—' : degisim(v, birim ?? '', ondalik ?? hane(v, birim));
-/** Ölçüm katmanının yazdığı hazır metin: eski sayılarda ASCII tire kalmış olabilir. */
-const eksiDuzelt = (s: unknown): string => String(s ?? '').replace(/(^|[\s(])-(?=\d)/g, '$1−');
-/**
- * Gösterge farkı. BİR ORANIN FARKI PUANDIR: %31,75'ten %31,51'e inen TÜFE'nin
- * farkı 0,24 puan, %0,24 değil — %0,24'lük bir düşüş 31,75'i 31,67'ye indirirdi.
- * Şerit farkı "−%0,24" basıyordu, aynı sayfadaki olay cümlesi aynı hareketi
- * doğru olarak "puan" diye yazıyordu (ölçüm katmanında `olay.FARK_BIRIMI`).
- */
-const gostergeFark = (fark: unknown, birim: unknown, sayisal?: unknown, farkBirim?: unknown): string => {
-  const f = eksiDuzelt(fark);
-  const bir = String(birim ?? '').trim();
-  // Sıfır fark "—" basılıyordu ve "veri yok" ile karışıyordu.
-  if (!f) return sayisal === 0 ? 'değişmedi' : '—';
-  // Farkı YÜZDE yazılan gösterge (kur): ölçüm katmanı `fark_birim: "%"` yazar.
-  if (String(farkBirim ?? '').trim() === '%') return yuzdeMetin(f);
-  if (bir === '%') return `${f} puan`;
-  return bir ? `${f} ${bir}` : f;
-};
-// BUGÜN İLERLEMEYEN GÖSTERGE (ölçüm katmanı `bugun_yeni: false`, 01.10.2026):
-// 30.09 şeridindeki 17 göstergenin 10'u bir önceki sayıdakiyle birebir aynıydı
-// ve 18.09 tarihli bir fark beş sayıdır bugünün haberi gibi renkli basılıyordu.
-// Değer ve kendi tarihi kalır; fark basılmaz, kart soluk. Alanı taşımayan eski
-// sayılarda davranış değişmez.
-const gostergeDurgun = (g: any): boolean => g?.bugun_yeni === false;
-/** Hazır yüzde metni ("21,4", "−1,2") → sözleşme: işaret önde, % sonra ("−%1,2"). */
-const yuzdeMetin = (m: unknown): string => {
-  const t = eksiDuzelt(m);
-  return t.startsWith('−') || t.startsWith('+') ? `${t[0]}%${t.slice(1)}` : `%${t}`;
-};
+// Gösterge şeridinin yazım kuralları lib/gosterge'de (ana sayfa da aynı şeridi basar).
 /** Birimli seviye (işaretsiz): "%1,20" ya da "6,5 bp". */
 const birimli = (v: number | null | undefined, birim: string | null | undefined, ondalik?: number): string => {
   if (v === null || v === undefined || typeof v !== 'number') return '—';
@@ -946,41 +920,7 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
       diyordu, basım ise ~980 sözcük düzyazıyı şeridin önüne koyuyordu:
       1360×900 ilk ekranda tek bir piyasa sayısı yoktu. */}
   <h2 class="gorunmez">Gösterge şeridi</h2>
-  <section class="gosterge-serit" id="gostergeler" aria-label="Gösterge şeridi">
-    {b.gostergeler.map((g: any) => (
-      <div class:list={['gosterge', { durgun: gostergeDurgun(g) }]}>
-        <span class="g-isim">{g.ad}</span>
-        <span class="g-deger">
-          {String(g.birim ?? '').trim() === '%'
-            ? yuzdeMetin(g.metin)
-            : <>{eksiDuzelt(g.metin)}<span class="g-birim">{g.birim}</span></>}
-        </span>
-        {gostergeDurgun(g)
-          ? <span class="g-fark g-durgun"><span class="gorunmez">bu sayıda yeni veri yok</span></span>
-          : <span class:list={['g-fark', { arti: (g.fark ?? 0) > 0, eksi: (g.fark ?? 0) < 0 }]}>
-              {gostergeFark(g.fark_metin, g.birim, g.fark, g.fark_birim)}
-            </span>}
-        {g.baglam_metin && (
-          <span class="g-baglam">
-            {g.baglam_ad}{' '}
-            {String(g.birim ?? '').trim() === '%'
-              ? yuzdeMetin(g.baglam_metin)
-              : <>{eksiDuzelt(g.baglam_metin)}<span class="g-birim">{g.birim}</span></>}
-          </span>
-        )}
-        <span class="g-tarih">
-          {tz(g.veri_tarihi)}
-          {g.kapanis_tanimi && <span class="g-kiyas">kapanış {g.kapanis_tanimi}</span>}
-          {g.kiyas && g.kiyas !== 'son yayım' && <span class="g-kiyas">{g.kiyas}</span>}
-        </span>
-        {g.canli && istanbulSaat(g.canli.zaman) && (
-          <span class="g-canli" title="Ölçüm anının son kotasyonu; kapanış ve fark kapanmış seanstan ölçülür">
-            {istanbulSaat(g.canli.zaman)} TSİ: {sayi(Number(g.canli.deger), g.ondalik ?? 2)}
-          </span>
-        )}
-      </div>
-    ))}
-  </section>
+  <GostergeSerit gostergeler={b.gostergeler} id="gostergeler" />
   {b.gostergeler.some(gostergeDurgun) && (
     <p class="alt-not serit-not">Soluk kartlar bu sayıda yeni verisi gelmeyen göstergelerdir;
     değer kartta yazan tarihin verisidir.</p>
@@ -2467,42 +2407,6 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
   .yazi-bolumu .gundem-metin :global(p) { margin: 0 0 0.65rem; line-height: 1.6; }
   .yazi-bolumu .gundem-metin :global(ul) { margin: 0 0 0.65rem; padding-left: 1.15rem; display: grid; gap: 0.35rem; }
 
-  /* Ayraç çizgisi hücrenin KENDİ kenarı: ızgara boşluğundan görünen zemin
-     rengiyle çizildiğinde son satırın boş hücresi koyu gri bir dolgu olarak
-     görünüyordu. Künye şeridiyle aynı kalıp (kenar + eksi dış boşluk). */
-  .gosterge-serit {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(215px, 100%), 1fr));
-    gap: 0;
-    /* Dış çizgi yalnız üstte ve solda; sağ ve alt kenarı hücreler çizer.
-       Son satır eksik kaldığında boş hücrelerin yerinde çerçeve kalmaz. */
-    border-top: 1px solid var(--ink-30);
-    border-left: 1px solid var(--ink-30);
-    margin: 1.8rem 0 2rem;
-  }
-  @media (min-width: 1200px) {
-    .gosterge-serit { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .gosterge { padding: 0.6rem 0.7rem; }
-    .g-deger { font-size: 1.12rem; }
-  }
-  .gosterge {
-    background: var(--paper); padding: 0.7rem 0.8rem; display: grid; gap: 0.15rem;
-    align-content: start;
-    border-right: 1px solid var(--ink-30); border-bottom: 1px solid var(--ink-30);
-  }
-  /* Telefonda iki sütun: tek sütunda on yedi kart alt alta diziliyor, şerit
-     2.040 piksele (2,4 ekran) çıkıyordu. */
-  @media (max-width: 640px) {
-    .gosterge-serit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .gosterge { padding: 0.55rem 0.6rem; }
-    .g-deger { font-size: 1.05rem; }
-  }
-  .g-isim { font-size: 0.72rem; color: var(--ink-70); line-height: 1.25; }
-  .g-deger { font-family: var(--font-mono); font-size: 1.22rem; font-weight: 500; }
-  .g-birim { font-size: 0.6em; color: var(--ink-70); margin-left: 0.35em; }
-  .g-fark { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-70); }
-  .g-fark.arti { color: var(--pozitif); }
-  .g-fark.eksi { color: var(--claret); }
   .sigma-ozet { margin: 0.2rem 0 0.6rem; }
   .p-isaret { color: var(--ink-60); font-size: 0.7em; margin-left: 0.15em; }
   .soz-kat > summary { cursor: pointer; font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-60); }
@@ -2516,20 +2420,8 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
   .satir-not dd { margin: 0; color: var(--ink-70); }
   @media (max-width: 640px) { .satir-not dl { grid-template-columns: 1fr; } .satir-not dd { margin-bottom: 0.3rem; } }
   .olay-neden { color: var(--ink-60); }
-  .gosterge.durgun .g-deger, .gosterge.durgun .g-isim { color: var(--ink-60); }
-  .gosterge.durgun .g-deger { font-weight: 400; }
   .serit-not { margin-top: 0.45rem; }
-  .g-tarih { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-60); }
-  .g-canli { display: block; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-70); }
   .p-canli { color: var(--ink-70); }
-  .g-kiyas { display: block; font-size: 0.92em; font-style: italic; }
-  /* BAĞLAM SATIRI — tek günlük okumanın altında, ondan sönük ama okunur
-     (--ink-60, üç zeminde de AA); --ink-30 metinde kullanılmaz (1,90:1). */
-  .g-baglam {
-    display: block; font-size: 0.86rem; color: var(--ink-60);
-    margin-top: 0.1rem; font-variant-numeric: tabular-nums;
-  }
-
   .blok { margin: 2.6rem 0; }
   /* Her sayıda aynı basılan yöntem notu katlanır: okur bir kez okur, sonra
      geçer. Güne özgü bilgi (seans, isabet oranı) katın DIŞINDA kalır. */

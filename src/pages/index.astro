@@ -2,20 +2,26 @@
 /**
  * Ana sayfa — dizin değil, MANŞET.
  *
- * Siteye ilk gelen profesyonel okur beş saniyede üç soruya cevap arar:
- * bu ne, güncel mi, ciddi mi? Rejim panosu üçünü birden cevaplar; bir
- * içindekiler listesi hiçbirini cevaplamaz. Bu yüzden sayfa bugünün
- * ÖLÇÜMÜYLE açılır, arşiv altına iner.
+ * Siteye ilk gelen profesyonel okur beş saniyede üç soruya cevap arar: bu ne,
+ * güncel mi, ciddi mi? Sayfa bu yüzden GÜNÜN NOTUYLA açılır: yazılmış son sayının
+ * manşeti ve ilk üç maddesi, yanında abonelik ve takvim; altında gösterge şeridi
+ * ve günün grafikleri, sonra analizler ve ölçülen katmanın panoları.
  *
- * Üstteki her şey ölçülen katmandan gelir — yazı katmanından tek cümle
- * alınmaz. Yazı katmanı bir sabah koşmasa da (ya da hafta sonu) manşet
- * doğru kalır; yanındaki tarih zaten neye ait olduğunu söyler.
+ * KARAR (29.10.2026, kullanıcı: "ana sayfayı daha profesyonel bir hale
+ * getirmeliyiz"): manşet eskiden yalnız ölçülen katmandan kuruluyordu (rejim
+ * cümlesi), çünkü yazı katmanı her sabah çıkmıyordu. Biçim 3'ten (01.10.2026) beri
+ * her sayı yazarın manşetini taşıyor ve kapıdan geçiyor; ölçülen manşet, yazılmış
+ * sayı yoksa yedektir. Künye neye ait olduğunu (tarih, sayı) yine söyler.
  */
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import KayitKarti from '../components/KayitKarti.astro';
 import RejimSerit from '../components/RejimSerit.astro';
 import HatlarTablosu from '../components/HatlarTablosu.astro';
+import GostergeSerit from '../components/GostergeSerit.astro';
+import BultenGorsel from '../components/BultenGorsel.astro';
+import AboneFormu from '../components/AboneFormu.astro';
+import abone from '../data/abone.json';
 import { dersleriTopla } from '../lib/dersListesi';
 import { sonBulten, sayi, OLAGANDISI_SIGMA, sigmaBasligi } from '../lib/anaSayfa';
 import { kartlar as analizKartlari } from '../lib/analizListesi';
@@ -59,84 +65,95 @@ const olcumSaati = istanbulSaat(b.olusturma);
 const sonYazili = bultenler()[0];
 const sayiNo = sonYazili && sonYazili.tarih === b.tarih ? sonYazili.sayiNo : null;
 
+// GÜNÜN NOTU: yazılmış son sayı (yoksa ölçülen manşet yedektir).
+const not = sonYazili?.b ?? null;
+const notManset: string = String(not?.manset ?? '').trim();
+const notMaddeler: string[] = [...String(not?.ozet?.ne_oldu ?? '').matchAll(/<li[^>]*>([\s\S]*?)<\/li>/g)]
+  .map((m) => m[1]).slice(0, 3);
+const notGorseller: any[] = ((not?.gorseller ?? []) as any[])
+  .filter((g) => g && g.baslik && (g.tur === 'egri' ? not?.grafikler?.egri : g.seriler?.length)).slice(0, 2);
+// Ana sayfa şeridi önce BUGÜN ilerleyen göstergeleri gösterir (sıra korunur): ilk
+// dört kartın dördü de soluk (yeni verisi yok) olunca şerit bayat görünüyordu.
+const notGostergeler: any[] = [...((not?.gostergeler ?? []) as any[])]
+  .sort((a, b) => Number(a?.bugun_yeni === false) - Number(b?.bugun_yeni === false));
+const notTur = sonYazili?.haftalik ? 'Haftaya bakış' : 'Sabah notu';
+const notSaat = sonYazili ? istanbulSaat(String(not?.ilk_yazi_zamani || not?.yazi_zamani || '')) : '';
+// Bölüm numaraları sıradan türer (bölüm eklenip çıkınca elle kaydırılmaz).
+let bolumNo = 0;
+const no = () => String(++bolumNo).padStart(2, '0');
+
 // Yüzde ÖNDE, bp ARKADA — kural lib/bicim'de tek yerde.
 const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp' ? 1 : 2);
 ---
 
 <Base>
   {
-    b.var ? (
+    (not || b.var) ? (
       <section class="ana-ust yuksel">
         <div class="ana-bas">
-          {/* İlk ekranda uzun tarih dört kez geçiyordu (üst şerit, künye, takvim
-              başlığı, bülten bağı). Künye tarihi kısa ve saatle birlikte yazar;
-              ek saate göre değiştiği için ("07:20'de") ek kullanılmaz. */}
           <p class="ana-kunye">
-            <span>ölçüm {tarihYaz(b.tarih)}{olcumSaati && ` · ${olcumSaati}`}</span>
-            {sayiNo && <span>Sayı {sayiNo}</span>}
+            {not
+              ? <><span>{notTur} · {sonYazili!.trTarih}</span><span>Sayı {sonYazili!.sayiNo}</span>{notSaat && <span>{notSaat} TSİ</span>}</>
+              : <><span>ölçüm {tarihYaz(b.tarih)}{olcumSaati && ` · ${olcumSaati}`}</span><span>{b.enstruman} enstrüman</span></>}
             <span>{hatlar.length} hat</span>
-            <span>{b.enstruman} enstrüman</span>
           </p>
-          {b.manset ? (
-            <h1 class="ana-manset">{b.manset.metin}</h1>
-          ) : (
-            <h1 class="ana-manset">Türkiye makrosunu ölçülmüş verilerle okumak.</h1>
+          <h1 class="ana-manset">{notManset || b.manset?.metin || 'Türkiye makrosunu ölçülmüş verilerle okumak.'}</h1>
+          {notMaddeler.length > 0 && (
+            <ul class="ana-maddeler">
+              {notMaddeler.map((m) => <li set:html={m} />)}
+            </ul>
           )}
-          {/* Manşetin altında sitenin kendi kuruluşunu anlatan bir paragraf
-              duruyordu ("Yukarıdaki cümle bir yorum değil…"); okurun kararını
-              değiştirmiyordu. Yerinde yayınlara giden bağlar var. */}
-          <ul class="ana-yayinlar">
-            <li>
-              <a href={b.bultenHref}>
-                <span class="ay-tur">{b.bultenHaftalik ? 'Haftaya bakış' : 'Günlük bülten'}</span>
-                <span class="ay-ad">{b.bultenYazili
-                  ? `${b.bultenTrTarih}${sonYazili ? ` · Sayı ${sonYazili.sayiNo}` : ''}`
-                  : (b.bultenTrTarih ? `Son yazılmış sayı · ${b.bultenTrTarih}` : 'Bülten arşivi')}</span>
-              </a>
-            </li>
+          <div class="ana-eylem">
+            {sonYazili && <a class="ana-dugme" href={sonYazili.href}>{sonYazili.haftalik ? 'Haftaya bakışı oku' : 'Sabah notunu oku'} →</a>}
             {analizler[0] && (
-              <li>
-                <a href={`/analiz/${analizler[0].yazi.id}/`}>
-                  <span class="ay-tur">Son analiz</span>
-                  <span class="ay-ad">{analizler[0].yazi.data.title}</span>
-                </a>
-              </li>
+              <a class="ana-ikincil" href={`/analiz/${analizler[0].yazi.id}/`}>
+                <span class="ay-tur">Son analiz</span> {analizler[0].yazi.data.title}
+              </a>
             )}
-          </ul>
+          </div>
         </div>
-        {(b.takvimGunu.length > 0 || b.siradaki.length > 0) && (
-          <aside class="ana-gun" aria-label="Takvim">
-            {b.takvimGunu.length > 0 && (
-              <>
-                <h2 class="ag-baslik etiket">{isoGun(istanbulGunu()) === b.tarih ? 'Bugün' : b.trTarih} · takvim · saatler TSİ</h2>
-                <ol class="ag-liste">
-                  {b.takvimGunu.map((k) => (
-                    <li class:list={{ birinci: k.onem === 1 }}>
-                      <span class="ag-saat">{k.saat || '—'}</span>
-                      <span class="ag-ulke">{k.ulke}</span>
-                      <span class="ag-olay">{k.olay}</span>
-                    </li>
-                  ))}
-                </ol>
-              </>
-            )}
-            {b.siradaki.length > 0 && (
-              <>
-                <h2 class="ag-baslik etiket">Sıradaki birinci derece veriler</h2>
-                <ol class="ag-liste">
-                  {b.siradaki.map((k) => (
-                    <li>
-                      <span class="ag-saat">{k.trTarih.replace(/ \d{4}$/, '')}</span>
-                      <span class="ag-ulke">{k.ulke}</span>
-                      <span class="ag-olay">{k.olay}</span>
-                    </li>
-                  ))}
-                </ol>
-              </>
-            )}
-            <a class="ag-tumu" href={`${b.bultenHref}#takvim`}>Takvimin tamamı →</a>
-          </aside>
-        )}
+        <aside class="ana-yan">
+          {abone.acik && (
+            <div class="ana-abone">
+              <p class="aa-baslik">Sabah notunu e-postayla al</p>
+              <p class="aa-metin">Hafta içi her sabah notun tamamı, pazar akşamı haftaya bakış.</p>
+              <AboneFormu kompakt />
+            </div>
+          )}
+          {(b.takvimGunu.length > 0 || b.siradaki.length > 0) && (
+            <div class="ana-gun" aria-label="Takvim">
+              {b.takvimGunu.length > 0 && (
+                <>
+                  <h2 class="ag-baslik etiket">{isoGun(istanbulGunu()) === b.tarih ? 'Bugün' : b.trTarih} · takvim · saatler TSİ</h2>
+                  <ol class="ag-liste">
+                    {b.takvimGunu.map((k) => (
+                      <li class:list={{ birinci: k.onem === 1 }}>
+                        <span class="ag-saat">{k.saat || '—'}</span>
+                        <span class="ag-ulke">{k.ulke}</span>
+                        <span class="ag-olay">{k.olay}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </>
+              )}
+              {b.siradaki.length > 0 && (
+                <>
+                  <h2 class="ag-baslik etiket">Sıradaki birinci derece veriler</h2>
+                  <ol class="ag-liste">
+                    {b.siradaki.map((k) => (
+                      <li>
+                        <span class="ag-saat">{k.trTarih.replace(/ \d{4}$/, '')}</span>
+                        <span class="ag-ulke">{k.ulke}</span>
+                        <span class="ag-olay">{k.olay}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </>
+              )}
+              <a class="ag-tumu" href={`${b.bultenHref}#takvim`}>Takvimin tamamı →</a>
+            </div>
+          )}
+        </aside>
       </section>
     ) : (
       <section class="ana-ust yuksel">
@@ -152,11 +169,57 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
     )
   }
 
+  {notGostergeler.length > 0 && (
+    <section class="ana-serit yuksel" style="--d: 60ms">
+      <div class="serit-ust">
+        <h2 class="etiket">Göstergeler · {sonYazili!.trTarih}</h2>
+        <a class="tumu" href={`${sonYazili!.href}#gostergeler`}>Bültende →</a>
+      </div>
+      <GostergeSerit gostergeler={notGostergeler} azami={8} />
+    </section>
+  )}
+
+  {notGorseller.length > 0 && (
+    <section>
+      <div class="bolum-baslik yuksel" style="--d: 80ms">
+        <span class="no">{no()}</span>
+        <h2>{notGorseller.length > 1 ? 'Günün grafikleri' : 'Günün grafiği'}</h2>
+        <a class="tumu" href={`${sonYazili!.href}#grafikler`}>Bültende →</a>
+      </div>
+      <div class="ana-grafikler yuksel" style="--d: 120ms">
+        {notGorseller.map((g, i) => <BultenGorsel gorsel={g} no={i + 1} egri={not?.grafikler?.egri} />)}
+      </div>
+    </section>
+  )}
+
+  {
+    analizler.length > 0 && (
+      <section>
+        <div class="bolum-baslik yuksel" style="--d: 80ms">
+          <span class="no">{no()}</span>
+          <h2>Analiz</h2>
+          <a class="tumu" href="/analiz/">
+            Tümü →
+          </a>
+        </div>
+        <p class="bolum-giris yuksel" style="--d: 100ms">
+          Tek bir piyasa gelişmesini mekanizmasına, tarihsel emsaline ve fiyat etkisine
+          kadar açan uzun yazılar.
+        </p>
+        <div class="kayit-izgara ana-analiz">
+          {analizler.map((k, i) => (
+            <KayitKarti href={`/analiz/${k.yazi.id}/`} sira={k.no} gecikme={120 + i * 60} {...k.yazi.data} ekBilgi={k.ekBilgi} tur="analiz" etiketler={false} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
   {
     b.rejim.length > 0 && (
       <section>
         <div class="bolum-baslik yuksel" style="--d: 80ms">
-          <span class="no">01</span>
+          <span class="no">{no()}</span>
           <h2>Rejim</h2>
           <a class="tumu" href={b.bultenHref}>
             Bültende →
@@ -177,7 +240,7 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
     olagandisi.length > 0 && (
       <section>
         <div class="bolum-baslik yuksel" style="--d: 80ms">
-          <span class="no">02</span>
+          <span class="no">{no()}</span>
           <h2>{sigmaBaslik}</h2>
           <a class="tumu" href={b.bultenHref}>
             Tümü →
@@ -211,7 +274,7 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
 
   <section>
     <div class="bolum-baslik yuksel" style="--d: 80ms">
-      <span class="no">{b.rejim.length > 0 ? '03' : '01'}</span>
+      <span class="no">{no()}</span>
       <h2>Hatlar</h2>
       <a class="tumu" href="/projeler/">Tümü →</a>
     </div>
@@ -225,34 +288,9 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
     </div>
   </section>
 
-  {
-    analizler.length > 0 && (
-      <section>
-        <div class="bolum-baslik yuksel" style="--d: 80ms">
-          <span class="no">{b.rejim.length > 0 ? '04' : '02'}</span>
-          <h2>Analiz</h2>
-          <a class="tumu" href="/analiz/">
-            Tümü →
-          </a>
-        </div>
-        <p class="bolum-giris yuksel" style="--d: 100ms">
-          Tek bir piyasa gelişmesini mekanizmasına, tarihsel emsaline ve fiyat etkisine
-          kadar açan uzun yazılar.
-        </p>
-        {/* İki sütun: üç sütunlu genel ızgarada dört kart 3 + 1 diziliyor,
-            dördüncü kart tek başına bir satır açıyordu. */}
-        <div class="kayit-izgara ana-analiz">
-          {analizler.map((k, i) => (
-            <KayitKarti href={`/analiz/${k.yazi.id}/`} sira={k.no} gecikme={120 + i * 60} {...k.yazi.data} ekBilgi={k.ekBilgi} tur="analiz" etiketler={false} />
-          ))}
-        </div>
-      </section>
-    )
-  }
-
   <section>
     <div class="bolum-baslik yuksel" style="--d: 160ms">
-      <span class="no">{b.rejim.length > 0 ? (analizler.length > 0 ? '05' : '04') : '03'}</span>
+      <span class="no">{no()}</span>
       <h2>Dersler</h2>
       <a class="tumu" href="/arastirma/">Tümü →</a>
     </div>
@@ -301,35 +339,63 @@ const yuzdeliYaz = (v: number, birim: string) => degisim(v, birim, birim === 'bp
     grid-template-columns: minmax(0, 1fr);
     gap: 2rem 3.2rem;
   }
-  .ana-bas { max-width: 40rem; }
   @media (min-width: 1000px) {
     .ana-ust { grid-template-columns: minmax(0, 1.6fr) minmax(17rem, 1fr); align-items: start; }
   }
 
-  .ana-yayinlar {
-    list-style: none; margin: 1.3rem 0 0; padding: 0;
-    display: grid; gap: 0; border-top: 1px solid var(--ink-30);
+  /* Günün notu: ilk üç madde manşetin altında, düğme ve son analiz altında. */
+  .ana-maddeler {
+    list-style: none; margin: 0 0 1.3rem; padding: 0; border-top: 1px solid var(--ink-30);
   }
-  .ana-yayinlar li { border-bottom: 1px dotted var(--ink-15); }
-  .ana-yayinlar a {
-    display: grid; grid-template-columns: 11.5rem minmax(0, 1fr); gap: 0.2rem 1rem;
-    align-items: baseline; padding: 0.55rem 0; text-decoration: none;
+  .ana-maddeler li {
+    position: relative; padding: 0.62rem 0 0.62rem 1.05rem; border-bottom: 1px dotted var(--ink-15);
+    font-size: 1.02rem; line-height: 1.5; color: var(--ink);
   }
-  .ana-yayinlar a:hover .ay-ad { color: var(--claret); }
+  .ana-maddeler li::before {
+    content: ''; position: absolute; left: 0; top: 1.12rem; width: 0.42rem; height: 0.42rem;
+    background: var(--claret);
+  }
+  .ana-maddeler li :global(strong) { font-weight: 600; }
+  .ana-eylem { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.8rem 1.4rem; }
+  .ana-dugme {
+    display: inline-block; padding: 0.6rem 1.1rem; background: var(--ink); color: var(--paper);
+    text-decoration: none; font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.05em;
+  }
+  .ana-dugme:hover { background: var(--claret); }
+  .ana-ikincil { text-decoration: none; color: var(--ink); font-size: 0.95rem; line-height: 1.4; }
+  .ana-ikincil:hover { color: var(--claret); }
   .ay-tur {
     font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em;
-    text-transform: uppercase; color: var(--claret);
+    text-transform: uppercase; color: var(--claret); margin-right: 0.35rem;
   }
-  .ay-ad { font-size: 1rem; line-height: 1.35; color: var(--ink); }
-  .ay-ad::after { content: ' →'; color: var(--claret); }
-  @media (max-width: 640px) {
-    .ana-yayinlar a { grid-template-columns: 1fr; }
+
+  /* Sağ sütun: abonelik kutusu, altında takvim. */
+  .ana-yan { display: grid; gap: 1.6rem; align-content: start; }
+  .ana-abone {
+    border: 1px solid var(--ink-15); border-top: 3px solid var(--claret);
+    padding: 0.9rem 1rem 1rem; background: var(--paper);
   }
+  .aa-baslik { margin: 0 0 0.2rem; font-family: var(--font-display); font-size: 1.15rem; font-weight: 560; }
+  .aa-metin { margin: 0 0 0.7rem; font-size: 0.9rem; line-height: 1.45; color: var(--ink-70); }
+
+  /* Gösterge şeridi: üstte etiket ve bülten bağı, şerit bileşenin kendisi. */
+  .ana-serit { margin: 2.2rem 0 0.6rem; }
+  .serit-ust { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .serit-ust h2 { margin: 0; font-size: 0.72rem; color: var(--ink-70); }
+  .serit-ust .tumu {
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
+    text-decoration: none; color: var(--claret);
+  }
+  .ana-serit :global(.gosterge-serit) { margin-top: 0.6rem; }
+
+  /* Tek sütun: yan yana iki grafikte SVG yarıya küçülüp eksen yazıları 6 piksele iniyordu. */
+  .ana-grafikler { display: grid; grid-template-columns: minmax(0, 1fr); max-width: 46rem; }
 
   .ana-gun {
     border-top: 2px solid var(--ink);
     padding-top: 0.7rem;
   }
+  .ana-bas { max-width: 42rem; }
   .ag-baslik {
     display: block; margin: 0 0 0.45rem; font-size: 0.7rem; color: var(--ink-70);
   }

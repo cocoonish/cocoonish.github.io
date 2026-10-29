@@ -1,0 +1,103 @@
+---
+/**
+ * Gösterge şeridi — bülten sayfası ve ana sayfa aynı bileşeni basar (yazım kuralları
+ * lib/gosterge). `azami` verilirse ilk n kart (ana sayfa); `id` sayfa içi çapadır.
+ */
+import { istanbulSaat, sayi, tarihYaz } from '../lib/bicim';
+import { eksiDuzelt, gostergeDurgun, gostergeFark, yuzdeMetin } from '../lib/gosterge';
+
+interface Props {
+  gostergeler: any[];
+  id?: string;
+  azami?: number;
+}
+const { gostergeler, id, azami } = Astro.props;
+const liste = (gostergeler ?? []).slice(0, azami ?? undefined);
+const tz = (t: unknown) => (typeof t === 'string' ? tarihYaz(t) : '');
+---
+<section class="gosterge-serit" id={id} aria-label="Gösterge şeridi">
+  {liste.map((g: any) => (
+    <div class:list={['gosterge', { durgun: gostergeDurgun(g) }]}>
+      <span class="g-isim">{g.ad}</span>
+      <span class="g-deger">
+        {String(g.birim ?? '').trim() === '%'
+          ? yuzdeMetin(g.metin)
+          : <>{eksiDuzelt(g.metin)}<span class="g-birim">{g.birim}</span></>}
+      </span>
+      {gostergeDurgun(g)
+        ? <span class="g-fark g-durgun"><span class="gorunmez">bu sayıda yeni veri yok</span></span>
+        : <span class:list={['g-fark', { arti: (g.fark ?? 0) > 0, eksi: (g.fark ?? 0) < 0 }]}>
+            {gostergeFark(g.fark_metin, g.birim, g.fark, g.fark_birim)}
+          </span>}
+      {g.baglam_metin && (
+        <span class="g-baglam">
+          {g.baglam_ad}{' '}
+          {String(g.birim ?? '').trim() === '%'
+            ? yuzdeMetin(g.baglam_metin)
+            : <>{eksiDuzelt(g.baglam_metin)}<span class="g-birim">{g.birim}</span></>}
+        </span>
+      )}
+      <span class="g-tarih">
+        {tz(g.veri_tarihi)}
+        {g.kapanis_tanimi && <span class="g-kiyas">kapanış {g.kapanis_tanimi}</span>}
+        {g.kiyas && g.kiyas !== 'son yayım' && <span class="g-kiyas">{g.kiyas}</span>}
+      </span>
+      {g.canli && istanbulSaat(g.canli.zaman) && (
+        <span class="g-canli" title="Ölçüm anının son kotasyonu; kapanış ve fark kapanmış seanstan ölçülür">
+          {istanbulSaat(g.canli.zaman)} TSİ: {sayi(Number(g.canli.deger), g.ondalik ?? 2)}
+        </span>
+      )}
+    </div>
+  ))}
+</section>
+
+<style>
+  /* Ayraç çizgisi hücrenin KENDİ kenarı: ızgara boşluğundan görünen zemin
+     rengiyle çizildiğinde son satırın boş hücresi koyu gri bir dolgu olarak
+     görünüyordu. Künye şeridiyle aynı kalıp (kenar + eksi dış boşluk). */
+  .gosterge-serit {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(215px, 100%), 1fr));
+    gap: 0;
+    /* Dış çizgi yalnız üstte ve solda; sağ ve alt kenarı hücreler çizer.
+       Son satır eksik kaldığında boş hücrelerin yerinde çerçeve kalmaz. */
+    border-top: 1px solid var(--ink-30);
+    border-left: 1px solid var(--ink-30);
+    margin: 1.8rem 0 2rem;
+  }
+  @media (min-width: 1200px) {
+    .gosterge-serit { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .gosterge { padding: 0.6rem 0.7rem; }
+    .g-deger { font-size: 1.12rem; }
+  }
+  .gosterge {
+    background: var(--paper); padding: 0.7rem 0.8rem; display: grid; gap: 0.15rem;
+    align-content: start;
+    border-right: 1px solid var(--ink-30); border-bottom: 1px solid var(--ink-30);
+  }
+  /* Telefonda iki sütun: tek sütunda on yedi kart alt alta diziliyor, şerit
+     2.040 piksele (2,4 ekran) çıkıyordu. */
+  @media (max-width: 640px) {
+    .gosterge-serit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .gosterge { padding: 0.55rem 0.6rem; }
+    .g-deger { font-size: 1.05rem; }
+  }
+  .g-isim { font-size: 0.72rem; color: var(--ink-70); line-height: 1.25; }
+  .g-deger { font-family: var(--font-mono); font-size: 1.22rem; font-weight: 500; }
+  .g-birim { font-size: 0.6em; color: var(--ink-70); margin-left: 0.35em; }
+  .g-fark { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-70); }
+  .g-fark.arti { color: var(--pozitif); }
+  .g-fark.eksi { color: var(--claret); }
+  .gosterge.durgun .g-deger, .gosterge.durgun .g-isim { color: var(--ink-60); }
+  .gosterge.durgun .g-deger { font-weight: 400; }
+  .g-tarih { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-60); }
+  .g-canli { display: block; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-70); }
+  .g-kiyas { display: block; font-size: 0.92em; font-style: italic; }
+  /* BAĞLAM SATIRI — tek günlük okumanın altında, ondan sönük ama okunur
+     (--ink-60, üç zeminde de AA); --ink-30 metinde kullanılmaz (1,90:1). */
+  .g-baglam {
+    display: block; font-size: 0.86rem; color: var(--ink-60);
+    margin-top: 0.1rem; font-variant-numeric: tabular-nums;
+  }
+
+</style>
