@@ -17,6 +17,7 @@
  * derinlik aşağıda, ek tablolar katlı.
  */
 import EgriGrafik from './EgriGrafik.astro';
+import BultenGorsel from './BultenGorsel.astro';
 import SigmaSerit from './SigmaSerit.astro';
 import Kunye from './Kunye.astro';
 import RejimSerit from './RejimSerit.astro';
@@ -777,12 +778,19 @@ const sigmaBaslik = sigmaBasligi(
 // eşiği aşmayan satırları da kapsardı).
 const haftaBaslik = 'Haftanın hareketleri';
 const haftaAsan = haftaHareket.filter((x: any) => Math.abs(x.h1_sigma) >= OLAGANDISI_SIGMA).length;
+// GÜNÜN GRAFİKLERİ (29.10.2026, bulten/grafik_sec.py): yazarın seçtiği en çok üç
+// grafik, veri sayının içinde dondurulmuş. X gönderisi aynı noktalardan çizer.
+const gorselListe = (Array.isArray(b.gorseller) ? b.gorseller : [])
+  .filter((g: any) => g && g.baslik && (g.tur === 'egri' ? b.grafikler?.egri : g.seriler?.length))
+  .slice(0, 3);
 const bolumler = [
   !bicim3 && b.duzeltmeler?.length > 0 && { id: 'duzeltmeler', ad: 'Düzeltmeler' },
   b.ozet && (b.ozet.ne_oldu || b.ozet.ne_bekleniyor) &&
     (bicim3
       ? { id: 'ozet', ad: b.haftalik ? 'Haftanın özeti' : 'Bu sabah' }
       : { id: 'ozet', ad: b.haftalik ? 'Geçen hafta / önümüzdeki hafta' : 'Ne oldu / ne bekleniyor', kisa: 'Özet' }),
+  bicim3 && gorselListe.length > 0 &&
+    { id: 'grafikler', ad: gorselListe.length > 1 ? 'Günün grafikleri' : 'Günün grafiği', kisa: 'Grafikler' },
   b.gostergeler?.length > 0 && { id: 'gostergeler', ad: 'Gösterge şeridi' },
   !bicim3 && b.one_cikanlar?.length > 0 && { id: 'one-cikanlar', ad: 'Öne çıkanlar' },
   (bicim3 || gruplarKalan.length > 0) && (bicim3
@@ -906,6 +914,12 @@ const ekAdlari = bolumler.filter((x) => EK_BOLUMLERI.has(x.id)).map((x) => x.kis
       burada yalnız tek satırlık işaret durur, künyedeki "Düzeltme" hücresi de sona bağlanır. */}
   {bicim3 && b.duzeltmeler?.length > 0 && (
     <p class="duzeltme-isaret"><a href="#duzeltmeler">Bu sayıda {b.duzeltmeler.length} düzeltme var ↓</a></p>
+  )}
+  {bicim3 && gorselListe.length > 0 && (
+    <section class="gunun-grafikleri" id="grafikler">
+      <h2>{gorselListe.length > 1 ? 'Günün grafikleri' : 'Günün grafiği'}</h2>
+      {gorselListe.map((g: any, i: number) => <BultenGorsel gorsel={g} no={i + 1} egri={b.grafikler?.egri} />)}
+    </section>
   )}
 
   {!bicim3 && b.ozet && (b.ozet.ne_oldu || b.ozet.ne_bekleniyor) && (
