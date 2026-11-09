@@ -1,28 +1,14 @@
-# TTO Trading — site
+# TTO Trading — ayna
 
-Türkiye makro & piyasa araştırmaları. Yayın: **https://cocoonish.github.io/**
+Türkiye makro & piyasa araştırmaları. Ana adres: **https://ttotrading.com/**
 
-Bu depo yalnız **sitenin kaynağıdır** (Astro + MDX). Veri hatları (Python), ham
-araştırma dosyaları ve çalışma araçları ayrı bir **private** depoda durur; grafikler
-orada üretilip `public/` altına kopyalanır.
+**https://cocoonish.github.io/** ana sitenin birebir aynasıdır. Site her yayında
+`site` dalına tek bir commit olarak gelir ve GitHub Pages o daldan yayımlanır
+(Settings → Pages → Deploy from a branch: `site`). Sayfaların kanonik adresi
+ttotrading.com'dur. Abonelik formu yalnız ana sitede çalışır.
 
-```
-src/content/projeler/     proje sayfaları   ·  src/content/arastirma/  ders sayfaları
-public/projeler/<slug>/   üretilmiş grafikler + ozet.json (sayfa metnindeki güncel sayılar)
-public/arastirma/<slug>/  ders grafikleri
-src/components/           GrafikEmbed, VeriTablosu, Deger ve hesap araçları
-```
-
-Yerelde:
-
-```bash
-npm install
-npm run dev      # http://localhost:4321
-npm run build    # dist/
-```
-
-`main`'e her push GitHub Actions ile derlenip yayınlanır
-(`.github/workflows/deploy.yml`).
+Bu dal (`main`) sitenin 29 Ekim 2026'ya kadarki kaynağını taşır ve artık
+güncellenmez.
 
 ---
 
