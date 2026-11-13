@@ -1,0 +1,822 @@
+<!DOCTYPE html><html lang="tr"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FX Gün İçi Stratejiler 8: Metodoloji — Veri, Saat, Yürütme, Ön Kayıt ve Ölçülmeyenler — TTO Trading</title><meta name="description" content="Serinin bütün sayılarının nasıl üretildiği: Dukascopy 1 dakikalık bid/ask arşivinin indirilmesi ve denetimi, saat ve yaz saati kuralları, yürütme mekaniği (giriş, stop, hedef, gün sonu, maliyet)…"><meta name="generator" content="Astro v5.18.2"><meta name="theme-color" content="#f5f0e6"><link rel="canonical" href="https://ttotrading.com/arastirma/fx-gunici-metodoloji/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — tüm yayınlar" href="/rss.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — Bülten" href="/bulten/rss.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — Analiz" href="/analiz/rss.xml"><meta property="og:type" content="article"><meta property="og:site_name" content="TTO Trading"><meta property="og:locale" content="tr_TR"><meta property="og:title" content="FX Gün İçi Stratejiler 8: Metodoloji — Veri, Saat, Yürütme, Ön Kayıt ve Ölçülmeyenler"><meta property="og:description" content="Serinin bütün sayılarının nasıl üretildiği: Dukascopy 1 dakikalık bid/ask arşivinin indirilmesi ve denetimi, saat ve yaz saati kuralları, yürütme mekaniği (giriş, stop, hedef, gün sonu, maliyet)…"><meta property="og:url" content="https://ttotrading.com/arastirma/fx-gunici-metodoloji/"><meta property="og:image" content="https://ttotrading.com/og/genel.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="TTO Trading — Dersler"><meta property="article:published_time" content="2026-10-17T00:00:00.000Z"><meta property="article:modified_time" content="2026-10-17T00:00:00.000Z"><meta property="article:section" content="Dersler"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="FX Gün İçi Stratejiler 8: Metodoloji — Veri, Saat, Yürütme, Ön Kayıt ve Ölçülmeyenler"><meta name="twitter:description" content="Serinin bütün sayılarının nasıl üretildiği: Dukascopy 1 dakikalık bid/ask arşivinin indirilmesi ve denetimi, saat ve yaz saati kuralları, yürütme mekaniği (giriş, stop, hedef, gün sonu, maliyet)…"><meta name="twitter:image" content="https://ttotrading.com/og/genel.png"><script type="application/ld+json">[{"@context":"https://schema.org","@type":"WebSite","name":"TTO Trading","url":"https://ttotrading.com/","description":"TCMB rezervleri, reel kur, Hazine ihaleleri ve faiz piyasaları üzerine veriye dayalı projeler, canlı grafikler ve hesaplama araçları.","inLanguage":"tr","publisher":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}}},{"@context":"https://schema.org","@type":"Article","headline":"FX Gün İçi Stratejiler 8: Metodoloji — Veri, Saat, Yürütme, Ön Kayıt ve Ölçülmeyenler","description":"Serinin bütün sayılarının nasıl üretildiği: Dukascopy 1 dakikalık bid/ask arşivinin indirilmesi ve denetimi, saat ve yaz saati kuralları, yürütme mekaniği (giriş, stop, hedef, gün sonu, maliyet)…","url":"https://ttotrading.com/arastirma/fx-gunici-metodoloji/","mainEntityOfPage":"https://ttotrading.com/arastirma/fx-gunici-metodoloji/","image":["https://ttotrading.com/og/genel.png"],"inLanguage":"tr","datePublished":"2026-10-17T00:00:00.000Z","dateModified":"2026-10-17T00:00:00.000Z","author":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}},"publisher":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}},"articleSection":"Dersler"}]</script><script defer data-domain="ttotrading.com" data-api="/v/api/event" src="/v/js/script.js"></script><link rel="stylesheet" href="/_astro/index.BWd6Gdev.css">
+<style>.video-oynatici[data-astro-cid-quemlkkv]{margin:1.75rem 0 .5rem;max-width:26rem}.video-ust[data-astro-cid-quemlkkv]{display:block;margin-bottom:.5rem;color:var(--ink-60)}video[data-astro-cid-quemlkkv]{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:1080 / 1350;background:var(--paper-2);border:1px solid var(--ink-30)}
+</style>
+<link rel="stylesheet" href="/_astro/_slug_.BVOGJi8f.css"></head> <body> <a class="atla" href="#icerik">İçeriğe geç</a> <header class="masthead" data-astro-cid-3ef6ksr2> <div class="sarici" data-astro-cid-3ef6ksr2> <div class="dateline etiket" data-astro-cid-3ef6ksr2>  <span class="gun-yer" data-astro-cid-3ef6ksr2><span data-bugun hidden data-astro-cid-3ef6ksr2></span><span class="orta" data-astro-cid-3ef6ksr2>İstanbul</span></span> <span class="son-yayinlar" data-astro-cid-3ef6ksr2> <a class="son-bulten" href="/bulten/2026-11-13/" data-astro-cid-3ef6ksr2> Son bülten · 13 Kasım 2026 </a> </span> </div> <div class="baslik-satir" data-astro-cid-3ef6ksr2> <a href="/" class="marka" aria-label="TTO Trading — ana sayfa" data-astro-cid-3ef6ksr2> <svg class="tto-isaret marka-isaret" viewBox="214 274 572 346" aria-hidden="true" focusable="false" data-astro-cid-tvrurpns> <line x1="321" y1="463" x2="321" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="424" y1="518" x2="424" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="543" y1="357" x2="543" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="668" y1="485" x2="668" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="470" y1="508.7" x2="470" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line><line x1="600" y1="437.5" x2="600" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line><line x1="722" y1="322.6" x2="722" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line> <path d="M264.5133568919622 387.26923076923083H365.3088210525277Q369.0643543309818 387.26923076923083 371.70667259092437 386.1712238182887Q374.3489908508669 385.0732168673466 376.3864166735349 384.00982477283105Q378.42384249620284 382.94643267831555 380.1755222590783 382.94643267831555Q382.5114517408566 382.94643267831555 383.786987571189 384.18423725352983Q385.0625234015214 385.4220418287441 385.8678259859578 388.79209905945197L394.333027061469 433.57036030568327Q394.8487847778373 435.8855405218828 394.13227325369814 437.3167612523987Q393.41576172955905 438.7479819829146 391.6071675681652 439.10139305943335Q389.91072097811127 439.45947588188574 388.56742771911934 438.7543744096139Q387.2241344601274 438.049272937342 386.2755288737468 436.0843873989697Q379.0536407074676 418.8134515649066 373.41589034543944 410.07865547336854Q367.7781399834113 401.3438593818305 362.3214716054857 398.31365833911474Q356.8648032275602 395.283457296399 350.18677113506084 395.283457296399H332.9446493739692V554.5362875338358Q332.9446493739692 556.8028829741793 334.4183017856692 558.1327898146119Q335.8919541973692 559.4626966550445 338.6966477772937 560.1186409746655L347.9124809122429 561.7652983915849Q351.47051628711273 562.7384699570158 351.47051628711273 565.5752783285884Q351.47051628711273 569.0 346.89970697140177 569.0H283.47981500525316Q281.1411042290811 569.0 280.02505495931166 568.0415332122133Q278.90900568954214 567.0830664244265 278.90900568954214 565.5752783285884Q278.90900568954214 562.7384699570158 282.46704106441194 561.7652983915849L291.68287419936115 560.1186409746655Q294.557661080912 559.4626966550445 295.99626684179884 558.1327898146119Q297.4348726026857 556.8028829741793 297.4348726026857 554.5362875338358V395.283457296399H280.1927508415941Q273.60816634313846 395.283457296399 268.16793926928835 398.50023585371673Q262.72771219543824 401.7170144110345 257.06634108012975 410.4820994922999Q251.4049699648212 419.2471845735653 244.10399310290813 436.0843873989697Q243.21510190720886 438.049272937342 241.84195145287623 438.7543744096139Q240.4688009985436 439.45947588188574 238.7723544084897 439.10139305943335Q237.00114277087582 438.7479819829146 236.31492023646402 437.3167612523987Q235.62869770205222 435.8855405218828 236.04649491518592 433.57036030568327L244.51169599069712 388.79209905945197Q245.31699857513348 385.4220418287441 246.60646800627 384.18423725352983Q247.89593743740653 382.94643267831555 250.20399971757658 382.94643267831555Q251.95965946791694 382.94643267831555 253.839403899888 384.00982477283105Q255.71914833185906 385.0732168673466 258.2822767688284 386.1712238182887Q260.8454052057977 387.26923076923083 264.5133568919622 387.26923076923083Z M434.9508568919622 387.26923076923083H535.7463210525277Q539.5018543309818 387.26923076923083 542.1441725909244 386.1712238182887Q544.7864908508669 385.0732168673466 546.8239166735349 384.00982477283105Q548.8613424962028 382.94643267831555 550.6130222590783 382.94643267831555Q552.9489517408566 382.94643267831555 554.224487571189 384.18423725352983Q555.5000234015214 385.4220418287441 556.3053259859578 388.79209905945197L564.770527061469 433.57036030568327Q565.2862847778373 435.8855405218828 564.5697732536983 437.3167612523987Q563.8532617295591 438.7479819829146 562.0446675681652 439.10139305943335Q560.3482209781113 439.45947588188574 559.0049277191193 438.7543744096139Q557.6616344601274 438.049272937342 556.7130288737468 436.0843873989697Q549.4911407074676 418.8134515649066 543.8533903454395 410.07865547336854Q538.2156399834113 401.3438593818305 532.7589716054857 398.31365833911474Q527.3023032275602 395.283457296399 520.6242711350608 395.283457296399H503.3821493739692V554.5362875338358Q503.3821493739692 556.8028829741793 504.8558017856692 558.1327898146119Q506.3294541973692 559.4626966550445 509.1341477772937 560.1186409746655L518.3499809122429 561.7652983915849Q521.9080162871128 562.7384699570158 521.9080162871128 565.5752783285884Q521.9080162871128 569.0 517.3372069714018 569.0H453.91731500525316Q451.5786042290811 569.0 450.46255495931166 568.0415332122133Q449.34650568954214 567.0830664244265 449.34650568954214 565.5752783285884Q449.34650568954214 562.7384699570158 452.90454106441194 561.7652983915849L462.12037419936115 560.1186409746655Q464.995161080912 559.4626966550445 466.43376684179884 558.1327898146119Q467.8723726026857 556.8028829741793 467.8723726026857 554.5362875338358V395.283457296399H450.6302508415941Q444.04566634313846 395.283457296399 438.60543926928835 398.50023585371673Q433.16521219543824 401.7170144110345 427.50384108012975 410.4820994922999Q421.8424699648212 419.2471845735653 414.54149310290813 436.0843873989697Q413.65260190720886 438.049272937342 412.27945145287623 438.7543744096139Q410.9063009985436 439.45947588188574 409.20985440848966 439.10139305943335Q407.43864277087584 438.7479819829146 406.752420236464 437.3167612523987Q406.0661977020522 435.8855405218828 406.4839949151859 433.57036030568327L414.94919599069715 388.79209905945197Q415.7544985751335 385.4220418287441 417.04396800627 384.18423725352983Q418.33343743740653 382.94643267831555 420.64149971757655 382.94643267831555Q422.39715946791694 382.94643267831555 424.276903899888 384.00982477283105Q426.15664833185906 385.0732168673466 428.7197767688284 386.1712238182887Q431.2829052057977 387.26923076923083 434.9508568919622 387.26923076923083Z M670.0099249976472 383.6388017458197Q690.4382683436672 383.6388017458197 707.0990273391362 390.6072315202238Q723.7597863346051 397.57566129462793 735.7482777719492 410.2809825321266Q747.7367692092935 422.9863037696252 754.2020477936424 440.3431412401394Q760.6673263779912 457.6999787106537 760.6673263779912 478.51815661411877Q760.6673263779912 499.2711380333998 754.2140708190855 516.5706936762883Q747.7608152601796 533.8702493191769 735.8290806515679 546.455872462346Q723.8973460429563 559.0414956055151 707.3436989293684 565.9155802871459Q690.7900518157805 572.7896649687766 670.653826673336 572.7896649687766Q650.3305402167069 572.7896649687766 633.7036184040435 565.8375905832957Q617.0766965913801 558.8855161978147 605.1017928756057 546.1474841824697Q593.1268891598313 533.4094521671248 586.6616105754824 515.9197815914926Q580.1963319911335 498.4301110158603 580.1963319911335 477.28966891016955Q580.1963319911335 456.73779573420495 586.6663747333491 439.5850067972385Q593.1364174755648 422.43221786027203 605.0849392674863 409.9095944846765Q617.0334610594078 397.38697110908106 633.5205602123438 390.5128864274504Q650.0076593652798 383.6388017458197 670.0099249976472 383.6388017458197ZM724.3195232508632 501.6529628355414Q724.3195232508632 483.8118575500826 721.0903217550904 467.4902417186039Q717.8611202593177 451.1686258871252 712.066546422107 437.45106030402417Q706.2719725848963 423.7334947209232 698.4092711878116 413.5686765919404Q690.546569790727 403.40385846295754 681.2429651379441 397.78557402524166Q671.9393604851614 392.16728958752583 661.7120868553981 392.16728958752583Q648.2373973273386 392.16728958752583 638.1003742385476 399.43499144007313Q627.9633511497567 406.70269329262044 622.3324881690339 420.5330491157858Q616.7016251883111 434.36340493895113 616.7016251883111 454.1212883221272Q616.7016251883111 472.12508390804464 619.9124813014283 488.5746892684032Q623.1233374145455 505.0242946287617 628.9183430461428 518.8256271502111Q634.7133486777401 532.6269596716604 642.541349303246 542.8567675619494Q650.3693499287518 553.0865754522383 659.7012535775295 558.7375706678006Q669.0331572263071 564.3885658833628 679.2285836669975 564.3885658833628Q692.9400367846067 564.3885658833628 703.0623485989724 557.1540066030486Q713.1846604133383 549.9194473227343 718.7520918321007 535.9288229872293Q724.3195232508632 521.9381986517244 724.3195232508632 501.6529628355414Z" class="harf" data-astro-cid-tvrurpns></path> <path d="M230.0,533.0 C245.2,520.3 288.7,460.5 321.0,457.0 C353.3,453.5 387.0,529.7 424.0,512.0 C461.0,494.3 502.3,356.5 543.0,351.0 C583.7,345.5 630.2,476.0 668.0,479.0 C705.8,482.0 753.0,387.3 770.0,369.0" class="dalga" data-astro-cid-tvrurpns></path> <path d="M232.0,564.0 C242.7,562.2 274.8,557.4 296.1,553.2 C317.5,549.0 338.9,544.5 360.2,539.0 C381.6,533.5 403.0,527.5 424.4,520.2 C445.8,513.0 467.1,505.1 488.5,495.6 C509.9,486.0 531.2,475.6 552.6,463.1 C574.0,450.6 595.4,436.9 616.8,420.4 C638.1,403.9 659.5,385.8 680.9,364.1 C702.2,342.4 734.3,302.3 745.0,290.0" class="egri" data-astro-cid-tvrurpns></path> <line x1="230" y1="603" x2="770" y2="603" class="eksen" data-astro-cid-tvrurpns></line> <line x1="230" y1="584" x2="230" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="320" y1="584" x2="320" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="410" y1="584" x2="410" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="500" y1="584" x2="500" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="590" y1="584" x2="590" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="680" y1="584" x2="680" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="770" y1="584" x2="770" y2="603" class="cetvel" data-astro-cid-tvrurpns></line> </svg>  <span class="marka-yazi" data-astro-cid-3ef6ksr2> <span class="marka-ad" lang="en" data-astro-cid-3ef6ksr2>TTO Trading</span> <span class="marka-alt" data-astro-cid-3ef6ksr2>Türkiye makro &amp; piyasa araştırmaları</span> </span> </a> <nav aria-label="Bölümler" data-astro-cid-3ef6ksr2> <div class="nav-acilir" data-acilir data-astro-cid-3ef6ksr2> <button type="button" class="nav-link nav-dugme" aria-expanded="false" aria-controls="menu-bulten" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>01</span> Bülten <span class="nav-ok" aria-hidden="true" data-astro-cid-3ef6ksr2></span> </button> <ul class="nav-menu" id="menu-bulten" data-astro-cid-3ef6ksr2> <li data-astro-cid-3ef6ksr2> <a href="/bulten/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Günlük</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Hafta içi her sabah</span> </a> </li><li data-astro-cid-3ef6ksr2> <a href="/bulten/haftalik/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Haftalık</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Pazar akşamı, haftaya bakış</span> </a> </li><li data-astro-cid-3ef6ksr2> <a href="/bulten/aylik/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Aylık</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Ayın ilk iş günü akşamı</span> </a> </li> </ul> </div><a href="/tradeler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>02</span> Tradeler </a><a href="/analiz/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>03</span> Analiz </a><a href="/projeler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>04</span> Projeler </a><a href="/grafikler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>05</span> Grafikler </a><a href="/arastirma/" class="nav-link aktif" aria-current="page" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>06</span> Dersler </a><a href="/indikatorler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>07</span> İndikatörler </a><a href="/hakkinda/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>08</span> Hakkında </a><a href="/arama/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>09</span> Arama </a> </nav> <noscript> <style>.nav-acilir:focus-within .nav-menu { display: block; }</style> </noscript> </div> </div> </header> <script type="module" src="/_astro/Header.astro_astro_type_script_index_0_lang.sWAGpYzy.js"></script>  <main class="sarici" id="icerik" tabindex="-1">  <article data-astro-cid-mrksnbf2> <header class="makale-baslik yuksel" data-astro-cid-mrksnbf2> <p class="kicker etiket" data-astro-cid-mrksnbf2> Ders  · <a href="/arastirma/#fx-opsiyon" data-astro-cid-mrksnbf2>FX &amp; opsiyon kitabı</a>  · fx · gun-ici · backtest · metodoloji </p> <h1 data-astro-cid-mrksnbf2>FX Gün İçi Stratejiler 8: Metodoloji — Veri, Saat, Yürütme, Ön Kayıt ve Ölçülmeyenler</h1> <p class="ozet" data-astro-cid-mrksnbf2>Bir backtest&#39;in sonucu, nasıl ölçüldüğü kadar güvenilirdir. Bu ders serinin makinesini açar: hangi fiyat, hangi saat, hangi dolum kuralı; ne önceden yazıldı, ne sonradan yapıldı; ve hangi soruların hiç sorulmadığı.</p> <div class="makale-meta" data-astro-cid-mrksnbf2> <span data-astro-cid-mrksnbf2><b data-astro-cid-mrksnbf2>Yayın</b> 17 Ekim 2026</span>      </div> <p class="arsiv-notu" data-astro-cid-mrksnbf2> <span class="etiket" data-astro-cid-mrksnbf2>Arşiv</span> Bu ders arşivdedir ve yazıldığı hâliyle durur. Güncel, bölümlere
+          ayrılmış hâli: <a href="/arastirma/seri/fxgi/" data-astro-cid-mrksnbf2>FX gün içi: açılış, fiksing, haber ve büyük mum</a>.
+</p>  <p class="kaynak-satiri" data-astro-cid-mrksnbf2><span class="etiket" data-astro-cid-mrksnbf2>Kaynak</span> Dukascopy 1 dakikalık bid/ask (2018–2026) · BLS, Fed, ECB, BoE resmî kaynakları · önceden kayıt</p> <p class="kapsam-satiri" data-astro-cid-mrksnbf2><span class="etiket" data-astro-cid-mrksnbf2>Kapsam</span> Serinin bütün sayılarının nasıl üretildiği: Dukascopy 1 dakikalık bid/ask arşivinin indirilmesi ve denetimi, saat ve yaz saati kuralları, yürütme mekaniği (giriş, stop, hedef, gün sonu, maliyet), örneklem bölmesi, sonuçtan önce yazılan ön kayıt ve sonradan yapılan her şey, seçim ve sağlamlık ölçüleri, haber takviminin kaynakları ve dışarıda kalan olaylar, ve bu serinin ölçmediği şeylerin listesi.</p> <div class="ders-kunye" aria-label="Ders künyesi" data-astro-cid-vyjx7skq> <div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>42 dk</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Okuma</span> <span class="kunye-alt" data-astro-cid-vyjx7skq>8,5 bin kelime</span> </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>8</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Bölüm</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>3</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Tablo</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>İleri</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Seviye</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>17 Eki 2026</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Son güncelleme</span>  </div> </div>   <p class="onkosul-satiri" data-astro-cid-mrksnbf2> <span class="etiket" data-astro-cid-mrksnbf2>Önce oku</span> <a href="/arastirma/fx-gunici-giris/" data-astro-cid-mrksnbf2>FX Gün İçi Stratejiler 1: Giriş — Veri, Saat, İşlem Mekaniği ve Sonuçların Okunuşu</a>  </p>  </header> <nav class="icindekiler yuksel" id="icindekiler" hidden aria-label="İçindekiler" data-astro-cid-mrksnbf2> <span class="etiket ic-baslik" data-astro-cid-mrksnbf2>İçindekiler</span> <ol id="icindekiler-liste" data-astro-cid-mrksnbf2></ol> </nav>   <div class="prose yuksel" style="--d: 120ms" data-deger="sabit" data-astro-cid-mrksnbf2>  <div class="not gezinme"><span class="etiket">Arşiv</span> Bu ders gün içi FX kurallarının ayrıntılı sınamasındandır ve arşivdedir. Gün içi seri şimdi açılış, fiksing ve haber anlarının oyun planı olarak beş derste: <a href="/arastirma/fx-oyun-okuma/">1 · İlk mumu okumak</a> · <a href="/arastirma/fx-oyun-acilislar/">2 · Açılışlar</a> · <a href="/arastirma/fx-oyun-fiksingler/">3 · Fiksingler</a> · <a href="/arastirma/fx-oyun-haberler/">4 · Haber mumları</a> · <a href="/arastirma/fx-oyun-backtest/">5 · Backtest</a>.</div>
+<p>Önceki yedi ders sonuçları anlattı. Bu ders sonuçların nasıl üretildiğini anlatır ve iki amaca hizmet eder. Birincisi
+denetlenebilirlik: bir okurun bir sayıya itiraz edebilmesi için o sayının hangi fiyattan, hangi saatte ve hangi
+kuralla ölçüldüğünü bilmesi gerekir. İkincisi dürüstlük: bir backtest’in en sık kusuru bir kuralın sonuca bakılarak
+seçilmesi ya da değiştirilmesidir. Burada neyin sonuçtan önce yazıldığı, neyin sonradan yapıldığı ve gerekçesi
+adıyla durur.</p>
+<h2 id="veri-kaynak-indirme-arşiv">Veri: kaynak, indirme, arşiv</h2>
+<p>Fiyat verisi Dukascopy’nin herkese açık beslemesinden gelir: her parite ve her UTC günü için iki dosya, 1 dakikalık
+<strong>bid</strong> ve <strong>ask</strong> mumları. İki taraf ayrı indirildiği için her dakikanın gerçek makası bilinir: alış ask’tan, satış
+bid’den yürütülür ve makas maliyete ayrıca eklenmez, fiyatın kendisindedir.</p>
+<p>Strateji mumları (5, 15, 60 dakika) 1 dakikalık orta fiyattan kurulur ve UTC saatine çıpalıdır. 5 ve 15 dakikalık
+mumlarda seans açılışları (Londra 08:00, New York 08:00 ve 09:30; TSİ yazın 10:00 · 15:00 · 16:30, kışın 11:00 · 16:00 · 17:30, ara haftalarda 11:00 · 15:00 · 16:30) her zaman bir mumun başına düşer. 60 dakikalık
+mumlarda her kural kendi çıpasını kullanır: saatlik mum saat başında başlar, New York ilk dengesi — 09:30 kuralında
+ise :30’da. Saat başı çıpanın New York 08:30 verileriyle (TSİ ABD yaz saatinde 15:30, kış saatinde 16:30) ilişkisi aşağıda, ön kaydın
+yorum gerektiren yerleri arasında.
+Haber kurallarının mumları her zaman olay dakikasından başlar: ilk haber mumu olay dakikası ile bir mum
+sonrası arasıdır.</p>
+<p>Arşiv dört paritede örneklemin bütün iş günlerini kapsar. UTC cumartesisi arşivde yoktur: FX cuma 17:00’de (New
+York; TSİ ABD yaz saatinde 00:00, kış saatinde 01:00) kapanır, pazar aynı saatte açılır ve UTC cumartesisinin bütün dakikaları kapalı piyasadır (ilk iki yılın bütün
+cumartesileri kaynakta boştur).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">Parite</th><th style="text-align:right">Yıl</th><th style="text-align:right">Tamamlanan yıl</th><th style="text-align:right">İstenen gün (UTC dosyası)</th><th style="text-align:right">Dolu gün</th><th style="text-align:right">İnmeyen gün</th><th style="text-align:right">Dakika</th></tr></thead><tbody><tr><td style="text-align:left">EUR/USD</td><td style="text-align:right">9</td><td style="text-align:right">9</td><td style="text-align:right">2.752</td><td style="text-align:right">2.750</td><td style="text-align:right">0</td><td style="text-align:right">3.273.768</td></tr><tr><td style="text-align:left">GBP/USD</td><td style="text-align:right">9</td><td style="text-align:right">9</td><td style="text-align:right">2.752</td><td style="text-align:right">2.749</td><td style="text-align:right">0</td><td style="text-align:right">3.274.264</td></tr><tr><td style="text-align:left">USD/JPY</td><td style="text-align:right">9</td><td style="text-align:right">9</td><td style="text-align:right">2.752</td><td style="text-align:right">2.750</td><td style="text-align:right">0</td><td style="text-align:right">3.273.541</td></tr><tr><td style="text-align:left">AUD/USD</td><td style="text-align:right">9</td><td style="text-align:right">9</td><td style="text-align:right">2.752</td><td style="text-align:right">2.750</td><td style="text-align:right">0</td><td style="text-align:right">3.269.043</td></tr></tbody></table>
+<p><em>Dolu gün ile istenen gün arasındaki fark, kaynağın kotasyonsuz döndürdüğü günlerdir: 01.01.2021 (bütün pariteler); 24.12.2023 (GBP/USD); 31.12.2023 (bütün pariteler).</em></p>
+<p><em>Dört paritede örneklemin her günü arşivde.</em></p>
+<p>Veri denetimi giriş dersinde (kapsam, tatil, makas, sıçrama adayı ve Dukascopy’nin kendi saatlik mumlarıyla çapraz
+sınama). Denetim veriyi <strong>değiştirmez</strong>: sıçrama adayları sayılır ve listelenir, düzeltilmez ya da atılmaz.</p>
+<p><strong>Tatil</strong> fiyattan değil takvimden gelir: 25 Aralık ve 1 Ocak hafta içine düştüğünde stratejiler o gün işlem açmaz.
+Günün kapsamından okunan bir tatil bayrağı gün bitmeden bilinemezdi; takvim önceden bilinir. Arşivde kapsamı %50’nin
+altında kalan işlem günleri dört paritede de tam bu günlerdir (12 gün).
+Örneklemin iki kenarında baştan sona kapsanmayan işlem günü de işlem açmaz.</p>
+<h2 id="saat">Saat</h2>
+<p>Bütün zaman damgaları UTC olarak saklanır; yerel saatler (Londra, New York, Frankfurt) IANA saat dilimi tablosundan
+çevrilir ve hiçbir saat farkı elle yazılmaz. FX günü New York 17:00’de (TSİ ABD yaz saatinde 00:00, kış saatinde 01:00) başlar ve biter. İşlem saatleri okura TSİ
+olarak verilir (UTC+3, yaz saati yok); olay saatleri ayrıca kendi yerel saatleriyle. Yaz saati geçişleri her yıl
+için elle yazılmış bir listeye karşı sınanır; Londra ile New York’un farklı haftalarda saat değiştirdiği ara dönemler
+giriş dersindeki tablodadır.</p>
+<p>Saatin doğru işlendiğinin bağımsız bir sınaması da var: ABD tarım dışı istihdam verisi 08:30 New York’ta
+(TSİ ABD yaz saatinde 15:30, kış saatinde 16:30) yayımlanır, yani damgalar doğruysa yayım günlerinde 1 dakikalık mum aralığının ortalaması yazın da kışın da tam o
+dakikada zirve yapmalıdır. Sınama yalnız günü takvimden alır, dakikayı fiyattan ölçer. EUR/USD’de
+yapıyor: yaz saatindeki 68 günün de kış saatindeki
+37 günün de ortalama aralığı 08:30 dakikasında en yüksek. Bir saatlik yaz
+saati hatası zirveyi altmış dakika öteye taşırdı.</p>
+<p>Ay sonu, ayın son <strong>Londra iş günüdür</strong> (WM/R fiksingi Londra’da hesaplanır). İngiltere ve Galler resmî tatilleri
+kuralla hesaplanır (Paskalya’ya bağlı günler, mayıs ve ağustos tatilleri, kraliyet etkinlikleri için konan özel
+günler adıyla) ve elle yazılmış bir listeye karşı sınanır.</p>
+<h2 id="yürütme-mekaniği">Yürütme mekaniği</h2>
+<ul>
+<li><strong>Sinyal ve giriş.</strong> Sinyal, strateji mumunun orta fiyat kapanışıyla verilir. Kural kendi giriş saatini
+tanımlamıyorsa giriş, bir sonraki mumun ilk dakikasının açılışındadır (alış ask’tan, satış bid’den); gün içi
+momentum 12:00 New York’ta (TSİ ABD yaz saatinde 19:00, kış saatinde 20:00), fiksing dönüşü “gecikme” parametresi kadar mum sonra girer. Sinyalin görüldüğü
+fiyattan girilmez.</li>
+<li><strong>Alınmayan emir.</strong> Stop seviyesi taşıyan emirde giriş tarafının kaymasız açılışı stopun ötesinde ya da tam
+üstündeyse, seviye hedefi yürütülen girişin (makas ve kayma dahil) gerisinde ya da tam üstündeyse, ya da giriş gün
+sonunda veya sonrasındaysa emir alınmaz. Stopun ölçütü ham açılıştır, hedefinki yürütülen fiyattır; hedef ölçütü bu yüzden
+kaymaya bağlıdır ve maliyet merdiveninin her basamağında atılan emir sayısı değişebilir. Alınmayan emirlerin
+sayısı strateji derslerinde, kural kural.</li>
+<li><strong>Stop.</strong> Sert stop emir tarafında dakika dakika izlenir; fiyat stopun ötesinde açılırsa (boşluk) dolum açılış
+fiyatındandır. Kapanış stopu, mumun orta fiyat kapanışı stopun ötesindeyse bir sonraki mumun açılışında kapatır.
+Varsayılanı stopsuz olan üç kuralın (fiksing momentumu, fiksing dönüşü ve gün içi momentum) stoplu
+kombinasyonlarında stop, yürütülen giriş fiyatından 1·ATR uzağa konur.</li>
+<li><strong>Hedef.</strong> Limit emirdir ve kaymaz. Stop ile hedef aynı strateji mumunun içinde değmişse sıra 1 dakikalık
+veriyle çözülür; aynı dakikada ikisi birden değmişse <strong>stop</strong> sayılır (tutucu varsayım). Zaman hedefi girişten
+12 mum sonra, o mumun açılışında
+piyasa emriyle çıkar; stop o ana kadar açıktır, çıkış gün sonunu aşmaz.</li>
+<li><strong>Gün sonu ve tek pozisyon.</strong> Bütün pozisyonlar en geç 16:55 New York’ta (TSİ ABD yaz saatinde 23:55, kış saatinde 00:55)
+kapanır; gece ve hafta sonu pozisyon taşınmaz. Aynı anda parite başına tek pozisyon vardır; açık pozisyon varken gelen sinyal atlanır.
+Haber kurallarında kural bütün olaylara birlikte uygulanır: bir olayın pozisyonu açıkken gelen başka bir olayın
+sinyali (ör. aynı gün FOMC kararından sonra basın toplantısının sinyali) alınmaz.</li>
+<li><strong>Maliyet.</strong> Makas gerçek bid/ask’tadır. Üstüne her piyasa dolumuna (giriş, zaman çıkışı, stop) temel senaryoda
+0,5 pip kayma eklenir; haber penceresinde (olay dakikasına göre
+−2 ile +15 dakika arası) kayma 1,0
+pip daha büyüktür. Maliyet merdiveni aynı kuralı dört kaymayla yeniden koşar (dolum başına
+0,0 · 0,5 · 1,0 · 2,0 pip);
+haber penceresinin ek kayması her basamakta aynı kalır. Ayrıca bir <strong>yalnız makas</strong> koşusu var: kayma da haber
+kayması da sıfır, maliyet yalnız gerçek bid/ask. Merdiven aynı işlemlerin değil aynı kuralın yeniden koşusudur:
+kayma dolum fiyatını değiştirir, R katı hedefin seviyesi ve stopa ya da hedefe değilen dakika onunla değişebilir,
+tek pozisyon kuralı yüzünden alınan işlemler de.</li>
+<li><strong>R.</strong> Bir işlemin R’si net sonucunun planlanan riske oranıdır: yürütülen giriş fiyatından stop seviyesine uzaklık.
+Stopsuz kurallarda R bir ölçek birimidir: fiksingde kuralın kendi mumlarından girişteki ATR(14), gün içi
+momentumda girişteki 60 dakikalık ATR(14).</li>
+<li><strong>MFE ve MAE.</strong> İşlemin lehine ve aleyhine en büyük hareketi: girişten çıkışa, dakika dakika, yürütülebilir
+fiyatla (alışta bid, satışta ask), R cinsinden. Hedefin dolduğu dakikada dakikanın içindeki sıra bilinmediği için o
+dakikanın ters ucu MAE’ye girer; gerçekleşen sonuç her zaman ikisinin arasındadır. Örnek günlerin “kaybeden” ve
+“tuzak” tanımları bu ölçüden okunur.</li>
+</ul>
+<p><strong>İleriye bakma sınaması.</strong> Bir kural geleceğe bakıyorsa (bugünün henüz kapanmamış tepesini, sonraki mumun fiyatını
+ya da günün kapanışını kullanıyorsa) bunu yakalamanın yolu veriyi bir anda kesmektir. Sınama gerçek arşivde değil,
+gerçek seans yapısıyla üretilmiş 70 iş günlük sentetik bir 1 dakikalık seride (haber
+olaylarıyla birlikte) yapılır ve her kesimde iki koşu ister: bir kez veri kesim anında kesilir, bir kez o andan sonraki
+bütün fiyatlar başka bir yürüyüşle değiştirilir. İki türlü kesim var.</p>
+<ul>
+<li><strong>Sinyale çıpalı kesim.</strong> Her kuralın varsayılanında, sentetik serideki sinyallerden 2
+tanesinin karar anı çıpa olur ve veri iki yerde kesilir: kararın hemen ardından (giriş dakikası veride, sinyal
+mumundan sonraki mum henüz tamamlanmamış) ve bir mum sonra. Kararı kesimden geç olmayan bütün sinyaller üç koşuda
+birebir aynı olmalıdır ve çıpanın kendisi kıyaslananların içindedir: kesim gününde en az bir sinyal kıyaslanır.
+Bir ya da iki mum sonrasının fiyatına bakan bir kural burada düşer; sınamanın kendisi de bunu sınar (aralık
+kırılımının kararı bir ve iki mum sonraki kapanıştan verilecek biçimde bozulunca çıpalı kesim iki çıpada da
+düşer).</li>
+<li><strong>Sabit kesim.</strong> 4 kesim anı: New York sabahı, Londra sabahı, Londra açılışından önce ve
+UTC gece yarısından hemen sonra.
+Kesim günün ortasına da düşer, çünkü günün bütününden kurulan bir alan (ör. kapsamdan okunan bir tatil bayrağı)
+yalnız böyle bir kesimde sinyal siler. Her kuralda ilk kesimde varsayılan ve ızgaradan rastgele seçilmiş
+4 kombinasyon, öbür kesimlerde varsayılan ve
+1 kombinasyon koşulur. Kararı kesimden en az iki mum önce verilen
+sinyaller üç koşuda birebir aynı olmalıdır; varsayılanın kesimden önce açılmış işlemlerinin giriş fiyatı, stopu ve
+R’si de geleceğin değişmesinden etkilenmemelidir. İki mumluk pay bu kesimi bir iki mumluk ileri bakışa kör yapar; o
+sızıntıyı çıpalı kesim yakalar.</li>
+<li><strong>Koşul değişkenleri.</strong> Koşul analizinin kovaları da girişin anında bilinen bilgiden kurulmalıdır. Önceden
+duyurulmayan bir karar (FOMC’nin olağanüstü toplantıları) ancak olduğu anda bilinir: sınama sentetik seride günün
+ortasına böyle bir olay koyar ve kararı olaydan önce verilen sinyallerin hiçbir koşul değişkeninin değişmediğini
+ister. Aynı olay planlanmış olsaydı günü baştan işaretlerdi; sınama bunu da ister, yani değişkenin takvimi gerçekten
+okuduğunu gösterir.</li>
+</ul>
+<p>Yorum duyarlılığının harf okumaları da (aşağıda) iki kesimden geçer. Sınama gerçek fiyatla yapılmadığı için bir kuralın
+kazancı hakkında bir şey söylemez. Kapsamı da sınırlıdır: bir sızıntının görünmesi için onu tetikleyen durumun sentetik
+seride oluşması gerekir; görünmeyen bir sızıntının olmadığını kanıtlamaz.</p>
+<h2 id="örneklem-seçim-ve-sağlamlık">Örneklem, seçim ve sağlamlık</h2>
+<p>Örneklem içi 01.01.2018 → 31.12.2023, örneklem dışı 01.01.2024 →
+15.10.2026. Her kural iki biçimde ölçülür. <strong>Varsayılan</strong>, veriye bakmadan seçilmiş ders kitabı hâlidir;
+hükmü o verir. <strong>Seçilen</strong>, parametre ızgarasından yalnız örneklem içinde, günlük R serisinin yıllık Sharpe’ıyla ve en
+az 100 işlem (haber kurallarında 30) şartıyla seçilen
+kombinasyondur; örneklem dışında ayrıca sınanır. Seçim 88 bileşimin 86
+tanesinde kurulabildi; öbür 2 bileşimde ızgaranın hiçbir kombinasyonu örneklem
+içinde asgari işlem sayısına ulaşmadı: N4 başarısız, GBP/USD ve AUD/USD (ikisinde de en kalabalık kombinasyon örneklem içinde 29 işlem). O bileşimlerde hüküm yalnız varsayılandan verilir. Günlük R serisi dönemin bütün tatil dışı FX işlem günlerini taşır
+ve işlem açılmayan gün sıfırdır (ön kaydın tanımı); Sharpe ×√252 ile yıllıklandırılır. 22 kuralın ızgaralarında toplam
+1.581 kombinasyon var.</p>
+<ul>
+<li><strong>Deflated Sharpe</strong> (Bailey ve López de Prado, 2014): ızgaradan seçilen en iyi kombinasyonun günlük Sharpe’ı, o
+ızgaranın deneme sayısıyla şansla beklenen en yüksek Sharpe’a karşı sınanır; sınama günlük getirilerin çarpıklık ve
+basıklığını da hesaba katar. Beklenen en yüksek Sharpe iki biçimde
+kurulur: yalnız örnekleme gürültüsünden (<strong>gürültü eşiği</strong>: her deneme sıfır kenarlı ve öbürlerinden bağımsız
+olsaydı tek bir günlük Sharpe’ın varyansı 1/(T−1), T gün sayısı) ve denemelerin kendi Sharpe’larının yayılımından (<strong>yayılım eşiği</strong>,
+Bailey ve López de Prado’nun önerisi). Seçilen Sharpe’ın eşiği aşma olasılığı %95 ya da üstüyse sınama geçer.
+Seçim tablolarındaki “DSR” yayılım eşiğine göredir; iki eşiğin ilişkisi aşağıda.</li>
+<li><strong>Yürüyen pencere:</strong> 2020’den itibaren her yıl için yalnız önceki
+yılların verisiyle seçim yapılır ve o yılda sınanır. Seçimin asgari işlem şartı, örneklem içi şartın yıl başına
+payıdır; şartı sağlayan kombinasyonu olmayan yıl sınanmaz ve sınanan yıllar adıyla yazılır.</li>
+<li><strong>Aralık:</strong> işlem başına net R’nin %95 aralığı 2.000 tekrarlı bootstrap’le; en
+az 10 işlem ister. Parite başına aralık işlemleri bağımsız örnekler (ön kaydın
+okuması; aynı günün işlemleriyle kümeli duyarlılığı aşağıda). Dört paritenin havuzunda aynı günün bütün
+paritelerdeki işlemleri birlikte örneklenir (gün kümeli bootstrap): aynı gün dört paritede açılan işlemler aynı
+haberi ve aynı dolar hareketini taşır, bağımsız sayılsalardı aralık olduğundan dar çıkardı.</li>
+<li><strong>Rastgele yön:</strong> alınan her işlemin aynası kurulur: aynı giriş dakikası, ters yön, aynı risk uzaklığı (stop ve hedef
+ters yönde girişe aynı uzaklıkta) ve aynı planlı çıkış (zaman ya da gün sonu çıkışı aynı dakikada). Her tekrarda
+her işlem için gerçeği ya da aynası yazı turayla seçilir ve ortalama alınır; 1.000
+tekrar. Kuralın yüzdeliği, gerçek ortalamanın altında kalan karışımların payıdır. En az
+20 işlem ister.</li>
+<li><strong>Hüküm:</strong> örneklem dışı (2024 →) net ortalama artı, aralığın alt ucu sıfırın üstünde ve rastgele yön dağılımında
+95. yüzdelik ya da üstü ise <strong>çalışıyor</strong>; ortalama artı ama öbür
+şartlardan biri tutmuyorsa ya da işlem sayısı o şartı kurmaya yetmiyorsa <strong>zayıf</strong>; ortalama sıfır ya da eksiyse
+<strong>çalışmıyor</strong>; örneklem dışında hiç işlem yoksa <strong>ölçülemedi</strong>. 20’den az işlemli
+sonuç <strong>az işlem</strong> diye işaretlenir; işaret hükmü değiştirmez. Brüt sonucun aralığı sıfırın üstünde ama net sonuç
+sıfır ya da eksiyse ayrıca <strong>maliyet</strong> bayrağı.</li>
+<li><strong>Koşullar:</strong> on dört değişken; sürekli değişkenlerde kova sınırları (terciller)
+yalnız örneklem içinden kurulur ve örneklem dışına taşınır. Koşulsuz ortalama değişkenin tanımlı olduğu
+işlemlerden alınır. Örneklem içinde koşulsuz ortalamanın üstündeki, en az 30
+işlemli kovalar seçilir; seçilen kovaların ortalaması örneklem dışında artı kalır, seçilmeyen kovaların birlikte
+ortalamasını (tamamlayanı) aşar ve en az 20 işlemle ölçülürse “tuttu”. Seçilen
+kova, seçilmeyenlerden birinin altında kalsa da tutabilir. Hiçbir kova seçilmediyse ya da bütün kovalar
+seçildiyse sınama kurulamaz ve adıyla yazılır. Bütün işlemlerde aynı değeri taşıyan iki değişken tek sayılır.
+Kontrol listesine aday olarak yalnız en az iki paritede aynı kova seçimiyle tutan koşul girer.</li>
+</ul>
+<h3 id="ön-kayıt">Ön kayıt</h3>
+<p>Kuralların, ızgaraların, kural ailelerinin varsayılanlarının ve hüküm kuralının şartlarının hepsi tek bir ön kayıt
+dosyasında, hiçbir backtest sonucu görülmeden yazıldı ve kaydedildi. Ön kayıtta olmayan iki şey var: New York ilk
+denge kırılımının 08:00 sürümünün varsayılanı (ön kayıtlı 09:30 sürümününkinden yalnız başlangıç saati değiştirilerek
+türetildi; iki başlangıç TSİ ABD yaz saatinde 15:00 ve 16:30, kış saatinde 16:00 ve 17:30) ve hüküm
+kuralının şartlarının asgari işlem sayıları. İkisi de, ölçümün ön kaydın harfinden ayrıldığı yerler de
+(varsayılanın hükmünün penceresi dahil: ön kayıt bütün dönemi ister, bu seri 2024 →‘yü birincil sayar) aşağıda
+adıyla durur. Dosyanın bütün geçmişi, ilk sonuçların
+görüldüğü anla birlikte:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">Zaman</th><th style="text-align:left">TSİ karşılığı</th><th style="text-align:left">Değişiklik</th></tr></thead><tbody><tr><td style="text-align:left">16.10.2026 08:29 UTC</td><td style="text-align:left">TSİ 11:29</td><td style="text-align:left">ilk kayıt: bütün kurallar, ızgaralar, varsayılanlar ve hüküm kuralı</td></tr><tr><td style="text-align:left">16.10.2026 08:55 UTC</td><td style="text-align:left">TSİ 11:55</td><td style="text-align:left">eklenen ya da değişen bölüm: haber devam tablosu</td></tr><tr><td style="text-align:left">16.10.2026 10:23 UTC</td><td style="text-align:left">TSİ 13:23</td><td style="text-align:left"><em>ilk sonuçlar görüldü: koşunun sonuçları ilk kez okundu (ön kaydın bir kaydı değildir)</em></td></tr><tr><td style="text-align:left">16.10.2026 10:28 UTC</td><td style="text-align:left">TSİ 13:28</td><td style="text-align:left">yalnız açıklama notu, kuralların içeriği aynı: ikinci kaydın notu düzeltildi: kayıt yazıldığında indirilmiş ama okunmamış iki veri parçası adıyla yazıldı</td></tr><tr><td style="text-align:left">16.10.2026 20:48 UTC</td><td style="text-align:left">TSİ 23:48</td><td style="text-align:left">yalnız açıklama notu, kuralların içeriği aynı: sonuçlardan sonra değişen uygulama kurallarının ve ön kaydın harfinden ayrılan iki okumanın listesi</td></tr><tr><td style="text-align:left">16.10.2026 22:30 UTC</td><td style="text-align:left">TSİ 17.10.2026 01:30</td><td style="text-align:left">yalnız açıklama notu, kuralların içeriği aynı: aynı listeye eksik kalan hüküm penceresi eklendi: varsayılanın birincil hükmü 2024 → penceresinden</td></tr></tbody></table>
+<p><a href="/arastirma/fx-gunici/onkayit.toml">Ön kaydın tam metni</a> sayfayla birlikte yayımlanır; dosyanın SHA-256 özü
+<code>0f7db64de16870fb6f1ff2c0566719ce9fd3078be9f8ba6bad08f92c5d01302e</code>. İkinci kayıt haber devam tablosunu ekledi: o anda fiyat ve takvim verisinin ilk iki
+parçası (EUR/USD 2018’in ilk fiyat dosyası ve FOMC duyurularının ham sayfaları) indirilmişti ama hiçbiri okunmamış,
+takvim ayrıştırılmamış ve hiçbir haber olayı ölçülmemişti. Sonraki 3 kayıt ilk
+sonuçlardan sonra yazıldı ve yalnız açıklama notudur: kuralların, ızgaraların, varsayılanların ve hüküm kuralının
+içeriği ikinci kayıttakiyle birebir aynıdır. Bu notlar sonuçlardan sonra değişen uygulama
+kurallarını ve ön kaydın harfinden ayrılan okumaları sayar; her birinin önceki hâli, zamanı ve ölçülmüş etkisi
+aşağıdadır.</p>
+<h3 id="ön-kayıttan-sapmalar">Ön kayıttan sapmalar</h3>
+<p>Ölçüm dört yerde ön kaydın harfinden ayrılır. Biri ilk sonuçlardan sonra kararlaştırıldı, üçü ilk sonuçlardan önce
+sabitlenmiş uygulamadadır.</p>
+<ul>
+<li>
+<p><strong>Hüküm penceresi</strong> (karar ilk sonuçlardan sonra, 16.10.2026 17:09 UTC = TSİ 20:09). Ön kayıt varsayılan
+için bütün dönemi örneklem dışı sayar ve hükmü oradan ister, çünkü varsayılan hiçbir veriye bakmadan yazıldı. Bu
+seri iki sonucu (varsayılan ve seçilen) aynı veride kıyaslamak için birincil hükmü 2024 → penceresinden verir;
+ön kaydın istediği bütün dönem hükmü her tabloda yan sütunda durur. Seçimin etkisi:
+varsayılanların 88 bileşiminde (önceden kayıtlı 84, türetilmiş 4: NY IB 08:00 kuralının pariteleri) 2024 → hükmü 82 çalışmıyor ve 6 zayıf, bütün dönem hükmü 83 çalışmıyor ve 5 zayıf; yalnız önceden kayıtlı 84 bileşim sayılınca 2024 → 78 çalışmıyor ve 6 zayıf, bütün dönem 79 çalışmıyor ve 5 zayıf; iki pencerede de “çalışıyor” hükmü alan bileşim yok. İki pencerenin hükmü 5 bileşimde ayrışıyor: Asya aralığı, USD/JPY: 2024 → zayıf (+0,04 R, 400 işlem), bütün dönem çalışmıyor (−0,004 R, 1.249 işlem); Sıkışma, USD/JPY: 2024 → zayıf (+0,02 R, 534 işlem), bütün dönem çalışmıyor (−0,01 R, 1.766 işlem); N2 fade, USD/JPY: 2024 → zayıf (+0,13 R, 56 işlem), bütün dönem çalışmıyor (−0,16 R, 163 işlem); N4 başarısız, EUR/USD: 2024 → çalışmıyor (−0,26 R, 10 işlem), bütün dönem zayıf (+0,01 R, 46 işlem); N5 devam, USD/JPY: 2024 → çalışmıyor (−0,18 R, 57 işlem), bütün dönem zayıf (+0,08 R, 184 işlem).</p>
+</li>
+<li>
+<p><strong>Ailelerin kurallara bölünmesi ve deneme sayısı</strong> (ilk sonuçlardan önce sabitlenmiş uygulama). Ön kayıt 17 kural ailesi kaydetti
+ve seçimi de deflated Sharpe’ın deneme sayısını da aile başına ister. Ölçüm dört aileyi kurallara böler (New York
+ilk dengesi başlangıç saatine, başarısız kırılım seviyesine, pivot ve fiksing türüne) ve ikisini de kural başına
+kurar: parite başına 17 yerine 22 seçim yapılır.
+New York ilk dengesinin ön kaydı tek varsayılan taşır (başlangıç 09:30 New York; TSİ ABD yaz saatinde 16:30, kış saatinde 17:30);
+08:00 sürümünün (TSİ ABD yaz saatinde 15:00, kış saatinde 16:00) varsayılanı ondan yalnız başlangıç saati değiştirilerek türetildi
+ve ön kayıtta yoktur.
+Pivot ve fiksingin ön kaydı her tür için ayrı varsayılan taşır.
+Başarısız kırılımın ön kayıtlı varsayılanı seviye belirtmez; üç kural aynı varsayılanı kendi seviyesiyle
+kullanır. Bölünmenin yönü tutucu değildir: daha az deneme şansla beklenen
+en yüksek Sharpe’ı, yani deflated Sharpe’ın eşiğini düşürür. Bölünen dört ailede deneme sayısı kural başına 9–120, aile başına 45–240. Seçilenlerin deflated Sharpe olasılığı yayılım eşiğiyle kural sayımında en çok 0,004, aile sayımında en çok 0,000; gürültü eşiğiyle 0,139 ve 0,057. Hiçbiri hükme girmez. Ailenin bütün ızgarasından tek seçim yapılsaydı her paritede seçilen, kurallardan birinin seçileni olurdu; o seçilenlerin hükmü: 16 çalışmıyor.</p>
+</li>
+<li>
+<p><strong>Altı kuralın beş yerde dar ya da farklı okunması</strong> (ilk sonuçlardan önce sabitlenmiş uygulama). Ölçüm altı
+kuralı beş yerde ön kaydın harfinden dar ya da farklı okur ve o okuma korunur:</p>
+<ul>
+<li>VWAP kurallarında çapadan sonraki ilk 60 dakika: ölçüm kuralın durumunu da sıfırlar, yani trend sayacı ve bant
+dışı gezinti çapadan bir saat sonra başlar; harf yalnız sinyali yasaklar.</li>
+<li>VWAP dönüşünde bandın içine dönüş: ölçüm yalnız çıkılan bandı sorar, üst bandın dışından dönen kapanış alt
+bandın da altında olsa sinyal verir; harf (“bandın içine kapanan ilk mum”) kapanışın iki bandın arasında
+olmasını ister ve karşı bandın ötesindeki kapanışı o yanda yeni bir gezinti sayar.</li>
+<li>Pivot kırılımı: ölçüm R1’i yalnız yukarı, S1’i yalnız aşağı kesişte sayar; harf her seviyenin günün ilk
+kesişini iki yönde de sayar.</li>
+<li>Başarısız kırılımın kırılım mumu: ölçüm seviyeyi kesen mumu sayar; harf pencerenin ilk mumu dışarıda kapanırsa
+da sayar, yani seviye pencereden önce aşıldıysa açılıştaki geri alınış da kırılımdır. Kesiş tanımı ön kaydın
+“pencere” parametresine anlam verir: dışarıda her kapanış kırılım sayılsaydı içeride kapanan ilk mum neredeyse
+her zaman dışarıda kapanmış bir mumun hemen ardından gelirdi ve bir mumluk pencere onu zaten yakalardı.</li>
+<li>Başarısız kırılımın geri dönüşü: ölçüm yalnız kırılan kenarı sorar, yukarı kırılımdan sonra alt kenarın da
+altında kapanan mum dönüş mumu sayılır ve satış verir; harf (“yeniden içeride kapanırsa”) kapanışın aralığın
+içinde olmasını ister ve karşı kenarın ötesindeki kapanışı ters yönde yeni bir kırılım sayar (haber dersindeki
+N4 başarısız kırılımının kuralı).</li>
+</ul>
+<p>Harfin her okuması her koşuda ayrıca ve tek başına ölçülür (öbür okumalar bu serinin kuralında kalır) ve ilgili
+strateji derslerinde kuralın sonuçlarının yanında durur:</p>
+<ul>
+<li><strong>Pivot kırılım</strong> (her seviyenin ilk kesişi iki yönde de işlem verir): dört paritenin 144 kombinasyonundan 72 tanesinin işlemleri değişir; hüküm hiçbir paritede değişmez; seçilen 1 paritede başka bir kombinasyon olur.</li>
+<li><strong>Sahte ORB</strong> (pencerenin ilk mumu dışarıda kapanırsa da kırılımdır): dört paritenin 144 kombinasyonundan hiçbirinin işlemleri değişmez; hüküm hiçbir paritede değişmez.</li>
+<li><strong>Sahte ORB</strong> (dönüş mumu aralığın içinde kapanır): dört paritenin 144 kombinasyonundan 144 tanesinin işlemleri değişir; hüküm hiçbir paritede değişmez.</li>
+<li><strong>Sahte Asya</strong> (pencerenin ilk mumu dışarıda kapanırsa da kırılımdır): dört paritenin 144 kombinasyonundan hiçbirinin işlemleri değişmez; hüküm hiçbir paritede değişmez.</li>
+<li><strong>Sahte Asya</strong> (dönüş mumu aralığın içinde kapanır): dört paritenin 144 kombinasyonundan 114 tanesinin işlemleri değişir; hüküm hiçbir paritede değişmez.</li>
+<li><strong>Sahte PDH/PDL</strong> (pencerenin ilk mumu dışarıda kapanırsa da kırılımdır): dört paritenin 144 kombinasyonundan 144 tanesinin işlemleri değişir; hüküm hiçbir paritede değişmez; seçilen 2 paritede başka bir kombinasyon olur.</li>
+<li><strong>Sahte PDH/PDL</strong> (dönüş mumu aralığın içinde kapanır): dört paritenin 144 kombinasyonundan 72 tanesinin işlemleri değişir; hüküm hiçbir paritede değişmez.</li>
+<li><strong>VWAP dönüş</strong> (ilk saatte yalnız sinyal verilmez): dört paritenin 384 kombinasyonundan 384 tanesinin işlemleri değişir; hüküm hiçbir paritede değişmez; seçilen 1 paritede başka bir kombinasyon olur.</li>
+<li><strong>VWAP dönüş</strong> (dönüş mumu iki bandın arasında kapanır): dört paritenin 384 kombinasyonundan 384 tanesinin işlemleri değişir; hüküm EUR/USD (seçilen) değişir; seçilen 1 paritede başka bir kombinasyon olur.</li>
+<li><strong>VWAP çekilme</strong> (ilk saatte yalnız sinyal verilmez): dört paritenin 288 kombinasyonundan 288 tanesinin işlemleri değişir; hüküm AUD/USD (seçilen) değişir.</li>
+</ul>
+</li>
+<li>
+<p><strong>Devam tablosunun etiketleri</strong> (ilk sonuçlardan önce sabitlenmiş uygulama). Ön kaydın terimi “ayrışmıyor”
+her yönü ayrı ayrı sıfıra karşı sınar; tablo onu ölçtüğü şeyle, “kazanan yok” diye yazar. Ön kayıt asgari olay
+sayısına ulaşmayan hücreyi de “ayrışmıyor” sayar; ölçüm o hücreyi “yetersiz örneklem” diye ayrı etiketler. İki
+etiket de “kırılım kazanır” ya da “fade kazanır” değildir; hiçbir hüküm bu yüzden değişmez.</p>
+</li>
+</ul>
+<h3 id="sonuçlardan-sonra-değişen-uygulama-kuralları">Sonuçlardan sonra değişen uygulama kuralları</h3>
+<p>İlk sonuçların görüldüğü an: 16.10.2026 10:23 UTC = TSİ 13:23. Koşunun sonuçları ilk kez o anda okundu. Dört paritenin ilk tam koşusu: 16.10.2026 14:15 UTC = TSİ 17:15.
+Aşağıdaki kurallar ilk sonuçlardan sonra değişti; ön kaydın kuralları değişmedi,
+değişen ölçümün uygulamasıdır. İşlemleri değiştiren her kuralın etkisi ölçüldü: kural tek başına eski hâline
+döndürüldü, bütün koşu yeniden yapıldı ve sonuç bugünküyle bileşim bileşim kıyaslandı (öbür bütün kurallar
+bugünkü hâliyle). Sıra hükme yakınlığa göredir.</p>
+<ul>
+<li><strong>“Ölçülemedi”nin eşiği</strong> (16.10.2026 17:09 UTC = TSİ 20:09). Önce: örneklem dışında 20’den az işlemi olan
+bileşim ölçülemedi sayılırdı. Bugün: yalnız hiç işlem yoksa; az işlemli sonuç hükmünü taşır ve
+“az işlem” diye işaretlenir (ön kayıt asgari yazmaz). Etkisi: Eski eşikle varsayılanın 2024 → hükmünde 4 bileşim (N4 başarısız; bugün zayıf ya da çalışmıyor, 9–12 işlem); bütün dönem hükmünde hiçbir bileşim; seçilende 2 bileşim (N4 başarısız; bugün zayıf ya da çalışmıyor, 12 işlem) ölçülemedi sayılırdı.</li>
+<li><strong>Stop seviyeli emirde ham açılış</strong> (16.10.2026 21:09 UTC = TSİ 17.10.2026 00:09). Önce: yalnız kaymalı dolum sorulurdu;
+giriş tarafının açılışı stopun ötesinde olsa da kayma dolumu stopun berisine itiyorsa işlem açılır ve planlanan
+risk kayma kadar küçük olurdu. Bugün: kaymasız açılış stopun ötesindeyse işlem yok; kayma emirden sonra gelen bir
+maliyettir, olmayacak bir işlemi doğuramaz. Etkisi: Hüküm 1 yerde değişir: N1 kırılım, AUD/USD, seçilen: bugün çalışmıyor, eski kuralla zayıf. Örneklem içi seçim hiçbir bileşimde değişmez. Varsayılanın bugünkü 140.648 işleminin hepsi eski kuralla da birebir aynıdır; eski kural bunlara ek olarak 2 işlem açar (2 bileşimde). Örneklem dışı işlem başına net R varsayılanda 1 bileşimde oynar (bugünkü kuralla daha yüksek); en büyük fark VWAP dönüş, EUR/USD: bugün −0,159, eski kuralla −0,160; seçilende 1 bileşimde oynar (bugünkü kuralla daha düşük); en büyük fark N1 kırılım, AUD/USD: bugün −0,03, eski kuralla +0,05. Koşul analizinin 2 hükmü değişir (varsayılan ve seçilen birlikte).</li>
+<li><strong>Giriş dakikasında boşluk</strong> (16.10.2026 21:09 UTC = TSİ 17.10.2026 00:09). Önce: sert stopun boşluk kuralı (stopun
+ötesinde açılan dakikada dolum açılıştan) yalnız girişten sonraki dakikalarda sorulurdu; giriş dakikasında makas
+stopu kapsıyorsa çıkış stop seviyesinden yazılırdı. Bugün: giriş dakikası dahil. Etkisi:
+Hüküm 88 bileşimin hiçbirinde değişmez (varsayılanın iki penceresi ve seçilen). Örneklem içi seçim 1 bileşimde başka bir kombinasyona düşer: PDH/PDL (USD/JPY). Varsayılanın bugünkü 140.648 işleminden 145 tanesi eski kuralla ya hiç açılmaz ya da başka bir sonuçla kapanır; eski kuralla bugün olmayan 145 işlem açılır (17 bileşimde). Örneklem dışı işlem başına net R varsayılanda 10 bileşimde oynar (hepsinde bugünkü kuralla daha düşük); en büyük fark VWAP çekilme, GBP/USD: bugün −0,29, eski kuralla −0,28; seçilende 2 bileşimde oynar (hepsinde bugünkü kuralla daha düşük); en büyük fark PDH/PDL, USD/JPY: bugün −0,13, eski kuralla −0,10. Koşul analizinin 1 hükmü değişir (varsayılan ve seçilen birlikte); varsayılanda tutan koşul bugün 115, eski kuralla 114.</li>
+<li><strong>Önceki gün ölçüleri tatili atlar</strong> (16.10.2026 21:09 UTC = TSİ 17.10.2026 00:09). Önce: önceki günün tepesi, dibi,
+kapanışı ve açılışı, gün ATR’si ve yüzdeliği ve NR4/NR7 bir önceki satırdan kurulurdu; 25 Aralık ve 1 Ocak’tan
+sonraki günün “önceki günü” tatilin ince kotasyonuydu. Bugün: tatil olmayan son işlem gününden (ön kayıt “önceki
+FX işlem günü” der). Etkisi: Hüküm 88 bileşimin hiçbirinde değişmez (varsayılanın iki penceresi ve seçilen). Örneklem içi seçim hiçbir bileşimde değişmez. Varsayılanın bugünkü 140.648 işleminden 51 tanesi eski kuralla ya hiç açılmaz ya da başka bir sonuçla kapanır; eski kuralla bugün olmayan 61 işlem açılır (16 bileşimde). Örneklem dışı işlem başına net R varsayılanda 16 bileşimde oynar (9’unda bugünkü kuralla daha yüksek, 7’sinde daha düşük); en büyük fark Sahte PDH/PDL, GBP/USD: bugün −0,07, eski kuralla −0,09; seçilende 13 bileşimde oynar (8’inde bugünkü kuralla daha yüksek, 5’inde daha düşük); en büyük fark Sahte PDH/PDL, EUR/USD: bugün −0,11, eski kuralla −0,10. Koşul analizinin 26 hükmü değişir (varsayılan ve seçilen birlikte); varsayılanda tutan koşul bugün 115, eski kuralla 110. Varsayılanın maliyet bayrağı 2 yerde değişir (iki dönem birlikte).</li>
+<li><strong>Fiksing ve gün içi momentumda stopun yeri</strong> (16.10.2026 14:15 UTC = TSİ 17:15 ve 16.10.2026 17:09 UTC = TSİ 20:09; iki adımda). Önce: fiksingde
+stop sinyal mumunun kapanışından, o mumun ATR’si kadar uzaktaydı ve R birimi o mumun ATR’siydi; gün içi momentumda
+stop giriş dakikasının orta açılışından 1·ATR uzaktaydı. İlk adım (14:15 UTC = TSİ 17:15) yalnız
+fiksingi değiştirdi: stop giriş dakikasının orta açılışına taşındı ve ATR girişten önce kapanan son mumdan alındı.
+Gecikmesiz girişte o mum sinyal mumunun kendisidir; girişi bir mum geciken kombinasyonlarda bir sonraki mumdur,
+yani o kombinasyonların R birimi stopsuz olanlarda da değişti. İkinci adım (17:09 UTC = TSİ 20:09)
+iki kuralda da stopu yürütülen girişe (makas ve kayma dahil) taşıdı. Bugün: ikisinde de stop yürütülen girişten,
+girişten önce kapanan son mumun ATR’si kadar uzaktadır ve R birimi tam o ATR’dir (ön kaydın tanımı); stopsuz ve
+gecikmesiz kombinasyonlar, varsayılanlar dahil, etkilenmez. Gerekçe: stop sinyal mumunun kapanışından ölçülürse,
+girişi bir mum geciken dönüş kombinasyonlarında fiyat o mumda stopa yaklaşabilir, planlanan risk birkaç pipe iner
+ve R’ye bölünen sonuç anlamsız büyür. Etkisi (iki adım birlikte): Hüküm 12 bileşimin hiçbirinde değişmez (varsayılanın iki penceresi ve seçilen). Örneklem içi seçim 5 bileşimde başka bir kombinasyona düşer: Fiksing dönüşü (EUR/USD, GBP/USD ve AUD/USD); Fiksing momentumu (AUD/USD); Gün içi momentum (GBP/USD). Varsayılanın 27.288 işleminin hepsi aynı kalır. Örneklem dışı işlem başına net R seçilende 7 bileşimde oynar (2’sinde bugünkü kuralla daha yüksek, 5’inde daha düşük); en büyük fark Fiksing dönüşü, EUR/USD: bugün −0,11, eski kuralla −0,26. Koşul analizinin 2 hükmü değişir (varsayılan ve seçilen birlikte).</li>
+<li><strong>Haber kurallarında tek pozisyon</strong> (16.10.2026 17:09 UTC = TSİ 20:09). Önce: tek pozisyon kuralı olay
+× ofset grubunun içinde uygulanırdı; aynı gün FOMC kararı ve basın toplantısı iki ayrı pozisyon açabilirdi (iki
+olayın sonucu ayrı okunsun diye bilerek seçilmişti). Bugün: parite başına bütün olaylara birlikte (ön kaydın
+ortak mekaniği). Basın toplantısı satırları bu yüzden yalnız karar pozisyonunun kapandığı toplantılardan oluşur
+(haber dersinde). Etkisi: Hüküm 1 yerde değişir: N1 kırılım, EUR/USD, seçilen: bugün çalışmıyor, eski kuralla zayıf. Örneklem içi seçim 2 bileşimde başka bir kombinasyona düşer: N1 kırılım (EUR/USD); N5 devam (EUR/USD). Varsayılanın bugünkü 4.439 işleminin hepsi eski kuralla da birebir aynıdır; eski kural bunlara ek olarak 311 işlem açar (10 bileşimde). Örneklem dışı işlem başına net R varsayılanda 9 bileşimde oynar (1’inde bugünkü kuralla daha yüksek, 8’inde daha düşük); en büyük fark N3 straddle, AUD/USD: bugün −0,26, eski kuralla −0,21; seçilende 14 bileşimde oynar (4’ünde bugünkü kuralla daha yüksek, 10’unda daha düşük); en büyük fark N1 kırılım, EUR/USD: bugün −0,17, eski kuralla +0,02. Koşul analizinin 29 hükmü değişir (varsayılan ve seçilen birlikte); varsayılanda tutan koşul bugün 21, eski kuralla 19.</li>
+<li><strong>Devam tablosunda gün sonu</strong> (16.10.2026 17:09 UTC = TSİ 20:09). Önce: ufku gün sonunu aşan gözlem gün
+sonuna kırpılırdı (motorun “gün sonunu aşamaz” okumasıyla aynı). Bugün: düşer, çünkü kırpılmış bir tutuş o hücrenin
+ufkunu ölçmez; ön kaydın aynı ifadesi böylece iki yerde iki biçimde uygulanır. Etkisi: Devam tablosunun 147 hücresinin birinde olay sayısı değişir: eski kural bu hücrede 552 olay ölçerdi, bugün 418. Hücrelerin hükmü hiçbirinde değişmez. Ortalamalar en çok kırılımda 0,1, fade’de 0,3 puan (ATR’nin yüzdesi) oynar.</li>
+<li><strong>Seçimde eşitlik</strong> (16.10.2026 21:09 UTC = TSİ 17.10.2026 00:09). Önce: örneklem içi Sharpe’lar kesin
+karşılaştırılırdı; işlem işlem aynı olan iki kombinasyon (ör. tek mum tutulan fiksing momentumunda kapanış stopu
+ile stopsuz) yalnız kayan nokta artığıyla ayrışır ve sonraki seçilebilirdi. Bugün: milyarda birden küçük fark
+eşitliktir ve ızgaradaki ilk alınır (ön kaydın eşitlik kuralı). Etkisi: Hüküm 88 bileşimin hiçbirinde değişmez (varsayılanın iki penceresi ve seçilen). Örneklem içi seçim 3 bileşimde başka bir kombinasyona düşer: Fiksing momentumu (GBP/USD, USD/JPY ve AUD/USD). Varsayılanın 140.648 işleminin hepsi aynı kalır. Örneklem dışı işlem başına net R hiçbir bileşimde değişmez.</li>
+<li><strong>Büyük olay günü ve olağanüstü kararlar</strong> (17.10.2026 10:29 UTC = TSİ 13:29). Önce: önceden
+duyurulmayan bir FOMC kararı da planlanmış olaylar gibi kendi gününü baştan “büyük olay günü” sayardı; o günün
+karardan önceki girişleri, olay anında bilinemeyen bir bilgiyle kovalanırdı (ileriye bakma). Bugün: önceden
+duyurulmayan olay günü yalnız FX gününün başında ya da öncesinde olmuşsa işaretler (giriş dersindeki koşul tablosu,
+ileriye bakma sınaması yukarıda). İşlemler bu değişkenden etkilenmez; değişen yalnız koşul analizinin kovalarıdır.
+Etkisi: Hüküm 88 bileşimin hiçbirinde değişmez (varsayılanın iki penceresi ve seçilen). Örneklem içi seçim hiçbir bileşimde değişmez. Varsayılanın 140.648 işleminin hepsi aynı kalır. Örneklem dışı işlem başına net R hiçbir bileşimde değişmez. Koşul analizinin 22 hükmü değişir (varsayılan ve seçilen birlikte); varsayılanda tutan koşul bugün 115, eski kuralla 116.</li>
+<li><strong>Ay sonu</strong> (16.10.2026 11:31 UTC = TSİ 14:31). Önce: ayın son hafta içi günü. Bugün: ayın son Londra iş günü
+(ön kaydın tanımı); ikisinin ayrıştığı aylar, son hafta içi gününün bir İngiltere tatiline düştüğü aylardır:
+Mart 2018, Ağustos 2020, Mayıs 2021, Mart 2024 ve Ağustos 2026. Tanımın iki tüketicisi var: fiksingin ay sonu ayrımı ve her kuralın “ay sonu”
+koşul değişkeni. Etkisi: Hüküm 88 bileşimin hiçbirinde değişmez (varsayılanın iki penceresi ve seçilen). Örneklem içi seçim hiçbir bileşimde değişmez. Varsayılanın 140.648 işleminin hepsi aynı kalır. Örneklem dışı işlem başına net R hiçbir bileşimde değişmez. Koşul analizinin 6 hükmü değişir (varsayılan ve seçilen birlikte); varsayılanda tutan koşul bugün 115, eski kuralla 116. Ay sonu alt kümesinde (ailenin 15 biçimi ölçüldü; 13 zaman dilimi biçiminin işlem dosyası saklanmadığı için eski tanımla ölçülemez) bugünkü tanımla ailenin tutma ölçütünü (iki ayrık pencerede alt uç sıfırın üstünde, ay sonu ile öbür günlerin farkı düzeltilmiş eşiğin altında) sağlayan tek biçim fiksing momentumu (GBP/USD, önceden kayıtlı varsayılan); eski tanımla ailenin hiçbir biçimi bu ölçütü sağlamaz. Eski tanımla o biçim 2018–2023 penceresinde +0,380 R (aralık +0,055 / +0,706), 2024 → penceresinde +0,198 R (aralık −0,193 / +0,598) verir: ikinci pencerede aralık sıfırı kapsar ve o penceredeki fark iki aydan gelir: Mart 2024’te eski tanım 29.03.2024 günü −2,18 R, bugünkü tanım 28.03.2024 günü +0,40 R; Ağustos 2026’da eski tanım 31.08.2026 günü −1,64 R, bugünkü tanım 28.08.2026 günü +1,66 R. Tanım, alt kümenin ölçümünü koşuya ekleyen değişiklikle aynı anda ön kaydın tanımına çekildi; alt kümenin eski tanımla sonucu o gün görülmemişti. Derslerdeki ay sonu sayılarının hepsi ön kaydın tanımıyladır.</li>
+<li><strong>Tatil</strong> (16.10.2026 17:09 UTC = TSİ 20:09). Önce: kotasyonlu dakikaları günün yarısından az olan gün tatil
+sayılırdı. Bugün: takvimden (hafta içine düşen 25 Aralık ve 1 Ocak, örneklemin iki kenarında baştan sona
+kapsanmayan gün); günün kapsamı gün bitmeden bilinemez. Etkisi: iki tanım dört paritede de aynı günleri verir,
+hiçbir işlem değişmez.</li>
+<li><strong>Başabaş kayma</strong> (16.10.2026 13:15 UTC = TSİ 16:15). Önce: pip ortalamasından. Bugün: serinin ölçüsünden,
+işlem başına net R’den. Hükme girmez.</li>
+<li><strong>Ön kayıtlı iki ölçünün koşuya girişi</strong> (16.10.2026 11:31 UTC = TSİ 14:31). Fiksingin ay sonu ayrımı
+ve gün içi momentumun öngörü regresyonu ön kayıtta vardı, ilk sonuçlarda koşulmamıştı. İkisi de hükme girmez.</li>
+<li><strong>Yalnız yazıya geçirilen iki kural.</strong> Seviye hedefi yürütülen girişin gerisinde ya da tam üstündeyse işlem
+yoktur; girişi gün sonunda (16:55 New York; TSİ ABD yaz saatinde 23:55, kış saatinde 00:55) ya da sonrasında olan sinyal alınmaz. İkisinin
+davranışı ilk koşudan beri aynıdır; alınmayan emirlerin sayısı strateji derslerindedir.</li>
+</ul>
+<h3 id="ön-kaydın-açık-bıraktığı-ya-da-yorum-gerektiren-yerler">Ön kaydın açık bıraktığı ya da yorum gerektiren yerler</h3>
+<ul>
+<li><strong>Uygulama eşikleri.</strong> Ön kayıt hüküm kuralının şartlarını yazar ama asgarilerini yazmaz: %95 aralığı en az
+10 işlemle kurulur, rastgele yön sınaması en az 20
+işlemle koşar, koşul analizinin “tuttu” hükmü örneklem dışında en az 20 işlem
+ister. Üç asgari de ilk sonuçlardan önce sabitlenmiş uygulamadadır. Asgariyi karşılamayan sınama kurulmaz ve “çalışıyor”un
+şartı sağlanmamış sayılır.</li>
+<li><strong>Rastgele yön sınamasının kurgusu.</strong> Ön kayıt yalnız “rastgele yön yüzdeliği”ni ister. Ölçüm her alınan işlemin
+aynasını kurar: aynı giriş dakikası, ters yön, aynanın kendi yürütülen girişinden aynı R uzaklığında stop ve
+hedef, aynı planlı çıkış; aynada tek pozisyon kuralı yoktur ve ayna kendi stopu ve hedefiyle yeniden yürütülür.
+Her tekrarda her işlem için gerçeği ya da aynası bağımsız yazı turayla seçilir.</li>
+<li><strong>Yürüyen pencerenin seçim şartı.</strong> Ön kayıt genişleyen pencereyi ve ilk sınama yılını yazar. Seçimin asgari işlem
+şartı, örneklem içi şartın yıl başına payıdır (geçen her yıl için altıda biri); şartı sağlayan kombinasyonu
+olmayan yıl sınanmaz ve sınanan yıllar adıyla yazılır.</li>
+<li><strong>Oynaklık tercili.</strong> Rejim tablosunun “düşük · orta · yüksek” oynaklığı, giriş gününün ATR’sinin son 252 işlem
+günündeki yüzdeliğinin üçte birlik sabit dilimleridir. Koşul analizindeki “oynaklık yüzdeliği” aynı değişkendir ama
+kova sınırları örneklem içindeki işlemlerin tercilleridir; iki tablonun kovaları bu yüzden birebir aynı değildir.</li>
+<li><strong>Emir geçerliliği.</strong> Ön kayıt “giriş stopun ötesindeyse işlem yok” kuralını yalnız haber kırılımında (N1) yazar;
+ölçüm aynı kuralı stop seviyesi taşıyan her emre uygular ve seviye hedefi için eşini ekler (hedef yürütülen girişin
+gerisindeyse işlem yok).</li>
+<li><strong>60 dakikalık mumun çıpası.</strong> Haber kuralları ve New York ilk dengesi — 09:30 dışındaki kurallarda saatlik mum
+saat başında başlar, yani New York 08:30 verisi (TSİ ABD yaz saatinde 15:30, kış saatinde 16:30) New York 08:00–09:00 mumunun
+(TSİ ABD yaz saatinde 15:00–16:00, kış saatinde 16:00–17:00) ortasına düşer. Tek bir saatlik ızgara Londra 08:00 açılışını
+(TSİ İngiltere yaz saatinde 10:00, kış saatinde 11:00) ve New York 08:30’u birlikte mum sınırına oturtamaz; Londra açılışı seçildi. Bu çıpayı 60
+dakikalık mumda 16 kural (Londra ORB, Asya aralığı, NY IB 08:00, İç mum, Sıkışma, PDH/PDL, Pivot kırılım, Sahte ORB, Sahte Asya, Sahte PDH/PDL, VWAP dönüş, Pivot dönüş, Fiksing dönüşü, Fiksing momentumu, Gün içi momentum ve VWAP çekilme) kullanır. Sinyal penceresi New York 08:00’den önce başlayıp 09:00’dan sonra biten
+bir kuralda New York 08:00–09:00 mumunun hareketi ABD verisinin tepkisini de taşır.</li>
+<li><strong>Asya aralığının başlangıcı.</strong> Ön kayıt aralığın başlangıcını Londra 00:00’da (TSİ İngiltere yaz saatinde 02:00, kış saatinde 03:00) sabit tutar, ızgara yalnız
+bitişini (Londra 07:00 · 08:00; TSİ İngiltere yaz saatinde 09:00 · 10:00, kış saatinde 10:00 · 11:00) sınar; Tokyo açılışı bu başlangıca en çok bir saat uzaktır.</li>
+<li><strong>Tatil.</strong> Ön kayıt tatili tanımlamaz; tatil takvimden gelir (yukarıda).</li>
+</ul>
+<h3 id="ön-kayıtta-olmayan-ve-hükme-girmeyen-ölçüler">Ön kayıtta olmayan ve hükme girmeyen ölçüler</h3>
+<ul>
+<li><strong>Maliyet.</strong> Başabaş kayma (işlem başına net R’yi sıfıra indiren dolum başına temel kayma; haber penceresindeki
+dolumların 1,0 pip ek kayması sabit tutulur) iki dönemde, bütün dönem ve 2024 →, R’den
+ölçülür. Yalnız makasla bile eksi kalan bileşimde iki hâl ayrılır: brütü (orta fiyattan orta fiyata) de eksiyse
+hiçbir maliyette başabaş yoktur (“orta fiyattan bile eksi”); brütü artıysa başabaş, sonucu sıfıra indiren makasın bu
+verinin makasına oranıdır, brüt R / (brüt R − yalnız makas R): maliyet makasla doğrusal ölçeklenir ve işlemler aynı
+kalır varsayımıyla. Yalnız makas koşusu (kayma ve haber kayması sıfır) merdivenin yanına eklendi; ön kaydın
+merdiveni aynen duruyor.</li>
+<li><strong>Deflated Sharpe’ın gürültü eşiği.</strong> Ön kayıt Bailey ve López de Prado’nun deflated Sharpe’ını ister; onun
+eşiği denemelerin kendi Sharpe’larının yayılımından kurulur (<strong>yayılım eşiği</strong>). Denemeler gerçekten farklıysa
+(maliyet bazı kombinasyonları sistematik olarak eksiye iter) yayılım örnekleme gürültüsünden büyük çıkar ve eşik
+şişer; denemeler birbirine çok benziyorsa küçük çıkar ve eşik düşer. Ölçüm ikinci bir eşik de yazar: yalnız
+örnekleme gürültüsünden, her deneme sıfır kenarlı ve öbürlerinden bağımsız olsaydı (<strong>gürültü eşiği</strong>). Izgaranın
+kombinasyonları birbirinden bağımsız değildir (aynı kuralın komşu parametreleri); bağımsız deneme sayısı ızgaranın
+boyundan küçük olduğu için gürültü eşiği de bu yönden tutucudur. Bu seride 86 seçimin 72’sinde yayılım eşiği gürültü eşiğinin üstünde (bu seçimlerde tabloların “DSR (yayılım)” sütunu tutucudur), 14’ünde altındadır: o seçimlerde “DSR (yayılım)” sütunu “DSR (gürültü)” sütunundan yüksektir (en büyük fark N5 devam EUR/USD, 0,26’ya karşı 0,05; Asya aralığı USD/JPY, 0,20’ye karşı 0,02). Hiçbir
+seçimin deflated Sharpe olasılığı iki eşikle de %95’e ulaşmaz; ikisi de hükme girmez.</li>
+<li><strong>Gün kümeli parite aralığı.</strong> Hükmün aralığı ön kaydın okumasıyla işlemleri bağımsız örnekler. Aynı paritede aynı
+gün açılan işlemler aynı haberi ve aynı seans hareketini taşır; günde çok işlem açan kurallarda (VWAP dönüşü, iç
+mum) aralık olduğundan dar olabilir. Aynı iki ölçüt gün kümeli aralıkla da soruldu: hüküm hiçbir bileşimde değişmez; varsayılanın maliyet bayrağı bütün dönemde yine 14 bileşimde, örneklem dışında (2024 →) 0 yerine 1 bileşimde yanar.
+Kümelemenin aralığa etkisi tek yönlü değil: varsayılanın örneklem dışındaki 87 net aralığının 17’si gün kümeli örneklemeyle daha dar, 23’ü daha geniş, 47’si birebir aynı (günde en çok bir işlem açan bileşimde iki yordam aynı örneklemi kurar); genişlik oranı (gün kümeli / bağımsız) 0,90–1,12. Maliyet bayrağı iki yordamda ayrışan bileşim VWAP dönüş EUR/USD (2024 →): brüt aralığın alt ucu bağımsız örneklemeyle −0,004 R, gün kümeli +0,0004 R; burada kümeleme brüt aralığı daraltıyor. Bağımsız uç sıfırın kıyısında: −0,004 R (sıfıra standart hatanın 0,13 katı uzaklıkta); 500.000 tekrarla −0,002 R, önceden kayıtlı yordam (2.000 tekrar) 200 tohumun %16’sında ucu sıfırın üstünde verir.</li>
+<li><strong>Havuzun aralığı</strong> gün kümeli bootstrap’le kurulur (yukarıda).</li>
+<li><strong>Koşul analizinin üç ayrıntısı.</strong> Koşulsuz ortalama değişkenin tanımlı olduğu işlemlerden alınır; aynı ölçünün iki
+adı (Asya aralığı kuralında “aralık” ile “Asya aralığı”) tek değişken sayılır; kontrol listesine yalnız en az iki
+paritede aynı kova seçimiyle tutan koşul aday olarak girer.</li>
+<li><strong>Ters seçim.</strong> Koşul analizinin “tuttu” sayısının ne kadarının şansla açıklanabileceğini görmek için aynı ölçüt,
+örneklem içinde ortalamanın altında kalan kovalar seçilerek de koşulur; karşılaştırma dersinde.</li>
+<li><strong>Örnek günler.</strong> Her kuralın üç örnek işlemi örneklem dışındaki uygun işlemlerden seçilir: kazanan net en az yarım
+R kazandıran, kaybeden en az yarım R kaybettiren ve işlem boyunca lehine yarım R’ye ulaşmamış, tuzak lehine en az
+yarım R gittikten sonra zararla kapanmış işlemdir. Seçim sabit bir çekilişle yapılır (ön kaydın tohumundan,
+kuralın, paritenin ve etiketin adından türer), sonuca bakılarak yapılmaz ve üç örnek ayrı günlerdedir. Uygun işlem
+yoksa kazanan ve kaybeden için yedek tanım (net artı · net eksi) kullanılır ve örneğin altında yazılır. Her örnek
+işlem ayrıca dolum başına yarım pip ek kaymayla yeniden koşulur; alıştırmaların “dolum daha kötü olsaydı” şıkkı bu
+koşudan cevaplanır.</li>
+<li><strong>Kuyruk duyarlılığı.</strong> R ortalaması her işlemi riskine göre ölçekler; riski makas düzeyine inen tek bir işlem
+ortalamayı taşıyabilir. Her kuralın sonucu ayrıca en iyi işlem çıkarılarak ve beklenen gidiş-dönüş maliyeti
+(girişteki makas, iki dolumun kayması ve haber penceresindeyse haber kayması) riskin yarısını aşan işlemler
+çıkarılarak yeniden ölçülür. R’nin bir tabanı ön kayda girmez; bu ölçü yalnız böyle bir tabanın ne değiştireceğini
+gösterir.</li>
+<li><strong>Pip ortalaması ve aralığı.</strong> R ortalaması her işlemi riskine göre ölçekler, pip ortalaması her işlemde aynı
+büyüklükle işlem yapanın sonucudur; ikisinin işareti ayrıştığında strateji dersleri bunu adıyla yazar ve pip
+ortalamasının %95 aralığını da verir.</li>
+<li><strong>Haber dakikasının makası.</strong> Olay anına göre makasın seyri betimleyici bir ölçüdür; hiçbir kurala ve hükme girmez.</li>
+<li><strong>Yerel tatiller.</strong> Kurallar yalnız hafta içine düşen 25 Aralık ve 1 Ocak’ı işlem günü saymaz; İngiltere’nin banka
+tatillerinde Londra kapalıyken, ABD’nin federal tatillerinde New York’un bankaları kapalıyken de sıradan gün gibi
+işlem açarlar. Bu ölçü o günlerin sonucunu kural kural betimler; ön kayıtta yoktur, sınama yapılmaz ve hükme girmez.
+Verinin o günlerdeki kapsamı giriş dersinin veri tablosunda.</li>
+</ul>
+<p>Örneklemde hafta içine düşen 60 İngiltere banka tatili ve 74 ABD federal tatili var (10 gün ikisi birden). Bütün dönemde İngiltere tatillerinin ortalaması 22 kuralın 19’unda öbür günlerinkinin altında, ABD tatillerininki 18’inde öbür günlerinkinin altında. Kümenin büyüklüğü kurala göre değişir (dört parite birlikte, İngiltere tatillerinde 0–568, ABD tatillerinde 0–556 işlem; N4 başarısız iki tatil kümesinde de; N5 devam ABD tatillerinde hiç işlem açmaz) ve hiçbir fark sınanmadı: bu sayım bir bulgu değil, sınanmamış bir sorudur.</p>
+<details><summary>Yerel tatillerde varsayılanların sonucu, kural kural</summary><div class="sayi-tablo">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">Kural</th><th style="text-align:right">İngiltere tatili: bütün dönem</th><th style="text-align:right">İngiltere tatili: 2024 →</th><th style="text-align:right">ABD tatili: bütün dönem</th><th style="text-align:right">ABD tatili: 2024 →</th><th style="text-align:right">Öbür günler: bütün dönem</th><th style="text-align:right">Öbür günler: 2024 →</th></tr></thead><tbody><tr><td style="text-align:left">Londra ORB</td><td style="text-align:right">−0,17 (239)</td><td style="text-align:right">−0,08 (68)</td><td style="text-align:right">−0,19 (291)</td><td style="text-align:right">−0,18 (93)</td><td style="text-align:right">−0,07 (8.568)</td><td style="text-align:right">−0,05 (2.726)</td></tr><tr><td style="text-align:left">Asya aralığı</td><td style="text-align:right">−0,25 (124)</td><td style="text-align:right">−0,26 (38)</td><td style="text-align:right">−0,07 (186)</td><td style="text-align:right">−0,07 (58)</td><td style="text-align:right">−0,06 (5.809)</td><td style="text-align:right">−0,05 (1.762)</td></tr><tr><td style="text-align:left">NY IB 08:00</td><td style="text-align:right">−0,19 (206)</td><td style="text-align:right">−0,24 (59)</td><td style="text-align:right">−0,31 (260)</td><td style="text-align:right">−0,28 (82)</td><td style="text-align:right">−0,05 (7.962)</td><td style="text-align:right">−0,05 (2.497)</td></tr><tr><td style="text-align:left">NY IB 09:30</td><td style="text-align:right">−0,15 (182)</td><td style="text-align:right">−0,05 (58)</td><td style="text-align:right">−0,28 (207)</td><td style="text-align:right">−0,27 (63)</td><td style="text-align:right">−0,07 (6.152)</td><td style="text-align:right">−0,04 (1.969)</td></tr><tr><td style="text-align:left">İç mum</td><td style="text-align:right">−0,18 (425)</td><td style="text-align:right">−0,29 (106)</td><td style="text-align:right">−0,19 (486)</td><td style="text-align:right">−0,04 (144)</td><td style="text-align:right">−0,11 (15.680)</td><td style="text-align:right">−0,13 (4.901)</td></tr><tr><td style="text-align:left">Sıkışma</td><td style="text-align:right">−0,13 (178)</td><td style="text-align:right">+0,06 (48)</td><td style="text-align:right">−0,19 (247)</td><td style="text-align:right">−0,20 (87)</td><td style="text-align:right">−0,08 (6.861)</td><td style="text-align:right">−0,10 (2.143)</td></tr><tr><td style="text-align:left">PDH/PDL</td><td style="text-align:right">−0,21 (123)</td><td style="text-align:right">−0,32 (34)</td><td style="text-align:right">+0,03 (124)</td><td style="text-align:right">−0,07 (42)</td><td style="text-align:right">−0,16 (5.355)</td><td style="text-align:right">−0,19 (1.640)</td></tr><tr><td style="text-align:left">Pivot kırılım</td><td style="text-align:right">−0,36 (114)</td><td style="text-align:right">−0,36 (29)</td><td style="text-align:right">−0,33 (112)</td><td style="text-align:right">−0,15 (39)</td><td style="text-align:right">−0,13 (5.481)</td><td style="text-align:right">−0,15 (1.667)</td></tr><tr><td style="text-align:left">Sahte ORB</td><td style="text-align:right">−0,40 (131)</td><td style="text-align:right">−0,37 (43)</td><td style="text-align:right">−0,31 (173)</td><td style="text-align:right">−0,37 (58)</td><td style="text-align:right">−0,14 (4.929)</td><td style="text-align:right">−0,13 (1.591)</td></tr><tr><td style="text-align:left">Sahte Asya</td><td style="text-align:right">−0,39 (86)</td><td style="text-align:right">−0,38 (30)</td><td style="text-align:right">−0,31 (126)</td><td style="text-align:right">−0,47 (44)</td><td style="text-align:right">−0,13 (3.595)</td><td style="text-align:right">−0,15 (1.131)</td></tr><tr><td style="text-align:left">Sahte PDH/PDL</td><td style="text-align:right">−0,11 (68)</td><td style="text-align:right">+0,05 (21)</td><td style="text-align:right">−0,31 (62)</td><td style="text-align:right">−0,35 (21)</td><td style="text-align:right">−0,17 (2.872)</td><td style="text-align:right">−0,16 (897)</td></tr><tr><td style="text-align:left">VWAP dönüş</td><td style="text-align:right">−0,39 (568)</td><td style="text-align:right">−0,19 (128)</td><td style="text-align:right">−0,29 (556)</td><td style="text-align:right">−0,30 (188)</td><td style="text-align:right">−0,23 (21.314)</td><td style="text-align:right">−0,25 (6.631)</td></tr><tr><td style="text-align:left">Pivot dönüş</td><td style="text-align:right">−0,50 (86)</td><td style="text-align:right">−0,65 (21)</td><td style="text-align:right">−0,73 (100)</td><td style="text-align:right">−1,01 (29)</td><td style="text-align:right">−0,30 (4.446)</td><td style="text-align:right">−0,33 (1.348)</td></tr><tr><td style="text-align:left">Fiksing dönüşü</td><td style="text-align:right">−0,22 (238)</td><td style="text-align:right">−0,35 (66)</td><td style="text-align:right">−0,16 (295)</td><td style="text-align:right">−0,17 (95)</td><td style="text-align:right">−0,13 (8.605)</td><td style="text-align:right">−0,17 (2.736)</td></tr><tr><td style="text-align:left">N1 kırılım</td><td style="text-align:right">−0,44 (24)</td><td style="text-align:right">+0,03 (4)</td><td style="text-align:right">−1,02 (1)</td><td style="text-align:right">−1,02 (1)</td><td style="text-align:right">−0,24 (1.362)</td><td style="text-align:right">−0,26 (424)</td></tr><tr><td style="text-align:left">N2 fade</td><td style="text-align:right">−0,18 (14)</td><td style="text-align:right">−1,05 (3)</td><td style="text-align:right">+1,12 (1)</td><td style="text-align:right">+1,12 (1)</td><td style="text-align:right">−0,13 (720)</td><td style="text-align:right">−0,04 (262)</td></tr><tr><td style="text-align:left">N3 straddle</td><td style="text-align:right">−0,24 (20)</td><td style="text-align:right">+0,02 (4)</td><td style="text-align:right">−1,01 (1)</td><td style="text-align:right">−1,01 (1)</td><td style="text-align:right">−0,15 (1.353)</td><td style="text-align:right">−0,16 (428)</td></tr><tr><td style="text-align:left">N4 başarısız</td><td style="text-align:right">—</td><td style="text-align:right">—</td><td style="text-align:right">—</td><td style="text-align:right">—</td><td style="text-align:right">+0,03 (154)</td><td style="text-align:right">−0,01 (43)</td></tr><tr><td style="text-align:left">N5 devam</td><td style="text-align:right">−0,42 (9)</td><td style="text-align:right">−0,35 (4)</td><td style="text-align:right">—</td><td style="text-align:right">—</td><td style="text-align:right">−0,16 (780)</td><td style="text-align:right">−0,25 (247)</td></tr><tr><td style="text-align:left">Fiksing momentumu</td><td style="text-align:right">−0,55 (240)</td><td style="text-align:right">−0,44 (68)</td><td style="text-align:right">−0,36 (292)</td><td style="text-align:right">−0,42 (95)</td><td style="text-align:right">−0,24 (8.597)</td><td style="text-align:right">−0,29 (2.732)</td></tr><tr><td style="text-align:left">Gün içi momentum</td><td style="text-align:right">−0,07 (240)</td><td style="text-align:right">+0,01 (68)</td><td style="text-align:right">−0,22 (296)</td><td style="text-align:right">−0,30 (96)</td><td style="text-align:right">−0,11 (8.604)</td><td style="text-align:right">−0,14 (2.739)</td></tr><tr><td style="text-align:left">VWAP çekilme</td><td style="text-align:right">−0,44 (146)</td><td style="text-align:right">−0,21 (43)</td><td style="text-align:right">−0,51 (176)</td><td style="text-align:right">−0,13 (42)</td><td style="text-align:right">−0,32 (4.508)</td><td style="text-align:right">−0,28 (1.522)</td></tr></tbody></table></div><p><em>İşlem başına ortalama net R (parantezde işlem sayısı); dört paritenin varsayılan işlemleri birlikte. İşlemin günü FX günüdür (New York 17:00’de başlar; TSİ ABD yaz saatinde 00:00, kış saatinde 01:00). İngiltere listesi gov.uk’in banka tatili listesinden (2018’i kapsamadığı için o yıl açık kaynaklı bir tatil kütüphanesinden; ortak yıllarda iki liste birebir aynı), ABD listesi ABD Personel Yönetimi Ofisi’nin (OPM) federal tatil listesinden; cumartesiye düşen bir tatilde Federal Reserve Bankaları önceki cuma açık olduğu için o cuma tatil sayılmaz (Fed’in K.8 kuralı).</em></p></details>
+<h2 id="haber-takvimi">Haber takvimi</h2>
+<p>Her olayın saati resmî bir kaynaktan geldi ve kaynak iki türlüdür. <strong>Tarih tarih</strong>: ABD tarım dışı istihdam ve TÜFE
+için BLS’nin yayım sayfalarının ambargo satırı (BLS’nin sitesi otomatik istekleri reddettiği için Internet Archive’daki
+kopyalarından; her kopyanın arşiv zaman damgası kayıtta), FOMC kararı için karar metninin yayım satırı (“For release
+at 2:00 p.m. EDT”), ECB basın toplantısı için karar duyurusunun kendi cümlesi; kuraldan ayrılan iki BoE kararının
+saati BoE’nin önceden yayımladığı saat duyurusundan (aşağıdaki listede). <strong>Kuraldan</strong>: öbür BoE kararları perşembe
+12:00 Londra (TSİ İngiltere yaz saatinde 14:00, kış saatinde 15:00; Para Politikası Kurulu’nun yayım kuralı, tarih her özetin kendi
+sayfasından), ECB karar saati ECB’nin 27 Haziran 2022 duyurusundan: 09.06.2022 toplantısına kadar 13:45 Frankfurt (TSİ Avrupa yaz saatinde 14:45, kış saatinde 15:45),
+21.07.2022 toplantısından itibaren 14:15 Frankfurt (TSİ Avrupa yaz saatinde 15:15, kış saatinde 16:15). Her
+toplantıda kuralın verdiği karar saatinin, duyurunun yazdığı basın toplantısı saatiyle eşleştiği ayrıca sınandı
+(Frankfurt saatiyle karar 13:45 ↔ basın toplantısı 14:30, karar 14:15 ↔ basın toplantısı 14:45; basın toplantısı
+TSİ Avrupa yaz saatinde 15:30 ya da 15:45, kış saatinde 16:30 ya da 16:45).</p>
+<p><strong>FOMC basın toplantısı</strong> saati en zor bulunanıdır. Ne karar metni ne basın toplantısı sayfası onu yazar: sayfadaki tek
+saat kararın yayım saatidir. Fed’in aylık etkinlik takvimi basın toplantısını ayrı satırla yalnız
+Eylül 2025 toplantısından itibaren listeler ve o tarihten bu yana
+9 toplantının 8 tanesinde
+satır var (Nisan 2026
+toplantısında yok);
+daha önce tek bir toplantının saatini ayın duyurusu yazar (30.01.2019).
+Kalan 56 toplantının saati Fed’in 13 Mart 2013 duyurusundaki
+kuraldan gelir: olağan toplantılarda kararın yayım saati 14:00, başkanın basın
+toplantısının başlangıcı “yaklaşık” 14:30 (New York; TSİ ABD yaz saatinde 21:00 ve 21:30, kış saatinde 22:00 ve 22:30).
+Kural Fed’in 2024 ve 2025 toplantı takvimi duyurularında aynen yinelenir. Tarih
+tarih kaydı olan toplantıların hepsi kuralla aynı saati taşır. Kural yalnız kararı kuralın saatinde yayımlanan olağan
+toplantıya uygulandı; olağanüstü toplantıların basın toplantısı
+kaynakta saatsiz olduğu için takvimde yok. Fiyat kuralla tutarlı: basın toplantısının ilk 15 dakikasında
+EUR/USD’nin ortalama dakikalık aralığı, hemen önceki 15 dakikanın (kararın ilk yarım saatinin ikinci yarısı) medyanda
+1,81 katı; 65
+toplantının 62 tanesinde 1’in üstünde. Bu bir
+doğrulama değildir: oran fiyatın kuralın saatinden sonra hızlandığını gösterir, toplantının hangi dakikada
+başladığını göstermez. “Yaklaşık” kelimesi ölçünün sınırıdır; konuşmanın gerçek başlangıcı bir iki dakika kayabilir.
+Karar ile basın toplantısının karşılaştırması bir saatlik pencereyle kurulduğu için böyle bir kayma onun içinde kalır;
+5 dakikalık ilk haber mumunda ise kayma mumun önemli bir parçasıdır ve N1–N5’in basın toplantısı sonuçları bu
+belirsizliği taşır.</p>
+<p>Takvimin dışarıda bıraktığı ya da düzelttiği kayıtlar:</p>
+<ul>
+<li><strong>ABD tarım dışı istihdam:</strong> Ekim 2025 referans ayının ayrı bir yayımı yok.</li>
+<li><strong>ABD tarım dışı istihdam:</strong> 2 yayımda referans ayı okunamadı; yayım günü ve saati okunduğu için olay takvimde.</li>
+<li><strong>ABD TÜFE:</strong> Ekim 2025 referans ayının ayrı bir yayımı yok.</li>
+<li><strong>ABD TÜFE:</strong> 13.01.2021: ambargo satırı yılı 2020 yazıyor; dosya adı ve aynı satırdaki yayım numarası (USDL-21) 2021 diyor — 2021 alındı.</li>
+<li><strong>ABD TÜFE:</strong> 46 yayımda referans ayı okunamadı; yayım günü ve saati okunduğu için olay takvimde.</li>
+<li><strong>ABD TÜFE:</strong> 14.10.2026 08:30 New York (TSİ 15:30) yayımı (Eylül 2026 referans ayı) örneklemin içinde, ama resmî kopyası arşivde yok; takvime girmedi. Tarih son okunan bültenin bir sonraki yayımı duyuran cümlesinden.</li>
+<li><strong>BoE:</strong> 06.08.2020 ve 05.11.2020 kararlarının saati kuraldan değil, BoE’nin önceden yayımladığı saat duyurusundan: 06.08.2020 07:00 Londra (TSİ 09:00; 07.07.2020 tarihli duyuru); 05.11.2020 07:00 Londra (TSİ 10:00; 04.11.2020 tarihli duyuru). Ağustos 2020 duyurusunun gerekçesi Para Politikası Raporu’nun Finansal İstikrar Raporu’yla ortak yayımıdır.</li>
+<li><strong>ECB:</strong> 18.03.2020: karar listesinde olağan toplantı dışı duyuru; yayım saati metinde yok — yazılmadı.</li>
+<li><strong>BoE:</strong> 07.05.2020: Para Politikası Raporu Finansal İstikrar Raporu’yla birlikte yayımlandı; BoE’nin bu güne ait saat duyurusu arşivde yok ve kuralın Londra 12:00’si (TSİ İngiltere yaz saatinde 14:00, kış saatinde 15:00) ortak yayım gününü kapsamıyor — saat doğrulanamadığı için yazılmadı.</li>
+<li><strong>BoE:</strong> 19.03.2020: Bank Rate değişti, MPC özet listesinde yok (olağanüstü karar); saat kaynakta yok — yazılmadı.</li>
+<li><strong>BoE:</strong> 11.03.2020: Bank Rate değişti, MPC özet listesinde yok (olağanüstü karar); saat kaynakta yok — yazılmadı.</li>
+<li><strong>FOMC:</strong> toplantı kararı sayılmayan açıklamalar takvimde yok: 23.03.2020 08:00 New York (TSİ 15:00), yazılı oylama (notation vote); 22.08.2025 10:00 New York (TSİ 17:00), yazılı oylama (notation vote).</li>
+<li><strong>FOMC:</strong> 65 basın toplantısı takvimde. Saatin kaynağı: kaynakta tarih tarih yazılı 9, Fed’in kuralı 56 (yukarıda). 2 olağanüstü toplantının basın toplantısının saati kaynakta yok ve kural yalnız olağan toplantılar için; bu toplantılar takvime girmedi.</li>
+</ul>
+<p>Olağanüstü FOMC toplantıları takvimde kendi saatleriyle durur: 11 Ekim 2019 11:00 New York (TSİ 18:00), 3 Mart 2020 10:00 New York (TSİ 18:00) ve 15 Mart 2020 17:00 New York (TSİ 16.03.2020 00:00). Saatini
+kaynağın yazmadığı olağanüstü ECB ve BoE kararları dışarıdadır, çünkü saati tahmin edilen bir olay haber penceresini
+yanlış yere koyardı.</p>
+<p>Takvimde durmak her ölçüye girmek demek değildir. Takvimdeki her olay haber makası tablosuna (arşivde dakikası olan
+dakikalarıyla) ve o günün “büyük olay günü” işaretine girer; ama devam tablosu, beş haber stratejisi ve ortalama
+patikalar olaydan önceki bir pencereye ve olay anının fiyatına ihtiyaç duyar. Bu ölçülere girmeyen olaylar:</p>
+<ul>
+<li><strong>ABD tarım dışı istihdam (NFP), 05.01.2018</strong> (dört paritenin hepsinde): devam tablosuna ve ortalama patikaya girmez — günlük ATR yok.</li>
+<li><strong>ABD TÜFE (CPI), 12.01.2018</strong> (dört paritenin hepsinde): devam tablosuna ve ortalama patikaya girmez — günlük ATR yok.</li>
+<li><strong>ABD tarım dışı istihdam (NFP), 05.10.2018</strong> (GBP/USD): devam tablosuna ve N1’in varsayılanına girmez — ilk beş dakikalık mumda fiyat değişmedi, yön yok.</li>
+<li><strong>FOMC kararı, 15.03.2020</strong> (dört paritenin hepsinde): devam tablosuna ve beş stratejiye girmez — olaydan önceki pencerede veri boşluğu, yani olay piyasa kapalıyken açıklandı ya da arşivde kesinti var; ortalama patikaya girmez — olay çevresinde fiyatı olmayan dakika var.</li>
+<li><strong>ABD tarım dışı istihdam (NFP), 04.09.2020</strong> (AUD/USD): devam tablosuna ve N1’in varsayılanına girmez — ilk beş dakikalık mumda fiyat değişmedi, yön yok.</li>
+<li><strong>ABD tarım dışı istihdam (NFP), 02.04.2021</strong> (EUR/USD): ortalama patikaya girmez — ilk beş dakikada fiyat değişmedi, yön yok.</li>
+<li><strong>FOMC basın toplantısı, 26.07.2023</strong> (EUR/USD): devam tablosuna ve N1’in varsayılanına girmez — ilk beş dakikalık mumda fiyat değişmedi, yön yok.</li>
+<li><strong>ECB kararı, 26.10.2023</strong> (EUR/USD): devam tablosuna ve N1’in varsayılanına girmez — ilk beş dakikalık mumda fiyat değişmedi, yön yok.</li>
+</ul>
+<p><strong>Fiyat sınaması.</strong> Her olayın saati ayrıca 1 dakikalık fiyattan sınandı. Sıçrama oranı, olay dakikası ve sonraki iki
+dakikanın en büyük dakikalık aralığının olaydan önceki otuz ile üç dakika arasının medyan aralığına oranıdır. Resmî
+saatte oran 3,0 ya da üstündeyse olay doğrulanır; bir saat ya da yarım saat önce ya da
+sonra oran eşiği aşıyor ve resmî saatinkinin en az iki katıysa çelişki sayılır; ikisi de değilse sessiz: piyasa ne
+resmî dakikada ne o dört aday saatte kımıldamıştır. Dört aday saat ancak bir saatlik kaymayı (yaz saati hatası) ve yarım
+saatlik kaymayı (ECB kararında Frankfurt 13:45 ↔ 14:15; TSİ Avrupa yaz saatinde 14:45 ↔ 15:15, kış saatinde 15:45 ↔ 16:15) yakalar; daha büyük bir kayma için resmî saatin altı saat öncesi ve sonrası yarım
+saatte bir ayrıca taranır. Altı saatlik tarama 15 olayda resmî saatin oranını açıkça aşan (eşiğin üstünde ve resmî saatinkinin en az iki katı) uzak bir hareket raporlar: ABD TÜFE (CPI) 9, FOMC kararı 3, BoE kararı 2, ECB kararı 1; 3’ünde o saatte takvimin başka bir olayı var. Uzak hareket bir çelişki değildir: aynı gün takvimde olmayan başka bir yayım ya da haber fiyatı oynatmış olabilir. Saat yalnız resmî bir metinle düzeltilir; tarama yalnız bakılacak günü gösterir. Sınama yalnız raporlar: resmî belge birincil kaynaktır ve hiçbir olay
+fiyat yüzünden dışarıda bırakılmadı. Çelişki veren olaylar:</p>
+<ul>
+<li><strong>ECB kararı, 12.12.2019 13:45 Frankfurt (TSİ 15:45):</strong> resmî saatte sıçrama oranı EUR/USD 2,62 (en iyi aday 60 dakika sonra: 6,95).</li>
+<li><strong>ABD TÜFE (CPI), 10.04.2020 08:30 New York (TSİ 15:30):</strong> resmî saatte sıçrama oranı AUD/USD 0,77 (en iyi aday 60 dakika sonra: 14,33); EUR/USD 1,35 (en iyi aday 30 dakika sonra: 3,44); GBP/USD 1,50 (en iyi aday 30 dakika sonra: 5,42).</li>
+</ul>
+<p>İkisinin de açıklaması
+kaynağın kendisinde. 12 Aralık 2019 ECB toplantısında aday saat basın toplantısının içine düşüyor: o gün fiyatı
+kararın kendisi değil toplantı oynattı. 10 Nisan 2020 TÜFE’si Paskalya cumasında, dakikalık aralıkların çok dar
+olduğu ince bir piyasada yayımlandı; aday saatlerdeki sıradan gürültü resmî saatten “daha iyi” oturdu.</p>
+<p>Sessiz kalan 14 olay: ABD TÜFE (CPI) 11.03.2020, 13.10.2020, 10.12.2020; ECB kararı 13.09.2018, 10.04.2019, 23.01.2020, 30.01.2025, 24.07.2025, 30.10.2025, 05.02.2026, 19.03.2026, 30.04.2026, 10.09.2026; BoE kararı 30.04.2026. Bunların 2’sinde altı saatlik tarama uzak bir hareket raporlar: ABD TÜFE (CPI) 11.03.2020 (resmî saate göre −330 ve −120 dakika); ABD TÜFE (CPI) 13.10.2020 (resmî saate göre −210, −90 ve +330 dakika); öbür 12’sinde resmî saatin altı saat öncesi ve sonrasında uzak bir sıçrama yok.</p>
+<h2 id="ölçülmeyenler">Ölçülmeyenler</h2>
+<p>Bu serinin cevaplamadığı sorular, sonuçların sınırlarıyla birlikte:</p>
+<ul>
+<li><strong>Gerçek sürpriz.</strong> Açıklanan verinin piyasa beklentisinden (anket medyanı) farkı yok; haber dersindeki büyüklük
+kovaları ilk mumun hareketinden kurulan bir vekildir.</li>
+<li><strong>Piyasa derinliği.</strong> Dolumlar en iyi bid/ask’tan, sınırsız likiditeyle yapılır; büyük bir emrin fiyatı itmesi ve
+kısmi dolum modellenmez. Kayma sabit pip olarak eklenir.</li>
+<li><strong>Başka bir likidite kaynağı.</strong> Makas Dukascopy’nin kendi kotasyonudur; bir bankanın ya da başka bir platformun
+gördüğü makastan farklı olabilir. Maliyet merdiveni bu farka duyarlılığı gösterir.</li>
+<li><strong>Komisyon ve ücretler.</strong> Makas ve kayma dışında maliyet yok sayıldı.</li>
+<li><strong>Gecelik taşıma.</strong> Bütün pozisyonlar gün sonunda kapandığı için faiz farkı (swap) doğmaz; gece taşıyan bir kuralın
+sonucu farklı olurdu.</li>
+<li><strong>Gecikme.</strong> Emrin iletilmesi ve kuyruğa girmesi modellenmez; giriş, kuralın giriş dakikasının açılışıdır.</li>
+<li><strong>Pasif ya da limit yürütme.</strong> Giriş ve piyasa çıkışları makası öder (alış ask’tan, satış bid’den); makasın bir
+kısmını kazanan bir limit girişi ya da orta fiyata yakın bir yürütme ölçülmedi. “Brüt” sonuç orta fiyattan orta
+fiyata ölçülür ve böyle bir yürütmenin üst sınırını verir, kendisini değil: limit emir her zaman dolmaz.</li>
+<li><strong>Yerel tatil süzgeci.</strong> İngiltere ve ABD tatillerinde işlem açmayan bir kural sınanmadı; o günlerin sonucu
+yukarıda yalnız betimlendi.</li>
+<li><strong>Gerçek işlem hacmi.</strong> FX’te merkezî hacim yoktur; VWAP kuralları kotasyon likiditesini ağırlık olarak kullanır.</li>
+<li><strong>Daha kısa zaman dilimleri.</strong> 5 dakikanın altındaki mumlar ve tick verisi ölçülmedi.</li>
+<li><strong>Başka pariteler.</strong> Yalnız dört majör (EUR/USD, GBP/USD, USD/JPY ve AUD/USD); çapraz kurlar ve gelişen piyasa paraları
+yok.</li>
+<li><strong>Pozisyon büyüklüğü.</strong> Her işlem 1 R’dir; kaldıraç, portföy düzeyinde risk ve kuralların birleşimi ölçülmedi.</li>
+<li><strong>Uyarlanan kurallar.</strong> Yürüyen pencere dışında rejime göre değişen ya da öğrenen bir model denenmedi.</li>
+</ul>
+<h2 id="yeniden-üretilebilirlik">Yeniden üretilebilirlik</h2>
+<p>Bu serinin sonuçlarını bir okurun yeniden kurması için gereken her şey açıktır: fiyat verisi Dukascopy’nin herkese
+açık 1 dakikalık bid/ask beslemesidir ve dönemi yukarıdaki tablodadır; olay saatlerinin kaynakları haber takvimi
+bölümünde tek tek yazılıdır; yürütme ve maliyet kuralları yukarıdadır; kuralların, ızgaraların ve hüküm kuralının
+tam metni yayımlanan ön kayıttadır ve dosyanın özü yukarıdadır. Ölçüm deterministtir: aynı veri ve aynı kurallarla
+her koşu aynı işlemleri ve aynı sayıları verir (bootstrap ve rastgele yön sabit tohumludur).</p>
+<h2 id="kaynaklar">Kaynaklar</h2>
+<ul>
+<li>Bailey, D. H. ve López de Prado, M. (2014). The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality. <em>Journal of Portfolio Management</em>, 40(5), 94–107. (alıntılar yazarlardan birinin sitesindeki yayım öncesi sürümden)</li>
+</ul>
+<p><em>Yatırım tavsiyesi değildir. Ölçülen her şey geçmişe aittir; geçmiş sonuçlar gelecekteki sonuçların göstergesi
+değildir.</em></p>  </div>    </article>  </main> <footer data-astro-cid-sz7xmlte> <div class="sarici ic" data-astro-cid-sz7xmlte> <div class="marka-blok" data-astro-cid-sz7xmlte>  <span class="etiket marka" lang="en" data-astro-cid-sz7xmlte>TTO Trading</span> <p class="aciklama" data-astro-cid-sz7xmlte>
+Türkiye makro ve piyasa araştırmaları. Her sayı ölçülen katmandan gelir ve kendi
+        tarihini taşır; yorum ölçümün üstüne yazılır, altına değil.
+</p> <p class="sorumluluk" data-astro-cid-sz7xmlte>Buradaki içerik araştırma ve bilgilendirme amaçlıdır; yatırım tavsiyesi değildir. Sayılar kamuya açık kaynaklardan derlenir, yöntem her sayfada açıkça yazılır.</p> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Yayınlar</span> <a href="/bulten/" data-astro-cid-sz7xmlte>Bülten</a><a href="/analiz/" data-astro-cid-sz7xmlte>Analiz</a> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Kaynaklar</span> <a href="/tradeler/" data-astro-cid-sz7xmlte>Tradeler</a><a href="/projeler/" data-astro-cid-sz7xmlte>Projeler</a><a href="/grafikler/" data-astro-cid-sz7xmlte>Grafikler</a><a href="/arastirma/" data-astro-cid-sz7xmlte>Dersler</a><a href="/indikatorler/" data-astro-cid-sz7xmlte>İndikatörler</a><a href="/arama/" data-astro-cid-sz7xmlte>Arama</a><a href="/teknik/" data-astro-cid-sz7xmlte>Teknik arşivi</a> <a href="/hakkinda/" data-astro-cid-sz7xmlte>Hakkında</a> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Besleme</span> <a href="/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · tüm yayınlar</a><a href="/bulten/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · Bülten</a><a href="/analiz/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · Analiz</a> </div> <div class="kolon etiket sag" data-astro-cid-sz7xmlte> <span data-astro-cid-sz7xmlte>© 2026 <span lang="en" data-astro-cid-sz7xmlte>TTO Trading</span></span> <span data-astro-cid-sz7xmlte>İstanbul</span> </div> </div> </footer>  <script type="module">const i=[...document.querySelectorAll("[data-kaydir]")],r=()=>{for(const e of i)if(e.scrollWidth>e.clientWidth+1){const t=e.querySelector("caption")?.textContent?.trim();e.setAttribute("tabindex","0"),e.setAttribute("role","region"),e.setAttribute("aria-label",t?`${t} (kaydırılabilir)`:"Kaydırılabilir tablo")}else e.removeAttribute("tabindex"),e.removeAttribute("role"),e.removeAttribute("aria-label")};if(i.length)if(r(),"ResizeObserver"in window){const e=new ResizeObserver(()=>r());i.forEach(t=>e.observe(t))}else addEventListener("resize",r,{passive:!0});</script> </body> </html> <script type="module">const t=[...document.querySelectorAll(".prose h2")];if(t.length>=4){const d=document.getElementById("icindekiler"),l=document.getElementById("icindekiler-liste");t.filter(e=>/^(?:(?:Bölüm|Modül|Kısım|Ek)\s+)?(?:[A-ZÇĞİÖŞÜ]\.)?\d+(?:\.\d+)*\.?[\s—–-]/.test(e.textContent||"")).length>=t.length/2&&l.classList.add("kendi-numarali"),t.forEach((e,a)=>{e.id||(e.id="bolum-"+(a+1));const i=document.createElement("li"),n=document.createElement("a");n.href="#"+e.id,n.textContent=e.textContent,i.appendChild(n),l.appendChild(i)}),d.hidden=!1}</script> 

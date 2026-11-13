@@ -1,0 +1,837 @@
+<!DOCTYPE html><html lang="tr"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Kâğıt: risk bütçesi, araç seçimi ve switch — TTO Trading</title><meta name="description" content="Durasyonun ne kadarı taşınır (oynaklık ve stres bütçesi, kayıpların asimetrisi, hedge ve stop), durasyon kâğıttan mı OIS'ten mi asset swap'tan mı alınır, switch'in üç ölçeklemesi ve P&#38;L'i, altı…"><meta name="generator" content="Astro v5.18.2"><meta name="theme-color" content="#f5f0e6"><link rel="canonical" href="https://ttotrading.com/arastirma/kagit-switch/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — tüm yayınlar" href="/rss.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — Bülten" href="/bulten/rss.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — Analiz" href="/analiz/rss.xml"><meta property="og:type" content="article"><meta property="og:site_name" content="TTO Trading"><meta property="og:locale" content="tr_TR"><meta property="og:title" content="Kâğıt: risk bütçesi, araç seçimi ve switch"><meta property="og:description" content="Durasyonun ne kadarı taşınır (oynaklık ve stres bütçesi, kayıpların asimetrisi, hedge ve stop), durasyon kâğıttan mı OIS'ten mi asset swap'tan mı alınır, switch'in üç ölçeklemesi ve P&#38;L'i, altı…"><meta property="og:url" content="https://ttotrading.com/arastirma/kagit-switch/"><meta property="og:image" content="https://ttotrading.com/og/genel.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="TTO Trading — Dersler"><meta property="article:published_time" content="2026-11-06T00:00:00.000Z"><meta property="article:modified_time" content="2026-11-06T00:00:00.000Z"><meta property="article:section" content="Dersler"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Kâğıt: risk bütçesi, araç seçimi ve switch"><meta name="twitter:description" content="Durasyonun ne kadarı taşınır (oynaklık ve stres bütçesi, kayıpların asimetrisi, hedge ve stop), durasyon kâğıttan mı OIS'ten mi asset swap'tan mı alınır, switch'in üç ölçeklemesi ve P&#38;L'i, altı…"><meta name="twitter:image" content="https://ttotrading.com/og/genel.png"><script type="application/ld+json">[{"@context":"https://schema.org","@type":"WebSite","name":"TTO Trading","url":"https://ttotrading.com/","description":"TCMB rezervleri, reel kur, Hazine ihaleleri ve faiz piyasaları üzerine veriye dayalı projeler, canlı grafikler ve hesaplama araçları.","inLanguage":"tr","publisher":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}}},{"@context":"https://schema.org","@type":"Article","headline":"Kâğıt: risk bütçesi, araç seçimi ve switch","description":"Durasyonun ne kadarı taşınır (oynaklık ve stres bütçesi, kayıpların asimetrisi, hedge ve stop), durasyon kâğıttan mı OIS'ten mi asset swap'tan mı alınır, switch'in üç ölçeklemesi ve P&L'i, altı…","url":"https://ttotrading.com/arastirma/kagit-switch/","mainEntityOfPage":"https://ttotrading.com/arastirma/kagit-switch/","image":["https://ttotrading.com/og/genel.png"],"inLanguage":"tr","datePublished":"2026-11-06T00:00:00.000Z","dateModified":"2026-11-06T00:00:00.000Z","author":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}},"publisher":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}},"articleSection":"Dersler"}]</script><script defer data-domain="ttotrading.com" data-api="/v/api/event" src="/v/js/script.js"></script><link rel="stylesheet" href="/_astro/index.BWd6Gdev.css">
+<style>.video-oynatici[data-astro-cid-quemlkkv]{margin:1.75rem 0 .5rem;max-width:26rem}.video-ust[data-astro-cid-quemlkkv]{display:block;margin-bottom:.5rem;color:var(--ink-60)}video[data-astro-cid-quemlkkv]{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:1080 / 1350;background:var(--paper-2);border:1px solid var(--ink-30)}
+</style>
+<link rel="stylesheet" href="/_astro/_slug_.BVOGJi8f.css"><style>.grafik[data-astro-cid-bik524jn]{margin:2.2em 0;border:1px solid var(--ink-30);background:#fff;box-shadow:0 1px 0 var(--ink-15)}.grafik[data-astro-cid-bik524jn].genis{position:relative;left:50%;transform:translate(-50%);width:min(1180px,calc(100vw - 32px))}figcaption[data-astro-cid-bik524jn]{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem .9rem;padding:.55rem .9rem;border-bottom:1px solid var(--ink-15);background:var(--paper-2)}.grafik-no[data-astro-cid-bik524jn]{color:var(--claret);white-space:nowrap}.grafik-baslik[data-astro-cid-bik524jn]{font-family:var(--font-body);font-style:italic;font-size:.95rem;color:var(--ink-70)}.grafik-veri[data-astro-cid-bik524jn]{margin-left:auto;min-width:0;overflow-wrap:break-word;color:var(--ink-50);font-variant-numeric:tabular-nums}.grafik-veri[data-astro-cid-bik524jn]+.tam-ekran[data-astro-cid-bik524jn]{margin-left:0}.tam-ekran[data-astro-cid-bik524jn]{margin-left:auto;white-space:nowrap;text-decoration:none;color:var(--ink-50)}.tam-ekran[data-astro-cid-bik524jn]:hover{color:var(--claret)}.cerceve[data-astro-cid-bik524jn]{position:relative;background:linear-gradient(100deg,transparent 30%,rgba(33,27,18,.05) 50%,transparent 70%) no-repeat 0 0 / 300% 100%,#fff;animation:parilti 1.6s linear infinite}@keyframes parilti{to{background-position:-300% 0,0 0}}.yukleniyor[data-astro-cid-bik524jn]{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-60)}iframe[data-astro-cid-bik524jn]{position:relative;display:block;width:100%;height:100%;border:none;opacity:0;transition:opacity .4s ease}.cerceve[data-astro-cid-bik524jn].hazir{animation:none;background:#fff}.cerceve[data-astro-cid-bik524jn].hazir iframe[data-astro-cid-bik524jn]{opacity:1}.cerceve[data-astro-cid-bik524jn].hazir .yukleniyor[data-astro-cid-bik524jn]{display:none}
+</style><style>.egri-kap[data-astro-cid-32qtg2pn]{padding:.9rem 1rem .4rem;border-bottom:1px solid var(--ink-15)}.blok-baslik[data-astro-cid-32qtg2pn]{color:var(--claret);display:block;margin-bottom:.5rem}.egri-girdiler[data-astro-cid-32qtg2pn]{display:grid;grid-template-columns:repeat(auto-fit,minmax(74px,1fr));gap:.4rem}.egri-girdiler[data-astro-cid-32qtg2pn] input{width:100%}.fon-satir[data-astro-cid-32qtg2pn]{display:flex;align-items:flex-end;gap:1rem;margin-top:.6rem}.girdiler[data-astro-cid-32qtg2pn]{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;padding:.9rem 1rem .4rem}.tablo-kab[data-astro-cid-32qtg2pn]{padding:.6rem 1rem;overflow-x:auto}.tablo-kab[data-astro-cid-32qtg2pn] .eksi{color:var(--claret);font-variant-numeric:tabular-nums}.tablo-kab[data-astro-cid-32qtg2pn] .arti{color:var(--teal);font-variant-numeric:tabular-nums}.saglama[data-astro-cid-32qtg2pn]{border-top:1px solid var(--ink-15);padding:.8rem 1rem .4rem}.sag-satir[data-astro-cid-32qtg2pn]{display:flex;flex-wrap:wrap;gap:.5rem 2rem;margin-bottom:.6rem}.sag-satir[data-astro-cid-32qtg2pn] .etiket[data-astro-cid-32qtg2pn]{display:block;color:var(--ink-60);font-size:.58rem}.mini-not[data-astro-cid-32qtg2pn]{margin:.4rem 0 0;font-size:.84rem;font-style:italic;color:var(--ink-70);line-height:1.55}@media(max-width:640px){.girdiler[data-astro-cid-32qtg2pn]{grid-template-columns:repeat(2,1fr)}}
+</style></head> <body> <a class="atla" href="#icerik">İçeriğe geç</a> <header class="masthead" data-astro-cid-3ef6ksr2> <div class="sarici" data-astro-cid-3ef6ksr2> <div class="dateline etiket" data-astro-cid-3ef6ksr2>  <span class="gun-yer" data-astro-cid-3ef6ksr2><span data-bugun hidden data-astro-cid-3ef6ksr2></span><span class="orta" data-astro-cid-3ef6ksr2>İstanbul</span></span> <span class="son-yayinlar" data-astro-cid-3ef6ksr2> <a class="son-bulten" href="/bulten/2026-11-13/" data-astro-cid-3ef6ksr2> Son bülten · 13 Kasım 2026 </a> </span> </div> <div class="baslik-satir" data-astro-cid-3ef6ksr2> <a href="/" class="marka" aria-label="TTO Trading — ana sayfa" data-astro-cid-3ef6ksr2> <svg class="tto-isaret marka-isaret" viewBox="214 274 572 346" aria-hidden="true" focusable="false" data-astro-cid-tvrurpns> <line x1="321" y1="463" x2="321" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="424" y1="518" x2="424" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="543" y1="357" x2="543" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="668" y1="485" x2="668" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="470" y1="508.7" x2="470" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line><line x1="600" y1="437.5" x2="600" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line><line x1="722" y1="322.6" x2="722" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line> <path d="M264.5133568919622 387.26923076923083H365.3088210525277Q369.0643543309818 387.26923076923083 371.70667259092437 386.1712238182887Q374.3489908508669 385.0732168673466 376.3864166735349 384.00982477283105Q378.42384249620284 382.94643267831555 380.1755222590783 382.94643267831555Q382.5114517408566 382.94643267831555 383.786987571189 384.18423725352983Q385.0625234015214 385.4220418287441 385.8678259859578 388.79209905945197L394.333027061469 433.57036030568327Q394.8487847778373 435.8855405218828 394.13227325369814 437.3167612523987Q393.41576172955905 438.7479819829146 391.6071675681652 439.10139305943335Q389.91072097811127 439.45947588188574 388.56742771911934 438.7543744096139Q387.2241344601274 438.049272937342 386.2755288737468 436.0843873989697Q379.0536407074676 418.8134515649066 373.41589034543944 410.07865547336854Q367.7781399834113 401.3438593818305 362.3214716054857 398.31365833911474Q356.8648032275602 395.283457296399 350.18677113506084 395.283457296399H332.9446493739692V554.5362875338358Q332.9446493739692 556.8028829741793 334.4183017856692 558.1327898146119Q335.8919541973692 559.4626966550445 338.6966477772937 560.1186409746655L347.9124809122429 561.7652983915849Q351.47051628711273 562.7384699570158 351.47051628711273 565.5752783285884Q351.47051628711273 569.0 346.89970697140177 569.0H283.47981500525316Q281.1411042290811 569.0 280.02505495931166 568.0415332122133Q278.90900568954214 567.0830664244265 278.90900568954214 565.5752783285884Q278.90900568954214 562.7384699570158 282.46704106441194 561.7652983915849L291.68287419936115 560.1186409746655Q294.557661080912 559.4626966550445 295.99626684179884 558.1327898146119Q297.4348726026857 556.8028829741793 297.4348726026857 554.5362875338358V395.283457296399H280.1927508415941Q273.60816634313846 395.283457296399 268.16793926928835 398.50023585371673Q262.72771219543824 401.7170144110345 257.06634108012975 410.4820994922999Q251.4049699648212 419.2471845735653 244.10399310290813 436.0843873989697Q243.21510190720886 438.049272937342 241.84195145287623 438.7543744096139Q240.4688009985436 439.45947588188574 238.7723544084897 439.10139305943335Q237.00114277087582 438.7479819829146 236.31492023646402 437.3167612523987Q235.62869770205222 435.8855405218828 236.04649491518592 433.57036030568327L244.51169599069712 388.79209905945197Q245.31699857513348 385.4220418287441 246.60646800627 384.18423725352983Q247.89593743740653 382.94643267831555 250.20399971757658 382.94643267831555Q251.95965946791694 382.94643267831555 253.839403899888 384.00982477283105Q255.71914833185906 385.0732168673466 258.2822767688284 386.1712238182887Q260.8454052057977 387.26923076923083 264.5133568919622 387.26923076923083Z M434.9508568919622 387.26923076923083H535.7463210525277Q539.5018543309818 387.26923076923083 542.1441725909244 386.1712238182887Q544.7864908508669 385.0732168673466 546.8239166735349 384.00982477283105Q548.8613424962028 382.94643267831555 550.6130222590783 382.94643267831555Q552.9489517408566 382.94643267831555 554.224487571189 384.18423725352983Q555.5000234015214 385.4220418287441 556.3053259859578 388.79209905945197L564.770527061469 433.57036030568327Q565.2862847778373 435.8855405218828 564.5697732536983 437.3167612523987Q563.8532617295591 438.7479819829146 562.0446675681652 439.10139305943335Q560.3482209781113 439.45947588188574 559.0049277191193 438.7543744096139Q557.6616344601274 438.049272937342 556.7130288737468 436.0843873989697Q549.4911407074676 418.8134515649066 543.8533903454395 410.07865547336854Q538.2156399834113 401.3438593818305 532.7589716054857 398.31365833911474Q527.3023032275602 395.283457296399 520.6242711350608 395.283457296399H503.3821493739692V554.5362875338358Q503.3821493739692 556.8028829741793 504.8558017856692 558.1327898146119Q506.3294541973692 559.4626966550445 509.1341477772937 560.1186409746655L518.3499809122429 561.7652983915849Q521.9080162871128 562.7384699570158 521.9080162871128 565.5752783285884Q521.9080162871128 569.0 517.3372069714018 569.0H453.91731500525316Q451.5786042290811 569.0 450.46255495931166 568.0415332122133Q449.34650568954214 567.0830664244265 449.34650568954214 565.5752783285884Q449.34650568954214 562.7384699570158 452.90454106441194 561.7652983915849L462.12037419936115 560.1186409746655Q464.995161080912 559.4626966550445 466.43376684179884 558.1327898146119Q467.8723726026857 556.8028829741793 467.8723726026857 554.5362875338358V395.283457296399H450.6302508415941Q444.04566634313846 395.283457296399 438.60543926928835 398.50023585371673Q433.16521219543824 401.7170144110345 427.50384108012975 410.4820994922999Q421.8424699648212 419.2471845735653 414.54149310290813 436.0843873989697Q413.65260190720886 438.049272937342 412.27945145287623 438.7543744096139Q410.9063009985436 439.45947588188574 409.20985440848966 439.10139305943335Q407.43864277087584 438.7479819829146 406.752420236464 437.3167612523987Q406.0661977020522 435.8855405218828 406.4839949151859 433.57036030568327L414.94919599069715 388.79209905945197Q415.7544985751335 385.4220418287441 417.04396800627 384.18423725352983Q418.33343743740653 382.94643267831555 420.64149971757655 382.94643267831555Q422.39715946791694 382.94643267831555 424.276903899888 384.00982477283105Q426.15664833185906 385.0732168673466 428.7197767688284 386.1712238182887Q431.2829052057977 387.26923076923083 434.9508568919622 387.26923076923083Z M670.0099249976472 383.6388017458197Q690.4382683436672 383.6388017458197 707.0990273391362 390.6072315202238Q723.7597863346051 397.57566129462793 735.7482777719492 410.2809825321266Q747.7367692092935 422.9863037696252 754.2020477936424 440.3431412401394Q760.6673263779912 457.6999787106537 760.6673263779912 478.51815661411877Q760.6673263779912 499.2711380333998 754.2140708190855 516.5706936762883Q747.7608152601796 533.8702493191769 735.8290806515679 546.455872462346Q723.8973460429563 559.0414956055151 707.3436989293684 565.9155802871459Q690.7900518157805 572.7896649687766 670.653826673336 572.7896649687766Q650.3305402167069 572.7896649687766 633.7036184040435 565.8375905832957Q617.0766965913801 558.8855161978147 605.1017928756057 546.1474841824697Q593.1268891598313 533.4094521671248 586.6616105754824 515.9197815914926Q580.1963319911335 498.4301110158603 580.1963319911335 477.28966891016955Q580.1963319911335 456.73779573420495 586.6663747333491 439.5850067972385Q593.1364174755648 422.43221786027203 605.0849392674863 409.9095944846765Q617.0334610594078 397.38697110908106 633.5205602123438 390.5128864274504Q650.0076593652798 383.6388017458197 670.0099249976472 383.6388017458197ZM724.3195232508632 501.6529628355414Q724.3195232508632 483.8118575500826 721.0903217550904 467.4902417186039Q717.8611202593177 451.1686258871252 712.066546422107 437.45106030402417Q706.2719725848963 423.7334947209232 698.4092711878116 413.5686765919404Q690.546569790727 403.40385846295754 681.2429651379441 397.78557402524166Q671.9393604851614 392.16728958752583 661.7120868553981 392.16728958752583Q648.2373973273386 392.16728958752583 638.1003742385476 399.43499144007313Q627.9633511497567 406.70269329262044 622.3324881690339 420.5330491157858Q616.7016251883111 434.36340493895113 616.7016251883111 454.1212883221272Q616.7016251883111 472.12508390804464 619.9124813014283 488.5746892684032Q623.1233374145455 505.0242946287617 628.9183430461428 518.8256271502111Q634.7133486777401 532.6269596716604 642.541349303246 542.8567675619494Q650.3693499287518 553.0865754522383 659.7012535775295 558.7375706678006Q669.0331572263071 564.3885658833628 679.2285836669975 564.3885658833628Q692.9400367846067 564.3885658833628 703.0623485989724 557.1540066030486Q713.1846604133383 549.9194473227343 718.7520918321007 535.9288229872293Q724.3195232508632 521.9381986517244 724.3195232508632 501.6529628355414Z" class="harf" data-astro-cid-tvrurpns></path> <path d="M230.0,533.0 C245.2,520.3 288.7,460.5 321.0,457.0 C353.3,453.5 387.0,529.7 424.0,512.0 C461.0,494.3 502.3,356.5 543.0,351.0 C583.7,345.5 630.2,476.0 668.0,479.0 C705.8,482.0 753.0,387.3 770.0,369.0" class="dalga" data-astro-cid-tvrurpns></path> <path d="M232.0,564.0 C242.7,562.2 274.8,557.4 296.1,553.2 C317.5,549.0 338.9,544.5 360.2,539.0 C381.6,533.5 403.0,527.5 424.4,520.2 C445.8,513.0 467.1,505.1 488.5,495.6 C509.9,486.0 531.2,475.6 552.6,463.1 C574.0,450.6 595.4,436.9 616.8,420.4 C638.1,403.9 659.5,385.8 680.9,364.1 C702.2,342.4 734.3,302.3 745.0,290.0" class="egri" data-astro-cid-tvrurpns></path> <line x1="230" y1="603" x2="770" y2="603" class="eksen" data-astro-cid-tvrurpns></line> <line x1="230" y1="584" x2="230" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="320" y1="584" x2="320" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="410" y1="584" x2="410" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="500" y1="584" x2="500" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="590" y1="584" x2="590" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="680" y1="584" x2="680" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="770" y1="584" x2="770" y2="603" class="cetvel" data-astro-cid-tvrurpns></line> </svg>  <span class="marka-yazi" data-astro-cid-3ef6ksr2> <span class="marka-ad" lang="en" data-astro-cid-3ef6ksr2>TTO Trading</span> <span class="marka-alt" data-astro-cid-3ef6ksr2>Türkiye makro &amp; piyasa araştırmaları</span> </span> </a> <nav aria-label="Bölümler" data-astro-cid-3ef6ksr2> <div class="nav-acilir" data-acilir data-astro-cid-3ef6ksr2> <button type="button" class="nav-link nav-dugme" aria-expanded="false" aria-controls="menu-bulten" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>01</span> Bülten <span class="nav-ok" aria-hidden="true" data-astro-cid-3ef6ksr2></span> </button> <ul class="nav-menu" id="menu-bulten" data-astro-cid-3ef6ksr2> <li data-astro-cid-3ef6ksr2> <a href="/bulten/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Günlük</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Hafta içi her sabah</span> </a> </li><li data-astro-cid-3ef6ksr2> <a href="/bulten/haftalik/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Haftalık</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Pazar akşamı, haftaya bakış</span> </a> </li><li data-astro-cid-3ef6ksr2> <a href="/bulten/aylik/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Aylık</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Ayın ilk iş günü akşamı</span> </a> </li> </ul> </div><a href="/tradeler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>02</span> Tradeler </a><a href="/analiz/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>03</span> Analiz </a><a href="/projeler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>04</span> Projeler </a><a href="/grafikler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>05</span> Grafikler </a><a href="/arastirma/" class="nav-link aktif" aria-current="page" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>06</span> Dersler </a><a href="/indikatorler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>07</span> İndikatörler </a><a href="/hakkinda/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>08</span> Hakkında </a><a href="/arama/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>09</span> Arama </a> </nav> <noscript> <style>.nav-acilir:focus-within .nav-menu { display: block; }</style> </noscript> </div> </div> </header> <script type="module" src="/_astro/Header.astro_astro_type_script_index_0_lang.sWAGpYzy.js"></script>  <main class="sarici" id="icerik" tabindex="-1">  <article data-astro-cid-mrksnbf2> <header class="makale-baslik yuksel" data-astro-cid-mrksnbf2> <p class="kicker etiket" data-astro-cid-mrksnbf2> Ders  · <a href="/arastirma/#faiz-masasi" data-astro-cid-mrksnbf2>Faiz masası — eğriden pozisyona</a>  · tl-faiz · dibs · kagit · <span lang="en">ois</span> </p> <h1 data-astro-cid-mrksnbf2>Kâğıt: risk bütçesi, araç seçimi ve switch</h1> <p class="ozet" data-astro-cid-mrksnbf2>Durasyonun boyutunu stres bütçesinden çıkarmak, doğru aracı seçmek ve bir kâğıttan ötekine geçişi (switch) doğru ölçekle kurmak.</p> <div class="makale-meta" data-astro-cid-mrksnbf2> <span data-astro-cid-mrksnbf2><b data-astro-cid-mrksnbf2>Yayın</b> 6 Kasım 2026</span>      </div>  <details class="seri-kunye" data-astro-cid-rqz27vut> <summary data-astro-cid-rqz27vut> <span class="etiket" data-astro-cid-rqz27vut>Seri</span> <a href="/arastirma/seri/kagit/" data-astro-cid-rqz27vut>Kâğıt ve TRY OIS: görüşten pozisyona</a> <span class="seri-konum" data-astro-cid-rqz27vut>Bölüm 2 / 12</span> <span class="seri-ac" data-astro-cid-rqz27vut>bütün bölümler</span> </summary> <ol class="seri-liste" data-astro-cid-rqz27vut> <li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>01</span> <a class="seri-ad" href="/arastirma/kagit-getiri/" data-astro-cid-rqz27vut>Kâğıt: getirinin dört parçası ve durasyon kararı</a> <span class="seri-dk" data-astro-cid-rqz27vut>23 dk</span> </li><li class="simdi" data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>02</span> <span class="seri-ad" data-astro-cid-rqz27vut>Kâğıt: risk bütçesi, araç seçimi ve switch</span> <span class="seri-dk" data-astro-cid-rqz27vut>22 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>03</span> <a class="seri-ad" href="/arastirma/kagit-ois/" data-astro-cid-rqz27vut>OIS outright: sabit faizi almak ya da ödemek</a> <span class="seri-dk" data-astro-cid-rqz27vut>29 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>04</span> <a class="seri-ad" href="/arastirma/kagit-tasima/" data-astro-cid-rqz27vut>Taşıma ve roll-down: tanım, harita ve gerçekleşme</a> <span class="seri-dk" data-astro-cid-rqz27vut>21 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>05</span> <a class="seri-ad" href="/arastirma/kagit-tasima-kural/" data-astro-cid-rqz27vut>Taşımadan para kazanmak: ne çalıştı, ne çalışmadı</a> <span class="seri-dk" data-astro-cid-rqz27vut>20 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>06</span> <a class="seri-ad" href="/arastirma/kagit-spread/" data-astro-cid-rqz27vut>Spread: eğime pozisyon almak</a> <span class="seri-dk" data-astro-cid-rqz27vut>23 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>07</span> <a class="seri-ad" href="/arastirma/kagit-spread-rejim/" data-astro-cid-rqz27vut>Spread: rejimler ve beklentiden spread&#39;e</a> <span class="seri-dk" data-astro-cid-rqz27vut>21 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>08</span> <a class="seri-ad" href="/arastirma/kagit-fly/" data-astro-cid-rqz27vut>Fly: yön, gerekçe ve ağırlık</a> <span class="seri-dk" data-astro-cid-rqz27vut>33 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>09</span> <a class="seri-ad" href="/arastirma/kagit-fly-harita/" data-astro-cid-rqz27vut>Fly: taşıma haritası, rejimler ve beş kart</a> <span class="seri-dk" data-astro-cid-rqz27vut>36 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>10</span> <a class="seri-ad" href="/arastirma/kagit-fly-risk/" data-astro-cid-rqz27vut>Fly: OIS bileti, konveksite, kalıcılık ve icra</a> <span class="seri-dk" data-astro-cid-rqz27vut>37 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>11</span> <a class="seri-ad" href="/arastirma/kagit-oyun/" data-astro-cid-rqz27vut>Oyun kitabı: teşhis, senaryo haritası ve on beş kart</a> <span class="seri-dk" data-astro-cid-rqz27vut>35 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>12</span> <a class="seri-ad" href="/arastirma/kagit-oyun-defter/" data-astro-cid-rqz27vut>Oyun kitabı: taşıma defteri, birleştirme ve vakalar</a> <span class="seri-dk" data-astro-cid-rqz27vut>22 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>Ek</span> <a class="seri-ad" href="/arastirma/kagit-ek/" data-astro-cid-rqz27vut>Kâğıt ve OIS serisinin eki: veri, çıpalar ve şekillerin hesabı</a> <span class="seri-dk" data-astro-cid-rqz27vut>11 dk</span> </li> </ol> </details>  <p class="kaynak-satiri" data-astro-cid-mrksnbf2><span class="etiket" data-astro-cid-mrksnbf2>Kaynak</span> TCMB DİBS gösterge değerleri (sıfır kuponlu eğri, 2013–2026) · TLREF · PPK karar arşivi · Hazine ihale sonuçları · temsili TRY OIS eğrisi. Ölçümlerin yöntemi ve kaynakları serinin ekinde.</p> <p class="kapsam-satiri" data-astro-cid-mrksnbf2><span class="etiket" data-astro-cid-mrksnbf2>Kapsam</span> Durasyonun ne kadarı taşınır (oynaklık ve stres bütçesi, kayıpların asimetrisi, hedge ve stop), durasyon kâğıttan mı OIS&#39;ten mi asset swap&#39;tan mı alınır, switch&#39;in üç ölçeklemesi ve P&amp;L&#39;i, altı switch türü ve zamanlaması, icra, likidite ve tipik hatalar; karar çerçevesi ve doldurulmuş bir işlem dosyası.</p> <div class="ders-kunye" aria-label="Ders künyesi" data-astro-cid-vyjx7skq> <div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>22 dk</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Okuma</span> <span class="kunye-alt" data-astro-cid-vyjx7skq>4,4 bin kelime</span> </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>5</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Alt başlık</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>1</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Hesap aracı</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>1</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Pratik bloğu</span> <span class="kunye-alt" data-astro-cid-vyjx7skq>4 çözümlü alıştırma</span> </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>12</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Tablo</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>Orta</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Seviye</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>06 Kas 2026</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Son güncelleme</span>  </div> </div>     </header> <nav class="icindekiler yuksel" id="icindekiler" hidden aria-label="İçindekiler" data-astro-cid-mrksnbf2> <span class="etiket ic-baslik" data-astro-cid-mrksnbf2>İçindekiler</span> <ol id="icindekiler-liste" data-astro-cid-mrksnbf2></ol> </nav>   <div class="prose yuksel" style="--d: 120ms" data-deger="sabit" data-astro-cid-mrksnbf2>  <div class="masa"><span class="etiket">Bu bölüm neyi çözer</span><p>Durasyon kararı “al” ya da “alma” diye verilmez, “ne kadar” ve “nerede” sorularıyla birlikte verilir. Bu bölüm boyutu oynaklık ve stres bütçesinden çıkarır, durasyonun hangi araçla (kâğıt, OIS, asset swap) alınacağını ayırır, sonra bir kâğıttan ötekine geçişi — switch’i — üç ölçeklemesi ve altı türüyle kurar. Bir çeyreklik karar vakası ve doldurulmuş bir işlem dosyasıyla kapanır.</p><p><strong>Kısaca</strong></p><ul>
+<li>Boyutu iki ölçü belirler: oynaklık bütçesi (tipik bir ay) ve stres bütçesi (kötü bir ay). Limit stresle, günlük yönetim oynaklıkla yapılır; kayıplar ralliden büyük gelir.</li>
+<li>Durasyon kâğıtta fonlama ve likidite, OIS’te teminat ve TLREF bazı, asset swap’ta swap spreadi taşır: aynı görüşün üç aracı üç ayrı risk bırakır.</li>
+<li>Switch’in üç ölçeklemesi vardır: nominal, DV01 ve beta. DV01-nötr switch paralel kaymaya nötrdür, kısa uç önde hareket ederse değildir.</li>
+<li>Altı switch türünün (eğri, göreli değer, gösterge ve ihale, başabaş enflasyon, sabit–değişken, roll) her birinin kendi zamanlama kuralı vardır.</li>
+<li>Gösterge dışı kâğıdın makası taşımayı yiyebilir: likiditeyi işlem dosyasına yazın.</li>
+</ul></div>
+<p><a href="/arastirma/kagit-getiri/">1. bölüm</a> durasyonun eşiğini ve gerekçesini kurdu; burada boyut, araç ve geçiş gelir.
+Sayılar aynı fotoğraftır: kâğıt eğrisi 22.09.2026, fonlama 21.09.2026 TLREF fixingi.</p>
+<h2 id="21--ne-kadar-durasyon-risk-bütçesi-stres-ve-hedge">2.1 · Ne kadar durasyon: risk bütçesi, stres ve hedge</h2>
+<p>Durasyon kararı “al” ya da “alma” diye verilmez; <strong>ne kadar</strong> sorusuyla birlikte verilir.
+Boyutu belirleyen iki ölçü vardır ve ikisi farklı soruları cevaplar:</p>
+<ul>
+<li><strong>Oynaklık bütçesi:</strong> tipik bir ayda ne kadar kaybedebilirim? Pozisyonun DV01’i ×
+vadenin aylık getiri oynaklığı. Günlük yönetim, stop mesafesi ve performans ölçümü
+bununla yapılır.</li>
+<li><strong>Stres bütçesi:</strong> kötü bir ayda ne kadar kaybedebilirim? Pozisyonun DV01’i × kötü bir
+ayın getiri hareketi. Limit, sermaye ve “bu pozisyon masayı batırır mı” sorusu bununla
+cevaplanır.</li>
+</ul>
+<p>2013–2026 ay sonu değişimlerinden stres kalibrasyonu:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Vade</th><th>En büyük aylık yükseliş</th><th>En büyük aylık düşüş</th><th>Mutlak değişimin 95. yüzdeliği</th><th>Son 36 ayda 95. yüzdelik</th></tr></thead><tbody><tr><td>2 yıl</td><td>+783 bp (03.2025)</td><td>−819 bp (08.2022)</td><td>547 bp</td><td>619 bp</td></tr><tr><td>5 yıl</td><td>+630 bp (03.2021)</td><td>−668 bp (05.2023)</td><td>496 bp</td><td>499 bp</td></tr><tr><td>7 yıl</td><td>+771 bp (06.2023)</td><td>−666 bp (05.2023)</td><td>456 bp</td><td>358 bp</td></tr></tbody></table>
+<p>Kâğıt sahibi için kayıp faizin <strong>yükselmesinden</strong> gelir; stres satırı, en büyük aylık
+yükseliştir. Bir masa aylık stres kaybını 50 mn TL ile sınırlıyorsa taşıyabileceği DV01
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>50</mn><mtext> mn</mtext><mi mathvariant="normal">/</mi><mtext>stres (bp)</mtext></mrow><annotation encoding="application/x-tex">50\ \text{mn} / \text{stres (bp)}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">50</span><span class="mspace"> </span><span class="mord text"><span class="mord">mn</span></span><span class="mord">/</span><span class="mord text"><span class="mord">stres (bp)</span></span></span></span></span>‘dir:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Vade</th><th>Stres = en büyük aylık yükseliş</th><th>İzin verilen DV01</th><th>Stres = son 36 ayın 95. yüzdeliği</th><th>İzin verilen DV01</th></tr></thead><tbody><tr><td>2 yıl</td><td>783 bp</td><td>≈63.900 TL/bp</td><td>619 bp</td><td>≈80.800 TL/bp</td></tr><tr><td>5 yıl</td><td>630 bp</td><td>≈79.400 TL/bp</td><td>499 bp</td><td>≈100.200 TL/bp</td></tr><tr><td>7 yıl</td><td>771 bp</td><td>≈64.900 TL/bp</td><td>358 bp</td><td>≈139.700 TL/bp</td></tr></tbody></table>
+<p>İki sütun arasındaki fark bir kalibrasyon kararıdır: 7 yıllıkta son üç yılın yüzdeliği
+tarihsel en kötü ayın yarısından azını veriyor ve izin verilen DV01’i iki katından
+fazlasına çıkarıyor. Sakin bir dönemin oynaklığıyla kurulan limit, bir sonraki şokta ilk
+aşılan limittir. Profesyonel pratik ikisini birlikte kullanmaktır: günlük boyutu oynaklık
+bütçesi, tavanı stres bütçesi belirler.</p>
+<p>Sıfır kuponlu vekille DV01’i nominale çevirmek için: 100 mn TL nominal başına DV01 2
+yıllıkta 7.225, 5 yıllıkta 7.965, 7 yıllıkta 7.090 TL/bp (fiyat vadeyle düştüğü için
+nominal başına DV01 vadeler arasında birbirine yakın çıkıyor). Kuponlu kâğıtta aynı hesap
+kâğıdın kendi fiyatı ve durasyonuyla yapılır.</p>
+<h3 id="kayıplar-ralliden-büyük-gelir">Kayıplar ralliden büyük gelir</h3>
+<p>Aynı dağılımın iki kuyruğu simetrik değil:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th>2 yıl</th><th>5 yıl</th><th>7 yıl</th></tr></thead><tbody><tr><td>200 bp’yi aşan aylık yükseliş · düşüş (ay sayısı)</td><td>29 · 21</td><td>18 · 16</td><td>14 · 12</td></tr><tr><td>En büyük on yükselişin ortalaması · en büyük on düşüşün</td><td>+609 · −509 bp</td><td>+521 · −419 bp</td><td>+496 · −390 bp</td></tr><tr><td>Çarpıklık</td><td>0,21</td><td>0,28</td><td>0,57</td></tr></tbody></table>
+<p>Büyük satış ayları büyük ralli aylarından daha sık ve en büyük on satış ayı, en büyük on
+ralli ayından ortalama 100 bp civarında daha büyük. Örneklem, faizin %6’dan %45’e çıktığı
+bir dönemi kapsıyor — yukarı yönlü sürüklenme bu asimetrinin bir kısmıdır. Ama sonuç
+durasyon sahibi için aynıdır: <strong>stres, rallinin aynası değildir</strong>; stop ve limit, kazanç
+hedefinden daha sıkı kalibre edilir.</p>
+<h3 id="hedge-durasyonu-satmanın-üç-yolu-ve-her-birinin-artığı">Hedge: durasyonu satmanın üç yolu ve her birinin artığı</h3>
+<p>Durasyonu azaltmak için kâğıdı satmak her zaman en iyi yol değildir (likidite, muhasebe
+sınıfı, gösterge ağırlığı). Hedge üç yoldan yapılır ve her biri geride başka bir risk
+bırakır:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Hedge</th><th>Ne yapılır</th><th>Geride kalan risk</th></tr></thead><tbody><tr><td><strong>Pay OIS</strong></td><td>kâğıdın DV01’i kadar sabit faiz ödenir</td><td>kâğıdın swap’a göre primi (ASW spreadi) ve TLREF–politika bazı</td></tr><tr><td><strong>Başka bir kâğıdı açığa satmak ya da repo ile ödünç alıp satmak</strong></td><td>aynı ya da komşu vadede kâğıt satılır</td><td>iki kâğıdın göreli fiyatı (eğri ve kâğıda özgü risk), repo maliyeti</td></tr><tr><td><strong>Değişken faizliye geçmek</strong></td><td>sabit kâğıt satılıp değişken faizli alınır</td><td>değişken kâğıdın spreadi, likidite</td></tr></tbody></table>
+<p>Hedge oranı DV01 eşitliğiyle başlar ama orada bitmez: hedge enstrümanı hedge edilen
+kâğıttan farklı bir vadedeyse, iki getirinin birlikte hareket etme oranı (<a href="/arastirma/kagit-spread/#63--spreadi-kurmak-dv01-beta-ve-pca--hedge-oran%C4%B1n%C4%B1n-y%C3%B6n%C3%BC">§6.3</a>’teki beta)
+hesaba girer. Aynı vadede pay OIS en temiz hedge’dir ama <strong>asset swap pozisyonuna</strong> dönüşür:
+artık faiz riski değil, kâğıdın swap’a göre ucuzlama–pahalılaşma riski taşınır (<a href="#22--durasyonu-hangi-ara%C3%A7la-k%C3%A2%C4%9F%C4%B1t-m%C4%B1-ois-mi-asset-swap-m%C4%B1">§2.2</a>).</p>
+<h3 id="stop-üç-tür-üç-soru">Stop: üç tür, üç soru</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Stop türü</th><th>Neye bağlanır</th><th>Ne zaman doğru araç</th></tr></thead><tbody><tr><td><strong>Gerekçe stopu</strong></td><td>görüşü geçersizleştiren olay (rehberlik, veri, rejim)</td><td>makro durasyon kararları</td></tr><tr><td><strong>Seviye stopu</strong></td><td>getirinin belirli bir seviyeyi aşması</td><td>olay bekleyen taktik pozisyonlar</td></tr><tr><td><strong>Zaman stopu</strong></td><td>beklenen hareketin belirli bir sürede gelmemesi</td><td>negatif taşımalı pozisyonlar — her gün beklemenin bedeli ödenir</td></tr></tbody></table>
+<p>Negatif taşımalı eğride zaman stopu özellikle önemlidir: 5 yıllık kâğıdın üç aylık taşıma</p>
+<ul>
+<li>roll’u <span class="isaret-koru">−%3,13</span>; görüşün gerçekleşmesi altı ay gecikirse, doğru görüş bile pozisyonu
+kazandırmayabilir.</li>
+</ul>
+<h2 id="22--durasyonu-hangi-araçla-kâğıt-mı-ois-mi-asset-swap-mı">2.2 · Durasyonu hangi araçla: kâğıt mı, OIS mi, asset swap mı</h2>
+<p>Aynı durasyon üç ayrı yoldan alınabilir ve üçü aynı şey değildir:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th>Kâğıt (fonlanmış)</th><th>OIS receive (fonlanmamış)</th><th>Asset swap (kâğıt + pay OIS)</th></tr></thead><tbody><tr><td>Ne alıyorsunuz</td><td>faiz riski + kâğıdın swap’a göre primi</td><td>yalnız faiz riski</td><td>yalnız kâğıdın swap’a göre primi (ASW spreadi)</td></tr><tr><td>Bilanço</td><td>tam nominal; repo ya da mevduatla fonlanır</td><td>nominal el değiştirmez; teminat (CSA)</td><td>tam nominal</td></tr><tr><td>Taşıma</td><td>kâğıt getirisi − fonlama (repo)</td><td>sabit oran − gerçekleşen TLREF</td><td>ASW spreadi + fonlama bazı</td></tr><tr><td>Likidite</td><td>gösterge kâğıtlarda iyi, eskilerde zayıf</td><td>1–2 yılda iyi, 5 yıl ötesinde talep üzerine</td><td>iki bacağın en zayıfı kadar</td></tr><tr><td>Özgül risk</td><td>ihale arzı, gösterge değişimi, repo</td><td>TLREF–politika bazı (<a href="/arastirma/kagit-ois/#34--y%C3%BCzen-baca%C4%9F%C4%B1n-riski-tlrefpolitika-baz%C4%B1">§3.4</a>)</td><td>ASW spreadinin kendisi</td></tr><tr><td>Muhasebe</td><td>defter sınıfına göre (alım-satım, gerçeğe uygun değer)</td><td>türev; korunma muhasebesi isteğe bağlı</td><td>paket olarak ya da ayrı</td></tr></tbody></table>
+<p>Seçimi üç soru belirler:</p>
+<ol>
+<li><strong>Görüşünüz faiz mi, kâğıdın primi mi?</strong> Yalnız faiz görüşü varsa OIS en temizidir;
+kâğıt alırsanız ikinci bir görüşü (swap spreadini) istemeden eklersiniz. Kâğıdın
+swap’a göre ucuzlamasına (ASW spreadinin açılmasına) görüşünüz varsa, faiz riskini OIS
+ile atan asset swap o görüşün saf hâlidir.</li>
+<li><strong>Bilançonuz nerede kısıtlı?</strong> Bilanço ve fonlama kısıtlı masalar durasyonu OIS’ten
+alır; teminat ve karşı taraf limiti kısıtlı masalar kâğıttan.</li>
+<li><strong>Hangi baz riskini taşıyabilirsiniz?</strong> Kâğıt, repo fonlamasının TLREF’ten
+ayrışmasını; OIS, TLREF’in politika faizinden ayrışmasını taşır. <a href="/arastirma/kagit-ois/#34--y%C3%BCzen-baca%C4%9F%C4%B1n-riski-tlrefpolitika-baz%C4%B1">§3.4</a>’te göreceğiniz
+gibi bu ikinci baz Türkiye’de aylarca 300 bp’ye ulaşabiliyor.</li>
+</ol>
+<p>Kural: <strong>aynı durasyonu kâğıttan almakla OIS’ten almak arasındaki fark tek bir
+sayıdır — swap spreadi.</strong> Durasyon kararından ayrı bir karardır; ikisini birlikte vermek iki
+görüşü tek pozisyona gömmektir ve raporlamada hangisinin çalıştığı hiç öğrenilemez.</p>
+<h2 id="23--switchin-anatomisi-üç-ölçekleme-bir-pl">2.3 · Switch’in anatomisi: üç ölçekleme, bir P&amp;L</h2>
+<p><strong>Switch</strong>, bir kâğıdı satıp başka bir kâğıdı almaktır. Kâğıt masasında en sık yapılan
+işlemdir, çünkü bir portföy yöneticisi çoğu zaman “durasyon alayım mı” değil “bu
+durasyonu nerede tutayım” sorusunu cevaplar. Satılan kâğıt <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span>, alınan <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span> olsun. Switch’in
+P&amp;L’i:</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>P&amp;L</mtext><mtext>  </mtext><mo>≈</mo><mtext>  </mtext><mo>−</mo><mtext> </mtext><msub><mtext>DV01</mtext><mi>B</mi></msub><mtext> </mtext><mi mathvariant="normal">Δ</mi><msub><mi>y</mi><mi>B</mi></msub><mtext>  </mtext><mo>+</mo><mtext>  </mtext><msub><mtext>DV01</mtext><mi>A</mi></msub><mtext> </mtext><mi mathvariant="normal">Δ</mi><msub><mi>y</mi><mi>A</mi></msub><mtext>  </mtext><mo>+</mo><mtext>  </mtext><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">[</mo><mo stretchy="false">(</mo><mrow><mtext>ta</mtext><mover accent="true"><mtext>s</mtext><mo>¸</mo></mover><mtext>ıma+roll</mtext></mrow><msub><mo stretchy="false">)</mo><mi>B</mi></msub><mo>−</mo><mo stretchy="false">(</mo><mrow><mtext>ta</mtext><mover accent="true"><mtext>s</mtext><mo>¸</mo></mover><mtext>ıma+roll</mtext></mrow><msub><mo stretchy="false">)</mo><mi>A</mi></msub><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">]</mo></mrow><annotation encoding="application/x-tex">\text{P\&amp;L} \;\approx\; -\,\text{DV01}_B\,\Delta y_B \;+\; \text{DV01}_A\,\Delta y_A
+\;+\; \big[(\text{taşıma+roll})_B - (\text{taşıma+roll})_A\big]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">P&amp;L</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord">−</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord text"><span class="mord">DV01</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">Δ</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord text"><span class="mord">DV01</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">Δ</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.2em;vertical-align:-0.35em;"></span><span class="mord"><span class="delimsizing size1">[</span></span><span class="mopen">(</span><span class="mord text"><span class="mord">ta</span><span class="mord accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord">s</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.2222em;"><span class="mord">¸</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1701em;"><span></span></span></span></span></span><span class="mord latin_fallback">ı</span><span class="mord">ma+roll</span></span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.2em;vertical-align:-0.35em;"></span><span class="mopen">(</span><span class="mord text"><span class="mord">ta</span><span class="mord accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord">s</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.2222em;"><span class="mord">¸</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1701em;"><span></span></span></span></span></span><span class="mord latin_fallback">ı</span><span class="mord">ma+roll</span></span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="delimsizing size1">]</span></span></span></span></span></span>
+<p>İlk iki terim fiyat, son terim beklemenin farkıdır. <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span>‘nin nominali üç kuraldan biriyle
+seçilir ve her kural <strong>başka bir riski bilerek</strong> taşır:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Ölçekleme</th><th><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>B</mi></msub></mrow><annotation encoding="application/x-tex">N_B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></th><th>Nötr olduğu</th><th>Bilerek taşıdığı</th></tr></thead><tbody><tr><td><strong>DV01-nötr</strong></td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>A</mi></msub><mo>⋅</mo><msub><mtext>DV01</mtext><mi>A</mi></msub><mi mathvariant="normal">/</mi><msub><mtext>DV01</mtext><mi>B</mi></msub></mrow><annotation encoding="application/x-tex">N_A \cdot \text{DV01}_A / \text{DV01}_B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord text"><span class="mord">DV01</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/</span><span class="mord"><span class="mord text"><span class="mord">DV01</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></td><td>paralel kayma</td><td>eğim (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>B</mi></msub><mo>−</mo><msub><mi>y</mi><mi>A</mi></msub></mrow><annotation encoding="application/x-tex">y_B - y_A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>)</td></tr><tr><td><strong>Nakit-nötr</strong></td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>A</mi></msub><mo>⋅</mo><msub><mi>P</mi><mi>A</mi></msub><mi mathvariant="normal">/</mi><msub><mi>P</mi><mi>B</mi></msub></mrow><annotation encoding="application/x-tex">N_A \cdot P_A / P_B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></td><td>fonlama ihtiyacı</td><td>eğim <strong>ve</strong> durasyon farkı</td></tr><tr><td><strong>Beta-ağırlıklı</strong></td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>A</mi></msub><mo>⋅</mo><msub><mtext>DV01</mtext><mi>A</mi></msub><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mi>β</mi><mtext> </mtext><msub><mtext>DV01</mtext><mi>B</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">N_A \cdot \text{DV01}_A / (\beta\,\text{DV01}_B)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord text"><span class="mord">DV01</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord text"><span class="mord">DV01</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></td><td>ortalama seviye hareketi</td><td>eğimin seviyeden bağımsız kısmı</td></tr></tbody></table>
+<p>Burada <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span></span></span></span>, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span>‘nin getirisinin <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span>‘nınkine regresyon eğimidir (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><msub><mi>y</mi><mi>B</mi></msub><mo>≈</mo><mi>β</mi><mtext> </mtext><mi mathvariant="normal">Δ</mi><msub><mi>y</mi><mi>A</mi></msub></mrow><annotation encoding="application/x-tex">\Delta y_B \approx
+\beta\,\Delta y_A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord">Δ</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0528em;">β</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">Δ</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">A</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>). <strong>Türkiye’de paralel kayma nadirdir</strong> (<a href="/arastirma/kagit-spread/#61--e%C4%9Frinin-%C3%BC%C3%A7-hareketi-seviye-e%C4%9Fim-b%C3%BCk%C3%BCm">§6.1</a>–<a href="/arastirma/kagit-spread/#63--spreadi-kurmak-dv01-beta-ve-pca--hedge-oran%C4%B1n%C4%B1n-y%C3%B6n%C3%BC">§6.3</a>): 2013–2026 ay sonu
+değişimlerinde 5 yıllık getiri, 2 yıllığın hareketinin ortalama <strong>0,69</strong>’u, 7 yıllık
+<strong>0,57</strong>’si kadar hareket ediyor. DV01-nötr bir uzatma switch’i (2y sat, 5y al) bu yüzden
+paralel kaymaya nötrdür ama tipik Türkiye hareketine değil: kısa uç düştüğünde 2 yıllık
+5 yıllıktan fazla ralli eder ve switch, “doğru” yönde olsa bile kaybeder. Beta-ağırlıklı
+ölçekleme bu ortalama ilişkiyi nötrler; karşılığında paralel kaymaya karşı açık kalır.
+Beta’nın kendisinin de bir seçim olduğu — regresyonun yönüne ve döneme göre değiştiği —
+<a href="/arastirma/kagit-spread/#63--spreadi-kurmak-dv01-beta-ve-pca--hedge-oran%C4%B1n%C4%B1n-y%C3%B6n%C3%BC">§6.3</a>’te sayıyla gösteriliyor.</p>
+<h3 id="uçtan-uca-örnek-2-yıllıktan-5-yıllığa-geçmek">Uçtan uca örnek: 2 yıllıktan 5 yıllığa geçmek</h3>
+<p>22.09.2026 eğrisiyle, 100 mn TL nominal 2 yıllık sıfır kuponlu kâğıt satılıp 5 yıllık
+alınıyor (sıfır kuponlu vekil: fiyat <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mtext> </mtext><mo stretchy="false">(</mo><mn>1</mn><mo>+</mo><mi>y</mi><msup><mo stretchy="false">)</mo><mrow><mo>−</mo><mi>T</mi></mrow></msup></mrow><annotation encoding="application/x-tex">100\,(1+y)^{-T}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">100</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0913em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8413em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight" style="margin-right:0.1389em;">T</span></span></span></span></span></span></span></span></span></span></span></span>; kuponlu kâğıtta nominal ile
+piyasa değerinin oranı farklıdır, DV01 mantığı aynıdır). 2 yıllık: fiyat 50,72, mod.
+durasyon 1,42, DV01 <strong>7.225 TL/bp</strong>. 5 yıllık: fiyat 21,64, mod. durasyon 3,68.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Ölçekleme</th><th>5y nominali</th><th>5y DV01</th><th>Net DV01</th><th>Nakit</th><th>Taşıma+roll farkı (3 ay)</th><th>Başabaş</th></tr></thead><tbody><tr><td>DV01-nötr</td><td>90,7 mn</td><td>7.225</td><td>0</td><td>31,1 mn serbest</td><td>−0,42 mn</td><td>−58 bp</td></tr><tr><td>Beta-ağırlıklı (<span class="harf-koru">β</span> 0,69)</td><td>131,5 mn</td><td>10.471</td><td>+3.246</td><td>22,3 mn serbest</td><td>−0,70 mn</td><td>−67 bp</td></tr><tr><td>Nakit-nötr</td><td>234,4 mn</td><td>18.673</td><td>+11.448</td><td>0</td><td>−1,39 mn</td><td>−75 bp</td></tr></tbody></table>
+<p>Okuma:</p>
+<ul>
+<li><strong>DV01-nötr switch</strong> saf bir eğim işlemidir: 2s5s’in (5 yıllık − 2 yıllık) daralmasına
+oynar. Eğri sabit kalırsa üç ayda 0,42 mn TL kaybeder, çünkü 5 yıllığın taşıma + roll’u
+2 yıllığınkinden kötüdür. Başabaş: 2s5s üç ayda <strong>58 bp</strong> daralmalı.</li>
+<li><strong>Beta-ağırlıklı switch</strong> ortalama bir Türkiye hareketinde (kısa uç önde) nötrdür ama
+3.246 TL/bp net durasyon taşır — tam paralel bir kaymada yaklaşık 45 mn TL nominal 2
+yıllık kâğıdın durasyonu kadar yön pozisyonu.</li>
+<li><strong>Nakit-nötr switch</strong> bir portföyün vadesini uzatmanın doğal hâlidir; DV01’i iki buçuk
+katından fazla büyütür (7.225’ten 18.673 TL/bp’ye; net +11.448). Bu artık bir switch
+değil, üstüne bir switch eklenmiş durasyon alımıdır ve öyle raporlanmalıdır — <a href="/arastirma/kagit-getiri/#13--ne-zaman-durasyon-al%C4%B1n%C4%B1r-forward-e%C5%9Fi%C4%9Fi-ve-onu-a%C5%9Fman%C4%B1n-gerek%C3%A7eleri">§1.3</a>’ün
+diliyle, aktif durasyonu değiştiren bir işlemdir.</li>
+</ul>
+<p>Aşağıdaki araç bu hesabı her vade çifti ve her eğri için yapar. Eğri noktaları varsayılan
+olarak 22.09.2026 eğrisidir; kendi kotasyonlarınızı girin. Eğri, 5. bölümdeki
+barbell–bullet aracına da akar.</p>
+<div class="hesap" id="kagit-switch" data-astro-cid-32qtg2pn> <div class="hesap-ust" data-astro-cid-32qtg2pn> <span class="etiket" data-astro-cid-32qtg2pn>Hesap Aracı</span> <span class="hesap-ad" data-astro-cid-32qtg2pn>Kâğıt Switch — Ölçekleme, Taşıma ve Başabaş</span> </div> <p class="hesap-yonerge" data-astro-cid-32qtg2pn>
+Varsayılan eğri dersin 22.09.2026 DİBS sıfır kuponlu eğrisidir; noktaları kendi
+    kotasyonlarınızla değiştirebilirsiniz. Kâğıtlar sıfır kupon vekiliyle hesaplanır
+    (fiyat 100·(1+y)<sup data-astro-cid-32qtg2pn>−T</sup>); kuponlu bir kâğıtta aynı mantık durasyon ve DV01'i
+    kendi nakit akışından alarak çalışır.
+</p> <div class="egri-kap" data-astro-cid-32qtg2pn> <span class="etiket blok-baslik" data-astro-cid-32qtg2pn>Kâğıt eğrisi — yıllık bileşik %</span> <div class="egri-girdiler" id="ks-egri" data-astro-cid-32qtg2pn></div> <div class="fon-satir" data-astro-cid-32qtg2pn> <label data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>Fonlama: TLREF (basit, %)</span> <input type="number" id="ks-fon" value="36.4859" step="0.05" data-astro-cid-32qtg2pn></label> <output class="ara-deger" id="ks-fon-etkin" data-astro-cid-32qtg2pn>—</output> </div> </div> <div class="girdiler" data-astro-cid-32qtg2pn> <label data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>Satılan kâğıt A — vade (yıl)</span> <input type="number" id="ks-ta" value="2" step="0.25" min="0.25" max="7" data-astro-cid-32qtg2pn></label> <label data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>Alınan kâğıt B — vade (yıl)</span> <input type="number" id="ks-tb" value="5" step="0.25" min="0.25" max="7" data-astro-cid-32qtg2pn></label> <label data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>A nominali (mn TL)</span> <input type="number" id="ks-n" value="100" step="10" min="1" data-astro-cid-32qtg2pn></label> <label data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>Ölçekleme</span> <select id="ks-mod" data-astro-cid-32qtg2pn> <option value="dv01" selected data-astro-cid-32qtg2pn>DV01-nötr (eğim switch'i)</option> <option value="nakit" data-astro-cid-32qtg2pn>Nakit-nötr (portföy yeniden dağılımı)</option> <option value="beta" data-astro-cid-32qtg2pn>Beta-ağırlıklı (seviyeye nötr)</option> </select></label> <label data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn><span class="harf-koru" data-astro-cid-32qtg2pn>β</span> = Δy<sub data-astro-cid-32qtg2pn>B</sub> / Δy<sub data-astro-cid-32qtg2pn>A</sub></span> <input type="number" id="ks-beta" value="0.69" step="0.01" min="0.05" max="3" data-astro-cid-32qtg2pn></label> <label data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>Ufuk (gün)</span> <input type="number" id="ks-h" value="91" step="1" min="1" max="365" data-astro-cid-32qtg2pn></label> <label data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>Senaryo: Δy<sub data-astro-cid-32qtg2pn>A</sub> (bp)</span> <input type="number" id="ks-dya" value="0" step="5" data-astro-cid-32qtg2pn></label> <label data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>Senaryo: Δy<sub data-astro-cid-32qtg2pn>B</sub> (bp)</span> <input type="number" id="ks-dyb" value="-50" step="5" data-astro-cid-32qtg2pn></label> </div> <div class="tablo-kab" data-astro-cid-32qtg2pn> <table data-astro-cid-32qtg2pn> <thead data-astro-cid-32qtg2pn><tr data-astro-cid-32qtg2pn><th data-astro-cid-32qtg2pn>Bacak</th><th data-astro-cid-32qtg2pn>Getiri</th><th data-astro-cid-32qtg2pn>Fiyat</th><th data-astro-cid-32qtg2pn>Mod. durasyon</th> <th data-astro-cid-32qtg2pn>Nominal (mn)</th><th data-astro-cid-32qtg2pn>DV01 (TL/bp)</th><th data-astro-cid-32qtg2pn>Taşıma+roll (mn TL)</th></tr></thead> <tbody id="ks-tablo" data-astro-cid-32qtg2pn></tbody> </table> </div> <div class="saglama" data-astro-cid-32qtg2pn> <div class="sag-satir" data-astro-cid-32qtg2pn> <div data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>Net DV01 (uzun B − kısa A)</span><output class="ara-deger" id="ks-net" data-astro-cid-32qtg2pn>—</output></div> <div data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>Nakit ihtiyacı</span><output class="ara-deger" id="ks-nakit" data-astro-cid-32qtg2pn>—</output></div> <div data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>Taşıma+roll farkı (ufuk)</span><output class="ara-deger" id="ks-fark" data-astro-cid-32qtg2pn>—</output></div> <div data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>Başabaş spread değişimi</span><output class="ara-deger" id="ks-basabas" data-astro-cid-32qtg2pn>—</output></div> <div data-astro-cid-32qtg2pn><span class="etiket" data-astro-cid-32qtg2pn>Senaryo P&amp;L</span><output class="ara-deger" id="ks-pnl" data-astro-cid-32qtg2pn>—</output></div> </div> <p class="mini-not" id="ks-yorum" data-astro-cid-32qtg2pn>—</p> </div> <div class="hesapla-satir" data-astro-cid-32qtg2pn> <button class="hesapla-btn" id="ks-hesapla" type="button" data-astro-cid-32qtg2pn>Hesapla ↻</button> <span class="canli-not" data-astro-cid-32qtg2pn>Girdiler değişince canlı güncellenir; eğri aşağıdaki araca da akar.</span> </div> <p class="hesap-dip" data-astro-cid-32qtg2pn> <b data-astro-cid-32qtg2pn>Okuma:</b> DV01-nötr switch paralel kaymaya nötrdür ama Türkiye eğrisinde paralel kayma
+    nadirdir — kısa uç uzun uçtan fazla hareket eder. Beta-ağırlıklı ölçekleme bu ortalama
+    ilişkiye nötrler; nakit-nötr ölçekleme ise durasyonu bilerek değiştirir. Hangisini
+    seçtiğiniz, hangi riski <b data-astro-cid-32qtg2pn>almak</b> istediğinizin cevabıdır.
+</p> </div> <script type="module" src="/_astro/KagitSwitchHesaplayici.astro_astro_type_script_index_0_lang.BYVTdo75.js"></script> 
+<p>Vakayı doğrulamak için: A = 2 yıl, B = 5 yıl, 100 mn, DV01-nötr, ufuk 91 gün → 5y
+nominali 90,7 mn · taşıma+roll farkı −0,42 mn · başabaş −58 bp. Ölçeklemeyi
+“nakit-nötr”e çevirin: net DV01 satırı, switch’in içine gizlenmiş durasyonu gösterir.</p>
+<h2 id="24--switchin-altı-türü-ve-zamanlaması">2.4 · Switch’in altı türü ve zamanlaması</h2>
+<p>Switch’ler gerekçelerine göre altı aileye ayrılır. Her ailenin ayrı bir sinyali, ayrı bir
+maliyeti ve ayrı bir “ne zaman bırakılır” kuralı vardır.</p>
+<h3 id="a-eğri-switchi-vade-uzatmak-ya-da-kısaltmak">(a) Eğri switch’i: vade uzatmak ya da kısaltmak</h3>
+<p>2 yıldan 5 ya da 7 yıla geçmek (uzatma) ya da tersi (kısaltma), bir <strong>eğim</strong> görüşünün
+kâğıt hâlidir. DV01-nötr uzatma switch’i eğrinin yataylaşmasına, kısaltma dikleşmesine
+oynar. Ne zaman yapılır?</p>
+<ul>
+<li><strong>Uzatma:</strong> faizler düşerken uzun ucun kısa uçtan hızlı düşeceğine (boğa yataylaşması)
+ya da faizler yükselirken kısa ucun önde satılacağına (ayı yataylaşması) dair bir
+gerekçeniz varsa. İkincisi Türkiye’de stresin tipik biçimidir (<a href="/arastirma/kagit-spread/#62--spreadin-ekonomisi-e%C4%9Fim-neyi-fiyatlar-neden-i%C5%9Flem-g%C3%B6r%C3%BCr">§6.2</a>).</li>
+<li><strong>Kısaltma:</strong> indirim döngüsünün başladığına ya da öne çekileceğine dair bir gerekçeniz
+varsa. Türkiye’de ralliler çoğunlukla kısa uçtan gelir: 2016–2026 arasında faizin
+indirildiği 26 ayın 9’unda eğri boğa dikleşmesi yaptı, 6’sında boğa yataylaşması.</li>
+</ul>
+<p>İnce nokta: nakit-nötr bir uzatma switch’i rallide kazandırır — ama kazancı durasyon
+eklemesinden gelir, eğimden değil. Türkiye’nin tipik rallisinde (kısa uç önde) DV01-nötr
+uzatma <strong>kaybeder</strong>. Portföy yöneticisinin “uzattım, kazandım” dediği pozisyonun
+kazancını ayrıştırmak, bir sonraki kararı doğru vermenin tek yoludur.</p>
+<p>Eğri switch’inin maliyeti taşıma + roll farkıdır ve 22.09.2026’daki gibi tümsekli bir
+eğride büyüktür: DV01-nötr 2y → 5y uzatması çeyrekte 58 bp’lik bir yataylaşma istiyor.
+Görüş ne kadar güçlü olursa olsun, bu eşiği üç ayda aşma olasılığı yazılmadan switch
+yapılmaz.</p>
+<h3 id="b-göreli-değer-switchi-aynı-bölgede-ucuz-kâğıda-geçmek">(b) Göreli değer switch’i: aynı bölgede ucuz kâğıda geçmek</h3>
+<p>Aynı vade bölgesindeki iki kâğıttan <strong>eğriye göre ucuz</strong> olana geçmek. Yöntem:</p>
+<ol>
+<li><strong>Eğriyi kurun.</strong> Bütün kâğıtların (ya da strip’lerin) getirisine düzgün bir eğri
+uydurun — kübik spline ya da Nelson–Siegel–Svensson. Türkiye eğrisi tümsekli olduğu için
+üç parametreli basit biçimler kısa uçta sistematik hata bırakır; daha esnek bir biçim
+seçin ve yalnız işlem gören kâğıtların <strong>işlem fiyatlarını</strong> kullanın.</li>
+<li><strong>Artığı ölçün.</strong> Her kâğıdın gerçek getirisi eksi eğrinin o vadedeki getirisi: pozitif
+artık = ucuz (getiri eğrinin üstünde), negatif = pahalı.</li>
+<li><strong>Artığın tarihçesine bakın.</strong> Tek günlük artık bir şey söylemez; artığın kendi ortalaması
+ve oynaklığı (z-skoru) ile <strong>ortalamaya dönüş hızı</strong> önemlidir. Kalıcı bir artık bir
+ucuzluk değil, bir özelliktir (likidite, kupon, repo özelliği).</li>
+<li><strong>Maliyeti düşün.</strong> İki kâğıdın alış–satış makasının toplamı, beklenen yakınsamanın
+küçük bir kesri olmalı; eski kâğıtlarda makas birkaç baz puanı kolayca geçer.</li>
+<li><strong>Taşıma + roll farkını ekleyin.</strong> Ucuz kâğıt çoğu zaman daha iyi taşır; ama tümsekli
+bir eğride aynı bölgede bile roll farkı artık farkını yiyebilir.</li>
+</ol>
+<p>Bir uyarı, bu seride kullanılan veriden: gösterge değerleri kâğıtların toplamı değil,
+strip’lerin toplamıdır — yani kâğıt düzeyinde bir ucuzluk bu veriden ölçülemez. Kâğıt
+düzeyinde göreli değer, işlem fiyatlarıyla kurulmuş bir eğri ister.</p>
+<div class="not sinav-ornek"><span class="etiket">Varsayımsal örnek — sayılar gösterim içindir</span><p>İki kâğıt, vadeleri birbirine yakın: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span>‘nın eğriye göre artığı −6 bp (pahalı), <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span>‘ninki
++12 bp (ucuz). İkisinin artığı da tarihsel olarak ±10 bp bandında ve yarı ömrü altı hafta
+civarında. DV01-nötr <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>→</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">A \rightarrow B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span> switch’i 18 bp’lik bir göreli ucuzluk satın alır.
+Beklenen yakınsama yarı ömürde yarısı: ~9 bp. İki bacağın toplam alış–satış maliyeti 4 bp,
+taşıma + roll farkı altı haftada +1 bp. Beklenen net: ~6 bp. Maliyet/beklenti oranı
+%44 — kabul edilebilir sınırda; alış–satış 6 bp olsaydı işlem yapılmazdı.</p></div>
+<h3 id="c-gösterge-ve-ihale-switchi">(c) Gösterge ve ihale switch’i</h3>
+<p>Gösterge (en son ihraç edilen, en likit) kâğıt likidite primi nedeniyle genellikle
+eğriye göre pahalıdır; gösterge değiştiğinde eski gösterge likiditesini kaybeder ve
+ucuzlar. Hazine aynı kâğıdı ihale ihale <strong>yeniden ihraç ettiği</strong> için Türkiye’de gösterge
+değişimi seyrek ama öngörülebilir bir olaydır: yeni bir 2, 5 ya da 10 yıllık seri ilk
+ihalesiyle açılır, sonraki ihalelerde büyür. Tipik işlemler:</p>
+<ul>
+<li><strong>Eski göstergeden yenisine geçmek:</strong> likiditeye ihtiyacınız varsa (sık alım-satım,
+hedge, repo) primi ödemeye değer; uzun süre elde tutacaksanız eski gösterge ucuzlama
+bittikten sonra daha iyi taşır.</li>
+<li><strong>İhale arzı:</strong> ihaleye çıkacak kâğıt, ihaleye yaklaşırken arz beklentisiyle ucuzlama
+eğilimindedir; ihale sonrası arz baskısı kalkınca göreli toparlanır. Bu, “ihaleden önce
+sat, ihalede geri al” switch’inin mantığıdır. Ancak etki kâğıttan kâğıda ve piyasa
+koşuluna göre değişir; ihale takvimi, beklenen tutar ve katılım (teklif/satış oranı)
+birlikte okunmalıdır. Hazine’nin aylık iç borçlanma stratejisi hangi hafta hangi vadenin
+ihraç edileceğini önceden söyler — bu switch’in kaynağı bilgi değil <strong>takvim okumaktır</strong>.
+<a href="/arastirma/kagit-getiri/#11--k%C3%A2%C4%9F%C4%B1d%C4%B1n-geldi%C4%9Fi-yer-ihra%C3%A7-talep-ve-ikincil-piyasa">§1.1</a>’deki tablo hatırlatır: rekabetçi talebin en ince olduğu gösterge 5 yıllıktır ve
+ihalenin yaklaşık yarısı ROT’la, ortalama fiyattan emilir.</li>
+</ul>
+<h3 id="d-nominal--tüfeye-endeksli-başabaş-enflasyon-switchi">(d) Nominal ↔ TÜFE’ye endeksli: başabaş enflasyon switch’i</h3>
+<p>Nominal kâğıt ile TÜFE’ye endeksli kâğıt arasındaki fark, piyasanın o vade için
+fiyatladığı enflasyondur. Fisher denklemiyle</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msup><mi>π</mi><mrow><mtext>ba</mtext><mover accent="true"><mtext>s</mtext><mo>¸</mo></mover><mtext>aba</mtext><mover accent="true"><mtext>s</mtext><mo>¸</mo></mover></mrow></msup><mo>=</mo><mfrac><mrow><mn>1</mn><mo>+</mo><msup><mi>y</mi><mtext>nominal</mtext></msup></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>r</mi><mtext>reel</mtext></msup></mrow></mfrac><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\pi^{\text{başabaş}} = \frac{1 + y^{\text{nominal}}}{1 + r^{\text{reel}}} - 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8991em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">π</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8991em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">ba</span><span class="mord accent mtight"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="mord mtight">s</span></span><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="accent-body" style="left:-0.2222em;"><span class="mord mtight">¸</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1701em;"><span></span></span></span></span></span><span class="mord mtight">aba</span><span class="mord accent mtight"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="mord mtight">s</span></span><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="accent-body" style="left:-0.2222em;"><span class="mord mtight">¸</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1701em;"><span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.2954em;vertical-align:-0.7693em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.5261em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7751em;"><span style="top:-2.989em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">reel</span></span></span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">nominal</span></span></span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.7693em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span></span>
+<p>22.09.2026’da 2 yıllık nominal %40,41 ve reel %8,13 ile başabaş <strong>%29,86</strong>. Switch
+kararı bu sayıya karşı verilir:</p>
+<ul>
+<li>Önümüzdeki iki yılın ortalama enflasyonunun <strong>%29,86’dan yüksek</strong> olacağını
+düşünüyorsanız endeksliye geçin (nominali satıp endeksli alın): endeksli kâğıt
+gerçekleşen enflasyonu kazandırır.</li>
+<li>Düşük olacağını düşünüyorsanız nominalde kalın ya da endeksliden nominale geçin.</li>
+</ul>
+<p>Üç ince nokta. <strong>Taşıma:</strong> endeksli kâğıt gerçekleşen aylık TÜFE’yi (referans endeksin
+gecikmesiyle) tahakkuk eder; yüksek aylık enflasyon dönemlerinde endekslinin taşıması
+nominalinkini geçer, dezenflasyon dönemlerinde geride kalır. <strong>Oran:</strong> reel getiri ile
+nominal getiri birebir hareket etmez; DV01-nötr bir başabaş switch’i reel faiz
+hareketine de açıktır ve boyut, iki getirinin tarihsel ilişkisine göre ayarlanmalıdır.
+<strong>Likidite:</strong> endeksli kâğıtların alış–satış makası nominal göstergelerden geniştir; kısa
+ufuklu switch’ler maliyete takılır.</p>
+<h3 id="e-sabit--değişken-faizli">(e) Sabit ↔ değişken faizli</h3>
+<p>TLREF’e ya da başka bir referansa endeksli değişken kuponlu kâğıtlar durasyon taşımaz
+(kuponu her dönem yeniden belirlenir) ama bir <strong>spread</strong> taşır. Sabitten değişkene geçmek,
+taşımayı büyük ölçüde koruyarak durasyonu satmanın yoludur. Ne zaman: faizlerin
+fiyatlanandan yavaş düşeceğine ya da yükseleceğine dair görüş, <strong>ve</strong> negatif taşımalı sabit
+kâğıt tutmanın bedelini ödemek istemediğiniz dönemler. <a href="/arastirma/kagit-getiri/#11--k%C3%A2%C4%9F%C4%B1d%C4%B1n-geldi%C4%9Fi-yer-ihra%C3%A7-talep-ve-ikincil-piyasa">§1.1</a>’deki tablo bu kâğıtların
+arzının küçük olmadığını gösteriyor: ihalelerin %28,5’i değişken faizli ya da TLREF’e
+endeksli kâğıtlar. Değişken kâğıdın kendi riski, kupon spreadinin piyasa spreadinden
+ayrışmasıdır (değişken kâğıdın “ASW”si).</p>
+<h3 id="f-roll-switchi-yıpranmış-kâğıttan-taze-vadeye">(f) Roll switch’i: yıpranmış kâğıttan taze vadeye</h3>
+<p>Tümsekli bir eğride her kâğıdın roll’u vadesiyle değişir. Tümseğin yükselen tarafındaki
+bir kâğıt (22.09.2026’da 1–2 yıl) roll’dan kazanır; zamanla tepeyi geçip inen tarafa
+geçtiğinde roll kaybettirmeye başlar. <strong>Roll switch’i</strong>, roll’u tükenmiş kâğıdı satıp aynı
+riski roll’u hâlâ lehte olan vadede tutmaktır. Bunun için her ay taşıma + roll tablosunu
+(<a href="/arastirma/kagit-getiri/#sekil-01">Şekil 01</a>’in sağ paneli) yeniden hesaplamak yeter: bir kâğıdın roll’u işaret değiştirdiğinde
+yeri de değişmelidir. 22.09.2026 eğrisinde 2 yıllık kâğıdın üç aylık roll’u <span class="isaret-koru">+%0,31</span>, 3
+yıllığınki <span class="isaret-koru">−%0,68</span>: aynı DV01’i 3 yıllıkta tutmak, 2 yıllıkta tutmaktan çeyrekte roll
+farkı kadar pahalıdır.</p>
+<p>Roll switch’inin ne sıklıkla yenileneceğini tümseğin ömrü belirler. 2013–2026 ay
+sonlarında eğrinin en yüksek getirili düğümü 2 yıl olduğunda bu durum ortalama <strong>1,4 ay</strong>
+sürdü; bugünkü tepe <strong>3 aydır</strong> 2 yılda. 2 yıllığın üç aylık roll’u tarihsel pencerelerin
+yalnız %40’ında artıydı, 1 yıllığınki %62’sinde. Roll-down işlemi “tümsek yerinde kalır”
+bahsidir ve bu bahis Türkiye’de uzun ömürlü değildir: roll tablosu her ay yeniden
+hesaplanır, tümseğin kaydığı ay pozisyonun yeri de kayar (<a href="/arastirma/kagit-tasima/#42--roll-down-haritas%C4%B1-ve-t%C3%BCmse%C4%9Fin-yeri">§4.2</a>).</p>
+<h3 id="switchin-icrası-iki-bacak-bir-fiyat">Switch’in icrası: iki bacak, bir fiyat</h3>
+<p>Switch iki ayrı işlem değil <strong>tek bir fiyattır</strong>: kâğıt masaları switch’i çoğu zaman
+“getiri farkı” olarak kote eder ve iki bacak aynı anda işlem görür. Bacakları ayrı ayrı
+işlemek, iki işlem arasındaki fiyat hareketine (bacak riski) açık kalmak demektir. Pratik
+kurallar:</p>
+<ul>
+<li><strong>Önce likit olmayan bacak.</strong> İki bacaktan hangisi daha zor işlem görüyorsa o önce
+yapılır; likit bacak arkadan kolayca tamamlanır.</li>
+<li><strong>Switch’i getiri farkı üzerinden fiyatlayın, iki ayrı fiyat üzerinden değil.</strong> Karşı
+tarafa “2y/5y switch’inde farkınız ne” diye sormak, iki bacağın alış–satış makasını ayrı
+ayrı ödemekten ucuzdur.</li>
+<li><strong>Boyutu piyasa derinliğine göre bölün.</strong> Tek seferde verilen büyük bir switch, özellikle
+eski kâğıtlarda, kendi fiyatını bozar.</li>
+</ul>
+<h3 id="switch-zamanlaması-dört-kural">Switch zamanlaması: dört kural</h3>
+<ol>
+<li><strong>Switch’i tetikleyen fiyat değil gerekçedir.</strong> Bir artık “büyük” diye değil, neden
+büyük olduğunu bildiğiniz ve o nedenin ortadan kalkacağını düşündüğünüz için switch
+yapılır.</li>
+<li><strong>Olay takvimine göre sıralayın.</strong> Veri ve PPK öncesi eğri oynaklığı artar; eğim
+switch’leri olaydan önce yarım boyla, olaydan sonra tamamlanarak kurulur.</li>
+<li><strong>İhale takvimini okuyun.</strong> Arz baskısı altındaki kâğıttan çıkmak ihaleden önce,
+girmek ihalede ya da sonrasında daha ucuzdur.</li>
+<li><strong>Maliyet/beklenti oranını yazın.</strong> Beklenen yakınsamanın yarısından fazlası
+alış–satış makasına gidiyorsa switch yapılmaz.</li>
+</ol>
+<h3 id="altı-switch-tek-tabloda">Altı switch, tek tabloda</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Tür</th><th>Neye oynar</th><th>Sinyal</th><th>Tipik ufuk</th><th>Başlıca maliyet</th><th>Ne zaman bırakılır</th></tr></thead><tbody><tr><td>Eğri (uzatma/kısaltma)</td><td>eğim</td><td>politika döngüsü, risk primi</td><td>haftalar–aylar</td><td>taşıma + roll farkı</td><td>döngü görüşü değişince ya da başabaş aşılamayınca</td></tr><tr><td>Göreli değer</td><td>kâğıdın eğriye göre artığı</td><td>artığın z-skoru ve yarı ömrü</td><td>günler–haftalar</td><td>iki bacağın alış–satış makası</td><td>artık kapanınca ya da iki yarı ömür dolunca</td></tr><tr><td>Gösterge ve ihale</td><td>likidite ve arz primi</td><td>ihale takvimi, yeni seri</td><td>günler</td><td>makas, bacak riski</td><td>ihale geçince ya da likidite göçü tamamlanınca</td></tr><tr><td>Başabaş enflasyon</td><td>fiyatlanan enflasyon</td><td>başabaş ile kendi enflasyon patikanız</td><td>aylar</td><td>endeksli kâğıdın makası, taşıma farkı</td><td>başabaş patikanıza yakınsayınca</td></tr><tr><td>Sabit ↔ değişken</td><td>durasyon (taşımayı koruyarak)</td><td>taşımanın işareti, görüşün yokluğu</td><td>aylar</td><td>değişken kâğıdın spreadi</td><td>taşıma işaret değiştirince</td></tr><tr><td>Roll</td><td>roll farkı</td><td>taşıma + roll tablosu</td><td>her ay</td><td>makas</td><td>roll işaret değiştirince</td></tr></tbody></table>
+<p>Tablonun son sütunu ilk sütunu kadar önemlidir: her switch, <strong>kendi gerekçesi ortadan
+kalkınca</strong> bırakılır. Göreli değer switch’ini eğim görüşü yüzünden tutmak, bir işlemi başka
+bir işlemin gerekçesiyle taşımaktır.</p>
+<h3 id="likidite-gösterge-dışı-kâğıdın-gizli-maliyeti">Likidite: gösterge dışı kâğıdın gizli maliyeti</h3>
+<p>Bir switch’in maliyeti yalnız bugünkü alış–satış makası değildir; çıkışın maliyeti de
+bugün satın alınır. Gösterge kâğıt stres anında da kote edilir; eski ihraçlar ve küçük
+seriler stres anında kote edilmeyebilir. Göreli değer switch’iyle eski bir kâğıda geçen
+trader, bugünkü ucuzluğu kazanırken stres anındaki çıkış opsiyonunu satar. Bu yüzden
+göreli değer hesabına iki satır eklenir: <strong>çıkış makası</strong> (sakin günün değil, stres gününün
+makası) ve <strong>boyut sınırı</strong> (kâğıdın günlük işlem hacminin küçük bir kesri). Bir kâğıdın
+“ucuzluğunun” bir kısmı, tam olarak bu çıkış maliyetinin fiyatıdır.</p>
+<h3 id="kâğıt-masasında-tipik-hatalar">Kâğıt masasında tipik hatalar</h3>
+<ul>
+<li><strong>Nakit-nötr switch’i eğri işlemi sanmak.</strong> Durasyon eklenmiştir; kazanç seviyeden gelir.</li>
+<li><strong>Taşımayı yanlış dilde hesaplamak.</strong> TLREF basit, kâğıt bileşik (<a href="/arastirma/kagit-getiri/#12--k%C3%A2%C4%9F%C4%B1d%C4%B1n-getirisi-d%C3%B6rt-par%C3%A7ad%C4%B1r">§1.2</a>); çeyreklik swap
+oranı ikisinden de farklı (<a href="/arastirma/kagit-ois/#31--sabit-faiz-neyi-fiyatlar-kotasyonu-gecelik-faize-%C3%A7evirmek">§3.1</a>).</li>
+<li><strong>Ters eğride “ucuz durasyon” görmek.</strong> Ters eğride forward bugünkünün altındadır;
+yüksek getiri, fiyatlanmış indirimin karşılığıdır, hediye değildir.</li>
+<li><strong>Gösterge değerini işlem fiyatı sanmak.</strong> Değerleme verisindeki bir sapma, işlem
+görebilen bir fiyat değilse fırsat değildir.</li>
+<li><strong>Stresi rallinin aynası sanmak.</strong> Büyük satış ayları büyük rallilerden sık ve büyük
+(<a href="#21--ne-kadar-durasyon-risk-b%C3%BCt%C3%A7esi-stres-ve-hedge">§2.1</a>).</li>
+</ul>
+<h2 id="25--kâğıt-karar-çerçevesi-ve-işlem-dosyası">2.5 · Kâğıt karar çerçevesi ve işlem dosyası</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Durum</th><th>Karar</th><th>Hangi araçla</th></tr></thead><tbody><tr><td>Görüş forward’ın altında, taşıma pozitif</td><td>durasyon al, sabırlı ol</td><td>kâğıt ya da OIS receive</td></tr><tr><td>Görüş forward’ın altında, taşıma negatif</td><td>durasyon al ama ufku kısa tut, gerekçe olayına bağla</td><td>OIS receive (fonlama bazından kaçmak için) ya da kâğıt</td></tr><tr><td>Görüş yok, taşıma pozitif</td><td>outright pozisyon yok; taşıma defteri (<a href="/arastirma/kagit-oyun-defter/#121--g%C3%B6r%C3%BC%C5%9F-yokken-ta%C5%9F%C4%B1ma-defteri">§12.1</a>, <a href="/arastirma/kagit-oyun/#k13--g%C3%B6r%C3%BC%C5%9F-yok-ta%C5%9F%C4%B1ma-defteri">K13</a>) — pozitif taşıma için tutulan durasyon forward’ın gerçekleşmeyeceğine bahistir ve dosyaya görüş olarak yazılır</td><td>DV01-nötr spread ya da fly (eğri ticareti, <a href="/arastirma/kagit-tasima-kural/#52--ta%C5%9F%C4%B1madan-para-kazanman%C4%B1n-kurallar%C4%B1-ne-%C3%A7al%C4%B1%C5%9Ft%C4%B1-ne-%C3%A7al%C4%B1%C5%9Fmad%C4%B1">§5.2</a>)</td></tr><tr><td>Görüş yok, taşıma negatif</td><td>elde tutulan sabit durasyonu azalt ya da değişken faizliye geç; bu bir bekleme bedelini kesmektir, yön bahsi değil</td><td>sabit → değişken switch’i</td></tr><tr><td>Görüş eğimde (kısa uç önde düşer)</td><td>kısaltma switch’i, DV01-nötr ya da beta-ağırlıklı</td><td>kâğıt switch’i ya da OIS spread (<a href="/arastirma/kagit-spread/">Bölüm 6</a>)</td></tr><tr><td>Görüş enflasyonda (başabaştan yüksek)</td><td>endeksliye geç</td><td>başabaş switch’i</td></tr><tr><td>Görüş kâğıdın primindedir</td><td>asset swap</td><td>kâğıt + pay OIS</td></tr></tbody></table>
+<p>Her pozisyon, açılmadan önce tek sayfalık bir <strong>işlem dosyasına</strong> yazılır. Dosyanın
+satırları bu bölümün özetidir:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Satır</th><th>Ne yazılır</th></tr></thead><tbody><tr><td>Görüş</td><td>tek cümle, forward’a göre (“5y getirisi üç ayda %35,39’un altına iner, çünkü …”)</td></tr><tr><td>Yapı ve ölçekleme</td><td>kâğıt/OIS/ASW; DV01-nötr, beta ya da nakit-nötr ve neden</td></tr><tr><td>Taşıma + roll</td><td>ufuk boyunca eğri sabitken P&amp;L ve başabaş (bp)</td></tr><tr><td>Boyut</td><td>DV01; oynaklık bütçesi ve stres bütçesi karşısındaki yeri</td></tr><tr><td>Stop</td><td>gerekçe, seviye ve zaman stopu — üçü ayrı ayrı</td></tr><tr><td>Hedef</td><td>kâr alma kuralı: patikanız ile yeni forward arasındaki fark</td></tr><tr><td>Olay takvimi</td><td>ihale, veri, PPK; olay öncesi boyut</td></tr><tr><td>Raporlama satırı</td><td>seviye mi, eğri mi, prim mi — P&amp;L hangi satıra yazılacak</td></tr></tbody></table>
+<h3 id="vaka-22-eylül-2026-eğrisinde-bir-çeyreklik-karar">Vaka: 22 Eylül 2026 eğrisinde bir çeyreklik karar</h3>
+<p>Bölümün bütün adımlarını tek bir kararda birleştirelim. Eğri ve taşıma sayıları
+22.09.2026’nın ölçümüdür; görüş varsayımsaldır.</p>
+<div class="not sinav-ornek"><span class="etiket">Varsayımsal görüş — sayılar gösterim içindir</span><p>“Önümüzdeki üç ayda PPK indirime döner ve kısa uç önde düşer: 2 yıllık getiri 150 bp,
+5 yıllık 60 bp, 7 yıllık 30 bp iner. Uzun uçta risk primi yüksek kalır.”</p></div>
+<p><strong>Adım 1 — forward kontrolü.</strong> Görüşü her vadede başabaşla karşılaştırın. Üç aylık
+fonlama üstü getiri ≈ taşıma + roll + <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>⋅</mo></mrow><annotation encoding="application/x-tex">D \cdot</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="mord">⋅</span></span></span></span>(düşüş) + konveksite:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Vade</th><th>Taşıma + roll</th><th>Fiyat etkisi</th><th>Konveksite</th><th>Beklenen fonlama üstü getiri</th><th>Başabaş</th></tr></thead><tbody><tr><td>2 yıl</td><td><span class="isaret-koru">−%0,38</span></td><td><span class="isaret-koru">+%2,14</span></td><td><span class="isaret-koru">+%0,03</span></td><td><strong><span class="isaret-koru">+%1,79</span></strong></td><td>−27 bp</td></tr><tr><td>5 yıl</td><td><span class="isaret-koru">−%3,13</span></td><td><span class="isaret-koru">+%2,21</span></td><td><span class="isaret-koru">+%0,03</span></td><td><strong><span class="isaret-koru">−%0,89</span></strong></td><td>−85 bp</td></tr><tr><td>7 yıl</td><td><span class="isaret-koru">−%3,92</span></td><td><span class="isaret-koru">+%1,58</span></td><td><span class="isaret-koru">+%0,01</span></td><td><strong><span class="isaret-koru">−%2,33</span></strong></td><td>−75 bp</td></tr></tbody></table>
+<p>Görüş üç vadede de faiz düşüşü söylüyor, ama yalnız 2 yıllık kazandırıyor: 5 ve 7 yıllıkta
+beklenen düşüş başabaşa yetmiyor. <strong>Doğru görüş, yanlış vadede kaybettirir.</strong> Bu eğride
+“faiz düşecek” cümlesinin kâğıttaki karşılığı durasyonu tümseğin tepesinde almaktır.</p>
+<p><strong>Adım 2 — seviye mi, eğri mi?</strong> Görüşün iki parçası var: seviye (faiz düşer) ve eğim
+(kısa uç önde). İkisi ayrı ifade edilir. Seviye: 2 yıllıkta uzun durasyon. Eğim: DV01-nötr
+bir <strong>2s5s dikleştirici</strong> (2 yıllık al, 5 yıllık sat) — <a href="#23--switchin-anatomisi-%C3%BC%C3%A7-%C3%B6l%C3%A7ekleme-bir-pl">§2.3</a>’teki switch’in tersi. Bu yapı
+eğri sabitken çeyrekte 100 mn TL 2 yıllık başına <strong>+0,42 mn</strong> taşır (uzatma switch’inin
+ödediğini bu taraf toplar) ve görüş gerçekleşirse 2s5s 90 bp dikleşir: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>90</mn><mo>×</mo><mn>7.225</mn><mo>≈</mo><mn>0,65</mn></mrow><annotation encoding="application/x-tex">90 \times 7.225
+\approx 0{,}65</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">90</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">7.225</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">65</span></span></span></span> mn, toplam ~1,07 mn. Bu eğride eğim görüşü hem taşımayla hem görüşle aynı
+yönde — nadir bir durum ve yapıyı cazip kılan budur.</p>
+<p><strong>Adım 3 — araç.</strong> 2 yıllık kâğıt tümseğin tepesinde, roll lehte (<span class="isaret-koru">+%0,31</span>); kâğıt, OIS’e
+göre bu avantajı taşır. Kısa bacak (5 yıllık) portföyde varsa ondan satılır; yoksa açığa
+satış yerine pay OIS düşünülür ve eklenen swap spreadi bacağı dosyaya yazılır.</p>
+<p><strong>Adım 4 — boyut.</strong> Masanın aylık stres limiti 30 mn TL; 2 yıllığın en büyük aylık
+yükselişi 783 bp. Seviye bacağının DV01 tavanı <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>30</mn><mtext> mn</mtext><mi mathvariant="normal">/</mi><mn>783</mn><mo>≈</mo></mrow><annotation encoding="application/x-tex">30\ \text{mn} / 783 \approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">30</span><span class="mspace"> </span><span class="mord text"><span class="mord">mn</span></span><span class="mord">/783</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span></span></span></span> <strong>38.300 TL/bp</strong>
+— sıfır kuponlu vekille ~530 mn TL nominal. Görüş gerçekleşirse fiyat kazancı
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>150</mn><mo>×</mo><mn>38.300</mn><mo>≈</mo><mn>5,75</mn></mrow><annotation encoding="application/x-tex">150 \times 38.300 \approx 5{,}75</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">150</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">38.300</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">5</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">75</span></span></span></span> mn, taşıma + roll maliyeti
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>27</mn><mo>×</mo><mn>38.300</mn><mo>≈</mo><mn>1,03</mn></mrow><annotation encoding="application/x-tex">27 \times 38.300 \approx 1{,}03</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">27</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">38.300</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">03</span></span></span></span> mn, konveksite ~0,09 mn: net <strong>~4,8 mn TL</strong>.</p>
+<p><strong>Adım 5 — stop ve hedef.</strong> Gerekçe stopu: ekim PPK metni rehberliği sertleştirirse
+pozisyon kapanır. Seviye stopu: 2 yıllık getiri 100 bp yükselirse — kayıp
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mo>×</mo><mn>38.300</mn><mo>≈</mo><mn>3,83</mn></mrow><annotation encoding="application/x-tex">100 \times 38.300 \approx 3{,}83</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">100</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">38.300</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">3</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">83</span></span></span></span> mn artı o güne kadarki taşıma. Zaman stopu: bir çeyrek;
+indirim gelmeden çeyrek biterse taşıma + roll kaybı (~1,03 mn) kabul edilmiş olur ve
+pozisyon yeniden savunulmadan uzatılmaz. Hedef: 2 yıllık getiri görüşteki seviyeye
+yaklaştığında kalan edge ≈ (görüş − yeni forward) × DV01 sıfıra iner; kâr orada alınır.</p>
+<p><strong>Adım 6 — dosya.</strong> İki satır: “seviye — 2 yıllık uzun, 38.300 TL/bp” ve “eğri — 2s5s
+dikleştirici, DV01-nötr”. İki satırın P&amp;L’i ayrı izlenir: çeyrek sonunda hangi parçanın
+çalıştığı ayrı ayrı görülür.</p>
+<h3 id="masada-ne-yaparsınız">Masada ne yaparsınız</h3>
+<ul>
+<li><strong>Taşıma + roll’u DV01 başına yazın.</strong> Yüzde taşıma kuponlu ve sıfır kuponlu kâğıtta
+aynı görünür; risk başına kira yaklaşık 1,4 kat farklı olabilir.</li>
+<li><strong>Durasyonu başabaşın en ucuz olduğu yerde alın.</strong> Bugünkü eğride bu tümseğin tepesi (2
+yıl, −27 bp); 5 ve 7 yıllık aynı görüşte başabaşı aşamıyor (<a href="#25--k%C3%A2%C4%9F%C4%B1t-karar-%C3%A7er%C3%A7evesi-ve-i%C5%9Flem-dosyas%C4%B1">§2.5</a> vakası).</li>
+<li><strong>Taşıma negatifse ufku kısa tutun ve gerekçeyi bir olaya bağlayın.</strong> Kira her gün
+işler; görüşün gerçekleşme tarihi yazılmadıysa kira görüşü yer.</li>
+<li><strong>Taşımanın işaretiyle yön seçmeyin.</strong> Bu örneklemde “hep kısa” kadar kazandırdı, fazlasını
+değil (<a href="/arastirma/kagit-getiri/#13--ne-zaman-durasyon-al%C4%B1n%C4%B1r-forward-e%C5%9Fi%C4%9Fi-ve-onu-a%C5%9Fman%C4%B1n-gerek%C3%A7eleri">§1.3</a>; <a href="/arastirma/kagit-tasima-kural/#52--ta%C5%9F%C4%B1madan-para-kazanman%C4%B1n-kurallar%C4%B1-ne-%C3%A7al%C4%B1%C5%9Ft%C4%B1-ne-%C3%A7al%C4%B1%C5%9Fmad%C4%B1">§5.2</a>).</li>
+<li><strong>Roll switch’ini her ay yeniden hesaplayın.</strong> Tümseğin tepesi bir düğümde ortalama bir
+buçuk aydan az kalıyor.</li>
+</ul>
+<p>Bu bölümün beklenti kartları (<a href="/arastirma/kagit-oyun/#113--beklenti-kartlar%C4%B1">§11.3</a>): <a href="/arastirma/kagit-oyun/#k1--gev%C5%9Feme-fiyatlanandan-h%C4%B1zl%C4%B1-g%C3%BCvercin-s%C3%BCrpriz">K1</a>, <a href="/arastirma/kagit-oyun/#k2--gev%C5%9Feme-fiyatlanandan-yava%C5%9F-ya-da-duraklama">K2</a>, <a href="/arastirma/kagit-oyun/#k3--s%C4%B1k%C4%B1la%C5%9Fma-ya-da-art%C4%B1r%C4%B1m-d%C3%B6ng%C3%BCs%C3%BC">K3</a>, <a href="/arastirma/kagit-oyun/#k4--kur-ya-da-risk-%C5%9Foku-sat%C4%B1%C5%9F-kuyru%C4%9Fu">K4</a>, <a href="/arastirma/kagit-oyun/#k7--kal%C4%B1c%C4%B1-dezenflasyon-ralli-uzun-u%C3%A7-risk-primi-d%C3%BC%C5%9Fer">K7</a>, K13, <a href="/arastirma/kagit-oyun/#k14--forwardlara-kat%C4%B1l%C4%B1yorum">K14</a>.</p>
+<div class="pratik"><span class="etiket">Pratik — Kâğıt</span><p><strong>1. Ters çevirme — hangi ölçekleme?</strong> 100 mn TL 2 yıllık satıp 5 yıllık alıyorsunuz.
+Amacınız “kısa uç önde düşecek, ama genel bir ralliye de açık kalmak istemiyorum”. Üç
+ölçeklemeden hangisini seçersiniz; neden DV01-nötr yetmez?</p><details><summary>Çözüm</summary><p>Görüş, 2s5s’in <strong>dikleşmesidir</strong> (kısa uç önde düşer). Bu bir <strong>kısaltma</strong> görüşüdür:
+doğru switch 5 yıllığı satıp 2 yıllığı almaktır — sorudaki yön (2y → 5y) görüşe terstir.
+Yön düzeltildikten sonra ölçekleme sorusu: Türkiye’de 5 yıllık, 2 yıllığın hareketinin
+ortalama 0,69’u kadar hareket eder. DV01-nötr kısaltma switch’i paralel kaymaya nötrdür
+ama tipik bir rallide (kısa uç önde) <strong>aynı yönde</strong> kazanır — yani genel ralliye de açıktır.
+“Ralliye açık kalmak istemiyorum” cümlesi <strong>beta-ağırlıklı</strong> ölçeklemeyi ister:
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mrow><mn>5</mn><mi>y</mi></mrow></msub></mrow><annotation encoding="application/x-tex">N_{5y}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">5</span><span class="mord mathnormal mtight" style="margin-right:0.0359em;">y</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span></span></span></span> = DV01 oranı / 0,69. Kalan risk: eğimin seviyeden bağımsız kısmı ve beta’nın
+kendisinin kararsızlığı — 5 yıllıkta 2013–2019’da 0,80, 2020–2022’de 0,69,
+Temmuz 2023 sonrasında 0,53 (<a href="/arastirma/kagit-spread/#63--spreadi-kurmak-dv01-beta-ve-pca--hedge-oran%C4%B1n%C4%B1n-y%C3%B6n%C3%BC">§6.3</a>).</p></details><p><strong>2. Boyut — stres bütçesi.</strong> Masanın aylık stres limiti 30 mn TL. 5 yıllık kâğıtta
+(a) en büyük tarihsel aylık yükselişe (+630 bp) göre, (b) son otuz altı ayın 95.
+yüzdeliğine (499 bp) göre en fazla ne kadar DV01 taşınabilir? (c) 100 mn TL nominal
+başına DV01 7.965 TL/bp ise, (a)‘daki DV01 kaç mn TL nominale denk gelir?</p><details><summary>Çözüm</summary><p>(a) <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>30</mn><mtext> mn</mtext><mi mathvariant="normal">/</mi><mn>630</mn><mo>≈</mo></mrow><annotation encoding="application/x-tex">30\ \text{mn} / 630 \approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">30</span><span class="mspace"> </span><span class="mord text"><span class="mord">mn</span></span><span class="mord">/630</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span></span></span></span> <strong>47.600 TL/bp</strong>.</p><p>(b) <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>30</mn><mtext> mn</mtext><mi mathvariant="normal">/</mi><mn>499</mn><mo>≈</mo></mrow><annotation encoding="application/x-tex">30\ \text{mn} / 499 \approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">30</span><span class="mspace"> </span><span class="mord text"><span class="mord">mn</span></span><span class="mord">/499</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span></span></span></span> <strong>60.100 TL/bp</strong>.</p><p>(c) <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>47.600</mn><mi mathvariant="normal">/</mi><mn>7.965</mn><mo>×</mo><mn>100</mn><mo>≈</mo></mrow><annotation encoding="application/x-tex">47.600 / 7.965 \times 100 \approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">47.600/7.965</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">100</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span></span></span></span> <strong>598 mn TL</strong> nominal (sıfır kuponlu vekil,
+fiyat 21,64: piyasa değeri ~129 mn TL). İki kalibrasyon arasındaki %26’lık fark bir
+tercihtir; limit tavanı genellikle en kötü aya, günlük boyut yakın dönem oynaklığına
+bağlanır.</p></details><p><strong>3. Uygulama — kuponlu kâğıtla switch.</strong> Portföyde 100 mn TL nominal, %35 kuponlu 5
+yıllık kâğıt var (fiyat 104,54; 100 mn nominal başına DV01 21.040 TL/bp). Kâğıdı satıp
+DV01-nötr olarak 2 yıllık sıfır kuponlu kâğıda (fiyat 50,72; 100 mn nominal başına DV01
+7.225 TL/bp) geçmek istiyorsunuz. (a) 2 yıllıktan kaç nominal alınır? (b) Switch nakit
+serbest bırakır mı, nakit ister mi? (c) Vade etiketlerine bakarak “5 yıldan 2 yıla
+kısalttım, durasyonu yarıdan fazla azalttım” diyen bir raporda yanlış olan ne?</p><details><summary>Çözüm</summary><p>(a) <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mo>×</mo><mn>21.040</mn><mi mathvariant="normal">/</mi><mn>7.225</mn><mo>≈</mo></mrow><annotation encoding="application/x-tex">100 \times 21.040 / 7.225 \approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">100</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">21.040/7.225</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span></span></span></span> <strong>291,2 mn TL</strong> nominal.</p><p>(b) Satış 104,54 mn TL getirir; alış <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>291,2</mn><mo>×</mo><mn>0,5072</mn><mo>≈</mo><mn>147,7</mn></mrow><annotation encoding="application/x-tex">291{,}2 \times 0{,}5072 \approx 147{,}7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">291</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">5072</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">147</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">7</span></span></span></span> mn TL tutar.
+Switch <strong>~43,2 mn TL nakit ister</strong>. Sıfır kuponlu 5 yıllıkla yapılan aynı switch (<a href="#23--switchin-anatomisi-%C3%BC%C3%A7-%C3%B6l%C3%A7ekleme-bir-pl">§2.3</a>)
+nakit serbest bırakıyordu; fark kuponun durasyonu öne çekmesinden geliyor.</p><p>(c) Switch DV01-nötr: durasyon <strong>hiç azalmadı</strong>, yalnız vadeye dağılımı değişti. %35
+kuponlu 5 yıllığın modifiye durasyonu zaten 2,01; vade etiketi risk ölçüsü değildir. Bu
+işlem bir seviye değil <strong>eğri</strong> pozisyonudur ve raporda öyle yazılır.</p></details><p><strong>4. Karar — cümleden kâğıda.</strong> Üç görüş için doğru işlemi yazın: (a) “PPK önümüzdeki
+bir yılda fiyatlanandan fazla indirir, ama enflasyon beklentiden yavaş düşer.” (b)
+“Faizler bir süre değişmez; ben beklerken para kaybetmek istemiyorum.” (c) “Yeni 5 yıllık
+gösterge açılacak ve eski gösterge likiditesini kaybedecek.”</p><details><summary>Çözüm</summary><p>(a) İki görüş: politika patikası (durasyon lehine) ve enflasyon (endeksli lehine). Doğru
+işlem, durasyonu <strong>kısa ve orta uçta</strong> (patika görüşünün ifade edildiği yer) almak ve
+başabaş görüşünü ayrıca ifade etmek için bir miktar <strong>nominalden endeksliye</strong> geçmektir.
+İkisini tek bir kâğıtla ifade etmeye çalışmayın; raporda iki satır olarak izleyin.</p><p>(b) Bu bir taşıma cümlesidir. Negatif taşımalı eğride (22.09.2026) sabit kâğıt beklerken
+kaybettirir: <strong>sabitten değişken faizliye</strong> geçin ya da durasyonu azaltın. Pozitif
+taşımalı bir eğride aynı cümle kâğıtta kalmayı savunurdu.</p><p>(c) Bir <strong>gösterge switch’i</strong>: eski göstergeyi likidite göçünden önce satın; likiditeye
+ihtiyacınız varsa yenisine geçin (primi ödeyerek), uzun süre elde tutacaksanız eski
+göstergeyi ucuzlaması bittikten sonra geri alın (<a href="#24--switchin-alt%C4%B1-t%C3%BCr%C3%BC-ve-zamanlamas%C4%B1">§2.4</a> c). Maliyet/beklenti oranını yazmadan işlem yapmayın.</p></details></div>  </div> <p class="etiket-listesi" data-astro-cid-mrksnbf2> <span class="etiket" data-astro-cid-mrksnbf2>Etiketler</span> <span class="etiket-oge" data-astro-cid-mrksnbf2>tl-faiz</span><span class="etiket-oge" data-astro-cid-mrksnbf2>dibs</span><span class="etiket-oge" data-astro-cid-mrksnbf2>kagit</span><span class="etiket-oge" data-astro-cid-mrksnbf2><span lang="en">ois</span></span><span class="etiket-oge" data-astro-cid-mrksnbf2>tlref</span><span class="etiket-oge" data-astro-cid-mrksnbf2>spread</span><span class="etiket-oge" data-astro-cid-mrksnbf2>fly</span> </p>  <nav class="seri-gezinme" aria-label="Seri gezinmesi" data-astro-cid-drc7arte> <a class="sg-onceki" href="/arastirma/kagit-getiri/" rel="prev" data-astro-cid-drc7arte> <span class="etiket" data-astro-cid-drc7arte>← Bölüm 1</span> <span class="sg-ad" data-astro-cid-drc7arte>Kâğıt: getirinin dört parçası ve durasyon kararı</span> </a> <a class="sg-sonraki" href="/arastirma/kagit-ois/" rel="next" data-astro-cid-drc7arte> <span class="etiket" data-astro-cid-drc7arte>Bölüm 3 →</span> <span class="sg-ad" data-astro-cid-drc7arte>OIS outright: sabit faizi almak ya da ödemek</span> </a> <a class="sg-harita" href="/arastirma/seri/kagit/" data-astro-cid-drc7arte>Kâğıt ve TRY OIS: görüşten pozisyona · yol haritası</a> </nav>  </article>  </main> <footer data-astro-cid-sz7xmlte> <div class="sarici ic" data-astro-cid-sz7xmlte> <div class="marka-blok" data-astro-cid-sz7xmlte>  <span class="etiket marka" lang="en" data-astro-cid-sz7xmlte>TTO Trading</span> <p class="aciklama" data-astro-cid-sz7xmlte>
+Türkiye makro ve piyasa araştırmaları. Her sayı ölçülen katmandan gelir ve kendi
+        tarihini taşır; yorum ölçümün üstüne yazılır, altına değil.
+</p> <p class="sorumluluk" data-astro-cid-sz7xmlte>Buradaki içerik araştırma ve bilgilendirme amaçlıdır; yatırım tavsiyesi değildir. Sayılar kamuya açık kaynaklardan derlenir, yöntem her sayfada açıkça yazılır.</p> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Yayınlar</span> <a href="/bulten/" data-astro-cid-sz7xmlte>Bülten</a><a href="/analiz/" data-astro-cid-sz7xmlte>Analiz</a> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Kaynaklar</span> <a href="/tradeler/" data-astro-cid-sz7xmlte>Tradeler</a><a href="/projeler/" data-astro-cid-sz7xmlte>Projeler</a><a href="/grafikler/" data-astro-cid-sz7xmlte>Grafikler</a><a href="/arastirma/" data-astro-cid-sz7xmlte>Dersler</a><a href="/indikatorler/" data-astro-cid-sz7xmlte>İndikatörler</a><a href="/arama/" data-astro-cid-sz7xmlte>Arama</a><a href="/teknik/" data-astro-cid-sz7xmlte>Teknik arşivi</a> <a href="/hakkinda/" data-astro-cid-sz7xmlte>Hakkında</a> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Besleme</span> <a href="/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · tüm yayınlar</a><a href="/bulten/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · Bülten</a><a href="/analiz/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · Analiz</a> </div> <div class="kolon etiket sag" data-astro-cid-sz7xmlte> <span data-astro-cid-sz7xmlte>© 2026 <span lang="en" data-astro-cid-sz7xmlte>TTO Trading</span></span> <span data-astro-cid-sz7xmlte>İstanbul</span> </div> </div> </footer>  <script type="module">const i=[...document.querySelectorAll("[data-kaydir]")],r=()=>{for(const e of i)if(e.scrollWidth>e.clientWidth+1){const t=e.querySelector("caption")?.textContent?.trim();e.setAttribute("tabindex","0"),e.setAttribute("role","region"),e.setAttribute("aria-label",t?`${t} (kaydırılabilir)`:"Kaydırılabilir tablo")}else e.removeAttribute("tabindex"),e.removeAttribute("role"),e.removeAttribute("aria-label")};if(i.length)if(r(),"ResizeObserver"in window){const e=new ResizeObserver(()=>r());i.forEach(t=>e.observe(t))}else addEventListener("resize",r,{passive:!0});</script> </body> </html> <script type="module">const t=[...document.querySelectorAll(".prose h2")];if(t.length>=4){const d=document.getElementById("icindekiler"),l=document.getElementById("icindekiler-liste");t.filter(e=>/^(?:(?:Bölüm|Modül|Kısım|Ek)\s+)?(?:[A-ZÇĞİÖŞÜ]\.)?\d+(?:\.\d+)*\.?[\s—–-]/.test(e.textContent||"")).length>=t.length/2&&l.classList.add("kendi-numarali"),t.forEach((e,a)=>{e.id||(e.id="bolum-"+(a+1));const i=document.createElement("li"),n=document.createElement("a");n.href="#"+e.id,n.textContent=e.textContent,i.appendChild(n),l.appendChild(i)}),d.hidden=!1}</script> 

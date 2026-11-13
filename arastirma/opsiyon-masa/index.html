@@ -1,0 +1,889 @@
+<!DOCTYPE html><html lang="tr"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FX opsiyon: masada bir gün, pozisyon ve kriz protokolü — TTO Trading</title><meta name="description" content="Opsiyon masasının iş günü: sabah, gün içi ve gün sonu ritmi, limit tablosu (net ve gross, bucket vega, senaryo köşesi), delta hedge frekansı ve on iki maddelik sabah listesi; pozisyon kurmak: görüş →…"><meta name="generator" content="Astro v5.18.2"><meta name="theme-color" content="#f5f0e6"><link rel="canonical" href="https://ttotrading.com/arastirma/opsiyon-masa/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — tüm yayınlar" href="/rss.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — Bülten" href="/bulten/rss.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — Analiz" href="/analiz/rss.xml"><meta property="og:type" content="article"><meta property="og:site_name" content="TTO Trading"><meta property="og:locale" content="tr_TR"><meta property="og:title" content="FX opsiyon: masada bir gün, pozisyon ve kriz protokolü"><meta property="og:description" content="Opsiyon masasının iş günü: sabah, gün içi ve gün sonu ritmi, limit tablosu (net ve gross, bucket vega, senaryo köşesi), delta hedge frekansı ve on iki maddelik sabah listesi; pozisyon kurmak: görüş →…"><meta property="og:url" content="https://ttotrading.com/arastirma/opsiyon-masa/"><meta property="og:image" content="https://ttotrading.com/og/genel.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="TTO Trading — Dersler"><meta property="article:published_time" content="2026-11-06T00:00:00.000Z"><meta property="article:modified_time" content="2026-11-06T00:00:00.000Z"><meta property="article:section" content="Dersler"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="FX opsiyon: masada bir gün, pozisyon ve kriz protokolü"><meta name="twitter:description" content="Opsiyon masasının iş günü: sabah, gün içi ve gün sonu ritmi, limit tablosu (net ve gross, bucket vega, senaryo köşesi), delta hedge frekansı ve on iki maddelik sabah listesi; pozisyon kurmak: görüş →…"><meta name="twitter:image" content="https://ttotrading.com/og/genel.png"><script type="application/ld+json">[{"@context":"https://schema.org","@type":"WebSite","name":"TTO Trading","url":"https://ttotrading.com/","description":"TCMB rezervleri, reel kur, Hazine ihaleleri ve faiz piyasaları üzerine veriye dayalı projeler, canlı grafikler ve hesaplama araçları.","inLanguage":"tr","publisher":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}}},{"@context":"https://schema.org","@type":"Article","headline":"FX opsiyon: masada bir gün, pozisyon ve kriz protokolü","description":"Opsiyon masasının iş günü: sabah, gün içi ve gün sonu ritmi, limit tablosu (net ve gross, bucket vega, senaryo köşesi), delta hedge frekansı ve on iki maddelik sabah listesi; pozisyon kurmak: görüş →…","url":"https://ttotrading.com/arastirma/opsiyon-masa/","mainEntityOfPage":"https://ttotrading.com/arastirma/opsiyon-masa/","image":["https://ttotrading.com/og/genel.png"],"inLanguage":"tr","datePublished":"2026-11-06T00:00:00.000Z","dateModified":"2026-11-06T00:00:00.000Z","author":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}},"publisher":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}},"articleSection":"Dersler"}]</script><script defer data-domain="ttotrading.com" data-api="/v/api/event" src="/v/js/script.js"></script><link rel="stylesheet" href="/_astro/index.BWd6Gdev.css">
+<style>.video-oynatici[data-astro-cid-quemlkkv]{margin:1.75rem 0 .5rem;max-width:26rem}.video-ust[data-astro-cid-quemlkkv]{display:block;margin-bottom:.5rem;color:var(--ink-60)}video[data-astro-cid-quemlkkv]{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:1080 / 1350;background:var(--paper-2);border:1px solid var(--ink-30)}
+</style>
+<link rel="stylesheet" href="/_astro/_slug_.BVOGJi8f.css"></head> <body> <a class="atla" href="#icerik">İçeriğe geç</a> <header class="masthead" data-astro-cid-3ef6ksr2> <div class="sarici" data-astro-cid-3ef6ksr2> <div class="dateline etiket" data-astro-cid-3ef6ksr2>  <span class="gun-yer" data-astro-cid-3ef6ksr2><span data-bugun hidden data-astro-cid-3ef6ksr2></span><span class="orta" data-astro-cid-3ef6ksr2>İstanbul</span></span> <span class="son-yayinlar" data-astro-cid-3ef6ksr2> <a class="son-bulten" href="/bulten/2026-11-13/" data-astro-cid-3ef6ksr2> Son bülten · 13 Kasım 2026 </a> </span> </div> <div class="baslik-satir" data-astro-cid-3ef6ksr2> <a href="/" class="marka" aria-label="TTO Trading — ana sayfa" data-astro-cid-3ef6ksr2> <svg class="tto-isaret marka-isaret" viewBox="214 274 572 346" aria-hidden="true" focusable="false" data-astro-cid-tvrurpns> <line x1="321" y1="463" x2="321" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="424" y1="518" x2="424" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="543" y1="357" x2="543" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="668" y1="485" x2="668" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="470" y1="508.7" x2="470" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line><line x1="600" y1="437.5" x2="600" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line><line x1="722" y1="322.6" x2="722" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line> <path d="M264.5133568919622 387.26923076923083H365.3088210525277Q369.0643543309818 387.26923076923083 371.70667259092437 386.1712238182887Q374.3489908508669 385.0732168673466 376.3864166735349 384.00982477283105Q378.42384249620284 382.94643267831555 380.1755222590783 382.94643267831555Q382.5114517408566 382.94643267831555 383.786987571189 384.18423725352983Q385.0625234015214 385.4220418287441 385.8678259859578 388.79209905945197L394.333027061469 433.57036030568327Q394.8487847778373 435.8855405218828 394.13227325369814 437.3167612523987Q393.41576172955905 438.7479819829146 391.6071675681652 439.10139305943335Q389.91072097811127 439.45947588188574 388.56742771911934 438.7543744096139Q387.2241344601274 438.049272937342 386.2755288737468 436.0843873989697Q379.0536407074676 418.8134515649066 373.41589034543944 410.07865547336854Q367.7781399834113 401.3438593818305 362.3214716054857 398.31365833911474Q356.8648032275602 395.283457296399 350.18677113506084 395.283457296399H332.9446493739692V554.5362875338358Q332.9446493739692 556.8028829741793 334.4183017856692 558.1327898146119Q335.8919541973692 559.4626966550445 338.6966477772937 560.1186409746655L347.9124809122429 561.7652983915849Q351.47051628711273 562.7384699570158 351.47051628711273 565.5752783285884Q351.47051628711273 569.0 346.89970697140177 569.0H283.47981500525316Q281.1411042290811 569.0 280.02505495931166 568.0415332122133Q278.90900568954214 567.0830664244265 278.90900568954214 565.5752783285884Q278.90900568954214 562.7384699570158 282.46704106441194 561.7652983915849L291.68287419936115 560.1186409746655Q294.557661080912 559.4626966550445 295.99626684179884 558.1327898146119Q297.4348726026857 556.8028829741793 297.4348726026857 554.5362875338358V395.283457296399H280.1927508415941Q273.60816634313846 395.283457296399 268.16793926928835 398.50023585371673Q262.72771219543824 401.7170144110345 257.06634108012975 410.4820994922999Q251.4049699648212 419.2471845735653 244.10399310290813 436.0843873989697Q243.21510190720886 438.049272937342 241.84195145287623 438.7543744096139Q240.4688009985436 439.45947588188574 238.7723544084897 439.10139305943335Q237.00114277087582 438.7479819829146 236.31492023646402 437.3167612523987Q235.62869770205222 435.8855405218828 236.04649491518592 433.57036030568327L244.51169599069712 388.79209905945197Q245.31699857513348 385.4220418287441 246.60646800627 384.18423725352983Q247.89593743740653 382.94643267831555 250.20399971757658 382.94643267831555Q251.95965946791694 382.94643267831555 253.839403899888 384.00982477283105Q255.71914833185906 385.0732168673466 258.2822767688284 386.1712238182887Q260.8454052057977 387.26923076923083 264.5133568919622 387.26923076923083Z M434.9508568919622 387.26923076923083H535.7463210525277Q539.5018543309818 387.26923076923083 542.1441725909244 386.1712238182887Q544.7864908508669 385.0732168673466 546.8239166735349 384.00982477283105Q548.8613424962028 382.94643267831555 550.6130222590783 382.94643267831555Q552.9489517408566 382.94643267831555 554.224487571189 384.18423725352983Q555.5000234015214 385.4220418287441 556.3053259859578 388.79209905945197L564.770527061469 433.57036030568327Q565.2862847778373 435.8855405218828 564.5697732536983 437.3167612523987Q563.8532617295591 438.7479819829146 562.0446675681652 439.10139305943335Q560.3482209781113 439.45947588188574 559.0049277191193 438.7543744096139Q557.6616344601274 438.049272937342 556.7130288737468 436.0843873989697Q549.4911407074676 418.8134515649066 543.8533903454395 410.07865547336854Q538.2156399834113 401.3438593818305 532.7589716054857 398.31365833911474Q527.3023032275602 395.283457296399 520.6242711350608 395.283457296399H503.3821493739692V554.5362875338358Q503.3821493739692 556.8028829741793 504.8558017856692 558.1327898146119Q506.3294541973692 559.4626966550445 509.1341477772937 560.1186409746655L518.3499809122429 561.7652983915849Q521.9080162871128 562.7384699570158 521.9080162871128 565.5752783285884Q521.9080162871128 569.0 517.3372069714018 569.0H453.91731500525316Q451.5786042290811 569.0 450.46255495931166 568.0415332122133Q449.34650568954214 567.0830664244265 449.34650568954214 565.5752783285884Q449.34650568954214 562.7384699570158 452.90454106441194 561.7652983915849L462.12037419936115 560.1186409746655Q464.995161080912 559.4626966550445 466.43376684179884 558.1327898146119Q467.8723726026857 556.8028829741793 467.8723726026857 554.5362875338358V395.283457296399H450.6302508415941Q444.04566634313846 395.283457296399 438.60543926928835 398.50023585371673Q433.16521219543824 401.7170144110345 427.50384108012975 410.4820994922999Q421.8424699648212 419.2471845735653 414.54149310290813 436.0843873989697Q413.65260190720886 438.049272937342 412.27945145287623 438.7543744096139Q410.9063009985436 439.45947588188574 409.20985440848966 439.10139305943335Q407.43864277087584 438.7479819829146 406.752420236464 437.3167612523987Q406.0661977020522 435.8855405218828 406.4839949151859 433.57036030568327L414.94919599069715 388.79209905945197Q415.7544985751335 385.4220418287441 417.04396800627 384.18423725352983Q418.33343743740653 382.94643267831555 420.64149971757655 382.94643267831555Q422.39715946791694 382.94643267831555 424.276903899888 384.00982477283105Q426.15664833185906 385.0732168673466 428.7197767688284 386.1712238182887Q431.2829052057977 387.26923076923083 434.9508568919622 387.26923076923083Z M670.0099249976472 383.6388017458197Q690.4382683436672 383.6388017458197 707.0990273391362 390.6072315202238Q723.7597863346051 397.57566129462793 735.7482777719492 410.2809825321266Q747.7367692092935 422.9863037696252 754.2020477936424 440.3431412401394Q760.6673263779912 457.6999787106537 760.6673263779912 478.51815661411877Q760.6673263779912 499.2711380333998 754.2140708190855 516.5706936762883Q747.7608152601796 533.8702493191769 735.8290806515679 546.455872462346Q723.8973460429563 559.0414956055151 707.3436989293684 565.9155802871459Q690.7900518157805 572.7896649687766 670.653826673336 572.7896649687766Q650.3305402167069 572.7896649687766 633.7036184040435 565.8375905832957Q617.0766965913801 558.8855161978147 605.1017928756057 546.1474841824697Q593.1268891598313 533.4094521671248 586.6616105754824 515.9197815914926Q580.1963319911335 498.4301110158603 580.1963319911335 477.28966891016955Q580.1963319911335 456.73779573420495 586.6663747333491 439.5850067972385Q593.1364174755648 422.43221786027203 605.0849392674863 409.9095944846765Q617.0334610594078 397.38697110908106 633.5205602123438 390.5128864274504Q650.0076593652798 383.6388017458197 670.0099249976472 383.6388017458197ZM724.3195232508632 501.6529628355414Q724.3195232508632 483.8118575500826 721.0903217550904 467.4902417186039Q717.8611202593177 451.1686258871252 712.066546422107 437.45106030402417Q706.2719725848963 423.7334947209232 698.4092711878116 413.5686765919404Q690.546569790727 403.40385846295754 681.2429651379441 397.78557402524166Q671.9393604851614 392.16728958752583 661.7120868553981 392.16728958752583Q648.2373973273386 392.16728958752583 638.1003742385476 399.43499144007313Q627.9633511497567 406.70269329262044 622.3324881690339 420.5330491157858Q616.7016251883111 434.36340493895113 616.7016251883111 454.1212883221272Q616.7016251883111 472.12508390804464 619.9124813014283 488.5746892684032Q623.1233374145455 505.0242946287617 628.9183430461428 518.8256271502111Q634.7133486777401 532.6269596716604 642.541349303246 542.8567675619494Q650.3693499287518 553.0865754522383 659.7012535775295 558.7375706678006Q669.0331572263071 564.3885658833628 679.2285836669975 564.3885658833628Q692.9400367846067 564.3885658833628 703.0623485989724 557.1540066030486Q713.1846604133383 549.9194473227343 718.7520918321007 535.9288229872293Q724.3195232508632 521.9381986517244 724.3195232508632 501.6529628355414Z" class="harf" data-astro-cid-tvrurpns></path> <path d="M230.0,533.0 C245.2,520.3 288.7,460.5 321.0,457.0 C353.3,453.5 387.0,529.7 424.0,512.0 C461.0,494.3 502.3,356.5 543.0,351.0 C583.7,345.5 630.2,476.0 668.0,479.0 C705.8,482.0 753.0,387.3 770.0,369.0" class="dalga" data-astro-cid-tvrurpns></path> <path d="M232.0,564.0 C242.7,562.2 274.8,557.4 296.1,553.2 C317.5,549.0 338.9,544.5 360.2,539.0 C381.6,533.5 403.0,527.5 424.4,520.2 C445.8,513.0 467.1,505.1 488.5,495.6 C509.9,486.0 531.2,475.6 552.6,463.1 C574.0,450.6 595.4,436.9 616.8,420.4 C638.1,403.9 659.5,385.8 680.9,364.1 C702.2,342.4 734.3,302.3 745.0,290.0" class="egri" data-astro-cid-tvrurpns></path> <line x1="230" y1="603" x2="770" y2="603" class="eksen" data-astro-cid-tvrurpns></line> <line x1="230" y1="584" x2="230" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="320" y1="584" x2="320" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="410" y1="584" x2="410" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="500" y1="584" x2="500" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="590" y1="584" x2="590" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="680" y1="584" x2="680" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="770" y1="584" x2="770" y2="603" class="cetvel" data-astro-cid-tvrurpns></line> </svg>  <span class="marka-yazi" data-astro-cid-3ef6ksr2> <span class="marka-ad" lang="en" data-astro-cid-3ef6ksr2>TTO Trading</span> <span class="marka-alt" data-astro-cid-3ef6ksr2>Türkiye makro &amp; piyasa araştırmaları</span> </span> </a> <nav aria-label="Bölümler" data-astro-cid-3ef6ksr2> <div class="nav-acilir" data-acilir data-astro-cid-3ef6ksr2> <button type="button" class="nav-link nav-dugme" aria-expanded="false" aria-controls="menu-bulten" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>01</span> Bülten <span class="nav-ok" aria-hidden="true" data-astro-cid-3ef6ksr2></span> </button> <ul class="nav-menu" id="menu-bulten" data-astro-cid-3ef6ksr2> <li data-astro-cid-3ef6ksr2> <a href="/bulten/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Günlük</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Hafta içi her sabah</span> </a> </li><li data-astro-cid-3ef6ksr2> <a href="/bulten/haftalik/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Haftalık</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Pazar akşamı, haftaya bakış</span> </a> </li><li data-astro-cid-3ef6ksr2> <a href="/bulten/aylik/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Aylık</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Ayın ilk iş günü akşamı</span> </a> </li> </ul> </div><a href="/tradeler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>02</span> Tradeler </a><a href="/analiz/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>03</span> Analiz </a><a href="/projeler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>04</span> Projeler </a><a href="/grafikler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>05</span> Grafikler </a><a href="/arastirma/" class="nav-link aktif" aria-current="page" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>06</span> Dersler </a><a href="/indikatorler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>07</span> İndikatörler </a><a href="/hakkinda/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>08</span> Hakkında </a><a href="/arama/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>09</span> Arama </a> </nav> <noscript> <style>.nav-acilir:focus-within .nav-menu { display: block; }</style> </noscript> </div> </div> </header> <script type="module" src="/_astro/Header.astro_astro_type_script_index_0_lang.sWAGpYzy.js"></script>  <main class="sarici" id="icerik" tabindex="-1">  <article data-astro-cid-mrksnbf2> <header class="makale-baslik yuksel" data-astro-cid-mrksnbf2> <p class="kicker etiket" data-astro-cid-mrksnbf2> Ders  · <a href="/arastirma/#fx-opsiyon" data-astro-cid-mrksnbf2>FX &amp; opsiyon kitabı</a>  · fx · opsiyon · vol · risk </p> <h1 data-astro-cid-mrksnbf2>FX opsiyon: masada bir gün, pozisyon ve kriz protokolü</h1> <p class="ozet" data-astro-cid-mrksnbf2>Masada günü sırayla yürütmek, limit ve hedge disiplinini kurmak, görüşü doğru opsiyon yapısına çevirmek ve terste kalınca protokolü bozmamak.</p> <div class="makale-meta" data-astro-cid-mrksnbf2> <span data-astro-cid-mrksnbf2><b data-astro-cid-mrksnbf2>Yayın</b> 6 Kasım 2026</span>      </div>  <details class="seri-kunye" data-astro-cid-rqz27vut> <summary data-astro-cid-rqz27vut> <span class="etiket" data-astro-cid-rqz27vut>Seri</span> <a href="/arastirma/seri/opsiyon/" data-astro-cid-rqz27vut>FX opsiyon kitabı</a> <span class="seri-konum" data-astro-cid-rqz27vut>Bölüm 3 / 4</span> <span class="seri-ac" data-astro-cid-rqz27vut>bütün bölümler</span> </summary> <ol class="seri-liste" data-astro-cid-rqz27vut> <li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>01</span> <a class="seri-ad" href="/arastirma/opsiyon-fiyatlama/" data-astro-cid-rqz27vut>FX opsiyon: fiyatlama ve Greek&#39;ler</a> <span class="seri-dk" data-astro-cid-rqz27vut>26 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>02</span> <a class="seri-ad" href="/arastirma/opsiyon-pnl-yuzey/" data-astro-cid-rqz27vut>FX opsiyon: P&amp;L ayrıştırması, vol yüzeyi ve risk matrisi</a> <span class="seri-dk" data-astro-cid-rqz27vut>27 dk</span> </li><li class="simdi" data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>03</span> <span class="seri-ad" data-astro-cid-rqz27vut>FX opsiyon: masada bir gün, pozisyon ve kriz protokolü</span> <span class="seri-dk" data-astro-cid-rqz27vut>22 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>04</span> <a class="seri-ad" href="/arastirma/opsiyon-cross-egzotik/" data-astro-cid-rqz27vut>FX opsiyon: çapraz kur, TRY pratiği ve egzotikler</a> <span class="seri-dk" data-astro-cid-rqz27vut>27 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>Ek</span> <a class="seri-ad" href="/arastirma/opsiyon-ek/" data-astro-cid-rqz27vut>FX opsiyon serisinin eki: kaynakça ve çalışma sırası</a> <span class="seri-dk" data-astro-cid-rqz27vut>1 dk</span> </li> </ol> </details>  <p class="kaynak-satiri" data-astro-cid-mrksnbf2><span class="etiket" data-astro-cid-mrksnbf2>Kaynak</span> Masa rehberi (anonimleştirilmiş vaka ve örneklerle); Garman-Kohlhagen ve Black-76 ile yeniden hesaplanmış tek koşan örnek. Kaynakça ve çalışma sırası serinin ekinde.</p> <p class="kapsam-satiri" data-astro-cid-mrksnbf2><span class="etiket" data-astro-cid-mrksnbf2>Kapsam</span> Opsiyon masasının iş günü: sabah, gün içi ve gün sonu ritmi, limit tablosu (net ve gross, bucket vega, senaryo köşesi), delta hedge frekansı ve on iki maddelik sabah listesi; pozisyon kurmak: görüş → ufuk → araç, strateji kataloğu, delta kesmenin üç yolu, XAU vakası ve terste kalınca uygulanan sıra (delta → gamma → vega → tasfiye).</p> <div class="ders-kunye" aria-label="Ders künyesi" data-astro-cid-vyjx7skq> <div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>22 dk</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Okuma</span> <span class="kunye-alt" data-astro-cid-vyjx7skq>4,5 bin kelime</span> </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>2</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Alt başlık</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>2</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Pratik bloğu</span> <span class="kunye-alt" data-astro-cid-vyjx7skq>6 çözümlü alıştırma</span> </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>11</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Tablo</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>İleri</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Seviye</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>06 Kas 2026</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Son güncelleme</span>  </div> </div>     </header> <nav class="icindekiler yuksel" id="icindekiler" hidden aria-label="İçindekiler" data-astro-cid-mrksnbf2> <span class="etiket ic-baslik" data-astro-cid-mrksnbf2>İçindekiler</span> <ol id="icindekiler-liste" data-astro-cid-mrksnbf2></ol> </nav>   <div class="prose yuksel" style="--d: 120ms" data-deger="sabit" data-astro-cid-mrksnbf2>  <div class="masa"><span class="etiket">Bu bölüm neyi çözer</span><p>Fiyatlama ve risk ölçümü ancak bir iş gününün içine yerleşince disipline döner. Bu bölüm masanın gününü sabah, gün içi ve gün sonu adımlarıyla, her adımın bir sonrakinin girdisi olduğu sırayla kurar; limitleri ve delta hedge frekansını yazar. Sonra görüşü doğru opsiyon yapısına çeviren karar zincirini ve terste kalan bir kitabı toparlayan protokolü bir vaka üzerinden yürütür.</p><p><strong>Kısaca</strong></p><ul>
+<li>Gün üç fazlıdır: attribution → Greek güncellemesi → limit → trade → hedge → bağımsız değerleme → raporlama. Her adım bir sonrakinin girdisidir.</li>
+<li>Limitler net ve gross, bucket başına vega, gamma, konsantrasyon ve senaryo köşesi olarak konur; ihlal tartışılmaz.</li>
+<li>Delta hedge’i sürekli değil bantlıdır; bant vol’e endekslenir, olay günlerinde zorunlu tur yapılır.</li>
+<li>Her trade görüş → ufuk → araç üçlüsüyle girer; delta kesmenin üç yolu üç ayrı risk paketidir.</li>
+<li>Terste kalınca sıra delta → gamma → vega → tasfiyedir; pozisyona ekleme yasaktır.</li>
+</ul></div>
+<p><a href="/arastirma/opsiyon-pnl-yuzey/">2. bölüm</a> kitabın ne taşıdığını ölçmeyi bitirdi; burada o ölçümler bir iş gününe ve
+bir karar zincirine yerleşir.</p>
+<h2 id="31--günün-ritmi-limitler-hedge-disiplini-masada-bir-iş-günü">3.1 · Günün ritmi, limitler, hedge disiplini: masada bir iş günü</h2>
+<p><em>Bu alt bölümde:</em> günün üç fazı ve her adımın gerekçesi, limit tablosunun anatomisi, delta
+hedge frekansının üç rejimi — sonunda uygulanabilir bir sabah kontrol listesi ve üç
+alıştırma.</p>
+<p>Buraya kadar olan alt bölümler kitabın <em>ne</em> taşıdığını ölçmeyi öğretti: greekler, bucket
+matrisi, senaryo taraması, P&amp;L ayrıştırması. Bu alt bölüm o ölçümleri bir <strong>iş gününe</strong>
+yerleştirir. Opsiyon masasında disiplin üç ayak üzerinde durur: her sabah aynı sırayla
+yapılan kontroller (ritim), yazılı ve pazarlıksız sınırlar (limitler) ve deltayı ne
+zaman-nasıl düzelteceğini önceden tanımlayan kurallar (hedge disiplini). Üçünün ortak
+amacı aynıdır: karar anında duyguya yer bırakmamak.</p>
+<h3 id="311--günün-ritmi-sabah--gün-içi--eod--hangi-adım-hangisinin-girdisi">3.1.1 · Günün ritmi: sabah · gün içi · EOD — hangi adım hangisinin girdisi?</h3>
+<p>Gün üç faza bölünür: sabah (dünün hesabını kapatıp bugünün risk fotoğrafını çekmek),
+gün içi (yeni trade + hedge yürütmesi) ve gün sonu (bağımsız değerleme + raporlama).
+Sıralama keyfî değildir — her adım bir sonrakinin girdisidir:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Zaman</th><th>İş</th><th>Detay</th></tr></thead><tbody><tr><td>Sabah</td><td>MTM + attribution</td><td>Dünün P&amp;L’i <a href="/arastirma/opsiyon-pnl-yuzey/#214--pl-attribution-g%C3%BCnl%C3%BCk-de%C4%9Fi%C5%9Fimi-alt%C4%B1-bile%C5%9Fene-ay%C4%B1rmak-ve-residual%C4%B1-okumak">§2.1.4</a> formülüyle ayrıştırılır; residual kontrol edilir</td></tr><tr><td>Sabah</td><td>Greek update</td><td>Bucket’lı delta/gamma/vega yenilenir; senaryo matrisi (<a href="/arastirma/opsiyon-fiyatlama/#146--senaryo-matrisi-greek-kovalamak-yerine-spot--vol-%C4%B1zgaras%C4%B1nda-yeniden-fiyatlamak">§1.4.6</a>) taranır</td></tr><tr><td>Sabah</td><td>Limit kontrolü</td><td>Her satır limit tablosuyla karşılaştırılır; ihlal → gün başlamadan aksiyon</td></tr><tr><td>Gün içi</td><td>Yeni trade işleme</td><td>Müşteri kotasyonu: base (mid smile) + XVA + spread; trade anında book’a</td></tr><tr><td>Gün içi</td><td>Hedge execution</td><td>Delta bandı aşımında rebalance; vega vade-eşleşmeli kapatma</td></tr><tr><td>EOD</td><td>Valuation + collateral</td><td>Middle office bağımsız MTM; CSA’lı trade’lerde collateral hesabı</td></tr><tr><td>EOD</td><td>P&amp;L raporlama</td><td>Desk P&amp;L + risk attribution; ertesi sabahın girdisi</td></tr></tbody></table>
+<p>Satırların gerekçesi tek tek:</p>
+<ul>
+<li><strong>MTM + attribution.</strong> MTM (mark-to-market), kitabın güncel piyasa verisiyle yeniden
+değerlenmesidir; attribution ise dünkü P&amp;L’in “ne kadarı delta’dan, ne kadarı
+gamma’dan, ne kadarı vega’dan, ne kadarı theta’dan geldi” ayrıştırmasıdır (<a href="/arastirma/opsiyon-pnl-yuzey/#214--pl-attribution-g%C3%BCnl%C3%BCk-de%C4%9Fi%C5%9Fimi-alt%C4%B1-bile%C5%9Fene-ay%C4%B1rmak-ve-residual%C4%B1-okumak">§2.1.4</a>
+formülü). <strong>Residual</strong> — greeklerle açıklanamayan artık P&amp;L — günün ilk sağlık
+testidir: küçükse model ve booking sağlamdır; büyükse ya yakalanmamış bir risk
+faktörü, ya bir kayıt hatası, ya da model zayıflığı vardır. Residual’ı denetlemeden
+güne başlamak, göstergeleri arızalı bir uçağı kaldırmaktır: gün boyunca vereceğin
+her hedge kararı o greeklere yaslanacak.</li>
+<li><strong>Greek update.</strong> Delta/gamma/vega vade kovaları (bucket) bazında yenilenir — toplam
+sayı yetmez, çünkü aynı toplam vega çok farklı vade dağılımlarından gelebilir ve
+eğri büküldüğünde farklı davranır. Ardından <a href="/arastirma/opsiyon-fiyatlama/#146--senaryo-matrisi-greek-kovalamak-yerine-spot--vol-%C4%B1zgaras%C4%B1nda-yeniden-fiyatlamak">§1.4.6</a>’daki senaryo matrisi taranır:
+spot ve vol’ün birlikte hareket ettiği ızgarada en kötü hücre nerede?</li>
+<li><strong>Limit kontrolü.</strong> Her limit satırı güncel kullanımla karşılaştırılır. İhlal varsa
+aksiyon <strong>gün başlamadan</strong> alınır — çünkü gün içinde yeni risk eklemeden önce mevcut
+fazlalığın temizlenmesi gerekir; ihlal üstüne trade almak ihlali kurumsallaştırır.</li>
+<li><strong>Yeni trade işleme.</strong> Müşteri kotasyonu üç katmandan kurulur: <strong>base</strong> fiyat smile’ın
+mid’inden (piyasanın orta noktasından) hesaplanır; üzerine <strong>XVA</strong> eklenir (karşı
+taraf kredi riski, fonlama ve sermaye maliyeti düzeltmeleri — CVA/FVA/KVA ailesi);
+en üste masanın <strong>spread</strong>’i (marjı) konur. Trade gerçekleştiği <strong>anda</strong> kitaba
+işlenir — gecikmiş booking, greeklerin ve limit kullanımının yanlış görünmesi
+demektir.</li>
+<li><strong>Hedge execution.</strong> Delta, tanımlı bandın dışına taştığında rebalance edilir
+(kurallar <a href="#313--delta-hedge-frekans%C4%B1-band--saat--olay--hangi-rejim-ne-zaman-kullan%C4%B1l%C4%B1r">§3.1.3</a>’te). Vega hedge’i <strong>vade-eşleşmeli</strong> kapatılır: 6M vega’yı 1M
+opsiyonla kapatmak toplam vega’yı sıfırlar ama eğri (term structure) riskini basis
+olarak kitapta bırakır — eğri bükülürse “nötr” sandığın kitap zarar yazar.</li>
+<li><strong>Valuation + collateral.</strong> Gün sonu değerlemesini front office değil <strong>middle
+office</strong> bağımsız yapar — pozisyonu tutan kişinin kendi notunu kendisi vermemesi
+temel iç kontrol ilkesidir. CSA’lı (Credit Support Annex — ISDA çerçevesindeki
+teminat eki) trade’lerde MTM’e göre teminat (collateral) alacağı/borcu hesaplanır.</li>
+<li><strong>P&amp;L raporlama.</strong> Desk P&amp;L’i risk attribution ile birlikte raporlanır ve ertesi
+sabahki ilk adımın girdisi olur — döngü böyle kapanır.</li>
+</ul>
+<h3 id="312--limit-tablosu-hangi-satır-neyi-bağlar-neden-net-ve-gross-birlikte-gerekir">3.1.2 · Limit tablosu: hangi satır neyi bağlar, neden net ve gross birlikte gerekir?</h3>
+<p>Limitler “<span lang="en">trading</span> kârı vs risk taşıma” dengesinin <strong>yazılı</strong> halidir: kurumun risk
+iştahını, tartışmanın mümkün olmadığı sayılara çevirirler. İki örnek set — biri TL
+rates masası (swaption kitabı), biri FX opsiyon masası (USDTRY, illüstratif).
+Büyüklükler kitaba göre kalibre edilir; <strong>yapı evrenseldir</strong>:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Limit</th><th>TL rates masası (swaption kitabı)</th><th>FX opsiyon masası (USDTRY, illüstratif)</th></tr></thead><tbody><tr><td>Net delta</td><td>±500K TL / bp (DV01)</td><td>±20M USD spot eşdeğeri</td></tr><tr><td>Gross delta</td><td>±2M TL / bp</td><td>±100M USD</td></tr><tr><td>Vega (bucket başına)</td><td>±200K TL / vol puanı</td><td>±150K USD / vol puanı</td></tr><tr><td>Gamma</td><td>&lt; 100K TL / <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mtext>bp</mtext><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\text{bp}^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0929em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord text"><span class="mord">bp</span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8984em;"><span style="top:-3.1473em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></td><td>&lt; 1,5M USD delta / %1 spot</td></tr><tr><td>Konsantrasyon</td><td>tek trade &lt; %20 book vega</td><td>tek strike/vade &lt; %20 book vega</td></tr><tr><td>Senaryo kaybı</td><td>stres matrisi köşesi &lt; eşik</td><td>spot ±%5 ve vol ±5pt köşesi &lt; eşik (<a href="/arastirma/opsiyon-fiyatlama/#146--senaryo-matrisi-greek-kovalamak-yerine-spot--vol-%C4%B1zgaras%C4%B1nda-yeniden-fiyatlamak">§1.4.6</a> matrisi)</td></tr></tbody></table>
+<p>Satırların mantığı:</p>
+<ul>
+<li><strong>Net vs gross delta.</strong> DV01, faizde 1 bp hareket başına TL P&amp;L’dir. Net delta sıfır
+olabilirken gross (mutlak değerlerin toplamı) devasa olabilir — netleme, pozisyonların
+birbirini gerçekten dengelediği varsayımına dayanır. O varsayım (korelasyon, basis,
+pin) bozulduğunda gerçek maruziyet gross’a yaklaşır; ayrıca kitabı kapatma (unwind)
+maliyeti net ile değil gross ile ölçeklenir. Bu yüzden iki ayrı limit vardır.</li>
+<li><strong>Vega’nın bucket başına sınırlanması.</strong> Toplam vega nötrken kısa vadede long, uzun
+vadede short olabilirsin; vol eğrisi paralel kaymak yerine büküldüğünde (twist) bu
+“nötr” kitap zarar yazar. Limit bu yüzden toplamı değil her kovayı ayrı bağlar.</li>
+<li><strong>Gamma limiti.</strong> Gamma ikinci türevdir: zarar, hareket büyüdükçe <strong>hızlanarak</strong>
+büyür. TL tarafında bp<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span> başına, FX tarafında “%1 spot hareketinde oluşan delta”
+cinsinden ifade edilir — ikisi aynı şeyin iki dilidir.</li>
+<li><strong>Konsantrasyon.</strong> Tek bir trade’in veya tek bir strike/vadenin book vega’sının
+%20’sini aşmaması, kitabı tek bir noktaya (tek müşteri akışına, tek pin gününe, tek
+likidite cebine) rehin olmaktan korur.</li>
+<li><strong>Senaryo kaybı.</strong> Stres matrisinin en kötü köşesine konan mutlak kayıp eşiğidir.</li>
+</ul>
+<p><strong>Kritik ilke:</strong> limit yalnızca tekil greeklere değil, <strong>senaryo matrisinin köşesine</strong>
+de konur. Nedeni çapraz terimlerdir: delta, gamma ve vega ayrı ayrı nötrken vanna
+(spot-vol çapraz duyarlılığı) ve volga (vol’ün vol’e duyarlılığı) üzerinden köşe kaybı
+büyük olabilir — spot ve vol <strong>birlikte</strong> hareket ettiğinde ortaya çıkan zarar, tekil
+greek limitlerinin hiçbirini tetiklemeden gelir. Köşe limiti bu kaçağı yakalayan tek
+settir. Ve ikinci ilke: <strong>limit ihlali tartışma konusu değildir</strong> — ihlal anı,
+aksiyonun önceden tanımlı olduğu andır. “Bir gün daha bekleyelim” cümlesinin limit
+çerçevesinde karşılığı yoktur; olsaydı limit olmazdı.</p>
+<h3 id="313--delta-hedge-frekansı-band--saat--olay--hangi-rejim-ne-zaman-kullanılır">3.1.3 · Delta hedge frekansı: band · saat · olay — hangi rejim ne zaman kullanılır?</h3>
+<ul>
+<li><strong>Sürekli hedge yok.</strong> Her tick’te rebalance etmek, bid-ask spread’ini gamma scalp
+kârına yediren en garantili yoldur: long gamma pozisyonun kazancı tam da spotun
+gidip gelmesinden gelir, ama her rebalance işleminde spread’in yarısını piyasaya
+ödersin. Frekans sonsuza giderken hedge hatası sıfırlanır ama işlem maliyeti scalp
+kârını yer — net sonuç sıfıra, hatta eksiye düşer. Optimal nokta her zaman “biraz
+hedge hatası taşı, maliyetten tasarruf et” tarafındadır.</li>
+<li><strong>Üç pratik rejim:</strong>
+<ol>
+<li><strong>Band bazlı</strong> — net delta mutlak değerce eşiği aşınca rebalance:
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">∣</mo><mi mathvariant="normal">Δ</mi><mo stretchy="false">∣</mo></mrow><annotation encoding="application/x-tex">\lvert\Delta\rvert</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">∣</span><span class="mord">Δ</span><span class="mclose">∣</span></span></span></span> eşiği örneğin ±500K–1M USD. Band içinde delta serbest salınır;
+band dışına taşınca spot/futures ile banda geri çekilir.</li>
+<li><strong>Zamanlı</strong> — günde 1-2 kez, <strong>likit saatlerde</strong> (spread’in dar, derinliğin yüksek
+olduğu pencerelerde) düzenli tur. Basitliği ve öngörülebilirliği için tercih edilir;
+bedeli, iki tur arasında biriken hedge hatasıdır.</li>
+<li><strong>Olay bazlı</strong> — TCMB/FOMC/CPI gibi takvim olaylarından sonra <strong>zorunlu</strong> tur.
+Büyük gap sonrası delta zaten bandın çok dışındadır; olayın hemen ardından
+(fiyatlama oturur oturmaz) rebalance edilir, sıradaki bandı beklemek riski
+taşımaya devam etmektir.</li>
+</ol>
+</li>
+<li><strong>Band kalibrasyonu vol’e endekslenir:</strong> <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext>band</mtext><mo>≈</mo><mi>k</mi><mo>⋅</mo><msub><mi>σ</mi><mrow><mi>g</mi><mover accent="true"><mi>u</mi><mo>¨</mo></mover><mi>n</mi><mi>l</mi><mover accent="true"><mi>u</mi><mo>¨</mo></mover><mi>k</mi></mrow></msub><mo>⋅</mo><mtext>Nominal</mtext></mrow><annotation encoding="application/x-tex">\text{band} \approx k \cdot \sigma_{günlük} \cdot \text{Nominal}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">band</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7306em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">σ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0359em;">g</span><span class="mord accent mtight"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6679em;"><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="mord mathnormal mtight">u</span></span><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="accent-body" style="left:-0.2222em;"><span class="mord mtight">¨</span></span></span></span></span></span></span><span class="mord mathnormal mtight">n</span><span class="mord mathnormal mtight" style="margin-right:0.0197em;">l</span><span class="mord accent mtight"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6679em;"><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="mord mathnormal mtight">u</span></span><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="accent-body" style="left:-0.2222em;"><span class="mord mtight">¨</span></span></span></span></span></span></span><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">Nominal</span></span></span></span></span> mantığıyla. Sezgi: sabit TRY cinsinden
+bir band, vol yükseldiğinde her saat başı aşılır ve işlem sayısı (dolayısıyla
+ödenen spread) patlar. Band günlük volatiliteyle orantılı genişletilirse, “bandı
+aşma sıklığı” rejimden bağımsız yaklaşık sabit kalır — hedge maliyeti kontrol
+altında tutulur. Vol yükselince TRY cinsinden band genişletilir; bu gevşeklik değil,
+aynı istatistiksel disiplinin korunmasıdır.</li>
+</ul>
+<h3 id="314--sabah-kontrol-listesi-on-iki-madde-sırayla">3.1.4 · Sabah kontrol listesi: on iki madde, sırayla</h3>
+<p><a href="#311--g%C3%BCn%C3%BCn-ritmi-sabah--g%C3%BCn-i%C3%A7i--eod--hangi-ad%C4%B1m-hangisinin-girdisi">§3.1.1</a>’deki tablo <em>neyin</em> yapıldığını söyler; aşağıdaki liste <em>nasıl</em> yapıldığını. Her
+madde ya bir sayı üretir ya bir aksiyon tetikler; hiçbiri “göz gezdirme” değildir.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Kontrol</th><th>Beklenen çıktı</th><th>Aksiyon eşiği</th></tr></thead><tbody><tr><td>1</td><td>Dünün P&amp;L’i ayrıştırıldı mı?</td><td>altı bileşen + residual</td><td>residual &gt; %2 → <a href="/arastirma/opsiyon-pnl-yuzey/#216--attribution%C4%B1-elle-y%C3%BCr%C3%BCtmek-prosed%C3%BCr-ve-residual-te%C5%9Fhis-a%C4%9Fac%C4%B1">§2.1.6</a> ağacı</td></tr><tr><td>2</td><td>Residual’ın işareti üst üste aynı mı?</td><td>5 günlük seri</td><td>3 gün aynı işaret → model incelemesi</td></tr><tr><td>3</td><td>Bucket vega tablosu yenilendi mi?</td><td>35 hücre</td><td>herhangi bir hücre limitin %80’i → boyut planı</td></tr><tr><td>4</td><td>Senaryo matrisi köşeleri?</td><td>en kötü hücre</td><td>eşiği aşıyorsa gün başlamadan küçült</td></tr><tr><td>5</td><td>Net ve gross delta?</td><td>iki sayı</td><td>gross/net oranı sıçradıysa ölü pozisyon ara</td></tr><tr><td>6</td><td>Bugün vade dolan opsiyonlar?</td><td>strike + nominal listesi</td><td>spot strike’a %1 yakınsa pin planı yaz</td></tr><tr><td>7</td><td>Bugünkü event takvimi?</td><td>event listesi + eşdeğer gün</td><td>event vol ayrıştırması güncellendi mi</td></tr><tr><td>8</td><td>Dünkü yüzey ile bugünkü fark haritası</td><td>tenor × delta farkları</td><td>vega P&amp;L ile eşleşmiyorsa marklama kontrolü</td></tr><tr><td>9</td><td>Rho hedge’i vade eşleşmesi bozuldu mu?</td><td>swap ladder</td><td>eşleşmemiş bacak varsa yenile</td></tr><tr><td>10</td><td>Collateral / margin çağrısı var mı?</td><td>tutar</td><td>likidite planına gir</td></tr><tr><td>11</td><td>Egzotik bariyerlere yakınlık?</td><td>mesafe (%)</td><td>%2’nin altına inen bariyer → izleme listesi</td></tr><tr><td>12</td><td>Dün girilen trade’lerin booking’i doğru mu?</td><td>capture ile mutabakat</td><td>fark varsa düzelt, attribution’ı yeniden koştur</td></tr></tbody></table>
+<p><strong>Neden liste, neden sıra?</strong> Kriz günü hafıza güvenilmez bir araçtır; liste, sakin günde
+yazılıp gergin günde uygulanmak üzere vardır. Sıra ise bağımlılıktır: 1–2 dünü kapatır,
+3–5 bugünün fotoğrafını çeker, 6–8 günün risklerini önceden görür, 9–12 altyapıyı denetler.</p>
+<div class="not"><span class="etiket">Bu alt bölümün tipik hataları</span><ol>
+<li><strong>Limit ihlalini “bugünlük” görmezden gelmek.</strong> İhlal anı, aksiyonun önceden
+tanımlı olduğu andır; erteleme limiti fiilen iptal eder.</li>
+<li><strong>Yalnız net delta limiti tutmak.</strong> Net sıfırken gross devasa olabilir; unwind
+maliyeti gross ile ölçeklenir.</li>
+<li><strong>Bandı TRY cinsinden sabitlemek.</strong> Vol yükseldiğinde işlem sayısı ve ödenen spread
+patlar; band günlük vol’e endekslenir.</li>
+<li><strong>Hedge’i illikit saatte yapmak.</strong> Aynı miktar, dar spread’li pencerede yarı
+maliyete kapanır.</li>
+<li><strong>Event sonrası bandı beklemek.</strong> Gap sonrası delta zaten bandın çok dışındadır;
+olay bazlı tur zorunludur.</li>
+</ol></div>
+<div class="not"><span class="etiket">Özet</span><p>Gün üç fazlıdır ve her adım bir sonrakinin girdisidir: attribution → Greek update →
+limit → trade → hedge → bağımsız valuation → raporlama. Limitler net <strong>ve</strong> gross,
+bucket başına vega, gamma, konsantrasyon ve <strong>senaryo köşesi</strong> olarak konur; ihlal
+tartışılmaz. Delta hedge’i sürekli değil bandlıdır; band vol’e endekslenir ve olay
+günlerinde zorunlu tur yapılır.</p></div>
+<div class="pratik"><span class="etiket">Pratik — Ritim, limit, hedge disiplini</span><p><strong>1. Doğrudan uygulama — band kalibrasyonu.</strong> Delta bandınız vol %12 iken ±500K USD.
+Vol %20’ye çıktı. (a) Band ne olmalı? (b) Koşan örneğin cash gamma’sı 657.170 USD/%1
+ise, %12 rejiminde bandı aşmak için spotun yüzde kaç oynaması gerekir? (c) Bu sayı size
+ne söylüyor?</p><details><summary>Çözüm</summary><p>Adım 1 — kural: band <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∝</mo><msub><mi>σ</mi><mrow><mi>g</mi><mover accent="true"><mi>u</mi><mo>¨</mo></mover><mi>n</mi><mi>l</mi><mover accent="true"><mi>u</mi><mo>¨</mo></mover><mi>k</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\propto \sigma_{günlük}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mrel">∝</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7167em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">σ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0359em;">g</span><span class="mord accent mtight"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6679em;"><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="mord mathnormal mtight">u</span></span><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="accent-body" style="left:-0.2222em;"><span class="mord mtight">¨</span></span></span></span></span></span></span><span class="mord mathnormal mtight">n</span><span class="mord mathnormal mtight" style="margin-right:0.0197em;">l</span><span class="mord accent mtight"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6679em;"><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="mord mathnormal mtight">u</span></span><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="accent-body" style="left:-0.2222em;"><span class="mord mtight">¨</span></span></span></span></span></span></span><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span></span></span></span> → <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>500</mn><mtext>K</mtext><mo>×</mo><mn>20</mn><mi mathvariant="normal">/</mi><mn>12</mn><mo>=</mo><mn mathvariant="bold">833</mn></mrow><annotation encoding="application/x-tex">500\text{K} \times 20/12 = \mathbf{833}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord">500</span><span class="mord text"><span class="mord">K</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">20/12</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord"><span class="mord mathbf">833</span></span></span></span></span>K USD.</p><p>Adım 2 — bandı aşma hareketi: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>500.000</mn><mi mathvariant="normal">/</mi><mn>657.170</mn><mo>=</mo><mrow><mi mathvariant="bold">%</mi><mn mathvariant="bold">0,76</mn></mrow></mrow><annotation encoding="application/x-tex">500.000 / 657.170 = \mathbf{\%0{,}76}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">500.000/657.170</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9444em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathbf">%0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord mathbf">76</span></span></span></span></span>.</p><p>Adım 3 — karşılaştırma: %12 vol’ün ima ettiği günlük 1<span class="harf-koru">σ</span> hareket <strong>%0,756</strong> (<a href="/arastirma/opsiyon-pnl-yuzey/#211--gamma-pl-ve-ba%C5%9Faba%C5%9F-hareket-g%C3%BCnde-ka%C3%A7-kuru%C5%9F-oynarsa-theta-%C3%A7%C4%B1kar">§2.1.1</a>).
+Yani band, tam olarak <strong>bir günlük 1<span class="harf-koru">σ</span></strong> genişliğinde kurulmuş.</p><p><strong>Cevap:</strong> (a) ±833K (b) %0,76 (c) Band 1<span class="harf-koru">σ</span>’ya denk geliyorsa istatistiksel beklenti
+kabaca <strong>günde bir rebalance</strong>tir. Bandı yarıya indirirseniz tur sayısı ~4 katına çıkar
+(hareket karekökle ölçeklendiği için), ödenen spread de öyle. Band seçimi bu yüzden
+“hassasiyet” değil, <strong>maliyet-hata</strong> optimizasyonudur.</p></details><p><strong>2. Karar — limit tamponu.</strong> FX vega limitiniz ±150K USD/puan. Kitapta hâlihazırda
+96K kullanılıyor. Müşteri, kabul ederseniz +32K vega ekleyecek bir trade istiyor.
+(a) Trade sonrası kullanım yüzde kaç? (b) <a href="#324--trade-%C3%B6ncesi-10-soru-teti%C4%9Fe-basmadan-%C3%B6nceki-son-filtre">§3.2.4</a>’teki #6 filtresi ne der? (c) Trade’i
+tamamen reddetmeden ne yaparsınız?</p><details><summary>Çözüm</summary><p>Adım 1 — kullanım: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>96</mn><mo>+</mo><mn>32</mn><mo stretchy="false">)</mo><mi mathvariant="normal">/</mi><mn>150</mn><mo>=</mo><mrow><mi mathvariant="bold">%</mi><mn mathvariant="bold">85,3</mn></mrow></mrow><annotation encoding="application/x-tex">(96+32)/150 = \mathbf{\%85{,}3}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">96</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">32</span><span class="mclose">)</span><span class="mord">/150</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9444em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathbf">%85</span><span class="mord"><span class="mpunct">,</span></span><span class="mord mathbf">3</span></span></span></span></span>.</p><p>Adım 2 — filtre: checklist #6 eşiği <strong>%80</strong>; ihlal. Limit teknik olarak aşılmıyor ama
+<strong>tampon</strong> yok — piyasa aleyhe dönerse boyut küçültmekten başka manevra kalmaz.</p><p>Adım 3 — çözümler: (i) trade’i <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>150</mn><mo>×</mo><mn>0,80</mn><mo>−</mo><mn>96</mn><mo>=</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">150\times 0{,}80 - 96 = 24</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">150</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">80</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">96</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">24</span></span></span></span>K vega ile sınırla → müşteri
+nominalinin <strong>%75’i</strong> (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>24</mn><mi mathvariant="normal">/</mi><mn>32</mn></mrow><annotation encoding="application/x-tex">24/32</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">24/32</span></span></span></span>); (ii) tam nominali al ve <strong>aynı gün</strong> offset işlemle
+vega’yı geri kısaltarak kullanımı %80 altına indir; (iii) trade’i eşleşen bir vadede
+back-to-back kapat (<a href="/arastirma/opsiyon-pnl-yuzey/#236--back-to-back-kitap-neden-hem-call-hem-put-g%C3%B6r%C3%BCn%C3%BCr-gelir-nereden-gelir">§2.3.6</a>) — spread’i cebe koy, riski taşıma.</p><p><strong>Cevap:</strong> (a) %85,3 (b) tamponu yiyor, ham hâliyle geçmez (c) %75 boyut, aynı-gün
+offset veya back-to-back. Müşteriye “hayır” demeden riski çerçeveye sokmak masanın
+zanaatıdır.</p></details><p><strong>3. Tuzak — hangi rejim?</strong> Sabah 09:00’da önemli bir makro veri açıklanacak; kitabınız
+long gamma. Üç seçenek: (i) bandı yarıya indirip sık rebalance, (ii) veriden önce
+deltayı tam nötrle ve veriden hemen sonra tur yap, (iii) hiçbir şey yapma, akşam banda
+bak. Hangisi ve neden?</p><details><summary>Çözüm</summary><p>Adım 1 — (i) yanlış: veri öncesi dar band, gürültüde defalarca tetiklenir ve spread
+ödetir; hareketin asıl kısmı zaten veriden <strong>sonra</strong> gelecektir.</p><p>Adım 2 — (iii) yanlış: gap sonrası delta bandın çok dışında kalır; long gamma’nın
+kazancını nakde çevirmenin yolu rebalance’tır, akşama kadar beklemek kazancı geri
+verebilir.</p><p>Adım 3 — (ii) doğru: veri öncesi delta nötr → gap simetrik yakalanır; veri sonrası
+fiyatlama oturur oturmaz <strong>olay bazlı zorunlu tur</strong> (<a href="#313--delta-hedge-frekans%C4%B1-band--saat--olay--hangi-rejim-ne-zaman-kullan%C4%B1l%C4%B1r">§3.1.3</a>) yapılır ve oluşan büyük delta
+kaymasının kârı kilitlenir.</p><p><strong>Cevap:</strong> (ii). Ek not: veriden hemen sonraki ilk saniyelerde spread’ler geniştir;
+“fiyatlama oturur oturmaz” ifadesi tam olarak bunu anlatır — ilk tick’e değil, ilk
+sakin kotasyona işlem yapılır.</p></details></div>
+<h2 id="32--pozisyon-kurmak-ve-terste-kalmak-karar-zinciri-ve-kriz-protokolü">3.2 · Pozisyon kurmak ve terste kalmak: karar zinciri ve kriz protokolü</h2>
+<p><em>Bu alt bölümde:</em> görüşten araca giden karar zinciri, strateji kataloğu, delta azaltmanın
+üç yolunun sayısal karşılaştırması, trade öncesi checklist, kriz protokolü ve risk
+tablosu okuma — sonunda kaybeden bir vakanın adım adım çözümü ve üç alıştırma.</p>
+<p>Önceki modül günün rutinini kurdu; bu alt bölüm iki soruya cevap verir: <strong>pozisyon nasıl
+kurulur</strong> (görüşten araca giden karar zinciri, strateji kataloğu, sayısal vaka) ve
+<strong>ters gidince ne yapılır</strong> (müdahale protokolü, risk tablosu okuma, sık hatalar).</p>
+<h3 id="321--karar-mekanizması-görüş--ufuk--araç-ve-neden-bu-sırayla">3.2.1 · Karar mekanizması: görüş → ufuk → araç (ve neden bu sırayla)</h3>
+<p>Her trade’in girişi aynı üç sorudan geçer. Sıra önemlidir: önce görüş netleşir, sonra
+ufuk, en son araç — araçtan başlayıp görüşü sonradan uydurma, masaların en yaygın
+kendini kandırma biçimidir.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Adım</th><th>Karar</th></tr></thead><tbody><tr><td><strong>1 — Görüş</strong></td><td>Neye inanıyorsun: yön mü (delta), hareket mi (gamma), belirsizlik seviyesi mi (vega)?</td></tr><tr><td><strong>2 — Zaman ufku</strong></td><td>Görüş gün/hafta ölçeğinde mi (kısa vade), ay/çeyrek ölçeğinde mi (uzun vade)?</td></tr><tr><td><strong>3 — Araç</strong></td><td>Kısa ufuk + hareket = <strong>GAMMA</strong> (kısa vade ATM); uzun ufuk + belirsizlik = <strong>VEGA</strong> (uzun vade)</td></tr></tbody></table>
+<p>Üçüncü adımın sezgisi <a href="/arastirma/opsiyon-fiyatlama/#13--birinci-derece-greekler-delta--gamma--vega--theta--rho">§1.3</a>’teki greek anatomisinden gelir: gamma kısa vadeli ATM
+opsiyonlarda yoğunlaşır (vade kısaldıkça delta strike etrafında hızla döner), vega ise
+vadeyle büyür ve uzun vadede stabildir. Dolayısıyla “hareket” görüşünün doğal aracı
+kısa vade, “vol rejimi” görüşünün doğal aracı uzun vadedir.</p>
+<p>İki uygulama:</p>
+<p><strong>Uygulama 1 — FOMC öncesi taktik gamma (ufuk: 2 gün).</strong> Görüş: “büyük hareket olacak
+ama yönü belirsiz.” Yön yok → delta aracı değil; hareket var + ufuk kısa → kısa vade
+ATM <strong>straddle long</strong> = saf gamma pozisyonu. Girişte ödenen vol’ün adil olup olmadığını
+<a href="/arastirma/opsiyon-pnl-yuzey/#225--term-structure-ve-event-vol-kotasyonun-i%C3%A7indeki-event-g%C3%BCn%C3%BC-nas%C4%B1l-ayr%C4%B1%C5%9Ft%C4%B1r%C4%B1l%C4%B1r">§2.2.5</a>’teki event vol hesabı söyler: FOMC günü 4 eşdeğer işlem günü sayılıyorsa ve
+bu pencere için implied edilen <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>σ</mi></mrow><annotation encoding="application/x-tex">1\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mord mathnormal" style="margin-right:0.0359em;">σ</span></span></span></span> hareket %1,62 ise, soru netleşir — <strong>senin
+beklediğin hareket bunun üstünde mi?</strong> Üstündeyse straddle ucuz, değilse “büyük hareket”
+görüşün zaten fiyatın içinde demektir ve trade’in beklenen değeri yoktur.</p>
+<p><strong>Uygulama 2 — Stratejik vega (ufuk: 3 ay).</strong> Görüş: “TRY vol rejimi yükselecek.”
+Belirsizlik seviyesi görüşü + uzun ufuk → <strong>6M–1Y vega long</strong>. Vade bilerek uzun
+tutulur: uzun vadenin gamma’sı küçüktür, yani günlük spot gürültüsünde delta’n sürekli
+oynamaz ve theta faturası görece hafiftir — gamma taşımak istemiyorsan vade uzatmak
+doğal filtredir. Delta ayrıca nötrlenir ki pozisyon saf vol görüşü olarak kalsın;
+aksi halde “vol yükselecek” trade’in fark etmeden bir spot pozisyonuna dönüşür.</p>
+<h3 id="322--strateji-kataloğu-hedefe-karşılık-gelen-yapı-ve-onun-bedeli">3.2.2 · Strateji kataloğu: hedefe karşılık gelen yapı ve onun bedeli</h3>
+<p>Görüş → ufuk → araç zinciri işledikten sonra katalog, hedefe karşılık gelen yapıyı ve
+o yapının <strong>bedelini</strong> verir. Opsiyon piyasasında bedava öğle yemeği yoktur: her satırda
+ne aldığın ve karşılığında ne ödediğin/taşıdığın açıkça yazılıdır.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Hedef</th><th>Yapı</th><th>Ne alırsın / ne ödersin</th></tr></thead><tbody><tr><td>Delta azalt, kitabı şişirme</td><td>ATM sat (düşük nominal)</td><td>Dengeli greek yükü; prim gelirli (<a href="#323--say%C4%B1sal-vaka-xauda-5m-delta-azaltman%C4%B1n-%C3%BC%C3%A7-yolu-%C3%BC%C3%A7-farkl%C4%B1-risk-paketi">§3.2.3</a>’teki A yolu)</td></tr><tr><td>Delta azalt, prim topla</td><td>25Δ sat (yüksek nominal)</td><td>Aynı delta için 1,6 kat gamma-vega + dev vanna (<a href="#323--say%C4%B1sal-vaka-xauda-5m-delta-azaltman%C4%B1n-%C3%BC%C3%A7-yolu-%C3%BC%C3%A7-farkl%C4%B1-risk-paketi">§3.2.3</a>’teki B yolu)</td></tr><tr><td>Delta azalt, greek yükleme</td><td>Risk reversal</td><td>Gamma <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo></mrow><annotation encoding="application/x-tex">\approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mrel">≈</span></span></span></span> 0, vega <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo></mrow><annotation encoding="application/x-tex">\approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mrel">≈</span></span></span></span> 0, prim <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo></mrow><annotation encoding="application/x-tex">\approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mrel">≈</span></span></span></span> 0; saf delta + skew (<a href="#323--say%C4%B1sal-vaka-xauda-5m-delta-azaltman%C4%B1n-%C3%BC%C3%A7-yolu-%C3%BC%C3%A7-farkl%C4%B1-risk-paketi">§3.2.3</a>’teki C yolu)</td></tr><tr><td>Gamma al (event)</td><td>Kısa vade ATM straddle</td><td>Theta ödersin; “realized vol implied’ı aşar” bahsi</td></tr><tr><td>Vega al (rejim)</td><td>6M+ opsiyon / straddle</td><td>Az gamma, büyük stabil vega; taşıma maliyeti düşük</td></tr><tr><td>Vega’sız gamma</td><td>Calendar: kısa vade al + uzun vade sat</td><td>Net vega <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo></mrow><annotation encoding="application/x-tex">\approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mrel">≈</span></span></span></span> 0, net gamma long; curve riski taşırsın</td></tr><tr><td>Gamma’sız vega</td><td>Uzun vade al + kısa vade sat (flattener)</td><td><a href="/arastirma/opsiyon-pnl-yuzey/#226--y%C3%BCzey-tradeleri-flattener-ve-butterfly%C4%B1n-bacak-oran%C4%B1-nereden-gelir">§2.2.6</a>; beta-ağırlıklı oranla</td></tr><tr><td>Skew görüşü</td><td>RR trade</td><td>Vanna pozisyonu; TRY’de spot-vol korelasyon bahsi</td></tr><tr><td>Kanat / vol-of-vol</td><td>BF trade (strangle vs straddle)</td><td>Volga pozisyonu; mean-reversion bahsi</td></tr></tbody></table>
+<p>Birkaç okuma notu: <strong>calendar</strong> yapısında kısa vade alınıp uzun vade satıldığında
+gamma kısa bacaktan, vega dengesi uzun bacaktan gelir — ama iki vadenin vol’leri ayrı
+hareket edebilir, taşıdığın şey artık <strong>curve</strong> (vade yapısı) riskidir. <strong>Flattener</strong>
+tersidir ve <a href="/arastirma/opsiyon-pnl-yuzey/#226--y%C3%BCzey-tradeleri-flattener-ve-butterfly%C4%B1n-bacak-oran%C4%B1-nereden-gelir">§2.2.6</a>’da anlatıldığı gibi bacaklar beta-ağırlıklı oranlanır: kısa
+vadenin vol’ü uzun vadeninkinden daha oynak olduğu için 1:1 nominal oran vol-nötr
+değildir. <strong>RR</strong> (risk reversal: bir kanadı al, diğerini sat) saf skew/vanna
+pozisyonudur; <strong>BF</strong> (butterfly: strangle ile straddle farkı) ise kanatların
+merkeze göre pahalılığına, yani vol-of-vol’e oynar.</p>
+<h3 id="323--sayısal-vaka-xauda-5m-delta-azaltmanın-üç-yolu-üç-farklı-risk-paketi">3.2.3 · Sayısal vaka: XAU’da +5M delta azaltmanın üç yolu, üç farklı risk paketi</h3>
+<p>Kurulum: kitapta istenmeyen <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>+</mo><mn>5.000.000</mn></mrow><annotation encoding="application/x-tex">+5.000.000</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">+</span><span class="mord">5.000.000</span></span></span></span> USD long delta var — spot <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>5.000</mn></mrow><annotation encoding="application/x-tex">S = 5.000</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5.000</span></span></span></span>
+USD/oz iken bu <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.000</mn></mrow><annotation encoding="application/x-tex">1.000</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1.000</span></span></span></span> oz altın eşdeğeridir. Piyasa verisi: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo>=</mo><mi mathvariant="normal">%</mi><mn>16</mn></mrow><annotation encoding="application/x-tex">\sigma = \%16</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">σ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8056em;vertical-align:-0.0556em;"></span><span class="mord">%16</span></span></span></span>,
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>3</mn><mtext>M</mtext></mrow><annotation encoding="application/x-tex">T = 3\text{M}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">3</span><span class="mord text"><span class="mord">M</span></span></span></span></span>, forward <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mo>=</mo><mn>5.050,25</mn></mrow><annotation encoding="application/x-tex">F = 5.050{,}25</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">5.050</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">25</span></span></span></span>; strike’lar <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mrow><mi>A</mi><mi>T</mi><mi>M</mi></mrow></msub><mo>=</mo><mi>F</mi></mrow><annotation encoding="application/x-tex">K_{ATM} = F</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0715em;">K</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">A</span><span class="mord mathnormal mtight" style="margin-right:0.1389em;">T</span><span class="mord mathnormal mtight" style="margin-right:0.109em;">M</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span></span></span></span>,
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mrow><mn>25</mn><mi>C</mi></mrow></msub><mo>=</mo><mn>5.346,9</mn></mrow><annotation encoding="application/x-tex">K_{25C} = 5.346{,}9</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0715em;">K</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">25</span><span class="mord mathnormal mtight" style="margin-right:0.0715em;">C</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">5.346</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">9</span></span></span></span>, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mrow><mn>25</mn><mi>P</mi></mrow></msub><mo>=</mo><mn>4.800,7</mn></mrow><annotation encoding="application/x-tex">K_{25P} = 4.800{,}7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0715em;">K</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">25</span><span class="mord mathnormal mtight" style="margin-right:0.1389em;">P</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">4.800</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">7</span></span></span></span>. Aynı deltayı kesen üç alternatif,
+tam hesaplanmış greek paketleriyle:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Ölçü</th><th>A: 1.941 oz ATM call SAT</th><th>B: 4.000 oz 25Δ call SAT</th><th>C: RR — 2.000 oz 25C sat + 2.000 oz 25P al</th></tr></thead><tbody><tr><td>Delta (USD)</td><td>−5.000.000</td><td>−5.000.000</td><td>−5.000.000</td></tr><tr><td>Alınan prim (USD)</td><td>+309.203</td><td>+229.500</td><td>−9.579 (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo></mrow><annotation encoding="application/x-tex">\approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mrel">≈</span></span></span></span> 0)</td></tr><tr><td>Cash gamma / %1 spot (USD)</td><td>−482.872</td><td>−793.975</td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo></mrow><annotation encoding="application/x-tex">\approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mrel">≈</span></span></span></span> 0</td></tr><tr><td>Vega / vol puanı (USD)</td><td>−19.315</td><td>−31.759</td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo></mrow><annotation encoding="application/x-tex">\approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mrel">≈</span></span></span></span> 0</td></tr><tr><td>Theta (USD/gün)</td><td>+2.203</td><td>+3.304</td><td>+549</td></tr><tr><td>Vanna / vol puanı (USD)</td><td>−9.657</td><td>−299.133</td><td>−267.374</td></tr></tbody></table>
+<p>Nominal sağlaması, tablonun ilk satırının neden üçünde de aynı olduğunu gösterir:
+ATM forward-yakını call’un spot deltası <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo><mn>0,515</mn></mrow><annotation encoding="application/x-tex">\approx 0{,}515</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">515</span></span></span></span> olduğundan
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.941</mn><mo>×</mo><mn>0,515</mn><mo>×</mo><mn>5.000</mn><mo>≈</mo><mn>5,0</mn><mtext>M</mtext></mrow><annotation encoding="application/x-tex">1.941 \times 0{,}515 \times 5.000 \approx 5{,}0\text{M}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1.941</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">515</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5.000</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord">5</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">0</span><span class="mord text"><span class="mord">M</span></span></span></span></span> USD; 25Δ call’da tanım gereği
+delta <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0,25</mn></mrow><annotation encoding="application/x-tex">0{,}25</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">25</span></span></span></span> olduğundan <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4.000</mn><mo>×</mo><mn>0,25</mn><mo>×</mo><mn>5.000</mn><mo>=</mo><mn>5,0</mn><mtext>M</mtext></mrow><annotation encoding="application/x-tex">4.000 \times 0{,}25 \times 5.000 = 5{,}0\text{M}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">4.000</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">25</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5.000</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord">5</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">0</span><span class="mord text"><span class="mord">M</span></span></span></span></span> USD;
+RR’de sat-25C (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mn>0,25</mn></mrow><annotation encoding="application/x-tex">-0{,}25</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">−</span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">25</span></span></span></span>) ve al-25P (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mn>0,25</mn></mrow><annotation encoding="application/x-tex">-0{,}25</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">−</span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">25</span></span></span></span>) bacakları oz başına <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mn>0,50</mn></mrow><annotation encoding="application/x-tex">-0{,}50</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">−</span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">50</span></span></span></span> delta
+verir, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2.000</mn><mo>×</mo><mn>0,50</mn><mo>×</mo><mn>5.000</mn><mo>=</mo><mn>5,0</mn><mtext>M</mtext></mrow><annotation encoding="application/x-tex">2.000 \times 0{,}50 \times 5.000 = 5{,}0\text{M}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">2.000</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">50</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5.000</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord">5</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">0</span><span class="mord text"><span class="mord">M</span></span></span></span></span> USD. Aynı delta — ama üç
+bambaşka risk paketi:</p>
+<ul>
+<li><strong>A (ATM, düşük nominal): dengeli yol.</strong> Prim en yüksek (+309K — ATM opsiyonun
+zaman değeri maksimumdur, sattığında en çok primi o verir); gamma/vega yükü ölçülü;
+vanna ihmal edilebilir (ATM’de vanna doğal olarak küçüktür, çünkü vanna kanatlarda
+yaşar). Kitap zaten short gamma+vega ise varsayılan tercih budur — <a href="/arastirma/opsiyon-fiyatlama/#136--ayn%C4%B1-delta-iki-kimlik-atm-d%C3%BC%C5%9F%C3%BCk-nominal-mi-otm-y%C3%BCksek-nominal-mi">§1.3.6</a>’nın
+karar kuralı.</li>
+<li><strong>B (25Δ, yüksek nominal): aldatıcı görüntü.</strong> “Daha az prim ama daha çok nominal”
+cümlesi masum görünür; tablo aksini söyler. Aynı <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">-5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord">5</span></span></span></span>M delta için <strong>%64 daha fazla
+gamma</strong> (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>793.975</mn><mi mathvariant="normal">/</mi><mn>482.872</mn><mo>≈</mo><mn>1,64</mn></mrow><annotation encoding="application/x-tex">793.975 / 482.872 \approx 1{,}64</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">793.975/482.872</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">64</span></span></span></span>), <strong>%64 daha fazla vega</strong>
+(<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>31.759</mn><mi mathvariant="normal">/</mi><mn>19.315</mn><mo>≈</mo><mn>1,64</mn></mrow><annotation encoding="application/x-tex">31.759 / 19.315 \approx 1{,}64</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">31.759/19.315</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">64</span></span></span></span>) ve <strong>31 kat vanna</strong>
+(<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>299.133</mn><mi mathvariant="normal">/</mi><mn>9.657</mn><mo>≈</mo><mn>31</mn></mrow><annotation encoding="application/x-tex">299.133 / 9.657 \approx 31</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">299.133/9.657</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">31</span></span></span></span>) yüklenirsin. Neden: 25Δ opsiyonun birim deltası
+küçük olduğundan aynı deltaya ulaşmak için nominali şişirmek zorundasın, ama gamma,
+vega ve özellikle vanna nominalle birlikte şişer — delta ise şişmez. Short gamma
+kitabına B ile delta kesmek, yangına körükle gitmektir: yön riskini düzeltirken
+hareket ve vol riskini büyütürsün.</li>
+<li><strong>C (risk reversal): en temiz delta makinesi — ama bedava değil.</strong> Gamma <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo></mrow><annotation encoding="application/x-tex">\approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mrel">≈</span></span></span></span> 0,
+vega <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo></mrow><annotation encoding="application/x-tex">\approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mrel">≈</span></span></span></span> 0, prim <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo></mrow><annotation encoding="application/x-tex">\approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mrel">≈</span></span></span></span> 0: iki bacağın gamma-vega’sı birbirini götürür,
+geriye neredeyse saf delta kalır. Bedeli iki tanedir. Birincisi, iki kanat açılır:
+pin/settlement riski artık <strong>iki ayrı strike’ta</strong> yaşar (5.346,9 ve 4.800,7) ve
+vadede spot bunlardan birine yaklaşırsa yönetilmesi gerekir. İkincisi, tabloda
+duran −267.374’lük <strong>vanna</strong> = taşınan skew pozisyonudur: XAU’da spot düşerken vol
+artıyorsa (negatif spot-vol korelasyonu — altında tipik rejim) bu vanna lehe çalışır;
+korelasyonun tersine döndüğü rejimde aleyhe. Yani C’yi seçmek “delta azaltayım”
+değil, “delta azaltayım <strong>VE</strong> skew satayım” kararıdır — bilinçli verilmelidir.
+Theta satırı da hikâyeyi doğrular: A ve B prim sattıkları için günde +2.203 / +3.304
+USD theta toplar; C’nin theta’sı +549 ile neredeyse sıfırdır, çünkü net prim de
+sıfırdır — kira almıyorsan kira geliri olmaz.</li>
+</ul>
+<h3 id="324--trade-öncesi-10-soru-tetiğe-basmadan-önceki-son-filtre">3.2.4 · Trade öncesi 10 soru: tetiğe basmadan önceki son filtre</h3>
+<p>Katalogdan yapı seçildi, vaka hesaplandı — tetiğe basmadan önce son filtre. Bu liste
+kâğıt üzerinde bürokrasi gibi görünür; pratikte her sorunun arkasında bu kitapta
+işlenen bir kayıp senaryosu vardır. Trade’i savunamadığın soru, trade’in zayıf noktasıdır:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Soru</th></tr></thead><tbody><tr><td>1</td><td>Bu trade hangi görüşe hizmet ediyor — yön mü, hareket mi, vol seviyesi mi, skew mi?</td></tr><tr><td>2</td><td>Görüşün zaman ufku ile opsiyonun vadesi eşleşiyor mu?</td></tr><tr><td>3</td><td>Trade sonrası bucket matrisim nasıl değişiyor? (before/after)</td></tr><tr><td>4</td><td>Senaryo matrisinin en kötü köşesi nereye gidiyor?</td></tr><tr><td>5</td><td>Kaç günlük theta ödüyorum / topluyorum; breakeven hareket kaç kuruş?</td></tr><tr><td>6</td><td>Herhangi bir limitin kullanımını %80’in üstüne itiyor mu?</td></tr><tr><td>7</td><td>Vanna/volga yükü ne; spot-vol birlikte hareket ederse ne olur?</td></tr><tr><td>8</td><td>Çıkış planı ne — kâr hedefi, stop, roll kuralı baştan yazıldı mı?</td></tr><tr><td>9</td><td>Bu vade/strike’ta likidite var mı; unwind spreadi kaç puan?</td></tr><tr><td>10</td><td>Pin/settlement günü takvimde işaretli mi; o gün kim yönetecek?</td></tr></tbody></table>
+<p>Birkaç sorunun gerekçesi: #6’daki %80 eşiği, limitin kendisine değil <strong>tamponuna</strong>
+bakar — limiti dolduran trade, piyasa aleyhine gittiğinde manevra alanı bırakmaz.
+#8’in “baştan yazıldı mı” vurgusu kritiktir: çıkış kuralı pozisyon zarardayken yazılmaz,
+çünkü o anda yazan artık analist değil, pozisyonun rehinesidir. #9, <a href="#323--say%C4%B1sal-vaka-xauda-5m-delta-azaltman%C4%B1n-%C3%BC%C3%A7-yolu-%C3%BC%C3%A7-farkl%C4%B1-risk-paketi">§3.2.3</a>/C vakasındaki
+gibi çok bacaklı yapılarda özellikle önemlidir — girişte dar görünen spread, stresli
+piyasada unwind ederken katlanır.</p>
+<h3 id="325--terste-kalma-protokolü-delta--gamma--vega--tasfiye-sırası">3.2.5 · Terste kalma protokolü: delta → gamma → vega → tasfiye sırası</h3>
+<p>Anonimleştirilmiş bir vaka: bir XAU/USD opsiyon kitabı fena terste. Risk tablosunun
+verdiği fotoğraf (değerler kitabın kendi risk-birimi ölçeğinde; okuma için işaretler
+ve göreli büyüklükler yeterlidir):</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Ölçü</th><th>Kitap toplamı</th><th>Yoğunlaşma</th></tr></thead><tbody><tr><td>Net delta</td><td>+4.192</td><td>O/N–1W kovası ve 0D Put tarafı</td></tr><tr><td>Gamma</td><td>−258</td><td>1M’de −178, 2W’de −40</td></tr><tr><td>Vega</td><td>−8,48</td><td>0D Call −8,85; 1M −5,58</td></tr></tbody></table>
+<p>(0D = aynı gün sonlanan opsiyonlar, O/N = overnight, 1W/2W/1M = bir hafta / iki
+hafta / bir ay kovaları.)</p>
+<p><strong>Teşhis:</strong> büyük pozitif deltanın Put tarafında yoğunlaşması, derin ITM put satışı /
+yönlü yapı işaretidir; kitap genelinde negatif gamma + negatif vega ise klasik
+<strong>opsiyon satıcısı profili</strong>. Bu kombinasyon, altın rallisi + vol sıçraması
+senaryosunda üç koldan birden kanar: delta (yön), gamma (hareket — yön fark etmeksizin
+zarar hızlanır), vega (vol seviyesi). Üç musluğun aynı anda açık olması, müdahale
+sırasının neden önceden yazılı olması gerektiğinin cevabıdır.</p>
+<p>Müdahale sırası değişmez ve pazarlıksızdır:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Sıra</th><th>Aksiyon</th><th>Gerekçe</th></tr></thead><tbody><tr><td>1</td><td>Deltayı kes (spot/futures ile en az yarıya)</td><td>En hızlı, en likit hamle; kanama hızını anında düşürür</td></tr><tr><td>2</td><td>Gammayı düzelt (1M/3M ATM straddle/strangle AL)</td><td>Negatif gamma en tehlikeli bacak: yön fark etmeksizin zarar hızlanıyor. Pahalıdır ama onsuz pozisyon yönetilemez</td></tr><tr><td>3</td><td>Vega’ya görüşle karar ver</td><td>Vol zaten sıçradıysa hedge pahalı; “daha da yükselir” tezi varsa uzak kanat alıp tail’i kapat, yoksa taşı</td></tr><tr><td>4</td><td>Kademeli tasfiye</td><td>Limit/margin baskısı varsa en büyük risk katkılı bacaklardan (0D’ler) başla</td></tr><tr><td>5</td><td>Roll — yalnızca tezle</td><td>Kısa vadeyi uzuna roll etmek zaman satın alır; “piyasa döner” umudu tez değildir</td></tr></tbody></table>
+<p>Sıranın mantığı maliyet-hız eğrisidir. Delta kesmek spot/futures piyasasında anında
+ve neredeyse maliyetsiz yapılır — bu yüzden ilk hamledir; birinci derece kanamayı
+durdurur. Gamma düzeltmesi opsiyon <strong>almayı</strong> gerektirir ve kriz anında opsiyon
+pahalıdır (vol sıçramıştır) — ama negatif gamma durduğu her saat zarar üretme
+kapasitesini büyüttüğü için pahalılığına rağmen ikinci sıradadır: yönetilemeyen
+pozisyonun ucuzu olmaz. Vega üçüncüdür çünkü artık acil kanama değil, seviye
+görüşüdür — burada panik değil tez konuşur. Tasfiyede 0D’lerden başlanır çünkü risk
+katkısı / nominal oranı en yüksek bacaklar onlardır. Ve roll: vadeyi uzatmak yalnızca
+“tezim doğru ama zamanlamam erken” savunulabilir önermesiyle meşrudur; tezsiz roll,
+zararı taksitlendirmekten ibarettir.</p>
+<div class="not"><p><span class="etiket">Tek altın kural</span>
+Terste kalınca pozisyona ekleme yapıp ortalama düşürme dürtüsüne diren. Negatif
+gamma + negatif vega kitabına ekleme, riski toplamaz — <strong>katlar</strong>:
+aynı yönde satılan her yeni opsiyon, zaten hızlanan zararın ivmesini büyütür.
+Önce kanamayı durdur, sonra strateji kur; bu sıra asla değişmez.</p></div>
+<h3 id="326--risk-tablosu-arkeolojisi-greeklerden-traderın-niyetini-okumak">3.2.6 · Risk tablosu arkeolojisi: Greek’lerden trader’ın niyetini okumak</h3>
+<p>Bir risk tablosu, pozisyon listesine hiç bakmadan trader’ın niyetini söyler.
+Anonimleştirilmiş bir vaka: bir EUR opsiyon kitabı, net delta <strong>−4,3M</strong> ama gamma
+<strong>+867K</strong>. İlk okuma: “EUR düşecek” görüşü vanilla short (düz spot satışı) yerine
+<strong>opsiyonla</strong> kurulmuş — büyük ihtimalle put alınmış. Neden zanaat açısından doğru:
+pozitif gamma sayesinde EUR düştükçe short delta <strong>kendiliğinden büyür</strong> (long put’un
+deltası spot düştükçe negatifleşir) — pozisyon, tez doğru çıktıkça kendi kendini
+büyüten bir yapıdadır; tez yanlış çıkarsa da delta kendiliğinden küçülür. Doğru zanaat.</p>
+<p>Ama detaya inince üç soru işareti çıkar:</p>
+<ol>
+<li><strong>0D Put kovasında −254K gamma + 1,37M delta.</strong> Uzak vadeli 25Δ put alınmışken 0D
+put <strong>satılmış</strong>: bu bir <strong>put spread</strong>’dir. Yapıya “düşecek ama çok düşmeyecek”
+bahsi de eklenmiş demektir — sorun şu ki, sert düşüş tezi hâlâ geçerliyse o 0D
+satışlar tam tezin gerçekleştiği günde pahalıya patlar. Spread’in tasarruf ettirdiği
+prim, tezin en iyi senaryosunun üst tarafını satmıştır.</li>
+<li><strong>0D Call tarafında vade kovaları: 2W −307K / 1M +274K / 6M +145K gamma.</strong> Kısa
+vade satılıp uzun vade alınmış — desen bir <strong>calendar</strong>’a benziyor. Kritik soru:
+bu bilinçli tek bir calendar trade’i mi, yoksa farklı zamanlarda farklı gerekçelerle
+girilmiş ve artık kimsenin sahiplenmediği <strong>artık pozisyonlar</strong> mı? İkisi aynı
+tabloyu üretir ama biri strateji, diğeri ihmalkârlıktır.</li>
+<li><strong>Vade dağılımı 2W-1M-3M-6M’e saçılmış.</strong> Hepsi hâlâ aynı teze mi hizmet ediyor?
+Karmaşıklık trader’ın düşmanıdır: hangisi ana pozisyon, hangisi hedge, hangisi ölü —
+ayıklanmalı ve sadeleştirilmeli. Ölü pozisyon sadece yer kaplamaz; limit kullanır,
+margin bağlar ve kriz gününde teşhisi yavaşlatır.</li>
+</ol>
+<p>Yöntem genellenebilir ve dört satırlık bir okuma anahtarına iner: <strong>delta işareti
+görüşü</strong> söyler (yukarı mı aşağı mı), <strong>gamma işareti kimliği</strong> söyler (pozitif =
+opsiyon alıcısı, negatif = satıcısı), <strong>bucket dağılımı yapıyı</strong> söyler
+(spread/calendar/outright), <strong>vega dağılımı vol görüşünü</strong> söyler (hangi vadede vol
+alınmış/satılmış). Tabloyu bu anahtarla okumak, pozisyon listesini satır satır okumaktan
+hem daha hızlı hem daha doğrudur — çünkü liste ne yapıldığını, tablo ne <strong>taşındığını</strong>
+gösterir.</p>
+<h3 id="327--sık-yapılan-hatalar-beş-tuzak-ve-her-birinin-panzehiri">3.2.7 · Sık yapılan hatalar: beş tuzak ve her birinin panzehiri</h3>
+<ul>
+<li><strong>Büyük nominal + kısa vade + OTM tuzağı.</strong> “Ucuz” primle dev nominal satmak: OTM
+opsiyonun birim primi küçüktür, bu yüzden anlamlı prim toplamak için nominal şişirilir.
+Spot strike’a yaklaştığında gamma ve vanna patlar — dünkü “uzak, güvenli” satış bir
+gecede kitabın ortasında bir ATM canavarına döner. Bu, <a href="/arastirma/opsiyon-fiyatlama/#136--ayn%C4%B1-delta-iki-kimlik-atm-d%C3%BC%C5%9F%C3%BCk-nominal-mi-otm-y%C3%BCksek-nominal-mi">§1.3.6</a> tablosunun tek
+cümlelik ders özetidir: OTM’in ucuzluğu fiyat değil, henüz gelmemiş riskin
+iskontosudur.</li>
+<li><strong>Nominal ile riski karıştırmak.</strong> “20M sattım” cümlesi risk hakkında hiçbir bilgi
+içermez; “5M delta, −794K gamma, −32K vega sattım” cümlesi içerir. <a href="#323--say%C4%B1sal-vaka-xauda-5m-delta-azaltman%C4%B1n-%C3%BC%C3%A7-yolu-%C3%BC%C3%A7-farkl%C4%B1-risk-paketi">§3.2.3</a>’teki B yolu
+bunun kanıtıdır: aynı delta, bambaşka paket. Masada konuşulan dil nominal değil,
+greek paketi olmalıdır.</li>
+<li><strong>Theta’yı bedava sanmak.</strong> Toplanan her theta, satılmış gamma/vega’nın <strong>kirasıdır</strong>;
+kira geliri, depremde ödenecek hasarın avansıdır. Theta’yı “masaya her sabah düşen
+gelir” olarak muhasebeleştirip karşılığındaki kısa gamma/vega yükümlülüğünü
+görmezden gelmek, sigortacının prim toplayıp hasar karşılığı ayırmaması ile aynı
+hatadır.</li>
+<li><strong>Vol hedge’ini vol sıçradıktan sonra düşünmek.</strong> Vega planı pozisyon <strong>açılırken</strong>
+yazılır (checklist #7-8): spot-vol birlikte hareket ederse ne olacağı ve çıkış kuralı
+girişte bellidir. Vol sıçradıktan sonra hedge aramak, yangın başladıktan sonra
+sigorta fiyatı sormaktır — poliçe hâlâ satılır, ama yangın fiyatından.</li>
+<li><strong>Vade saçılması.</strong> Beş vadeye dağılmış, birbiriyle tutarsız pozisyonlar (<a href="#326--risk-tablosu-arkeolojisi-greeklerden-trader%C4%B1n-niyetini-okumak">§3.2.6</a>’daki
+üçüncü soru işareti). Çözüm rutindir: her çeyrek “ölü pozisyon temizliği” yapılır —
+teze hizmet etmeyen, hedge görevi kalmamış her bacak kapatılır ya da sadeleştirilir.</li>
+</ul>
+<h3 id="328--kaybeden-vaka-ve-geçersizleşme-kuralı-bir-trade-adım-adım-nasıl-bozulur">3.2.8 · Kaybeden vaka ve geçersizleşme kuralı: bir trade adım adım nasıl bozulur</h3>
+<p>Buraya kadarki örnekler çalışan hâli gösterdi. Zanaatın asıl öğretici kısmı, <strong>kaybeden</strong>
+örneği aynı ayrıntıyla yürütmektir.</p>
+<p><strong>Kurulum.</strong> Koşan örneğin piyasasında (spot 45,00 · 3M · <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo>=</mo><mi mathvariant="normal">%</mi><mn>12</mn></mrow><annotation encoding="application/x-tex">\sigma=\%12</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">σ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8056em;vertical-align:-0.0556em;"></span><span class="mord">%12</span></span></span></span>) 20M USD
+nominal <strong>25Δ call sattınız</strong> (strike 51,2722). Tez: “TRY sakin kalır, kanat pahalı,
+theta toplarım.” Girişte tahsil edilen prim <strong>7.846.227 TRY</strong>; delta hedge için
+5.000.078 USD spot <strong>alındı</strong>; günlük theta geliri +303.771 TRY.</p>
+<p><strong>Bir günde ne oldu.</strong> Spot 45,00 → 45,90 (<span class="isaret-koru">+%2</span>) ve vol %12 → %15 (+3 puan).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Kalem</th><th>Hesap</th><th>TRY</th></tr></thead><tbody><tr><td>Opsiyonun değeri (t0)</td><td>satılan prim</td><td>+7.846.227</td></tr><tr><td>Opsiyonun değeri (t1)</td><td>tam repricing</td><td>−18.080.676</td></tr><tr><td><strong>Opsiyon bacağı</strong></td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>7,85</mn><mo>−</mo><mn>18,08</mn></mrow><annotation encoding="application/x-tex">7{,}85 - 18{,}08</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">7</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">85</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">18</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">08</span></span></span></span> M</td><td><strong>−10.234.450</strong></td></tr><tr><td>Spot hedge kârı</td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5.000.078</mn><mo>×</mo><mn>0,90</mn></mrow><annotation encoding="application/x-tex">5.000.078 \times 0{,}90</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">5.000.078</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">90</span></span></span></span></td><td><strong>+4.500.070</strong></td></tr><tr><td><strong>Net</strong></td><td></td><td><strong>−5.734.380</strong></td></tr></tbody></table>
+<p><strong>Neden bu kadar?</strong> Ayrıştırma yapılırsa: gamma kanalı ve vanna kanalı birlikte deltayı
+5,00M USD’den <strong>7,79M</strong> USD’ye taşıdı — yani gün sonunda hedge’iniz <strong>2,79M USD eksik</strong>
+kaldı ve zararın bir kısmı bu açıktan geldi. Tekil Greek’lerle yapılan Taylor tahmini
+bu kaymayı 3,26M USD gösteriyordu (<a href="/arastirma/opsiyon-fiyatlama/#14--y%C3%BCksek-dereceli-greekler-vanna-volga-ve-senaryo-matrisi">§1.4</a> pratiği); gerçek 2,79M çıktı — büyük şokta
+Taylor <strong>abartır</strong>, çünkü gamma ve vanna hareket ilerledikçe kendileri de değişir. İki
+sonuç: (i) hedge açığını Taylor’la değil tam repricing’le ölçün, (ii) büyük şokta
+“ne kadar açığım” sorusunun tek doğru cevabı yeniden fiyatlamadır.</p>
+<p><strong>Tez nerede yanlıştı?</strong> Tezin kendisi (“kanat pahalı”) makul olabilir. Yanlış olan
+<strong>boyut ve yapı</strong>ydı: aynı görüşü <a href="/arastirma/opsiyon-fiyatlama/#136--ayn%C4%B1-delta-iki-kimlik-atm-d%C3%BC%C5%9F%C3%BCk-nominal-mi-otm-y%C3%BCksek-nominal-mi">§1.3.6</a>’daki A yolu (düşük nominal ATM) ile almak
+vanna’yı 39 kat küçültürdü. “Kanat pahalı” tezi kanat <strong>satmayı</strong> gerektirir, ama
+kanadın vanna’sını taşımayı gerektirmez — vanna, ikinci bir bahistir ve bilinçli
+alınmadıysa kazayla alınmıştır.</p>
+<p><strong>Geçersizleşme (invalidation) kuralı — girişte yazılır.</strong> Bu trade için:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Sinyal</th><th>Eşik</th><th>Aksiyon</th></tr></thead><tbody><tr><td>Spot, strike’a mesafe</td><td>%5’in altına inerse</td><td>nominali yarıya indir</td></tr><tr><td>Vol seviyesi</td><td>giriş vol’ünün +2 puan üstü</td><td>vanna kanalını kapat (kanat geri al)</td></tr><tr><td>Senaryo köşesi</td><td>limitin %80’ini geçerse</td><td>pozisyonu ölçekle küçült</td></tr><tr><td>RR</td><td>giriş seviyesinin +1 puan üstü</td><td>tez geçersiz: skew genişliyor, kanat satışı yanlış</td></tr><tr><td>Süre</td><td>tez ufkunun (ör. 4 hafta) sonu</td><td>kâr/zarar fark etmeksizin gözden geçir</td></tr></tbody></table>
+<p>Kuralın değeri, <strong>pozisyon zarardayken yazılmamış olmasındadır</strong>. Zarardayken yazılan
+kural, kuralın kılığına girmiş bir umuttur.</p>
+<div class="not"><p><span class="etiket">Özet</span>
+Görüş → ufuk → araç üçlüsü her trade’in girişidir; katalog hedefe göre yapıyı verir.
+Delta kesmenin üç yolu üç farklı risk paketidir: A dengeli, B yüklü, C saf
+delta+skew. Terste kalınca sıra delta → gamma → vega → tasfiye’dir ve pozisyona
+ekleme yasaktır. Risk tablosu, trader’ın niyetinin röntgenidir — okumayı öğrenen,
+kitabı da karşı tarafı da daha hızlı anlar.</p></div>
+<div class="pratik"><span class="etiket">Pratik — Strateji ve kriz yönetimi</span><p><strong>1. Karar — hangi yol?</strong> XAU kitabınızda istenmeyen +5.000.000 USD delta var ve kitap
+hâlihazırda <strong>short gamma, short vega</strong>. <a href="#323--say%C4%B1sal-vaka-xauda-5m-delta-azaltman%C4%B1n-%C3%BC%C3%A7-yolu-%C3%BC%C3%A7-farkl%C4%B1-risk-paketi">§3.2.3</a>’teki üç yol (A: ATM sat · B: 25Δ sat ·
+C: risk reversal) arasından seçin ve iki cümleyle gerekçelendirin. Seçtiğiniz yolun
+gizli maliyeti ne?</p><details><summary>Çözüm</summary><p>Adım 1 — A: ATM <strong>satmak</strong> gamma ve vega’yı daha da negatife iter (−483K cash gamma,
+−19,3K vega). Zaten short olan kitapta bu yangına körüktür.</p><p>Adım 2 — B: daha beter — aynı deltayı %64 daha fazla gamma/vega ve <strong>31 kat vanna</strong> ile
+keser.</p><p>Adım 3 — C: risk reversal. Gamma ≈ 0, vega ≈ 0, prim ≈ 0 → mevcut short profili
+büyütmez. Doğru seçim <strong>C</strong>.</p><p>Adım 4 — gizli maliyet: tabloda duran <strong>−267.374</strong> vanna, yani satılan skew; artı <strong>iki
+ayrı strike’ta</strong> (5.346,9 ve 4.800,7) pin/settlement riski; artı theta’nın da sıfıra
+yakın olması (+549/gün) — kira almıyorsanız kira geliriniz de yoktur.</p><p><strong>Cevap:</strong> C; bedeli “delta azalttım” değil, “<strong>delta azalttım ve skew sattım</strong>”
+kararını bilinçli vermektir. Bu karar <a href="#324--trade-%C3%B6ncesi-10-soru-teti%C4%9Fe-basmadan-%C3%B6nceki-son-filtre">§3.2.4</a>’teki #7 (“vanna/volga yükü ne?”) sorusunun
+tam olarak sorduğu şeydir.</p></details><p><strong>2. Doğrudan uygulama — nominal sağlaması.</strong> Aynı +5M USD delta’yı bu kez <strong>25Δ put
+alarak</strong> kesmek istiyorsunuz. Spot 5.000 USD/oz, 25Δ put’un ons başına deltası −0,25.
+(a) Kaç ons put alırsınız? (b) Bu yol kitabın gamma/vega’sına ne yapar? (c) A ve B
+yollarından farkı ne?</p><details><summary>Çözüm</summary><p>Adım 1 — nominal: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5.000.000</mn><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mn>0,25</mn><mo>×</mo><mn>5.000</mn><mo stretchy="false">)</mo><mo>=</mo><mn mathvariant="bold">4.000</mn></mrow><annotation encoding="application/x-tex">5.000.000 / (0{,}25 \times 5.000) = \mathbf{4.000}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">5.000.000/</span><span class="mopen">(</span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">25</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">5.000</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord"><span class="mord mathbf">4.000</span></span></span></span></span> ons.</p><p>Adım 2 — işaret: opsiyon <strong>alındığı</strong> için gamma ve vega <strong>pozitif</strong> eklenir — short
+gamma/vega olan kitap için bu bir düzeltmedir, bozma değil.</p><p>Adım 3 — fark: A ve B prim <strong>toplar</strong> (satış), bu yol prim <strong>öder</strong>. Karşılığında
+kitabın en tehlikeli bacağını (negatif gamma) hafifletirsiniz.</p><p><strong>Cevap:</strong> 4.000 ons 25Δ put; gamma/vega long’a döner, prim ödenir. Ders: aynı delta
+hedefine ulaşmanın <strong>dört</strong> yolu vardır ve dördü de farklı Greek paketleri taşır —
+“delta’yı kestim” cümlesi tek başına hiçbir şey anlatmaz.</p></details><p><strong>3. Kriz — ilk üç hamle.</strong> <a href="#325--terste-kalma-protokol%C3%BC-delta--gamma--vega--tasfiye-s%C4%B1ras%C4%B1">§3.2.5</a>’teki kitabı devraldınız: net delta <strong>+4.192</strong>,
+gamma <strong>−258</strong> (1M’de −178), vega <strong>−8,48</strong> (0D call −8,85). Altın ralli hâlinde ve vol
+sıçramış. (a) İlk üç hamleyi sırayla yazın. (b) Yasak hamle ne? (c) Roll’u ne zaman
+meşru sayarsınız?</p><details><summary>Çözüm</summary><p>Adım 1 — hamle 1: <strong>deltayı kes.</strong> +4.192’yi spot/futures ile en az yarıya (≈ +2.096)
+indir. En hızlı, en likit, en ucuz müdahale; kanamanın birinci derecesini durdurur.</p><p>Adım 2 — hamle 2: <strong>gammayı düzelt.</strong> Yoğunlaşmanın olduğu 1M vadesinde ATM
+straddle/strangle <strong>al</strong>. Vol sıçradığı için pahalıdır — ama negatif gamma durduğu her
+saat zarar üretme kapasitesini büyütür; yönetilemeyen pozisyonun ucuzu olmaz.</p><p>Adım 3 — hamle 3: <strong>vega’ya görüşle karar ver.</strong> Vol zaten sıçradıysa tam hedge pahalı;
+“daha da yükselir” tezi varsa uzak kanat alıp kuyruğu kapat, yoksa taşı ve boyutu
+tasfiye ile küçült (0D’lerden başlayarak).</p><p>Adım 4 — yasak: <strong>pozisyona ekleyip ortalama düşürmek.</strong> Negatif gamma + negatif vega
+kitabında ekleme riski toplamaz, katlar.</p><p>Adım 5 — roll: yalnızca “tezim doğru, zamanlamam erken” önermesi <strong>savunulabilirse</strong>.
+Tezsiz roll, zararı taksitlendirmektir.</p><p><strong>Cevap:</strong> delta → gamma → vega; ekleme yasak; roll ancak yazılı tezle. Sıranın mantığı
+maliyet-hız eğrisidir: en ucuz ve en hızlı müdahale önce gelir.</p></details></div>  </div>   <nav class="seri-gezinme" aria-label="Seri gezinmesi" data-astro-cid-drc7arte> <a class="sg-onceki" href="/arastirma/opsiyon-pnl-yuzey/" rel="prev" data-astro-cid-drc7arte> <span class="etiket" data-astro-cid-drc7arte>← Bölüm 2</span> <span class="sg-ad" data-astro-cid-drc7arte>FX opsiyon: P&amp;L ayrıştırması, vol yüzeyi ve risk matrisi</span> </a> <a class="sg-sonraki" href="/arastirma/opsiyon-cross-egzotik/" rel="next" data-astro-cid-drc7arte> <span class="etiket" data-astro-cid-drc7arte>Bölüm 4 →</span> <span class="sg-ad" data-astro-cid-drc7arte>FX opsiyon: çapraz kur, TRY pratiği ve egzotikler</span> </a> <a class="sg-harita" href="/arastirma/seri/opsiyon/" data-astro-cid-drc7arte>FX opsiyon kitabı · yol haritası</a> </nav>  </article>  </main> <footer data-astro-cid-sz7xmlte> <div class="sarici ic" data-astro-cid-sz7xmlte> <div class="marka-blok" data-astro-cid-sz7xmlte>  <span class="etiket marka" lang="en" data-astro-cid-sz7xmlte>TTO Trading</span> <p class="aciklama" data-astro-cid-sz7xmlte>
+Türkiye makro ve piyasa araştırmaları. Her sayı ölçülen katmandan gelir ve kendi
+        tarihini taşır; yorum ölçümün üstüne yazılır, altına değil.
+</p> <p class="sorumluluk" data-astro-cid-sz7xmlte>Buradaki içerik araştırma ve bilgilendirme amaçlıdır; yatırım tavsiyesi değildir. Sayılar kamuya açık kaynaklardan derlenir, yöntem her sayfada açıkça yazılır.</p> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Yayınlar</span> <a href="/bulten/" data-astro-cid-sz7xmlte>Bülten</a><a href="/analiz/" data-astro-cid-sz7xmlte>Analiz</a> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Kaynaklar</span> <a href="/tradeler/" data-astro-cid-sz7xmlte>Tradeler</a><a href="/projeler/" data-astro-cid-sz7xmlte>Projeler</a><a href="/grafikler/" data-astro-cid-sz7xmlte>Grafikler</a><a href="/arastirma/" data-astro-cid-sz7xmlte>Dersler</a><a href="/indikatorler/" data-astro-cid-sz7xmlte>İndikatörler</a><a href="/arama/" data-astro-cid-sz7xmlte>Arama</a><a href="/teknik/" data-astro-cid-sz7xmlte>Teknik arşivi</a> <a href="/hakkinda/" data-astro-cid-sz7xmlte>Hakkında</a> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Besleme</span> <a href="/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · tüm yayınlar</a><a href="/bulten/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · Bülten</a><a href="/analiz/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · Analiz</a> </div> <div class="kolon etiket sag" data-astro-cid-sz7xmlte> <span data-astro-cid-sz7xmlte>© 2026 <span lang="en" data-astro-cid-sz7xmlte>TTO Trading</span></span> <span data-astro-cid-sz7xmlte>İstanbul</span> </div> </div> </footer>  <script type="module">const i=[...document.querySelectorAll("[data-kaydir]")],r=()=>{for(const e of i)if(e.scrollWidth>e.clientWidth+1){const t=e.querySelector("caption")?.textContent?.trim();e.setAttribute("tabindex","0"),e.setAttribute("role","region"),e.setAttribute("aria-label",t?`${t} (kaydırılabilir)`:"Kaydırılabilir tablo")}else e.removeAttribute("tabindex"),e.removeAttribute("role"),e.removeAttribute("aria-label")};if(i.length)if(r(),"ResizeObserver"in window){const e=new ResizeObserver(()=>r());i.forEach(t=>e.observe(t))}else addEventListener("resize",r,{passive:!0});</script> </body> </html> <script type="module">const t=[...document.querySelectorAll(".prose h2")];if(t.length>=4){const d=document.getElementById("icindekiler"),l=document.getElementById("icindekiler-liste");t.filter(e=>/^(?:(?:Bölüm|Modül|Kısım|Ek)\s+)?(?:[A-ZÇĞİÖŞÜ]\.)?\d+(?:\.\d+)*\.?[\s—–-]/.test(e.textContent||"")).length>=t.length/2&&l.classList.add("kendi-numarali"),t.forEach((e,a)=>{e.id||(e.id="bolum-"+(a+1));const i=document.createElement("li"),n=document.createElement("a");n.href="#"+e.id,n.textContent=e.textContent,i.appendChild(n),l.appendChild(i)}),d.hidden=!1}</script> 

@@ -1,0 +1,820 @@
+<!DOCTYPE html><html lang="tr"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>İşlem matematiği I: denklem, olasılık sınıfları ve büyüyen spike — TTO Trading</title><meta name="description" content="Her kalıbın tek sayıya indirgenmesi: trader denklemi ve komisyon, olasılık–ödül takası, karşı taraf simetrisi, olasılık sınıfları ve kurulum listeleri, olasılık ve pozisyon büyüklüğü, kenarların…"><meta name="generator" content="Astro v5.18.2"><meta name="theme-color" content="#f5f0e6"><link rel="canonical" href="https://ttotrading.com/arastirma/brooks-matematik-1/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — tüm yayınlar" href="/rss.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — Bülten" href="/bulten/rss.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — Analiz" href="/analiz/rss.xml"><meta property="og:type" content="article"><meta property="og:site_name" content="TTO Trading"><meta property="og:locale" content="tr_TR"><meta property="og:title" content="İşlem matematiği I: denklem, olasılık sınıfları ve büyüyen spike"><meta property="og:description" content="Her kalıbın tek sayıya indirgenmesi: trader denklemi ve komisyon, olasılık–ödül takası, karşı taraf simetrisi, olasılık sınıfları ve kurulum listeleri, olasılık ve pozisyon büyüklüğü, kenarların…"><meta property="og:url" content="https://ttotrading.com/arastirma/brooks-matematik-1/"><meta property="og:image" content="https://ttotrading.com/og/genel.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="TTO Trading — Dersler"><meta property="article:published_time" content="2026-11-06T00:00:00.000Z"><meta property="article:modified_time" content="2026-11-06T00:00:00.000Z"><meta property="article:section" content="Dersler"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="İşlem matematiği I: denklem, olasılık sınıfları ve büyüyen spike"><meta name="twitter:description" content="Her kalıbın tek sayıya indirgenmesi: trader denklemi ve komisyon, olasılık–ödül takası, karşı taraf simetrisi, olasılık sınıfları ve kurulum listeleri, olasılık ve pozisyon büyüklüğü, kenarların…"><meta name="twitter:image" content="https://ttotrading.com/og/genel.png"><script type="application/ld+json">[{"@context":"https://schema.org","@type":"WebSite","name":"TTO Trading","url":"https://ttotrading.com/","description":"TCMB rezervleri, reel kur, Hazine ihaleleri ve faiz piyasaları üzerine veriye dayalı projeler, canlı grafikler ve hesaplama araçları.","inLanguage":"tr","publisher":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}}},{"@context":"https://schema.org","@type":"Article","headline":"İşlem matematiği I: denklem, olasılık sınıfları ve büyüyen spike","description":"Her kalıbın tek sayıya indirgenmesi: trader denklemi ve komisyon, olasılık–ödül takası, karşı taraf simetrisi, olasılık sınıfları ve kurulum listeleri, olasılık ve pozisyon büyüklüğü, kenarların…","url":"https://ttotrading.com/arastirma/brooks-matematik-1/","mainEntityOfPage":"https://ttotrading.com/arastirma/brooks-matematik-1/","image":["https://ttotrading.com/og/genel.png"],"inLanguage":"tr","datePublished":"2026-11-06T00:00:00.000Z","dateModified":"2026-11-06T00:00:00.000Z","author":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}},"publisher":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}},"articleSection":"Dersler"}]</script><script defer data-domain="ttotrading.com" data-api="/v/api/event" src="/v/js/script.js"></script><link rel="stylesheet" href="/_astro/index.BWd6Gdev.css">
+<style>.video-oynatici[data-astro-cid-quemlkkv]{margin:1.75rem 0 .5rem;max-width:26rem}.video-ust[data-astro-cid-quemlkkv]{display:block;margin-bottom:.5rem;color:var(--ink-60)}video[data-astro-cid-quemlkkv]{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:1080 / 1350;background:var(--paper-2);border:1px solid var(--ink-30)}
+</style>
+<link rel="stylesheet" href="/_astro/_slug_.BVOGJi8f.css"><style>.grafik[data-astro-cid-bik524jn]{margin:2.2em 0;border:1px solid var(--ink-30);background:#fff;box-shadow:0 1px 0 var(--ink-15)}.grafik[data-astro-cid-bik524jn].genis{position:relative;left:50%;transform:translate(-50%);width:min(1180px,calc(100vw - 32px))}figcaption[data-astro-cid-bik524jn]{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem .9rem;padding:.55rem .9rem;border-bottom:1px solid var(--ink-15);background:var(--paper-2)}.grafik-no[data-astro-cid-bik524jn]{color:var(--claret);white-space:nowrap}.grafik-baslik[data-astro-cid-bik524jn]{font-family:var(--font-body);font-style:italic;font-size:.95rem;color:var(--ink-70)}.grafik-veri[data-astro-cid-bik524jn]{margin-left:auto;min-width:0;overflow-wrap:break-word;color:var(--ink-50);font-variant-numeric:tabular-nums}.grafik-veri[data-astro-cid-bik524jn]+.tam-ekran[data-astro-cid-bik524jn]{margin-left:0}.tam-ekran[data-astro-cid-bik524jn]{margin-left:auto;white-space:nowrap;text-decoration:none;color:var(--ink-50)}.tam-ekran[data-astro-cid-bik524jn]:hover{color:var(--claret)}.cerceve[data-astro-cid-bik524jn]{position:relative;background:linear-gradient(100deg,transparent 30%,rgba(33,27,18,.05) 50%,transparent 70%) no-repeat 0 0 / 300% 100%,#fff;animation:parilti 1.6s linear infinite}@keyframes parilti{to{background-position:-300% 0,0 0}}.yukleniyor[data-astro-cid-bik524jn]{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-60)}iframe[data-astro-cid-bik524jn]{position:relative;display:block;width:100%;height:100%;border:none;opacity:0;transition:opacity .4s ease}.cerceve[data-astro-cid-bik524jn].hazir{animation:none;background:#fff}.cerceve[data-astro-cid-bik524jn].hazir iframe[data-astro-cid-bik524jn]{opacity:1}.cerceve[data-astro-cid-bik524jn].hazir .yukleniyor[data-astro-cid-bik524jn]{display:none}
+</style></head> <body> <a class="atla" href="#icerik">İçeriğe geç</a> <header class="masthead" data-astro-cid-3ef6ksr2> <div class="sarici" data-astro-cid-3ef6ksr2> <div class="dateline etiket" data-astro-cid-3ef6ksr2>  <span class="gun-yer" data-astro-cid-3ef6ksr2><span data-bugun hidden data-astro-cid-3ef6ksr2></span><span class="orta" data-astro-cid-3ef6ksr2>İstanbul</span></span> <span class="son-yayinlar" data-astro-cid-3ef6ksr2> <a class="son-bulten" href="/bulten/2026-11-13/" data-astro-cid-3ef6ksr2> Son bülten · 13 Kasım 2026 </a> </span> </div> <div class="baslik-satir" data-astro-cid-3ef6ksr2> <a href="/" class="marka" aria-label="TTO Trading — ana sayfa" data-astro-cid-3ef6ksr2> <svg class="tto-isaret marka-isaret" viewBox="214 274 572 346" aria-hidden="true" focusable="false" data-astro-cid-tvrurpns> <line x1="321" y1="463" x2="321" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="424" y1="518" x2="424" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="543" y1="357" x2="543" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="668" y1="485" x2="668" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="470" y1="508.7" x2="470" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line><line x1="600" y1="437.5" x2="600" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line><line x1="722" y1="322.6" x2="722" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line> <path d="M264.5133568919622 387.26923076923083H365.3088210525277Q369.0643543309818 387.26923076923083 371.70667259092437 386.1712238182887Q374.3489908508669 385.0732168673466 376.3864166735349 384.00982477283105Q378.42384249620284 382.94643267831555 380.1755222590783 382.94643267831555Q382.5114517408566 382.94643267831555 383.786987571189 384.18423725352983Q385.0625234015214 385.4220418287441 385.8678259859578 388.79209905945197L394.333027061469 433.57036030568327Q394.8487847778373 435.8855405218828 394.13227325369814 437.3167612523987Q393.41576172955905 438.7479819829146 391.6071675681652 439.10139305943335Q389.91072097811127 439.45947588188574 388.56742771911934 438.7543744096139Q387.2241344601274 438.049272937342 386.2755288737468 436.0843873989697Q379.0536407074676 418.8134515649066 373.41589034543944 410.07865547336854Q367.7781399834113 401.3438593818305 362.3214716054857 398.31365833911474Q356.8648032275602 395.283457296399 350.18677113506084 395.283457296399H332.9446493739692V554.5362875338358Q332.9446493739692 556.8028829741793 334.4183017856692 558.1327898146119Q335.8919541973692 559.4626966550445 338.6966477772937 560.1186409746655L347.9124809122429 561.7652983915849Q351.47051628711273 562.7384699570158 351.47051628711273 565.5752783285884Q351.47051628711273 569.0 346.89970697140177 569.0H283.47981500525316Q281.1411042290811 569.0 280.02505495931166 568.0415332122133Q278.90900568954214 567.0830664244265 278.90900568954214 565.5752783285884Q278.90900568954214 562.7384699570158 282.46704106441194 561.7652983915849L291.68287419936115 560.1186409746655Q294.557661080912 559.4626966550445 295.99626684179884 558.1327898146119Q297.4348726026857 556.8028829741793 297.4348726026857 554.5362875338358V395.283457296399H280.1927508415941Q273.60816634313846 395.283457296399 268.16793926928835 398.50023585371673Q262.72771219543824 401.7170144110345 257.06634108012975 410.4820994922999Q251.4049699648212 419.2471845735653 244.10399310290813 436.0843873989697Q243.21510190720886 438.049272937342 241.84195145287623 438.7543744096139Q240.4688009985436 439.45947588188574 238.7723544084897 439.10139305943335Q237.00114277087582 438.7479819829146 236.31492023646402 437.3167612523987Q235.62869770205222 435.8855405218828 236.04649491518592 433.57036030568327L244.51169599069712 388.79209905945197Q245.31699857513348 385.4220418287441 246.60646800627 384.18423725352983Q247.89593743740653 382.94643267831555 250.20399971757658 382.94643267831555Q251.95965946791694 382.94643267831555 253.839403899888 384.00982477283105Q255.71914833185906 385.0732168673466 258.2822767688284 386.1712238182887Q260.8454052057977 387.26923076923083 264.5133568919622 387.26923076923083Z M434.9508568919622 387.26923076923083H535.7463210525277Q539.5018543309818 387.26923076923083 542.1441725909244 386.1712238182887Q544.7864908508669 385.0732168673466 546.8239166735349 384.00982477283105Q548.8613424962028 382.94643267831555 550.6130222590783 382.94643267831555Q552.9489517408566 382.94643267831555 554.224487571189 384.18423725352983Q555.5000234015214 385.4220418287441 556.3053259859578 388.79209905945197L564.770527061469 433.57036030568327Q565.2862847778373 435.8855405218828 564.5697732536983 437.3167612523987Q563.8532617295591 438.7479819829146 562.0446675681652 439.10139305943335Q560.3482209781113 439.45947588188574 559.0049277191193 438.7543744096139Q557.6616344601274 438.049272937342 556.7130288737468 436.0843873989697Q549.4911407074676 418.8134515649066 543.8533903454395 410.07865547336854Q538.2156399834113 401.3438593818305 532.7589716054857 398.31365833911474Q527.3023032275602 395.283457296399 520.6242711350608 395.283457296399H503.3821493739692V554.5362875338358Q503.3821493739692 556.8028829741793 504.8558017856692 558.1327898146119Q506.3294541973692 559.4626966550445 509.1341477772937 560.1186409746655L518.3499809122429 561.7652983915849Q521.9080162871128 562.7384699570158 521.9080162871128 565.5752783285884Q521.9080162871128 569.0 517.3372069714018 569.0H453.91731500525316Q451.5786042290811 569.0 450.46255495931166 568.0415332122133Q449.34650568954214 567.0830664244265 449.34650568954214 565.5752783285884Q449.34650568954214 562.7384699570158 452.90454106441194 561.7652983915849L462.12037419936115 560.1186409746655Q464.995161080912 559.4626966550445 466.43376684179884 558.1327898146119Q467.8723726026857 556.8028829741793 467.8723726026857 554.5362875338358V395.283457296399H450.6302508415941Q444.04566634313846 395.283457296399 438.60543926928835 398.50023585371673Q433.16521219543824 401.7170144110345 427.50384108012975 410.4820994922999Q421.8424699648212 419.2471845735653 414.54149310290813 436.0843873989697Q413.65260190720886 438.049272937342 412.27945145287623 438.7543744096139Q410.9063009985436 439.45947588188574 409.20985440848966 439.10139305943335Q407.43864277087584 438.7479819829146 406.752420236464 437.3167612523987Q406.0661977020522 435.8855405218828 406.4839949151859 433.57036030568327L414.94919599069715 388.79209905945197Q415.7544985751335 385.4220418287441 417.04396800627 384.18423725352983Q418.33343743740653 382.94643267831555 420.64149971757655 382.94643267831555Q422.39715946791694 382.94643267831555 424.276903899888 384.00982477283105Q426.15664833185906 385.0732168673466 428.7197767688284 386.1712238182887Q431.2829052057977 387.26923076923083 434.9508568919622 387.26923076923083Z M670.0099249976472 383.6388017458197Q690.4382683436672 383.6388017458197 707.0990273391362 390.6072315202238Q723.7597863346051 397.57566129462793 735.7482777719492 410.2809825321266Q747.7367692092935 422.9863037696252 754.2020477936424 440.3431412401394Q760.6673263779912 457.6999787106537 760.6673263779912 478.51815661411877Q760.6673263779912 499.2711380333998 754.2140708190855 516.5706936762883Q747.7608152601796 533.8702493191769 735.8290806515679 546.455872462346Q723.8973460429563 559.0414956055151 707.3436989293684 565.9155802871459Q690.7900518157805 572.7896649687766 670.653826673336 572.7896649687766Q650.3305402167069 572.7896649687766 633.7036184040435 565.8375905832957Q617.0766965913801 558.8855161978147 605.1017928756057 546.1474841824697Q593.1268891598313 533.4094521671248 586.6616105754824 515.9197815914926Q580.1963319911335 498.4301110158603 580.1963319911335 477.28966891016955Q580.1963319911335 456.73779573420495 586.6663747333491 439.5850067972385Q593.1364174755648 422.43221786027203 605.0849392674863 409.9095944846765Q617.0334610594078 397.38697110908106 633.5205602123438 390.5128864274504Q650.0076593652798 383.6388017458197 670.0099249976472 383.6388017458197ZM724.3195232508632 501.6529628355414Q724.3195232508632 483.8118575500826 721.0903217550904 467.4902417186039Q717.8611202593177 451.1686258871252 712.066546422107 437.45106030402417Q706.2719725848963 423.7334947209232 698.4092711878116 413.5686765919404Q690.546569790727 403.40385846295754 681.2429651379441 397.78557402524166Q671.9393604851614 392.16728958752583 661.7120868553981 392.16728958752583Q648.2373973273386 392.16728958752583 638.1003742385476 399.43499144007313Q627.9633511497567 406.70269329262044 622.3324881690339 420.5330491157858Q616.7016251883111 434.36340493895113 616.7016251883111 454.1212883221272Q616.7016251883111 472.12508390804464 619.9124813014283 488.5746892684032Q623.1233374145455 505.0242946287617 628.9183430461428 518.8256271502111Q634.7133486777401 532.6269596716604 642.541349303246 542.8567675619494Q650.3693499287518 553.0865754522383 659.7012535775295 558.7375706678006Q669.0331572263071 564.3885658833628 679.2285836669975 564.3885658833628Q692.9400367846067 564.3885658833628 703.0623485989724 557.1540066030486Q713.1846604133383 549.9194473227343 718.7520918321007 535.9288229872293Q724.3195232508632 521.9381986517244 724.3195232508632 501.6529628355414Z" class="harf" data-astro-cid-tvrurpns></path> <path d="M230.0,533.0 C245.2,520.3 288.7,460.5 321.0,457.0 C353.3,453.5 387.0,529.7 424.0,512.0 C461.0,494.3 502.3,356.5 543.0,351.0 C583.7,345.5 630.2,476.0 668.0,479.0 C705.8,482.0 753.0,387.3 770.0,369.0" class="dalga" data-astro-cid-tvrurpns></path> <path d="M232.0,564.0 C242.7,562.2 274.8,557.4 296.1,553.2 C317.5,549.0 338.9,544.5 360.2,539.0 C381.6,533.5 403.0,527.5 424.4,520.2 C445.8,513.0 467.1,505.1 488.5,495.6 C509.9,486.0 531.2,475.6 552.6,463.1 C574.0,450.6 595.4,436.9 616.8,420.4 C638.1,403.9 659.5,385.8 680.9,364.1 C702.2,342.4 734.3,302.3 745.0,290.0" class="egri" data-astro-cid-tvrurpns></path> <line x1="230" y1="603" x2="770" y2="603" class="eksen" data-astro-cid-tvrurpns></line> <line x1="230" y1="584" x2="230" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="320" y1="584" x2="320" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="410" y1="584" x2="410" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="500" y1="584" x2="500" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="590" y1="584" x2="590" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="680" y1="584" x2="680" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="770" y1="584" x2="770" y2="603" class="cetvel" data-astro-cid-tvrurpns></line> </svg>  <span class="marka-yazi" data-astro-cid-3ef6ksr2> <span class="marka-ad" lang="en" data-astro-cid-3ef6ksr2>TTO Trading</span> <span class="marka-alt" data-astro-cid-3ef6ksr2>Türkiye makro &amp; piyasa araştırmaları</span> </span> </a> <nav aria-label="Bölümler" data-astro-cid-3ef6ksr2> <div class="nav-acilir" data-acilir data-astro-cid-3ef6ksr2> <button type="button" class="nav-link nav-dugme" aria-expanded="false" aria-controls="menu-bulten" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>01</span> Bülten <span class="nav-ok" aria-hidden="true" data-astro-cid-3ef6ksr2></span> </button> <ul class="nav-menu" id="menu-bulten" data-astro-cid-3ef6ksr2> <li data-astro-cid-3ef6ksr2> <a href="/bulten/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Günlük</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Hafta içi her sabah</span> </a> </li><li data-astro-cid-3ef6ksr2> <a href="/bulten/haftalik/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Haftalık</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Pazar akşamı, haftaya bakış</span> </a> </li><li data-astro-cid-3ef6ksr2> <a href="/bulten/aylik/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Aylık</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Ayın ilk iş günü akşamı</span> </a> </li> </ul> </div><a href="/tradeler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>02</span> Tradeler </a><a href="/analiz/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>03</span> Analiz </a><a href="/projeler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>04</span> Projeler </a><a href="/grafikler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>05</span> Grafikler </a><a href="/arastirma/" class="nav-link aktif" aria-current="page" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>06</span> Dersler </a><a href="/indikatorler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>07</span> İndikatörler </a><a href="/hakkinda/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>08</span> Hakkında </a><a href="/arama/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>09</span> Arama </a> </nav> <noscript> <style>.nav-acilir:focus-within .nav-menu { display: block; }</style> </noscript> </div> </div> </header> <script type="module" src="/_astro/Header.astro_astro_type_script_index_0_lang.sWAGpYzy.js"></script>  <main class="sarici" id="icerik" tabindex="-1">  <article data-astro-cid-mrksnbf2> <header class="makale-baslik yuksel" data-astro-cid-mrksnbf2> <p class="kicker etiket" data-astro-cid-mrksnbf2> Ders  · <a href="/arastirma/#teknik-analiz" data-astro-cid-mrksnbf2>Teknik analiz &amp; fiyat aksiyonu</a>  · fiyat-aksiyonu · teknik-analiz · brooks · price-action </p> <h1 data-astro-cid-mrksnbf2>İşlem matematiği I: denklem, olasılık sınıfları ve büyüyen spike</h1> <p class="ozet" data-astro-cid-mrksnbf2>Bir kalıbın adı ikincildir; işlemi olasılık, ödül ve risk belirler — ve bu üçü fiyat ilerledikçe her tick&#39;te değişir.</p> <div class="makale-meta" data-astro-cid-mrksnbf2> <span data-astro-cid-mrksnbf2><b data-astro-cid-mrksnbf2>Yayın</b> 6 Kasım 2026</span>      </div>  <details class="seri-kunye" data-astro-cid-rqz27vut> <summary data-astro-cid-rqz27vut> <span class="etiket" data-astro-cid-rqz27vut>Seri</span> <a href="/arastirma/seri/brooks/" data-astro-cid-rqz27vut>Al Brooks fiyat hareketi</a> <span class="seri-konum" data-astro-cid-rqz27vut>Bölüm 18 / 27</span> <span class="seri-ac" data-astro-cid-rqz27vut>bütün bölümler</span> </summary> <ol class="seri-liste" data-astro-cid-rqz27vut> <li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>01</span> <a class="seri-ad" href="/arastirma/brooks-cerceve/" data-astro-cid-rqz27vut>Çerçeve: piyasayı kim hareket ettirir, bir işlem neden alınır</a> <span class="seri-dk" data-astro-cid-rqz27vut>30 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>02</span> <a class="seri-ad" href="/arastirma/brooks-bar-okuma/" data-astro-cid-rqz27vut>Bar okuma: gövde, kuyruk, kapanış ve baskı</a> <span class="seri-dk" data-astro-cid-rqz27vut>31 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>03</span> <a class="seri-ad" href="/arastirma/brooks-sinyal-bari/" data-astro-cid-rqz27vut>Sinyal barı, kurulum ve giriş: emir nereye konur</a> <span class="seri-dk" data-astro-cid-rqz27vut>33 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>04</span> <a class="seri-ad" href="/arastirma/brooks-trend/" data-astro-cid-rqz27vut>Trend: tanım, güç işaretleri, spike ve kanal</a> <span class="seri-dk" data-astro-cid-rqz27vut>31 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>05</span> <a class="seri-ad" href="/arastirma/brooks-kanal-ve-cizgiler/" data-astro-cid-rqz27vut>Kanalda çalışmak: trend çizgisi, kanal çizgisi, merdiven ve devrilme</a> <span class="seri-dk" data-astro-cid-rqz27vut>37 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>06</span> <a class="seri-ad" href="/arastirma/brooks-yatay-bant/" data-astro-cid-rqz27vut>Yatay bant: tanı, mıknatıs ve bantta çalışmak</a> <span class="seri-dk" data-astro-cid-rqz27vut>26 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>07</span> <a class="seri-ad" href="/arastirma/brooks-dar-bant/" data-astro-cid-rqz27vut>Dar bant, barbwire, üçgen ve kırılım modu: ne zaman hiç işlem yapılmaz</a> <span class="seri-dk" data-astro-cid-rqz27vut>29 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>08</span> <a class="seri-ad" href="/arastirma/brooks-kirilim/" data-astro-cid-rqz27vut>Kırılım tutacak mı: tanımlar, güç ve zayıflık listeleri</a> <span class="seri-dk" data-astro-cid-rqz27vut>24 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>09</span> <a class="seri-ad" href="/arastirma/brooks-kirilim-giris/" data-astro-cid-rqz27vut>Kırılımı işlemek: tick başarısızlıkları, bağlam ve giriş yolları</a> <span class="seri-dk" data-astro-cid-rqz27vut>31 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>10</span> <a class="seri-ad" href="/arastirma/brooks-geri-cekilme/" data-astro-cid-rqz27vut>Geri çekilme ve bar sayımı: high 2 ve low 2 ne zaman alınır</a> <span class="seri-dk" data-astro-cid-rqz27vut>25 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>11</span> <a class="seri-ad" href="/arastirma/brooks-bayrak-ve-ortalama/" data-astro-cid-rqz27vut>Bayraklar, geri çekilmenin derinliği ve 20 barlık ortalama</a> <span class="seri-dk" data-astro-cid-rqz27vut>30 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>12</span> <a class="seri-ad" href="/arastirma/brooks-trend-sonu/" data-astro-cid-rqz27vut>Trend nasıl ölür: atalet, devrilme ve klimaks</a> <span class="seri-dk" data-astro-cid-rqz27vut>36 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>13</span> <a class="seri-ad" href="/arastirma/brooks-donus/" data-astro-cid-rqz27vut>Dönüş dizisi: dört koşul, beş bar kuralı, erken ve geç giriş</a> <span class="seri-dk" data-astro-cid-rqz27vut>27 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>14</span> <a class="seri-ad" href="/arastirma/brooks-donus-kaliplari-1/" data-astro-cid-rqz27vut>Dönüş kalıpları I: üç itiş, kama ve son bayrak</a> <span class="seri-dk" data-astro-cid-rqz27vut>22 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>15</span> <a class="seri-ad" href="/arastirma/brooks-donus-kaliplari-2/" data-astro-cid-rqz27vut>Dönüş kalıpları II: genişleyen üçgen, çift tepe, baş-omuz ve başarısızlık</a> <span class="seri-dk" data-astro-cid-rqz27vut>31 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>16</span> <a class="seri-ad" href="/arastirma/brooks-miknatis/" data-astro-cid-rqz27vut>Mıknatıslar: fiyat nereye çekilir</a> <span class="seri-dk" data-astro-cid-rqz27vut>21 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>17</span> <a class="seri-ad" href="/arastirma/brooks-olculmus-hareket/" data-astro-cid-rqz27vut>Ölçülmüş hareket: hedef ne kadar uzakta</a> <span class="seri-dk" data-astro-cid-rqz27vut>25 dk</span> </li><li class="simdi" data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>18</span> <span class="seri-ad" data-astro-cid-rqz27vut>İşlem matematiği I: denklem, olasılık sınıfları ve büyüyen spike</span> <span class="seri-dk" data-astro-cid-rqz27vut>24 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>19</span> <a class="seri-ad" href="/arastirma/brooks-matematik-2/" data-astro-cid-rqz27vut>İşlem matematiği II: scalp ve swing, yasaklar, Fibonacci yerine risk-ödül</a> <span class="seri-dk" data-astro-cid-rqz27vut>26 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>20</span> <a class="seri-ad" href="/arastirma/brooks-giris-ve-stop/" data-astro-cid-rqz27vut>Emir nereye: dört giriş biçimi ve koruyucu stop</a> <span class="seri-dk" data-astro-cid-rqz27vut>34 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>21</span> <a class="seri-ad" href="/arastirma/brooks-kar-alma/" data-astro-cid-rqz27vut>Kâr alma, ölçekleme ve pozisyon boyu</a> <span class="seri-dk" data-astro-cid-rqz27vut>29 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>22</span> <a class="seri-ad" href="/arastirma/brooks-always-in/" data-astro-cid-rqz27vut>Always-in ve gün tipleri: şu anda hangi yöndesin, bugün ne günü</a> <span class="seri-dk" data-astro-cid-rqz27vut>30 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>23</span> <a class="seri-ad" href="/arastirma/brooks-seans/" data-astro-cid-rqz27vut>Seans: günün üç dilimi, açılış aralığı ve boşluklu açılış</a> <span class="seri-dk" data-astro-cid-rqz27vut>23 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>24</span> <a class="seri-ad" href="/arastirma/brooks-ust-zaman/" data-astro-cid-rqz27vut>Üst zaman dilimleri ve opsiyonla risk tanımlamak</a> <span class="seri-dk" data-astro-cid-rqz27vut>20 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>25</span> <a class="seri-ad" href="/arastirma/brooks-galeri-1/" data-astro-cid-rqz27vut>İşlem galerisi I: trend, klimaks ve bant işlemleri</a> <span class="seri-dk" data-astro-cid-rqz27vut>28 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>26</span> <a class="seri-ad" href="/arastirma/brooks-galeri-2/" data-astro-cid-rqz27vut>İşlem galerisi II: en güçlü trend, bant scalp&#39;i, dönüş ve negatif örnekler</a> <span class="seri-dk" data-astro-cid-rqz27vut>24 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>27</span> <a class="seri-ad" href="/arastirma/brooks-rutin/" data-astro-cid-rqz27vut>Masada her gün: ilkeler, rutin ve çalışma programı</a> <span class="seri-dk" data-astro-cid-rqz27vut>28 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>Ek</span> <a class="seri-ad" href="/arastirma/brooks-ek/" data-astro-cid-rqz27vut>Ek: kaynak, şekiller ve sayısal sabitler</a> <span class="seri-dk" data-astro-cid-rqz27vut>10 dk</span> </li> </ol> </details>  <p class="kaynak-satiri" data-astro-cid-mrksnbf2><span class="etiket" data-astro-cid-mrksnbf2>Kaynak</span> Al Brooks, Trading Price Action üçlemesi (Trends · Trading Ranges · Reversals), Wiley 2012. Yöntemin kaynağı; seri onu kendi ifadesiyle yeniden yazar. Şekillerin ve sayıların notları serinin ekinde.</p> <p class="kapsam-satiri" data-astro-cid-mrksnbf2><span class="etiket" data-astro-cid-mrksnbf2>Kapsam</span> Her kalıbın tek sayıya indirgenmesi: trader denklemi ve komisyon, olasılık–ödül takası, karşı taraf simetrisi, olasılık sınıfları ve kurulum listeleri, olasılık ve pozisyon büyüklüğü, kenarların geçiciliği, denklemin her tick&#39;te yeniden hesaplanması, büyüyen spike&#39;ın matematiği, yönsel olasılığın kanal boyunca erozyonu, %90 ve %10 olasılık anları.</p> <div class="ders-kunye" aria-label="Ders künyesi" data-astro-cid-vyjx7skq> <div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>24 dk</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Okuma</span> <span class="kunye-alt" data-astro-cid-vyjx7skq>4,8 bin kelime</span> </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>11</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Alt başlık</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>4</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Grafik</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>15</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Tablo</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>Giriş</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Seviye</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>06 Kas 2026</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Son güncelleme</span>  </div> </div>     </header> <nav class="icindekiler yuksel" id="icindekiler" hidden aria-label="İçindekiler" data-astro-cid-mrksnbf2> <span class="etiket ic-baslik" data-astro-cid-mrksnbf2>İçindekiler</span> <ol id="icindekiler-liste" data-astro-cid-mrksnbf2></ol> </nav>   <div class="prose yuksel" style="--d: 120ms" data-deger="sabit" data-astro-cid-mrksnbf2>  <div class="masa"><span class="etiket">Bu bölüm neyi çözer</span><p>Grafikte bir çift dip boğa bayrağı gördün, adını doğru koydun, sinyal barı da güzel. Almaya değer mi? Formasyonun adı ikincildir: aynı kalıp, giriş yeri, stop ve hedef değişince başka bir işlemdir. Bu bölüm ve sonraki, serideki her kalıbı tek bir sayıya indirger: beklenen değer. Burada denklem, simetri ve dinamik var; yasaklar ve uygulama <a href="/arastirma/brooks-matematik-2/">Bölüm 19</a>’da.</p><p><strong>Kısaca</strong></p><ul>
+<li>Olasılık sınıfları: %70 ve üzeri için ödül en az riskin yarısı, %60 için en az risk kadar, ~%50 için riskin 1,5 katı, %40 ve altı için riskin iki katı gerekir.</li>
+<li>Yüksek olasılık ile büyük ödül aynı işlemde bir arada olmaz: karşı tarafın denklemi seninkinin aynasıdır.</li>
+<li>Kenar küçük ve geçicidir; avantaj gördüğünde hızlı davranman gerekir. Denklem her tick’te yeniden hesaplanır.</li>
+<li>Spike büyüdükçe baştan girenin matematiği iyileşir, sonradan girenin riski büyür; kanal ilerledikçe yönsel olasılık erir ve trend yönlü giriş limite döner.</li>
+<li>%90 olasılık anlarında braket emrine güven, son tick’i yönetmeye çalışma.</li>
+</ul></div>
+<p>Bu bölüm ve <a href="/arastirma/brooks-matematik-2/">Bölüm 19</a> serinin <strong>türetim</strong> bölümleridir. Buraya kadar öğrendiğiniz her kalıp — spike, kanal, bant, kırılım, dönüş, mıknatıs, ölçülmüş hareket — burada tek bir sayıya indirgenecek: <strong>beklenen değer</strong>.</p>
+<p>Bunun neden gerekli olduğunu bir soruyla açalım. Grafikte bir çift dip boğa bayrağı gördünüz. Kalıbı doğru tanıdınız, adını doğru koydunuz, sinyal barı da güzel. <strong>Şimdi ne olacak?</strong> Kalıbın adı size girip girmemeniz gerektiğini söylemez. Girmeniz gerektiğini söyleyen tek şey, üç sayının çarpımıdır: başarı olasılığı, hedefe olan mesafe, stopa olan mesafe.</p>
+<p>Brooks’un kitap boyunca “iyi işlem” dediği şey, işte bu üç sayının pozitif bir sonuç ürettiği işlemdir. <strong>Formasyonun adı ikincildir.</strong> Aynı çift dip, giriş yerine göre pozitif de negatif de olabilir; aynı zayıf kurulum, karşı taraftan bakıldığında mükemmel bir işlem olabilir. Bu bölüm size bu hesabı öğretiyor.</p>
+<p>Konu dört katmandan oluşuyor; ilk üçü bu bölümde, dördüncüsü Bölüm 19’da:</p>
+<ol>
+<li><strong>Denklem</strong> — üç değişken, karar sırası, komisyon, takas eğrisi.</li>
+<li><strong>Simetri</strong> — karşı tarafın denklemi, kurumsal karşı taraf ilkesi, “yüksek olasılık + büyük ödül” imkânsızlığı.</li>
+<li><strong>Dinamik</strong> — denklemin her tick’te değişmesi, büyüyen spike, kanal boyunca erozyon.</li>
+<li><strong>Uygulama ve yasaklar</strong> — scalp/swing matematiği, olasılık sınıfları, cherry-picking, martingale, dağılım yanılgısı, kırılım aritmetiği, düzeltme aritmetiği.</li>
+</ol>
+<div class="not"><p><span class="etiket">Bu bölümün okuma notu</span>
+Buradaki sayılar — %60, 2R, 8 tick — Brooks’un belirli enstrümanlarda belirli dönemlerde gözlemlediği kalibrasyon değerleridir; olgu olarak aktarılıyor ve ona atfediliyor. <strong>Evrensel sabitler değildir.</strong> Kendi enstrümanınızda kendi sayılarınızı ölçmeniz gerekir. Ama <em>yapı</em> — hangi değişkenin hangi değişkeni nasıl kısıtladığı — evrenseldir ve bu bölümün asıl öğrettiği odur.</p></div>
+<hr/>
+<h2 id="181--trader-denklemi">18.1 · Trader denklemi</h2>
+<p><strong>Tanım.</strong> Bir işlemin alınıp alınmayacağına karar veren tek ölçüt. Üç girdisi vardır:</p>
+<ul>
+<li><strong>P</strong> — başarı olasılığı (hedefe stopa değmeden ulaşma olasılığı).</li>
+<li><strong>Ödül</strong> — giriş fiyatı ile kâr hedefi arasındaki mesafe.</li>
+<li><strong>Risk</strong> — giriş fiyatı ile koruyucu stop arasındaki mesafe.</li>
+</ul>
+<p><strong>Karar kuralı:</strong></p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>×</mo><mrow><mover accent="true"><mtext>O</mtext><mo>¨</mo></mover><mtext>d</mtext><mover accent="true"><mtext>u</mtext><mo>¨</mo></mover><mtext>l</mtext></mrow><mo>&gt;</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>P</mi><mo stretchy="false">)</mo><mo>×</mo><mtext>Risk</mtext></mrow><annotation encoding="application/x-tex">P \times \text{Ödül} &gt; (1 - P) \times \text{Risk}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9593em;vertical-align:-0.0391em;"></span><span class="mord text"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9202em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord">O</span></span><span style="top:-3.2523em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord">¨</span></span></span></span></span></span></span><span class="mord">d</span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6679em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord">u</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord">¨</span></span></span></span></span></span></span><span class="mord">l</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">Risk</span></span></span></span></span></p>
+<p>Sol taraf beklenen kazanç, sağ taraf beklenen kayıptır. Fark pozitifse işlem matematiksel olarak geçerlidir. Fark, işlem başına <strong>beklenen değerdir</strong>:</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">B</mi><mi mathvariant="normal">D</mi></mrow><mo>=</mo><mi>P</mi><mo>×</mo><mrow><mover accent="true"><mtext>O</mtext><mo>¨</mo></mover><mtext>d</mtext><mover accent="true"><mtext>u</mtext><mo>¨</mo></mover><mtext>l</mtext></mrow><mo>−</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>P</mi><mo stretchy="false">)</mo><mo>×</mo><mtext>Risk</mtext></mrow><annotation encoding="application/x-tex">\mathrm{BD} = P \times \text{Ödül} - (1-P) \times \text{Risk}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord"><span class="mord mathrm">BD</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0035em;vertical-align:-0.0833em;"></span><span class="mord text"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9202em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord">O</span></span><span style="top:-3.2523em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord">¨</span></span></span></span></span></span></span><span class="mord">d</span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6679em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord">u</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord">¨</span></span></span></span></span></span></span><span class="mord">l</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">Risk</span></span></span></span></span></p>
+<p><strong>Karar sırası — Brooks’un yeni başlayanlar için önerdiği sıra.</strong> Sıra önemlidir; üç sayıyı bu sırayla belirlerseniz kendinizi kandırma ihtimaliniz azalır.</p>
+<ol>
+<li><strong>Önce risk.</strong> Risk, sinyal barının boyu + 2 tick’tir. (Bir tick üstünden girersiniz, bir tick altına stop koyarsınız.) Bu, <em>tercih</em> değil <em>ölçüm</em>dür: piyasa size riski söyler.</li>
+<li><strong>Sonra ödül.</strong> En az riske eşit olmalı. Daha azını hedefleyecekseniz işlemi almayın.</li>
+<li><strong>En son olasılık.</strong> Kuruluma bakıp “iyi görünüyor” diyebiliyorsanız bu <strong>≥ %60</strong> demektir — çünkü %55’te kendinizi güvende hissetmezsiniz. Ortalama kanaat seviyeniz ≥ %60 olduğu için denklemde %60 kullanın.</li>
+</ol>
+<p><strong>Belirsizlik kuralı.</strong> Olasılık tahmininde emin değilseniz <strong>%50</strong> kullanın. Belirsizlik, tanımı gereği yatay bant demektir; yatay bantta yukarı ile aşağı olasılığı eşittir.</p>
+<p><strong>Kritik uyarı — planlanan hedef ile uygulanan hedef aynı olmalıdır.</strong> Denklemi, <em>gerçekten kullanacağınız</em> hedefle çözün. “Tutarsa 4 puan tutarım” deyip 1 puanda çıkacaksanız, denklemi 1 puanla çözün. Bu kural o kadar önemlidir ki <a href="/arastirma/brooks-matematik-2/#193--planlanan-hedef-ile-uygulanan-hedef-ayn%C4%B1-olmal%C4%B1d%C4%B1r">§19.3</a>’te ayrı başlık açıyoruz.</p>
+<p><strong>Süreklilik kuralı.</strong> Her tick’te üç değişken de değişir. Denklem tek seferlik değil, süreklidir (<a href="#188--dinamik-trader-denklemi-her-tickte-yeniden-hesap">§18.8</a>).</p>
+<p><strong>Sayısal eşikler.</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Ödül/Risk</th><th>Gereken minimum olasılık</th></tr></thead><tbody><tr><td>0,5 × risk</td><td>~<strong>%80</strong></td></tr><tr><td>1 × risk</td><td>~<strong>%50</strong> (komisyonla biraz üstü)</td></tr><tr><td>2 × risk</td><td>~<strong>%40</strong></td></tr></tbody></table>
+<p><strong>“En iyi işlem” tarifi:</strong> olasılık ≥ %60 <strong>ve</strong> ödül ≥ risk, tercihen ödül ≈ 2 × risk. Bu güçte bir kurulum ortalama bir günde yalnızca <strong>birkaç kez</strong> oluşur.</p>
+<p><strong>Komisyon.</strong> Endeks vadelisinde gidiş-dönüş komisyon yaklaşık <strong>0,1 puan</strong> mertebesindedir. Ödül küçüldükçe bu terim baskın hâle gelir (<a href="/arastirma/brooks-matematik-2/#192--scalp-ile-swingin-matematiksel-kar%C5%9F%C4%B1tl%C4%B1%C4%9F%C4%B1">§19.2</a>).</p>
+<figure class="grafik" id="sekil-79" data-astro-cid-bik524jn> <figcaption data-astro-cid-bik524jn> <span class="etiket grafik-no" data-astro-cid-bik524jn>Şekil 79</span> <span class="grafik-baslik" data-astro-cid-bik524jn>Trader denklemi: tek kurulumun bileşenleri ve aynı denklemin beş senaryosu</span>  <a class="etiket tam-ekran" href="/arastirma/fiyat-hareketi-brooks/79_trader_denklemi.html" target="_blank" rel="noopener" data-astro-cid-bik524jn>Tam ekran ↗</a> </figcaption> <div class="cerceve" style="height:880px" data-astro-cid-bik524jn> <div class="yukleniyor etiket" data-astro-cid-bik524jn>Grafik yükleniyor…</div> <iframe src="/arastirma/fiyat-hareketi-brooks/79_trader_denklemi.html" title="Trader denklemi: tek kurulumun bileşenleri ve aynı denklemin beş senaryosu" loading="lazy" onload="this.parentElement.classList.add('hazir')" data-astro-cid-bik524jn></iframe> </div> </figure> 
+<p><strong>Bu şekilde ne görüyorsun.</strong> İki panel alt alta.</p>
+<p><strong>Panel 1 — tek kurulum, denklemin anatomisi.</strong> P = %60, ödül = 2 birim, risk = 1 birim. Çubuklar:</p>
+<ul>
+<li>Beklenen kazanç: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0,60</mn><mo>×</mo><mn>2</mn><mo>=</mo><mn mathvariant="bold">1,20</mn></mrow><annotation encoding="application/x-tex">0{,}60 \times 2 = \mathbf{1{,}20}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">60</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathbf">1</span><span class="mord"><span class="mpunct">,</span></span><span class="mord mathbf">20</span></span></span></span></span></li>
+<li>Beklenen kayıp: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0,40</mn><mo>×</mo><mn>1</mn><mo>=</mo><mn mathvariant="bold">0,40</mn></mrow><annotation encoding="application/x-tex">0{,}40 \times 1 = \mathbf{0{,}40}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">40</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathbf">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord mathbf">40</span></span></span></span></span></li>
+<li><strong>Brüt beklenen değer: 0,80 birim</strong></li>
+<li>Komisyon: 0,12 birim</li>
+<li><strong>Net beklenen değer: 0,68 birim</strong></li>
+</ul>
+<p>Komisyonun brüt beklenen değerin <strong>%15’ini</strong> yediğine dikkat edin. Bu, ödül 2 birimken. Ödül 0,5 birime inseydi komisyon beklenen değerin tamamını yerdi — <a href="/arastirma/brooks-matematik-2/#192--scalp-ile-swingin-matematiksel-kar%C5%9F%C4%B1tl%C4%B1%C4%9F%C4%B1">§19.2</a>’nin konusu tam olarak budur.</p>
+<p><strong>Panel 2 — aynı denklem, beş senaryo.</strong> Beş farklı kurulumun beklenen değeri yan yana:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Senaryo</th><th>P</th><th>Ödül</th><th>Risk</th><th>Beklenen değer</th></tr></thead><tbody><tr><td>Scalp</td><td>%70</td><td>4</td><td>4</td><td><strong>+1,6</strong></td></tr><tr><td>Swing</td><td>%40</td><td>12</td><td>4</td><td><strong>+2,4</strong></td></tr><tr><td>%90 olasılık anı</td><td>%90</td><td>2</td><td>8</td><td><strong>+1,0</strong></td></tr><tr><td>%10 olasılıklı ama geçerli</td><td>%10</td><td>20</td><td>2</td><td><strong>+0,2</strong></td></tr><tr><td>Dar bant tepesinden alım</td><td>%40</td><td>4</td><td>8</td><td><strong>−3,2</strong></td></tr></tbody></table>
+<p>Bu tablo bölümün özetidir. Dört gözlem:</p>
+<ul>
+<li><strong>Swing (%40 olasılık), scalp’ten (%70 olasılık) daha iyi bir denkleme sahiptir.</strong> Kazanma oranı düşük olan strateji daha kârlıdır. Bu, kazanma oranının tek başına hiçbir şey ifade etmediğinin en net kanıtıdır.</li>
+<li><strong>%90 olasılıklı işlem, listenin en düşük pozitif değerlerinden birine sahiptir</strong> — çünkü ödülü küçük, riski büyüktür. Yüksek olasılık bedavaya gelmez.</li>
+<li><strong>%10 olasılıklı işlem pozitiftir.</strong> Onda dokuz kez kaybedersiniz ve yine de para kazanırsınız. Ama bunun bir şartı var: <strong>her sinyali almanız</strong> gerekir (<a href="/arastirma/brooks-matematik-2/#194--se%C3%A7icilik-yasa%C4%9F%C4%B1-martingale-ve-da%C4%9F%C4%B1l%C4%B1m-yan%C4%B1lg%C4%B1s%C4%B1">§19.4</a>).</li>
+<li><strong>Tek negatif olan senaryo</strong>, ödülün riskten küçük <em>ve</em> olasılığın düşük olduğu senaryodur: dar bandın tepesinden alım. Bu, acemi trader’ın en sevdiği işlemdir çünkü grafikte “güçlü boğa barı” görür.</li>
+</ul>
+<hr/>
+<h2 id="182--olasılıködül-takası">18.2 · Olasılık–ödül takası</h2>
+<p><strong>İlke.</strong> Yüksek olasılıklı bir işlem, <strong>tanımı gereği</strong> küçük ödüllüdür; büyük ödüllü bir işlem, <strong>tanımı gereği</strong> düşük olasılıklı ya da yüksek risklidir.</p>
+<p>“Yüksek olasılıkla, küçük risk karşılığı büyük ödül” diye bir kurulum <strong>yoktur</strong>. Öyle görünüyorsa değişkenlerden birini yanlış okumuşsunuzdur.</p>
+<p><strong>Neden?</strong> Piyasa — gün içi vadeli işlemde iyi bir yaklaşıklıkla — <strong>yaklaşık sıfır toplamlıdır</strong> ve karşı tarafta zorunlu olarak kârlı bir kurum vardır. Bu, <a href="#183--kar%C5%9F%C4%B1-taraf-simetrisi-ve-kurumsal-kar%C5%9F%C4%B1-taraf-ilkesi">§18.3</a>’ün konusu.</p>
+<p><strong>Takas eğrisi.</strong> Ödül = risk iken gereken minimum olasılık %50’dir. Ödül büyüdükçe gereken olasılık düşer, ödül küçüldükçe fırlar. Başabaş koşulu:</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>×</mo><mrow><mover accent="true"><mtext>O</mtext><mo>¨</mo></mover><mtext>d</mtext><mover accent="true"><mtext>u</mtext><mo>¨</mo></mover><mtext>l</mtext></mrow><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>P</mi><mo stretchy="false">)</mo><mo>×</mo><mtext>Risk</mtext><mtext>  </mtext><mo>⟹</mo><mtext>  </mtext><mfrac><mrow><mover accent="true"><mtext>O</mtext><mo>¨</mo></mover><mtext>d</mtext><mover accent="true"><mtext>u</mtext><mo>¨</mo></mover><mtext>l</mtext></mrow><mtext>Risk</mtext></mfrac><mo>=</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>P</mi></mrow><mi>P</mi></mfrac></mrow><annotation encoding="application/x-tex">P \times \text{Ödül} = (1-P) \times \text{Risk} \implies \frac{\text{Ödül}}{\text{Risk}} = \frac{1-P}{P}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9202em;"></span><span class="mord text"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9202em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord">O</span></span><span style="top:-3.2523em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord">¨</span></span></span></span></span></span></span><span class="mord">d</span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6679em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord">u</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord">¨</span></span></span></span></span></span></span><span class="mord">l</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7184em;vertical-align:-0.024em;"></span><span class="mord text"><span class="mord">Risk</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⟹</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.3831em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.0381em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">Risk</span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord accent mtight"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9202em;"><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="mord mtight">O</span></span><span style="top:-2.9523em;"><span class="pstrut" style="height:2.7em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord mtight">¨</span></span></span></span></span></span></span><span class="mord mtight">d</span><span class="mord accent mtight"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6679em;"><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="mord mtight">u</span></span><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord mtight">¨</span></span></span></span></span></span></span><span class="mord mtight">l</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.2173em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8723em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.1389em;">P</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span><span class="mbin mtight">−</span><span class="mord mathnormal mtight" style="margin-right:0.1389em;">P</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></p>
+<figure class="grafik" id="sekil-80" data-astro-cid-bik524jn> <figcaption data-astro-cid-bik524jn> <span class="etiket grafik-no" data-astro-cid-bik524jn>Şekil 80</span> <span class="grafik-baslik" data-astro-cid-bik524jn>Olasılık–ödül takası: her kazanma oranı için gereken minimum ödül/risk oranı, komisyonlu ve komisyonsuz</span>  <a class="etiket tam-ekran" href="/arastirma/fiyat-hareketi-brooks/80_takas_egrisi.html" target="_blank" rel="noopener" data-astro-cid-bik524jn>Tam ekran ↗</a> </figcaption> <div class="cerceve" style="height:620px" data-astro-cid-bik524jn> <div class="yukleniyor etiket" data-astro-cid-bik524jn>Grafik yükleniyor…</div> <iframe src="/arastirma/fiyat-hareketi-brooks/80_takas_egrisi.html" title="Olasılık–ödül takası: her kazanma oranı için gereken minimum ödül/risk oranı, komisyonlu ve komisyonsuz" loading="lazy" onload="this.parentElement.classList.add('hazir')" data-astro-cid-bik524jn></iframe> </div> </figure> 
+<p><strong>Bu şekilde ne görüyorsun.</strong> Yatay eksende kazanma oranı, dikeyde başabaş için gereken minimum ödül/risk oranı (R cinsinden). İki eğri: komisyonsuz ve komisyonlu (0,15R komisyon varsayımıyla).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Kazanma oranı</th><th>Gereken ödül/risk (komisyonsuz)</th><th>Komisyonla</th></tr></thead><tbody><tr><td>%35</td><td>1,857R</td><td><strong>2,286R</strong></td></tr><tr><td>%40</td><td>1,500R</td><td><strong>1,875R</strong></td></tr><tr><td>%50</td><td>1,000R</td><td><strong>1,300R</strong></td></tr><tr><td>%60</td><td>0,667R</td><td><strong>0,917R</strong></td></tr><tr><td>%70</td><td>0,429R</td><td><strong>0,643R</strong></td></tr><tr><td>%80</td><td>0,250R</td><td><strong>0,437R</strong></td></tr><tr><td>%90</td><td>0,111R</td><td><strong>0,278R</strong></td></tr></tbody></table>
+<p>Grafikte iki bölge taralı: <strong>swing bölgesi</strong> (%40 civarı, 1,5R gereksinimi) ve <strong>scalp bölgesi</strong> (%70 civarı, 0,43R gereksinimi). Aralarındaki <strong>%60</strong> noktası “Brooks eşiği” olarak işaretli — “olası” dediğiniz kurulumun karşılığı.</p>
+<p><strong>Eğriden okunacak üç şey.</strong></p>
+<ol>
+<li><strong>Komisyon, düşük ödüllü tarafta orantısız zarar verir.</strong> %90 kazanma oranında komisyonsuz gereksinim 0,111R iken komisyonlu 0,278R — <strong>iki buçuk katı</strong>. %35’te ise 1,857R’den 2,286R’ye, yalnızca %23 artış. Yani komisyon, yüksek kazanma oranlı küçük hedefli stratejileri orantısız cezalandırır.</li>
+<li><strong>Eğri %50’nin altında dikleşir.</strong> %40’tan %35’e inmek, gereksinimi 1,5R’den 1,86R’ye çıkarır. Düşük olasılıklı stratejilerde ödül tahmininizde küçük bir hata, denklemi kolayca negatife çevirir.</li>
+<li><strong>%60 eşiği neden bu kadar sık geçiyor?</strong> Çünkü orada gereksinim 0,667R — yani “ödül en az risk kadar” kuralı, %60 olasılıkta rahat bir marjla sağlanır (0,667 gerekiyorken 1,0 alıyorsunuz). Bu, kuralın neden bu kadar dayanıklı olduğunun açıklamasıdır.</li>
+</ol>
+<hr/>
+<h2 id="183--karşı-taraf-simetrisi-ve-kurumsal-karşı-taraf-ilkesi">18.3 · Karşı taraf simetrisi ve kurumsal karşı taraf ilkesi</h2>
+<p>Trader denkleminin en güçlü kullanımı, kendi hesabınızı doğrulamak değil, <strong>karşı tarafın hesabını yazıp saçma olup olmadığına bakmaktır.</strong></p>
+<p><strong>Karşı taraf simetrisi.</strong> Sizin olasılığınız P ise karşı tarafınki (1−P); sizin ödülünüz onun riski, sizin riskiniz onun ödülüdür. Bu bir metafor değil, aritmetik zorunluluktur.</p>
+<p><strong>Kontrol kuralı.</strong> Kendi hesabınıza göre olasılık %80 ve ödül/risk oranı 3:1 çıkıyorsa, <strong>durun ve yeniden hesaplayın.</strong></p>
+<p><strong>Somut örnek.</strong> Diyelim %80 olasılıkla 6 puan kazanıp 2 puan riske ettiğinizi düşünüyorsunuz. Bu, karşı tarafa şunu dayatır: %20 olasılıkla 2 puan kazanmak için 6 puan riske etmek. Beklenen değeri:</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0,20</mn><mo>×</mo><mn>2</mn><mo>−</mo><mn>0,80</mn><mo>×</mo><mn>6</mn><mo>=</mo><mn>0,40</mn><mo>−</mo><mn>4,80</mn><mo>=</mo><mo>−</mo><mn>4,40</mn></mrow><annotation encoding="application/x-tex">0{,}20 \times 2 - 0{,}80 \times 6 = 0{,}40 - 4{,}80 = -4{,}40</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">20</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">80</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">6</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">40</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">4</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">80</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">−</span><span class="mord">4</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">40</span></span></span></span></p>
+<p>Böyle bir işlemi büyük bir piyasada kim alır? Kimse. Dolayısıyla sizin hesabınız yanlıştır.</p>
+<p><strong>Kurumsal karşı taraf ilkesi.</strong> Gerçekleşen her işlemin <strong>iki tarafında da</strong>, o işlemi kârlı bir stratejinin parçası olarak yapan bir kurum vardır. Bireysel emirler ancak bir kurum aynı fiyattan aynı yönde işlem yapmaya razıysa dolar.</p>
+<p><strong>Kurumsal hacim payları.</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Ölçüt</th><th>Değer</th></tr></thead><tbody><tr><td>Büyük piyasalarda kurumsal işlem payı</td><td><strong>&gt; %90</strong></td></tr><tr><td>Toplam hacimde bilgisayar algoritmalarının payı</td><td>~<strong>%70</strong></td></tr><tr><td>Kurumsal hacimde algoritma payı</td><td>~<strong>%80</strong></td></tr><tr><td>Büyük dönüş noktalarında bireysel trader payı</td><td><strong>&lt; %5</strong></td></tr><tr><td>Tipik büyük piyasada aktif kurum sayısı</td><td>~<strong>100</strong>, her biri hacmin ~%1’i</td></tr><tr><td>Kurumsal sistemlerin kayıp oranı aralığı</td><td>Hepsi zamanın <strong>%30–70</strong>’inde kaybeder</td></tr></tbody></table>
+<p>Son satır önemlidir: kurumlar da kaybeder, hem de sık. Fark, kaybettiklerinde ne kadar kaybettikleridir.</p>
+<p><strong>“Mantıksız” hareketlerin çözümü.</strong> Grafikte mantıksız görünen bir hareket varsa — güçlü trendin tepesinden alım, dibinden satım — o hareketi yapan tarafın kârlı olabileceği bir <strong>yönetim biçimi</strong> vardır: ölçekli giriş, geniş stop, hedge, ya da riskinden çok daha büyük bir hedef. Siz scalp yapıyorsanız karşı taraf büyük olasılıkla swing yapıyordur; <strong>girişler zıt olsa da yönetimler zıt değildir.</strong></p>
+<p><strong>Ve bir imkânsızlık:</strong> iki iyi scalper birbirinin karşı tarafında olamaz. Risk ve ödül simetrikken ikisi birden yüksek olasılıklı olamaz.</p>
+<p><strong>“Piyasa stop’unu avlamaz.”</strong> Bu ilkenin en pratik sonucu. Fiyatın koruyucu stopunuzun bulunduğu seviyeyi test etmesi, o stopla ilgili değildir. Fiyat oraya, o seviyede satmayı matematiksel olarak doğru bulan kurumlar ile almayı doğru bulan kurumlar bulunduğu için gider.</p>
+<ul>
+<li>Long’ken koruyucu satış stopunuz yendiyse, o fiyattan satmak isteyen en az bir kurum vardı.</li>
+<li>Güçlü bir yükselişte kurumların aşağıda satmasının nedeni genellikle çok daha düşükten alınmış pozisyonların kısmi kâr realizasyonudur.</li>
+<li>Tek istisna: yeterince çok küçük trader aynı yerde aynı emri verirse, ortaya kurumsal ilgiyi çekecek bir hacim çıkabilir. Bu nadirdir.</li>
+</ul>
+<p><strong>Pratik sonuç — deneyimliler için.</strong> Yuvarlak stop seviyeleri (girişten 2, 3, 4 veya 5 puan) sık sık tam tick’ine kadar test edilip sonra dönülür. Ölçekli giriş yapan deneyimli trader, bariz stop seviyesinin <strong>bir tick içerisine</strong> ikinci giriş limit emri koyar. Örnek: 3 puanlık stop bariz ise, ilk girişten 11 tick ötede (3 puanın bir tick içinde) ekleme emri bırakılır.</p>
+<p><strong>İki tuzak.</strong></p>
+<ul>
+<li><strong>Zihinsel stop kullanmak.</strong> Brooks’un kuralı nettir: stop emri piyasada olur, kafada değil.</li>
+<li><strong>Stop yendi diye hemen ters yöne dönmek.</strong> Bağlam gerektirir.</li>
+</ul>
+<p><strong>Ve davranışsal sonuç:</strong> “piyasa stopumu avladı” açıklamasını terk edin, “orada satmak isteyen bir kurum vardı, neden?” sorusunu sorun. Birincisi hatanın nerede olduğunu gizler; ikincisi bulur.</p>
+<hr/>
+<h2 id="184--olasılık-sınıfları-ve-kurulum-listeleri">18.4 · Olasılık sınıfları ve kurulum listeleri</h2>
+<p>Brooks kurulumları başarı olasılığına göre sınıflandırır ve her sınıf için gereken minimum ödül/risk oranını verir. Bu, dersin “hangi kurulum hangi denklemle alınır” tablosudur.</p>
+<p><strong>Sınıf 1 — %70 ve üzeri olasılık (başabaş için ödül ≥ 0,5 × risk).</strong></p>
+<p>Scalp’ler. Ama uyarıyla: çoğu trader %70’lik işlemi seçemediği için scalp yalnızca <strong>ödül en az risk kadarsa</strong> alınmalıdır.</p>
+<p><strong>Sınıf 2 — %60 ve üzeri olasılık (başabaş için ödül ≥ risk).</strong> Serinin ana kurulum listesi:</p>
+<ul>
+<li>Boğa trendinde hareketli ortalamaya high 2 geri çekilme alımı; ayı trendinde low 2 satımı.</li>
+<li>Boğa trendinde kama boğa bayrağı geri çekilme alımı; ayıda kama ayı bayrağı satımı.</li>
+<li>Boğa bayrağı kırılımından gelen kırılım geri çekilmesi alımı; ayıda simetriği.</li>
+<li>Güçlü boğa spike’ında high 1 geri çekilme alımı — <strong>alım doruğundan sonra değil</strong>; ayıda low 1 satımı.</li>
+<li>Bandın tepesinde short, özellikle <strong>ikinci girişse</strong>; bandın dibinde long, özellikle ikinci girişse.</li>
+<li>Trend dönüşleri: (a) güçlü trend çizgisi kırılımından sonra, trendin ucunun testinde iyi bir dönüş sinyal barıyla; (b) güçlü son bayrak dönüşü; (c) ayı merdiveninde üçüncü veya dördüncü aşağı itişi, önceki itişin dibinin testi için alma; (d) boğa merdiveninde simetriği.</li>
+<li><strong>Limit emirli girişler</strong> (daha fazla deneyim gerektirir): güçlü boğa kırılımında spike’ı piyasadan / bar kapanışında / önceki barın düşüğünde limitle almak; güçlü ayı kırılımında simetriği; ayı kırılımını ölçülmüş hareket civarında limitle almak (yalnızca çok deneyimliler); zayıf low 1/low 2 sinyal barının düşüğünde limitle almak; hareketli ortalamada sakin bir boğa bayrağında önceki barın altında limitle almak; boğa bayrağını kıran boğa barının altında kırılım geri çekilmesi beklentisiyle almak.</li>
+</ul>
+<p><strong>Sınıf 3 — ~%50 olasılık (başabaş için ödül ≥ 1,5 × risk).</strong></p>
+<ul>
+<li>Bantta ölçekli girişin ilk ayağı.</li>
+<li>Dar bantta, riskinin birkaç katı kâr verecek bir kırılım beklentisiyle alım/satım.</li>
+<li>Trend dönüyor olabilirken bantta lower high satmak / higher low almak. Giriş bandın ortasında olduğu için olasılık %50, ama ödül genellikle riskin iki katıdır.</li>
+</ul>
+<p><strong>Sınıf 4 — %40 ve altı olasılık (ödül ≥ 2 × risk).</strong></p>
+<ul>
+<li>Ayı trendinin dibinde alım, boğa trendinin tepesinde satım. Dönüş işleminin küçük risk ve çok büyük ödül verdiği durumlar. Örnek: net bir direnç seviyesine yapılan ralliyi, direncin 1 tick altında limit emirle satmak; stop direncin 1–2 tick üstünde.</li>
+</ul>
+<p><strong>Sınıf 5 — %40–60 arası, koşullara göre.</strong></p>
+<ul>
+<li>Boğa trendinde kırılım testini, piyasa düşerken limitle almak; ayıda simetriği.</li>
+<li>Yeni bir boğa trendinde veya bandın dibinde, zayıf olmasa bile bir low 1/low 2 sinyal barının altında limitle almak (olası higher low); ayıda simetriği.</li>
+<li><strong>Mıknatısları fade etmek:</strong> boğa trendinde ölçülmüş hareket hedefinde satmak, ayı trendinde MM hedefinde almak. (<a href="/arastirma/brooks-miknatis/">Bölüm 16</a>’daki koşullarla!)</li>
+<li>Aşırıya kaçmış bir ayı trendinde, destek bölgesinde, alışılmadık büyüklükte bir ayı trend barının kapanışı civarında satış doruğu alımı; boğada simetriği.</li>
+</ul>
+<p><strong>Olasılığın davranışsal yorumu.</strong> %60 güven demek, <strong>vakaların %40’ında kaybedeceksiniz</strong> demektir. Brooks’un benzetmesi keskindir: otuz metre öteden size ateş eden ama isabet olasılığı yalnızca %40 olan birini görmezden gelmezsiniz. %40’ı yok saymayın.</p>
+<p>Ve: %50 olasılıklı işlemleri almayıp yalnızca %60’lıkları alıyorsanız, iyi işlemlerin <strong>yarısını</strong> kaçıracaksınız. Bu, sıfır toplamlı bir oyunda avantajların zorunlu olarak küçük olmasının doğal sonucudur.</p>
+<hr/>
+<h2 id="185--olasılık-pozisyon-büyüklüğü-ve-konfor-bölgesi">18.5 · Olasılık, pozisyon büyüklüğü ve konfor bölgesi</h2>
+<p>Denklemin üç değişkeni kişiliğe göre farklı ağırlıklandırılır ve bu doğrudan <strong>pozisyon büyüklüğünü</strong> belirler.</p>
+<p><strong>Profil 1 — yüksek kazanma oranı isteyen trader.</strong> Görece daha az ödül ve daha fazla risk kabul etmek zorundadır. Neden: olasılık yüksekken dengesizlik göze batar ve piyasa onu hızla nötrler; hareket yalnızca birkaç bar sürer, dolayısıyla ödül küçük olmak zorundadır. Olasılık yüksek ve risk küçükken (iyi bir scalp kurulumu) trader’lar genellikle <strong>en büyük</strong> pozisyonlarını alırlar.</p>
+<p><strong>Profil 2 — büyük ödül isteyen trader.</strong> ~%40 kazanma oranına razı olmalıdır. Olasılık düşükken daha küçük işlem yapılır ve bazıları piyasa lehine gittikçe ekler. Bu yüzden <strong>swing trader’ın başlangıç pozisyonu genellikle scalp trader’ınkinden küçüktür</strong> — sezgiye aykırıdır ama doğrudur.</p>
+<p><strong>Profil 3 — riskten kaçınan trader.</strong> Minimum risk için hem daha düşük ödülü hem daha düşük olasılığı kabul eder.</p>
+<p><strong>Profil 4 — uyarlanabilir trader.</strong> Bağlama göre işler; olasılık görece yüksekken kârı erken alır, ödül öne çıktığında olasılığın düşeceğini kabul eder ve pozisyonun daha büyük kısmını swing yapar.</p>
+<p><strong>Aradaki işlemler</strong> ~%50 olasılıklıdır; bunlarda <strong>daima riskin ~2 katı ödül</strong> hedeflenmelidir.</p>
+<p><strong>Pozisyon boyutu kuralı.</strong> Toplam dolar riski sabit tutulur; lot, stop mesafesine göre ayarlanır. Güçlü bir kırılımda stop teorik olarak spike’ın ötesindedir ve risk yüksektir; ama ödül de yüksektir ve olasılık ≥ %60’tır. Çözüm riski kabul etmemek değil, <strong>lotu küçültmektir.</strong> Formül: risk normalin 3 katıysa büyüklük normalin 1/3’ü → mutlak risk sabit kalır. Korkutucu bir kırılım işleminde normal büyüklüğün <strong>1/3 veya 1/4</strong>’ü uygundur.</p>
+<p><strong>Konfor bölgesi ve stil seçimi.</strong> Uzun yıllar kârlı işlem yapmak için kendi konfor bölgenizde kalmalısınız.</p>
+<ul>
+<li>Bazı trader’lar ödülün riskin birkaç katı olduğu işlemleri sever ve yalnızca <strong>%30–40</strong> kazanmaya razıdır. Denklemleri lehtedir, ama çoğu işlemin ödülü riske yaklaşık eşit olduğu için her gün gerçekleşen işlemlerin çoğunu kaçırırlar.</li>
+<li>Diğerleri yalnızca yüksek olasılıklı kurulumları işler ve riske eşit ödüle razı olur. Ancak piyasa trend yaparken geri çekilmeler küçüktür ve kurulumların olasılığı sık sık %50’nin altındadır.</li>
+</ul>
+<p><strong>Somut karşılaştırma.</strong> Belirgin kuyruklu, zayıf bir ayı kanalında kanalın dibinde bir satış sinyali var. Görünüşe göre olasılık bant oluşumu lehine. Ama riskin iki-üç katı bir salınım arayan ve dipte satmaya razı ayılar çok iyi sonuç alır. Yalnızca yüksek olasılık isteyen trader’lar ise, yüksek olasılıklı bir dönüş kurulumu beklerken ayının <strong>10–20 bar</strong> daha devam etmesini izler.</p>
+<p><strong>Tuzak.</strong> Kendi stilinize uymayan işlemleri zorlamak. İyi trader’ların çoğunun belirli bir stili vardır ve o stile uygun kurulumları bekler.</p>
+<hr/>
+<h2 id="186--piyasa-faaliyeti-spektrumu">18.6 · Piyasa faaliyeti spektrumu</h2>
+<p>Denklemin girdileri piyasanın hangi evrede olduğuna göre değişir. Bu, denklemi grafiğe bağlayan köprüdür.</p>
+<p><strong>Spektrum.</strong> Piyasa, “aşırı tek yönlü” (güçlü trendin spike evresi) ile “aşırı iki yönlü” (çok dar yatay bant) uçları arasında sürekli gidip gelir. Zamanın çoğunda ikisinin arasındadır.</p>
+<p><strong>Spektrumdaki yer, emir tipini ve hedefi belirler:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Evre</th><th>Emir tipi</th><th>Hedef</th></tr></thead><tbody><tr><td>Spike</td><td><strong>Stop emriyle giriş</strong>, bar kapanışından alım, agresif ekleme</td><td>Ölçülmüş hareket</td></tr><tr><td>Kanal (10+ bar)</td><td>Önceki barın altına/üstüne <strong>limit emri</strong></td><td>Kanal hedefi</td></tr><tr><td>Uzamış kanal (20+ bar) + direnç</td><td>Trend yönünde alımı bırak, <strong>karşı yöne limit emirleri</strong></td><td>Kanalın dibi</td></tr></tbody></table>
+<p><strong>Okuma kuralları.</strong></p>
+<ul>
+<li>Trend barları tek yönlü işlemin; ters dönüşler ve kuyruklar iki yönlü işlemin göstergesidir.</li>
+<li>Aşırı tek yönlü evrede geri çekilmeler ağırlıkla <strong>kâr realizasyonundan</strong> doğar; karşı taraf yeni pozisyon açmıyordur.</li>
+<li>Piyasa iki yönlüleştikçe her kırılım ve her geri çekilmede hem alıcı hem satıcı kurumlar <strong>yeni pozisyon</strong> açmaya başlar.</li>
+</ul>
+<p><strong>Sayısal ölçüt.</strong> Aşırı tek yönlü evrede short arayan firmalar için “birazdan daha yukarıdan satabilirim” olasılığı <strong>%80 veya üzeri</strong> olabilir; bu yüzden orada satmazlar. Bu, <a href="/arastirma/brooks-miknatis/">Bölüm 16</a>’daki vakumun rakamsal karşılığıdır.</p>
+<p><strong>İki tuzak.</strong></p>
+<ul>
+<li>Spike’ta limit emriyle geri çekilme beklemek → trendi kaçırmak.</li>
+<li>Kanalda hâlâ stop emriyle kırılım almak → sürekli tepeden alıp dipten satmak.</li>
+</ul>
+<p><strong>Trend nasıl biter — katılımcı bileşimi.</strong> Bir trend, katılımcı bileşimi değiştiği için biter. Boğa trendinin başında hem scalper hem swing boğaları alır. Piyasa iki yönlüleştikçe ayılar önce yalnızca scalp için satar, sonra swing için satmaya başlar. Boğa tarafında ise swing yapanlar kâr alıp çekilir; geriye yalnızca scalper’lar kalır. Alım sinyal barları zayıfladıkça scalper’lar da çekilir. <strong>Boğa scalper’ları ve swing boğaları çekildiğinde ve satış tarafı scalp’ten swing’e geçtiğinde trend döner.</strong></p>
+<p>Tespit işaretleri: bandın tepesinde zayıf high 1 / high 2 alım sinyal barları; kuyrukların büyümesi, gövdelerin küçülmesi, örtüşmenin artması; kırılım barlarının ardından takip barı gelmemesi.</p>
+<p>Sayısal karşılığı: yatay banda dönen piyasada zayıf high 1 / high 2 alımlarının olasılığı ~<strong>%40</strong>’a düşer.</p>
+<hr/>
+<h2 id="187--kenarların-geçiciliği">18.7 · Kenarların geçiciliği</h2>
+<p><strong>İlke.</strong> Yönlü olasılık %50’den uzun süre uzak kalamaz. Karşı tarafta duran kurum, denkleminin negatif olduğunu hızla fark eder ve pozisyonunu değiştirir. Herkes aynı avantajı gördüğü için piyasa dengesizliği hızla kapatır.</p>
+<p><strong>Sonuç:</strong> avantaj gördüğünüzde <strong>hızlı davranmanız</strong> gerekir.</p>
+<p><strong>Tespit kuralları.</strong></p>
+<ul>
+<li>Yeterince belirgin bir kurulumda dengesizlik yalnızca <strong>bir–iki bar</strong> sürer.</li>
+<li>Trader’lar %60 veya üzeri bir kesinliğe inandığı anda herkes girer, fiyat belirsizlik bölgesine döner ve avantaj kaybolur.</li>
+<li>Bandın uçlarında geçirilen süre çok kısadır. Market Profile’da uçlarda çok az zaman görülür — yüksek olasılıklı anların ne kadar dar bir pencere olduğunun kanıtı.</li>
+</ul>
+<p><strong>Bir bant tepesi testinin olasılık seyri — bar bar:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Durum</th><th>Dönüş olasılığı</th></tr></thead><tbody><tr><td>Bant tepesi test ediliyor</td><td><strong>%60+</strong></td></tr><tr><td>Kırılım barı büyük değil ve trend kanal çizgisinde takıldı</td><td>~<strong>%65</strong></td></tr><tr><td>Sonraki bar güçlü bir dönüş barı</td><td>~<strong>%70</strong></td></tr><tr><td>Kırılım barı güçlü görünüyor</td><td><strong>%50</strong>’ye iner</td></tr><tr><td>İki bar güçlü takip geldi</td><td><strong>%30</strong>’a düşer (yani spike yönünde hareket olasılığı %70)</td></tr></tbody></table>
+<p>Beş satırda olasılık %70’ten %30’a gidiyor. Bu, “her tick’te yeniden hesapla” kuralının neden zorunlu olduğunu gösterir.</p>
+<p><strong>Pozisyon büyüklüğü çözümü.</strong> Bu tür anlarda pozisyonu küçültüp piyasadan girmek meşrudur. Normalde 500 hisse ve 20 cent risk alan biri, spike 40 cent risk gerektiriyorsa 100 hisse alıp 40 cent stop koyar.</p>
+<p><strong>İki tuzak.</strong></p>
+<ul>
+<li>Avantajı görüp “daha iyi bir fiyat” beklemek.</li>
+<li>Ardışık beş başarısız kırılımdan sonra altıncısına inanamamak. Bu, piyasa ataletinin trader üzerindeki versiyonudur.</li>
+</ul>
+<hr/>
+<h2 id="188--dinamik-trader-denklemi-her-tickte-yeniden-hesap">18.8 · Dinamik trader denklemi: her tick’te yeniden hesap</h2>
+<p><strong>İlke.</strong> Olasılık, risk ve ödül <strong>her tick’te</strong> değişir. İşlem yönetimi, bu üç sayının sürekli yeniden okunmasıdır.</p>
+<p><strong>Lehinize hareket ederse:</strong> olasılık yükselir, kalan ödül küçülür, stop sıkılaştırılabildiği için risk düşer.
+<strong>Aleyhinize hareket ederse:</strong> ödül büyür, risk küçülür (stopa yaklaştınız), ama olasılık <strong>sert biçimde</strong> düşer.</p>
+<p><strong>Somut örnek — 2 puan hedef / 2 puan risk, %60 ile girildi.</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>An</th><th>Olasılık</th><th>Kalan ödül</th><th>Risk</th><th>Değerlendirme</th></tr></thead><tbody><tr><td>Giriş</td><td>%60</td><td>2 puan</td><td>2 puan</td><td>Pozitif</td></tr><tr><td>Altı tick yükseliş, 1–2 tick’lik geri çekilmeler</td><td><strong>%80</strong></td><td>4 tick</td><td>3 tick (stop mevcut barın 1 tick altına çekildi)</td><td><strong>Güçlü</strong></td></tr><tr><td>Dört tick düşüş</td><td>~<strong>%35</strong></td><td>12 tick</td><td>4 tick</td><td>Hâlâ pozitif → <strong>çıkma</strong></td></tr><tr><td>Olasılık %30’un altına indi + premise (girişin dayandığı öncül — “bu neden olacaktı”) değişti</td><td>—</td><td>—</td><td>—</td><td><strong>Çık</strong></td></tr></tbody></table>
+<p>İkinci satırda kritik bir ayrım var: pozisyondaki trader için denklem güçlüdür, ama <strong>flat olan biri aynı anda 3 tick riske edip 2 tick kovalamamalıdır.</strong> Aynı fiyat, aynı an, iki farklı doğru cevap — çünkü pozisyon maliyeti farklı.</p>
+<p><strong>Ana soru — gün boyu kendinize soracağınız tek soru:</strong></p>
+<blockquote>
+<p>“Şu anda flat olsaydım, bu fiyattan bu stopla girer miydim?”</p>
+</blockquote>
+<p>Cevap hayırsa çıkın.</p>
+<p><strong>Karar kuralları.</strong></p>
+<ul>
+<li>Denklem marjinalleşirse: elden geldiğince hızlı ve kârlı çık.</li>
+<li>Denklem negatifleşirse: zararla bile hemen çık.</li>
+</ul>
+<p><strong>İki tuzak.</strong></p>
+<ul>
+<li>Girişten sonra olasılığın düştüğünü kabullenmeyip ümitle beklemek.</li>
+<li>Denklem iyileştiği hâlde (kâr büyüdükçe, risk düştükçe) erken çıkmak.</li>
+</ul>
+<hr/>
+<h2 id="189--büyüyen-spikeın-matematiği">18.9 · Büyüyen spike’ın matematiği</h2>
+<p>Bu, dinamik denklemin en önemli özel hâlidir ve trende <strong>erken</strong> girmenin matematiksel gerekçesidir.</p>
+<p><strong>İlke.</strong> Bir spike’a erken girildiğinde <strong>risk sabit kalır</strong> (stop spike’ın dibinde), <strong>ödül ise spike her büyüdüğünde büyür.</strong> Bu, trend işleminde en yüksek beklenen değerli durumdur.</p>
+<p><strong>Neden olasılık ≥ %60?</strong> İlk spike always-in yönünü çevirecek kadar güçlüyse, eşit uzaklıklı hareketin yönlü olasılığı en az %60’tır — çünkü kurumlar spike dibine stop koyup en az bir ölçülmüş hareket bekliyor ve %50–50’de bunu yapmazlardı.</p>
+<p><strong>Sayısal örnek 1 — bir tahvil vadelisinde spike’ın büyümesi.</strong> (1 tick = 1/64 puan.)</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Aşama</th><th>Spike boyu</th><th>Giriş</th><th>Stop mesafesi</th><th>Hedef</th><th>Not</th></tr></thead><tbody><tr><td>Bar 15 kapanışı</td><td>6 tick</td><td>bar 15 kapanışı</td><td><strong>7 tick</strong></td><td>≥ 6 tick</td><td>%60 varsayımı</td></tr><tr><td>Bar 19 kapanışı — yeni giren</td><td>17 tick</td><td>piyasadan, küçük pozisyon</td><td><strong>18 tick</strong></td><td><strong>16 tick</strong></td><td>Spike hâlâ kırılım spike’ı</td></tr><tr><td>Bar 19 kapanışı — bar 15’ten taşıyan</td><td>17 tick</td><td>bar 15 kapanışı</td><td><strong>7 tick (değişmedi)</strong></td><td>≈ <strong>28 tick</strong></td><td>Risk sabit, ödül dört katına çıktı</td></tr></tbody></table>
+<p>Üçüncü satır kalıbın tamamıdır: aynı anda iki trader, aynı enstrümanda, aynı yönde. Yeni giren 18 tick riske edip 16 tick hedefliyor (ödül &lt; risk!). Erken giren 7 tick riske edip 28 tick hedefliyor (4R). Fark, dört bar önce girmiş olmaktan geliyor.</p>
+<p>Devamı: spike bar 19’da bitti (sonraki bar güçlü bir boğa trend barı yerine ayı iç barı oldu). Bar 24 ölçülmüş hareket hedefinin üstüne çıktı.</p>
+<p><strong>Sayısal örnek 2 — bir endeks vadelisinde 4 puan → 6 puan.</strong></p>
+<ol>
+<li>Spike’ın tepesi dibinin <strong>4 puan</strong> üstünde. En yüksek tick’ten alan trader 4 puan riske eder.</li>
+<li>Olasılık varsayımı: 4 puanlık stop vurulmadan 4 puan yükselme şansı <strong>≈ %60 veya daha iyi</strong>.</li>
+<li>Gerekçe: başarı şansı %60’ın epey altındayken risk = ödül matematiksel olarak akılsızcadır; kurumlar bu işlemi almazdı. Piyasa hâlâ yükseliyorsa kurumlar alıyordur.</li>
+<li>Spike 2 puan daha büyüyor → spike <strong>6 puan</strong>. Spike burada bittiyse: 6 puan düşmeden 6 puan yükselme şansı ≈ %60.</li>
+<li>Spike 4 puanken alan boğa: risk <strong>4 puan</strong>, toplam potansiyel <strong>8 puan</strong> — %60’lık bir bahiste mükemmel matematik.</li>
+</ol>
+<figure class="grafik" id="sekil-81" data-astro-cid-bik524jn> <figcaption data-astro-cid-bik524jn> <span class="etiket grafik-no" data-astro-cid-bik524jn>Şekil 81</span> <span class="grafik-baslik" data-astro-cid-bik524jn>Büyüyen spike&#39;ın matematiği: spike 3, 7 ve 8 puanken denklemin dönüşümü</span>  <a class="etiket tam-ekran" href="/arastirma/fiyat-hareketi-brooks/81_buyuyen_spike.html" target="_blank" rel="noopener" data-astro-cid-bik524jn>Tam ekran ↗</a> </figcaption> <div class="cerceve" style="height:1020px" data-astro-cid-bik524jn> <div class="yukleniyor etiket" data-astro-cid-bik524jn>Grafik yükleniyor…</div> <iframe src="/arastirma/fiyat-hareketi-brooks/81_buyuyen_spike.html" title="Büyüyen spike'ın matematiği: spike 3, 7 ve 8 puanken denklemin dönüşümü" loading="lazy" onload="this.parentElement.classList.add('hazir')" data-astro-cid-bik524jn></iframe> </div> </figure> 
+<p><strong>Bu şekilde ne görüyorsun.</strong> İki panel alt alta.</p>
+<p><strong>Panel 1 — dört kademe, dört denklem.</strong> Spike tabanı 100,00, kapanışı 108,00, boyu <strong>8 puan</strong>. Barların tick boyları: <strong>14 / 10 / 8</strong> — yani her bar bir öncekinden küçük, ama hepsi trend barı. Ölçülmüş hareket hedefi <strong>116,00</strong> (108 + 8).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Kademe</th><th>Risk</th><th>Ödül</th><th>P</th><th>Ödül/Risk</th><th>Beklenen değer</th></tr></thead><tbody><tr><td>Spike 3 puan, 1. kademe, giriş 103,00</td><td>3,0</td><td>3,0</td><td>%60</td><td>1,00R</td><td><strong>+0,6</strong></td></tr><tr><td>Spike 7 puan, 2. kademe, giriş 107,00</td><td>3,0</td><td>7,0</td><td>%50</td><td>2,33R</td><td><strong>+2,0</strong></td></tr><tr><td>Spike 8 puan, <strong>baştan girenin durumu</strong></td><td>3,0</td><td>13,0</td><td>%60</td><td>4,33R</td><td><strong>+6,6</strong></td></tr><tr><td>Spike 8 puan, <strong>şimdi giren</strong>, giriş 108,00</td><td>8,25</td><td>8,0</td><td>%60</td><td>0,97R</td><td><strong>+1,5</strong></td></tr></tbody></table>
+<p>Son iki satırı yan yana koyun. Aynı an, aynı fiyat, aynı hedef. Baştan giren <strong>+6,6</strong> birim beklenen değer taşıyor; şimdi giren <strong>+1,5</strong>. Fark <strong>dört kattan fazla</strong> ve tek kaynağı zamanlama: baştan girenin stopu hâlâ spike’ın dibinde ve girişinin 3 puan altında; şimdi girenin stopu 8,25 puan uzakta.</p>
+<p>Dikkat edilecek bir ayrıntı daha: ikinci kademede olasılık %60’tan %50’ye düşüyor (spike büyüdükçe her yeni giriş biraz daha riskli), ama ödül/risk 1,00R’den 2,33R’ye çıktığı için beklenen değer <strong>üç katına</strong> çıkıyor. Denklemde olasılık tek başına hiçbir şey söylemez.</p>
+<p><strong>Panel 2 — fiyat karşılığı.</strong> Aynı spike’ın bar bar görünümü: giriş noktaları, sabit stop çizgisi ve büyüyen hedef kutusu. Stop çizgisinin yatay kalması, ödül kutusunun her barda uzaması — kalıbın görsel özeti.</p>
+<p><strong>İşlem kurulumu.</strong></p>
+<ul>
+<li><strong>Giriş:</strong> always-in yönü netleştiği anda piyasadan veya bar kapanışından.</li>
+<li><strong>Stop:</strong> spike dibinin altı. Para yönetimi sınırını aşıyorsa <strong>pozisyonu küçültün</strong>, stopu yaklaştırmayın.</li>
+<li><strong>Hedef:</strong> güncel spike boyu kadar ölçülmüş hareket; her yeni barla hedefi yukarı taşıyın.</li>
+<li><strong>Yönetim:</strong> iki büyük trend barından sonra kısmi kâr + başabaş stop.</li>
+</ul>
+<p><strong>İki tuzak.</strong></p>
+<ul>
+<li><strong>Geri çekilme beklemek.</strong> Spike evresinde geri çekilme gelmeyebilir; gelirse <strong>1–4 tick</strong> olur. Trader’lar bunu bildikleri için spike geri çekilmeden büyür: pozisyonlarına yukarı doğru eklerler ve spike’ın dibine kadar risk alırlar. Kaçırma riski yerine riski kabul ederler.</li>
+<li><strong>Riski sabit tutmak yerine stopu erken sıkıştırıp spike içi normal dalgalanmada atılmak.</strong></li>
+</ul>
+<p><strong>Ve bir davranışsal not.</strong> Başarılı kırılımların matematiği mükemmeldir ama duygusal olarak işlemesi çok zordur: hızlı gerçekleşirler ve trader riskin spike’ın dibine kadar olduğunu içgüdüsel olarak bilir. Trader geri çekilme ister ama piyasa daha yükselene kadar gelmeyeceğini bilir ve spike’ın tepesinden almaktan korkar. Gözden kaçırdığı şey, <strong>matematiğin lehinde olmasıdır.</strong> Brooks’un çözümü: normalin çeyreği kadar pozisyonla girip riski kabul etmek — “umurumda değil” pozisyon boyu.</p>
+<hr/>
+<h2 id="1810--yönsel-olasılığın-kanal-boyunca-erozyonu">18.10 · Yönsel olasılığın kanal boyunca erozyonu</h2>
+<p>Spike’ta yüksek olan olasılık, kanalda erir. Bu, işlem yönetiminin en pratik kuralını doğurur.</p>
+<p><strong>İlke.</strong> Spike evresinde yüksek olan yönlü olasılık, kanal evresinde yavaşça %50’ye doğru erir; ölçülmüş hareket hedefine veya dirence varıldığında %50’yi geçip <strong>karşı yöne</strong> döner.</p>
+<p><strong>Neden aşırıya kaçar?</strong> Piyasa “çok ileri gittiğini” bilir ama “yeterince gittiğini” bilmez. Bu yüzden nötr noktayı bulmak için hep aşırıya kaçar.</p>
+<figure class="grafik" id="sekil-82" data-astro-cid-bik524jn> <figcaption data-astro-cid-bik524jn> <span class="etiket grafik-no" data-astro-cid-bik524jn>Şekil 82</span> <span class="grafik-baslik" data-astro-cid-bik524jn>Yönsel olasılığın kanal boyunca erozyonu: kırılımdan aşıma beş aşama</span>  <a class="etiket tam-ekran" href="/arastirma/fiyat-hareketi-brooks/82_kanal_erozyonu.html" target="_blank" rel="noopener" data-astro-cid-bik524jn>Tam ekran ↗</a> </figcaption> <div class="cerceve" style="height:640px" data-astro-cid-bik524jn> <div class="yukleniyor etiket" data-astro-cid-bik524jn>Grafik yükleniyor…</div> <iframe src="/arastirma/fiyat-hareketi-brooks/82_kanal_erozyonu.html" title="Yönsel olasılığın kanal boyunca erozyonu: kırılımdan aşıma beş aşama" loading="lazy" onload="this.parentElement.classList.add('hazir')" data-astro-cid-bik524jn></iframe> </div> </figure> 
+<p><strong>Bu şekilde ne görüyorsun.</strong> Bir kırılım spike’ı (barlar 5–7) ve ardından 8. bardan 41. bara uzanan bir kanal. Kanal boyunca beş noktada yönsel olasılık etiketlenmiş:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Konum</th><th>Yönsel olasılık</th><th>Anlam</th></tr></thead><tbody><tr><td>Kırılım anı — spike lehte</td><td><strong>%70</strong></td><td>Dengesiz</td></tr><tr><td>Kanalın başı</td><td><strong>%60</strong></td><td>Hâlâ trend lehine</td></tr><tr><td>Kanalın ortası</td><td><strong>%55</strong></td><td>Erimeye başladı</td></tr><tr><td>Kanalın sonu</td><td><strong>%50</strong></td><td>Yazı-tura</td></tr><tr><td>Kanal tepesi / aşım</td><td><strong>%45</strong></td><td><strong>Karşı taraf öne geçti</strong></td></tr></tbody></table>
+<p>Grafiğin ikinci katmanı daha da öğreticidir: <strong>aynı kanal boyunca gereken risk mesafesi de büyüyor.</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Bar</th><th>Konum</th><th>Kanal genişliği (risk)</th></tr></thead><tbody><tr><td>12</td><td>Kanalın başı</td><td><strong>2,23</strong></td></tr><tr><td>22</td><td>Kanalın ortası</td><td><strong>3,08</strong></td></tr><tr><td>34</td><td>Kanalın sonu</td><td><strong>6,69</strong></td></tr></tbody></table>
+<p>İki eğri ters yönde hareket ediyor: <strong>olasılık düşerken risk üç katına çıkıyor.</strong> Denklemin iki değişkeni de aynı anda kötüleşiyor. Kanalın sonunda trend yönünde stop emriyle girmek — %50 olasılıkla 6,69 birim riske etmek — matematiksel olarak felaket bir işlemdir; ve tam da acemi trader’ın yaptığı şeydir, çünkü “trend hâlâ devam ediyor” görür.</p>
+<p><strong>İşlem kurulumu.</strong></p>
+<ul>
+<li>Kanal evresinde trend yönünde giriş için <strong>stop emri yerine limit emri</strong> kullanın.</li>
+<li>Kanal 20 barı geçtiyse ve dirence yaklaşıldıysa: trend yönünde alımı bırakın, <strong>karşı yöne limit emirlerine</strong> geçin.</li>
+</ul>
+<p><strong>Sayısal referanslar.</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Durum</th><th>Olasılık</th></tr></thead><tbody><tr><td>Bant tepesinde aşağı yönlü eşit uzaklıklı hareket</td><td>~%60</td></tr><tr><td>Kanalın tepesinden dibine düşme</td><td>~%60</td></tr><tr><td>Aynı anda o kadar daha yükselme</td><td>~%40</td></tr><tr><td>Aşağı düzeltmenin eğimi sığsa, dipte boğalar lehine</td><td>~%60</td></tr><tr><td>Destek zayıf görünürse</td><td>~%56 (yine %50 üstü)</td></tr><tr><td>Bandın ortası</td><td>~%50</td></tr></tbody></table>
+<p><strong>İki tuzak.</strong></p>
+<ul>
+<li>Kanal evresinde hâlâ spike matematiğini kullanmak.</li>
+<li>Bandın ortasında yön kararı vermeye çalışmak.</li>
+</ul>
+<p><strong>Boğa kanalının doğası.</strong> Bir boğa kanalı genellikle kanalın dibine geri hareketle biter — yani <strong>boğa kanalı aslında henüz oluşmamış bir işlem aralığının ilk bacağıdır.</strong> MM hedefine ulaşıldığında orası muhtemelen doğmakta olan aralığın üst ucudur. Çok sayıda trader MM bölgesinde kâr aldığı için piyasa geri çekilmeye başlar; çoğu trader kanalın dibine kadar agresif alım yapmaz — orada genellikle <strong>çift dip</strong> oluşur ve o da bir mıknatıstır.</p>
+<hr/>
+<h2 id="1811--90-olasılık-anları-ve-10-olasılıklı-geçerli-işlem">18.11 · %90 olasılık anları ve %10 olasılıklı geçerli işlem</h2>
+<p>Denklemin iki uç noktası. İkisi de meşrudur, ikisi de yanlış anlaşılır.</p>
+<p><strong>%90 olasılık anı.</strong> Kâr alma limit emrinize bir tick kala oluşan, çok kısa süreli ama aşırı asimetrik risk/ödül anı.</p>
+<p>Long’sunuz, hedefinize bir tick kalmış, stopunuz 4–6 tick aşağıda. O anda <strong>5 tick riske edip 1 tick kovalıyorsunuz.</strong> Bu, ancak başarı olasılığı ~%90 ise mantıklıdır — ve genellikle öyledir, çünkü momentum yukarıdadır ve durum bir saniyeden kısa sürer.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Durum</th><th>Gereken olasılık</th></tr></thead><tbody><tr><td>5 tick risk / 1 tick ödül</td><td>~%90</td></tr><tr><td>4 tick risk / 1 tick ödül</td><td>~%80</td></tr><tr><td>Fiyat 2 tick geri gelirse: 3–4 tick risk / 3 tick ödül</td><td>~%70 — hâlâ pozitif ama zayıf</td></tr></tbody></table>
+<p><strong>Genel kural — kâr alma mekaniği.</strong> Kâr alma limit emrinin dolması için piyasanın genellikle emrin <strong>bir tick ötesine</strong> geçmesi gerekir. Bunun pratik karşılığı: 8 tick (2 puan) kâr için piyasanın sinyal barının <strong>10 tick</strong> ötesine gitmesi gerekir; 4 tick kâr için <strong>6 tick</strong>.</p>
+<p><strong>Pratik kural.</strong> Braket emrine güvenin, o son tick’i yönetmeye çalışmayın. Yukarı hareket zorlanıyorsa hedefi çekmek meşrudur, ama çoğu trader piyasayı o hızda okuyamaz.</p>
+<p><strong>Tuzaklar.</strong></p>
+<ul>
+<li>Hedefi 8 tick’ten 7’ye çekince durumun düzeldiğini sanmak. Risk yine barın dibine kadardır; yalnızca gereken olasılık %90’dan %80’e iner.</li>
+<li>Hedefe bir tick kala piyasa emriyle çıkmak. Yüksek frekans programları zaten hedefin 1–2 tick altında alıcıdır ve bu alım hedefi doldurma olasılığını artırır.</li>
+</ul>
+<p><strong>%10 olasılıklı ama geçerli işlem.</strong> Karşı uç. Başarı olasılığı çok düşük olmasına rağmen ödül/risk oranı yeterince büyükse işlem geçerlidir.</p>
+<p><strong>Klasik örnek.</strong> Güçlü ayı trendinde, önceki dibin <strong>1 tick üstüne</strong> limit alım ve <strong>1 tick altına</strong> koruyucu stop.</p>
+<ul>
+<li>Olasılık: %10.</li>
+<li>Risk: 0,5 puan (2 tick).</li>
+<li>Ödül: 10 puan.</li>
+<li><strong>10 işlemde:</strong> 9 kayıp × 2 tick = 18 tick kayıp; 1 kazanç = 40 tick. <strong>Net 22 tick</strong>, işlem başına ortalama <strong>2,2 tick</strong>.</li>
+</ul>
+<p><strong>Karşı örnek — yapılmaması gereken.</strong> Günün herhangi bir anında piyasanın 200 tick düşmeden önce 1 tick yükselme olasılığı ~%95’tir. Ama 200 tick riske edip 1 tick kazanmak için <strong>başabaş olmak bile %99,5</strong> gerektirir ve 200 kez kusursuz uygulama ister. Yüksek olasılık, tek başına hiçbir şey değildir.</p>
+<p><strong>İki tuzak.</strong></p>
+<ul>
+<li>Bu tür işlemi <strong>seçici</strong> uygulamak (<a href="/arastirma/brooks-matematik-2/#194--se%C3%A7icilik-yasa%C4%9F%C4%B1-martingale-ve-da%C4%9F%C4%B1l%C4%B1m-yan%C4%B1lg%C4%B1s%C4%B1">§19.4</a>).</li>
+<li>Küçük stopu “az risk” sanıp pozisyonu büyütmek.</li>
+</ul>
+<p><strong>Kötü denklemi fade etmek.</strong> Aynı madalyonun diğer yüzü: bir stop emri girişinin denklemi negatifse, <strong>aynı kurulumun karşı tarafından limit emirle girmek pozitif olabilir.</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Taraf</th><th>P</th><th>Ödül</th><th>Risk</th><th>Sonuç</th></tr></thead><tbody><tr><td>Zayıf low 1 short (stop emriyle)</td><td>%50</td><td>4 tick</td><td>8 tick</td><td><strong>Kaybettirici</strong></td></tr><tr><td>Aynı barın dibinden alım (limitle)</td><td>%50</td><td>6 tick</td><td>6 tick</td><td><strong>Başabaş</strong></td></tr><tr><td>Aynı alım, sinyal barı bandın dibinde bir doji ise</td><td>~%70</td><td>6 tick</td><td>6 tick</td><td><strong>Kârlı</strong></td></tr></tbody></table>
+<p><strong>İşlem kurulumu:</strong> zayıf short sinyal barının dibinden (veya 1–3 tick altından) limit alım; stop ~4–6 tick; hedef high 1 / high 2 tetiğinin birkaç tick üstü.</p>
+<p><strong>Tuzak.</strong> Her stop kurulumunu körü körüne fade etmek de kaybettiricidir; bu, seçicilik gerektirir. Ve deneyimsizken limit emirle girmek psikolojik olarak yıpratıcıdır — piyasa aleyhinize giderken beklemek zorundasınızdır.</p>
+<hr/>
+<div class="masa"><span class="etiket">Masada</span><p><strong>Emri vermeden önce denklemi kur</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Adım</th><th>Soru</th></tr></thead><tbody><tr><td>1</td><td>Bu kurulum hangi olasılık sınıfında: %70, %60, ~%50, %40 ve altı? Gerekçen ne?</td></tr><tr><td>2</td><td>Bu sınıf için gereken asgari ödül/risk sağlanıyor mu (riskin yarısı · risk kadar · 1,5 katı · iki katı)?</td></tr><tr><td>3</td><td>Komisyon ve dolum payı denklemde mi?</td></tr><tr><td>4</td><td>Fiyat ilerlerken denklem değişti mi? Spike büyüdüyse sonradan giriş için risk büyüdü; kanal yaşlandıysa olasılık eridi.</td></tr><tr><td>5</td><td>Olasılığa göre pozisyon büyüklüğü: düşük olasılıkta yarım, yüksek olasılıkta tam.</td></tr></tbody></table><p>Denklemi çözemiyorsan işlem yoktur. Scalp ile swing’in karşıtlığı, seçicilik ve martingale yasakları, kırılım ve dönüş aritmetiği: <a href="/arastirma/brooks-matematik-2/">Bölüm 19</a>.</p></div>  </div>   <nav class="seri-gezinme" aria-label="Seri gezinmesi" data-astro-cid-drc7arte> <a class="sg-onceki" href="/arastirma/brooks-olculmus-hareket/" rel="prev" data-astro-cid-drc7arte> <span class="etiket" data-astro-cid-drc7arte>← Bölüm 17</span> <span class="sg-ad" data-astro-cid-drc7arte>Ölçülmüş hareket: hedef ne kadar uzakta</span> </a> <a class="sg-sonraki" href="/arastirma/brooks-matematik-2/" rel="next" data-astro-cid-drc7arte> <span class="etiket" data-astro-cid-drc7arte>Bölüm 19 →</span> <span class="sg-ad" data-astro-cid-drc7arte>İşlem matematiği II: scalp ve swing, yasaklar, Fibonacci yerine risk-ödül</span> </a> <a class="sg-harita" href="/arastirma/seri/brooks/" data-astro-cid-drc7arte>Al Brooks fiyat hareketi · yol haritası</a> </nav>  </article>  </main> <footer data-astro-cid-sz7xmlte> <div class="sarici ic" data-astro-cid-sz7xmlte> <div class="marka-blok" data-astro-cid-sz7xmlte>  <span class="etiket marka" lang="en" data-astro-cid-sz7xmlte>TTO Trading</span> <p class="aciklama" data-astro-cid-sz7xmlte>
+Türkiye makro ve piyasa araştırmaları. Her sayı ölçülen katmandan gelir ve kendi
+        tarihini taşır; yorum ölçümün üstüne yazılır, altına değil.
+</p> <p class="sorumluluk" data-astro-cid-sz7xmlte>Buradaki içerik araştırma ve bilgilendirme amaçlıdır; yatırım tavsiyesi değildir. Sayılar kamuya açık kaynaklardan derlenir, yöntem her sayfada açıkça yazılır.</p> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Yayınlar</span> <a href="/bulten/" data-astro-cid-sz7xmlte>Bülten</a><a href="/analiz/" data-astro-cid-sz7xmlte>Analiz</a> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Kaynaklar</span> <a href="/tradeler/" data-astro-cid-sz7xmlte>Tradeler</a><a href="/projeler/" data-astro-cid-sz7xmlte>Projeler</a><a href="/grafikler/" data-astro-cid-sz7xmlte>Grafikler</a><a href="/arastirma/" data-astro-cid-sz7xmlte>Dersler</a><a href="/indikatorler/" data-astro-cid-sz7xmlte>İndikatörler</a><a href="/arama/" data-astro-cid-sz7xmlte>Arama</a><a href="/teknik/" data-astro-cid-sz7xmlte>Teknik arşivi</a> <a href="/hakkinda/" data-astro-cid-sz7xmlte>Hakkında</a> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Besleme</span> <a href="/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · tüm yayınlar</a><a href="/bulten/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · Bülten</a><a href="/analiz/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · Analiz</a> </div> <div class="kolon etiket sag" data-astro-cid-sz7xmlte> <span data-astro-cid-sz7xmlte>© 2026 <span lang="en" data-astro-cid-sz7xmlte>TTO Trading</span></span> <span data-astro-cid-sz7xmlte>İstanbul</span> </div> </div> </footer>  <script type="module">const i=[...document.querySelectorAll("[data-kaydir]")],r=()=>{for(const e of i)if(e.scrollWidth>e.clientWidth+1){const t=e.querySelector("caption")?.textContent?.trim();e.setAttribute("tabindex","0"),e.setAttribute("role","region"),e.setAttribute("aria-label",t?`${t} (kaydırılabilir)`:"Kaydırılabilir tablo")}else e.removeAttribute("tabindex"),e.removeAttribute("role"),e.removeAttribute("aria-label")};if(i.length)if(r(),"ResizeObserver"in window){const e=new ResizeObserver(()=>r());i.forEach(t=>e.observe(t))}else addEventListener("resize",r,{passive:!0});</script> </body> </html> <script type="module">const t=[...document.querySelectorAll(".prose h2")];if(t.length>=4){const d=document.getElementById("icindekiler"),l=document.getElementById("icindekiler-liste");t.filter(e=>/^(?:(?:Bölüm|Modül|Kısım|Ek)\s+)?(?:[A-ZÇĞİÖŞÜ]\.)?\d+(?:\.\d+)*\.?[\s—–-]/.test(e.textContent||"")).length>=t.length/2&&l.classList.add("kendi-numarali"),t.forEach((e,a)=>{e.id||(e.id="bolum-"+(a+1));const i=document.createElement("li"),n=document.createElement("a");n.href="#"+e.id,n.textContent=e.textContent,i.appendChild(n),l.appendChild(i)}),d.hidden=!1}</script> 

@@ -1,0 +1,636 @@
+<!DOCTYPE html><html lang="tr"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>TRY OIS: spread kurulumu, fly&#39;lar ve masa pratiği — TTO Trading</title><meta name="description" content="Bir spread'i yedi adımda uçtan uca kurmak; eğrinin bükümünü işlem etmek: fly'ın genel grameri, ön uç, geçiş, belly ve uzun uç fly katalogları, 50:50 DV01 ağırlığı, 3× maliyet testi, unwind ve yapı…"><meta name="generator" content="Astro v5.18.2"><meta name="theme-color" content="#f5f0e6"><link rel="canonical" href="https://ttotrading.com/arastirma/egri-ois-fly/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — tüm yayınlar" href="/rss.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — Bülten" href="/bulten/rss.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — Analiz" href="/analiz/rss.xml"><meta property="og:type" content="article"><meta property="og:site_name" content="TTO Trading"><meta property="og:locale" content="tr_TR"><meta property="og:title" content="TRY OIS: spread kurulumu, fly'lar ve masa pratiği"><meta property="og:description" content="Bir spread'i yedi adımda uçtan uca kurmak; eğrinin bükümünü işlem etmek: fly'ın genel grameri, ön uç, geçiş, belly ve uzun uç fly katalogları, 50:50 DV01 ağırlığı, 3× maliyet testi, unwind ve yapı…"><meta property="og:url" content="https://ttotrading.com/arastirma/egri-ois-fly/"><meta property="og:image" content="https://ttotrading.com/og/genel.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="TTO Trading — Dersler"><meta property="article:published_time" content="2026-11-06T00:00:00.000Z"><meta property="article:modified_time" content="2026-11-06T00:00:00.000Z"><meta property="article:section" content="Dersler"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="TRY OIS: spread kurulumu, fly'lar ve masa pratiği"><meta name="twitter:description" content="Bir spread'i yedi adımda uçtan uca kurmak; eğrinin bükümünü işlem etmek: fly'ın genel grameri, ön uç, geçiş, belly ve uzun uç fly katalogları, 50:50 DV01 ağırlığı, 3× maliyet testi, unwind ve yapı…"><meta name="twitter:image" content="https://ttotrading.com/og/genel.png"><script type="application/ld+json">[{"@context":"https://schema.org","@type":"WebSite","name":"TTO Trading","url":"https://ttotrading.com/","description":"TCMB rezervleri, reel kur, Hazine ihaleleri ve faiz piyasaları üzerine veriye dayalı projeler, canlı grafikler ve hesaplama araçları.","inLanguage":"tr","publisher":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}}},{"@context":"https://schema.org","@type":"Article","headline":"TRY OIS: spread kurulumu, fly'lar ve masa pratiği","description":"Bir spread'i yedi adımda uçtan uca kurmak; eğrinin bükümünü işlem etmek: fly'ın genel grameri, ön uç, geçiş, belly ve uzun uç fly katalogları, 50:50 DV01 ağırlığı, 3× maliyet testi, unwind ve yapı…","url":"https://ttotrading.com/arastirma/egri-ois-fly/","mainEntityOfPage":"https://ttotrading.com/arastirma/egri-ois-fly/","image":["https://ttotrading.com/og/genel.png"],"inLanguage":"tr","datePublished":"2026-11-06T00:00:00.000Z","dateModified":"2026-11-06T00:00:00.000Z","author":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}},"publisher":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}},"articleSection":"Dersler"}]</script><script defer data-domain="ttotrading.com" data-api="/v/api/event" src="/v/js/script.js"></script><link rel="stylesheet" href="/_astro/index.BWd6Gdev.css">
+<style>.video-oynatici[data-astro-cid-quemlkkv]{margin:1.75rem 0 .5rem;max-width:26rem}.video-ust[data-astro-cid-quemlkkv]{display:block;margin-bottom:.5rem;color:var(--ink-60)}video[data-astro-cid-quemlkkv]{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:1080 / 1350;background:var(--paper-2);border:1px solid var(--ink-30)}
+</style>
+<link rel="stylesheet" href="/_astro/_slug_.BVOGJi8f.css"><style>.takvim[data-astro-cid-qfjm3awh]{padding:.2rem 1rem .7rem}.takvim-satir[data-astro-cid-qfjm3awh]{margin:0 0 .4rem;font-family:var(--font-mono);font-size:.8rem;color:var(--ink-70)}.egri-kap[data-astro-cid-qfjm3awh]{padding:.9rem 1rem .2rem;border-bottom:1px solid var(--ink-15)}.blok-baslik[data-astro-cid-qfjm3awh]{color:var(--claret);display:block;margin-bottom:.5rem}.egri-girdiler[data-astro-cid-qfjm3awh]{display:grid;grid-template-columns:repeat(auto-fit,minmax(74px,1fr));gap:.4rem}.egri-girdiler[data-astro-cid-qfjm3awh] input{width:100%}.girdiler[data-astro-cid-qfjm3awh]{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;padding:.9rem 1rem .4rem}.orta[data-astro-cid-qfjm3awh]{display:flex;flex-wrap:wrap;gap:.6rem 1.8rem;padding:.5rem 1rem}.orta[data-astro-cid-qfjm3awh] .etiket[data-astro-cid-qfjm3awh],.sag-satir[data-astro-cid-qfjm3awh] .etiket[data-astro-cid-qfjm3awh]{display:block;color:var(--ink-50);font-size:.58rem}.tablo-kab[data-astro-cid-qfjm3awh]{padding:.6rem 1rem;overflow-x:auto}.tablo-kab[data-astro-cid-qfjm3awh] .form{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-50);white-space:nowrap}.tablo-kab[data-astro-cid-qfjm3awh] .not-h{font-size:.78rem;color:var(--ink-70)}.tablo-kab[data-astro-cid-qfjm3awh] .eksi{color:var(--claret);font-variant-numeric:tabular-nums}.tablo-kab[data-astro-cid-qfjm3awh] .arti{color:var(--teal);font-variant-numeric:tabular-nums}.tablo-kab[data-astro-cid-qfjm3awh] tr.toplam{border-top:2px solid var(--ink-30)}.saglama[data-astro-cid-qfjm3awh]{border-top:1px solid var(--ink-15);padding:.8rem 1rem .4rem}.sag-satir[data-astro-cid-qfjm3awh]{display:flex;flex-wrap:wrap;gap:.5rem 2rem;margin-bottom:.6rem}.mini-not[data-astro-cid-qfjm3awh]{margin:.4rem 0 0;font-size:.84rem;font-style:italic;color:var(--ink-70);line-height:1.55}@media(max-width:640px){.girdiler[data-astro-cid-qfjm3awh]{grid-template-columns:repeat(2,1fr)}}
+</style><style>.girdiler[data-astro-cid-odhdydyd]{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;padding:.9rem 1rem .4rem}.tablo-kab[data-astro-cid-odhdydyd]{padding:.6rem 1rem;overflow-x:auto}.tablo-kab[data-astro-cid-odhdydyd] .pay{color:var(--claret);font-weight:600}.tablo-kab[data-astro-cid-odhdydyd] .rec{color:var(--teal);font-weight:600}.saglama[data-astro-cid-odhdydyd]{border-top:1px solid var(--ink-15);padding:.8rem 1rem .4rem}.sag-satir[data-astro-cid-odhdydyd]{display:flex;flex-wrap:wrap;gap:.5rem 2rem;margin-bottom:.6rem}.sag-satir[data-astro-cid-odhdydyd] .etiket[data-astro-cid-odhdydyd]{display:block;color:var(--ink-50);font-size:.58rem}.mini-not[data-astro-cid-odhdydyd]{margin:.4rem 0 0;font-size:.84rem;font-style:italic;color:var(--ink-70);line-height:1.55}@media(max-width:640px){.girdiler[data-astro-cid-odhdydyd]{grid-template-columns:repeat(2,1fr)}}
+</style></head> <body> <a class="atla" href="#icerik">İçeriğe geç</a> <header class="masthead" data-astro-cid-3ef6ksr2> <div class="sarici" data-astro-cid-3ef6ksr2> <div class="dateline etiket" data-astro-cid-3ef6ksr2>  <span class="gun-yer" data-astro-cid-3ef6ksr2><span data-bugun hidden data-astro-cid-3ef6ksr2></span><span class="orta" data-astro-cid-3ef6ksr2>İstanbul</span></span> <span class="son-yayinlar" data-astro-cid-3ef6ksr2> <a class="son-bulten" href="/bulten/2026-11-13/" data-astro-cid-3ef6ksr2> Son bülten · 13 Kasım 2026 </a> </span> </div> <div class="baslik-satir" data-astro-cid-3ef6ksr2> <a href="/" class="marka" aria-label="TTO Trading — ana sayfa" data-astro-cid-3ef6ksr2> <svg class="tto-isaret marka-isaret" viewBox="214 274 572 346" aria-hidden="true" focusable="false" data-astro-cid-tvrurpns> <line x1="321" y1="463" x2="321" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="424" y1="518" x2="424" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="543" y1="357" x2="543" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="668" y1="485" x2="668" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="470" y1="508.7" x2="470" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line><line x1="600" y1="437.5" x2="600" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line><line x1="722" y1="322.6" x2="722" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line> <path d="M264.5133568919622 387.26923076923083H365.3088210525277Q369.0643543309818 387.26923076923083 371.70667259092437 386.1712238182887Q374.3489908508669 385.0732168673466 376.3864166735349 384.00982477283105Q378.42384249620284 382.94643267831555 380.1755222590783 382.94643267831555Q382.5114517408566 382.94643267831555 383.786987571189 384.18423725352983Q385.0625234015214 385.4220418287441 385.8678259859578 388.79209905945197L394.333027061469 433.57036030568327Q394.8487847778373 435.8855405218828 394.13227325369814 437.3167612523987Q393.41576172955905 438.7479819829146 391.6071675681652 439.10139305943335Q389.91072097811127 439.45947588188574 388.56742771911934 438.7543744096139Q387.2241344601274 438.049272937342 386.2755288737468 436.0843873989697Q379.0536407074676 418.8134515649066 373.41589034543944 410.07865547336854Q367.7781399834113 401.3438593818305 362.3214716054857 398.31365833911474Q356.8648032275602 395.283457296399 350.18677113506084 395.283457296399H332.9446493739692V554.5362875338358Q332.9446493739692 556.8028829741793 334.4183017856692 558.1327898146119Q335.8919541973692 559.4626966550445 338.6966477772937 560.1186409746655L347.9124809122429 561.7652983915849Q351.47051628711273 562.7384699570158 351.47051628711273 565.5752783285884Q351.47051628711273 569.0 346.89970697140177 569.0H283.47981500525316Q281.1411042290811 569.0 280.02505495931166 568.0415332122133Q278.90900568954214 567.0830664244265 278.90900568954214 565.5752783285884Q278.90900568954214 562.7384699570158 282.46704106441194 561.7652983915849L291.68287419936115 560.1186409746655Q294.557661080912 559.4626966550445 295.99626684179884 558.1327898146119Q297.4348726026857 556.8028829741793 297.4348726026857 554.5362875338358V395.283457296399H280.1927508415941Q273.60816634313846 395.283457296399 268.16793926928835 398.50023585371673Q262.72771219543824 401.7170144110345 257.06634108012975 410.4820994922999Q251.4049699648212 419.2471845735653 244.10399310290813 436.0843873989697Q243.21510190720886 438.049272937342 241.84195145287623 438.7543744096139Q240.4688009985436 439.45947588188574 238.7723544084897 439.10139305943335Q237.00114277087582 438.7479819829146 236.31492023646402 437.3167612523987Q235.62869770205222 435.8855405218828 236.04649491518592 433.57036030568327L244.51169599069712 388.79209905945197Q245.31699857513348 385.4220418287441 246.60646800627 384.18423725352983Q247.89593743740653 382.94643267831555 250.20399971757658 382.94643267831555Q251.95965946791694 382.94643267831555 253.839403899888 384.00982477283105Q255.71914833185906 385.0732168673466 258.2822767688284 386.1712238182887Q260.8454052057977 387.26923076923083 264.5133568919622 387.26923076923083Z M434.9508568919622 387.26923076923083H535.7463210525277Q539.5018543309818 387.26923076923083 542.1441725909244 386.1712238182887Q544.7864908508669 385.0732168673466 546.8239166735349 384.00982477283105Q548.8613424962028 382.94643267831555 550.6130222590783 382.94643267831555Q552.9489517408566 382.94643267831555 554.224487571189 384.18423725352983Q555.5000234015214 385.4220418287441 556.3053259859578 388.79209905945197L564.770527061469 433.57036030568327Q565.2862847778373 435.8855405218828 564.5697732536983 437.3167612523987Q563.8532617295591 438.7479819829146 562.0446675681652 439.10139305943335Q560.3482209781113 439.45947588188574 559.0049277191193 438.7543744096139Q557.6616344601274 438.049272937342 556.7130288737468 436.0843873989697Q549.4911407074676 418.8134515649066 543.8533903454395 410.07865547336854Q538.2156399834113 401.3438593818305 532.7589716054857 398.31365833911474Q527.3023032275602 395.283457296399 520.6242711350608 395.283457296399H503.3821493739692V554.5362875338358Q503.3821493739692 556.8028829741793 504.8558017856692 558.1327898146119Q506.3294541973692 559.4626966550445 509.1341477772937 560.1186409746655L518.3499809122429 561.7652983915849Q521.9080162871128 562.7384699570158 521.9080162871128 565.5752783285884Q521.9080162871128 569.0 517.3372069714018 569.0H453.91731500525316Q451.5786042290811 569.0 450.46255495931166 568.0415332122133Q449.34650568954214 567.0830664244265 449.34650568954214 565.5752783285884Q449.34650568954214 562.7384699570158 452.90454106441194 561.7652983915849L462.12037419936115 560.1186409746655Q464.995161080912 559.4626966550445 466.43376684179884 558.1327898146119Q467.8723726026857 556.8028829741793 467.8723726026857 554.5362875338358V395.283457296399H450.6302508415941Q444.04566634313846 395.283457296399 438.60543926928835 398.50023585371673Q433.16521219543824 401.7170144110345 427.50384108012975 410.4820994922999Q421.8424699648212 419.2471845735653 414.54149310290813 436.0843873989697Q413.65260190720886 438.049272937342 412.27945145287623 438.7543744096139Q410.9063009985436 439.45947588188574 409.20985440848966 439.10139305943335Q407.43864277087584 438.7479819829146 406.752420236464 437.3167612523987Q406.0661977020522 435.8855405218828 406.4839949151859 433.57036030568327L414.94919599069715 388.79209905945197Q415.7544985751335 385.4220418287441 417.04396800627 384.18423725352983Q418.33343743740653 382.94643267831555 420.64149971757655 382.94643267831555Q422.39715946791694 382.94643267831555 424.276903899888 384.00982477283105Q426.15664833185906 385.0732168673466 428.7197767688284 386.1712238182887Q431.2829052057977 387.26923076923083 434.9508568919622 387.26923076923083Z M670.0099249976472 383.6388017458197Q690.4382683436672 383.6388017458197 707.0990273391362 390.6072315202238Q723.7597863346051 397.57566129462793 735.7482777719492 410.2809825321266Q747.7367692092935 422.9863037696252 754.2020477936424 440.3431412401394Q760.6673263779912 457.6999787106537 760.6673263779912 478.51815661411877Q760.6673263779912 499.2711380333998 754.2140708190855 516.5706936762883Q747.7608152601796 533.8702493191769 735.8290806515679 546.455872462346Q723.8973460429563 559.0414956055151 707.3436989293684 565.9155802871459Q690.7900518157805 572.7896649687766 670.653826673336 572.7896649687766Q650.3305402167069 572.7896649687766 633.7036184040435 565.8375905832957Q617.0766965913801 558.8855161978147 605.1017928756057 546.1474841824697Q593.1268891598313 533.4094521671248 586.6616105754824 515.9197815914926Q580.1963319911335 498.4301110158603 580.1963319911335 477.28966891016955Q580.1963319911335 456.73779573420495 586.6663747333491 439.5850067972385Q593.1364174755648 422.43221786027203 605.0849392674863 409.9095944846765Q617.0334610594078 397.38697110908106 633.5205602123438 390.5128864274504Q650.0076593652798 383.6388017458197 670.0099249976472 383.6388017458197ZM724.3195232508632 501.6529628355414Q724.3195232508632 483.8118575500826 721.0903217550904 467.4902417186039Q717.8611202593177 451.1686258871252 712.066546422107 437.45106030402417Q706.2719725848963 423.7334947209232 698.4092711878116 413.5686765919404Q690.546569790727 403.40385846295754 681.2429651379441 397.78557402524166Q671.9393604851614 392.16728958752583 661.7120868553981 392.16728958752583Q648.2373973273386 392.16728958752583 638.1003742385476 399.43499144007313Q627.9633511497567 406.70269329262044 622.3324881690339 420.5330491157858Q616.7016251883111 434.36340493895113 616.7016251883111 454.1212883221272Q616.7016251883111 472.12508390804464 619.9124813014283 488.5746892684032Q623.1233374145455 505.0242946287617 628.9183430461428 518.8256271502111Q634.7133486777401 532.6269596716604 642.541349303246 542.8567675619494Q650.3693499287518 553.0865754522383 659.7012535775295 558.7375706678006Q669.0331572263071 564.3885658833628 679.2285836669975 564.3885658833628Q692.9400367846067 564.3885658833628 703.0623485989724 557.1540066030486Q713.1846604133383 549.9194473227343 718.7520918321007 535.9288229872293Q724.3195232508632 521.9381986517244 724.3195232508632 501.6529628355414Z" class="harf" data-astro-cid-tvrurpns></path> <path d="M230.0,533.0 C245.2,520.3 288.7,460.5 321.0,457.0 C353.3,453.5 387.0,529.7 424.0,512.0 C461.0,494.3 502.3,356.5 543.0,351.0 C583.7,345.5 630.2,476.0 668.0,479.0 C705.8,482.0 753.0,387.3 770.0,369.0" class="dalga" data-astro-cid-tvrurpns></path> <path d="M232.0,564.0 C242.7,562.2 274.8,557.4 296.1,553.2 C317.5,549.0 338.9,544.5 360.2,539.0 C381.6,533.5 403.0,527.5 424.4,520.2 C445.8,513.0 467.1,505.1 488.5,495.6 C509.9,486.0 531.2,475.6 552.6,463.1 C574.0,450.6 595.4,436.9 616.8,420.4 C638.1,403.9 659.5,385.8 680.9,364.1 C702.2,342.4 734.3,302.3 745.0,290.0" class="egri" data-astro-cid-tvrurpns></path> <line x1="230" y1="603" x2="770" y2="603" class="eksen" data-astro-cid-tvrurpns></line> <line x1="230" y1="584" x2="230" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="320" y1="584" x2="320" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="410" y1="584" x2="410" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="500" y1="584" x2="500" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="590" y1="584" x2="590" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="680" y1="584" x2="680" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="770" y1="584" x2="770" y2="603" class="cetvel" data-astro-cid-tvrurpns></line> </svg>  <span class="marka-yazi" data-astro-cid-3ef6ksr2> <span class="marka-ad" lang="en" data-astro-cid-3ef6ksr2>TTO Trading</span> <span class="marka-alt" data-astro-cid-3ef6ksr2>Türkiye makro &amp; piyasa araştırmaları</span> </span> </a> <nav aria-label="Bölümler" data-astro-cid-3ef6ksr2> <div class="nav-acilir" data-acilir data-astro-cid-3ef6ksr2> <button type="button" class="nav-link nav-dugme" aria-expanded="false" aria-controls="menu-bulten" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>01</span> Bülten <span class="nav-ok" aria-hidden="true" data-astro-cid-3ef6ksr2></span> </button> <ul class="nav-menu" id="menu-bulten" data-astro-cid-3ef6ksr2> <li data-astro-cid-3ef6ksr2> <a href="/bulten/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Günlük</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Hafta içi her sabah</span> </a> </li><li data-astro-cid-3ef6ksr2> <a href="/bulten/haftalik/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Haftalık</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Pazar akşamı, haftaya bakış</span> </a> </li><li data-astro-cid-3ef6ksr2> <a href="/bulten/aylik/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Aylık</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Ayın ilk iş günü akşamı</span> </a> </li> </ul> </div><a href="/tradeler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>02</span> Tradeler </a><a href="/analiz/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>03</span> Analiz </a><a href="/projeler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>04</span> Projeler </a><a href="/grafikler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>05</span> Grafikler </a><a href="/arastirma/" class="nav-link aktif" aria-current="page" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>06</span> Dersler </a><a href="/indikatorler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>07</span> İndikatörler </a><a href="/hakkinda/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>08</span> Hakkında </a><a href="/arama/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>09</span> Arama </a> </nav> <noscript> <style>.nav-acilir:focus-within .nav-menu { display: block; }</style> </noscript> </div> </div> </header> <script type="module" src="/_astro/Header.astro_astro_type_script_index_0_lang.sWAGpYzy.js"></script>  <main class="sarici" id="icerik" tabindex="-1">  <article data-astro-cid-mrksnbf2> <header class="makale-baslik yuksel" data-astro-cid-mrksnbf2> <p class="kicker etiket" data-astro-cid-mrksnbf2> Ders  · <a href="/arastirma/#faiz-masasi" data-astro-cid-mrksnbf2>Faiz masası — eğriden pozisyona</a>  · tl-faiz · egri · <span lang="en">ois</span> · dibs </p> <h1 data-astro-cid-mrksnbf2>TRY OIS: spread kurulumu, fly&#39;lar ve masa pratiği</h1> <p class="ozet" data-astro-cid-mrksnbf2>Bir eğim ya da büküm görüşünü DV01 nötr bir spread ya da fly&#39;a çevirmek, maliyet testinden geçirmek ve her işlemi sekiz maddelik kontrol listesiyle açmak.</p> <div class="makale-meta" data-astro-cid-mrksnbf2> <span data-astro-cid-mrksnbf2><b data-astro-cid-mrksnbf2>Yayın</b> 6 Kasım 2026</span>      </div>  <details class="seri-kunye" data-astro-cid-rqz27vut> <summary data-astro-cid-rqz27vut> <span class="etiket" data-astro-cid-rqz27vut>Seri</span> <a href="/arastirma/seri/egri/" data-astro-cid-rqz27vut>TL faiz masası: eğriden pozisyona</a> <span class="seri-konum" data-astro-cid-rqz27vut>Bölüm 9 / 9</span> <span class="seri-ac" data-astro-cid-rqz27vut>bütün bölümler</span> </summary> <ol class="seri-liste" data-astro-cid-rqz27vut> <li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>01</span> <a class="seri-ad" href="/arastirma/egri-df-ve-bootstrap/" data-astro-cid-rqz27vut>İskonto faktörü, forward ve bootstrap</a> <span class="seri-dk" data-astro-cid-rqz27vut>24 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>02</span> <a class="seri-ad" href="/arastirma/egri-kurmak-ve-tlref/" data-astro-cid-rqz27vut>Eğriyi kurmak: araç, TLREF ve toplantı patikası</a> <span class="seri-dk" data-astro-cid-rqz27vut>23 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>03</span> <a class="seri-ad" href="/arastirma/egri-enstruman/" data-astro-cid-rqz27vut>Enstrüman fiyatlama: tahvil, swap, swaption ve ASW</a> <span class="seri-dk" data-astro-cid-rqz27vut>32 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>04</span> <a class="seri-ad" href="/arastirma/egri-dv01/" data-astro-cid-rqz27vut>DV01: aynı işlemin üç cevabı</a> <span class="seri-dk" data-astro-cid-rqz27vut>23 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>05</span> <a class="seri-ad" href="/arastirma/egri-hedge/" data-astro-cid-rqz27vut>FX forward&#39;ı OIS ile hedge etmek</a> <span class="seri-dk" data-astro-cid-rqz27vut>24 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>06</span> <a class="seri-ad" href="/arastirma/egri-asw-trade/" data-astro-cid-rqz27vut>Asset swap trade: paketin doğumundan kapanışına</a> <span class="seri-dk" data-astro-cid-rqz27vut>20 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>07</span> <a class="seri-ad" href="/arastirma/egri-ois-motorlar/" data-astro-cid-rqz27vut>TRY OIS: zemin ve pay/receive&#39;in üç motoru</a> <span class="seri-dk" data-astro-cid-rqz27vut>24 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>08</span> <a class="seri-ad" href="/arastirma/egri-ois-vadeler/" data-astro-cid-rqz27vut>TRY OIS: vade vade karar ve spreadler</a> <span class="seri-dk" data-astro-cid-rqz27vut>23 dk</span> </li><li class="simdi" data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>09</span> <span class="seri-ad" data-astro-cid-rqz27vut>TRY OIS: spread kurulumu, fly&#39;lar ve masa pratiği</span> <span class="seri-dk" data-astro-cid-rqz27vut>22 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>Ek</span> <a class="seri-ad" href="/arastirma/egri-ek/" data-astro-cid-rqz27vut>TL faiz serisinin eki: çıpalar, formül kâğıtları ve başvuru</a> <span class="seri-dk" data-astro-cid-rqz27vut>6 dk</span> </li> </ol> </details>  <p class="kaynak-satiri" data-astro-cid-mrksnbf2><span class="etiket" data-astro-cid-mrksnbf2>Kaynak</span> TCMB, Borsa İstanbul ve TLREF piyasa kotasyonları; Murex ve Bloomberg sistem pratiği. Seri hesapları elle ve sayfadaki hesap araçlarıyla yapar; formül kâğıdı, sistem konfigürasyonu ve sözlük serinin ekinde.</p> <p class="kapsam-satiri" data-astro-cid-mrksnbf2><span class="etiket" data-astro-cid-mrksnbf2>Kapsam</span> Bir spread&#39;i yedi adımda uçtan uca kurmak; eğrinin bükümünü işlem etmek: fly&#39;ın genel grameri, ön uç, geçiş, belly ve uzun uç fly katalogları, 50:50 DV01 ağırlığı, 3× maliyet testi, unwind ve yapı bozunması, girmeden önce dokuz soru; masa pratiği: sekiz maddelik kontrol listesi, beş vaka, PPK haftası playbook&#39;u, pozisyon izleme rutini ve sık yapılan on hata; ve bir fikrin altı adımda pozisyona dönüşü.</p> <div class="ders-kunye" aria-label="Ders künyesi" data-astro-cid-vyjx7skq> <div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>22 dk</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Okuma</span> <span class="kunye-alt" data-astro-cid-vyjx7skq>4,3 bin kelime</span> </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>4</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Alt başlık</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>2</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Hesap aracı</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>3</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Pratik bloğu</span> <span class="kunye-alt" data-astro-cid-vyjx7skq>8 çözümlü alıştırma</span> </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>8</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Tablo</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>Orta</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Seviye</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>06 Kas 2026</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Son güncelleme</span>  </div> </div>     </header> <nav class="icindekiler yuksel" id="icindekiler" hidden aria-label="İçindekiler" data-astro-cid-mrksnbf2> <span class="etiket ic-baslik" data-astro-cid-mrksnbf2>İçindekiler</span> <ol id="icindekiler-liste" data-astro-cid-mrksnbf2></ol> </nav>   <div class="prose yuksel" style="--d: 120ms" data-deger="sabit" data-astro-cid-mrksnbf2>  <div class="masa"><span class="etiket">Bu bölüm neyi çözer</span><p>Önce 8. bölümün spread kataloğu yedi adımlık kurulumla kapanır, sonra eğrinin bükümüne geçilir. Fly, eğrinin genel eğimini nötrler ve yalnız yerel bükülmeyi bırakır; OIS yapıları içinde en pahalısı ve kontrolü en uzun olanıdır. Bölüm fly kataloğunu ağırlık, maliyet testi ve bozunma kurallarıyla kurar, sonra masa pratiğine geçer: kontrol listesi, beş vaka, PPK haftası ve izleme rutini. Bir fikrin altı adımda pozisyona dönüştüğü akışla kapanır.</p><p><strong>Kısaca</strong></p><ul>
+<li>Spread yedi adımda kurulur: görüş cümlesi, kadran, bacaklar, DV01 nötr nosyoneller, iki senaryoda taşıma, hedef ve süre, terk işareti. Ters eğride steepener bir yarıştır; geç kalan taşımaya yenilir.</li>
+<li>Long fly gövdede pay, kanatlarda receive’dir; fly yükselirse kazandırır. Kurulum 50:50 DV01’dir: nosyonel nötr kurulum gizli bir outright taşır.</li>
+<li>Beklenen normalize hareket toplam maliyetin en az 3 katı değilse fly’a girilmez; dar bantlı yapılar bu testte sık elenir.</li>
+<li>Likidite kaybolunca fly bacak bacak çözülür; en ince bacak yapının boyutunu belirler.</li>
+<li>Sekiz madde kapanmadan işlem açılmaz; PPK haftası gün gün plana bağlanır.</li>
+<li>On tipik hatanın hepsi bilgi değil disiplin eksikliğidir: her biri işlem öncesi tek bir yazılı satırla önlenebilirdi.</li>
+</ul></div>
+<p>Sayılar 7. ve 8. bölümdekiyle aynı fotoğraftır: <strong>Çıpa: 05.08.2026 kapanışı</strong>, temsili eğri
+<a href="/arastirma/egri-ois-motorlar/#716--temsili-e%C4%9Fri-ois-b%C3%B6l%C3%BCmlerinde-kullan%C4%B1lan-kotasyonlar-%C3%A7%C4%B1pa-05082026">§7.1.6</a>’da.</p>
+<h2 id="91--bir-spreadi-uçtan-uca-kurmak-yedi-adımlık-prosedür">9.1 · Bir spread’i uçtan uca kurmak: yedi adımlık prosedür</h2>
+<p>Katalog “hangi yapı” sorusunu cevaplar; bu prosedür “nasıl kurulur” sorusunu. Örnek:
+<strong>2s5s bull steepener</strong> (rec 2y / pay 5y), giriş −630.</p>
+<p><strong>1. Cümleyi yaz.</strong> <em>“Gevşeme öne çekilir; ön uç uzun uçtan hızlı ralli eder.”</em> Bu bir
+<strong>eğim</strong> görüşüdür (<a href="/arastirma/egri-ois-motorlar/#721--plin-%C3%BC%C3%A7-bile%C5%9Feni-fixing-carry-rolldown-ve-e%C4%9Fri-mtmi">§7.2.1</a> haritası) ⇒ spread, outright değil.</p>
+<p><strong>2. Bacakları ve yönü sabitle.</strong> Steepener = spread’in <strong>yükselmesi</strong>. 2s5s = 5y − 2y.
+Yükselmesi için 2y’nin daha çok düşmesi gerekir ⇒ <strong>receive 2y / pay 5y</strong>.</p>
+<p><strong>3. DV01-nötr nosyonelleri hesapla.</strong> <a href="/arastirma/egri-ek/#ek-b--temsili-dv01-tablosu">Ek B</a>: 2y 14.700 · 5y 30.400 TL/bp (100 mn başına).
+100 mn 2y için 5y bacağı: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mo>×</mo><mstyle scriptlevel="0" displaystyle="true"><mfrac><mn>14.700</mn><mn>30.400</mn></mfrac></mstyle><mo>=</mo><mn>48,4</mn><mo>≈</mo></mrow><annotation encoding="application/x-tex">100 \times \dfrac{14.700}{30.400} = 48{,}4 \approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">100</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.0074em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">30.400</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">14.700</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">48</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">4</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span></span></span></span> <strong>48 mn</strong>.
+Sağlama: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>48</mn><mo>×</mo><mn>304</mn><mo>=</mo><mn>14.592</mn><mo>≈</mo><mn>14.700</mn></mrow><annotation encoding="application/x-tex">48 \times 304 = 14.592 \approx 14.700</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">48</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">304</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">14.592</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">14.700</span></span></span></span> ✓</p>
+<p><strong>4. Taşımayı yaz (iki senaryo).</strong> Forwardlar gerçekleşirse ≈ 0. Eğri sabitse steepener
+100 mn 2y bacağı başına çeyrekte <strong>~−1,5 mn TL</strong> öder (B.5 girişindeki kutu). Üç aydan uzun
+taşınacaksa hedef bu maliyeti de kapatmalıdır.</p>
+<p><strong>5. Hedef ve stop’u senaryoya bağla.</strong> Hedef: iki güvercin toplantının ön uca taşınması
+senaryosunda ~−520. Stop: stres derinleşmesi (bear flattener) senaryosunda ~−710/−720.
+Yuvarlak sayı değil, <strong>senaryo</strong> çıpalanır (<a href="/arastirma/egri-ois-vadeler/#835--belly-2s5s-ve-3y5y--d%C3%B6rt-kadran-ve-trynin-ampirik-imzas%C4%B1">§8.3.5</a> şablonu).</p>
+<p><strong>6. Kuruluşu sırala.</strong> Paket kotasyon iste. Bacak bacak kurulacaksa <strong>likit olmayan
+bacak önce</strong> (5y): likit bacağı önce kurarsan ikinci bacak seni bekletir ve yapı yarım
+kalır — o arada elinde bir outright vardır.</p>
+<p><strong>7. Dilimle ve izle.</strong> Toplantı öncesi yarım boy, karar sonrası tamamla (<a href="/arastirma/egri-ois-motorlar/#722--%C3%B6n-u%C3%A7-stripi-kotasyonlardan-toplant%C4%B1-ad%C4%B1mlar%C4%B1n%C4%B1-%C3%A7%C3%B6zmek">§7.2.2</a>’deki dağılım
+okuması). İzlemede iki satır zorunludur: <strong>spread seviyesi</strong> ve <strong>eğri-sabit taşımanın
+işareti</strong> (<a href="#938--pozisyon-izleme-rutini-sabah-fixinginden-mark-kalitesine">§9.3.8</a>).</p>
+<p><strong>Sayısal kapanış.</strong> Hedefe ulaşırsa: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mo>−</mo><mn>520</mn><mo stretchy="false">)</mo><mo>−</mo><mo stretchy="false">(</mo><mo>−</mo><mn>630</mn><mo stretchy="false">)</mo><mo>=</mo><mn>110</mn></mrow><annotation encoding="application/x-tex">(-520) - (-630) = 110</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">−</span><span class="mord">520</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">−</span><span class="mord">630</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">110</span></span></span></span> bp × 14.700 TL/bp <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo></mrow><annotation encoding="application/x-tex">=</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">=</span></span></span></span>
+<strong>+1,62 mn TL</strong>. Aynı çeyrekte taşıma −1,5 mn. <strong>Net ≈ +0,12 mn.</strong> Bu, spread işlemlerinin
+en önemli dersidir: <em>doğru görüş, doğru yapı, hedefe tam ulaşma — ve yine de kâr yok.</em>
+Çözüm üçünden biridir: (i) hedefi büyüt (−500 altı), (ii) ufku kısalt (taşıma birikmesin),
+(iii) taşıması ters işaretli yapıyı seç (flattener). Bir spread’e girmeden önce bu hesap
+yapılmazsa, pozisyon “haklı ama kârsız” biter.</p>
+<div class="pratik"><span class="etiket">Pratik — Spreadler ve forwardlar</span><p><strong>1. Doğrudan uygulama — DV01-nötrlük ve gizli outright.</strong> 2s5s’i (a) DV01-nötr,
+(b) nosyonel-nötr (100/100) kurun. İkinci durumda ne taşıyorsunuz?</p><details><summary>Çözüm</summary><p>(a) 100 mn 2y ↔ <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mo>×</mo><mn>14.700</mn><mi mathvariant="normal">/</mi><mn>30.400</mn><mo>=</mo></mrow><annotation encoding="application/x-tex">100 \times 14.700/30.400 = </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">100</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">14.700/30.400</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span></span></span></span> <strong>48 mn 5y</strong>. Net DV01 ≈ 0.</p><p>(b) 100/100 kurulursa: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>30.400</mn><mo>−</mo><mn>14.700</mn><mo>=</mo></mrow><annotation encoding="application/x-tex">30.400 - 14.700 = </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">30.400</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">14.700</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span></span></span></span> <strong>15.700 TL/bp</strong> net. Bu, tek başına
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>15.700</mn><mi mathvariant="normal">/</mi><mn>304</mn><mo>≈</mo></mrow><annotation encoding="application/x-tex">15.700/304 \approx</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">15.700/304</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span></span></span></span> <strong>52 mn 5y outright</strong>’a eşdeğerdir — yani “spread” diye kurulan
+pozisyonun yarısından fazlası aslında bir 5y bahsidir.</p><p><strong>Cevap:</strong> 48 mn; nosyonel-nötr kurulum ~52 mn’lik gizli 5y outright taşır. <a href="#939--s%C4%B1k-yap%C4%B1lan-on-hata-masa-haf%C4%B1zas%C4%B1n%C4%B1n-k%C4%B1sa-listesi">§9.3.9</a>’un 3.
+maddesi tam olarak budur.</p></details><p><strong>2. Ters çevirme — hedef taşımayı kapatıyor mu?</strong> 2s5s steepener −630’dan kuruldu,
+hedef −520, ufuk üç ay, 2y bacağı 100 mn, çeyreklik taşıma −1,5 mn. (a) Hedefe ulaşırsa
+brüt ve net P&amp;L? (b) Net’in sıfır olduğu hedef seviyesi kaç? (c) Ufuk altı aya uzarsa?</p><details><summary>Çözüm</summary><p>(a) Brüt: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>110</mn><mo>×</mo><mn>14.700</mn><mo>=</mo><mn>1,617</mn></mrow><annotation encoding="application/x-tex">110 \times 14.700 = 1{,}617</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">110</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">14.700</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">617</span></span></span></span> mn. Net: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1,617</mn><mo>−</mo><mn>1,5</mn><mo>=</mo></mrow><annotation encoding="application/x-tex">1{,}617 - 1{,}5 = </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">617</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">5</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span></span></span></span> <strong>+0,12 mn</strong>.</p><p>(b) Başabaş hareket: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1,5</mn><mtext> mn</mtext><mi mathvariant="normal">/</mi><mn>14.700</mn><mo>=</mo><mn>102</mn></mrow><annotation encoding="application/x-tex">1{,}5\ \text{mn} / 14.700 = 102</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">5</span><span class="mspace"> </span><span class="mord text"><span class="mord">mn</span></span><span class="mord">/14.700</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">102</span></span></span></span> bp ⇒ spread <strong>−528</strong>’e gelirse net
+sıfır. Yani hedefin neredeyse tamamı taşımaya gidiyor.</p><p>(c) Altı ayda taşıma −3,0 mn ⇒ başabaş hareket 204 bp ⇒ spread <strong>−426</strong>’ya gelmeli. Aynı
+tez, iki kat uzun ufukta neredeyse iki kat hedef gerektirir.</p><p><strong>Cevap:</strong> +0,12 mn · −528 · −426. <strong>Sonuç:</strong> ters eğride steepener bir <strong>yarış</strong>tır; geç
+kalan taşımaya yenilir (<a href="/arastirma/egri-ois-vadeler/#831--genel-gramer-spread-hangi-beklentiyle-yap%C4%B1l%C4%B1r-ne-zaman-kazand%C4%B1r%C4%B1r">§8.3.1</a>’deki “haklıyken kaybetme” biçimlerinden ikincisi).</p></details><p><strong>3. Karar — cümleden yapıya.</strong> Şu üç cümle için doğru yapıyı ve bacak yönlerini yazın:
+(a) <em>“Hem stres riskinden korunayım hem kredibilite kazanımına oynayayım.”</em>
+(b) <em>“<strong>Y+1</strong> yavaşlar, gevşeme <strong>Y+2</strong>’ye taşar.”</em>
+(c) <em>“Döngü kesintisiz sonuna kadar gider.”</em></p><details><summary>Çözüm</summary><p>(a) <strong>2s5s flattener</strong> — pay 2y / rec 5y. Gerekçe: flattener iki zıt dünyada birden çalışır
+(stres ⇒ bear flattener; kredibilite ⇒ bull flattener); kaybettiği dünya “sakin ve
+güvercin” ortadır (<a href="/arastirma/egri-ois-vadeler/#835--belly-2s5s-ve-3y5y--d%C3%B6rt-kadran-ve-trynin-ampirik-imzas%C4%B1">§8.3.5</a>).</p><p>(b) <strong>1y1y − 2y1y genişleme</strong> — pay 1y1y / rec 2y1y. Spot bacaklarla:
+pay 1y1y ≈ pay 2y + receive 1y (eşit nosyonel); rec 2y1y ≈ rec 3y + pay 2y. Uyarı: bu yapı
+<strong>1y2y3y long fly’ına eşdeğerdir</strong> (<a href="/arastirma/egri-ois-vadeler/#837--forward-spreadler-patikadan-ar%C4%B1nd%C4%B1r%C4%B1lm%C4%B1%C5%9F-g%C3%B6r%C3%BC%C5%9F">§8.3.7</a> sonu) — ikisini birden kurmak çifte pozisyondur
+(<a href="#939--s%C4%B1k-yap%C4%B1lan-on-hata-masa-haf%C4%B1zas%C4%B1n%C4%B1n-k%C4%B1sa-listesi">§9.3.9</a>, madde 3 ve <a href="#923--ge%C3%A7i%C5%9F-flylar%C4%B1-b%C3%BCk%C3%BCm%C3%BCn-kendisi">§9.2.3</a> tuzağı).</p><p>(c) <strong>1y2y flattener</strong> — pay 1y / rec 2y. Uyarı: iki bacak da likit olduğu için boyut
+kolayca şişer, ama spread PPK sürprizinde outright gibi davranır (yüksek beta) — DV01-nötr
+olması “risksiz” demek değildir.</p><p><strong>Araçla doğrula:</strong> <em>OIS Carry Hesaplayıcısı</em>nda her bacağı ayrı ayrı geçirip taşımaları
+toplayın; üç yapının hangisinin sizi beklerken ödediğini görün.</p></details></div>
+<h2 id="92--flylar-eğrinin-bükümünü-işlem-etmek-ön-uç--geçiş--belly--uzun-uç">9.2 · Fly’lar: eğrinin bükümünü işlem etmek (ön uç · geçiş · belly · uzun uç)</h2>
+<p><em>Burada:</em> fly’ın üç kaynağı, altı kayıp modu, dört katalog, 50:50 ağırlıklama, 3× maliyet testi ve yapı bozunması kuralları.</p>
+<div class="not"><p><span class="etiket">Bu bölümün derin hâli</span>
+Klasik fly’ların neden yapıldığı (yedi gerekçe), ağırlıklandırmanın ucuz/pahalı hükmünü
+nasıl tersine çevirebildiği, fly taşıma haritası, rejimlerde fly, OIS’te fly bileti,
+barbell–bullet ve konveksite, kalıcılık ve risk yönetimi Kâğıt ve OIS serisinin
+<a href="/arastirma/kagit-fly/">fly bölümlerinde</a> (8.–10. bölüm), Türkiye eğrisinin ölçülmüş davranışıyla
+anlatılıyor; taşıma ve roll-down’ın tam tanımı <a href="/arastirma/kagit-tasima/">4. bölümünde</a>. Buradaki
+katalog o çerçevenin OIS karşılığıdır.</p></div>
+<p>Hatırlatma — konvansiyon: <strong>fly = 2 × gövde − kanatlar</strong>; long fly = gövde pay +
+kanatlar receive, fly yükselirse kazanır. Fly, spreadin de nötralize edemediği şeyi
+nötralize eder: <strong>eğrinin genel eğimini</strong>. Geriye kalan tek risk yerel bükülmedir — ve
+TRY’de bükülmeler ya patika zamanlamasından (ön uç) ya akış yoğunlaşmasından (2y+) doğar.
+Katalog, 3. ve 4. bölümde derinlemesine işlenen 3m6m1y (+80) ve 5y6y7y (−20) dışındaki
+yapıları kapsar; seviyeler temsili eğriden.</p>
+<h3 id="921--genel-gramer-fly-hangi-beklentiyle-yapılır-ne-zaman-kazandırır">9.2.1 · Genel gramer: fly hangi beklentiyle yapılır, ne zaman kazandırır?</h3>
+<p>Fly’ın seviyesi üç kaynaktan beslenir: <strong>patika konveksitesi</strong> (beklenen faiz yolunun o
+bölgedeki bükümü — ön uçta baskın), <strong>vadeye özgü akış/arz primi</strong> (belirli noktaya yığılan
+hedge, ihraç veya yatırım talebi — orta ve uzun uçta baskın) ve <strong>eğri kurma yöntemi</strong>
+(interpolasyonun ürettiği yapay büküm). Fly işlemi bu üçünden birinin <em>değişeceği</em>
+beklentisiyle yapılır ve hangisine oynadığını bilmek, hedefle stop’un neye bağlanacağını
+belirler: patikaya oynuyorsan tetik merkez bankası iletişimidir, akışa oynuyorsan tetik
+akışın kendisidir, <strong>mark’a oynuyorsan muhtemelen oynamamalısın</strong>.</p>
+<p><strong>Ne zaman kazandırır</strong> (rejimden bağımsız dört kaynak):</p>
+<ul>
+<li><strong>Dislokasyon fade’i:</strong> tek yönlü akış bir noktayı kanatlarından koparmıştır; normalize
+olmasına oynanır (<a href="/arastirma/egri-ois-vadeler/#824--5y6y7y-fly%C4%B1-sinyal-mi-mark-g%C3%BCr%C3%BClt%C3%BCs%C3%BC-m%C3%BC-ger%C3%A7ekle%C5%9Febilirlik-testi">§8.2.4</a>’teki örnek). Hedef, akış öncesi banda dönüş; süre, akışın bitmesi.</li>
+<li><strong>Patika şekli görüşü:</strong> toplam hareketin değil dağılımının fiyatlanması — “front-load vs
+erteleme” (<a href="/arastirma/egri-ois-vadeler/#814--3m6m1y-fly%C4%B1-gev%C5%9Femenin-toplam%C4%B1n%C4%B1-de%C4%9Fil-zamanlamas%C4%B1n%C4%B1-i%C5%9Flem-etmek">§8.1.4</a>’ün genel hâli). Her döngü fazında çalışır; sıkılaşmada işaretler aynalanır.</li>
+<li><strong>Takvimli akış öncesi pozisyonlanma:</strong> bilinen ihraç/itfa/hedge programının belirli
+vadeyi taşıyacağı öngörülür; akıştan önce kurulur, akışla kapatılır. Kaynağı bilgi değil
+<strong>takvim okumaktır</strong>.</li>
+<li><strong>Büküm göçü:</strong> döngü ilerledikçe eğrinin maksimum büküm noktası vade ekseninde yer
+değiştirir — gevşeme fiyatlandıkça kink uzaktan yakına iner. Göçün geldiği bölgede long,
+terk ettiği bölgede short fly yavaş ama ısrarcı bir kaynaktır.</li>
+</ul>
+<p><strong>Ne zaman kaybettirir</strong> — fly’ın kayıp modları kazanç modlarından daha öğreticidir:</p>
+<ul>
+<li><strong>Yanlış katman:</strong> görüş seviyede/eğimde doğru çıkar ama büküm değişmez — fly tanımı
+gereği ödemez; maliyet ve taşıma birikir. En sık hata, outright görüşünü “daha güvenli”
+diye fly’a çevirmektir: <strong>fly güvenli outright değil, başka bir şeyin işlemidir.</strong></li>
+<li><strong>Taşıma sessizliği:</strong> fly da kendi forward’ına akar (taşıma = spot fly − forward fly);
+küçük görünen fark, dar bantlı fly’larda beklenen hareketin yarısını yiyebilir —
+<a href="#926--mekanik-5050-a%C4%9F%C4%B1rl%C4%B1k-3-maliyet-testi-unwind-s%C4%B1ras%C4%B1">§9.2.6</a>’daki 3× maliyet kuralının nedeni budur.</li>
+<li><strong>Kanat korelasyonunun kırılması:</strong> stres gününde likit olmayan kanat hareket etmez;
+50:50 DV01 nötrlüğü kâğıtta kalır, yapı fiilen outright/spread olur ve stres yönünde açık
+taşırsın.</li>
+<li><strong>Kalabalık RV çözülmesi:</strong> aynı fly’da yoğunlaşmış defterler zorunlu unwind’a girdiğinde
+dislokasyon önce derinleşir — “ucuz, daha ucuz olur”. Stop teze bağlanır ama seviyesiz
+bırakılmaz.</li>
+<li><strong>Mark yanılsaması:</strong> interpolasyonla girilen kâr, interpolasyonla çıkılamayan zarardır
+(<a href="/arastirma/egri-ois-vadeler/#824--5y6y7y-fly%C4%B1-sinyal-mi-mark-g%C3%BCr%C3%BClt%C3%BCs%C3%BC-m%C3%BC-ger%C3%A7ekle%C5%9Febilirlik-testi">§8.2.4</a>, <a href="#924--belly-flylar%C4%B1-ak%C4%B1%C5%9F%C4%B1n-izi">§9.2.4</a>).</li>
+<li><strong>Reset ihmali:</strong> “duration’sız” yapının fixing bacakları vardır; kanat resetleri
+PPK/vergi haftalarında beklenmedik P&amp;L üretir (<a href="/arastirma/egri-ois-vadeler/#814--3m6m1y-fly%C4%B1-gev%C5%9Femenin-toplam%C4%B1n%C4%B1-de%C4%9Fil-zamanlamas%C4%B1n%C4%B1-i%C5%9Flem-etmek">§8.1.4</a>, <a href="#926--mekanik-5050-a%C4%9F%C4%B1rl%C4%B1k-3-maliyet-testi-unwind-s%C4%B1ras%C4%B1">§9.2.6</a>).</li>
+</ul>
+<p>Bu liste fly’ın doğasını da özetler: fly, düşük olasılıkla büyük değil, <strong>yüksek olasılıkla
+küçük</strong> kazanan bir enstrümandır — edge’i ancak maliyet, taşıma ve likidite disipliniyle
+korunduğu sürece vardır. Aşağıdaki katalog, bu gramerin vadelere uygulanmış hâlidir.</p>
+<h3 id="922--ön-uç-flyları-zamanlama-işlemleri">9.2.2 · Ön uç fly’ları: zamanlama işlemleri</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Yapı (temsili)</th><th>Ne fiyatlar</th><th>Long fly kazanır eğer</th><th>Tuzak</th></tr></thead><tbody><tr><td><strong>1m3m6m: +50</strong></td><td><strong>T1 adımının T2–T3 bloğuna oranı</strong></td><td>İlk toplantı pas geçilir ama T2–T3 bloğu fiyatta kalırsa</td><td>1m kanadı saf fixing; vergi/ZK sıçraması fly’ı taşır</td></tr><tr><td><strong>3m6m9m: −15</strong></td><td><strong>T2–T3 bloğunun yoğunluğu</strong> vs uçlar</td><td><strong>Orta blok (T2–T3)</strong> fiyatlanandan az teslim ederse</td><td>Gerçek 9m kotasyonu şart; interpolasyonla girme</td></tr><tr><td><strong>6m9m1y: −35</strong></td><td><strong>T2–T3 bloğu → Y+1 açılışı</strong> geçişi</td><td>Gevşeme <strong>Y+1 başına</strong> ötelenirse (9m ucuzlar)</td><td>Üç bacak da PPK strip’ine bağlı; sürpriz metinde korelasyon 1’e gider</td></tr></tbody></table>
+<h3 id="923--geçiş-flyları-bükümün-kendisi">9.2.3 · Geçiş fly’ları: bükümün kendisi</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Yapı (temsili)</th><th>Ne fiyatlar</th><th>Long fly kazanır eğer</th><th>Tuzak</th></tr></thead><tbody><tr><td><strong>6m1y2y: +260</strong></td><td>Eğrinin ana büküm noktası — döngünün orta kısmının dikliği</td><td>1y bölgesindeki gevşeme fiyatı sönerse (duraklamalı döngü)</td><td>Seviye yüksek çünkü kink gerçek; +260’ı “ucuzluk” sanma</td></tr><tr><td><strong>1y18m2y: −45</strong></td><td>Bükümün ince ayarı</td><td>18m gerçek akışla ucuzlarsa</td><td>18m çoğu gün türetilmiş mark — önce kotasyon, sonra pozisyon</td></tr><tr><td><strong>1y2y3y: −155</strong></td><td><strong>Y+1 vs Y+2 gevşeme dağılımı</strong>; 1y1y−2y1y’nin fly yazımı</td><td><strong>Y+1 yavaşlar, döngü Y+2’ye taşarsa</strong></td><td>Forward spread ile aynı anda taşıma — çifte pozisyonlanmaya dikkat</td></tr></tbody></table>
+<h3 id="924--belly-flyları-akışın-izi">9.2.4 · Belly fly’ları: akışın izi</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Yapı (temsili)</th><th>Ne fiyatlar</th><th>Long fly kazanır eğer</th><th>Tuzak</th></tr></thead><tbody><tr><td><strong>1y2y5y: +145</strong></td><td>Makro temanın (2y) taşıma noktasının zenginliği</td><td>Offshore 2y receive yoğunlaşması çözülürse</td><td>Tema akışıyla kavga — stop disiplini olmadan girme</td></tr><tr><td><strong>2y3y5y: −30</strong></td><td>Plato bölgesine geçişin şekli</td><td>3y, plato fiyatlamasında yalnız kalırsa</td><td>Hareket bandı dar (±30−40); maliyet/edge oranını hesapla</td></tr><tr><td><strong>3y4y5y: −60</strong></td><td>4y noktasının mark kalitesi</td><td>4y gerçek akışla ucuzlarsa</td><td>Neredeyse saf interpolasyon RV; kâğıt kârı riski yüksek</td></tr><tr><td><strong>2y5y10y: −430</strong></td><td>Klasik 2s5s10s: belly’nin barbell’e göre fiyatı</td><td>5y’yi taşıyan ASW/yapılandırılmış talep çekilirse</td><td>10y bacağı — klip küçük, kotasyon talep üzerine</td></tr></tbody></table>
+<h3 id="925--uzun-uç-flyları-3y5y7y-ve-5y7y10y--sadece-akışa-karşılık">9.2.5 · Uzun uç fly’ları: 3y5y7y ve 5y7y10y — sadece akışa karşılık</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Yapı (temsili)</th><th>Ne fiyatlar</th><th>Long fly kazanır eğer</th><th>Tuzak</th></tr></thead><tbody><tr><td><strong>3y5y7y: −180</strong></td><td>5y’nin makro segment ile yapılandırılmış segment arasındaki yeri</td><td>5y’deki alıcı yoğunluğu (dezenflasyon teması) seyrelirse</td><td>7y bacağı için <a href="/arastirma/egri-ois-vadeler/#824--5y6y7y-fly%C4%B1-sinyal-mi-mark-g%C3%BCr%C3%BClt%C3%BCs%C3%BC-m%C3%BC-ger%C3%A7ekle%C5%9Febilirlik-testi">§8.2.4</a>’teki gerçekleşebilirlik testi aynen geçerli</td></tr><tr><td><strong>5y7y10y: −40</strong></td><td>Uzun ucun kendi içindeki eğriliği</td><td>7y tek yönlü akışla dislokasyona uğrarsa (fade işlemi)</td><td>Üç bacağın üçü de ince; sadece akışa karşılık kur</td></tr></tbody></table>
+<h3 id="926--mekanik-5050-ağırlık-3-maliyet-testi-unwind-sırası">9.2.6 · Mekanik: 50:50 ağırlık, 3× maliyet testi, unwind sırası</h3>
+<p><strong>Ağırlıklama:</strong> defter standardı <strong>50:50 DV01</strong> (gövde DV01’inin yarısı her kanada):</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>N</mi><mtext>kanat</mtext></msub><mo>=</mo><mn>0,5</mn><mo>⋅</mo><msub><mi>N</mi><mrow><mtext>g</mtext><mover accent="true"><mtext>o</mtext><mo>¨</mo></mover><mtext>vde</mtext></mrow></msub><mo>⋅</mo><mfrac><msub><mtext>DV01</mtext><mrow><mtext>g</mtext><mover accent="true"><mtext>o</mtext><mo>¨</mo></mover><mtext>vde</mtext></mrow></msub><msub><mtext>DV01</mtext><mtext>kanat</mtext></msub></mfrac></mrow><annotation encoding="application/x-tex">N_{\text{kanat}} = 0{,}5\cdot N_{\text{gövde}}\cdot
+\frac{\text{DV01}_{\text{gövde}}}{\text{DV01}_{\text{kanat}}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">kanat</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">g</span><span class="mord accent mtight"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6679em;"><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="mord mtight">o</span></span><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord mtight">¨</span></span></span></span></span></span></span><span class="mord mtight">vde</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.1963em;vertical-align:-0.836em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord text"><span class="mord">DV01</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">kanat</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord text"><span class="mord">DV01</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">g</span><span class="mord accent mtight"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6679em;"><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="mord mtight">o</span></span><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span class="accent-body" style="left:-0.25em;"><span class="mord mtight">¨</span></span></span></span></span></span></span><span class="mord mtight">vde</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.836em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span>
+<p>İstatistiksel nötrlük istiyorsan kanat ağırlıklarını son 3−6 ayın günlük değişim
+regresyonuyla trimleyebilirsin (ön uçta kısa kanadın betası düşüktür, payı artar); ama
+regresyon ağırlıklı fly’ın unwind’ı standart pakete göre pahalıdır. Pratik çözüm: pozisyonu
+50:50 kur, regresyonu sinyal/geri-test tarafında kullan.</p>
+<p><strong>Maliyet/edge testi:</strong> all-in kuruluş+çıkış maliyeti paket kotasyonda ~6−10 bp, bacak
+bacak 12−18 bp’dir. Kural: <strong>beklenen normalize hareket, toplam maliyetin en az 3 katı
+değilse fly’a girme</strong> — 2y3y5y ve 3y4y5y gibi dar bantlı yapılar bu testte sık elenir.</p>
+<p><strong>Unwind riski:</strong> likidite kaybolduğunda fly bacak bacak çözülür ve kalan bacaklar
+outright’a döner. Boyut kuralı: her bacak için <strong>tek başına çıkış kotasyonu alabildiğin</strong>
+nosyonelin üstüne çıkma; en ince bacak yapının boyutunu belirler.</p>
+<p><strong>Reset yönetimi:</strong> kanatlarda receive bacaklar fixing toplar; PPK haftalarında fly’ın
+“duration’sızlığına” güvenip reset takvimini ihmal etme (<a href="/arastirma/egri-ois-vadeler/#812--d%C3%B6nemsellikler-vergi-zk-y%C4%B1l-sonu-ve-ppk-g%C3%BCn%C3%BC-fixing-riski">§8.1.2</a>’deki uyarı burada da
+geçerli).</p>
+<p>Fly aracı DV01’leri ve fly seviyesini aynı sayfadaki eğriden okur. Eğri, 7. bölümdeki taşıma
+hesabında kullanılan carry aracıdır (<a href="/arastirma/egri-ois-motorlar/#723--ters-e%C4%9Fride-carry--roll-1y-receivein-%C3%BC%C3%A7-ayl%C4%B1k-ta%C5%9F%C4%B1ma-hesab%C4%B1">§7.2.3</a>); burada eğri girdisi olarak durur:</p>
+<div class="hesap" id="ois-carry" data-astro-cid-qfjm3awh> <div class="hesap-ust" data-astro-cid-qfjm3awh> <span class="etiket" data-astro-cid-qfjm3awh>Hesap Aracı</span> <span class="hesap-ad" data-astro-cid-qfjm3awh>TRY OIS — Carry &amp; Roll, Eğri Sabit Senaryosu</span> </div> <p class="hesap-yonerge" data-astro-cid-qfjm3awh>
+Ters eğride "taşımayı kim ödüyor?" sorusunun sayısal cevabı. Eğri noktalarını
+    değiştirebilirsiniz; annuity seçili kupon sıklığıyla, ACT/365 basit iskontoyla kurulur
+    (masa standardı <b data-astro-cid-qfjm3awh>3 aylık</b>).
+    Varsayılanlar dersteki temsili eğri ve §2.3 vakasıdır.
+</p> <div class="egri-kap" data-astro-cid-qfjm3awh> <span class="etiket blok-baslik" data-astro-cid-qfjm3awh>Temsili eğri — kotasyon %</span> <div class="egri-girdiler" id="oc-egri" data-astro-cid-qfjm3awh></div> </div> <div class="girdiler" data-astro-cid-qfjm3awh> <label data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>Nominal (mn TL)</span> <input type="number" id="oc-n" value="500" step="50" min="1" data-astro-cid-qfjm3awh></label> <label data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>Vade T (yıl)</span> <input type="number" id="oc-t" value="1" step="0.25" min="0.25" data-astro-cid-qfjm3awh></label> <label data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>Taraf</span> <select id="oc-yon" data-astro-cid-qfjm3awh> <option value="rec" selected data-astro-cid-qfjm3awh>Receive (sabit al)</option> <option value="pay" data-astro-cid-qfjm3awh>Pay (sabit öde)</option> </select></label> <label data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>Kontrat oranı K (%)</span> <input type="number" id="oc-k" value="35.25" step="0.05" data-astro-cid-qfjm3awh></label> <label data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>Ufuk h (gün)</span> <input type="number" id="oc-h" value="92" step="1" min="1" data-astro-cid-qfjm3awh></label> <label data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>Beklenen ort. TLREF fixingi (%, gecelik)</span> <input type="number" id="oc-tlref" value="39.95" step="0.05" data-astro-cid-qfjm3awh></label> <label data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>Kupon sıklığı</span> <select id="oc-frek" data-astro-cid-qfjm3awh> <option value="4" selected data-astro-cid-qfjm3awh>3 aylık (çeyreklik) — masa standardı</option> <option value="2" data-astro-cid-qfjm3awh>6 aylık</option> <option value="1" data-astro-cid-qfjm3awh>Yıllık (bazı offshore kotasyonları)</option> </select></label> </div> <div class="orta" data-astro-cid-qfjm3awh> <div data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>A(T) — annuity</span><output class="ara-deger" id="oc-at" data-astro-cid-qfjm3awh>—</output></div> <div data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>A(T−h)</span><output class="ara-deger" id="oc-ath" data-astro-cid-qfjm3awh>—</output></div> <div data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>DV01</span><output class="ara-deger" id="oc-dv01" data-astro-cid-qfjm3awh>—</output></div> <div data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>Yüzen oran F (dönem, bileşik)</span><output class="ara-deger" id="oc-f" data-astro-cid-qfjm3awh>—</output></div> <div data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>T−h kotasyonu (eğriden)</span><output class="ara-deger" id="oc-sth" data-astro-cid-qfjm3awh>—</output></div> </div> <div class="takvim" data-astro-cid-qfjm3awh> <span class="etiket blok-baslik" data-astro-cid-qfjm3awh>Kupon takvimi — her iki bacak da bu tarihlerde öder</span> <p class="takvim-satir" id="oc-takvim" data-astro-cid-qfjm3awh>—</p> <p class="mini-not" id="oc-frek-not" data-astro-cid-qfjm3awh>—</p> </div> <div class="tablo-kab" data-astro-cid-qfjm3awh> <table data-astro-cid-qfjm3awh> <thead data-astro-cid-qfjm3awh><tr data-astro-cid-qfjm3awh><th data-astro-cid-qfjm3awh>Bileşen</th><th data-astro-cid-qfjm3awh>Formül</th><th data-astro-cid-qfjm3awh>mn TL</th><th data-astro-cid-qfjm3awh>Okuma</th></tr></thead> <tbody id="oc-tablo" data-astro-cid-qfjm3awh></tbody> </table> </div> <div class="saglama" data-astro-cid-qfjm3awh> <p class="blok-baslik etiket" data-astro-cid-qfjm3awh>Başabaş ve günlük taşıma</p> <div class="sag-satir" data-astro-cid-qfjm3awh> <div data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>Günlük taşıma</span><output class="ara-deger" id="oc-gunluk" data-astro-cid-qfjm3awh>—</output></div> <div data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>Başabaş: T−h kotasyonu</span><output class="ara-deger" id="oc-basabas" data-astro-cid-qfjm3awh>—</output></div> <div data-astro-cid-qfjm3awh><span class="etiket" data-astro-cid-qfjm3awh>Gerekli hareket</span><output class="ara-deger" id="oc-hareket" data-astro-cid-qfjm3awh>—</output></div> </div> <p class="mini-not" id="oc-yorum" data-astro-cid-qfjm3awh>—</p> </div> <div class="hesapla-satir" data-astro-cid-qfjm3awh> <button class="hesapla-btn" id="oc-hesapla" type="button" data-astro-cid-qfjm3awh>Hesapla ↻</button> <span class="canli-not" data-astro-cid-qfjm3awh>Girdiler değişince canlı güncellenir.</span> </div> <p class="hesap-dip" data-astro-cid-qfjm3awh>
+"Forwardlar gerçekleşirse" senaryosu tanım gereği ≈ 0 verir; burada hesaplanan
+<b data-astro-cid-qfjm3awh>eğri sabit</b> senaryosudur — pozisyonun beklerken ne kazandığı/kaybettiği.
+    Ters eğride receiver her iki bileşende de öder, payer ikisini de toplar; normal
+    eğride işaretler aynalanır (Ek A işaret tablosu).
+</p> </div> <script type="module" src="/_astro/OisCarryHesaplayici.astro_astro_type_script_index_0_lang.WlJ10Uky.js"></script> 
+<div class="hesap" id="fly-agirlik" data-astro-cid-odhdydyd> <div class="hesap-ust" data-astro-cid-odhdydyd> <span class="etiket" data-astro-cid-odhdydyd>Hesap Aracı</span> <span class="hesap-ad" data-astro-cid-odhdydyd>Fly / Spread — DV01-Nötr Ağırlıklar</span> </div> <p class="hesap-yonerge" data-astro-cid-odhdydyd>
+Vadeleri yıl cinsinden girin; DV01'ler yukarıdaki eğriden (çeyreklik annuity)
+    türetilir. Kanat nosyonelleri 50:50 DV01 kuralıyla hesaplanır — nosyonel-nötr
+    kurulum <b data-astro-cid-odhdydyd>gizli bir outright</b> taşır, bu araç onu engellemek içindir.
+</p> <div class="girdiler" data-astro-cid-odhdydyd> <label data-astro-cid-odhdydyd><span class="etiket" data-astro-cid-odhdydyd>Yapı</span> <select id="fa-tip" data-astro-cid-odhdydyd> <option value="fly" selected data-astro-cid-odhdydyd>Long fly: gövdede pay, kanatlarda receive (2×gövde − kanatlar)</option> <option value="spread" data-astro-cid-odhdydyd>Dikleştirici: kısa vadede receive, uzun vadede pay (uzun − kısa)</option> </select></label> <label data-astro-cid-odhdydyd><span class="etiket" data-astro-cid-odhdydyd>Kısa kanat / kısa bacak (yıl)</span> <input type="number" id="fa-t1" value="0.25" step="0.25" min="0.08" data-astro-cid-odhdydyd></label> <label data-astro-cid-odhdydyd><span class="etiket" data-astro-cid-odhdydyd>Gövde (yıl)</span> <input type="number" id="fa-t2" value="0.5" step="0.25" min="0.08" data-astro-cid-odhdydyd></label> <label data-astro-cid-odhdydyd><span class="etiket" data-astro-cid-odhdydyd>Uzun kanat / uzun bacak (yıl)</span> <input type="number" id="fa-t3" value="1" step="0.25" min="0.08" data-astro-cid-odhdydyd></label> <label data-astro-cid-odhdydyd><span class="etiket" data-astro-cid-odhdydyd>Gövde / kısa bacak nominali (mn TL)</span> <input type="number" id="fa-n" value="400" step="50" min="1" data-astro-cid-odhdydyd></label> <label data-astro-cid-odhdydyd><span class="etiket" data-astro-cid-odhdydyd>Beklenen normalize hareket (bp)</span> <input type="number" id="fa-hedef" value="80" step="5" min="0" data-astro-cid-odhdydyd></label> </div> <div class="tablo-kab" data-astro-cid-odhdydyd> <table data-astro-cid-odhdydyd> <thead data-astro-cid-odhdydyd><tr data-astro-cid-odhdydyd><th data-astro-cid-odhdydyd>Bacak</th><th data-astro-cid-odhdydyd>Yön</th><th data-astro-cid-odhdydyd>Nominal (mn TL)</th><th data-astro-cid-odhdydyd>DV01 (TL/bp)</th></tr></thead> <tbody id="fa-tablo" data-astro-cid-odhdydyd></tbody> </table> </div> <div class="saglama" data-astro-cid-odhdydyd> <div class="sag-satir" data-astro-cid-odhdydyd> <div data-astro-cid-odhdydyd><span class="etiket" data-astro-cid-odhdydyd>Yapının seviyesi</span><output class="ara-deger" id="fa-seviye" data-astro-cid-odhdydyd>—</output></div> <div data-astro-cid-odhdydyd><span class="etiket" data-astro-cid-odhdydyd>Net DV01 (nötrlük kontrolü)</span><output class="ara-deger" id="fa-net" data-astro-cid-odhdydyd>—</output></div> <div data-astro-cid-odhdydyd><span class="etiket" data-astro-cid-odhdydyd>Hedef P&amp;L</span><output class="ara-deger" id="fa-pnl" data-astro-cid-odhdydyd>—</output></div> </div> <p class="mini-not" id="fa-yorum" data-astro-cid-odhdydyd>—</p> </div> <div class="hesapla-satir" data-astro-cid-odhdydyd> <button class="hesapla-btn" id="fa-hesapla" type="button" data-astro-cid-odhdydyd>Hesapla ↻</button> <span class="canli-not" data-astro-cid-odhdydyd>Eğri değişince kendini yeniler.</span> </div> <p class="hesap-dip" data-astro-cid-odhdydyd> <b data-astro-cid-odhdydyd>Maliyet/edge testi (§6.5):</b> all-in kuruluş+çıkış paket kotasyonda ~6−10 bp,
+    bacak bacak 12−18 bp. Beklenen normalize hareket toplam maliyetin <b data-astro-cid-odhdydyd>en az 3
+    katı</b> değilse yapıya girilmez. Boyutu her zaman <b data-astro-cid-odhdydyd>en ince bacak</b> belirler.
+</p> </div> <script type="module" src="/_astro/FlyAgirlikHesaplayici.astro_astro_type_script_index_0_lang.D_3GW19j.js"></script> 
+<p>Carry aracında bir pillar’ı değiştirirseniz DV01’ler ve ağırlıklar fly aracında da yenilenir.
+Varsayılan kurulum <a href="/arastirma/egri-ois-vadeler/#814--3m6m1y-fly%C4%B1-gev%C5%9Femenin-toplam%C4%B1n%C4%B1-de%C4%9Fil-zamanlamas%C4%B1n%C4%B1-i%C5%9Flem-etmek">§8.1.4</a>’teki 3m6m1y fly’ıdır (gövde 400 mn
+→ kanatlar 400 mn / 111 mn); <strong>Net DV01</strong> satırı nötrlüğün sağlamasıdır, sıfırdan belirgin
+saparsa yapı gizli bir outright taşıyor demektir. Alttaki yorum <a href="#926--mekanik-5050-a%C4%9F%C4%B1rl%C4%B1k-3-maliyet-testi-unwind-s%C4%B1ras%C4%B1">§9.2.6</a>’daki <strong>3× maliyet
+testini</strong> uygular — dar bantlı yapılar (2y3y5y, 3y4y5y) bu testte sık elenir.</p>
+<h3 id="927--yapı-bozunması-bacak-kapandıkça-ne-kalır">9.2.7 · Yapı bozunması: bacak kapandıkça ne kalır?</h3>
+<p>Her çok bacaklı yapı, bacakları kapandıkça daha basit bir yapıya bozunur: <strong>fly − bir kanat
+= spread; spread − bir bacak = outright.</strong> Bozunma iki şekilde yaşanır: planlı (kâr alma
+sıralaması) veya zorunlu (likidite kaybı, limit, karşı taraf). Kurallar:</p>
+<ul>
+<li><strong>Bozunma her zaman yeni bir işlemdir:</strong> kalan yapının senaryo tablosu, taşıması ve limit
+görünümü aynı gün yeniden yazılır ve tez hâlâ geçerliyse taşınır — “fly’dan arta kalan”
+diye pozisyon tutulmaz.</li>
+<li><strong>Planlı bozunmada sıra likiditeye göre:</strong> önce en likit bacaktan kâr alınırsa kalan yapı
+en pahalı bacaklarda kilitlenir; doğrusu <strong>en az likit bacağı ilk kapatmaktır</strong> (3.
+bölümdeki fly çıkış notunun genellemesi).</li>
+<li><strong>Zorunlu bozunmada</strong> (bir bacak dönmüyor) kalan riski komşu vadeyle proxy’le (7y yerine
+5y ağırlığı artırma örneği, <a href="/arastirma/egri-ois-vadeler/#824--5y6y7y-fly%C4%B1-sinyal-mi-mark-g%C3%BCr%C3%BClt%C3%BCs%C3%BC-m%C3%BC-ger%C3%A7ekle%C5%9Febilirlik-testi">§8.2.4</a>) ve <strong>baz riskini deftere ayrı satır olarak yaz</strong>.</li>
+<li>Bozunmuş yapının P&amp;L’i orijinal yapının teziyle raporlanmaz; “2s5s’ten kalan 5y pay”
+artık bir <strong>5y pay</strong>’dir ve 4. bölümün outright disiplinine tabidir.</li>
+</ul>
+<h3 id="928--fly-kurulum-prosedürü-girmeden-önce-cevaplanacak-dokuz-soru">9.2.8 · Fly kurulum prosedürü: girmeden önce cevaplanacak dokuz soru</h3>
+<p>Fly, OIS yapılarının en pahalısı olduğu için kontrolü de en uzun olanıdır. Sırayla:</p>
+<ol>
+<li><strong>Hangi katmana oynuyorum?</strong> Patika konveksitesi mi, akış/arz primi mi, eğri kurma
+yöntemi mi (<a href="#921--genel-gramer-fly-hangi-beklentiyle-yap%C4%B1l%C4%B1r-ne-zaman-kazand%C4%B1r%C4%B1r">§9.2.1</a>)? Üçüncüyse girme.</li>
+<li><strong>Toplam hakkında görüşüm var mı?</strong> Varsa yanlış sayfadayım — outright ya da spread.</li>
+<li><strong>Seviye tarihsel bandın neresinde?</strong> Bandın ortasındaki bir fly’da beklenen hareket,
+maliyeti karşılamaz.</li>
+<li><strong>Beklenen normalize hareket kaç bp?</strong> Sayı yazılmadan devam edilmez.</li>
+<li><strong>All-in maliyet kaç bp?</strong> Paket 6−10, bacak bacak 12−18 (<a href="#926--mekanik-5050-a%C4%9F%C4%B1rl%C4%B1k-3-maliyet-testi-unwind-s%C4%B1ras%C4%B1">§9.2.6</a>). <strong>3× testi</strong>:
+beklenen hareket ≥ 3 × maliyet mi?</li>
+<li><strong>Taşıma ne kadar?</strong> Spot fly − forward fly. Dar bantlı yapılarda bu tek başına
+hedefin yarısını yiyebilir.</li>
+<li><strong>Ağırlıklar ve net DV01?</strong> 50:50 kur, net DV01’i sağla (araçtaki satır).</li>
+<li><strong>En ince bacağın çıkış klipi kaç?</strong> Boyut odur — gövde değil, <strong>en ince bacak</strong>.</li>
+<li><strong>Resetler nerede?</strong> Kanatların fixing bloğu PPK/vergi haftasına denk geliyor mu (<a href="/arastirma/egri-ois-vadeler/#814--3m6m1y-fly%C4%B1-gev%C5%9Femenin-toplam%C4%B1n%C4%B1-de%C4%9Fil-zamanlamas%C4%B1n%C4%B1-i%C5%9Flem-etmek">§8.1.4</a>)?</li>
+</ol>
+<p>Dokuz soru cevaplanmadan fly deftere girmez. Bu liste, <a href="#921--genel-gramer-fly-hangi-beklentiyle-yap%C4%B1l%C4%B1r-ne-zaman-kazand%C4%B1r%C4%B1r">§9.2.1</a>’deki altı kayıp modunun her
+birine bir kapı koyar: yanlış katman → soru 1–2; taşıma sessizliği → soru 6; kanat
+korelasyonu ve kalabalık çözülmesi → soru 8; mark yanılsaması → soru 1 ve 3; reset ihmali
+→ soru 9.</p>
+<div class="pratik"><span class="etiket">Pratik — Fly mekaniği ve maliyet testi</span><p><strong>1. Doğrudan uygulama — 3× maliyet testi.</strong> 2y3y5y fly’ı −30’da, tarihsel bandı
+±30−40 bp. Beklediğiniz normalize hareket <strong>25 bp</strong>. (a) Paket kotasyonla (8 bp all-in)
+test geçer mi? (b) Bacak bacak kurulursa (15 bp)? (c) Karar?</p><details><summary>Çözüm</summary><p>(a) <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>8</mn><mo>=</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">3 \times 8 = 24</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">3</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">8</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">24</span></span></span></span> bp. Beklenen 25 bp &gt; 24 ⇒ <strong>sınırda geçer</strong>.</p><p>(b) <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>15</mn><mo>=</mo><mn>45</mn></mrow><annotation encoding="application/x-tex">3 \times 15 = 45</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">3</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">15</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">45</span></span></span></span> bp. Beklenen 25 bp &lt; 45 ⇒ <strong>elenir</strong>.</p><p>(c) Karar: <strong>yalnızca paket kotasyon alınabiliyorsa</strong> gir; broker paket vermiyorsa bu fly
+girilmez. Ayrıca sınırda geçen bir testte taşıma da hesaba katılmalıdır (<a href="#928--fly-kurulum-prosed%C3%BCr%C3%BC-girmeden-%C3%B6nce-cevaplanacak-dokuz-soru">§9.2.8</a>, soru 6) —
+taşıma aleyhteyse 25 bp fiilen 20 bp’ye iner ve test düşer.</p><p><strong>Sonuç:</strong> <a href="#926--mekanik-5050-a%C4%9F%C4%B1rl%C4%B1k-3-maliyet-testi-unwind-s%C4%B1ras%C4%B1">§9.2.6</a>’daki “dar bantlı yapılar bu testte sık elenir” cümlesinin sayısal karşılığı
+budur; eleme kriteri kanaat değil <strong>aritmetik</strong>tir.</p></details><p><strong>2. Ters çevirme — bozunmuş yapı ne oldu?</strong> Long 3m6m1y fly (gövde 400 mn 6m pay;
+kanatlar 400 mn 3m receive + 111 mn 1y receive) taşınırken 1y bacağı kâr alınarak
+kapatıldı. (a) Geriye hangi yapı kaldı? (b) Net DV01? (c) Ne yapılmalı?</p><details><summary>Çözüm</summary><p>(a) Kalan bacaklar: 6m pay 400 mn + 3m receive 400 mn ⇒ bu bir <strong>3m6m spread</strong>’idir.
+Spread <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo></mrow><annotation encoding="application/x-tex">=</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">=</span></span></span></span> 6m <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo></mrow><annotation encoding="application/x-tex">-</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord">−</span></span></span></span> 3m; pay 6m / rec 3m ⇒ spread <strong>yükselirse</strong> kazanır ⇒ <strong>3m6m steepener</strong>.</p><p>(b) <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>400</mn><mo>×</mo><mn>46</mn><mo>−</mo><mn>400</mn><mo>×</mo><mn>23</mn><mo>=</mo><mn>18.400</mn><mo>−</mo><mn>9.200</mn><mo>=</mo></mrow><annotation encoding="application/x-tex">400 \times 46 - 400 \times 23 = 18.400 - 9.200 = </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">400</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">46</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">400</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">23</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">18.400</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">9.200</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span></span></span></span> <strong>+9.200 TL/bp</strong> (payer yönünde).</p><p>(c) <a href="#927--yap%C4%B1-bozunmas%C4%B1-bacak-kapand%C4%B1k%C3%A7a-ne-kal%C4%B1r">§9.2.7</a>’nin birinci kuralı: <strong>bozunma yeni bir işlemdir.</strong> Kalan yapının senaryo tablosu,
+taşıması ve limit görünümü aynı gün yeniden yazılır; tez hâlâ geçerliyse taşınır. Ayrıca
+kapatma sırası yanlış seçilmiştir: 1y <strong>en likit</strong> bacaktı; doğrusu en az likit bacağı
+(3m’in fixing yüklü bloğu değil, kotasyonu en dar olmayan bacak) önce kapatmaktır — kalan
+yapı en pahalı bacakta kilitlenmemeliydi.</p><p><strong>Cevap:</strong> 3m6m steepener, +9.200 TL/bp; yeniden karara bağlanır.</p></details><p><strong>3. Karar — dağılım mı seviye mi?</strong> İki görüş: (A) <em>“Toplam gevşeme fiyatlanandan
+derin.”</em> (B) <em>“Toplam aynı ama arkaya kayıyor.”</em> Her biri için yapı, ve <strong>yanlış</strong> yapı
+seçilirse ne olur?</p><details><summary>Çözüm</summary><p>(A) <strong>Seviye</strong> görüşü ⇒ outright receive (vade = görüş ufku; 1y en likit adres, B.3).
+Yanlış yapı fly olursa: toplam hareket gelse bile fly tanım gereği ödemez (<a href="#921--genel-gramer-fly-hangi-beklentiyle-yap%C4%B1l%C4%B1r-ne-zaman-kazand%C4%B1r%C4%B1r">§9.2.1</a>, “yanlış
+katman”); maliyet ve taşıma birikir, görüş doğruyken P&amp;L eksi kalır.</p><p>(B) <strong>Dağılım</strong> görüşü ⇒ long 3m6m1y fly (<a href="/arastirma/egri-ois-vadeler/#814--3m6m1y-fly%C4%B1-gev%C5%9Femenin-toplam%C4%B1n%C4%B1-de%C4%9Fil-zamanlamas%C4%B1n%C4%B1-i%C5%9Flem-etmek">§8.1.4</a>, “Erteleme” satırı). Yanlış yapı outright
+olursa: toplam hakkında görüş olmadığı hâlde seviye riski üstlenilir; TCMB toplamı
+değiştirmeden dağılımı kaydırsa bile outright’ın P&amp;L’i gürültüye kalır ve ters eğride
+taşıma yükü eklenir.</p><p><strong>Tek cümle:</strong> <em>fly güvenli outright değil, başka bir şeyin işlemidir</em> (<a href="#921--genel-gramer-fly-hangi-beklentiyle-yap%C4%B1l%C4%B1r-ne-zaman-kazand%C4%B1r%C4%B1r">§9.2.1</a>). Yapı seçimi
+“risk azaltma” değil <strong>katman seçimi</strong>dir.</p><p><strong>Araçla doğrula:</strong> <em>Fly Ağırlık Hesaplayıcısı</em>nda 3m6m1y’yi kurun, sonra 1y kanadını
+sıfırlayın — “Net DV01” satırının nasıl outright’a doğru açıldığını izleyin.</p></details></div>
+<h2 id="93--masa-pratiği-kontrol-listesi-beş-vaka-ve-ppk-haftası-playbooku">9.3 · Masa pratiği: kontrol listesi, beş vaka ve PPK haftası playbook’u</h2>
+<p><em>Burada:</em> işlem öncesi sekiz maddelik kontrol listesi, beş uçtan uca vaka, karar haftası playbook’u, izleme rutini ve on tipik hata.</p>
+<h3 id="931--i̇şlem-öncesi-kontrol-listesi-sekiz-madde-kapanmadan-işlem-yok">9.3.1 · İşlem öncesi kontrol listesi: sekiz madde kapanmadan işlem yok</h3>
+<ul>
+<li><strong>Görüş cümlesi tek satır:</strong> “X vadesinde piyasa Y fiyatlıyor, ben Z bekliyorum.”
+Yazamıyorsan işlem yok.</li>
+<li><strong>Referans testi:</strong> görüş forward’a karşı mı (patika), eğriye karşı mı (RV)? Yanlış
+enstrümanla doğru görüş para kaybettirir.</li>
+<li><strong>Taşıma, iki senaryo:</strong> forwardlar gerçekleşirse / eğri sabitse — ikisini de mn TL olarak
+yaz.</li>
+<li><strong>DV01 ve limit:</strong> bucket bazında net etki; risk sisteminde swap DV01’inin bucket’lara
+pro-rata dağıldığını unutma — spread/fly’ların bucket raporundaki görünümünü işlem öncesi
+kontrol et.</li>
+<li><strong>Likidite ve çıkış planı:</strong> her bacak için tek başına çıkış kotasyonu; stop ve hedef
+seviyeleri emir olarak değilse bile deftere yazılı.</li>
+<li><strong>Karşı taraf / CSA:</strong> teminat TL nakit mi, iskonto tutarlı mı; yeni offshore karşı tarafta
+BDDK/uyum teyidi.</li>
+<li><strong>Muhasebe:</strong> hedge ilişkisi kurulacaksa dokümantasyon işlem günü; kurulmayacaksa MTM
+oynaklığı bütçeye yazıldı mı?</li>
+<li><strong>Fixing/reset takvimi:</strong> pozisyonun ilk 2 haftadaki fixing duyarlılığı; PPK, vergi
+haftası, ay/çeyrek sonu çakışmaları.</li>
+</ul>
+<h3 id="932--vaka-1--ppk-öncesi-taşıma-işlemi-6m-pay">9.3.2 · Vaka 1 — PPK öncesi taşıma işlemi: 6m pay</h3>
+<p><strong>Çıpa: 05.08.2026 kapanışı</strong> — vaka bir anlık görüntüdür, kural değildir; <em>yöntemi</em>
+(taşıma tablosu, stop’un fixinge bağlanması) her çıpada aynıdır.</p>
+<p><strong>Görüş:</strong> enflasyon katılığı ve enerji riskiyle TCMB <strong>T1’de (10.09.2026)</strong> pas geçer,
+<strong>T2 (22.10.2026)</strong> şüpheli; strip’teki ~−425 bp/6m fazla iyimser. <strong>İşlem:</strong> 500 mn 6m pay @ %37,50
+(DV01 ≈ 23.000 TL/bp).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Kalem (3 aylık ufuk)</th><th>mn TL</th><th>Not</th></tr></thead><tbody><tr><td>Fixing carry: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>42,01</mn><mo>−</mo><mn>37,50</mn><mo stretchy="false">)</mo><mo>×</mo><mn>92</mn><mi mathvariant="normal">/</mi><mn>365</mn></mrow><annotation encoding="application/x-tex">(42{,}01 - 37{,}50)\times 92/365</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">42</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">01</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">37</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">50</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">92/365</span></span></span></span>; <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mo>=</mo><mi mathvariant="normal">%</mi><mn>42,01</mn></mrow><annotation encoding="application/x-tex">F = \%42{,}01</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9444em;vertical-align:-0.1944em;"></span><span class="mord">%42</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">01</span></span></span></span> fixingin 92 günlük bileşiği</td><td><strong>+5,7</strong></td><td>Hiç indirim gelmezse; her −125’lik adım gerçekleştikçe azalır</td></tr><tr><td>Rolldown: 6m→3m <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>38,95</mn><mo>−</mo><mn>37,50</mn><mo stretchy="false">)</mo><mo>×</mo><mi>A</mi><mo stretchy="false">(</mo><mn>3</mn><mi>m</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(38{,}95 - 37{,}50)\times A(3m)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">38</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">95</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">37</span><span class="mord"><span class="mpunct">,</span></span><span class="mord">50</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">A</span><span class="mopen">(</span><span class="mord">3</span><span class="mord mathnormal">m</span><span class="mclose">)</span></span></span></span></td><td><strong>+1,7</strong></td><td>Eğri sabit varsayımı</td></tr><tr><td>Eğri-sabit toplam</td><td><strong>+7,3</strong></td><td>Beklerken maaş</td></tr><tr><td>Stres: <strong>T1’de</strong> −250 güvercin sürpriz</td><td>≈ <strong>−3,5</strong></td><td>6m ~−120/−150 bp reprice × DV01; carry kısmen tamponlar</td></tr></tbody></table>
+<p><strong>Yönetim:</strong> stop 6m %36,60 (≈ −90 bp, −2,1 mn); hedef %38,40 (+0,9 × DV01 ≈ +2,1 mn) +
+tahakkuk eden taşıma. PPK metni faize dokunmadan fonlamayı gevşetirse (fixing 39,95’ten
+politikaya doğru inerse) <strong>tez bozulmuştur</strong> — MTM beklemeden küçült. Bu işlemin özü budur:
+kâr motoru MTM değil taşıma, o yüzden çıkış disiplini fixing patikasına bağlanır.</p>
+<h3 id="933--vaka-2--dezenflasyon-teması-outright-mı-steepener-mı">9.3.3 · Vaka 2 — Dezenflasyon teması: outright mı, steepener mı?</h3>
+<p><strong>Çıpa: 05.08.2026 kapanışı</strong> — seviyeler anlık görüntüdür, karar mantığı geneldir.</p>
+<p><strong>Görüş:</strong> döngü <strong>T1–T2’de</strong> yeniden başlar ve piyasanın fiyatladığından hızlı
+derinleşir. İki ifade: <strong>(A)</strong> 200 mn 2y receive @ 30,40; <strong>(B)</strong> 2s5s bull steepener:
+200 mn 2y receive + 97 mn 5y pay (DV01 eşit, ~29.400 TL/bp).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Yapı</th><th>Eğri-sabit taşıma (3m)</th><th>Kazandığı dünya</th><th>Kaybettiği dünya</th></tr></thead><tbody><tr><td><strong>(A)</strong> 2y receive</td><td>≈ −7,7 mn</td><td>Her tür ralli; en çok bull steepener</td><td>Genel satış; oyalama (taşıma erimesi)</td></tr><tr><td><strong>(B)</strong> 2s5s steepener</td><td>≈ −3,2 mn</td><td>Bull steepener (öne çekilen indirim)</td><td>Bear flattener (stres); bull flattener’da yatay</td></tr></tbody></table>
+<p><strong>Karar mantığı:</strong> görüş <strong>zamanlamaya</strong> dairse (indirimler öne çekilecek) B, <strong>rejime</strong>
+dairse (Türkiye faizi kalıcı düşecek) A. B taşımayı yarılar ve stres dünyasının bir kısmını
+(bear steepener) lehine çevirir; karşılığında bull flattener dünyasındaki kazancı 5y
+bacağına iade eder. Komiteye ikisi tek sayfada, bu tabloyla sunulur — “receive’im var”
+cümlesi tek başına pozisyon değildir.</p>
+<h3 id="934--vaka-3--forwarda-taşınmak-1y1y-receive">9.3.4 · Vaka 3 — Forward’a taşınmak: 1y1y receive</h3>
+<p><strong>Çıpa: 05.08.2026 kapanışı.</strong> <strong>Görüş:</strong> <strong>Y+1 gevşemesi</strong> fiyatlanandan derin; ama ilk
+yılın spot fixingten (çıpada %39,95) kilitli fixing yükünü taşımak istemiyorum. <strong>Kurulum:</strong> 300 mn 2y receive + 300 mn 1y pay (eşit nosyonel
+⇒ ilk yıl DV01’i netleşir; kalan ~19.200 TL/bp saf 2. yıl riski, 1y1y ≈ %25,7’den receive
+edilmiş olur).</p>
+<p><strong>Taşıma:</strong> eğri-sabit senaryoda <del>−6,2 mn/çeyrek — outright 300 mn 2y receive’in
+(</del>−11,6 mn) yaklaşık yarısı. Forward, ters eğride taşımayı <strong>azaltır ama sıfırlamaz</strong>:
+forward seviyesi her çeyrek spota doğru yukarı “roll” eder.</p>
+<p><strong>Tetikleyici avantaj:</strong> PPK pas geçtiğinde spot 2y, 1y bacağındaki payer kazancıyla kısmen
+korunur; pozisyonun betası “toplantı” değil “döngü” olur.</p>
+<p><strong>Çıkış:</strong> hedef 1y1y’nin 23,50 altına inmesi (~+220 bp × 19.200 ≈ +4,2 mn); yapı
+bozulacaksa <strong>iki bacağı aynı anda çöz</strong> — tek bacak kapatmak seni istemediğin outright’ta
+bırakır.</p>
+<h3 id="935--vaka-4-mini--ppk-günü-switchi">9.3.5 · Vaka 4 (mini) — PPK günü switch’i</h3>
+<p><strong>Çıpa: T1 sabahı (10.09.2026), karar öncesi.</strong> “Pas” görüşüyle pay 2m 400 mn / receive
+1m 795 mn (DV01 ≈ 6.500 TL/bp eşit). Pas + şahin metin gelirse <strong>T1 ile T2 arasındaki
+pencereye</strong> ait fiyatlama söner, switch ~+40−60 bp kazandırır; −125 aynen gelirse kayıp benzer
+büyüklükte. Bu işlem türünde boyut, kanaatin gücüyle değil <strong>karar sonrası ilk yarım saatte
+çıkabileceğin kliple</strong> belirlenir; kotasyonlar o pencerede 3−4 kat genişler.</p>
+<h3 id="936--vaka-5--5y-çıplak-receive-mi-asw-mi">9.3.6 · Vaka 5 — 5y: çıplak receive mi, ASW mi?</h3>
+<p><strong>Çıpa: 05.08.2026 kapanışı.</strong> <strong>Görüş:</strong> normalizasyon sürer, 5y faiz aşağı gider. Temsili seviyeler: 5y DİBS getirisi
+%26,00, 5y OIS %24,10 ⇒ <strong>swap spreadi (DİBS − OIS) +190 bp</strong>. Üç ifade yolu:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Yapı</th><th>Ne kazandırır</th><th>Taşıma profili</th><th>Ne zaman seç</th></tr></thead><tbody><tr><td><strong>(A)</strong> 100 mn 5y receive OIS</td><td>Saf faiz görüşü; spreade maruz değil</td><td>≈ −4,7 mn/çeyrek (fixing + roll)</td><td>Faiz görüşü + arz dalgası/spread genişlemesi endişesi varsa</td></tr><tr><td><strong>(B)</strong> DİBS al + 5y pay (ASW)</td><td>TLREF + ~190 bp sentetik FRN; duration’sız</td><td>≈ +190 bp/yıl − repo/bilanço maliyeti</td><td>Faiz görüşü yok, yalnız spread daralması bekleniyorsa</td></tr><tr><td><strong>(C)</strong> DİBS çıplak al</td><td>Faiz + spread görüşü birlikte</td><td>Kupon − repo (ters eğride derin negatif) + roll</td><td>Hem faiz düşer hem banka talebi spreadi daraltır deniyorsa</td></tr></tbody></table>
+<p><strong>Karar mantığı:</strong> spread’in ana sürücüsü Hazine arz takvimi ile banka bilanço talebinin
+dengesidir. Arz yoğunlaşması bekleniyorsa (C) aynı faiz görüşünde (A)‘dan <strong>sistematik
+kötüdür</strong> — bono ucuzlarken swap yerinde durur. Tersine, HTM/tesis kaynaklı talep dalgası
+bekleniyorsa (C), (A)‘nın kazancına spread daralmasını ekler. Kural: <strong>faiz görüşü OIS’te,
+spread görüşü ASW’de ifade edilir</strong>; ikisini tek enstrümanda (C) birleştirmek bilinçli bir
+çifte bahistir ve komiteye öyle sunulur.</p>
+<h3 id="937--ppk-haftası-playbooku-karar-haftası-gün-gün-nasıl-geçer">9.3.7 · PPK haftası playbook’u: karar haftası gün gün nasıl geçer?</h3>
+<p><strong>Pazartesi:</strong> strip mutabakatı (kendi bootstrap’ı vs broker kotasyonları; sapma varsa
+nedeni bulunur), pozisyonların senaryo-P&amp;L matrisi, hafta içi fixing duyarlılığı raporu.</p>
+<p><strong>Salı-Çarşamba:</strong> fonlama kompozisyonu ipuçları — haftalık repo ihale tutarları, kotasyon
+davranışı, likidite tahmini (vergi, itfa, kupon çakışmaları); beklenti anketleri ve analist
+revizyon akışı; switch pozisyonlarının son boyut ayarı (<a href="/arastirma/egri-ois-motorlar/#722--%C3%B6n-u%C3%A7-stripi-kotasyonlardan-toplant%C4%B1-ad%C4%B1mlar%C4%B1n%C4%B1-%C3%A7%C3%B6zmek">§7.2.2</a>’deki dağılım okuması).</p>
+<p><strong>Perşembe:</strong> 14:00 karar — <a href="/arastirma/egri-ois-vadeler/#813--karar-g%C3%BCn%C3%BC-mikro-yap%C4%B1s%C4%B1-karar%C4%B1-izleyen-yar%C4%B1m-saat-nas%C4%B1l-y%C3%B6netilir">§8.1.3</a>’teki okuma sırası ve plan uygulaması; 15:00 sonrası fiyat
+keşfi ve yeni strip’in çıkarılması; komiteye aynı gün tek sayfalık “karar → pozisyon
+etkisi” notu.</p>
+<p><strong>Cuma:</strong> karar sonrası ilk fixing ile bütün taşıma tabloları yenilenir; switch kalıntıları
+temizlenir; bir sonraki toplantıya kadar olan tema pozisyonu gözden geçirilir.</p>
+<h3 id="938--pozisyon-izleme-rutini-sabah-fixinginden-mark-kalitesine">9.3.8 · Pozisyon izleme rutini: sabah fixinginden mark kalitesine</h3>
+<ul>
+<li><strong>Sabah fixing raporu:</strong> bugünkü TLREF’e duyarlı toplam nosyonel (bugün reset olan
+bacaklar) + hafta içi PPK/vergi/ay sonu çakışmaları.</li>
+<li><strong>Bucket DV01:</strong> outright, spread ve fly’lar tek raporda bucket bazında; risk sisteminin
+pro-rata dağılımının fly’ları komşu bucket’lara “sızdırdığını” bilerek oku — gerekirse
+yapıları ayrı portföy kodunda tut.</li>
+<li><strong>Taşıma yeniden hesabı:</strong> eğri her belirgin harekette (±50 bp) eğri-sabit taşıma
+tablosunu güncelle; <strong>carry işaret değiştiren pozisyon</strong>, tezi değişmemiş olsa da
+komiteye yeniden gider.</li>
+<li><strong>Mark kalitesi:</strong> 18m, 4y, 6−7y, 10y bacaklarında hafta sonu P&amp;L’ini işlem gören
+seviyelerle mutabakat et; interpolasyon kârı ayrı satırda raporlanır.</li>
+</ul>
+<h3 id="939--sık-yapılan-on-hata-masa-hafızasının-kısa-listesi">9.3.9 · Sık yapılan on hata: masa hafızasının kısa listesi</h3>
+<ol>
+<li><strong>Taşımasız görüş sunumu:</strong> “receive’im var” deyip iki senaryolu taşıma tablosunu (<a href="/arastirma/egri-ois-motorlar/#721--plin-%C3%BC%C3%A7-bile%C5%9Feni-fixing-carry-rolldown-ve-e%C4%9Fri-mtmi">§7.2.1</a>)
+eklememek.</li>
+<li><strong>Referans karışıklığı:</strong> forward’a karşı görüşü eğri RV yapısıyla, eğri görüşünü
+outright’la ifade etmek.</li>
+<li><strong>Nosyonel-nötr spread/fly kurmak</strong> — gizli outright taşımak.</li>
+<li><strong>İnterpolasyon markıyla RV pozisyonuna girmek</strong> ve kâğıt kârını gerçek sanmak (<a href="/arastirma/egri-ois-vadeler/#824--5y6y7y-fly%C4%B1-sinyal-mi-mark-g%C3%BCr%C3%BClt%C3%BCs%C3%BC-m%C3%BC-ger%C3%A7ekle%C5%9Febilirlik-testi">§8.2.4</a>, <a href="#924--belly-flylar%C4%B1-ak%C4%B1%C5%9F%C4%B1n-izi">§9.2.4</a>).</li>
+<li><strong>Karar günü ilk yarım saatte fiyat keşfine çıkmak</strong> (<a href="/arastirma/egri-ois-vadeler/#813--karar-g%C3%BCn%C3%BC-mikro-yap%C4%B1s%C4%B1-karar%C4%B1-izleyen-yar%C4%B1m-saat-nas%C4%B1l-y%C3%B6netilir">§8.1.3</a>).</li>
+<li><strong>Switch’te “efektif adım = politika adımı” varsaymak</strong>; fonlama kompozisyonunu unutmak
+(<a href="/arastirma/egri-ois-motorlar/#722--%C3%B6n-u%C3%A7-stripi-kotasyonlardan-toplant%C4%B1-ad%C4%B1mlar%C4%B1n%C4%B1-%C3%A7%C3%B6zmek">§7.2.2</a>).</li>
+<li><strong>Stop’u tezin bozulmasına değil yuvarlak MTM sayısına bağlamak.</strong></li>
+<li><strong>Reset/fixing takvimini ihmal etmek</strong> — “duration’sız” yapının fixing’li olduğunu
+unutmak (<a href="/arastirma/egri-ois-vadeler/#814--3m6m1y-fly%C4%B1-gev%C5%9Femenin-toplam%C4%B1n%C4%B1-de%C4%9Fil-zamanlamas%C4%B1n%C4%B1-i%C5%9Flem-etmek">§8.1.4</a>, <a href="#926--mekanik-5050-a%C4%9F%C4%B1rl%C4%B1k-3-maliyet-testi-unwind-s%C4%B1ras%C4%B1">§9.2.6</a>).</li>
+<li><strong>Çok bacaklı yapıyı tek bacaktan çözmeye başlayıp</strong> istenmeyen outright’ta kalmak (<a href="#927--yap%C4%B1-bozunmas%C4%B1-bacak-kapand%C4%B1k%C3%A7a-ne-kal%C4%B1r">§9.2.7</a>).</li>
+<li><strong>Kalabalık pozisyonda normal likidite varsaymak:</strong> herkesin aynı kapıya koştuğu gün
+klipler küçülür, spreadler açılır — boyut, ortalama güne göre değil <strong>o güne</strong> göre
+seçilir.</li>
+</ol>
+<div class="pratik"><span class="etiket">Pratik — Masa disiplini</span><p><strong>1. Karar — kontrol listesi denetimi.</strong> Bir trader şunu getiriyor: <em>“1y receive alalım,
+600 mn; faizler düşecek.”</em> <a href="#931--i%CC%87%C5%9Flem-%C3%B6ncesi-kontrol-listesi-sekiz-madde-kapanmadan-i%C5%9Flem-yok">§9.3.1</a>’in sekiz maddesinden hangileri kapanmamış ve her biri için
+ne sorulmalı?</p><details><summary>Çözüm</summary>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Madde</th><th>Durum</th><th>Sorulacak soru</th></tr></thead><tbody><tr><td>Görüş cümlesi</td><td>✗</td><td>“Piyasa ne fiyatlıyor, sen ne bekliyorsun?” — cümlede <strong>forward</strong> yok</td></tr><tr><td>Referans testi</td><td>✗</td><td>Görüş forward’a karşı mı? 1y zaten −470 bp fiyatlı (<a href="/arastirma/egri-ois-motorlar/#716--temsili-e%C4%9Fri-ois-b%C3%B6l%C3%BCmlerinde-kullan%C4%B1lan-kotasyonlar-%C3%A7%C4%B1pa-05082026">§7.1.6</a>)</td></tr><tr><td>Taşıma, iki senaryo</td><td>✗</td><td>Eğri-sabit: 600 mn 1y receive ⇒ ~−7,1 mn carry + <del>−3,6 mn roll = **</del>−10,7 mn/çeyrek**</td></tr><tr><td>DV01 / limit</td><td>✗</td><td><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>600</mn><mo>×</mo><mn>83</mn><mo>=</mo><mn>49.800</mn></mrow><annotation encoding="application/x-tex">600 \times 83 = 49.800</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">600</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">83</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">49.800</span></span></span></span> TL/bp; bucket raporunda nasıl görünüyor?</td></tr><tr><td>Likidite / çıkış</td><td>✗</td><td>1y çıkış klipi ~500 mn; 600 mn tek seferde dönmez</td></tr><tr><td>Karşı taraf / CSA</td><td>?</td><td>Yeni karşı tarafsa BDDK/uyum teyidi</td></tr><tr><td>Muhasebe</td><td>?</td><td>Ticari portföy mü, hedge ilişkisi mi?</td></tr><tr><td>Fixing/reset</td><td>✗</td><td>İlk iki haftada PPK veya vergi haftası var mı?</td></tr></tbody></table><p><strong>Cevap:</strong> sekiz maddenin en az beşi açık. Kritik olan üçü: <strong>forward referansı yok</strong>,
+<strong>taşıma yazılmamış</strong>, <strong>boyut çıkış klipini aşıyor</strong>. Doğru cevap “hayır” değil; “cümleyi
+şöyle yaz, taşımayı hesapla, boyutu 500 mn’nin altına indir, sonra konuşalım.”</p></details><p><strong>2. Tuzak yakalama — hangi hata hangisi?</strong> Aşağıdaki dört durum, <a href="#939--s%C4%B1k-yap%C4%B1lan-on-hata-masa-haf%C4%B1zas%C4%B1n%C4%B1n-k%C4%B1sa-listesi">§9.3.9</a>’daki on hatadan
+hangisine karşılık gelir?</p><p>(a) 6y7y fly’ı üç haftada 15 bp kazandırdı, ama iki bacak da o üç haftada hiç işlem
+görmedi.
+(b) PPK faize dokunmadı, 2m payer pozisyonu zarar yazdı.
+(c) 2s5s’ten kâr almak için önce 2y bacağı kapatıldı; elde 48 mn 5y receive kaldı.
+(d) Herkesin aynı yönde olduğu bir temada 500 mn’lik pozisyondan çıkılmak istendi, kotasyon
+yarı klipte ve 8 bp geniş geldi.</p><details><summary>Çözüm</summary><p>(a) <strong>Madde 4</strong> — interpolasyon markıyla RV pozisyonu; kâğıt kârı. Test: işlem gören
+seviyeyle mutabakat (<a href="#938--pozisyon-izleme-rutini-sabah-fixinginden-mark-kalitesine">§9.3.8</a>’in dördüncü satırı).</p><p>(b) <strong>Madde 6</strong> — “efektif adım = politika adımı” varsayımı; fonlama kompozisyonu
+unutulmuş (<a href="/arastirma/egri-ois-motorlar/#722--%C3%B6n-u%C3%A7-stripi-kotasyonlardan-toplant%C4%B1-ad%C4%B1mlar%C4%B1n%C4%B1-%C3%A7%C3%B6zmek">§7.2.2</a> ve <a href="/arastirma/egri-ois-vadeler/#815--k%C4%B1sa-u%C3%A7ta-ge%C3%A7ersizle%C5%9Fme-pozisyon-hangi-i%C5%9Faretle-terk-edilir">§8.1.5</a>’teki kaybeden örnek).</p><p>(c) <strong>Madde 9</strong> — çok bacaklı yapıyı likit bacaktan çözmek; istenmeyen outright’ta kalmak
+(<a href="#927--yap%C4%B1-bozunmas%C4%B1-bacak-kapand%C4%B1k%C3%A7a-ne-kal%C4%B1r">§9.2.7</a>). Doğrusu en az likit bacağı önce kapatmaktı.</p><p>(d) <strong>Madde 10</strong> — kalabalık pozisyonda normal likidite varsaymak; boyut ortalama güne göre
+değil <strong>o güne</strong> göre seçilir (<a href="/arastirma/egri-ois-motorlar/#726--boyutland%C4%B1rma-dv01-b%C3%BCt%C3%A7esi-stop-mesafesi-%C3%A7%C4%B1k%C4%B1%C5%9F-klipi">§7.2.6</a>’daki kalabalıklık ayarı).</p><p><strong>Sonuç:</strong> on hatanın hepsi “bilgi eksikliği” değil <strong>disiplin eksikliğidir</strong>; her biri,
+işlem öncesi tek bir yazılı satırla önlenebilirdi.</p></details></div>
+<h2 id="94--kapanış-fikirden-pozisyona-altı-adımlık-akış-ve-tazeleme-borcu">9.4 · Kapanış: fikirden pozisyona altı adımlık akış ve tazeleme borcu</h2>
+<p>Yeni bir fikir geldiğinde akış şudur: <strong>görüş cümlesini yaz</strong> (<a href="#931--i%CC%87%C5%9Flem-%C3%B6ncesi-kontrol-listesi-sekiz-madde-kapanmadan-i%C5%9Flem-yok">§9.3.1</a>) → <strong>hareketi
+sınıflandır:</strong> seviye mi, eğim mi, büküm mü (<a href="/arastirma/egri-ois-motorlar/#721--plin-%C3%BC%C3%A7-bile%C5%9Feni-fixing-carry-rolldown-ve-e%C4%9Fri-mtmi">§7.2.1</a>’deki enstrüman haritası) → <strong>doğru
+vadeyi/yapıyı seç</strong> (outright için <a href="/arastirma/egri-ois-vadeler/#81--k%C4%B1sa-u%C3%A7-3m--6m--1y-hangi-vade-hangi-toplant%C4%B1y%C4%B1-fiyatlar">§8.1</a>−<a href="/arastirma/egri-ois-vadeler/#82--orta-uzun-u%C3%A7-5y--6y--7y-toplant%C4%B1-de%C4%9Fil-rejim-bahsi">§8.2</a>; eğri için <a href="/arastirma/egri-ois-vadeler/#831--genel-gramer-spread-hangi-beklentiyle-yap%C4%B1l%C4%B1r-ne-zaman-kazand%C4%B1r%C4%B1r">§8.3.1</a> genel grameri + seçim ağacı; büküm
+için <a href="#921--genel-gramer-fly-hangi-beklentiyle-yap%C4%B1l%C4%B1r-ne-zaman-kazand%C4%B1r%C4%B1r">§9.2.1</a> + kataloglar) → <strong>taşımayı iki senaryoda hesapla</strong> (<a href="/arastirma/egri-ois-motorlar/#721--plin-%C3%BC%C3%A7-bile%C5%9Feni-fixing-carry-rolldown-ve-e%C4%9Fri-mtmi">§7.2.1</a>, <a href="/arastirma/egri-ois-motorlar/#723--ters-e%C4%9Fride-carry--roll-1y-receivein-%C3%BC%C3%A7-ayl%C4%B1k-ta%C5%9F%C4%B1ma-hesab%C4%B1">§7.2.3</a>; spread/fly’da taşıma
+yasası: <a href="/arastirma/egri-ois-vadeler/#831--genel-gramer-spread-hangi-beklentiyle-yap%C4%B1l%C4%B1r-ne-zaman-kazand%C4%B1r%C4%B1r">§8.3.1</a>, <a href="#921--genel-gramer-fly-hangi-beklentiyle-yap%C4%B1l%C4%B1r-ne-zaman-kazand%C4%B1r%C4%B1r">§9.2.1</a>) → <strong>boyutu üç kısıtla belirle</strong> (<a href="/arastirma/egri-ois-motorlar/#726--boyutland%C4%B1rma-dv01-b%C3%BCt%C3%A7esi-stop-mesafesi-%C3%A7%C4%B1k%C4%B1%C5%9F-klipi">§7.2.6</a>) → <strong>kontrol listesini kapat</strong> (<a href="#931--i%CC%87%C5%9Flem-%C3%B6ncesi-kontrol-listesi-sekiz-madde-kapanmadan-i%C5%9Flem-yok">§9.3.1</a>)
+→ <strong><a href="/arastirma/egri-ek/#ek-e--h%C4%B1zl%C4%B1-ba%C5%9Fvuru-kart%C4%B1">Ek E</a> kartıyla</strong> son bir tutarlılık kontrolü yap.</p>
+<p>Buradaki bütün seviyeler <strong>Çıpa: 05.08.2026 kapanışı</strong> koşullarıyla tutarlı <strong>temsili</strong>
+kurgulardır — anlık görüntüdür, kural değildir; genel
+gramer bölümleri (<a href="/arastirma/egri-ois-motorlar/#721--plin-%C3%BC%C3%A7-bile%C5%9Feni-fixing-carry-rolldown-ve-e%C4%9Fri-mtmi">§7.2.1</a>, <a href="/arastirma/egri-ois-vadeler/#831--genel-gramer-spread-hangi-beklentiyle-yap%C4%B1l%C4%B1r-ne-zaman-kazand%C4%B1r%C4%B1r">§8.3.1</a>, <a href="#921--genel-gramer-fly-hangi-beklentiyle-yap%C4%B1l%C4%B1r-ne-zaman-kazand%C4%B1r%C4%B1r">§9.2.1</a>) ise <strong>rejimden bağımsızdır</strong> ve eğri şekli değişse de
+geçerliliğini korur. Eğri, DV01 tablosu ve fly/spread seviyeleri her çeyrek başında ve her
+büyük rejim değişiminde (koridor ayarı, fonlama kompozisyonu kırılması, PPK takvim
+revizyonu) tazelenir. Tazeleme sorumluluğu okuyandadır; kart ve tablolar güncel değilse bu
+metin yol gösterici olmaktan çıkar, <strong>tarih belgesine dönüşür</strong>.</p>
+<div class="masa"><span class="etiket">Masada</span><p><strong>Fly’a girmeden.</strong> Hangi katmana oynadığınızı yazın: patika konveksitesi mi, akış ve arz primi
+mi, eğri kurma artığı mı? Sonra maliyet testini yapın: beklenen normalize hareket, kuruluş ve
+çıkışın toplam maliyetinin üç katı değilse girmeyin.</p><p><strong>Kurarken.</strong> 50:50 DV01 ile kurun; Net DV01 sıfırdan belirgin sapıyorsa yapı gizli bir outright
+taşıyor. Boyutu en ince bacağın tek başına çıkış kotasyonuyla sınırlayın.</p><p><strong>Taşırken.</strong> Kanatlardaki receive bacakların fixing topladığını unutmayın; PPK haftasında reset
+takvimine bakın. Bir bacak kapandıkça elinizde kalanın artık fly olmadığını bilin.</p><p><strong>Her işlemde.</strong> Sekiz maddelik listeyi kapatmadan işlem açmayın; görüş cümlesi, hareket türü,
+yapı, iki senaryoda taşıma, üç kısıtla boyut ve terk işareti yazılı olsun. Seviyeler ve DV01
+tablosu her çeyrek başında ve her rejim değişiminde tazelenir.</p></div>  </div> <p class="etiket-listesi" data-astro-cid-mrksnbf2> <span class="etiket" data-astro-cid-mrksnbf2>Etiketler</span> <span class="etiket-oge" data-astro-cid-mrksnbf2>tl-faiz</span><span class="etiket-oge" data-astro-cid-mrksnbf2>egri</span><span class="etiket-oge" data-astro-cid-mrksnbf2><span lang="en">ois</span></span><span class="etiket-oge" data-astro-cid-mrksnbf2>dibs</span><span class="etiket-oge" data-astro-cid-mrksnbf2>fiyatlama</span><span class="etiket-oge" data-astro-cid-mrksnbf2>risk</span> </p>  <nav class="seri-gezinme" aria-label="Seri gezinmesi" data-astro-cid-drc7arte> <a class="sg-onceki" href="/arastirma/egri-ois-vadeler/" rel="prev" data-astro-cid-drc7arte> <span class="etiket" data-astro-cid-drc7arte>← Bölüm 8</span> <span class="sg-ad" data-astro-cid-drc7arte>TRY OIS: vade vade karar ve spreadler</span> </a> <a class="sg-sonraki" href="/arastirma/egri-ek/" rel="next" data-astro-cid-drc7arte> <span class="etiket" data-astro-cid-drc7arte>Ek →</span> <span class="sg-ad" data-astro-cid-drc7arte>TL faiz serisinin eki: çıpalar, formül kâğıtları ve başvuru</span> </a> <a class="sg-harita" href="/arastirma/seri/egri/" data-astro-cid-drc7arte>TL faiz masası: eğriden pozisyona · yol haritası</a> </nav>  </article>  </main> <footer data-astro-cid-sz7xmlte> <div class="sarici ic" data-astro-cid-sz7xmlte> <div class="marka-blok" data-astro-cid-sz7xmlte>  <span class="etiket marka" lang="en" data-astro-cid-sz7xmlte>TTO Trading</span> <p class="aciklama" data-astro-cid-sz7xmlte>
+Türkiye makro ve piyasa araştırmaları. Her sayı ölçülen katmandan gelir ve kendi
+        tarihini taşır; yorum ölçümün üstüne yazılır, altına değil.
+</p> <p class="sorumluluk" data-astro-cid-sz7xmlte>Buradaki içerik araştırma ve bilgilendirme amaçlıdır; yatırım tavsiyesi değildir. Sayılar kamuya açık kaynaklardan derlenir, yöntem her sayfada açıkça yazılır.</p> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Yayınlar</span> <a href="/bulten/" data-astro-cid-sz7xmlte>Bülten</a><a href="/analiz/" data-astro-cid-sz7xmlte>Analiz</a> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Kaynaklar</span> <a href="/tradeler/" data-astro-cid-sz7xmlte>Tradeler</a><a href="/projeler/" data-astro-cid-sz7xmlte>Projeler</a><a href="/grafikler/" data-astro-cid-sz7xmlte>Grafikler</a><a href="/arastirma/" data-astro-cid-sz7xmlte>Dersler</a><a href="/indikatorler/" data-astro-cid-sz7xmlte>İndikatörler</a><a href="/arama/" data-astro-cid-sz7xmlte>Arama</a><a href="/teknik/" data-astro-cid-sz7xmlte>Teknik arşivi</a> <a href="/hakkinda/" data-astro-cid-sz7xmlte>Hakkında</a> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Besleme</span> <a href="/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · tüm yayınlar</a><a href="/bulten/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · Bülten</a><a href="/analiz/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · Analiz</a> </div> <div class="kolon etiket sag" data-astro-cid-sz7xmlte> <span data-astro-cid-sz7xmlte>© 2026 <span lang="en" data-astro-cid-sz7xmlte>TTO Trading</span></span> <span data-astro-cid-sz7xmlte>İstanbul</span> </div> </div> </footer>  <script type="module">const i=[...document.querySelectorAll("[data-kaydir]")],r=()=>{for(const e of i)if(e.scrollWidth>e.clientWidth+1){const t=e.querySelector("caption")?.textContent?.trim();e.setAttribute("tabindex","0"),e.setAttribute("role","region"),e.setAttribute("aria-label",t?`${t} (kaydırılabilir)`:"Kaydırılabilir tablo")}else e.removeAttribute("tabindex"),e.removeAttribute("role"),e.removeAttribute("aria-label")};if(i.length)if(r(),"ResizeObserver"in window){const e=new ResizeObserver(()=>r());i.forEach(t=>e.observe(t))}else addEventListener("resize",r,{passive:!0});</script> </body> </html> <script type="module">const t=[...document.querySelectorAll(".prose h2")];if(t.length>=4){const d=document.getElementById("icindekiler"),l=document.getElementById("icindekiler-liste");t.filter(e=>/^(?:(?:Bölüm|Modül|Kısım|Ek)\s+)?(?:[A-ZÇĞİÖŞÜ]\.)?\d+(?:\.\d+)*\.?[\s—–-]/.test(e.textContent||"")).length>=t.length/2&&l.classList.add("kendi-numarali"),t.forEach((e,a)=>{e.id||(e.id="bolum-"+(a+1));const i=document.createElement("li"),n=document.createElement("a");n.href="#"+e.id,n.textContent=e.textContent,i.appendChild(n),l.appendChild(i)}),d.hidden=!1}</script> 

@@ -1,0 +1,562 @@
+<!DOCTYPE html><html lang="tr"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sistematik strateji araştırması: bir backtest&#39;i masada okumak — TTO Trading</title><meta name="description" content="Masaya gelen bir backtest nasıl okunur: Sharpe oranının ölçüm hatası ve örneklemin uzunluğu; ileriye bakışın tek günlük kaymasının etkisi; çok sayıda denemenin en iyisinin şansla ne kadar yüksek…"><meta name="generator" content="Astro v5.18.2"><meta name="theme-color" content="#f5f0e6"><link rel="canonical" href="https://ttotrading.com/arastirma/strateji-masa/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — tüm yayınlar" href="/rss.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — Bülten" href="/bulten/rss.xml"><link rel="alternate" type="application/rss+xml" title="TTO Trading — Analiz" href="/analiz/rss.xml"><meta property="og:type" content="article"><meta property="og:site_name" content="TTO Trading"><meta property="og:locale" content="tr_TR"><meta property="og:title" content="Sistematik strateji araştırması: bir backtest'i masada okumak"><meta property="og:description" content="Masaya gelen bir backtest nasıl okunur: Sharpe oranının ölçüm hatası ve örneklemin uzunluğu; ileriye bakışın tek günlük kaymasının etkisi; çok sayıda denemenin en iyisinin şansla ne kadar yüksek…"><meta property="og:url" content="https://ttotrading.com/arastirma/strateji-masa/"><meta property="og:image" content="https://ttotrading.com/og/genel.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="TTO Trading — Dersler"><meta property="article:published_time" content="2026-11-13T00:00:00.000Z"><meta property="article:modified_time" content="2026-11-13T00:00:00.000Z"><meta property="article:section" content="Dersler"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Sistematik strateji araştırması: bir backtest'i masada okumak"><meta name="twitter:description" content="Masaya gelen bir backtest nasıl okunur: Sharpe oranının ölçüm hatası ve örneklemin uzunluğu; ileriye bakışın tek günlük kaymasının etkisi; çok sayıda denemenin en iyisinin şansla ne kadar yüksek…"><meta name="twitter:image" content="https://ttotrading.com/og/genel.png"><script type="application/ld+json">[{"@context":"https://schema.org","@type":"WebSite","name":"TTO Trading","url":"https://ttotrading.com/","description":"TCMB rezervleri, reel kur, Hazine ihaleleri ve faiz piyasaları üzerine veriye dayalı projeler, canlı grafikler ve hesaplama araçları.","inLanguage":"tr","publisher":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}}},{"@context":"https://schema.org","@type":"Article","headline":"Sistematik strateji araştırması: bir backtest'i masada okumak","description":"Masaya gelen bir backtest nasıl okunur: Sharpe oranının ölçüm hatası ve örneklemin uzunluğu; ileriye bakışın tek günlük kaymasının etkisi; çok sayıda denemenin en iyisinin şansla ne kadar yüksek…","url":"https://ttotrading.com/arastirma/strateji-masa/","mainEntityOfPage":"https://ttotrading.com/arastirma/strateji-masa/","image":["https://ttotrading.com/og/genel.png"],"inLanguage":"tr","datePublished":"2026-11-13T00:00:00.000Z","dateModified":"2026-11-13T00:00:00.000Z","author":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}},"publisher":{"@type":"Organization","name":"TTO Trading","url":"https://ttotrading.com/","logo":{"@type":"ImageObject","url":"https://ttotrading.com/og/genel.png"}},"articleSection":"Dersler"}]</script><script defer data-domain="ttotrading.com" data-api="/v/api/event" src="/v/js/script.js"></script><link rel="stylesheet" href="/_astro/index.BWd6Gdev.css">
+<style>.video-oynatici[data-astro-cid-quemlkkv]{margin:1.75rem 0 .5rem;max-width:26rem}.video-ust[data-astro-cid-quemlkkv]{display:block;margin-bottom:.5rem;color:var(--ink-60)}video[data-astro-cid-quemlkkv]{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:1080 / 1350;background:var(--paper-2);border:1px solid var(--ink-30)}
+</style>
+<link rel="stylesheet" href="/_astro/_slug_.BVOGJi8f.css"><style>.grafik[data-astro-cid-bik524jn]{margin:2.2em 0;border:1px solid var(--ink-30);background:#fff;box-shadow:0 1px 0 var(--ink-15)}.grafik[data-astro-cid-bik524jn].genis{position:relative;left:50%;transform:translate(-50%);width:min(1180px,calc(100vw - 32px))}figcaption[data-astro-cid-bik524jn]{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem .9rem;padding:.55rem .9rem;border-bottom:1px solid var(--ink-15);background:var(--paper-2)}.grafik-no[data-astro-cid-bik524jn]{color:var(--claret);white-space:nowrap}.grafik-baslik[data-astro-cid-bik524jn]{font-family:var(--font-body);font-style:italic;font-size:.95rem;color:var(--ink-70)}.grafik-veri[data-astro-cid-bik524jn]{margin-left:auto;min-width:0;overflow-wrap:break-word;color:var(--ink-50);font-variant-numeric:tabular-nums}.grafik-veri[data-astro-cid-bik524jn]+.tam-ekran[data-astro-cid-bik524jn]{margin-left:0}.tam-ekran[data-astro-cid-bik524jn]{margin-left:auto;white-space:nowrap;text-decoration:none;color:var(--ink-50)}.tam-ekran[data-astro-cid-bik524jn]:hover{color:var(--claret)}.cerceve[data-astro-cid-bik524jn]{position:relative;background:linear-gradient(100deg,transparent 30%,rgba(33,27,18,.05) 50%,transparent 70%) no-repeat 0 0 / 300% 100%,#fff;animation:parilti 1.6s linear infinite}@keyframes parilti{to{background-position:-300% 0,0 0}}.yukleniyor[data-astro-cid-bik524jn]{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-60)}iframe[data-astro-cid-bik524jn]{position:relative;display:block;width:100%;height:100%;border:none;opacity:0;transition:opacity .4s ease}.cerceve[data-astro-cid-bik524jn].hazir{animation:none;background:#fff}.cerceve[data-astro-cid-bik524jn].hazir iframe[data-astro-cid-bik524jn]{opacity:1}.cerceve[data-astro-cid-bik524jn].hazir .yukleniyor[data-astro-cid-bik524jn]{display:none}
+</style></head> <body> <a class="atla" href="#icerik">İçeriğe geç</a> <header class="masthead" data-astro-cid-3ef6ksr2> <div class="sarici" data-astro-cid-3ef6ksr2> <div class="dateline etiket" data-astro-cid-3ef6ksr2>  <span class="gun-yer" data-astro-cid-3ef6ksr2><span data-bugun hidden data-astro-cid-3ef6ksr2></span><span class="orta" data-astro-cid-3ef6ksr2>İstanbul</span></span> <span class="son-yayinlar" data-astro-cid-3ef6ksr2> <a class="son-bulten" href="/bulten/2026-11-13/" data-astro-cid-3ef6ksr2> Son bülten · 13 Kasım 2026 </a> </span> </div> <div class="baslik-satir" data-astro-cid-3ef6ksr2> <a href="/" class="marka" aria-label="TTO Trading — ana sayfa" data-astro-cid-3ef6ksr2> <svg class="tto-isaret marka-isaret" viewBox="214 274 572 346" aria-hidden="true" focusable="false" data-astro-cid-tvrurpns> <line x1="321" y1="463" x2="321" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="424" y1="518" x2="424" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="543" y1="357" x2="543" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="668" y1="485" x2="668" y2="569" class="kesik altin" data-astro-cid-tvrurpns></line><line x1="470" y1="508.7" x2="470" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line><line x1="600" y1="437.5" x2="600" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line><line x1="722" y1="322.6" x2="722" y2="569" class="kesik bordo" data-astro-cid-tvrurpns></line> <path d="M264.5133568919622 387.26923076923083H365.3088210525277Q369.0643543309818 387.26923076923083 371.70667259092437 386.1712238182887Q374.3489908508669 385.0732168673466 376.3864166735349 384.00982477283105Q378.42384249620284 382.94643267831555 380.1755222590783 382.94643267831555Q382.5114517408566 382.94643267831555 383.786987571189 384.18423725352983Q385.0625234015214 385.4220418287441 385.8678259859578 388.79209905945197L394.333027061469 433.57036030568327Q394.8487847778373 435.8855405218828 394.13227325369814 437.3167612523987Q393.41576172955905 438.7479819829146 391.6071675681652 439.10139305943335Q389.91072097811127 439.45947588188574 388.56742771911934 438.7543744096139Q387.2241344601274 438.049272937342 386.2755288737468 436.0843873989697Q379.0536407074676 418.8134515649066 373.41589034543944 410.07865547336854Q367.7781399834113 401.3438593818305 362.3214716054857 398.31365833911474Q356.8648032275602 395.283457296399 350.18677113506084 395.283457296399H332.9446493739692V554.5362875338358Q332.9446493739692 556.8028829741793 334.4183017856692 558.1327898146119Q335.8919541973692 559.4626966550445 338.6966477772937 560.1186409746655L347.9124809122429 561.7652983915849Q351.47051628711273 562.7384699570158 351.47051628711273 565.5752783285884Q351.47051628711273 569.0 346.89970697140177 569.0H283.47981500525316Q281.1411042290811 569.0 280.02505495931166 568.0415332122133Q278.90900568954214 567.0830664244265 278.90900568954214 565.5752783285884Q278.90900568954214 562.7384699570158 282.46704106441194 561.7652983915849L291.68287419936115 560.1186409746655Q294.557661080912 559.4626966550445 295.99626684179884 558.1327898146119Q297.4348726026857 556.8028829741793 297.4348726026857 554.5362875338358V395.283457296399H280.1927508415941Q273.60816634313846 395.283457296399 268.16793926928835 398.50023585371673Q262.72771219543824 401.7170144110345 257.06634108012975 410.4820994922999Q251.4049699648212 419.2471845735653 244.10399310290813 436.0843873989697Q243.21510190720886 438.049272937342 241.84195145287623 438.7543744096139Q240.4688009985436 439.45947588188574 238.7723544084897 439.10139305943335Q237.00114277087582 438.7479819829146 236.31492023646402 437.3167612523987Q235.62869770205222 435.8855405218828 236.04649491518592 433.57036030568327L244.51169599069712 388.79209905945197Q245.31699857513348 385.4220418287441 246.60646800627 384.18423725352983Q247.89593743740653 382.94643267831555 250.20399971757658 382.94643267831555Q251.95965946791694 382.94643267831555 253.839403899888 384.00982477283105Q255.71914833185906 385.0732168673466 258.2822767688284 386.1712238182887Q260.8454052057977 387.26923076923083 264.5133568919622 387.26923076923083Z M434.9508568919622 387.26923076923083H535.7463210525277Q539.5018543309818 387.26923076923083 542.1441725909244 386.1712238182887Q544.7864908508669 385.0732168673466 546.8239166735349 384.00982477283105Q548.8613424962028 382.94643267831555 550.6130222590783 382.94643267831555Q552.9489517408566 382.94643267831555 554.224487571189 384.18423725352983Q555.5000234015214 385.4220418287441 556.3053259859578 388.79209905945197L564.770527061469 433.57036030568327Q565.2862847778373 435.8855405218828 564.5697732536983 437.3167612523987Q563.8532617295591 438.7479819829146 562.0446675681652 439.10139305943335Q560.3482209781113 439.45947588188574 559.0049277191193 438.7543744096139Q557.6616344601274 438.049272937342 556.7130288737468 436.0843873989697Q549.4911407074676 418.8134515649066 543.8533903454395 410.07865547336854Q538.2156399834113 401.3438593818305 532.7589716054857 398.31365833911474Q527.3023032275602 395.283457296399 520.6242711350608 395.283457296399H503.3821493739692V554.5362875338358Q503.3821493739692 556.8028829741793 504.8558017856692 558.1327898146119Q506.3294541973692 559.4626966550445 509.1341477772937 560.1186409746655L518.3499809122429 561.7652983915849Q521.9080162871128 562.7384699570158 521.9080162871128 565.5752783285884Q521.9080162871128 569.0 517.3372069714018 569.0H453.91731500525316Q451.5786042290811 569.0 450.46255495931166 568.0415332122133Q449.34650568954214 567.0830664244265 449.34650568954214 565.5752783285884Q449.34650568954214 562.7384699570158 452.90454106441194 561.7652983915849L462.12037419936115 560.1186409746655Q464.995161080912 559.4626966550445 466.43376684179884 558.1327898146119Q467.8723726026857 556.8028829741793 467.8723726026857 554.5362875338358V395.283457296399H450.6302508415941Q444.04566634313846 395.283457296399 438.60543926928835 398.50023585371673Q433.16521219543824 401.7170144110345 427.50384108012975 410.4820994922999Q421.8424699648212 419.2471845735653 414.54149310290813 436.0843873989697Q413.65260190720886 438.049272937342 412.27945145287623 438.7543744096139Q410.9063009985436 439.45947588188574 409.20985440848966 439.10139305943335Q407.43864277087584 438.7479819829146 406.752420236464 437.3167612523987Q406.0661977020522 435.8855405218828 406.4839949151859 433.57036030568327L414.94919599069715 388.79209905945197Q415.7544985751335 385.4220418287441 417.04396800627 384.18423725352983Q418.33343743740653 382.94643267831555 420.64149971757655 382.94643267831555Q422.39715946791694 382.94643267831555 424.276903899888 384.00982477283105Q426.15664833185906 385.0732168673466 428.7197767688284 386.1712238182887Q431.2829052057977 387.26923076923083 434.9508568919622 387.26923076923083Z M670.0099249976472 383.6388017458197Q690.4382683436672 383.6388017458197 707.0990273391362 390.6072315202238Q723.7597863346051 397.57566129462793 735.7482777719492 410.2809825321266Q747.7367692092935 422.9863037696252 754.2020477936424 440.3431412401394Q760.6673263779912 457.6999787106537 760.6673263779912 478.51815661411877Q760.6673263779912 499.2711380333998 754.2140708190855 516.5706936762883Q747.7608152601796 533.8702493191769 735.8290806515679 546.455872462346Q723.8973460429563 559.0414956055151 707.3436989293684 565.9155802871459Q690.7900518157805 572.7896649687766 670.653826673336 572.7896649687766Q650.3305402167069 572.7896649687766 633.7036184040435 565.8375905832957Q617.0766965913801 558.8855161978147 605.1017928756057 546.1474841824697Q593.1268891598313 533.4094521671248 586.6616105754824 515.9197815914926Q580.1963319911335 498.4301110158603 580.1963319911335 477.28966891016955Q580.1963319911335 456.73779573420495 586.6663747333491 439.5850067972385Q593.1364174755648 422.43221786027203 605.0849392674863 409.9095944846765Q617.0334610594078 397.38697110908106 633.5205602123438 390.5128864274504Q650.0076593652798 383.6388017458197 670.0099249976472 383.6388017458197ZM724.3195232508632 501.6529628355414Q724.3195232508632 483.8118575500826 721.0903217550904 467.4902417186039Q717.8611202593177 451.1686258871252 712.066546422107 437.45106030402417Q706.2719725848963 423.7334947209232 698.4092711878116 413.5686765919404Q690.546569790727 403.40385846295754 681.2429651379441 397.78557402524166Q671.9393604851614 392.16728958752583 661.7120868553981 392.16728958752583Q648.2373973273386 392.16728958752583 638.1003742385476 399.43499144007313Q627.9633511497567 406.70269329262044 622.3324881690339 420.5330491157858Q616.7016251883111 434.36340493895113 616.7016251883111 454.1212883221272Q616.7016251883111 472.12508390804464 619.9124813014283 488.5746892684032Q623.1233374145455 505.0242946287617 628.9183430461428 518.8256271502111Q634.7133486777401 532.6269596716604 642.541349303246 542.8567675619494Q650.3693499287518 553.0865754522383 659.7012535775295 558.7375706678006Q669.0331572263071 564.3885658833628 679.2285836669975 564.3885658833628Q692.9400367846067 564.3885658833628 703.0623485989724 557.1540066030486Q713.1846604133383 549.9194473227343 718.7520918321007 535.9288229872293Q724.3195232508632 521.9381986517244 724.3195232508632 501.6529628355414Z" class="harf" data-astro-cid-tvrurpns></path> <path d="M230.0,533.0 C245.2,520.3 288.7,460.5 321.0,457.0 C353.3,453.5 387.0,529.7 424.0,512.0 C461.0,494.3 502.3,356.5 543.0,351.0 C583.7,345.5 630.2,476.0 668.0,479.0 C705.8,482.0 753.0,387.3 770.0,369.0" class="dalga" data-astro-cid-tvrurpns></path> <path d="M232.0,564.0 C242.7,562.2 274.8,557.4 296.1,553.2 C317.5,549.0 338.9,544.5 360.2,539.0 C381.6,533.5 403.0,527.5 424.4,520.2 C445.8,513.0 467.1,505.1 488.5,495.6 C509.9,486.0 531.2,475.6 552.6,463.1 C574.0,450.6 595.4,436.9 616.8,420.4 C638.1,403.9 659.5,385.8 680.9,364.1 C702.2,342.4 734.3,302.3 745.0,290.0" class="egri" data-astro-cid-tvrurpns></path> <line x1="230" y1="603" x2="770" y2="603" class="eksen" data-astro-cid-tvrurpns></line> <line x1="230" y1="584" x2="230" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="320" y1="584" x2="320" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="410" y1="584" x2="410" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="500" y1="584" x2="500" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="590" y1="584" x2="590" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="680" y1="584" x2="680" y2="603" class="cetvel" data-astro-cid-tvrurpns></line><line x1="770" y1="584" x2="770" y2="603" class="cetvel" data-astro-cid-tvrurpns></line> </svg>  <span class="marka-yazi" data-astro-cid-3ef6ksr2> <span class="marka-ad" lang="en" data-astro-cid-3ef6ksr2>TTO Trading</span> <span class="marka-alt" data-astro-cid-3ef6ksr2>Türkiye makro &amp; piyasa araştırmaları</span> </span> </a> <nav aria-label="Bölümler" data-astro-cid-3ef6ksr2> <div class="nav-acilir" data-acilir data-astro-cid-3ef6ksr2> <button type="button" class="nav-link nav-dugme" aria-expanded="false" aria-controls="menu-bulten" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>01</span> Bülten <span class="nav-ok" aria-hidden="true" data-astro-cid-3ef6ksr2></span> </button> <ul class="nav-menu" id="menu-bulten" data-astro-cid-3ef6ksr2> <li data-astro-cid-3ef6ksr2> <a href="/bulten/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Günlük</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Hafta içi her sabah</span> </a> </li><li data-astro-cid-3ef6ksr2> <a href="/bulten/haftalik/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Haftalık</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Pazar akşamı, haftaya bakış</span> </a> </li><li data-astro-cid-3ef6ksr2> <a href="/bulten/aylik/" class="menu-link" data-astro-cid-3ef6ksr2> <span class="menu-isim" data-astro-cid-3ef6ksr2>Aylık</span> <span class="menu-not" data-astro-cid-3ef6ksr2>Ayın ilk iş günü akşamı</span> </a> </li> </ul> </div><a href="/tradeler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>02</span> Tradeler </a><a href="/analiz/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>03</span> Analiz </a><a href="/projeler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>04</span> Projeler </a><a href="/grafikler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>05</span> Grafikler </a><a href="/arastirma/" class="nav-link aktif" aria-current="page" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>06</span> Dersler </a><a href="/indikatorler/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>07</span> İndikatörler </a><a href="/hakkinda/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>08</span> Hakkında </a><a href="/arama/" class="nav-link" data-astro-cid-3ef6ksr2> <span class="nav-no" data-astro-cid-3ef6ksr2>09</span> Arama </a> </nav> <noscript> <style>.nav-acilir:focus-within .nav-menu { display: block; }</style> </noscript> </div> </div> </header> <script type="module" src="/_astro/Header.astro_astro_type_script_index_0_lang.sWAGpYzy.js"></script>  <main class="sarici" id="icerik" tabindex="-1">  <article data-astro-cid-mrksnbf2> <header class="makale-baslik yuksel" data-astro-cid-mrksnbf2> <p class="kicker etiket" data-astro-cid-mrksnbf2> Ders  · <a href="/arastirma/#olcum-rv" data-astro-cid-mrksnbf2>Ölçüm &amp; göreli değer</a>  · strateji · backtest · sharpe · yontem </p> <h1 data-astro-cid-mrksnbf2>Sistematik strateji araştırması: bir backtest&#39;i masada okumak</h1> <p class="ozet" data-astro-cid-mrksnbf2>Bir backtest&#39;in sayısını masada sınamak: ölçüm hatasını, ileriye bakışı, seçimi ve maliyeti sayıyla bilmek.</p> <div class="makale-meta" data-astro-cid-mrksnbf2> <span data-astro-cid-mrksnbf2><b data-astro-cid-mrksnbf2>Yayın</b> 13 Kasım 2026</span>      </div>  <details class="seri-kunye" data-astro-cid-rqz27vut> <summary data-astro-cid-rqz27vut> <span class="etiket" data-astro-cid-rqz27vut>Seri</span> <a href="/arastirma/seri/strateji/" data-astro-cid-rqz27vut>Sistematik strateji araştırması: bir backtest&#39;i masada okumak</a> <span class="seri-konum" data-astro-cid-rqz27vut>Bölüm 1 / 1</span> <span class="seri-ac" data-astro-cid-rqz27vut>bütün bölümler</span> </summary> <ol class="seri-liste" data-astro-cid-rqz27vut> <li class="simdi" data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>01</span> <span class="seri-ad" data-astro-cid-rqz27vut>Sistematik strateji araştırması: bir backtest&#39;i masada okumak</span> <span class="seri-dk" data-astro-cid-rqz27vut>20 dk</span> </li><li data-astro-cid-rqz27vut> <span class="seri-no" data-astro-cid-rqz27vut>Ek</span> <a class="seri-ad" href="/arastirma/strateji-ek/" data-astro-cid-rqz27vut>Strateji araştırması serisinin eki: laboratuvar, tanımlar ve ölçülmeyenler</a> <span class="seri-dk" data-astro-cid-rqz27vut>3 dk</span> </li> </ol> </details>  <p class="kaynak-satiri" data-astro-cid-mrksnbf2><span class="etiket" data-astro-cid-mrksnbf2>Kaynak</span> Sitenin teknik göstergeler serisinin trend takibi ailesi (on dört piyasanın günlük kapanışları; taşıma, oynaklık hedefi ve maliyet o serinin tanımlarıyla). Tanımlar serinin ekinde.</p> <p class="kapsam-satiri" data-astro-cid-mrksnbf2><span class="etiket" data-astro-cid-mrksnbf2>Kapsam</span> Masaya gelen bir backtest nasıl okunur: Sharpe oranının ölçüm hatası ve örneklemin uzunluğu; ileriye bakışın tek günlük kaymasının etkisi; çok sayıda denemenin en iyisinin şansla ne kadar yüksek çıkacağı; örneklem içinde seçilen stratejinin örneklem dışında ne yaptığı; önceden kayıt; maliyet, devir ve gecikme; en büyük düşüşün süreyle ve seçimle derinleşmesi; tek bir yılın payı; ailenin tamamı ile şampiyonun farkı. Laboratuvar sitenin trend takibi ailesi: on dört piyasa, altı sinyal, yirmi yıl.</p> <div class="ders-kunye" aria-label="Ders künyesi" data-astro-cid-vyjx7skq> <div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>20 dk</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Okuma</span> <span class="kunye-alt" data-astro-cid-vyjx7skq>4 bin kelime</span> </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>17</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Alt başlık</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>2</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Grafik</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>4</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Tablo</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>Orta</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Seviye</span>  </div><div class="kunye-hucre" data-astro-cid-vyjx7skq> <span class="kunye-deger" data-astro-cid-vyjx7skq>13 Kas 2026</span> <span class="kunye-etiket etiket" data-astro-cid-vyjx7skq>Son güncelleme</span>  </div> </div>     </header> <nav class="icindekiler yuksel" id="icindekiler" hidden aria-label="İçindekiler" data-astro-cid-mrksnbf2> <span class="etiket ic-baslik" data-astro-cid-mrksnbf2>İçindekiler</span> <ol id="icindekiler-liste" data-astro-cid-mrksnbf2></ol> </nav>   <div class="prose yuksel" style="--d: 120ms" data-deger="sabit" data-astro-cid-mrksnbf2>  <div class="masa"><span class="etiket">Bu bölüm neyi çözer</span><p>Masaya her hafta bir backtest gelir: bir satıcının sunumu, bir meslektaşın fikri, kendi araştırman. Hepsinin ortak noktası güzel
+bir kâr eğrisi ve yüksek bir Sharpe oranıdır. Bu bölüm o sayıyı okumanın sorularını ve her sorunun cevabının ne büyüklükte
+olduğunu ölçüyle verir. Laboratuvar sitenin <a href="/arastirma/gosterge-trend/">teknik göstergeler serisindeki</a> trend takibi ailesidir:
+on dört piyasa, altı sinyal, 2006’dan bugüne, taşıma ve maliyet dahil. Strateji yeni değil; yeni olan, ona bir backtest okuyucusu
+gibi bakmak. Önceden kayıt ve sonuçtan sonra değişen uygulamanın ayrıntılı bir örneği arşivdeki
+<a href="/arastirma/fx-gunici-metodoloji/">FX gün içi yöntem dersinde</a> (arşiv).</p><p><strong>Kısaca</strong></p><ul>
+<li>Sharpe oranı bir tahmindir ve hatası büyüktür: Sharpe’ı 0,69 olan bir stratejinin üç yıllık
+pencerelerdeki Sharpe’ı −0,63 ile +2,12 arasında dolaştı; pencerelerin %14
+kadarında eksiydi.</li>
+<li>Tek günlük ileriye bakış bir stratejiyi yıldıza çevirir: 1 aylık trend sinyalinin Sharpe’ı doğru hâliyle
+0,41, bugünün sinyali bugünün getirisine uygulanınca 7,14.</li>
+<li>84 stratejinin örneklem içi sıralaması örneklem dışını söylemedi (sıra korelasyonu −0,09);
+içeride en iyi strateji dışarıda +0,88 yerine +0,18 verdi.</li>
+<li>Şans da yüksek Sharpe üretir: 84 sıfır Sharpe’lı stratejiden şansla beklenen en yüksek Sharpe
+0,83; ailenin içerideki en yüksek Sharpe’ı +0,88.</li>
+<li>Önceden belirlenmiş sinyal, içeride seçilenle örneklem dışında aynı yeri buldu (+0,26 ve
++0,26).</li>
+<li>Seçimin bedeli düşüşte de ödenir: örneklem içinde en iyi on stratejinin en büyük düşüşü, eşit uzunluktaki örneklem dışında
+medyanda %18,3 yerine %30,7 oldu.</li>
+</ul></div>
+<h2 id="11--sharpe-oranı-bir-tahmindir">1.1 · Sharpe oranı bir tahmindir</h2>
+<p>Bir stratejinin Sharpe oranı, günlük getirisinin ortalamasının standart sapmasına oranının yıllığa çevrilmesidir:</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mover accent="true"><mrow><mi>S</mi><mi>R</mi></mrow><mo stretchy="true">^</mo></mover><mo>=</mo><mfrac><mover accent="true"><mi>r</mi><mo>ˉ</mo></mover><msub><mi>s</mi><mi>r</mi></msub></mfrac><mtext> </mtext><msqrt><mn>261</mn></msqrt></mrow><annotation encoding="application/x-tex">\widehat{SR} = \frac{\bar r}{s_r}\,\sqrt{261}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9833em;"></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span><span class="svg-align" style="top:-3.6833em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.3em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.3em" viewBox="0 0 2364 300" preserveAspectRatio="none"><path d="M1181 0h2l1171 176c6 0 10 5 10 11l-2 23c-1 6-5 10
+-11 10h-1L1182 67 15 220h-1c-6 0-10-4-11-10l-2-23c-1-6 4-11 10-11z"/></svg></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0808em;vertical-align:-0.836em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.2448em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">s</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0278em;">r</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.5678em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1944em;"><span class="mord">ˉ</span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.836em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.9561em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord">261</span></span></span><span style="top:-2.9161em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.0839em;"><span></span></span></span></span></span></span></span></span></span>
+<p>Bu bir ölçüm değil, bir tahmindir: gerçek Sharpe’ı bilinmeyen bir sürecin sınırlı bir örneklemden okunuşudur. Getiriler kabaca
+bağımsızsa tahminin standart hatası yaklaşık şudur (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi></mrow><annotation encoding="application/x-tex">T</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span></span></span></span> yıl):</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mrow><mi mathvariant="normal">S</mi><mi mathvariant="normal">H</mi></mrow><mo stretchy="false">(</mo><mover accent="true"><mrow><mi>S</mi><mi>R</mi></mrow><mo stretchy="true">^</mo></mover><mo stretchy="false">)</mo><mo>≈</mo><msqrt><mfrac><mrow><mn>1</mn><mo>+</mo><msup><mover accent="true"><mrow><mi>S</mi><mi>R</mi></mrow><mo stretchy="true">^</mo></mover><mn>2</mn></msup><mi mathvariant="normal">/</mi><mn>2</mn></mrow><mi>T</mi></mfrac></msqrt></mrow><annotation encoding="application/x-tex">\mathrm{SH}(\widehat{SR}) \approx \sqrt{\frac{1 + \widehat{SR}^2 / 2}{T}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.2333em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathrm">SH</span></span><span class="mopen">(</span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span><span class="svg-align" style="top:-3.6833em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.3em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.3em" viewBox="0 0 2364 300" preserveAspectRatio="none"><path d="M1181 0h2l1171 176c6 0 10 5 10 11l-2 23c-1 6-5 10
+-11 10h-1L1182 67 15 220h-1c-6 0-10-4-11-10l-2-23c-1-6 4-11 10-11z"/></svg></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3.04em;vertical-align:-0.817em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.223em;"><span class="svg-align" style="top:-5em;"><span class="pstrut" style="height:5em;"></span><span class="mord" style="padding-left:1em;"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8643em;"><span style="top:-2.5013em;"><span class="pstrut" style="height:3.1873em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span></span></span><span style="top:-3.4173em;"><span class="pstrut" style="height:3.1873em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.8643em;"><span class="pstrut" style="height:3.1873em;"></span><span class="mord"><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span><span class="svg-align" style="top:-3.6833em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.3em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.3em" viewBox="0 0 2364 300" preserveAspectRatio="none"><path d="M1181 0h2l1171 176c6 0 10 5 10 11l-2 23c-1 6-5 10
+-11 10h-1L1182 67 15 220h-1c-6 0-10-4-11-10l-2-23c-1-6 4-11 10-11z"/></svg></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.1873em;"><span style="top:-3.4362em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord">/2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span><span style="top:-4.183em;"><span class="pstrut" style="height:5em;"></span><span class="hide-tail" style="min-width:1.02em;height:3.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="3.08em" viewBox="0 0 400000 3240" preserveAspectRatio="xMinYMin slice"><path d="M473,2793
+c339.3,-1799.3,509.3,-2700,510,-2702 l0 -0
+c3.3,-7.3,9.3,-11,18,-11 H400000v40H1017.7
+s-90.5,478,-276.2,1466c-185.7,988,-279.5,1483,-281.5,1485c-2,6,-10,9,-24,9
+c-8,0,-12,-0.7,-12,-2c0,-1.3,-5.3,-32,-16,-92c-50.7,-293.3,-119.7,-693.3,-207,-1200
+c0,-1.3,-5.3,8.7,-16,30c-10.7,21.3,-21.3,42.7,-32,64s-16,33,-16,33s-26,-26,-26,-26
+s76,-153,76,-153s77,-151,77,-151c0.7,0.7,35.7,202,105,604c67.3,400.7,102,602.7,104,
+606zM1001 80h400000v40H1017.7z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.817em;"><span></span></span></span></span></span></span></span></span></span>
+<p>Formülün masaya söylediği şey basittir: Sharpe’ın hatası örneklemin karekökü kadar küçülür. Trend ailesinin on dört piyasalık
+portföyü (12 aylık getiri sinyali, maliyetli) 20,8 yılda 0,69 Sharpe verdi. Bu
+Sharpe’ta standart hata üç yılda 0,64, on yılda 0,35, yirmi yılda 0,25.
+Üç yıllık bir backtest’in Sharpe’ı, gerçek Sharpe’ın iki standart hata altından iki standart hata üstüne kadar herhangi bir yerde
+çıkabilir.</p>
+<p>Aynı stratejinin kayan üç yıllık pencerelerdeki Sharpe’ı bunu gerçek veriyle gösterir:</p>
+<figure class="grafik" id="sekil-02" data-astro-cid-bik524jn> <figcaption data-astro-cid-bik524jn> <span class="etiket grafik-no" data-astro-cid-bik524jn>Şekil 02</span> <span class="grafik-baslik" data-astro-cid-bik524jn>Aynı stratejinin üç yıllık Sharpe&#39;ı</span> <span class="etiket grafik-veri" data-astro-cid-bik524jn> Sitenin teknik göstergeler serisinin trend ailesi </span> <a class="etiket tam-ekran" href="/arastirma/strateji/02_kayan.html" target="_blank" rel="noopener" data-astro-cid-bik524jn>Tam ekran ↗</a> </figcaption> <div class="cerceve" style="height:650px" data-astro-cid-bik524jn> <div class="yukleniyor etiket" data-astro-cid-bik524jn>Grafik yükleniyor…</div> <iframe src="/arastirma/strateji/02_kayan.html" title="Aynı stratejinin üç yıllık Sharpe'ı" loading="lazy" onload="this.parentElement.classList.add('hazir')" data-astro-cid-bik524jn></iframe> </div> </figure> 
+<p>Hiçbir kuralı değişmeyen tek bir strateji, üç yıllık pencerelerde −0,63 ile +2,12 arasında
+Sharpe verdi; pencerelerin onda biri −0,08 ve altında, onda biri +1,44 ve üstünde, pencerelerin
+%14 kadarında Sharpe eksi. Bir satıcı bu stratejiyi en iyi üç yılıyla sunsaydı Sharpe’ı yirmi yıllık değerinin üç
+katı görünürdü; en kötü üç yılıyla sunulsaydı strateji çöpe atılırdı.</p>
+<p>Masa için ilk soru bu yüzden “Sharpe kaç?” değil, “kaç yılda?” sorusudur. Üç yıllık bir backtest’te Sharpe bir ile yarım
+arasındaki farkı ayıramaz.</p>
+<h2 id="12--i̇leriye-bakış-bir-günün-bedeli">1.2 · İleriye bakış: bir günün bedeli</h2>
+<p>Bir backtest’in en sık ve en pahalı hatası, bir kararın o kararın anında bilinmeyen bir bilgiyle verilmesidir. Trend ailesinde doğru
+kural şudur: bugünün pozisyonu dünün kapanışıyla kurulan sinyalle alınır ve bugünün getirisini taşır. Kural tek bir gün kaydırılıp
+bugünün kapanışıyla kurulan sinyal bugünün getirisine uygulanırsa, strateji henüz olmamış bir fiyat hareketini bilmiş olur.</p>
+<div class="sayi-tablo">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">Sinyal</th><th style="text-align:right">Doğru</th><th style="text-align:right">İleriye bakışlı</th></tr></thead><tbody><tr><td style="text-align:left">12 aylık getiri</td><td style="text-align:right">0,69</td><td style="text-align:right">2,48</td></tr><tr><td style="text-align:left">1 aylık getiri</td><td style="text-align:right">0,41</td><td style="text-align:right">7,14</td></tr><tr><td style="text-align:left">55/20 günlük kanal</td><td style="text-align:right">0,61</td><td style="text-align:right">3,19</td></tr><tr><td style="text-align:left">50/200 günlük ortalama</td><td style="text-align:right">0,59</td><td style="text-align:right">0,67</td></tr></tbody></table></div>
+<p>Tek günlük kayma 12 aylık sinyalin Sharpe’ını 0,69 düzeyinden 2,48 düzeyine,
+55/20 günlük kanalınkini 0,61 düzeyinden 3,19 düzeyine, 1 aylık sinyalinkini
+0,41 düzeyinden 7,14 düzeyine çıkarıyor. Sinyal ne kadar hızlıysa, yani bugünün
+getirisi bugünün sinyalinde ne kadar ağırsa, şişme o kadar büyük. 50/200 günlük ortalamada etki küçük
+(0,67): iki uzun ortalamanın kesişimi tek bir günün getirisine az bağlıdır.</p>
+<p>Bu yüzden ileriye bakış çoğu zaman bir yazılım hatası değil, bir zaman damgası hatasıdır: kapanış fiyatı gün bitmeden bilinmez; bir
+grafik platformunda son bar kapanmadan “son değer” diye okunan sayı o anda kapanmış bir bar değildir; bir verinin yayımlandığı gün
+ile ait olduğu gün aynı değildir. Masada sorulacak soru şudur: “sinyal hangi anda biliniyordu ve işlem hangi fiyatla yapıldı?”
+Sharpe’ı ikiyi aşan bir günlük strateji, bu sorunun cevabı yazılmadan okunmaz.</p>
+<p>Ters yöndeki bir günlük kayma ucuzdur. Pozisyon doğru hâlinden bir ile on işlem günü sonra kurulduğunda:</p>
+<div class="sayi-tablo">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">Sinyal</th><th style="text-align:right">Doğru</th><th style="text-align:right">Bir gün geç</th><th style="text-align:right">Geç: en düşük</th><th style="text-align:right">Geç: en yüksek</th></tr></thead><tbody><tr><td style="text-align:left">12 aylık getiri</td><td style="text-align:right">0,69</td><td style="text-align:right">0,75</td><td style="text-align:right">0,62</td><td style="text-align:right">0,78</td></tr><tr><td style="text-align:left">1 aylık getiri</td><td style="text-align:right">0,41</td><td style="text-align:right">0,43</td><td style="text-align:right">0,06</td><td style="text-align:right">0,50</td></tr><tr><td style="text-align:left">55/20 günlük kanal</td><td style="text-align:right">0,61</td><td style="text-align:right">0,58</td><td style="text-align:right">0,46</td><td style="text-align:right">0,72</td></tr><tr><td style="text-align:left">50/200 günlük ortalama</td><td style="text-align:right">0,59</td><td style="text-align:right">0,58</td><td style="text-align:right">0,52</td><td style="text-align:right">0,58</td></tr></tbody></table></div>
+<p>Bir gün geç işlem 12 aylık sinyalde 0,75, 1 aylık sinyalde 0,43 Sharpe verdi: doğru
+hâline yakın. Bir günlük erken bilgi Sharpe’ı kat kat büyütürken bir günlük gecikme onu hemen hiç küçültmüyorsa, şişen kısım
+stratejinin değil aynı günün getirisinindir. Masada ikinci sınama budur: işlem bir gün geciktirilir; Sharpe çöküyorsa backtest ya
+ileriye bakıyordur ya da masanın uygulayamayacağı bir hıza dayanıyordur.</p>
+<p>Gecikmenin bedeli sinyalin hızına bağlı. 12 aylık sinyalin Sharpe’ı on gecikmenin hepsinde 0,62 ile
+0,78 arasında kaldı; 1 aylık sinyalinki 0,06 ile 0,50 arasında
+dolaştı. Hızlı bir sinyalin sonucu uygulama gününe duyarlıdır ve bu duyarlılık tek bir backtest’te görünmez.</p>
+<h2 id="13--şansın-en-iyisi">1.3 · Şansın en iyisi</h2>
+<p>Bir araştırmacı yirmi kural dener ve en iyisini sunar. Sunulan Sharpe tek bir stratejinin değil, yirmi stratejinin en yükseğidir;
+ve en yüksek olan, en şanslı olandır. Gerçek Sharpe’ı sıfır olan <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span></span> bağımsız stratejinin <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi></mrow><annotation encoding="application/x-tex">T</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span></span></span></span> yıllık örneklemde şansla beklenen
+en yüksek Sharpe’ı yaklaşık şudur (<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi mathvariant="normal">Φ</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\Phi^{-1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">Φ</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span></span></span></span> standart normalin ters dağılımı, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi></mrow><annotation encoding="application/x-tex">\gamma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0556em;">γ</span></span></span></span> Euler sabiti):</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="normal">E</mi><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">[</mo><mi>max</mi><mo>⁡</mo><mover accent="true"><mrow><mi>S</mi><mi>R</mi></mrow><mo stretchy="true">^</mo></mover><mo fence="false" stretchy="true" minsize="1.2em" maxsize="1.2em">]</mo><mo>≈</mo><mfrac><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>γ</mi><mo stretchy="false">)</mo><mtext> </mtext><msup><mi mathvariant="normal">Φ</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mtext> ⁣</mtext><mrow><mo fence="true">(</mo><mn>1</mn><mo>−</mo><mstyle scriptlevel="0" displaystyle="false"><mfrac><mn>1</mn><mi>N</mi></mfrac></mstyle><mo fence="true">)</mo></mrow><mo>+</mo><mi>γ</mi><mtext> </mtext><msup><mi mathvariant="normal">Φ</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mtext> ⁣</mtext><mrow><mo fence="true">(</mo><mn>1</mn><mo>−</mo><mstyle scriptlevel="0" displaystyle="false"><mfrac><mn>1</mn><mrow><mi>N</mi><mi>e</mi></mrow></mfrac></mstyle><mo fence="true">)</mo></mrow></mrow><msqrt><mi>T</mi></msqrt></mfrac></mrow><annotation encoding="application/x-tex">\mathrm{E}\big[\max \widehat{SR}\big] \approx \frac{(1 - \gamma)\,\Phi^{-1}\!\left(1 - \tfrac{1}{N}\right) + \gamma\,\Phi^{-1}\!\left(1 - \tfrac{1}{N e}\right)}{\sqrt{T}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.3333em;vertical-align:-0.35em;"></span><span class="mord mathrm">E</span><span class="mord"><span class="delimsizing size1">[</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop">max</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span><span class="svg-align" style="top:-3.6833em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.3em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.3em" viewBox="0 0 2364 300" preserveAspectRatio="none"><path d="M1181 0h2l1171 176c6 0 10 5 10 11l-2 23c-1 6-5 10
+-11 10h-1L1182 67 15 220h-1c-6 0-10-4-11-10l-2-23c-1-6 4-11 10-11z"/></svg></span></span></span></span></span></span><span class="mord"><span class="delimsizing size1">]</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.52em;vertical-align:-0.93em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.59em;"><span style="top:-2.1833em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.9267em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span></span></span><span style="top:-2.8867em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1133em;"><span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.74em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0556em;">γ</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord">Φ</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:-0.1667em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size1">(</span></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.109em;">N</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size1">)</span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0556em;">γ</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord">Φ</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:-0.1667em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size1">(</span></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.109em;">N</span><span class="mord mathnormal mtight">e</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size1">)</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.93em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span>
+<p>On yıllık bir örneklemde hiçbir şey kazanmayan stratejilerden on deneme şansla 0,50, yüz deneme
+0,80, bin deneme 1,03 Sharpe’lık bir “en iyi” üretir. Bin deneme bir
+araştırmacı için az değildir: üç parametrenin onar değeri bin kombinasyon eder.</p>
+<p>Trend ailesinde 84 strateji var (on dört piyasa × altı sinyal) ve örneklem içi (2006–2015) ortalama
+8,8 yıl. Bu sayıda ve bu uzunlukta sıfır Sharpe’lı stratejiden şansla beklenen en yüksek Sharpe
+0,83; ailenin içerideki en yüksek Sharpe’ı +0,88 (Brent, 55/20 günlük kanal). En iyi strateji
+şansın üretebileceğinin hemen üstünde.</p>
+<p>Masa için kural: bir backtest’in Sharpe’ı, kaç denemenin en iyisi olduğu yazılmadan okunmaz. Sunucu kaç kural denediğini
+bilmiyorsa ya da söylemiyorsa, sunulan Sharpe’tan yukarıdaki formülle şansın payı düşülür.</p>
+<h2 id="14--örneklem-içi-ve-örneklem-dışı">1.4 · Örneklem içi ve örneklem dışı</h2>
+<p>Şansın payını ölçmenin doğrudan yolu örneklem dışıdır: stratejiler bir dönemde sıralanır, başka bir dönemde ölçülür. Trend ailesinin
+84 stratejisi 2006–2015’te sıralanıp 2016’dan bugüne ölçüldüğünde:</p>
+<div class="sayi-tablo">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">Grup</th><th style="text-align:right">İçeride</th><th style="text-align:right">Dışarıda</th></tr></thead><tbody><tr><td style="text-align:left">Bütün aile (84)</td><td style="text-align:right">+0,20</td><td style="text-align:right">+0,22</td></tr><tr><td style="text-align:left">Örneklem içinde en iyi 10</td><td style="text-align:right">+0,65</td><td style="text-align:right">+0,38</td></tr><tr><td style="text-align:left">Örneklem içinde en kötü 10</td><td style="text-align:right">−0,24</td><td style="text-align:right">+0,55</td></tr><tr><td style="text-align:left">Her piyasada içeride en iyi sinyal (14)</td><td style="text-align:right">+0,53</td><td style="text-align:right">+0,26</td></tr><tr><td style="text-align:left">Önceden belirlenen: 12 aylık (14)</td><td style="text-align:right">+0,19</td><td style="text-align:right">+0,26</td></tr><tr><td style="text-align:left">İçeride en iyi tek strateji (Brent, 55/20 günlük kanal)</td><td style="text-align:right">+0,88</td><td style="text-align:right">+0,18</td></tr></tbody></table></div>
+<figure class="grafik" id="sekil-01" data-astro-cid-bik524jn> <figcaption data-astro-cid-bik524jn> <span class="etiket grafik-no" data-astro-cid-bik524jn>Şekil 01</span> <span class="grafik-baslik" data-astro-cid-bik524jn>Örneklem içi ve dışı: 84 strateji</span> <span class="etiket grafik-veri" data-astro-cid-bik524jn> Sitenin teknik göstergeler serisinin trend ailesi </span> <a class="etiket tam-ekran" href="/arastirma/strateji/01_icdis.html" target="_blank" rel="noopener" data-astro-cid-bik524jn>Tam ekran ↗</a> </figcaption> <div class="cerceve" style="height:710px" data-astro-cid-bik524jn> <div class="yukleniyor etiket" data-astro-cid-bik524jn>Grafik yükleniyor…</div> <iframe src="/arastirma/strateji/01_icdis.html" title="Örneklem içi ve dışı: 84 strateji" loading="lazy" onload="this.parentElement.classList.add('hazir')" data-astro-cid-bik524jn></iframe> </div> </figure> 
+<p><strong>Sıralama taşınmadı.</strong> Örneklem içi ve dışı Sharpe’ın sıra korelasyonu −0,09: içeride iyi olan dışarıda iyi
+olmadı. İçeride en iyi on stratejinin ortalaması +0,65 düzeyinden +0,38 düzeyine indi;
+içeride en kötü on stratejininki −0,24 düzeyinden +0,55 düzeyine çıktı. İçerideki en iyi
+tek strateji (Brent, 55/20 günlük kanal) dışarıda +0,18 verdi.</p>
+<p><strong>Aile taşındı.</strong> Bütün ailenin ortalaması içeride +0,20, dışarıda +0,22. Trend
+takibinin kendisi iki dönemde de benzer bir şey kazandırdı; bozulan, aile içinden yapılan seçimdi. İçerideki farkların büyük kısmı
+gerçek bir fark değil, şanstı; şans dışarıya taşınmaz.</p>
+<p>Bu tablo backtest okumanın merkezidir. Önüne gelen strateji bir ailenin şampiyonuysa beklentin şampiyonun içerideki sayısı değil,
+ailenin ortalamasına yakın bir sayıdır. En iyi ile ortalama arasındaki fark ne kadar büyükse, şansın payı o kadar büyüktür.</p>
+<h2 id="15--önceden-kayıt">1.5 · Önceden kayıt</h2>
+<p>Seçim bir kez yapılınca geri alınamaz: verinin hepsine bakıp en iyiyi seçen bir araştırmacının artık örneklem dışı yoktur. Bunun
+tek çaresi önceden kayıttır: kural, parametre ve hüküm kuralı veriye bakılmadan yazılır ve tarihli olarak saklanır.</p>
+<p>Trend ailesinde önceden belirlenmiş bir seçim vardı: ders kitaplarının varsayılanı olan 12 aylık getiri sinyali. Karşısında,
+örneklem içinde her piyasa için en iyi sinyali seçen araştırmacı:</p>
+<ul>
+<li><strong>Seçilen.</strong> Her piyasada içeride en iyi sinyal: içeride +0,53, dışarıda +0,26.</li>
+<li><strong>Önceden belirlenen.</strong> Her piyasada 12 aylık sinyal: içeride +0,19, dışarıda +0,26.</li>
+</ul>
+<p>Seçim içeride Sharpe’ı neredeyse üç katına çıkardı; dışarıda hiçbir şey eklemedi. Seçimin içerideki bütün katkısı şanstı.</p>
+<p>Önceden kayıt bir dürüstlük beyanı değil, bir kayıttır: kuralın hangi gün yazıldığı ve sonuçlar görüldükten sonra neyin
+değiştiği belgeyle gösterilir. Sitenin FX gün içi çalışmasında kurallar bir backtest görülmeden yazılıp sürüm kontrolüne alındı;
+sonuçtan sonra değişen her uygulama ayrıca tarihlenip kaydedildi (<a href="/arastirma/fx-gunici-metodoloji/">arşivdeki yöntem dersi</a>). Masa için soru
+şudur: “bu kural ne zaman yazıldı, ondan sonra ne değişti?“</p>
+<h2 id="16--maliyet-ve-devir">1.6 · Maliyet ve devir</h2>
+<p>Backtest’in üçüncü sorusu, kâğıttaki kârın masada kalıp kalmadığıdır. Her pozisyon değişimi bir alış–satış makası ve fiyat etkisi
+öder; hızlı bir strateji bu bedeli sık öder. Trend ailesinin maliyeti teknik göstergeler serisinde ölçüldü:</p>
+<ul>
+<li>On dört piyasalık 12 aylık sinyal portföyünün Sharpe’ı maliyetsiz 0,76, maliyetli
+0,69.</li>
+<li>Sinyal hızlandıkça devir büyür: 12 aylık sinyalde pozisyon değişiminin yıllık toplamı sermayenin 13,7
+katı, 1 aylık sinyalde 44,6 katı. 1 aylık sinyalin maliyetli Sharpe’ı 0,41,
+12 aylığınki 0,69.</li>
+</ul>
+<p>Maliyetin iki ve üç katına çıkarılması masanın standart sınamasıdır; trend ailesinde cevabı şu (Sharpe; 1 kat teknik
+göstergeler serisinin maliyet varsayımı):</p>
+<div class="sayi-tablo">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">Sinyal</th><th style="text-align:right">1 kat</th><th style="text-align:right">2 kat</th><th style="text-align:right">3 kat</th><th style="text-align:right">Başabaş</th></tr></thead><tbody><tr><td style="text-align:left">1 aylık getiri</td><td style="text-align:right">0,41</td><td style="text-align:right">0,20</td><td style="text-align:right">−0,01</td><td style="text-align:right">3,0</td></tr><tr><td style="text-align:left">3 aylık getiri</td><td style="text-align:right">0,64</td><td style="text-align:right">0,51</td><td style="text-align:right">0,39</td><td style="text-align:right">6,0</td></tr><tr><td style="text-align:left">6 aylık getiri</td><td style="text-align:right">0,75</td><td style="text-align:right">0,67</td><td style="text-align:right">0,59</td><td style="text-align:right">10,1</td></tr><tr><td style="text-align:left">12 aylık getiri</td><td style="text-align:right">0,69</td><td style="text-align:right">0,63</td><td style="text-align:right">0,56</td><td style="text-align:right">11,5</td></tr><tr><td style="text-align:left">55/20 günlük kanal</td><td style="text-align:right">0,61</td><td style="text-align:right">0,56</td><td style="text-align:right">0,50</td><td style="text-align:right">12,0</td></tr><tr><td style="text-align:left">50/200 günlük ortalama</td><td style="text-align:right">0,59</td><td style="text-align:right">0,56</td><td style="text-align:right">0,54</td><td style="text-align:right">25,7</td></tr></tbody></table></div>
+<p>Başabaş kat, maliyetin kaç katında maliyetli getirinin sıfıra indiğini söyler: 1 aylık sinyalde 3,0, 12
+aylıkta 11,5, 50/200 günlük ortalamada 25,7. 1 aylık sinyalin Sharpe’ı maliyetsiz
+0,62, maliyetli 0,41; maliyet iki katına çıkınca 0,20, üç katında
+−0,01. 12 aylık sinyalinki üç katta da 0,56. Maliyet varsayımındaki bir hata hızlı bir stratejide sonucun işaretini değiştirebilir, yavaş bir
+stratejide yalnız büyüklüğünü.</p>
+<p>Maliyet varsayımı bir backtest’in en kolay iyileştirilen satırıdır: piyasa başına birkaç baz puan eksik yazılan maliyet, hızlı bir
+stratejinin Sharpe’ını yükseltir ve kimse fark etmez. Masada sorulan iki soru: “maliyet piyasa başına kaç baz puan yazıldı ve
+kaynağı ne?” ve “devir ne kadar?” Devri yüksek bir stratejide maliyetin iki katına çıkarılması sonucu değiştiriyorsa strateji bir
+maliyet stratejisidir, bir fiyat stratejisi değil.</p>
+<h2 id="17--şampiyonu-değil-aileyi-almak">1.7 · Şampiyonu değil aileyi almak</h2>
+<p>Örneklem dışı tablonun en pratik sonucu bir portföy kuralıdır. İçeride en iyi stratejiyi almak dışarıda ailenin ortalamasının
+altında kalabilir (en iyi tek strateji +0,18, aile ortalaması +0,22). Ailenin tamamını, ya da
+önceden belirlenmiş bir temsilcisini almak, dışarıda ailenin ortalamasını garanti eder ve ortalamanın kendisi iki dönemde de
+korundu.</p>
+<p>Bu, çeşitlendirmenin en eski kuralının araştırmadaki karşılığıdır: neyin işe yarayacağını bilmediğinde hepsine küçük pay vermek,
+şanslı olana büyük pay vermekten iyidir. Teknik göstergeler serisinin portföyleri bu yüzden tek bir piyasa ya da tek bir hızla değil,
+on dört piyasa ve birden çok hızla kuruldu (<a href="/arastirma/gosterge-trend/">trend takibi bölümü</a>).</p>
+<h2 id="18--bir-stratejiye-kaç-yıl-verilir">1.8 · Bir stratejiye kaç yıl verilir</h2>
+<p>Sharpe’ın standart hatası masanın en sık sorusunu da cevaplar: yeni bir stratejiye ne kadar süre verilir? Sharpe’ın <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span> istatistiği
+yaklaşık <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mrow><mi>S</mi><mi>R</mi></mrow><mo stretchy="true">^</mo></mover><msqrt><mi>T</mi></msqrt></mrow><annotation encoding="application/x-tex">\widehat{SR}\sqrt{T}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0967em;vertical-align:-0.1133em;"></span><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span><span class="svg-align" style="top:-3.6833em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.3em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.3em" viewBox="0 0 2364 300" preserveAspectRatio="none"><path d="M1181 0h2l1171 176c6 0 10 5 10 11l-2 23c-1 6-5 10
+-11 10h-1L1182 67 15 220h-1c-6 0-10-4-11-10l-2-23c-1-6 4-11 10-11z"/></svg></span></span></span></span></span></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.9267em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span></span></span><span style="top:-2.8867em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1133em;"><span></span></span></span></span></span></span></span></span>‘dir; ikiye ulaşması için gereken süre:</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>T</mi><mo>≈</mo><msup><mrow><mo fence="true">(</mo><mfrac><mn>2</mn><mrow><mi>S</mi><mi>R</mi></mrow></mfrac><mo fence="true">)</mo></mrow><mn>2</mn></msup><mrow><mo fence="true">(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mi>S</mi><msup><mi>R</mi><mn>2</mn></msup></mrow><mn>2</mn></mfrac><mo fence="true">)</mo></mrow></mrow><annotation encoding="application/x-tex">T \approx \left(\frac{2}{SR}\right)^2 \left(1 + \frac{SR^2}{2}\right)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.604em;vertical-align:-0.95em;"></span><span class="minner"><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size3">(</span></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size3">)</span></span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.654em;"><span style="top:-3.9029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size3">(</span></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.4911em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size3">)</span></span></span></span></span></span></span>
+<p>Trend ailesinin portföyünün Sharpe’ıyla (0,69) bu süre 10,3 yıl. İyi bir stratejinin
+iyi olduğunu canlı sonuçla kanıtlamak on yıla yakın sürer; kötü olduğunu kanıtlamak da. Masa bu yüzden canlı izlemede kanıt
+beklemez; stratejinin backtest’teki dağılımın içinde kalıp kalmadığına bakar.</p>
+<p><strong>Kayıplı yıllar beklenen sonuçtur.</strong> Getiriler normal sayılırsa bu Sharpe’ta bir takvim yılının kayıplı olma olasılığı
+%24, üç yılın %11. Gerçekleşen: teknik göstergeler serisinin ölçüsüyle tamamlanmış
+takvim yıllarının %80 kadarı kârla kapandı. Üç yılın kayıplı olma olasılığı
+%11 iken kayan üç yıllık pencerelerin %14 kadarında Sharpe eksi: gerçekleşen kuyruk normal
+yaklaşımdan biraz kalın. Bu Sharpe’taki bir strateji kabaca her dört–beş yılda bir kayıplı yıl yazar; kayıplı bir yıl tek başına
+stratejiyi kapatmanın gerekçesi değildir.</p>
+<p>Kapatma kuralı bu yüzden önceden ve dağılıma göre yazılır: örneğin kayan üç yıllık Sharpe’ın backtest’teki onda birlik alt diliminin
+(−0,08) altına inmesi. Kural sonuçtan sonra yazılırsa her kayıp bir istisna, her kazanç bir kanıt gibi okunur.</p>
+<h2 id="19--ailenin-etkin-deneme-sayısı">1.9 · Ailenin etkin deneme sayısı</h2>
+<p>Şansla beklenen en yüksek Sharpe formülü denemelerin bağımsız olduğunu varsayar. Trend ailesinde değiller: aynı piyasadaki altı
+sinyalin günlük getirileri ortalama 0,47 korelasyonlu, farklı piyasalardaki stratejiler arasında korelasyon
+0,05; ailenin ortalama ikili korelasyonu 0,08. Basit bir yaklaşım bağımlılığı etkin deneme
+sayısına çevirir:</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>N</mi><mtext>etkin</mtext></msub><mo>=</mo><mfrac><mi>N</mi><mrow><mn>1</mn><mo>+</mo><mo stretchy="false">(</mo><mi>N</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mtext> </mtext><mover accent="true"><mi>ρ</mi><mo>ˉ</mo></mover></mrow></mfrac></mrow><annotation encoding="application/x-tex">N_{\text{etkin}} = \frac{N}{1 + (N - 1)\,\bar\rho}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">etkin</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.2963em;vertical-align:-0.936em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.5678em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal">ρ</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span>
+<p>Bu ailede 84 deneme yaklaşık 11,5 bağımsız denemeye denk. Etkin sayıyla şansla beklenen en yüksek
+Sharpe 0,56: içerideki en iyi strateji (+0,88) bu sınırın üstünde. Ama formül gerçek
+Sharpe’ı sıfır sayar; ailenin içerideki ortalaması +0,20. Ailenin ortalamasının üstüne şansın eklediği, en
+iyiyi açıklamaya yeter; en iyi strateji de dışarıda ailenin ortalamasına döndü (+0,18).</p>
+<p>Masa için ders: deneme sayısı yalnız sayılmaz, bağımlılığıyla birlikte yazılır; ve şansın payı sıfırdan değil ailenin ortalamasından
+ölçülür. Aynı fikrin altı varyantı altı fikir değildir; ama altı varyantın en iyisi de fikrin kendisinden daha iyi değildir.</p>
+<h2 id="110--çoklu-sınama">1.10 · Çoklu sınama</h2>
+<p>Bir ailede her stratejiye ayrı ayrı “anlamlı mı?” diye sorulursa bazıları şansla anlamlı çıkar. Yüzde beş düzeyinde, hiçbiri gerçek
+olmasa bile 84 stratejiden 4,2 tanesinin anlamlı çıkması beklenir. Düzeltmeler bu şansı
+sınırlar: Bonferroni her sınamaya yüzde beşin N’de birini verir; Holm aynı korumayı sıralı biçimde, daha az güç kaybıyla verir;
+Benjamini–Hochberg yanlış keşiflerin oranını yüzde beşte tutar.</p>
+<p>Ölçülen: örneklem içinde 5 strateji yüzde beş düzeyinde anlamlıydı; Bonferroni’yle 0,
+Holm’la 0, Benjamini–Hochberg ile 0 kaldı. Örneklem dışında (on yılı aşan daha uzun
+dönem) 11 strateji anlamlı; Bonferroni’yle 7, Holm’la 7,
+Benjamini–Hochberg ile 8.</p>
+<p>İki sonuç birlikte okunur. İçeride düzeltmeden sonra kalan strateji sayısı, içerideki “en iyi”lerin şanstan ayrılıp ayrılamadığını
+söyler. Dışarıda düzeltmeden sonra kalanlar ise uzun bir dönemde ve ön seçimsiz ölçüldüğü için daha güvenilirdir; ailenin bir kısmı
+gerçekten bir şey kazanıyor. Masa için kural: ailenin içinden seçilmiş tek bir stratejinin p değeri, düzeltilmeden okunmaz.</p>
+<h2 id="111--parametre-yüzeyi">1.11 · Parametre yüzeyi</h2>
+<p>Bir parametre bir adım kaydırıldığında sonuç ne oluyor? Teknik göstergeler serisi getiri sinyalini dört hızda ölçtü (on dört
+piyasa, maliyetli Sharpe): 1 aylık 0,41, 3 aylık 0,64, 6 aylık
+0,75, 12 aylık 0,69.</p>
+<p>Yüzey düzgün: komşu hızlar benzer sonuç veriyor, en iyi hız ile komşuları arasında uçurum yok; en hızlı sinyalin düşüklüğünün bir
+kısmı maliyettir (maliyetsiz Sharpe’ı 0,62; 1.6). Bu bir sağlamlık işaretidir. Tersi bir uyarıdır: tek bir parametrede sivri bir tepe ve çevresinde çöküş,
+çoğu zaman şansın bir parametreye oturmasıdır. Masada sorulan: “parametre bir adım kaydırılınca sonuç ne oluyor?” Cevap bir tablo
+ya da yüzeydir, tek bir sayı değil.</p>
+<h2 id="112--en-kötü-düşüş-geride-değil-önde">1.12 · En kötü düşüş geride değil, önde</h2>
+<p>Bir backtest’in en büyük düşüşü (birikimli getirinin tepeden dibe kaybı) çoğu zaman stratejinin “en kötü senaryosu” diye okunur.
+Bu okuma iki nedenle iyimserdir.</p>
+<p><strong>Düşüş, ölçüldüğü sürenin fonksiyonudur.</strong> Dönem uzadıkça daha derin bir dibe rastlama olasılığı artar. Ailenin 2006’nın başından
+verisi olan 60 stratejisi aynı yirmi yılda (2006–2025) farklı uzunlukta pencerelerle ölçüldüğünde en büyük
+düşüşün medyanı üç yıllık pencerelerde %15,8, on yıllık pencerelerde %27,8, yirmi yılın
+tamamında %33,1. İki stratejinin düşüşü ancak eşit uzunlukta kıyaslanır; üç yıllık bir sicilin en kötü dönemi,
+uzun vadenin en kötü dönemi değildir.</p>
+<p><strong>Seçim düşüşü de küçültür.</strong> Örneklem içinde Sharpe’ı en yüksek olan strateji, kötü dönemi az olduğu için de seçilir. İki eşit on
+yıllık pencerede (2006–2015 ve 2016–2025) ailenin içerideki en büyük düşüşlerinin medyanı %25,0, içeride en
+iyi on stratejininki %18,3. Dışarıda bu on stratejinin hepsinde düşüş
+derinleşti ve medyanı %30,7 oldu; dışarıdaki düşüşün içeridekine oranının medyanı
+1,47. Bütün ailede 84 stratejinin 48 tanesinde düşüş derinleşti
+(oranın medyanı 1,14), içeride en kötü on stratejinin ise yalnız 4 tanesinde (oran
+0,55). Sharpe’ta görülen ortalamaya dönüş (1.4) düşüşte de görülüyor.</p>
+<p><strong>Dönüş de sürer.</strong> On dört piyasalık portföyün (12 aylık sinyal, yüzde on oynaklığa ölçekli) iki penceredeki en büyük düşüşü
+%19,7 ve %22,6 oldu; ikincisi bütün dönemin de en büyük düşüşüdür (teknik
+göstergeler serisinin ölçüsüyle %22,6). Portföy o düşüşün dibine 1,1 yılda indi, eski tepesine
+2,7 yılda döndü: dönüş inişten uzun sürdü. Tek tek stratejilerde tablo daha sert: 84
+stratejinin 47 tanesi bütün dönemin en büyük düşüşünden ölçümün son gününe kadar eski tepesine dönmedi.</p>
+<p>Masa için kural: bir stratejinin risk limiti backtest’in en büyük düşüşüne göre değil, ondan derin bir düşüşe göre yazılır; limitin
+yanına düşüşün ve dönüşün süresi de yazılır. Seçilmiş bir stratejide aradaki pay daha geniş tutulur.</p>
+<h2 id="113--tek-bir-yılın-payı">1.13 · Tek bir yılın payı</h2>
+<p>Bir backtest’in Sharpe’ı çoğu zaman birkaç iyi yılın üzerinde durur. Sınaması basittir: en iyi takvim yılı çıkarılır ve Sharpe
+yeniden hesaplanır.</p>
+<p>On dört piyasalık portföyün (12 aylık sinyal) Sharpe’ı 0,69. En iyi yılı 2025 (yüzde
+on oynaklığa ölçekli getirisi <span class="isaret-koru">+%22,8</span>) çıkarılınca 0,62, en iyi iki yılı çıkarılınca
+0,55; en kötü yılı 2016 (<span class="isaret-koru">−%15,5</span>) çıkarılınca
+0,81. Portföyün sonucu tek bir yıla bağlı değil.</p>
+<p>Tek tek stratejilerde durum farklı. Ailenin 84 stratejisinin bütün dönem Sharpe’ının medyanı
++0,16; her strateji kendi en iyi yılı çıkarılarak ölçüldüğünde medyan +0,06. Artı
+Sharpe’lı stratejilerin 11 tanesinde tek bir yılın çıkarılması Sharpe’ı sıfıra ya da altına indirdi. Ailede
+19 stratejinin (5 piyasada) en iyi yılı 2022: en sık
+görülen en iyi yıl.</p>
+<p>Masa için kural: Sharpe’ın en iyi yılsız hâli backtest’le birlikte istenir. Tek piyasalı bir stratejide en iyi yıl sonucun büyük
+kısmını taşıyabilir; çeşitlendirilmiş bir portföyde payı küçüktür. Bu da şampiyonu değil aileyi almanın (1.7) bir başka
+gerekçesidir.</p>
+<h2 id="114--masada-bir-backtesti-okumanın-on-sorusu">1.14 · Masada: bir backtest’i okumanın on sorusu</h2>
+<p>Masaya bir backtest geldiğinde bu sorular sırayla sorulur; her birinin cevabı yazılır:</p>
+<ol>
+<li><strong>Kaç yıl?</strong> Sharpe’ın standart hatası örneklemin kareköküyle küçülür; üç yılda yarımın üstündedir (1.1, 1.8). En büyük düşüş
+de sürenin fonksiyonudur (1.12).</li>
+<li><strong>Sinyal hangi anda biliniyordu?</strong> Kapanış fiyatı, verinin yayım saati, işlemin yapıldığı fiyat; işlem bir gün geciktirilince
+sonuç (1.2).</li>
+<li><strong>Kaç deneme, ne kadar bağımlı?</strong> Sunulan sonuç kaç kuralın en iyisi; şansla beklenen en yüksek Sharpe etkin deneme sayısıyla
+hesaplanır ve p değeri düzeltilir (1.3, 1.9, 1.10).</li>
+<li><strong>Örneklem dışı var mı?</strong> Sıralama bir dönemde yapılıp başka bir dönemde ölçüldü mü (1.4)?</li>
+<li><strong>Kural ne zaman yazıldı?</strong> Önceden kayıt, tarih ve sonradan değişenlerin listesi (1.5).</li>
+<li><strong>Maliyet, devir ve taşıma?</strong> Piyasa başına maliyetin kaynağı; maliyet iki ve üç katına çıkınca sonuç ve başabaş kat;
+getirinin fazla getiri olup olmadığı (1.6).</li>
+<li><strong>Aile mi, şampiyon mu?</strong> Ailenin ortalaması ile sunulan stratejinin farkı (1.7).</li>
+<li><strong>Hangi dönem?</strong> Örneklemin içinde tek bir krizin ya da tek bir yılın payı; en iyi yıl çıkarılınca Sharpe (1.13).</li>
+<li><strong>Parametre bir adım kayınca?</strong> Sonuç bir tablo ya da yüzey olarak istenir; sivri bir tepe şanstır (1.11).</li>
+<li><strong>Ölçeklenebilir mi?</strong> Stratejinin büyüklüğü piyasanın derinliğine göre ne kadar; fiyat etkisi yazıldı mı?</li>
+</ol>
+<p>Dokuz sorunun büyüklüğü bu bölümde ölçüldü; ölçeğin payı stratejinin piyasasına göre ayrıca ölçülür.</p>
+<h2 id="115--sık-hatalar">1.15 · Sık hatalar</h2>
+<ol>
+<li><strong>Kısa bir örneklemin Sharpe’ına güvenmek.</strong> Aynı strateji üç yıllık pencerelerde −0,63 ile
++2,12 arasında Sharpe verdi (1.1).</li>
+<li><strong>Kapanmamış barla işlem yapmak.</strong> Tek günlük ileriye bakış bir Sharpe’ı kat kat büyütür (1.2).</li>
+<li><strong>En iyiyi seçip en iyinin sayısını beklemek.</strong> İçeride en iyi on stratejinin ortalaması dışarıda +0,65
+düzeyinden +0,38 düzeyine indi (1.4).</li>
+<li><strong>İçerideki kötü sonucu kesin hüküm saymak.</strong> İçeride en kötü on strateji dışarıda +0,55 verdi: içerideki
+kötülük de büyük ölçüde şanstı (1.4).</li>
+<li><strong>Maliyeti iyimser yazmak.</strong> Hızlı bir sinyalde maliyetin her katı Sharpe’tan büyük bir parça götürür: 1 aylık sinyalde maliyet
+üç katına çıkınca Sharpe −0,01 (1.6).</li>
+<li><strong>Backtest’in en büyük düşüşünü en kötü senaryo saymak.</strong> İçeride en iyi on stratejinin hepsinde düşüş dışarıda derinleşti
+(1.12).</li>
+<li><strong>Bir yılın sonucunu stratejinin sonucu saymak.</strong> Ailenin medyan stratejisinin Sharpe’ı en iyi yılı çıkarılınca
++0,16 düzeyinden +0,06 düzeyine indi (1.13).</li>
+</ol>
+<h2 id="116--kontrol-listesi">1.16 · Kontrol listesi</h2>
+<ul>
+<li>Backtest’in yılı ve Sharpe’ın standart hatası yazıldı mı?</li>
+<li>Sinyalin bilindiği an ve işlemin fiyatı yazıldı mı? İşlem bir gün geciktirildiğinde sonuç ne oluyor?</li>
+<li>Deneme sayısı ve şansla beklenen en yüksek Sharpe hesaplandı mı?</li>
+<li>Örneklem dışı sonuç ayrı yazıldı mı?</li>
+<li>Kuralın yazıldığı tarih ve sonradan değişenler belgelendi mi?</li>
+<li>Maliyet iki ve üç katına çıkarıldığında sonuç ne oluyor, başabaş kat kaç?</li>
+<li>Sunulan strateji ailenin ortalamasından ne kadar uzak?</li>
+<li>En büyük düşüş eşit uzunlukta kıyaslandı, dönüş süresiyle birlikte yazıldı mı?</li>
+<li>En iyi yıl çıkarıldığında Sharpe ne oluyor?</li>
+</ul>
+<h2 id="117--alıştırmalar">1.17 · Alıştırmalar</h2>
+<p><strong>1.</strong> Bir satıcı üç yıllık backtest’te Sharpe’ı iki olan bir strateji sunuyor. Standart hata kabaca nedir, gerçek Sharpe hakkında
+ne söylenebilir?</p>
+<details><summary>Çözüm</summary><p>Sharpe iki iken standart hata <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>+</mo><msup><mn>2</mn><mn>2</mn></msup><mi mathvariant="normal">/</mi><mn>2</mn><mo stretchy="false">)</mo><mi mathvariant="normal">/</mi><mn>3</mn></mrow></msqrt><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\sqrt{(1 + 2^2/2)/3} = 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.24em;vertical-align:-0.305em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.935em;"><span class="svg-align" style="top:-3.2em;"><span class="pstrut" style="height:3.2em;"></span><span class="mord" style="padding-left:1em;"><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7401em;"><span style="top:-2.989em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord">/2</span><span class="mclose">)</span><span class="mord">/3</span></span></span><span style="top:-2.895em;"><span class="pstrut" style="height:3.2em;"></span><span class="hide-tail" style="min-width:1.02em;height:1.28em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.28em" viewBox="0 0 400000 1296" preserveAspectRatio="xMinYMin slice"><path d="M263,681c0.7,0,18,39.7,52,119
+c34,79.3,68.167,158.7,102.5,238c34.3,79.3,51.8,119.3,52.5,120
+c340,-704.7,510.7,-1060.3,512,-1067
+l0 -0
+c4.7,-7.3,11,-11,19,-11
+H40000v40H1012.3
+s-271.3,567,-271.3,567c-38.7,80.7,-84,175,-136,283c-52,108,-89.167,185.3,-111.5,232
+c-22.3,46.7,-33.8,70.3,-34.5,71c-4.7,4.7,-12.3,7,-23,7s-12,-1,-12,-1
+s-109,-253,-109,-253c-72.7,-168,-109.3,-252,-110,-252c-10.7,8,-22,16.7,-34,26
+c-22,17.3,-33.3,26,-34,26s-26,-26,-26,-26s76,-59,76,-59s76,-60,76,-60z
+M1001 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.305em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> civarındadır. İki standart hatalık aralık kabaca sıfır ile dört arasıdır:
+üç yıl, gerçek Sharpe’ın sıfır olmadığını zar zor söyler. Üstelik bu tek bir denemeyse doğrudur; kaç denemenin en iyisi olduğu
+bilinmiyorsa şansın payı ayrıca düşülür (1.3). Trend ailesinin portföyünde üç yıllık Sharpe +2,12 düzeyine
+kadar çıktı; yirmi yıllık değeri 0,69.</p></details>
+<p><strong>2.</strong> Bir meslektaş günlük kapanış verisiyle bir kırılım stratejisi kurmuş: “fiyat 55 günlük en yükseği aştığı gün al”. Backtest’te
+Sharpe üçün üstünde. İlk sorun ne?</p>
+<details><summary>Çözüm</summary><p>Sinyal günün kapanışıyla biliniyor; işlemin o günün getirisini taşıması ileriye bakıştır. Trend ailesinin 55/20 günlük kanalı doğru
+hâliyle 0,61, bugünün sinyali bugünün getirisine uygulanınca 3,19 Sharpe veriyor:
+“üçün üstü” büyük olasılıkla bu kaymanın sonucudur. İşlem ertesi günün açılışında ya da kapanışında yapılarak yeniden ölçülür.</p></details>
+<p><strong>3.</strong> Bir araştırmacı üç parametreli bir stratejinin her parametresine onar değer denemiş ve en iyi kombinasyonun on yıllık Sharpe’ını
+bir olarak sunuyor. Ne düşünürsün?</p>
+<details><summary>Çözüm</summary><p>Bin kombinasyon bin denemedir. On yıllık örneklemde sıfır Sharpe’lı bin stratejiden şansla beklenen en yüksek Sharpe
+1,03: sunulan sayı şansın üretebileceğinden ayırt edilemiyor. Kombinasyonlar birbirine benzediği için
+etkin deneme sayısı bin değil daha azdır, ama araştırmacı bunu göstermek zorundadır. Örneklem dışı bir dönemde ölçülmemiş bir sonuç
+olarak okunur.</p></details>
+<p><strong>4.</strong> Örneklem içinde (2006–2015) en kötü on trend stratejisi dışarıda en iyi ondan daha iyi yaptı. Bu, en kötüleri seçmenin bir
+strateji olduğu anlamına mı gelir?</p>
+<details><summary>Çözüm</summary><p>Hayır. İçeride en kötü onun dışarıda +0,55, en iyi onun +0,38 vermesi, içerideki
+farkların büyük kısmının şans olduğunu söyler; şans dışarıya taşınmaz ve her iki grup ailenin ortalamasına (+0,22)
+doğru döner. Sıra korelasyonu −0,09: sıralamanın hiçbir yönü dışarıya taşınmadı. Doğru sonuç seçimin değil ailenin
+alınmasıdır (1.7).</p></details>
+<p><strong>5.</strong> Bir strateji on dört piyasada her piyasa için ayrı ayrı en iyi parametreyle sunuluyor. Önceden belirlenmiş tek bir parametreyle
+kıyaslanmamışsa ne istersin?</p>
+<details><summary>Çözüm</summary><p>Önceden belirlenmiş bir varsayılanla aynı dönemlerde kıyas istenir. Trend ailesinde her piyasada içeride seçilen sinyal dışarıda
++0,26, önceden belirlenen 12 aylık sinyal +0,26 verdi: seçim içeride Sharpe’ı
++0,19 düzeyinden +0,53 düzeyine çıkarmıştı, dışarıda hiçbir şey eklemedi. Piyasa başına
+ayrı parametre, kanıtlanana kadar şansın kılığıdır.</p></details>
+<p><strong>6.</strong> Canlı bir strateji iki yıldır kayıpta; backtest’teki Sharpe’ı 0,69. Kapatmalı mı?</p>
+<details><summary>Çözüm</summary><p>Önce önceden yazılmış kapatma kuralına bakılır; yoksa dağılıma. Bu Sharpe’ta bir yılın kayıplı olma olasılığı %24;
+iki yılın üst üste kayıplı olması nadir ama olağandışı değildir ve Sharpe’ın t istatistiğinin ikiye ulaşması 10,3 yıl
+ister: iki yıl kanıt üretmez. Doğru soru, kayan Sharpe’ın backtest dağılımının onda birlik alt diliminin (−0,08)
+altına inip inmediği ve kayıpların backtest’te benzeri görülen bir rejimde gelip gelmediğidir. Kural sonuçtan sonra yazılırsa karar
+duygudan verilir.</p></details>
+<p><strong>7.</strong> Bir ekip seksen dört varyantın on birinin yüzde beş düzeyinde anlamlı olduğunu ve bu on birin bir portföy olarak sunulmasını
+öneriyor. Ne sorarsın?</p>
+<details><summary>Çözüm</summary><p>Hiçbiri gerçek olmasa bile seksen dört varyanttan 4,2 tanesinin şansla anlamlı çıkması beklenir. Düzeltilmiş
+sayı istenir: trend ailesinin örneklem dışında on bir anlamlı stratejisinden Bonferroni’yle 7, Holm’la
+7 kaldı. Ayrıca on birin hangi dönemde seçildiği sorulur: seçim ve ölçüm aynı dönemdeyse anlamlılık
+seçimin kendisidir. Doğru öneri ya önceden belirlenmiş bir alt küme ya da ailenin tamamıdır (1.7).</p></details>
+<p><strong>8.</strong> Bir stratejinin on yıllık backtest’inde en büyük düşüş yüzde on iki; strateji örneklem içinde birçok varyant arasından
+seçilmiş. Risk limiti nereye yazılır?</p>
+<details><summary>Çözüm</summary><p>Backtest’in düşüşü bir alt sınırdır, beklenen en kötü değer değil. Seçilmiş bir stratejide fark büyüktür: trend ailesinde içeride en
+iyi on stratejinin düşüşü, eşit uzunluktaki örneklem dışında on stratejinin hepsinde derinleşti;
+dışarıdaki düşüşün içeridekine oranının medyanı 1,47. Limit yüzde on ikinin belirgin biçimde ötesine ve
+önceden yazılır; aşıldığında ne yapılacağı (pozisyonu küçültmek ya da durdurmak) da aynı gün yazılır. Dönüş süresi ayrıca sorulur:
+ailenin portföyü en büyük düşüşünün dibine 1,1 yılda indi, eski tepesine 2,7 yılda
+döndü.</p></details>
+<p><strong>9.</strong> Bir satıcı devri yüksek, günlük bir stratejiyi maliyetli Sharpe’ı bir olarak sunuyor. Masada ilk iki sınama ne?</p>
+<details><summary>Çözüm</summary><p>Maliyeti iki ve üç katına çıkarmak ve işlemi bir gün geciktirmek. Trend ailesinin en hızlı sinyalinde (1 aylık getiri) maliyet iki
+katına çıkınca Sharpe 0,41 yerine 0,20, üç katında −0,01 oldu; başabaş
+kat 3,0. Aynı sinyalin Sharpe’ı bir ile on gün arasındaki gecikmelerde 0,06 ile
+0,50 arasında dolaştı. Başabaş katı küçük ve gecikmeye duyarlı bir strateji kâğıtta kalır; satıcıdan
+maliyetin kaynağı ve uygulama saati yazılı istenir.</p></details>
+<div class="masa"><span class="etiket">Masada</span><ul>
+<li><strong>Kaç yıl?</strong> Sharpe’ın hatası örneklemin karekökü kadar küçülür; üç yıllık Sharpe yarımla biri ayıramaz.</li>
+<li><strong>Hangi an?</strong> Sinyalin bilindiği an ve işlemin fiyatı yazılmadan Sharpe okunmaz; tek günlük kayma Sharpe’ı kat kat büyütür.</li>
+<li><strong>Bir gün geciktir.</strong> Bir günlük gecikmeyle çöken Sharpe ya ileriye bakıyordur ya da masanın uygulayamayacağı bir hızdadır.</li>
+<li><strong>Kaç deneme?</strong> En iyinin Sharpe’ı şansla beklenen en yüksek Sharpe’la kıyaslanır; deneme sayısı bağımlılığıyla yazılır, p
+değeri düzeltilir.</li>
+<li><strong>Kaç yıl beklenir?</strong> Bu Sharpe’ta kanıt on yıla yakın sürer; kapatma kuralı önceden ve dağılıma göre yazılır.</li>
+<li><strong>Dışarıda ne oldu?</strong> İçerideki sıralama dışarıya taşınmadı; aile taşındı.</li>
+<li><strong>Ne zaman yazıldı?</strong> Önceden kayıt ve sonradan değişenlerin listesi istenir.</li>
+<li><strong>Maliyet ve devir.</strong> Maliyet iki ve üç katına çıkarılır; başabaş katı küçük bir strateji bir maliyet stratejisidir.</li>
+<li><strong>Şampiyonu değil aileyi al.</strong> Önceden belirlenmiş bir temsilci ya da ailenin tamamı.</li>
+<li><strong>En kötü düşüş önde.</strong> Düşüş eşit uzunlukta kıyaslanır; seçilmiş bir stratejinin düşüşü dışarıda derinleşir, limit ondan derine
+yazılır.</li>
+<li><strong>En iyi yılı çıkar.</strong> Sharpe’ın en iyi yılsız hâli istenir; tek piyasalı bir stratejide sonuç bir yıla dayanabilir.</li>
+</ul></div>  </div> <p class="etiket-listesi" data-astro-cid-mrksnbf2> <span class="etiket" data-astro-cid-mrksnbf2>Etiketler</span> <span class="etiket-oge" data-astro-cid-mrksnbf2>strateji</span><span class="etiket-oge" data-astro-cid-mrksnbf2>backtest</span><span class="etiket-oge" data-astro-cid-mrksnbf2>sharpe</span><span class="etiket-oge" data-astro-cid-mrksnbf2>yontem</span><span class="etiket-oge" data-astro-cid-mrksnbf2>masa</span> </p>  <nav class="seri-gezinme" aria-label="Seri gezinmesi" data-astro-cid-drc7arte> <span class="sg-bos" data-astro-cid-drc7arte></span> <a class="sg-sonraki" href="/arastirma/strateji-ek/" rel="next" data-astro-cid-drc7arte> <span class="etiket" data-astro-cid-drc7arte>Ek →</span> <span class="sg-ad" data-astro-cid-drc7arte>Strateji araştırması serisinin eki: laboratuvar, tanımlar ve ölçülmeyenler</span> </a> <a class="sg-harita" href="/arastirma/seri/strateji/" data-astro-cid-drc7arte>Sistematik strateji araştırması: bir backtest&#39;i masada okumak · yol haritası</a> </nav>  </article>  </main> <footer data-astro-cid-sz7xmlte> <div class="sarici ic" data-astro-cid-sz7xmlte> <div class="marka-blok" data-astro-cid-sz7xmlte>  <span class="etiket marka" lang="en" data-astro-cid-sz7xmlte>TTO Trading</span> <p class="aciklama" data-astro-cid-sz7xmlte>
+Türkiye makro ve piyasa araştırmaları. Her sayı ölçülen katmandan gelir ve kendi
+        tarihini taşır; yorum ölçümün üstüne yazılır, altına değil.
+</p> <p class="sorumluluk" data-astro-cid-sz7xmlte>Buradaki içerik araştırma ve bilgilendirme amaçlıdır; yatırım tavsiyesi değildir. Sayılar kamuya açık kaynaklardan derlenir, yöntem her sayfada açıkça yazılır.</p> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Yayınlar</span> <a href="/bulten/" data-astro-cid-sz7xmlte>Bülten</a><a href="/analiz/" data-astro-cid-sz7xmlte>Analiz</a> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Kaynaklar</span> <a href="/tradeler/" data-astro-cid-sz7xmlte>Tradeler</a><a href="/projeler/" data-astro-cid-sz7xmlte>Projeler</a><a href="/grafikler/" data-astro-cid-sz7xmlte>Grafikler</a><a href="/arastirma/" data-astro-cid-sz7xmlte>Dersler</a><a href="/indikatorler/" data-astro-cid-sz7xmlte>İndikatörler</a><a href="/arama/" data-astro-cid-sz7xmlte>Arama</a><a href="/teknik/" data-astro-cid-sz7xmlte>Teknik arşivi</a> <a href="/hakkinda/" data-astro-cid-sz7xmlte>Hakkında</a> </div> <div class="kolon etiket" data-astro-cid-sz7xmlte> <span class="kolon-baslik" data-astro-cid-sz7xmlte>Besleme</span> <a href="/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · tüm yayınlar</a><a href="/bulten/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · Bülten</a><a href="/analiz/rss.xml" type="application/rss+xml" data-astro-cid-sz7xmlte>RSS · Analiz</a> </div> <div class="kolon etiket sag" data-astro-cid-sz7xmlte> <span data-astro-cid-sz7xmlte>© 2026 <span lang="en" data-astro-cid-sz7xmlte>TTO Trading</span></span> <span data-astro-cid-sz7xmlte>İstanbul</span> </div> </div> </footer>  <script type="module">const i=[...document.querySelectorAll("[data-kaydir]")],r=()=>{for(const e of i)if(e.scrollWidth>e.clientWidth+1){const t=e.querySelector("caption")?.textContent?.trim();e.setAttribute("tabindex","0"),e.setAttribute("role","region"),e.setAttribute("aria-label",t?`${t} (kaydırılabilir)`:"Kaydırılabilir tablo")}else e.removeAttribute("tabindex"),e.removeAttribute("role"),e.removeAttribute("aria-label")};if(i.length)if(r(),"ResizeObserver"in window){const e=new ResizeObserver(()=>r());i.forEach(t=>e.observe(t))}else addEventListener("resize",r,{passive:!0});</script> </body> </html> <script type="module">const t=[...document.querySelectorAll(".prose h2")];if(t.length>=4){const d=document.getElementById("icindekiler"),l=document.getElementById("icindekiler-liste");t.filter(e=>/^(?:(?:Bölüm|Modül|Kısım|Ek)\s+)?(?:[A-ZÇĞİÖŞÜ]\.)?\d+(?:\.\d+)*\.?[\s—–-]/.test(e.textContent||"")).length>=t.length/2&&l.classList.add("kendi-numarali"),t.forEach((e,a)=>{e.id||(e.id="bolum-"+(a+1));const i=document.createElement("li"),n=document.createElement("a");n.href="#"+e.id,n.textContent=e.textContent,i.appendChild(n),l.appendChild(i)}),d.hidden=!1}</script> 
