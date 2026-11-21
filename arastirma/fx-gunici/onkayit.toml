@@ -1,0 +1,480 @@
+# ÖNCEDEN KAYIT — FX gün içi stratejiler
+#
+# Bu dosya HİÇBİR backtest sonucu görülmeden yazıldı ve öyle commit edildi
+# (git geçmişi kanıttır). Her stratejinin kuralı, parametre ızgarası, ÖNCEDEN
+# KAYITLI VARSAYILANI ve hüküm kuralı buradadır. Sonradan değişirse değişiklik
+# ayrı bir commit'te, gerekçesiyle yapılır ve derste adıyla yazılır.
+#
+# İki sonuç birlikte raporlanır:
+#   · varsayılan — veriye hiç bakmadan seçilmiş, ders kitabı hâli; bütün
+#     dönem onun için örneklem dışıdır.
+#   · seçilen   — ızgaradan YALNIZ örneklem içinde (2018–2023) seçilen;
+#     2024 → 15.10.2026 onun örneklem dışıdır.
+#
+# Ortak mekanik (kod: motor.py):
+#   sinyal mid mum kapanışında; giriş sonraki mumun ilk dakikasının açılışı
+#   (alış ask, satış bid); sert stop emir tarafında dakika dakika; kapanış
+#   stop'u mid kapanış stop ötesinde → sonraki mum açılışı; hedef limit
+#   (kayma yok); aynı dakikada stop ve hedef → stop; tek pozisyon; gün sonu
+#   16:55 ET; R = gerçek giriş fiyatından stop seviyesine planlanan risk.
+#
+# SONRADAN — 16.10.2026. Bu not ilk sonuçlardan (8aa94c7e, 10:23 UTC) SONRA
+# eklendi ve yalnız açıklamadır: ayrıştırılan içerik (kurallar, ızgaralar,
+# varsayılanlar, hüküm kuralı) değişmedi. Ölçümün UYGULAMASI sonuçlardan sonra
+# şu yerlerde değişti; her birinin zamanı, önceki hâli ve ölçülmüş etkisi
+# metodoloji dersinde:
+#   · hüküm penceresi: varsayılanın birincil hükmü 2024 → penceresinden
+#     verilir, seçilenle aynı pencerede kıyaslansın diye (yukarıda varsayılan
+#     için örneklem dışı sayılan bütün dönemin hükmü yan sütunda yazılır);
+#   · ortak mekanik: stop seviyeli emirde giriş tarafının KAYMASIZ açılışı
+#     stop'un ötesindeyse işlem yok (önce yalnız kaymalı dolum sorulurdu);
+#     sert stop'un boşluk kuralı giriş dakikasında da; önceki gün ölçüleri
+#     (H, L, C, O, gün ATR'si, NR4/NR7) tatil olmayan son FX işlem gününden;
+#     seçimde 1e−9'dan küçük Sharpe farkı eşitliktir (ızgaradaki ilk);
+#   · ay sonu ayın son Londra iş günü (önce verideki ayın son işlem günü);
+#     fiksingde ay sonu ayrımı ve momentumda HAC regresyonu koşuya sonradan
+#     girdi; fiksing ve gün içi momentumda stop yürütülen girişten 1·ATR;
+#   · "ölçülemedi" yalnız örneklem dışında hiç işlem yoksa (önce 20'nin
+#     altı); tatil günün kapsamından değil takvimden; haber kurallarında tek
+#     pozisyon parite başına bütün olaylara; devam tablosunda ufku gün sonunu
+#     aşan gözlem kırpılmaz, düşer; başabaş kayma pip'ten değil R'den.
+# Yalnız yazıya geçirilen (davranışı değişmeyen) iki kural: seviye hedefi
+# yürütülen girişin gerisindeyse işlem yok (bu yüzden kaymaya bağlıdır);
+# girişi 16:55 ET'de ya da sonrasında olan sinyal alınmaz.
+# Sonuçtan ÖNCE yazılmış kod iki yerde bu dosyanın harfinden ayrılır ve o
+# okuma korunur: (1) üç kuralı harften dar okur — VWAP'ın ilk 60 dakikası
+# (kuralın durumu da sıfırlanır; harf: yalnız sinyal yok), pivot kırılımı (R1
+# yalnız yukarı, S1 yalnız aşağı; harf: iki yönde ilk kesiş), başarısız
+# kırılım (kırılım mumu bir kesiştir; harf: pencerenin ilk mumu dışarıda
+# kapanırsa da); harfin okuması her koşuda ayrıca ölçülür (kosu.YORUM).
+# (2) Dört aile birimlere bölündü; deflated Sharpe'ın deneme sayısı ve seçim
+# ailenin değil birimin ızgarasıdır (ders aile sayımını da verir).
+
+[genel]
+# Temel senaryo kayması (pip, piyasa ve stop dolumu başına); ızgara ayar.toml'da.
+temel_kayma_pip = 0.5
+# Desen stratejilerinde "zaman" hedefi: girişten sonra bu kadar mum (gün sonunu aşamaz).
+desen_zaman_mum = 12
+# Desen stratejilerinde sinyal mumunun en geç kapanışı (New York saati).
+desen_son_sinyal_et = "16:00"
+# Stopsuz (yalnız zamanla çıkan) stratejilerde R birimi: girişteki ATR(14) (aynı tf).
+atr_mum = 14
+# Gün ATR'si (koşul değişkenleri ve oranlar): önceki 14 FX işlem gününün Wilder ATR'si.
+gun_atr = 14
+tohum = 20261016
+
+[secim]
+# Örneklem içinde parametre seçimi: günlük R serisinin yıllıklandırılmış Sharpe'ı
+# (işlemsiz gün 0, ×√252), asgari işlem sayısı şartıyla. Eşitlikte daha az
+# serbest parametreli (ızgaradaki ilk) kombinasyon.
+olcut = "is_sharpe"
+asgari_islem = 100
+asgari_islem_haber = 30
+
+[hukum]
+# Hüküm kuralı — ders metnindeki "çalışıyor / çalışmıyor" cümlesi bu kuraldan seçilir.
+#   calisiyor : örneklem dışı net ortalama R > 0, %95 bootstrap alt sınırı > 0
+#               ve rastgele yön yüzdeliği ≥ 95
+#   zayif     : örneklem dışı net ortalama R > 0 ama yukarıdakilerden biri tutmuyor
+#   calismiyor: örneklem dışı net ortalama R ≤ 0
+#   maliyet   : (ayrıca işaretlenir) brüt ortalama R'nin alt sınırı > 0, net ≤ 0
+bootstrap_tekrar = 2000
+rastgele_tekrar = 1000
+rastgele_esik_yuzdelik = 95
+
+[saglamlik]
+walk_forward_ilk_test_yili = 2020   # genişleyen pencere: 2018 → Y−1 seç, Y'de sına
+dsr = true                          # Bailey & López de Prado deflated Sharpe, aile başına deneme sayısı
+rejim = ["yil", "oynaklik_tercil"]
+
+[kosul]
+degiskenler = [
+  "range_atr", "asya_atr", "onceki_gun_range_atr", "onceki_gun_yon", "nr4", "nr7",
+  "acilis_farki_atr", "oynaklik_yuzdelik", "trend60", "hafta_gunu", "haber_gunu",
+  "ay_sonu", "dst_gecis_haftasi", "dst_ara_donem",
+]
+# Sürekli değişkenler örneklem içi tercillerle kovalanır; sınırlar örneklem dışına taşınır.
+surekli_kova = "is_tercil"
+asgari_kova_islem = 30
+# Seçim (örneklem içi): kovanın ortalama R'si koşulsuzdan büyük ve kovada ≥ 30 işlem.
+# Doğrulama (örneklem dışı): seçilen kovaların ortalama R'si > 0 ve tamamlayanından
+# büyükse "tuttu", değilse "tutmadı".
+
+# ───────────────────────────────────────────── 1 · London ORB
+[orb]
+ad = "London ORB"
+kural = """Aralık: Londra 08:00'den itibaren ilk tf mumu (60 dk'da 08:00–09:00).
+Sinyal: aralıktan sonraki mumlardan aralığın DIŞINDA kapanan ilk mum (yukarı → alış,
+aşağı → satış); günde tek işlem. Sinyal mumunun kapanışı en geç 'son giriş'."""
+[orb.izgara]
+tf = [5, 15, 60]
+stop_yeri = ["karsi_uc", "orta"]
+stop_turu = ["sert", "kapanis"]
+hedef = ["1R", "2R", "gun_sonu"]
+son_giris_londra = ["10:00", "12:00", "14:00"]
+[orb.varsayilan]
+tf = 15
+stop_yeri = "karsi_uc"
+stop_turu = "sert"
+hedef = "gun_sonu"
+son_giris_londra = "12:00"
+
+# ───────────────────────────────────────────── 2 · Asya aralığı kırılımı
+[asya]
+ad = "Asya aralığı kırılımı"
+kural = """Aralık: Londra 00:00 → aralık sonu (07:00 ya da 08:00) 1 dk mid yüksek/düşükleri.
+Sinyal: Londra 08:00'den sonra aralığın dışında kapanan ilk tf mumu; günde tek işlem."""
+[asya.izgara]
+tf = [5, 15, 60]
+aralik_sonu_londra = ["07:00", "08:00"]
+stop_yeri = ["karsi_uc", "orta"]
+stop_turu = ["sert", "kapanis"]
+hedef = ["1R", "2R", "gun_sonu"]
+son_giris_londra = ["11:00", "14:00"]
+[asya.varsayilan]
+tf = 15
+aralik_sonu_londra = "08:00"
+stop_yeri = "orta"
+stop_turu = "sert"
+hedef = "1R"
+son_giris_londra = "11:00"
+
+# ───────────────────────────────────────────── 3 · NY Initial Balance
+[nyib]
+ad = "New York Initial Balance"
+kural = """Başlangıç 08:00 ya da 09:30 ET. IB: başlangıçtan itibaren ilk tf mumu ya da ilk 60 dakika.
+Sinyal: IB bittikten sonra IB'nin dışında kapanan ilk tf mumu; günde tek işlem.
+60 dk mumlar başlangıca çıpalı (09:30 → :30 ızgarası)."""
+[nyib.izgara]
+tf = [5, 15, 60]
+baslangic_et = ["08:00", "09:30"]
+ib_pencere = ["tf", "60"]          # tf=60'ta ikisi aynıdır, tek sayılır
+stop_yeri = ["karsi_uc", "orta"]
+stop_turu = ["sert", "kapanis"]
+hedef = ["1R", "2R", "gun_sonu"]
+son_giris_et = ["12:00", "14:00"]
+[nyib.varsayilan]
+tf = 15
+baslangic_et = "09:30"
+ib_pencere = "60"
+stop_yeri = "karsi_uc"
+stop_turu = "sert"
+hedef = "gun_sonu"
+son_giris_et = "12:00"
+
+# ───────────────────────────────────────────── 4 · Inside bar kırılımı
+[icmum]
+ad = "Inside bar kırılımı"
+kural = """İç mum: yüksek < önceki yüksek ve düşük > önceki düşük (kesin). Referans: iç mumun ya
+da ana mumun uçları. Sinyal: sonraki 'geçerlilik' kadar mumun içinde referansın dışında
+kapanan ilk mum; yoksa iptal. Stop referansın karşı ucu. Seans: Londra–NY (08:00 Londra →
+12:00 ET sinyal) ya da bütün gün (sinyal en geç 16:00 ET)."""
+[icmum.izgara]
+tf = [5, 15, 60]
+referans = ["ic", "ana"]
+gecerlilik = [1, 3]
+seans = ["londra_ny", "tum_gun"]
+stop_turu = ["sert", "kapanis"]
+hedef = ["1R", "2R", "zaman"]
+[icmum.varsayilan]
+tf = 15
+referans = "ana"
+gecerlilik = 3
+seans = "londra_ny"
+stop_turu = "sert"
+hedef = "2R"
+
+# ───────────────────────────────────────────── 5 · BB/KC squeeze
+[sikisma]
+ad = "Bollinger/Keltner sıkışması"
+kural = """BB(20, 2): SMA20 ± 2σ (kapanışlar, nüfus sapması). KC(20, 1,5): EMA20 ± 1,5·ATR20
+(Wilder). Sıkışma: BB'nin iki bandı da KC'nin içinde. En az 'süre' ardışık sıkışma
+mumundan sonra sıkışmanın bittiği ilk mumdan itibaren 5 mum içinde yön: 'kutu' —
+sıkışma mumlarının en yüksek/en düşüğünün dışında ilk kapanış; 'ttm' — sıkışmanın bittiği
+mumun kapanışı SMA20'nin üstündeyse alış, altındaysa satış. Stop: kutunun karşı ucu ya da
+ortası. Sinyal en geç 16:00 ET."""
+[sikisma.izgara]
+tf = [5, 15, 60]
+sure = [3, 6]
+yon = ["kutu", "ttm"]
+stop_yeri = ["karsi_uc", "orta"]
+stop_turu = ["sert", "kapanis"]
+hedef = ["1R", "2R", "zaman"]
+[sikisma.varsayilan]
+tf = 15
+sure = 6
+yon = "kutu"
+stop_yeri = "karsi_uc"
+stop_turu = "sert"
+hedef = "2R"
+
+# ───────────────────────────────────────────── 6 · PDH/PDL kırılımı
+[pdhl]
+ad = "Önceki gün yüksek/düşük kırılımı"
+kural = """Seviye: önceki FX işlem gününün (17:00 → 17:00 ET) mid yüksek ve düşüğü. Sinyal: seviyeyi
+KESEN ilk kapanış (önceki kapanış içeride, bu kapanış dışarıda); günde tek işlem; pencere
+'başlangıç'tan 14:00 ET'ye. Stop: sinyal mumunun karşı ucu ya da seviyenin 0,5·ATR(tf) içi."""
+[pdhl.izgara]
+tf = [5, 15, 60]
+baslangic = ["gun_basi", "londra"]
+stop_kurali = ["sinyal_mumu", "atr_yarim"]
+stop_turu = ["sert", "kapanis"]
+hedef = ["1R", "2R", "gun_sonu"]
+[pdhl.varsayilan]
+tf = 15
+baslangic = "londra"
+stop_kurali = "sinyal_mumu"
+stop_turu = "sert"
+hedef = "2R"
+
+# ───────────────────────────────────────────── 7 · Başarısız kırılım (turtle soup)
+[sahte]
+ad = "Başarısız kırılım (turtle soup)"
+kural = """Seviye: ORB aralığı (Londra 08:00'den ilk tf), Asya aralığı (00:00–08:00 Londra) ya da
+PDH/PDL. Bir mum seviyenin dışında kapanır; sonraki 'pencere' kadar mumun içinde bir mum
+yeniden içeride kapanırsa ters yönde giriş. Stop: kırılım mumundan dönüş mumuna kadarki uç.
+Seviye ve gün başına tek işlem. Pencere: ORB/Asya için 14:00 Londra'ya, PDH/PDL için
+Londra açılışından 14:00 ET'ye."""
+[sahte.izgara]
+seviye = ["orb", "asya", "pdhl"]
+tf = [5, 15, 60]
+pencere = [1, 2]
+stop_turu = ["sert", "kapanis"]
+hedef = ["1R", "2R", "gun_sonu"]
+[sahte.varsayilan]
+tf = 15
+pencere = 2
+stop_turu = "sert"
+hedef = "1R"
+
+# ───────────────────────────────────────────── 8a · VWAP dönüşü
+[vwap_donus]
+ad = "VWAP'a dönüş"
+kural = """VWAP: çapadan (FX günü başı 17:00 ET ya da Londra 08:00) beri 1 dk tipik fiyatın
+(H+L+C)/3 Dukascopy hacmiyle ağırlıklı ortalaması; σ hacim ağırlıklı sapma. Çapadan
+sonraki ilk 60 dakika sinyal yok. Sinyal: kapanış VWAP ± k·σ bandının dışına çıktıktan
+sonra bandın İÇİNE kapanan ilk mum → VWAP yönünde giriş. Stop: bant dışı gezintinin ucu.
+Hedef 'vwap': sinyal anındaki VWAP seviyesi. Sinyal en geç 16:00 ET."""
+[vwap_donus.izgara]
+tf = [5, 15, 60]
+capa = ["fx_gunu", "londra"]
+k = [1.5, 2.0]
+stop_turu = ["sert", "kapanis"]
+hedef = ["vwap", "1R", "2R", "zaman"]
+[vwap_donus.varsayilan]
+tf = 15
+capa = "londra"
+k = 2.0
+stop_turu = "sert"
+hedef = "vwap"
+
+# ───────────────────────────────────────────── 8b · VWAP geri çekilmesi
+[vwap_cekilme]
+ad = "VWAP geri çekilmesi"
+kural = """Trend: son N mumun hepsi VWAP'ın aynı yanında kapandı. Sinyal: mum VWAP'a değer (yükselişte
+düşük ≤ VWAP) ve trend yönünde (VWAP'ın üstünde) kapanır → trend yönünde giriş. Stop: sinyal
+mumunun karşı ucu. Sinyal en geç 16:00 ET; çapadan sonraki ilk 60 dakika sinyal yok."""
+[vwap_cekilme.izgara]
+tf = [5, 15, 60]
+capa = ["fx_gunu", "londra"]
+n = [6, 12]
+stop_turu = ["sert", "kapanis"]
+hedef = ["1R", "2R", "zaman"]
+[vwap_cekilme.varsayilan]
+tf = 15
+capa = "londra"
+n = 12
+stop_turu = "sert"
+hedef = "2R"
+
+# ───────────────────────────────────────────── 9 · Floor pivot
+[pivot]
+ad = "Floor pivot"
+kural = """Önceki FX gününün H, L, C'sinden P = (H+L+C)/3, R1 = 2P − L, S1 = 2P − H. Dönüş: mum
+seviyeye değer ve geldiği yanda kapanır (R1'de yükseğe değip altında kapanış → satış; S1'de
+tersi; P'ye yukarıdan değip üstünde kapanış → alış, aşağıdan değip altında → satış);
+stop sinyal mumunun seviye ötesindeki ucu; 'seviye' hedefi R1/S1 için P, P için R1/S1.
+Kırılım: kapanış seviyeyi keser (önceki kapanış öbür yanda) → kesiş yönünde giriş; stop
+sinyal mumunun karşı ucu. Pencere Londra 08:00 → 14:00 ET; seviye ve gün başına tek işlem."""
+[pivot.izgara]
+tf = [5, 15, 60]
+seviye = ["P", "R1S1"]
+tur = ["donus", "kirilim"]
+stop_turu = ["sert", "kapanis"]
+hedef = ["seviye", "1R", "2R", "zaman"]   # 'seviye' yalnız dönüşte
+[pivot.varsayilan_donus]
+tf = 15
+seviye = "R1S1"
+tur = "donus"
+stop_turu = "sert"
+hedef = "seviye"
+[pivot.varsayilan_kirilim]
+tf = 15
+seviye = "R1S1"
+tur = "kirilim"
+stop_turu = "sert"
+hedef = "2R"
+
+# ───────────────────────────────────────────── 10 · WM/R 16:00 Londra fiksingi
+[fiks]
+ad = "WM/R 16:00 Londra fiksingi"
+kural = """Momentum: 16:00'dan iki tf önce başlayan mumun yönünde, 16:00 − tf'de giriş, 16:00'da çıkış
+(fiksinge giden son mumu taşı). Dönüş: 16:00 − tf → 16:00 mumunun TERSİ yönde, 16:00 + gecikme'de
+giriş, 'tutma' mum sonra çıkış. Bütün günler ve ay sonu (ayın son Londra iş günü) ayrı.
+R birimi girişteki ATR(14, tf); 'sert'/'kapanis' stop 1·ATR."""
+[fiks.izgara]
+tur = ["momentum", "donus"]
+tf = [5, 15, 60]
+gecikme_mum = [0, 1]          # yalnız dönüş
+tutma_mum = [1, 2]            # yalnız dönüş
+stop_turu = ["yok", "sert", "kapanis"]
+[fiks.varsayilan_momentum]
+tur = "momentum"
+tf = 5
+stop_turu = "yok"
+[fiks.varsayilan_donus]
+tur = "donus"
+tf = 15
+gecikme_mum = 0
+tutma_mum = 2
+stop_turu = "yok"
+
+# ───────────────────────────────────────────── 11 · Gün içi momentum
+[momentum]
+ad = "Londra açılışı → New York öğleden sonrası"
+kural = """Sinyal: Londra 08:00'den itibaren ilk tf'lik getirinin işareti (60 dk = ilk saat). Giriş
+12:00 ET, çıkış 16:00 ya da 16:55 ET. Ayrıca sinyalin öngörü gücü regresyonla (öğleden sonra
+getirisi ~ ilk tf getirisi; HAC) sınanır. R birimi ATR(14, 60 dk); 'sert'/'kapanis' 1·ATR."""
+[momentum.izgara]
+tf = [5, 15, 60]
+cikis_et = ["16:00", "16:55"]
+stop_turu = ["yok", "sert", "kapanis"]
+[momentum.varsayilan]
+tf = 60
+cikis_et = "16:00"
+stop_turu = "yok"
+
+# ───────────────────────────────────────────── HABER
+[haber]
+olaylar = ["NFP", "CPI", "FOMC_karar", "FOMC_basin", "ECB_karar", "ECB_basin", "BoE_karar"]
+# Olay–parite eşlemesi: ABD olayları dört paritede; ECB EUR/USD'de; BoE GBP/USD'de.
+abd = ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD"]
+ecb = ["EURUSD"]
+boe = ["GBPUSD"]
+# Mumlar olay anına çıpalı: k. mum [t0 + k·tf, t0 + (k+1)·tf). İlk haber mumu k = 0.
+atr_mum = 14                 # olaydan önceki 14 mumun ATR'si (aynı tf, aynı çıpa)
+oncesi_trend_mum = 12        # haber öncesi trend: olaydan önceki 12 mumun getirisi
+zaman_mum = 12
+kova_atr = [0.5, 1.0, 2.0]   # |ilk mum hareketi| / ATR kovaları: <0,5 · 0,5–1 · 1–2 · >2
+
+[n1]
+ad = "N1 — kırılım/momentum"
+kural = """İlk haber mumunun kapanış yönünde (kapanış − açılış), 'giriş_mumu' kadar mum kapandıktan
+sonraki açılışta giriş. Stop: ilk haber mumunun karşı ucu (giriş onun ötesindeyse işlem yok)."""
+[n1.izgara]
+tf = [5, 15, 60]
+giris_mumu = [1, 2, 3]
+stop_turu = ["sert", "kapanis"]
+hedef = ["1R", "2R", "zaman"]
+[n1.varsayilan]
+tf = 5
+giris_mumu = 1
+stop_turu = "sert"
+hedef = "1R"
+
+[n2]
+ad = "N2 — fade"
+kural = """|İlk mum hareketi| > k·ATR ise ters yönde giriş: 'ilk_kapanis' — ilk mum kapanınca; 'teyit' — sonraki
+3 mumun içinde ters yönde kapanan (kapanış < açılış, yukarı itkide) ilk mumdan sonra. Stop: itkinin
+ucu (o ana kadarki en yüksek/en düşük). 'oncesi' hedefi: haber öncesi fiyat (ilk mumun açılışı)."""
+[n2.izgara]
+tf = [5, 15, 60]
+k = [1.0, 2.0]
+giris = ["ilk_kapanis", "teyit"]
+stop_turu = ["sert", "kapanis"]
+hedef = ["oncesi", "1R", "2R", "zaman"]
+[n2.varsayilan]
+tf = 5
+k = 2.0
+giris = "teyit"
+stop_turu = "sert"
+hedef = "oncesi"
+
+[n3]
+ad = "N3 — haber öncesi aralık kırılımı (straddle)"
+kural = """Haber öncesi aralık: olaydan önceki 'on_mum' mumun yüksek/düşüğü. Olaydan sonra aralığın dışında
+kapanan ilk mumun yönünde giriş (en geç 6. mum). Stop: aralığın karşı ucu ya da ortası."""
+[n3.izgara]
+tf = [5, 15, 60]
+on_mum = [3, 6]
+stop_yeri = ["karsi_uc", "orta"]
+stop_turu = ["sert", "kapanis"]
+hedef = ["1R", "2R", "zaman"]
+[n3.varsayilan]
+tf = 5
+on_mum = 6
+stop_yeri = "karsi_uc"
+stop_turu = "sert"
+hedef = "1R"
+
+[n4]
+ad = "N4 — başarısız haber kırılımı"
+kural = """İlk haber mumu haber öncesi aralığın dışında kapanır, ikinci mum yeniden içeride kapanırsa ters yönde
+giriş. Stop: ilk iki mumun ucu. 'karsi_uc' hedefi: aralığın öbür ucu."""
+[n4.izgara]
+tf = [5, 15, 60]
+on_mum = [3, 6]
+stop_turu = ["sert", "kapanis"]
+hedef = ["karsi_uc", "1R", "2R", "zaman"]
+[n4.varsayilan]
+tf = 5
+on_mum = 6
+stop_turu = "sert"
+hedef = "karsi_uc"
+
+[n5]
+ad = "N5 — geri çekilme sonrası devam"
+kural = """İtki: ilk haber mumu (|hareket| ≥ 0,5·ATR şartı). Sonraki 6 mumun içinde fiyat itkinin
+(açılıştan uca) 'geri_cekilme' oranı kadar geri çekilir; ardından itki yönünde kapanan ilk mumda
+giriş. Stop: geri çekilmenin ucu. 'itki_ucu' hedefi: ilk mumun ucu."""
+[n5.izgara]
+tf = [5, 15, 60]
+geri_cekilme = [0.382, 0.5]
+stop_turu = ["sert", "kapanis"]
+hedef = ["itki_ucu", "1R", "2R"]
+[n5.varsayilan]
+tf = 5
+geri_cekilme = 0.5
+stop_turu = "sert"
+hedef = "itki_ucu"
+
+[haber_devam]
+# EKLENDİ 16.10.2026 08:55 UTC (d001aeeb), ilk ön kayıttan (a985e126, 08:29) sonra. O anda uzak
+# dalda iki veri commit'i vardı ve ikisi de OKUNMAMIŞTI: EUR/USD 2018'in ilk fiyat parçası
+# (637da271, 08:50) ve FOMC duyurularının ham sayfaları (3e8ede37, 08:52). Takvim henüz
+# ayrıştırılmamıştı; hiçbir haber olayı ölçülmemişti. (Bu satırın ilk hâli "arşivin ilk bulut
+# koşusu henüz bitmemişti" diyordu; git geçmişine göre düzeltildi.) Gerekçe: görev tanımı
+# "hangi koşulda kırılımın, hangisinde fade'in kazandığını gösteren net bir tablo" istiyor;
+# N1/N2 stop ve hedef kuralları taşıdığı için bu soruyu kendi başına cevaplamaz.
+ad = "Kırılım ↔ fade devam tablosu"
+kural = """Strateji kuralından bağımsız betimleyici ölçü. İlk haber mumu kapandıktan sonraki ilk dakikanın
+açılışında ilk hareketin yönünde (kırılım) ya da tersinde (fade) giriş; stop ve hedef yok; çıkış 'ufuk'
+dakika sonra (gün sonunu aşamaz). İkisi de yürütülebilir fiyatla, temel kayma ve haber kaymasıyla; biri
+kazandığında öbürü maliyetin iki katı kadar kaybeder. Ölçü birimi: net getiri / günlük ATR (paritelerin
+pipleri kıyaslanamaz). Gözlem birimi OLAYDIR: aynı ABD olayı dört paritede aynı anda ölçülür ve bu
+dört ölçüm bağımsız değildir; hücrede aynı olaya düşen paritelerin ortalaması tek gözlem sayılır.
+Hücreler: olay, parite, ilk hareket/ATR kovası, haber öncesi trend uyumu (5 dk'da, tek tek), zaman
+dilimi (5/15/60) ve olay × kova (5 dk); her biri her ufukta. Sınama: kırılım ve fade için ayrı tek
+yönlü t (ortalama net > 0); bütün hücrelerin bütün sınamaları TEK AİLE, Benjamini–Hochberg q.
+Hüküm: hücrede ≥ asgari_olay olay ve q < fdr_q → 'kırılım kazanır' / 'fade kazanır'; değilse
+'ayrışmıyor'. Örneklem dışı (2024 →) işaret ayrıca yazılır; hükmü değiştirmez."""
+ufuk_dk = [15, 60, 120]
+asgari_olay = 20
+fdr_q = 0.10
+ana_tf = 5
+
+[fomc]
+ad = "FOMC: karar ve basın toplantısı"
+kural = """Yalnız basın toplantılı toplantılar. Karar hareketi 14:00 → 14:30 ET, basın hareketi 14:30 → 15:30 ET
+(ve 16:00 ET). Sorular: işaret uyumu, korelasyon, karar hareketi büyüklüğüne göre dönüş
+olasılığı; bootstrap aralıkları."""
